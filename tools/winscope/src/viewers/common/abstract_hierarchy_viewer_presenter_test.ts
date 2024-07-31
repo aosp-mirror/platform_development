@@ -31,12 +31,15 @@ import {UiTreeUtils} from 'viewers/common/ui_tree_utils';
 import {UserOptions} from 'viewers/common/user_options';
 import {UiDataHierarchy} from './ui_data_hierarchy';
 
-export abstract class AbstractHierarchyViewerPresenterTest {
+export abstract class AbstractHierarchyViewerPresenterTest<
+  UiData extends UiDataHierarchy,
+> {
   execute() {
     describe('AbstractHierarchyViewerPresenter', () => {
       let uiData: UiDataHierarchy;
-      let presenter: AbstractHierarchyViewerPresenter;
+      let presenter: AbstractHierarchyViewerPresenter<UiData>;
       beforeAll(async () => {
+        jasmine.addCustomEqualityTester(TreeNodeUtils.treeNodeEqualityTester);
         await this.setUpTestEnvironment();
       });
 
@@ -74,6 +77,8 @@ export abstract class AbstractHierarchyViewerPresenterTest {
       });
 
       it('processes trace position updates', async () => {
+        pinNode(this.getSelectedTree());
+
         await assertDefined(presenter).onAppEvent(
           assertDefined(this.getPositionUpdate()),
         );
@@ -88,6 +93,8 @@ export abstract class AbstractHierarchyViewerPresenterTest {
         assertDefined(uiData.hierarchyTrees).forEach((tree) => {
           expect(tree.getAllChildren().length > 0).toBeTrue();
         });
+        expect(uiData.pinnedItems.length).toBeGreaterThan(0);
+
         if (this.shouldExecuteRectTests) {
           expect(
             Object.keys(assertDefined(uiData.rectsUserOptions)).length,
@@ -113,7 +120,32 @@ export abstract class AbstractHierarchyViewerPresenterTest {
         });
       }
 
-      it('updates pinned items', () => {
+      if (this.shouldExecuteDumpTests) {
+        it('shows correct hierarchy tree name for entry', async () => {
+          const update = this.getPositionUpdate();
+          const spy = spyOn(
+            assertDefined(update.position.entry?.getFullTrace()),
+            'isDumpWithoutTimestamp',
+          );
+
+          spy.and.returnValue(false);
+          await presenter.onAppEvent(update);
+          const entryNode = assertDefined(uiData.hierarchyTrees?.at(0));
+          expect(entryNode.getDisplayName()).toContain(
+            update.position.timestamp.format(),
+          );
+
+          pinNode(entryNode);
+
+          spy.and.returnValue(true);
+          await presenter.onAppEvent(update);
+          const newEntryNode = assertDefined(uiData.hierarchyTrees?.at(0));
+          expect(newEntryNode.getDisplayName()).toContain('Dump');
+          expect(uiData.pinnedItems).toEqual([newEntryNode]);
+        });
+      }
+
+      it('handles pinned item change', () => {
         expect(uiData.pinnedItems).toEqual([]);
 
         const pinnedItem = TreeNodeUtils.makeUiHierarchyNode({
@@ -122,7 +154,10 @@ export abstract class AbstractHierarchyViewerPresenterTest {
         });
 
         presenter.onPinnedItemChange(pinnedItem);
-        expect(uiData.pinnedItems).toContain(pinnedItem);
+        expect(uiData.pinnedItems).toEqual([pinnedItem]);
+
+        presenter.onPinnedItemChange(pinnedItem);
+        expect(uiData.pinnedItems).toEqual([]);
       });
 
       it('updates highlighted property', () => {
@@ -152,11 +187,24 @@ export abstract class AbstractHierarchyViewerPresenterTest {
           this.getExpectedChildrenBeforeVisibilityFilter(),
         );
 
+        const nonVisibleNode = assertDefined(
+          uiData.hierarchyTrees
+            ?.at(0)
+            ?.findDfs(
+              (node) =>
+                !node.isRoot() &&
+                !node.getEagerPropertyByName('isComputedVisible')?.getValue(),
+            ),
+        );
+        pinNode(nonVisibleNode);
+        expect(uiData.pinnedItems).toEqual([nonVisibleNode]);
+
         userOptions['showOnlyVisible'].enabled = true;
         await presenter.onHierarchyUserOptionsChange(userOptions);
         expect(this.getTotalHierarchyChildren(uiData)).toEqual(
           this.getExpectedChildrenAfterVisibilityFilter(),
         );
+        expect(uiData.pinnedItems).toEqual([nonVisibleNode]);
       });
 
       if (this.shouldExecuteFlatTreeTest) {
@@ -232,6 +280,8 @@ export abstract class AbstractHierarchyViewerPresenterTest {
             ),
           );
           expect(nodeWithLongName.getDisplayName()).toEqual(shortName);
+          pinNode(nodeWithLongName);
+          expect(uiData.pinnedItems).toEqual([nodeWithLongName]);
 
           await presenter.onHierarchyUserOptionsChange(userOptions);
           expect(uiData.hierarchyUserOptions).toEqual(userOptions);
@@ -241,6 +291,7 @@ export abstract class AbstractHierarchyViewerPresenterTest {
             ),
           );
           expect(longName).toContain(nodeWithLongName.getDisplayName());
+          expect(uiData.pinnedItems).toEqual([nodeWithLongName]);
         });
       }
 
@@ -270,10 +321,22 @@ export abstract class AbstractHierarchyViewerPresenterTest {
           this.getExpectedHierarchyChildrenBeforeStringFilter(),
         );
 
+        const nonMatchNode = assertDefined(
+          uiData.hierarchyTrees
+            ?.at(0)
+            ?.findDfs(
+              (node) =>
+                !node.isRoot() && !node.id.includes(this.hierarchyFilterString),
+            ),
+        );
+        pinNode(nonMatchNode);
+        expect(uiData.pinnedItems).toEqual([nonMatchNode]);
+
         await presenter.onHierarchyFilterChange(this.hierarchyFilterString);
         expect(this.getTotalHierarchyChildren(uiData)).toEqual(
           this.expectedHierarchyChildrenAfterStringFilter,
         );
+        expect(uiData.pinnedItems).toEqual([nonMatchNode]);
       });
 
       it('sets properties tree and associated ui data from tree node', async () => {
@@ -293,9 +356,8 @@ export abstract class AbstractHierarchyViewerPresenterTest {
 
       it('after highlighting a node, updates properties tree on position update', async () => {
         await presenter.onAppEvent(this.getPositionUpdate());
-        await presenter.onHighlightedNodeChange(
-          this.getSelectedTreeAfterPositionUpdate(),
-        );
+        const selectedTree = this.getSelectedTreeAfterPositionUpdate();
+        await presenter.onHighlightedNodeChange(selectedTree);
         this.executeChecksForPropertiesTreeAfterPositionUpdate(uiData);
 
         const secondUpdate = this.getSecondPositionUpdate();
@@ -412,7 +474,7 @@ export abstract class AbstractHierarchyViewerPresenterTest {
 
         it('filters rects by show/hide state', async () => {
           const userOptions: UserOptions = {
-            ignoreNonHidden: {
+            ignoreRectShowState: {
               name: 'Ignore',
               icon: 'visibility',
               enabled: true,
@@ -428,7 +490,7 @@ export abstract class AbstractHierarchyViewerPresenterTest {
           );
           this.checkRectUiData(uiData, totalRects, totalRects, totalRects - 1);
 
-          userOptions['ignoreNonHidden'].enabled = false;
+          userOptions['ignoreRectShowState'].enabled = false;
           presenter.onRectsUserOptionsChange(userOptions);
           this.checkRectUiData(
             uiData,
@@ -440,7 +502,7 @@ export abstract class AbstractHierarchyViewerPresenterTest {
 
         it('handles both visibility and show/hide state in rects', async () => {
           const userOptions: UserOptions = {
-            ignoreNonHidden: {
+            ignoreRectShowState: {
               name: 'Ignore',
               icon: 'visibility',
               enabled: true,
@@ -461,7 +523,7 @@ export abstract class AbstractHierarchyViewerPresenterTest {
           );
           this.checkRectUiData(uiData, totalRects, totalRects, totalRects - 1);
 
-          userOptions['ignoreNonHidden'].enabled = false;
+          userOptions['ignoreRectShowState'].enabled = false;
           presenter.onRectsUserOptionsChange(userOptions);
           this.checkRectUiData(
             uiData,
@@ -479,7 +541,7 @@ export abstract class AbstractHierarchyViewerPresenterTest {
             visibleRects - 1,
           );
 
-          userOptions['ignoreNonHidden'].enabled = true;
+          userOptions['ignoreRectShowState'].enabled = true;
           presenter.onRectsUserOptionsChange(userOptions);
           this.checkRectUiData(
             uiData,
@@ -519,6 +581,11 @@ export abstract class AbstractHierarchyViewerPresenterTest {
           }
         });
       }
+
+      function pinNode(node: UiHierarchyTreeNode) {
+        presenter.onPinnedItemChange(node);
+        expect(uiData.pinnedItems).toEqual([node]);
+      }
     });
 
     if (this.executeSpecializedTests) {
@@ -553,6 +620,7 @@ export abstract class AbstractHierarchyViewerPresenterTest {
   abstract readonly shouldExecuteFlatTreeTest: boolean;
   abstract readonly shouldExecuteRectTests: boolean;
   abstract readonly shouldExecuteShowDiffTests: boolean;
+  abstract readonly shouldExecuteDumpTests: boolean;
   abstract readonly shouldExecuteSimplifyNamesTest: boolean;
   abstract readonly numberOfDefaultProperties: number;
   abstract readonly numberOfNonDefaultProperties: number;
@@ -571,11 +639,11 @@ export abstract class AbstractHierarchyViewerPresenterTest {
 
   abstract setUpTestEnvironment(): Promise<void>;
   abstract createPresenter(
-    callback: NotifyHierarchyViewCallbackType,
-  ): AbstractHierarchyViewerPresenter;
+    callback: NotifyHierarchyViewCallbackType<UiData>,
+  ): AbstractHierarchyViewerPresenter<UiData>;
   abstract createPresenterWithEmptyTrace(
-    callback: NotifyHierarchyViewCallbackType,
-  ): AbstractHierarchyViewerPresenter;
+    callback: NotifyHierarchyViewCallbackType<UiData>,
+  ): AbstractHierarchyViewerPresenter<UiData>;
   abstract getPositionUpdate(): TracePositionUpdate;
   abstract getSecondPositionUpdate(): TracePositionUpdate | undefined;
   abstract getShowDiffPositionUpdate(): TracePositionUpdate;

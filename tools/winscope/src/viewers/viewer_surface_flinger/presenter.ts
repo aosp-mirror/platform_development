@@ -49,7 +49,7 @@ import {UserOptions} from 'viewers/common/user_options';
 import {UiRect} from 'viewers/components/rects/types2d';
 import {UiData} from './ui_data';
 
-export class Presenter extends AbstractHierarchyViewerPresenter {
+export class Presenter extends AbstractHierarchyViewerPresenter<UiData> {
   static readonly DENYLIST_PROPERTY_NAMES = [
     'name',
     'children',
@@ -85,13 +85,13 @@ export class Presenter extends AbstractHierarchyViewerPresenter {
     Presenter.DENYLIST_PROPERTY_NAMES,
     true,
     false,
-    (entry) => entry.getTimestamp().format(),
+    this.getEntryFormattedTimestamp,
   );
   protected override rectsPresenter = new RectsPresenter(
     PersistentStoreProxy.new<UserOptions>(
       'SfRectsOptions',
       {
-        ignoreNonHidden: {
+        ignoreRectShowState: {
           name: 'Ignore',
           icon: 'visibility',
           enabled: false,
@@ -106,7 +106,7 @@ export class Presenter extends AbstractHierarchyViewerPresenter {
     ),
     (tree: HierarchyTreeNode) =>
       UI_RECT_FACTORY.makeUiRects(tree, this.viewCapturePackageNames),
-    this.getDisplays,
+    makeDisplayIdentifiers,
   );
   protected override propertiesPresenter = new PropertiesPresenter(
     PersistentStoreProxy.new<UserOptions>(
@@ -130,6 +130,8 @@ export class Presenter extends AbstractHierarchyViewerPresenter {
       this.storage,
     ),
     Presenter.DENYLIST_PROPERTY_NAMES,
+    undefined,
+    ['a', 'type'],
   );
   protected override multiTraceType = undefined;
 
@@ -141,7 +143,7 @@ export class Presenter extends AbstractHierarchyViewerPresenter {
     trace: Trace<HierarchyTreeNode>,
     traces: Traces,
     storage: Readonly<Storage>,
-    notifyViewCallback: NotifyHierarchyViewCallbackType,
+    notifyViewCallback: NotifyHierarchyViewCallbackType<UiData>,
   ) {
     super(trace, traces, storage, notifyViewCallback, new UiData());
   }
@@ -205,39 +207,6 @@ export class Presenter extends AbstractHierarchyViewerPresenter {
       return packageAndWindow.packageName;
     });
     this.viewCapturePackageNames = await Promise.all(promisesPackageName);
-  }
-
-  private getDisplays(rects: UiRect[]): DisplayIdentifier[] {
-    const ids: DisplayIdentifier[] = [];
-
-    rects.forEach((rect: UiRect) => {
-      if (!rect.isDisplay) return;
-      const displayId = rect.id.slice(10, rect.id.length);
-      ids.push({displayId, groupId: rect.groupId, name: rect.label});
-    });
-
-    let offscreenDisplayCount = 0;
-    rects.forEach((rect: UiRect) => {
-      if (rect.isDisplay) return;
-
-      if (!ids.find((identifier) => identifier.groupId === rect.groupId)) {
-        offscreenDisplayCount++;
-        const name =
-          'Offscreen Display' +
-          (offscreenDisplayCount > 1 ? ` ${offscreenDisplayCount}` : '');
-        ids.push({displayId: -1, groupId: rect.groupId, name});
-      }
-    });
-
-    return ids.sort((a, b) => {
-      if (a.name < b.name) {
-        return -1;
-      }
-      if (a.name > b.name) {
-        return 1;
-      }
-      return 0;
-    });
   }
 
   private updateCuratedProperties() {
@@ -411,8 +380,43 @@ export class Presenter extends AbstractHierarchyViewerPresenter {
   }
 
   private refreshUIData() {
-    this.refreshHierarchyViewerUiData(
-      new UiData(this.curatedProperties, this.displayPropertyGroups),
-    );
+    this.uiData.curatedProperties = this.curatedProperties;
+    this.uiData.displayPropertyGroups = this.displayPropertyGroups;
+    this.refreshHierarchyViewerUiData();
   }
+}
+
+export function makeDisplayIdentifiers(
+  displayRects: UiRect[],
+): DisplayIdentifier[] {
+  const ids: DisplayIdentifier[] = [];
+
+  displayRects.forEach((rect: UiRect) => {
+    if (!rect.isDisplay) return;
+    const displayId = rect.id.slice(10, rect.id.length);
+    ids.push({displayId, groupId: rect.groupId, name: rect.label});
+  });
+
+  let offscreenDisplayCount = 0;
+  displayRects.forEach((rect: UiRect) => {
+    if (rect.isDisplay) return;
+
+    if (!ids.find((identifier) => identifier.groupId === rect.groupId)) {
+      offscreenDisplayCount++;
+      const name =
+        'Offscreen Display' +
+        (offscreenDisplayCount > 1 ? ` ${offscreenDisplayCount}` : '');
+      ids.push({displayId: -1, groupId: rect.groupId, name});
+    }
+  });
+
+  return ids.sort((a, b) => {
+    if (a.name < b.name) {
+      return -1;
+    }
+    if (a.name > b.name) {
+      return 1;
+    }
+    return 0;
+  });
 }

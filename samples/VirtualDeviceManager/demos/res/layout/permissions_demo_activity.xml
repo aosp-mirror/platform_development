@@ -1,4 +1,5 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/main_layout"
     android:layout_width="wrap_content"
     android:layout_height="match_parent"
     android:layout_gravity="center"
@@ -7,17 +8,24 @@
     android:padding="10dp">
 
     <Button
-        android:id="@+id/request_permissions"
+        android:id="@+id/request_device_aware_permissions"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:onClick="onRequestPermissions"
-        android:text="@string/request_permissions" />
+        android:text="@string/request_device_aware_permissions" />
 
     <Button
-        android:id="@+id/revoke_permissions"
+        android:id="@+id/revoke_device_aware_permissions"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:onClick="onRevokePermissions"
-        android:text="@string/revoke_permissions" />
+        android:text="@string/revoke_device_aware_permissions" />
+
+    <Button
+        android:id="@+id/request_non_device_aware_permissions"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:onClick="onRequestPermissions"
+        android:text="@string/request_non_device_aware_permissions" />
 
 </LinearLayout>

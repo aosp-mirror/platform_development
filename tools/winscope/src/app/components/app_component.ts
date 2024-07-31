@@ -35,9 +35,9 @@ import {FileUtils} from 'common/file_utils';
 import {globalConfig} from 'common/global_config';
 import {InMemoryStorage} from 'common/in_memory_storage';
 import {PersistentStore} from 'common/persistent_store';
-import {PersistentStoreProxy} from 'common/persistent_store_proxy';
 import {Timestamp} from 'common/time';
 import {UrlUtils} from 'common/url_utils';
+import {UserNotifier} from 'common/user_notifier';
 import {CrossToolProtocol} from 'cross_tool/cross_tool_protocol';
 import {Analytics} from 'logging/analytics';
 import {
@@ -52,14 +52,13 @@ import {
   WinscopeEventType,
 } from 'messaging/winscope_event';
 import {WinscopeEventListener} from 'messaging/winscope_event_listener';
-import {proxyClient, ProxyState} from 'trace_collection/proxy_client';
-import {
-  TraceConfigurationMap,
-  TRACES,
-} from 'trace_collection/trace_collection_utils';
+import {AdbConnection} from 'trace_collection/adb_connection';
+import {ProxyConnection} from 'trace_collection/proxy_connection';
 import {iconDividerStyle} from 'viewers/components/styles/icon_divider.styles';
 import {ViewerInputMethodComponent} from 'viewers/components/viewer_input_method_component';
 import {Viewer} from 'viewers/viewer';
+import {ViewerInputComponent} from 'viewers/viewer_input/viewer_input_component';
+import {ViewerJankCujsComponent} from 'viewers/viewer_jank_cujs/viewer_jank_cujs_component';
 import {ViewerProtologComponent} from 'viewers/viewer_protolog/viewer_protolog_component';
 import {ViewerScreenRecordingComponent} from 'viewers/viewer_screen_recording/viewer_screen_recording_component';
 import {ViewerSurfaceFlingerComponent} from 'viewers/viewer_surface_flinger/viewer_surface_flinger_component';
@@ -204,6 +203,7 @@ import {UploadTracesComponent} from './upload_traces_component';
       <mat-drawer #drawer mode="overlay" opened="true" [baseHeight]="collapsedTimelineHeight">
         <timeline
           *ngIf="dataLoaded"
+          [allTraces]="tracePipeline.getTraces()"
           [timelineData]="timelineData"
           [store]="store"
           (collapsedTimelineSizeChanged)="onCollapsedTimelineSizeChanged($event)"></timeline>
@@ -220,9 +220,8 @@ import {UploadTracesComponent} from './upload_traces_component';
           <div class="card-grid landing-grid">
             <collect-traces
               class="collect-traces-card homepage-card"
-              [traceConfig]="traceConfig"
-              [dumpConfig]="dumpConfig"
               [storage]="traceConfigStorage"
+              [adbConnection]="adbConnection"
               (filesCollected)="onFilesCollected($event)"></collect-traces>
 
             <upload-traces
@@ -328,7 +327,6 @@ export class AppComponent implements WinscopeEventListener {
   timelineData = new TimelineData();
   abtChromeExtensionProtocol = new AbtChromeExtensionProtocol();
   crossToolProtocol: CrossToolProtocol;
-  states = ProxyState;
   dataLoaded = false;
   showDataLoadedElements = false;
   collapsedTimelineHeight = 0;
@@ -338,7 +336,6 @@ export class AppComponent implements WinscopeEventListener {
 
   isDarkModeOn = false;
   changeDetectorRef: ChangeDetectorRef;
-  snackbarOpener: SnackBarOpener;
   tracePipeline: TracePipeline;
   mediator: Mediator;
   currentTimestamp?: Timestamp;
@@ -349,8 +346,7 @@ export class AppComponent implements WinscopeEventListener {
       Validators.pattern(FileUtils.DOWNLOAD_FILENAME_REGEX),
     ]),
   );
-  traceConfig: TraceConfigurationMap;
-  dumpConfig: TraceConfigurationMap;
+  adbConnection: AdbConnection = new ProxyConnection();
   traceConfigStorage: Storage;
 
   @ViewChild(UploadTracesComponent)
@@ -363,13 +359,13 @@ export class AppComponent implements WinscopeEventListener {
   constructor(
     @Inject(Injector) injector: Injector,
     @Inject(ChangeDetectorRef) changeDetectorRef: ChangeDetectorRef,
-    @Inject(SnackBarOpener) snackBar: SnackBarOpener,
+    @Inject(SnackBarOpener) snackbarOpener: SnackBarOpener,
     @Inject(Title) private pageTitle: Title,
     @Inject(NgZone) private ngZone: NgZone,
     @Inject(MatDialog) private dialog: MatDialog,
   ) {
     this.changeDetectorRef = changeDetectorRef;
-    this.snackbarOpener = snackBar;
+    UserNotifier.setSnackBarOpener(snackbarOpener);
     this.tracePipeline = new TracePipeline();
     this.crossToolProtocol = new CrossToolProtocol(
       this.tracePipeline.getTimestampConverter(),
@@ -380,7 +376,6 @@ export class AppComponent implements WinscopeEventListener {
       this.abtChromeExtensionProtocol,
       this.crossToolProtocol,
       this,
-      this.snackbarOpener,
       localStorage,
     );
 
@@ -440,36 +435,21 @@ export class AppComponent implements WinscopeEventListener {
         createCustomElement(ViewerViewCaptureComponent, {injector}),
       );
     }
+    if (!customElements.get('viewer-jank-cujs')) {
+      customElements.define(
+        'viewer-jank-cujs',
+        createCustomElement(ViewerJankCujsComponent, {injector}),
+      );
+    }
+    if (!customElements.get('viewer-input')) {
+      customElements.define(
+        'viewer-input',
+        createCustomElement(ViewerInputComponent, {injector}),
+      );
+    }
 
     this.traceConfigStorage =
       globalConfig.MODE === 'PROD' ? localStorage : new InMemoryStorage();
-
-    this.traceConfig = PersistentStoreProxy.new<TraceConfigurationMap>(
-      'TracingSettings',
-      TRACES['default'],
-      this.traceConfigStorage,
-    );
-    this.dumpConfig = PersistentStoreProxy.new<TraceConfigurationMap>(
-      'DumpSettings',
-      {
-        window_dump: {
-          name: 'Window Manager',
-          run: true,
-          config: undefined,
-        },
-        layers_dump: {
-          name: 'Surface Flinger',
-          run: true,
-          config: undefined,
-        },
-        screenshot: {
-          name: 'Screenshot',
-          run: true,
-          config: undefined,
-        },
-      },
-      this.traceConfigStorage,
-    );
 
     window.onunhandledrejection = (evt) => {
       Analytics.Error.logGlobalException(evt.reason);
@@ -583,7 +563,6 @@ export class AppComponent implements WinscopeEventListener {
     });
 
     await event.visit(WinscopeEventType.VIEWERS_UNLOADED, async (event) => {
-      proxyClient.adbData = [];
       this.dataLoaded = false;
       this.showDataLoadedElements = false;
       this.pageTitle.setTitle('Winscope');

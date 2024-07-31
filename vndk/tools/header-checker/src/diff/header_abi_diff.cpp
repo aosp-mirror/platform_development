@@ -215,6 +215,10 @@ static std::string GetErrorMessage(CompatibilityStatusIR status) {
   if (!allow_extensions && (status & CompatibilityStatusIR::Extension)) {
     return "EXTENDING CHANGES";
   }
+  if (!allow_extensions && !allow_unreferenced_elf_symbol_changes &&
+      (status & CompatibilityStatusIR::ElfExtension)) {
+    return "ELF Symbols not referenced by exported headers added";
+  }
   if (!allow_unreferenced_changes &&
       (status & CompatibilityStatusIR::UnreferencedChanges)) {
     return "changes in exported headers, which are not directly referenced "

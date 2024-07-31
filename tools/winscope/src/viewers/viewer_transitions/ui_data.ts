@@ -19,21 +19,23 @@ import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
 import {
   LogEntry,
   LogField,
-  LogFieldName,
+  LogFieldType,
   UiDataLog,
 } from 'viewers/common/ui_data_log';
 import {UiPropertyTreeNode} from 'viewers/common/ui_property_tree_node';
 
 export class UiData implements UiDataLog {
   constructor(
-    public headers: LogFieldName[],
+    public headers: LogFieldType[],
     public entries: LogEntry[],
     public selectedIndex: undefined | number,
     public scrollToIndex: undefined | number,
     public propertiesTree: undefined | UiPropertyTreeNode,
   ) {}
 
-  static EMPTY = new UiData([], [], undefined, undefined, undefined);
+  static createEmpty(): UiData {
+    return new UiData([], [], undefined, undefined, undefined);
+  }
 }
 
 export class TransitionsEntry implements LogEntry {
