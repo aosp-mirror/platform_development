@@ -18,11 +18,15 @@ import {Inject, Injectable, NgZone} from '@angular/core';
 import {MatSnackBar} from '@angular/material/snack-bar';
 import {assertDefined} from 'common/assert_utils';
 import {NotificationType, UserNotification} from 'messaging/user_notification';
-import {UserNotificationsListener} from 'messaging/user_notifications_listener';
 import {SnackBarComponent} from './snack_bar_component';
 
+type Messages = string[];
+
 @Injectable({providedIn: 'root'})
-export class SnackBarOpener implements UserNotificationsListener {
+export class SnackBarOpener {
+  private isOpen = false;
+  private queue: Messages[] = [];
+
   constructor(
     @Inject(NgZone) private ngZone: NgZone,
     @Inject(MatSnackBar) private snackBar: MatSnackBar,
@@ -35,20 +39,18 @@ export class SnackBarOpener implements UserNotificationsListener {
       return;
     }
 
-    this.ngZone.run(() => {
-      // The snackbar needs to be opened within ngZone,
-      // otherwise it will first display on the left and then will jump to the center
-      this.snackBar.openFromComponent(SnackBarComponent, {
-        data: messages,
-        duration: 10000,
-      });
-    });
+    if (this.isOpen) {
+      this.queue.push(messages);
+      return;
+    }
+
+    this.displayMessages(messages);
   }
 
   private convertNotificationsToMessages(
     notifications: UserNotification[],
-  ): string[] {
-    const messages: string[] = [];
+  ): Messages {
+    const messages: Messages = [];
 
     const warnings = notifications.filter(
       (n) => n.getNotificationType() === NotificationType.WARNING,
@@ -66,7 +68,9 @@ export class SnackBarOpener implements UserNotificationsListener {
 
       if (countCropped > 0) {
         messages.push(
-          `... (cropped ${countCropped} '${groupedWarnings[0].getDescriptor()}' messages)`,
+          `... (cropped ${countCropped} '${groupedWarnings[0].getDescriptor()}' message${
+            countCropped > 1 ? 's' : ''
+          })`,
         );
       }
     }
@@ -87,5 +91,24 @@ export class SnackBarOpener implements UserNotificationsListener {
     });
 
     return new Set(groups.values());
+  }
+
+  private displayMessages(messages: Messages) {
+    this.ngZone.run(() => {
+      // The snackbar needs to be opened within ngZone,
+      // otherwise it will first display on the left and then will jump to the center
+      this.isOpen = true;
+      const ref = this.snackBar.openFromComponent(SnackBarComponent, {
+        data: messages,
+        duration: 10000,
+      });
+      ref.afterDismissed().subscribe(() => {
+        this.isOpen = false;
+        const next = this.queue.shift();
+        if (next !== undefined) {
+          this.displayMessages(next);
+        }
+      });
+    });
   }
 }

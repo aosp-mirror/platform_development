@@ -15,7 +15,7 @@
  */
 
 import {assertDefined} from 'common/assert_utils';
-import {LogFieldName} from 'viewers/common/ui_data_log';
+import {LogFieldType} from 'viewers/common/ui_data_log';
 import {VariableHeightScrollStrategy} from 'viewers/common/variable_height_scroll_strategy';
 import {ProtologEntry} from 'viewers/viewer_protolog/ui_data';
 
@@ -27,7 +27,7 @@ export class ProtologScrollStrategy extends VariableHeightScrollStrategy {
 
   protected override predictScrollItemHeight(entry: ProtologEntry): number {
     const textHeight = this.subItemHeight(
-      assertDefined(entry.fields.find((f) => f.name === LogFieldName.TEXT))
+      assertDefined(entry.fields.find((f) => f.type === LogFieldType.TEXT))
         .value as string,
       this.textCharsPerRow,
     );
@@ -37,7 +37,7 @@ export class ProtologScrollStrategy extends VariableHeightScrollStrategy {
     );
     const sourceFileHeight = this.subItemHeight(
       assertDefined(
-        entry.fields.find((f) => f.name === LogFieldName.SOURCE_FILE),
+        entry.fields.find((f) => f.type === LogFieldType.SOURCE_FILE),
       ).value as string,
       this.sourceFileCharsPerRow,
     );

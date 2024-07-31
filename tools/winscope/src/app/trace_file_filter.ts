@@ -17,7 +17,7 @@
 import {assertDefined} from 'common/assert_utils';
 import {FileUtils} from 'common/file_utils';
 import {TimezoneInfo} from 'common/time';
-import {UserNotificationsListener} from 'messaging/user_notifications_listener';
+import {UserNotifier} from 'common/user_notifier';
 import {TraceOverridden} from 'messaging/user_warnings';
 import {TraceFile} from 'trace/trace_file';
 
@@ -43,10 +43,7 @@ export class TraceFileFilter {
     '.perfetto',
   ];
 
-  async filter(
-    files: TraceFile[],
-    UserNotificationsListener: UserNotificationsListener,
-  ): Promise<FilterResult> {
+  async filter(files: TraceFile[]): Promise<FilterResult> {
     const bugreportMainEntry = files.find((file) =>
       file.file.name.endsWith('main_entry.txt'),
     );
@@ -54,10 +51,7 @@ export class TraceFileFilter {
     const perfettoFiles = files.filter((file) => this.isPerfettoFile(file));
     const legacyFiles = files.filter((file) => !this.isPerfettoFile(file));
     if (!(await this.isBugreport(bugreportMainEntry, files))) {
-      const perfettoFile = this.pickLargestFile(
-        perfettoFiles,
-        UserNotificationsListener,
-      );
+      const perfettoFile = this.pickLargestFile(perfettoFiles);
       return {
         perfetto: perfettoFile,
         legacy: legacyFiles,
@@ -187,10 +181,7 @@ export class TraceFileFilter {
     });
   }
 
-  private pickLargestFile(
-    files: TraceFile[],
-    UserNotificationsListener: UserNotificationsListener,
-  ): TraceFile | undefined {
+  private pickLargestFile(files: TraceFile[]): TraceFile | undefined {
     if (files.length === 0) {
       return undefined;
     }
@@ -199,9 +190,7 @@ export class TraceFileFilter {
         largestSoFar.file.size > file.file.size
           ? [largestSoFar, file]
           : [file, largestSoFar];
-      UserNotificationsListener.onNotifications([
-        new TraceOverridden(overridden.getDescriptor()),
-      ]);
+      UserNotifier.add(new TraceOverridden(overridden.getDescriptor()));
       return largest;
     });
   }

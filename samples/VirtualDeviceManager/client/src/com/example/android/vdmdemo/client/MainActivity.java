@@ -219,7 +219,8 @@ public class MainActivity extends Hilt_MainActivity {
     private void processRemoteEvent(RemoteEvent event) {
         if (event.hasStartStreaming()) {
             runOnUiThread(
-                    () -> mDisplayAdapter.addDisplay(event.getStartStreaming().getHomeEnabled()));
+                    () -> mDisplayAdapter.addDisplay(event.getStartStreaming().getHomeEnabled(),
+                            event.getStartStreaming().getRotationSupported()));
         } else if (event.hasStopStreaming()) {
             runOnUiThread(() -> mDisplayAdapter.removeDisplay(event.getDisplayId()));
         } else if (event.hasDisplayRotation()) {

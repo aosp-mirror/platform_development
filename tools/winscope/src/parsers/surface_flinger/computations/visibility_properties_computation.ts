@@ -72,103 +72,112 @@ export class VisibilityPropertiesComputation implements Computation {
         layer.addEagerProperty(
           DEFAULT_PROPERTY_TREE_NODE_FACTORY.makeCalculatedProperty(
             layer.id,
+            'isHiddenByPolicy',
+            this.isHiddenByPolicy(layer),
+          ),
+        );
+      } else {
+        const displaySize = this.getDisplaySize(layer);
+
+        const occludedBy = opaqueLayers
+          .filter((other) => {
+            if (
+              this.getDefinedValue(other, 'layerStack') !==
+              this.getDefinedValue(layer, 'layerStack')
+            ) {
+              return false;
+            }
+            if (!this.layerContains(other, layer, displaySize)) {
+              return false;
+            }
+            const cornerRadiusOther =
+              other.getEagerPropertyByName('cornerRadius')?.getValue() ?? 0;
+
+            return (
+              cornerRadiusOther <= 0 ||
+              (cornerRadiusOther ===
+                layer.getEagerPropertyByName('cornerRadius')?.getValue() ??
+                0)
+            );
+          })
+          .map((other) => other.id);
+
+        if (occludedBy.length > 0) {
+          isVisible = false;
+        }
+
+        layer.addEagerProperty(
+          DEFAULT_PROPERTY_TREE_NODE_FACTORY.makeCalculatedProperty(
+            layer.id,
+            'isComputedVisible',
+            isVisible,
+          ),
+        );
+        layer.addEagerProperty(
+          DEFAULT_PROPERTY_TREE_NODE_FACTORY.makeCalculatedProperty(
+            layer.id,
+            'occludedBy',
+            occludedBy,
+          ),
+        );
+
+        const partiallyOccludedBy = opaqueLayers
+          .filter((other) => {
+            if (
+              this.getDefinedValue(other, 'layerStack') !==
+              this.getDefinedValue(layer, 'layerStack')
+            ) {
+              return false;
+            }
+            if (!this.layerOverlaps(other, layer, displaySize)) {
+              return false;
+            }
+            return !occludedBy.includes(other.id);
+          })
+          .map((other) => other.id);
+
+        layer.addEagerProperty(
+          DEFAULT_PROPERTY_TREE_NODE_FACTORY.makeCalculatedProperty(
+            layer.id,
+            'partiallyOccludedBy',
+            partiallyOccludedBy,
+          ),
+        );
+
+        const coveredBy = transparentLayers
+          .filter((other) => {
+            if (
+              this.getDefinedValue(other, 'layerStack') !==
+              this.getDefinedValue(layer, 'layerStack')
+            ) {
+              return false;
+            }
+            return this.layerOverlaps(other, layer, displaySize);
+          })
+          .map((other) => other.id);
+
+        layer.addEagerProperty(
+          DEFAULT_PROPERTY_TREE_NODE_FACTORY.makeCalculatedProperty(
+            layer.id,
+            'coveredBy',
+            coveredBy,
+          ),
+        );
+
+        this.isOpaque(layer)
+          ? opaqueLayers.push(layer)
+          : transparentLayers.push(layer);
+      }
+
+      if (!isVisible) {
+        layer.addEagerProperty(
+          DEFAULT_PROPERTY_TREE_NODE_FACTORY.makeCalculatedProperty(
+            layer.id,
             'visibilityReason',
             this.getVisibilityReasons(layer),
           ),
         );
-        continue;
       }
-
-      const displaySize = this.getDisplaySize(layer);
-
-      const occludedBy = opaqueLayers
-        .filter((other) => {
-          if (
-            this.getDefinedValue(other, 'layerStack') !==
-            this.getDefinedValue(layer, 'layerStack')
-          ) {
-            return false;
-          }
-          if (!this.layerContains(other, layer, displaySize)) {
-            return false;
-          }
-          const cornerRadiusOther =
-            other.getEagerPropertyByName('cornerRadius')?.getValue() ?? 0;
-
-          return (
-            cornerRadiusOther <= 0 ||
-            (cornerRadiusOther ===
-              layer.getEagerPropertyByName('cornerRadius')?.getValue() ??
-              0)
-          );
-        })
-        .map((other) => other.id);
-
-      if (occludedBy.length > 0) {
-        isVisible = false;
-      }
-
-      layer.addEagerProperty(
-        DEFAULT_PROPERTY_TREE_NODE_FACTORY.makeCalculatedProperty(
-          layer.id,
-          'isComputedVisible',
-          isVisible,
-        ),
-      );
-      layer.addEagerProperty(
-        DEFAULT_PROPERTY_TREE_NODE_FACTORY.makeCalculatedProperty(
-          layer.id,
-          'occludedBy',
-          occludedBy,
-        ),
-      );
-
-      const partiallyOccludedBy = opaqueLayers
-        .filter((other) => {
-          if (
-            this.getDefinedValue(other, 'layerStack') !==
-            this.getDefinedValue(layer, 'layerStack')
-          ) {
-            return false;
-          }
-          if (!this.layerOverlaps(other, layer, displaySize)) {
-            return false;
-          }
-          return !occludedBy.includes(other.id);
-        })
-        .map((other) => other.id);
-
-      layer.addEagerProperty(
-        DEFAULT_PROPERTY_TREE_NODE_FACTORY.makeCalculatedProperty(
-          layer.id,
-          'partiallyOccludedBy',
-          partiallyOccludedBy,
-        ),
-      );
-
-      const coveredBy = transparentLayers
-        .filter((other) => {
-          if (
-            this.getDefinedValue(other, 'layerStack') !==
-            this.getDefinedValue(layer, 'layerStack')
-          ) {
-            return false;
-          }
-          return this.layerOverlaps(other, layer, displaySize);
-        })
-        .map((other) => other.id);
-
-      layer.addEagerProperty(
-        DEFAULT_PROPERTY_TREE_NODE_FACTORY.makeCalculatedProperty(
-          layer.id,
-          'coveredBy',
-          coveredBy,
-        ),
-      );
-
-      this.isOpaque(layer)
-        ? opaqueLayers.push(layer)
-        : transparentLayers.push(layer);
     }
   }
 
@@ -289,6 +298,11 @@ export class VisibilityPropertiesComputation implements Computation {
       !layer.getEagerPropertyByName('excludesCompositionState')?.getValue()
     ) {
       reasons.push('null visible region');
+    }
+
+    const occludedByNode = layer.getEagerPropertyByName('occludedBy');
+    if (occludedByNode && occludedByNode.getAllChildren().length > 0) {
+      reasons.push('occluded');
     }
 
     if (reasons.length === 0) reasons.push('unknown');

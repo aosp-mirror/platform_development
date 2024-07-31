@@ -14,9 +14,8 @@
  * limitations under the License.
  */
 
-import {UserNotificationsListener} from 'messaging/user_notifications_listener';
-import {UserWarning} from 'messaging/user_warning';
 import {TraceOverridden} from 'messaging/user_warnings';
+import {UserNotifierChecker} from 'test/unit/user_notifier_checker';
 import {UnitTestUtils} from 'test/unit/utils';
 import {TraceFile} from 'trace/trace_file';
 import {TraceFileFilter} from './trace_file_filter';
@@ -30,16 +29,14 @@ describe('TraceFileFilter', () => {
     'test_bugreport.zip',
   ) as unknown as File;
 
-  let warnings: UserWarning[];
-  let notificationListener: UserNotificationsListener;
+  let userNotifierChecker: UserNotifierChecker;
+
+  beforeAll(() => {
+    userNotifierChecker = new UserNotifierChecker();
+  });
 
   beforeEach(() => {
-    warnings = [];
-    notificationListener = {
-      onNotifications(notifications: UserWarning[]) {
-        warnings.push(...notifications);
-      },
-    };
+    userNotifierChecker.reset();
   });
 
   describe('bugreport (detects it is a bugreport)', () => {
@@ -78,15 +75,13 @@ describe('TraceFileFilter', () => {
         'would-be-ignored-if-was-part-of-bugreport/input_method_clients.pb',
       );
 
-      const result = await filter.filter(
-        [...bugreportFiles, plainTraceFile],
-        notificationListener,
-      );
+      const result = await filter.filter([...bugreportFiles, plainTraceFile]);
       expect(result.perfetto).toBeUndefined();
 
       const expectedLegacy = new Set([...pickedBugreportFiles, plainTraceFile]);
       const actualLegacy = new Set(result.legacy);
       expect(actualLegacy).toEqual(expectedLegacy);
+      userNotifierChecker.expectNone();
     });
 
     it('picks perfetto systrace.pftrace', async () => {
@@ -107,10 +102,10 @@ describe('TraceFileFilter', () => {
           bugreportArchive,
         ),
       ];
-      const result = await filter.filter(bugreportFiles, notificationListener);
+      const result = await filter.filter(bugreportFiles);
       expect(result.perfetto).toEqual(perfettoSystemTrace);
       expect(result.legacy).toEqual([]);
-      expect(warnings).toEqual([]);
+      userNotifierChecker.expectNone();
     });
 
     it('ignores perfetto traces other than systrace.pftrace', async () => {
@@ -126,10 +121,10 @@ describe('TraceFileFilter', () => {
           bugreportArchive,
         ),
       ];
-      const result = await filter.filter(bugreportFiles, notificationListener);
+      const result = await filter.filter(bugreportFiles);
       expect(result.perfetto).toBeUndefined();
       expect(result.legacy).toEqual([]);
-      expect(warnings).toEqual([]);
+      userNotifierChecker.expectNone();
     });
 
     it('identifies timezone information from bugreport codename file', async () => {
@@ -142,14 +137,14 @@ describe('TraceFileFilter', () => {
         await makeBugreportCodenameTraceFile(),
         legacyFile,
       ];
-      const result = await filter.filter(bugreportFiles, notificationListener);
+      const result = await filter.filter(bugreportFiles);
       expect(result.legacy).toEqual([legacyFile]);
       expect(result.perfetto).toBeUndefined();
       expect(result.timezoneInfo).toEqual({
         timezone: 'Asia/Kolkata',
         locale: 'en-US',
       });
-      expect(warnings).toEqual([]);
+      userNotifierChecker.expectNone();
     });
 
     it('unzips trace files within bugreport zip', async () => {
@@ -161,13 +156,13 @@ describe('TraceFileFilter', () => {
         zippedTraceFile,
       ];
 
-      const result = await filter.filter(bugreportFiles, notificationListener);
+      const result = await filter.filter(bugreportFiles);
       expect(result.perfetto).toBeUndefined();
       expect(result.legacy.map((file) => file.file.name)).toEqual([
         'Surface Flinger/SurfaceFlinger.pb',
         'Window Manager/WindowManager.pb',
       ]);
-      expect(warnings).toEqual([]);
+      userNotifierChecker.expectNone();
     });
   });
 
@@ -206,13 +201,10 @@ describe('TraceFileFilter', () => {
       const small = makeTraceFile('small.perfetto-trace', undefined, 10);
       const medium = makeTraceFile('medium.perfetto-trace', undefined, 20);
       const large = makeTraceFile('large.perfetto-trace', undefined, 30);
-      const result = await filter.filter(
-        [small, large, medium],
-        notificationListener,
-      );
+      const result = await filter.filter([small, large, medium]);
       expect(result.perfetto).toEqual(large);
       expect(result.legacy).toEqual([]);
-      expect(warnings).toEqual([
+      userNotifierChecker.expectAdded([
         new TraceOverridden(small.getDescriptor()),
         new TraceOverridden(medium.getDescriptor()),
       ]);
@@ -221,10 +213,10 @@ describe('TraceFileFilter', () => {
     async function checkPerfettoFilePickedWithoutErrors(
       perfettoFile: TraceFile,
     ) {
-      const result = await filter.filter([perfettoFile], notificationListener);
+      const result = await filter.filter([perfettoFile]);
       expect(result.perfetto).toEqual(perfettoFile);
       expect(result.legacy).toEqual([]);
-      expect(warnings).toEqual([]);
+      userNotifierChecker.expectNone();
     }
   });
 

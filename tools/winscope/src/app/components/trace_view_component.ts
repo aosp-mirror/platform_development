@@ -55,6 +55,8 @@ interface Tab {
                   mat-tab-link
                   [active]="isCurrentActiveTab(tab)"
                   [class.active]="isCurrentActiveTab(tab)"
+                  [matTooltip]="getTabTooltip(tab.view)"
+                  [matTooltipShowDelay]="300"
                   (click)="onTabClick(tab)"
                   (focus)="$event.target.blur()"
                   [class.last]="isLast"
@@ -65,7 +67,7 @@ interface Tab {
                     {{ TRACE_INFO[tab.view.traces[0].type].icon }}
                 </mat-icon>
                 <span>
-                  {{ tab.view.title }}
+                  {{ getTitle(tab.view) }}
                 </span>
               </a>
           </nav>
@@ -83,6 +85,7 @@ interface Tab {
         display: flex;
         flex-direction: row;
         justify-content: space-between;
+        overflow-x: auto;
       }
 
       .tabs-navigation-bar {
@@ -156,6 +159,15 @@ export class TraceViewComponent
 
   isCurrentActiveTab(tab: Tab) {
     return tab === this.currentActiveTab;
+  }
+
+  getTabTooltip(view: View): string {
+    return view.traces.flatMap((trace) => trace.getDescriptors()).join(', ');
+  }
+
+  getTitle(view: View): string {
+    const isDump = view.traces.length === 1 && view.traces[0].isDump();
+    return view.title + (isDump ? ' Dump' : '');
   }
 
   private renderViewsTab(firstToRender: boolean) {

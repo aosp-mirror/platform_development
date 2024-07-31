@@ -27,6 +27,7 @@ import {
 } from 'messaging/user_warnings';
 import {TimestampConverterUtils} from 'test/unit/timestamp_converter_utils';
 import {TracesUtils} from 'test/unit/traces_utils';
+import {UserNotifierChecker} from 'test/unit/user_notifier_checker';
 import {UnitTestUtils} from 'test/unit/utils';
 import {TraceType} from 'trace/trace_type';
 import {FilesSource} from './files_source';
@@ -35,9 +36,13 @@ import {TracePipeline} from './trace_pipeline';
 describe('TracePipeline', () => {
   let validSfFile: File;
   let validWmFile: File;
-  let warnings: UserWarning[];
   let progressListener: ProgressListenerStub;
   let tracePipeline: TracePipeline;
+  let userNotifierChecker: UserNotifierChecker;
+
+  beforeAll(() => {
+    userNotifierChecker = new UserNotifierChecker();
+  });
 
   beforeEach(async () => {
     jasmine.addCustomEqualityTester(UnitTestUtils.timestampEqualityTester);
@@ -48,11 +53,10 @@ describe('TracePipeline', () => {
       'traces/elapsed_and_real_timestamp/WindowManager.pb',
     );
 
-    warnings = [];
-
     progressListener = new ProgressListenerStub();
     spyOn(progressListener, 'onProgressUpdate');
     spyOn(progressListener, 'onOperationFinished');
+    userNotifierChecker.reset();
 
     tracePipeline = new TracePipeline();
   });
@@ -252,6 +256,7 @@ describe('TracePipeline', () => {
         'Perfetto trace has no Transactions entries',
         'Perfetto trace has no Transitions entries',
         'Perfetto trace has no ViewCapture windows',
+        'Perfetto trace has no Window Manager entries',
         'Perfetto trace has no Motion Events entries',
         'Perfetto trace has no Key Events entries',
       ]),
@@ -413,17 +418,7 @@ describe('TracePipeline', () => {
     files: File[],
     source: FilesSource = FilesSource.TEST,
   ) {
-    const notificationListener = {
-      onNotifications(notifications: UserWarning[]) {
-        warnings.push(...notifications);
-      },
-    };
-    await tracePipeline.loadFiles(
-      files,
-      source,
-      notificationListener,
-      progressListener,
-    );
+    await tracePipeline.loadFiles(files, source, progressListener);
     expect(progressListener.onOperationFinished).toHaveBeenCalled();
     await tracePipeline.buildTraces();
   }
@@ -432,7 +427,7 @@ describe('TracePipeline', () => {
     numberOfTraces: number,
     expectedWarnings: UserWarning[],
   ) {
-    expect(warnings).toEqual(expectedWarnings);
+    userNotifierChecker.expectAdded(expectedWarnings);
     expect(tracePipeline.getTraces().getSize()).toEqual(numberOfTraces);
   }
 });
