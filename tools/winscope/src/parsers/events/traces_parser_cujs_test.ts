@@ -18,6 +18,7 @@ import {assertDefined} from 'common/assert_utils';
 import {PropertyTreeBuilder} from 'test/unit/property_tree_builder';
 import {TimestampConverterUtils} from 'test/unit/timestamp_converter_utils';
 import {UnitTestUtils} from 'test/unit/utils';
+import {CoarseVersion} from 'trace/coarse_version';
 import {Parser} from 'trace/parser';
 import {TraceType} from 'trace/trace_type';
 import {
@@ -38,6 +39,14 @@ describe('TracesParserCujs', () => {
 
   it('has expected trace type', () => {
     expect(parser.getTraceType()).toEqual(TraceType.CUJS);
+  });
+
+  it('has expected coarse version', () => {
+    expect(parser.getCoarseVersion()).toEqual(CoarseVersion.LEGACY);
+  });
+
+  it('has expected descriptors', () => {
+    expect(parser.getDescriptors()).toEqual(['eventlog.winscope']);
   });
 
   it('provides timestamps', () => {
