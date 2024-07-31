@@ -21,6 +21,7 @@ import {TreeNode} from './tree_node';
 
 export class HierarchyTreeNode extends TreeNode {
   private rects: TraceRect[] | undefined;
+  private secondaryRects: TraceRect[] | undefined;
   private zParent: HierarchyTreeNode | undefined;
   private parent: this | undefined;
 
@@ -50,6 +51,14 @@ export class HierarchyTreeNode extends TreeNode {
 
   getRects(): TraceRect[] | undefined {
     return this.rects;
+  }
+
+  setSecondaryRects(value: TraceRect[]) {
+    this.secondaryRects = value;
+  }
+
+  getSecondaryRects(): TraceRect[] | undefined {
+    return this.secondaryRects;
   }
 
   setZParent(parent: HierarchyTreeNode): void {

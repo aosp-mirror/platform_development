@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 import {ParserTimestampConverter} from 'common/timestamp_converter';
+import {UserNotifier} from 'common/user_notifier';
 import {ProgressListener} from 'messaging/progress_listener';
-import {UserNotificationsListener} from 'messaging/user_notifications_listener';
 import {UnsupportedFileFormat} from 'messaging/user_warnings';
 import {ParserEventLog} from 'parsers/events/parser_eventlog';
 import {FileAndParser} from 'parsers/file_and_parser';
@@ -31,8 +31,8 @@ import {ParserTransactions} from 'parsers/transactions/legacy/parser_transaction
 import {ParserTransitionsShell} from 'parsers/transitions/legacy/parser_transitions_shell';
 import {ParserTransitionsWm} from 'parsers/transitions/legacy/parser_transitions_wm';
 import {ParserViewCapture} from 'parsers/view_capture/legacy/parser_view_capture';
-import {ParserWindowManager} from 'parsers/window_manager/parser_window_manager';
-import {ParserWindowManagerDump} from 'parsers/window_manager/parser_window_manager_dump';
+import {ParserWindowManager} from 'parsers/window_manager/legacy/parser_window_manager';
+import {ParserWindowManagerDump} from 'parsers/window_manager/legacy/parser_window_manager_dump';
 import {Parser} from 'trace/parser';
 import {TraceFile} from 'trace/trace_file';
 
@@ -59,7 +59,6 @@ export class ParserFactory {
     traceFiles: TraceFile[],
     timestampConverter: ParserTimestampConverter,
     progressListener?: ProgressListener,
-    notificationListener?: UserNotificationsListener,
   ): Promise<FileAndParser[]> {
     const parsers = new Array<{file: TraceFile; parser: Parser<object>}>();
 
@@ -91,9 +90,7 @@ export class ParserFactory {
       }
 
       if (!hasFoundParser) {
-        notificationListener?.onNotifications([
-          new UnsupportedFileFormat(traceFile.getDescriptor()),
-        ]);
+        UserNotifier.add(new UnsupportedFileFormat(traceFile.getDescriptor()));
       }
     }
     return parsers;

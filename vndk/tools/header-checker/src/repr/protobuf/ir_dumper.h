@@ -17,7 +17,6 @@
 
 #include "repr/ir_dumper.h"
 #include "repr/protobuf/abi_dump.h"
-#include "repr/protobuf/converter.h"
 #include "repr/protobuf/ir_dumper.h"
 
 
@@ -25,7 +24,7 @@ namespace header_checker {
 namespace repr {
 
 
-class ProtobufIRDumper : public IRDumper, public IRToProtobufConverter {
+class ProtobufIRDumper : public IRDumper {
  private:
   // Types
   bool AddRecordTypeIR(const RecordTypeIR *);

@@ -35,7 +35,7 @@ import {UiTreeUtils} from 'viewers/common/ui_tree_utils';
 import {Presenter} from 'viewers/viewer_view_capture/presenter';
 import {UiData} from 'viewers/viewer_view_capture/ui_data';
 
-class PresenterViewCaptureTest extends AbstractHierarchyViewerPresenterTest {
+class PresenterViewCaptureTest extends AbstractHierarchyViewerPresenterTest<UiData> {
   private traces: Traces | undefined;
   private positionUpdate: TracePositionUpdate | undefined;
   private secondPositionUpdate: TracePositionUpdate | undefined;
@@ -45,6 +45,7 @@ class PresenterViewCaptureTest extends AbstractHierarchyViewerPresenterTest {
   override readonly shouldExecuteFlatTreeTest = false;
   override readonly shouldExecuteRectTests = true;
   override readonly shouldExecuteShowDiffTests = true;
+  override readonly shouldExecuteDumpTests = false;
   override readonly shouldExecuteSimplifyNamesTest = true;
 
   override readonly numberOfDefaultProperties = 3;
@@ -103,7 +104,7 @@ class PresenterViewCaptureTest extends AbstractHierarchyViewerPresenterTest {
   }
 
   override createPresenterWithEmptyTrace(
-    callback: NotifyHierarchyViewCallbackType,
+    callback: NotifyHierarchyViewCallbackType<UiData>,
   ): Presenter {
     const trace = new TraceBuilder<HierarchyTreeNode>()
       .setType(TraceType.VIEW_CAPTURE)
@@ -119,7 +120,7 @@ class PresenterViewCaptureTest extends AbstractHierarchyViewerPresenterTest {
   }
 
   override createPresenter(
-    callback: NotifyHierarchyViewCallbackType,
+    callback: NotifyHierarchyViewCallbackType<UiData>,
   ): Presenter {
     return new Presenter(
       assertDefined(this.traces),

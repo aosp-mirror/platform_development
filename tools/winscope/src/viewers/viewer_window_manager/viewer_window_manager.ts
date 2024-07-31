@@ -17,9 +17,9 @@
 import {WinscopeEvent} from 'messaging/winscope_event';
 import {Trace} from 'trace/trace';
 import {Traces} from 'trace/traces';
+import {TRACE_INFO} from 'trace/trace_info';
 import {TraceType} from 'trace/trace_type';
 import {HierarchyTreeNode} from 'trace/tree_node/hierarchy_tree_node';
-import {NotifyHierarchyViewCallbackType} from 'viewers/common/abstract_hierarchy_viewer_presenter';
 import {View, Viewer, ViewType} from 'viewers/viewer';
 import {Presenter} from './presenter';
 import {UiData} from './ui_data';
@@ -43,19 +43,14 @@ export class ViewerWindowManager implements Viewer {
     const notifyViewCallback = (uiData: UiData) => {
       (this.htmlElement as any).inputData = uiData;
     };
-    this.presenter = new Presenter(
-      trace,
-      traces,
-      storage,
-      notifyViewCallback as NotifyHierarchyViewCallbackType,
-    );
+    this.presenter = new Presenter(trace, traces, storage, notifyViewCallback);
     this.presenter.addEventListeners(this.htmlElement);
 
     this.view = new View(
       ViewType.TAB,
       this.getTraces(),
       this.htmlElement,
-      'Window Manager',
+      TRACE_INFO[TraceType.WINDOW_MANAGER].name,
     );
   }
 

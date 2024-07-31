@@ -1,4 +1,4 @@
-<mat-toolbar color="primary">
+<mat-toolbar color="accent">
   <span>Motion Test Watcher</span>
   <span class="header-spacer"></span>
 
@@ -9,9 +9,10 @@
     <mat-icon>delete</mat-icon>
   </button>
 </mat-toolbar>
+<mat-progress-bar
+  [class.show]="showProgress"
+  mode="indeterminate"
+></mat-progress-bar>
 <div class="content mat-app-background">
-  @if (showProgress) {
-    <mat-progress-bar mode="indeterminate"></mat-progress-bar>
-  }
   <app-test-overview [goldens]="goldens"></app-test-overview>
 </div>

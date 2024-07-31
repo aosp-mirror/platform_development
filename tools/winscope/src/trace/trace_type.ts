@@ -42,6 +42,7 @@ export enum TraceType {
   VIEW_CAPTURE,
   INPUT_MOTION_EVENT,
   INPUT_KEY_EVENT,
+  INPUT_EVENT_MERGED,
 }
 
 export type ImeTraceType =
@@ -73,10 +74,12 @@ export interface TraceEntryTypeMap {
   [TraceType.VIEW_CAPTURE]: HierarchyTreeNode;
   [TraceType.INPUT_MOTION_EVENT]: PropertyTreeNode;
   [TraceType.INPUT_KEY_EVENT]: PropertyTreeNode;
+  [TraceType.INPUT_EVENT_MERGED]: PropertyTreeNode;
 }
 
 export class TraceTypeUtils {
   private static UI_PIPELINE_ORDER = [
+    TraceType.INPUT_EVENT_MERGED,
     TraceType.INPUT_METHOD_CLIENTS,
     TraceType.INPUT_METHOD_SERVICE,
     TraceType.INPUT_METHOD_MANAGER_SERVICE,
@@ -91,6 +94,7 @@ export class TraceTypeUtils {
     TraceType.SCREEN_RECORDING,
     TraceType.SURFACE_FLINGER,
     TraceType.WINDOW_MANAGER,
+    TraceType.INPUT_EVENT_MERGED,
     TraceType.INPUT_METHOD_CLIENTS,
     TraceType.INPUT_METHOD_MANAGER_SERVICE,
     TraceType.INPUT_METHOD_SERVICE,
@@ -99,6 +103,7 @@ export class TraceTypeUtils {
     TraceType.PROTO_LOG,
     TraceType.VIEW_CAPTURE,
     TraceType.TRANSITION,
+    TraceType.CUJS,
   ];
 
   static isTraceTypeWithViewer(t: TraceType): boolean {
@@ -131,15 +136,6 @@ export class TraceTypeUtils {
 
   static canVisualizeTrace(t: TraceType): boolean {
     return t !== TraceType.WM_TRANSITION && t !== TraceType.SHELL_TRANSITION;
-  }
-
-  static traceUploadInfo(t: TraceType): string | undefined {
-    switch (t) {
-      case TraceType.CUJS:
-        return 'Used to show CUJ boundaries in timeline';
-      default:
-        return undefined;
-    }
   }
 
   static getReasonForNoTraceVisualization(t: TraceType): string {

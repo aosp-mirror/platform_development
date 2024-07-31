@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import argparse
+import json
 import os
 import time
 
@@ -90,8 +91,35 @@ def find_and_copy_lib_lsdumps(get_ref_dump_dir_stem, arch, libs,
     return num_created
 
 
+# TODO(b/355612961): Add a config.json file to each dump directory to ignore
+# errors. Once we have solution, this must be removed.
+def add_workaround_config_json(get_ref_dump_dir_stem, arch):
+    ref_dump_dir_stem = get_ref_dump_dir_stem(tag_to_dir_name('LLNDK'),
+                                              arch.get_arch_str())
+    reference_dump_dir = os.path.join(ref_dump_dir_stem, 'source-based')
+    config_path = os.path.join(reference_dump_dir, 'config.json')
+    if os.path.exists(config_path):
+        return
+
+    config_json = {
+        'libc': [
+            {
+                'target_version': 'current',
+                'ignore_linker_set_keys': [
+                    '_ZTI7siginfo'
+                ]
+            }
+        ]
+    }
+    os.makedirs(reference_dump_dir, exist_ok=True)
+    with open(config_path, 'w') as config_file:
+        json.dump(config_json, config_file, indent=2)
+    print(f'Created {config_path}')
+
+
 def create_source_abi_reference_dumps(args, get_ref_dump_dir_stem,
-                                      lsdump_paths, arches):
+                                      lsdump_paths, arches,
+                                      need_workaround_config_json):
     num_libs_copied = 0
     for arch in arches:
         assert arch.primary_arch != ''
@@ -100,6 +128,8 @@ def create_source_abi_reference_dumps(args, get_ref_dump_dir_stem,
 
         num_libs_copied += find_and_copy_lib_lsdumps(
             get_ref_dump_dir_stem, arch, args.libs, lsdump_paths)
+        if need_workaround_config_json:
+            add_workaround_config_json(get_ref_dump_dir_stem, arch)
     return num_libs_copied
 
 
@@ -160,8 +190,12 @@ def create_source_abi_reference_dumps_for_all_products(args):
             lsdump_paths = read_lsdump_paths(build_target, arches,
                                              lsdump_filter, build=False)
 
+            need_workaround = (int(release_board_api_level) >= 202504
+                               and 'LLNDK' in args.include_tags)
+
             num_processed += create_source_abi_reference_dumps(
-                args, get_ref_dump_dir_stem, lsdump_paths, arches)
+                args, get_ref_dump_dir_stem, lsdump_paths, arches,
+                need_workaround)
         except KeyError as e:
             if args.libs or not args.ref_dump_dir:
                 raise RuntimeError('Please check the lib name, --lib-variant '

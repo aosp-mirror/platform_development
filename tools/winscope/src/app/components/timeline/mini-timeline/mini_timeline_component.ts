@@ -317,7 +317,9 @@ export class MiniTimelineComponent {
 
   resetZoom() {
     Analytics.Navigation.logZoom('reset', 'timeline');
-    this.onZoomChanged(assertDefined(this.timelineData).getFullTimeRange());
+    this.onZoomChanged(
+      this.initialZoom ?? assertDefined(this.timelineData).getFullTimeRange(),
+    );
   }
 
   onZoomInButtonClick() {
