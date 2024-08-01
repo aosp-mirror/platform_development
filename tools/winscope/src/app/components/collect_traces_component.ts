@@ -221,7 +221,7 @@ import {
                     title="Dump targets"
                     [initialTraceConfig]="dumpConfig"
                     [storage]="storage"
-                    traceConfigStoreKey="DumpSettings"
+                    [traceConfigStoreKey]="storeKeyDumpConfig"
                     (traceConfigChange)="onDumpConfigChange($event)"></trace-config>
                   <div class="dump-btn" *ngIf="!refreshDumps">
                     <button color="primary" mat-raised-button (click)="dumpState()">
@@ -419,6 +419,7 @@ export class CollectTracesComponent
 
   private readonly storeKeyImeWarning = 'doNotShowImeWarningDialog';
   private readonly storeKeyLastDevice = 'adb.lastDevice';
+  private readonly storeKeyDumpConfig = 'DumpSettings';
 
   private selectedDevice: AdbDevice | undefined;
   private emitEvent: EmitEvent = FunctionUtils.DO_NOTHING_ASYNC;
@@ -645,18 +646,22 @@ export class CollectTracesComponent
     const device = assertDefined(this.selectedDevice);
     await connection.dumpState(device, requestedDumpsWithConfig);
     this.refreshDumps = false;
-    this.filesCollected.emit(
-      await connection.fetchLastTracingSessionData(device),
-    );
+    if (connection.getState() === ConnectionState.DUMPING_STATE) {
+      this.filesCollected.emit(
+        await connection.fetchLastTracingSessionData(device),
+      );
+    }
   }
 
   async endTrace() {
     const connection = assertDefined(this.adbConnection);
     const device = assertDefined(this.selectedDevice);
     await connection.endTrace(device);
-    this.filesCollected.emit(
-      await connection.fetchLastTracingSessionData(device),
-    );
+    if (connection.getState() === ConnectionState.ENDING_TRACE) {
+      this.filesCollected.emit(
+        await connection.fetchLastTracingSessionData(device),
+      );
+    }
   }
 
   isAdbProxy(): boolean {
@@ -769,7 +774,13 @@ export class CollectTracesComponent
   }
 
   private getRequestedDumps(): string[] {
-    const dumpConfig = assertDefined(this.dumpConfig);
+    let dumpConfig = assertDefined(this.dumpConfig);
+    if (this.refreshDumps && this.storage) {
+      const storedConfig = this.storage.getItem(this.storeKeyDumpConfig);
+      if (storedConfig) {
+        dumpConfig = JSON.parse(storedConfig);
+      }
+    }
     return Object.keys(dumpConfig).filter((dumpKey: string) => {
       return dumpConfig[dumpKey].enabled;
     });

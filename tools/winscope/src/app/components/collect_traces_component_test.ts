@@ -14,7 +14,12 @@
  * limitations under the License.
  */
 import {CommonModule} from '@angular/common';
-import {Component, NO_ERRORS_SCHEMA, ViewChild} from '@angular/core';
+import {
+  Component,
+  NO_ERRORS_SCHEMA,
+  QueryList,
+  ViewChildren,
+} from '@angular/core';
 import {ComponentFixture, TestBed} from '@angular/core/testing';
 import {FormsModule} from '@angular/forms';
 import {MatButtonModule} from '@angular/material/button';
@@ -263,9 +268,10 @@ describe('CollectTracesComponent', () => {
     goToConfigSection();
     await fixture.whenStable();
     fixture.detectChanges();
+    const collectTracesComponent = getCollectTracesComponent();
 
     expect(
-      component.collectTracesComponent?.traceConfig['window_trace']?.enabled,
+      collectTracesComponent.traceConfig['window_trace']?.enabled,
     ).toBeTrue();
     const traceSection = assertDefined(
       htmlElement.querySelector('.trace-section'),
@@ -276,11 +282,11 @@ describe('CollectTracesComponent', () => {
     traceCheckboxInput.click();
     fixture.detectChanges();
     expect(
-      component.collectTracesComponent?.traceConfig['window_trace']?.enabled,
+      collectTracesComponent.traceConfig['window_trace']?.enabled,
     ).toBeFalse();
 
     expect(
-      component.collectTracesComponent?.dumpConfig['window_dump']?.enabled,
+      collectTracesComponent.dumpConfig['window_dump']?.enabled,
     ).toBeTrue();
     const dumpSection = assertDefined(
       htmlElement.querySelector('.dump-section'),
@@ -291,7 +297,7 @@ describe('CollectTracesComponent', () => {
     dumpCheckboxInput.click();
     fixture.detectChanges();
     expect(
-      component.collectTracesComponent?.dumpConfig['window_dump']?.enabled,
+      collectTracesComponent.dumpConfig['window_dump']?.enabled,
     ).toBeFalse();
   });
 
@@ -305,15 +311,16 @@ describe('CollectTracesComponent', () => {
 
   it('emits event if no trace targets selected', async () => {
     goToConfigSection();
+    const collectTracesComponent = getCollectTracesComponent();
 
     let lastEvent: WinscopeEvent | undefined;
-    getCollectTracesComponent().setEmitEvent(async (event: WinscopeEvent) => {
+    collectTracesComponent.setEmitEvent(async (event: WinscopeEvent) => {
       lastEvent = event;
     });
 
-    Object.values(
-      assertDefined(component.collectTracesComponent?.traceConfig),
-    ).forEach((c) => (c.enabled = false));
+    Object.values(collectTracesComponent.traceConfig).forEach(
+      (c) => (c.enabled = false),
+    );
     const spy = spyOn(getConnection(), 'startTrace');
     await clickStartTraceButton();
 
@@ -332,19 +339,33 @@ describe('CollectTracesComponent', () => {
 
   it('emits event if no dump targets selected', async () => {
     goToConfigSection();
+    const collectTracesComponent = getCollectTracesComponent();
 
     let lastEvent: WinscopeEvent | undefined;
-    getCollectTracesComponent().setEmitEvent(async (event: WinscopeEvent) => {
+    collectTracesComponent.setEmitEvent(async (event: WinscopeEvent) => {
       lastEvent = event;
     });
 
-    Object.values(
-      assertDefined(component.collectTracesComponent?.dumpConfig),
-    ).forEach((c) => (c.enabled = false));
+    Object.values(collectTracesComponent.dumpConfig).forEach(
+      (c) => (c.enabled = false),
+    );
     const filesSpy = spyOn(getCollectTracesComponent().filesCollected, 'emit');
     await clickDumpStateButton();
 
     expect(lastEvent).toEqual(new NoTraceTargetsSelected());
+    expect(filesSpy).not.toHaveBeenCalled();
+  });
+
+  it('does not collect files if dumping fails', async () => {
+    goToConfigSection();
+
+    const filesSpy = spyOn(getCollectTracesComponent().filesCollected, 'emit');
+    const connection = getConnection();
+    spyOn(connection, 'dumpState').and.callFake(async () => {
+      connection.state = ConnectionState.ERROR;
+    });
+    await clickDumpStateButton();
+
     expect(filesSpy).not.toHaveBeenCalled();
   });
 
@@ -582,26 +603,62 @@ describe('CollectTracesComponent', () => {
   });
 
   it('refreshes dumps', async () => {
+    goToConfigSection();
     const collectTracesComponent = getCollectTracesComponent();
-    const spy = spyOn(collectTracesComponent, 'dumpState');
+    const spy = spyOn(getConnection(), 'dumpState');
     collectTracesComponent.refreshDumps = true;
     fixture.detectChanges();
 
     getConnection().setState(ConnectionState.IDLE);
     fixture.detectChanges();
     await fixture.whenStable();
-    expect(spy).toHaveBeenCalled();
+    expect(spy).toHaveBeenCalledOnceWith(mockDevice, [
+      {name: 'window_dump', config: []},
+      {name: 'layers_dump', config: []},
+      {name: 'screenshot', config: []},
+      {name: 'perfetto_dump', config: []},
+    ]);
+  });
+
+  it('refreshes dumps using stored dump config', async () => {
+    goToConfigSection();
+    await fixture.whenStable();
+    fixture.detectChanges();
+    const collectTracesComponent = getCollectTracesComponent();
+    const dumpCheckboxInput = assertDefined(
+      htmlElement.querySelector<HTMLInputElement>(
+        '.dump-section .trace-checkbox input',
+      ),
+    );
+    dumpCheckboxInput.click();
+    fixture.detectChanges();
+    expect(
+      collectTracesComponent.dumpConfig['window_dump']?.enabled,
+    ).toBeFalse();
+
+    component.showSecondComponent = true;
+    fixture.detectChanges();
+    const newComponent = getCollectTracesComponent(1);
+    const spy = spyOn(getConnection(), 'dumpState');
+    newComponent.refreshDumps = true;
+    fixture.detectChanges();
+
+    getConnection().setState(ConnectionState.IDLE);
+    fixture.detectChanges();
+    await fixture.whenStable();
+    expect(spy).toHaveBeenCalledOnceWith(mockDevice, [
+      {name: 'layers_dump', config: []},
+      {name: 'screenshot', config: []},
+      {name: 'perfetto_dump', config: []},
+    ]);
   });
 
   it('update available traces from connection', () => {
-    expect(
-      component.collectTracesComponent?.traceConfig['wayland_trace']?.available,
-    ).toBeFalse();
+    const config = getCollectTracesComponent().traceConfig;
+    expect(config['wayland_trace']?.available).toBeFalse();
     getConnection().availableTracesChangeCallback(['wayland_trace']);
     fixture.detectChanges();
-    expect(
-      component.collectTracesComponent?.traceConfig['wayland_trace']?.available,
-    ).toBeTrue();
+    expect(config['wayland_trace']?.available).toBeTrue();
   });
 
   describe('ProxyConnection', () => {
@@ -664,7 +721,7 @@ describe('CollectTracesComponent', () => {
   }
 
   function updateTraceConfigToInvalidIMEFrameMapping() {
-    const config = assertDefined(component.collectTracesComponent?.traceConfig);
+    const config = assertDefined(getCollectTracesComponent().traceConfig);
     config['ime'].enabled = true;
     config['layers_trace'].enabled = false;
   }
@@ -699,8 +756,8 @@ describe('CollectTracesComponent', () => {
     return dialog;
   }
 
-  function getCollectTracesComponent(): CollectTracesComponent {
-    return assertDefined(component.collectTracesComponent);
+  function getCollectTracesComponent(index = 0): CollectTracesComponent {
+    return assertDefined(component.collectTracesComponents?.get(index));
   }
 
   function getConnection(): MockAdbConnection {
@@ -715,13 +772,19 @@ describe('CollectTracesComponent', () => {
       <collect-traces
         [adbConnection]="adbConnection"
         [storage]="storage"></collect-traces>
+
+      <collect-traces
+        *ngIf="showSecondComponent"
+        [adbConnection]="adbConnection"
+        [storage]="storage"></collect-traces>
     `,
   })
   class TestHostComponent {
     adbConnection: AdbConnection = new MockAdbConnection();
     storage = new InMemoryStorage();
+    showSecondComponent = false;
 
-    @ViewChild(CollectTracesComponent)
-    collectTracesComponent: CollectTracesComponent | undefined;
+    @ViewChildren(CollectTracesComponent)
+    collectTracesComponents: QueryList<CollectTracesComponent> | undefined;
   }
 });

@@ -1193,8 +1193,8 @@ class DumpEndpoint(DeviceRequestEndpoint):
     def process_with_device(self, server, path, device_id):
         try:
             requested_types = self.get_request(server)
-            requested_traces = [DUMP_TARGETS[t] for t in requested_types]
-            requested_traces = self.move_perfetto_target_to_end_of_list(requested_traces)
+            requested_dumps = [DUMP_TARGETS[t] for t in requested_types]
+            requested_dumps = self.move_perfetto_target_to_end_of_list(requested_dumps)
         except KeyError as err:
             raise BadRequest("Unsupported trace target\n" + str(err))
         if device_id in TRACE_THREADS:
@@ -1206,7 +1206,10 @@ class DumpEndpoint(DeviceRequestEndpoint):
 
         clear_last_tracing_session(device_id)
 
-        dump_commands = '\n'.join(t.dump_command for t in requested_traces)
+        log.debug("Dump requested for {} with targets {}".format(
+            device_id, ','.join([t for t in requested_types])))
+
+        dump_commands = '\n'.join(t.dump_command for t in requested_dumps)
         command = f"""
 {PERFETTO_UTILS}
 
