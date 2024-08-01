@@ -19,16 +19,13 @@ import {OnProgressUpdateType} from 'common/function_utils';
 import {HttpRequestStatus, HttpResponse} from 'common/http_request';
 import {AdbDevice} from './adb_device';
 import {ConnectionState} from './connection_state';
-import {TraceConfigurationMap} from './trace_collection_utils';
 import {TraceRequest} from './trace_request';
 
 export abstract class AdbConnection {
   abstract initialize(
     detectStateChangeInUi: () => Promise<void>,
     progressCallback: OnProgressUpdateType,
-    availableTracesChangeCallback: (
-      availableTracesConfig: TraceConfigurationMap,
-    ) => void,
+    availableTracesChangeCallback: (traces: string[]) => void,
   ): Promise<void>;
   abstract restartConnection(): Promise<void>;
   abstract setSecurityToken(token: string): void;

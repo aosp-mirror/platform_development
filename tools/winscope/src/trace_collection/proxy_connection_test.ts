@@ -300,6 +300,42 @@ describe('ProxyConnection', () => {
     });
   });
 
+  describe('wayland trace availability', () => {
+    beforeEach(() => {
+      availableTracesChangeCallback.calls.reset();
+    });
+
+    afterEach(() => {
+      localStorage.clear();
+    });
+
+    it('updates availability of wayland trace if available', async () => {
+      const successfulResponse: HttpResponse = {
+        status: HttpRequestStatus.SUCCESS,
+        type: '',
+        text: 'true',
+        body: undefined,
+        getHeader: getVersionHeader,
+      };
+      await setUpTestEnvironment(successfulResponse);
+      expect(availableTracesChangeCallback).toHaveBeenCalledOnceWith([
+        'wayland_trace',
+      ]);
+    });
+
+    it('does not update availability of traces if call fails', async () => {
+      const unsuccessfulResponse: HttpResponse = {
+        status: HttpRequestStatus.SUCCESS,
+        type: '',
+        text: 'false',
+        body: undefined,
+        getHeader: getVersionHeader,
+      };
+      await setUpTestEnvironment(unsuccessfulResponse);
+      expect(availableTracesChangeCallback).not.toHaveBeenCalled();
+    });
+  });
+
   describe('finding devices', () => {
     afterEach(() => {
       localStorage.clear();
@@ -322,7 +358,7 @@ describe('ProxyConnection', () => {
     });
 
     it('fetches devices', async () => {
-      const noDevicesResponse: HttpResponse = {
+      const devicesResponse: HttpResponse = {
         status: HttpRequestStatus.SUCCESS,
         type: 'text',
         text: JSON.stringify({
@@ -331,7 +367,7 @@ describe('ProxyConnection', () => {
         body: undefined,
         getHeader: getVersionHeader,
       };
-      await setUpTestEnvironment(noDevicesResponse);
+      await setUpTestEnvironment(devicesResponse);
       checkGetDevicesRequest();
       expect(connection.getState()).toEqual(ConnectionState.IDLE);
       expect(connection.getDevices()).toEqual([mockDevice]);
@@ -427,7 +463,7 @@ describe('ProxyConnection', () => {
   }
 
   function checkGetDevicesRequest(header = '') {
-    expect(getSpy).toHaveBeenCalledOnceWith(
+    expect(getSpy).toHaveBeenCalledWith(
       ProxyConnection.WINSCOPE_PROXY_URL + ProxyEndpoint.DEVICES,
       [['Winscope-Token', header]],
       undefined,
