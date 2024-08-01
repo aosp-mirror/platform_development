@@ -107,6 +107,19 @@ impl PseudoCrate {
         }
         Ok(())
     }
+    pub fn remove(&self, krate: &impl NamedAndVersioned) -> Result<()> {
+        let status = Command::new("cargo")
+            .args(["remove", krate.name()])
+            .current_dir(self.path.abs())
+            .spawn()
+            .context("Failed to spawn 'cargo remove'")?
+            .wait()
+            .context("Failed to wait on 'cargo remove'")?;
+        if !status.success() {
+            return Err(anyhow!("Failed to run 'cargo remove {}'", krate.name()));
+        }
+        Ok(())
+    }
     pub fn vendor(&self) -> Result<()> {
         let output =
             Command::new("cargo").args(["vendor"]).current_dir(self.path.abs()).output()?;
