@@ -555,7 +555,8 @@ export class TimelineComponent
     this.selectedTraces = this.sortedTraces.filter((trace) => {
       return (
         timelineData.hasTrace(trace) &&
-        !storedDeselectedTraces.includes(trace.type)
+        (!storedDeselectedTraces.includes(trace.type) ||
+          timelineData.getActiveTrace() === trace)
       );
     });
     this.selectedTracesFormControl = new FormControl<Array<Trace<object>>>(
