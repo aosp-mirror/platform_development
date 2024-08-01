@@ -24,7 +24,9 @@ import {
 } from 'common/http_request';
 import {PersistentStore} from 'common/persistent_store';
 import {TimeUtils} from 'common/time_utils';
+import {UserNotifier} from 'common/user_notifier';
 import {Analytics} from 'logging/analytics';
+import {ProxyTracingErrors} from 'messaging/user_warnings';
 import {AdbConnection, OnRequestSuccessCallback} from './adb_connection';
 import {AdbDevice} from './adb_device';
 import {ConnectionState} from './connection_state';
@@ -32,7 +34,7 @@ import {ProxyEndpoint} from './proxy_endpoint';
 import {TraceRequest} from './trace_request';
 
 export class ProxyConnection extends AdbConnection {
-  static readonly VERSION = '2.4.0';
+  static readonly VERSION = '2.4.1';
   static readonly WINSCOPE_PROXY_URL = 'http://localhost:5544';
 
   private readonly store = new PersistentStore();
@@ -204,6 +206,12 @@ export class ProxyConnection extends AdbConnection {
       case ConnectionState.ENDING_TRACE:
         await this.postToProxy(
           `${ProxyEndpoint.END_TRACE}${assertDefined(this.selectedDevice).id}/`,
+          (request: HttpResponse) => {
+            const errors = JSON.parse(request.body);
+            if (Array.isArray(errors) && errors.length > 0) {
+              UserNotifier.add(new ProxyTracingErrors(errors)).notify();
+            }
+          },
         );
         return;
 

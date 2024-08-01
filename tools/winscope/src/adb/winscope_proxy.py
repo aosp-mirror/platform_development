@@ -62,7 +62,7 @@ def create_argument_parser() -> argparse.ArgumentParser:
     return parser
 
 # Keep in sync with ProxyConnection#VERSION in Winscope
-VERSION = '2.4.0'
+VERSION = '2.4.1'
 
 PERFETTO_TRACE_CONFIG_FILE = '/data/misc/perfetto-configs/winscope-proxy-trace.conf'
 PERFETTO_DUMP_CONFIG_FILE = '/data/misc/perfetto-configs/winscope-proxy-dump.conf'
@@ -255,7 +255,7 @@ fi
         f'''
         settings put system show_touches 1 && \
         settings put system pointer_location 1 && \
-        screenrecord --bugreport --bit-rate 8M /data/local/tmp/screen.mp4 >/dev/null 2>&1 & \
+        screenrecord --bugreport --bit-rate 8M /data/local/tmp/screen.mp4 & \
         echo "ScreenRecorder started."
         ''',
         '''settings put system pointer_location 0 && \
@@ -1035,7 +1035,10 @@ class TraceThread(threading.Thread):
                 log.debug("Trace {} finished successfully on {}".format(
                     self.trace_name,
                     self._device_id))
-                self._success = True
+                if self.trace_name == "perfetto_trace":
+                    self._success = True
+                else:
+                    self._success = len(self.err) == 0
                 break
             log.debug("Still waiting for cleanup on {} for {}".format(self._device_id, self.trace_name))
             time.sleep(0.1)
@@ -1155,6 +1158,8 @@ class EndTraceEndpoint(DeviceRequestEndpoint):
         if device_id not in TRACE_THREADS:
             raise BadRequest("No trace in progress for {}".format(device_id))
 
+        errors: list[str] = []
+
         for thread in TRACE_THREADS[device_id]:
             if thread.is_alive():
                 thread.end_trace()
@@ -1174,10 +1179,11 @@ class EndTraceEndpoint(DeviceRequestEndpoint):
                     "Error ending trace {} on the device\n### Output ###\n".format(thread.trace_name) + out.decode(
                         "utf-8")
                 )
+                errors.append("Error ending trace {} on the device: {}".format(thread.trace_name, thread.err))
 
         call_adb(f"shell su root rm {WINSCOPE_STATUS}", device=device_id)
         TRACE_THREADS.pop(device_id)
-        server.respond(HTTPStatus.OK, out, "text/plain")
+        server.respond(HTTPStatus.OK, json.dumps(errors).encode("utf-8"), "text/plain")
 
 
 class StatusEndpoint(DeviceRequestEndpoint):

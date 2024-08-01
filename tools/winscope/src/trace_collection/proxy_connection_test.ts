@@ -20,6 +20,8 @@ import {
   HttpRequestStatus,
   HttpResponse,
 } from 'common/http_request';
+import {ProxyTracingErrors} from 'messaging/user_warnings';
+import {UserNotifierChecker} from 'test/unit/user_notifier_checker';
 import {AdbDevice} from 'trace_collection/adb_device';
 import {ConnectionState} from 'trace_collection/connection_state';
 import {ProxyConnection} from 'trace_collection/proxy_connection';
@@ -52,6 +54,14 @@ describe('ProxyConnection', () => {
     config: [],
   };
   const getVersionHeader = () => ProxyConnection.VERSION;
+  const successfulEndTraceResponse: HttpResponse = {
+    status: HttpRequestStatus.SUCCESS,
+    type: '',
+    text: '[]',
+    body: '[]',
+    getHeader: getVersionHeader,
+  };
+
   let connection: ProxyConnection;
   let getSpy: jasmine.Spy<HttpRequestGetType>;
   let postSpy: jasmine.Spy<HttpRequestPostType>;
@@ -200,7 +210,14 @@ describe('ProxyConnection', () => {
   });
 
   describe('successful responses to tracing process', () => {
+    let userNotifierChecker: UserNotifierChecker;
+
+    beforeAll(() => {
+      userNotifierChecker = new UserNotifierChecker();
+    });
+
     beforeEach(async () => {
+      userNotifierChecker.reset();
       const successfulResponse: HttpResponse = {
         status: HttpRequestStatus.SUCCESS,
         type: '',
@@ -270,19 +287,24 @@ describe('ProxyConnection', () => {
       expect(connection.getState()).toEqual(ConnectionState.TRACING);
     });
 
-    it('posts end trace request to proxy', async () => {
-      const requestObj = [mockTraceRequest];
-      await connection.startTrace(mockDevice, requestObj);
-      resetSpies();
-      await connection.endTrace();
+    it('posts end trace request to proxy and handles response without errors', async () => {
+      await startAndEndTrace(successfulEndTraceResponse);
+      checkTraceEndedSuccessfully();
+      userNotifierChecker.expectNone();
+    });
 
-      expect(postSpy).toHaveBeenCalledOnceWith(
-        ProxyConnection.WINSCOPE_PROXY_URL +
-          ProxyEndpoint.END_TRACE +
-          `${mockDevice.id}/`,
-        [['Winscope-Token', '']],
-        undefined,
-      );
+    it('posts end trace request to proxy and handles response with errors', async () => {
+      await startAndEndTrace({
+        status: HttpRequestStatus.SUCCESS,
+        type: '',
+        text: '["Error tracing device"]',
+        body: '["Error tracing device"]',
+        getHeader: getVersionHeader,
+      });
+      checkTraceEndedSuccessfully();
+      userNotifierChecker.expectNotified([
+        new ProxyTracingErrors(['Error tracing device']),
+      ]);
     });
 
     it('posts dump state request to proxy', async () => {
@@ -298,6 +320,17 @@ describe('ProxyConnection', () => {
       );
       expect(connection.getState()).toEqual(ConnectionState.DUMPING_STATE);
     });
+
+    function checkTraceEndedSuccessfully() {
+      expect(postSpy).toHaveBeenCalledOnceWith(
+        ProxyConnection.WINSCOPE_PROXY_URL +
+          ProxyEndpoint.END_TRACE +
+          `${mockDevice.id}/`,
+        [['Winscope-Token', '']],
+        undefined,
+      );
+      expect(connection.getState()).toEqual(ConnectionState.ENDING_TRACE);
+    }
   });
 
   describe('wayland trace availability', () => {
@@ -434,9 +467,7 @@ describe('ProxyConnection', () => {
 
     it('fetches last tracing session data from ongoing tracing', async () => {
       await setUpTestEnvironment(successfulResponse);
-      const requestObj = [mockTraceRequest];
-      await connection.startTrace(mockDevice, requestObj);
-      await connection.endTrace();
+      await startAndEndTrace(successfulEndTraceResponse);
       resetSpies();
       const files = await connection.fetchLastTracingSessionData(mockDevice);
 
@@ -468,6 +499,13 @@ describe('ProxyConnection', () => {
       [['Winscope-Token', header]],
       undefined,
     );
+  }
+
+  async function startAndEndTrace(endingTraceResponse: HttpResponse) {
+    await connection.startTrace(mockDevice, [mockTraceRequest]);
+    resetSpies();
+    postSpy.and.returnValue(Promise.resolve(endingTraceResponse));
+    await connection.endTrace();
   }
 
   function resetSpies() {
