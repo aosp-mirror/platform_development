@@ -25,8 +25,9 @@ import {TraceRectBuilder} from 'trace/trace_rect_builder';
 import {Computation} from 'trace/tree_node/computation';
 import {HierarchyTreeNode} from 'trace/tree_node/hierarchy_tree_node';
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
+import {Size} from 'viewers/components/rects/types2d';
 
-function getDisplayWidthAndHeight(display: PropertyTreeNode): [number, number] {
+function getDisplaySize(display: PropertyTreeNode): Size {
   const displaySize = assertDefined(display.getChildByName('size'));
   const w = assertDefined(displaySize.getChildByName('w')?.getValue());
   const h = assertDefined(displaySize.getChildByName('h')?.getValue());
@@ -36,7 +37,10 @@ function getDisplayWidthAndHeight(display: PropertyTreeNode): [number, number] {
   const typeFlags = TransformUtils.getTypeFlags(transformType);
   const isRotated =
     typeFlags.includes('ROT_90') || typeFlags.includes('ROT_270');
-  return [isRotated ? h : w, isRotated ? w : h];
+  return {
+    width: isRotated ? h : w,
+    height: isRotated ? w : h,
+  };
 }
 
 // InputConfig constants defined in the platform:
@@ -58,8 +62,8 @@ class RectSfFactory {
       const isEmptyLayerStackRect = displayRect.isEmpty();
 
       if (isEmptyLayerStackRect) {
-        const [w, h] = getDisplayWidthAndHeight(display);
-        displayRect = new Rect(0, 0, w, h);
+        const size = getDisplaySize(display);
+        displayRect = new Rect(0, 0, size.width, size.height);
       }
 
       const layerStack = assertDefined(
@@ -221,14 +225,32 @@ export class RectsComputation implements Computation {
     displays: readonly PropertyTreeNode[],
   ): Rect[] {
     if (displays.length === 0) return [];
-    const [maxX, maxY] = displays.reduce(
-      (sizes, display) => {
-        const [w, h] = getDisplayWidthAndHeight(display);
-        return [Math.max(sizes[0], w), Math.max(sizes[1], h)];
+
+    // foldables expand rects to fill display space before all displays are available
+    // make invalid bounds for each individual display, and for the rect of max dimensions
+
+    const invalidBounds: Rect[] = [];
+
+    const maxSize = displays.reduce(
+      (size, display) => {
+        const displaySize = getDisplaySize(display);
+        invalidBounds.push(
+          ...RectsComputation.makeInvalidBoundsFromSize(displaySize),
+        );
+        return {
+          width: Math.max(size.width, displaySize.width),
+          height: Math.max(size.height, displaySize.height),
+        };
       },
-      [0, 0],
+      {width: 0, height: 0},
     );
-    const [invalidX, invalidY] = [maxX * 10, maxY * 10];
+    invalidBounds.push(...RectsComputation.makeInvalidBoundsFromSize(maxSize));
+
+    return invalidBounds;
+  }
+
+  private static makeInvalidBoundsFromSize(size: Size): Rect[] {
+    const [invalidX, invalidY] = [size.width * 10, size.height * 10];
     const invalidBounds = new Rect(
       -invalidX,
       -invalidY,

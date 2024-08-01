@@ -71,8 +71,8 @@ object NotificationContent {
                 visibilityThreshold = 0.5f,
             )
 
-        overscroll(Notification.Scenes.Collapsed, Orientation.Vertical)
-        overscroll(Notification.Scenes.Expanded, Orientation.Vertical)
+        overscrollDisabled(Notification.Scenes.Collapsed, Orientation.Vertical)
+        overscrollDisabled(Notification.Scenes.Expanded, Orientation.Vertical)
 
         from(Notification.Scenes.Expanded, to = Notification.Scenes.Collapsed) {
             spec = tween(500)

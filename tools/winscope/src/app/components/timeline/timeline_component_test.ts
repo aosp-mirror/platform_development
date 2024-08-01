@@ -762,6 +762,45 @@ describe('TimelineComponent', () => {
     );
   });
 
+  it('does not apply stored trace deselection on active trace', async () => {
+    loadAllTraces();
+    const firstTimeline = assertDefined(component.timeline);
+    expectSelectedTraceTypes(
+      [
+        TraceType.SCREEN_RECORDING,
+        TraceType.SURFACE_FLINGER,
+        TraceType.WINDOW_MANAGER,
+        TraceType.PROTO_LOG,
+      ],
+      firstTimeline,
+    );
+    await updateActiveTrace(TraceType.PROTO_LOG);
+    await openSelectPanel();
+    clickTraceFromSelectPanel(1);
+    expectSelectedTraceTypes(
+      [
+        TraceType.SCREEN_RECORDING,
+        TraceType.WINDOW_MANAGER,
+        TraceType.PROTO_LOG,
+      ],
+      firstTimeline,
+    );
+
+    const secondFixture = TestBed.createComponent(TestHostComponent);
+    const secondHost = secondFixture.componentInstance;
+    loadAllTraces(secondHost, secondFixture);
+    const secondTimeline = assertDefined(secondHost.timeline);
+    expectSelectedTraceTypes(
+      [
+        TraceType.SCREEN_RECORDING,
+        TraceType.SURFACE_FLINGER,
+        TraceType.WINDOW_MANAGER,
+        TraceType.PROTO_LOG,
+      ],
+      secondTimeline,
+    );
+  });
+
   it('does not store traces based on active view trace type', async () => {
     loadAllTraces();
     expectSelectedTraceTypes(
