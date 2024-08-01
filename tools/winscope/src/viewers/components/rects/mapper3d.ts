@@ -15,7 +15,7 @@
  */
 
 import {assertDefined} from 'common/assert_utils';
-import {IDENTITY_MATRIX} from 'common/geometry_types';
+import {IDENTITY_MATRIX} from 'common/geometry/transform_matrix';
 import {Size, UiRect} from 'viewers/components/rects/types2d';
 import {
   Box3D,

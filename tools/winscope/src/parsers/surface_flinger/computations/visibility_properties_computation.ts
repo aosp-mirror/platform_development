@@ -15,7 +15,7 @@
  */
 
 import {assertDefined} from 'common/assert_utils';
-import {Rect} from 'common/rect';
+import {Rect} from 'common/geometry/rect';
 import {RawDataUtils} from 'parsers/raw_data_utils';
 import {LayerFlag} from 'parsers/surface_flinger/layer_flag';
 import {

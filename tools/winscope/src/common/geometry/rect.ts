@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import {Point} from 'common/geometry_types';
+import {Point} from 'common/geometry/point';
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
 
 export class Rect {

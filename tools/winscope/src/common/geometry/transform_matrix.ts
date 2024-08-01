@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023 The Android Open Source Project
+ * Copyright 2024 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,13 +14,9 @@
  * limitations under the License.
  */
 
+import {Point} from './point';
 import {Rect} from './rect';
 import {Region} from './region';
-
-export interface Point {
-  x: number;
-  y: number;
-}
 
 // These values correspond to the values from the gui::Transform class in the platform, defined in:
 //     frameworks/native/libs/ui/include/ui/Transform.h

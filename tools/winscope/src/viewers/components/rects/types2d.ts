@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-import {TransformMatrix} from 'common/geometry_types';
-import {Rect} from 'common/rect';
-import {Region} from 'common/region';
+import {Rect} from 'common/geometry/rect';
+import {Region} from 'common/geometry/region';
+import {TransformMatrix} from 'common/geometry/transform_matrix';
 
 export class UiRect extends Rect {
   constructor(

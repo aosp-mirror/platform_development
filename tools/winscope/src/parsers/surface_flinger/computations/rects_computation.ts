@@ -15,9 +15,9 @@
  */
 
 import {assertDefined} from 'common/assert_utils';
-import {TransformMatrix} from 'common/geometry_types';
-import {Rect} from 'common/rect';
-import {Region} from 'common/region';
+import {Rect} from 'common/geometry/rect';
+import {Region} from 'common/geometry/region';
+import {TransformMatrix} from 'common/geometry/transform_matrix';
 import {
   Transform,
   TransformType,

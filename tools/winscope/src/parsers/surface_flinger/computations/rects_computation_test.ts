@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import {IDENTITY_MATRIX} from 'common/geometry_types';
+import {IDENTITY_MATRIX} from 'common/geometry/transform_matrix';
 import {
   Transform,
   TransformTypeFlags,

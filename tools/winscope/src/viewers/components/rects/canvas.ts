@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 import {assertDefined} from 'common/assert_utils';
-import {TransformMatrix} from 'common/geometry_types';
+import {TransformMatrix} from 'common/geometry/transform_matrix';
 import * as THREE from 'three';
 import {
   CSS2DObject,

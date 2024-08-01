@@ -27,7 +27,7 @@ import {MatSliderModule} from '@angular/material/slider';
 import {MatTooltipModule} from '@angular/material/tooltip';
 import {BrowserAnimationsModule} from '@angular/platform-browser/animations';
 import {assertDefined} from 'common/assert_utils';
-import {TransformMatrix} from 'common/geometry_types';
+import {TransformMatrix} from 'common/geometry/transform_matrix';
 import {PersistentStore} from 'common/persistent_store';
 import {TraceType} from 'trace/trace_type';
 import {VISIBLE_CHIP} from 'viewers/common/chip';

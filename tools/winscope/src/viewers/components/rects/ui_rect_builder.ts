@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-import {TransformMatrix} from 'common/geometry_types';
-import {Region} from 'common/region';
+import {Region} from 'common/geometry/region';
+import {TransformMatrix} from 'common/geometry/transform_matrix';
 import {UiRect} from './types2d';
 
 export class UiRectBuilder {

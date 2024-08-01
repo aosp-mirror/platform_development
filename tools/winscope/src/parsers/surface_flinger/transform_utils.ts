@@ -15,7 +15,10 @@
  */
 
 import {assertDefined} from 'common/assert_utils';
-import {IDENTITY_MATRIX, TransformMatrix} from 'common/geometry_types';
+import {
+  IDENTITY_MATRIX,
+  TransformMatrix,
+} from 'common/geometry/transform_matrix';
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
 
 export enum TransformTypeFlags {
