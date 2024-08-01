@@ -20,7 +20,7 @@ import {Rect} from 'common/rect';
 import {Region} from 'common/region';
 import {
   Transform,
-  TransformUtils,
+  TransformType,
 } from 'parsers/surface_flinger/transform_utils';
 import {TraceRect} from 'trace/trace_rect';
 import {TraceRectBuilder} from 'trace/trace_rect_builder';
@@ -36,7 +36,7 @@ function getDisplaySize(display: PropertyTreeNode): Size {
   const transformType =
     display.getChildByName('transform')?.getChildByName('type')?.getValue() ??
     0;
-  const typeFlags = TransformUtils.getTypeFlags(transformType);
+  const typeFlags = TransformType.getTypeFlags(transformType);
   const isRotated =
     typeFlags.includes('ROT_90') || typeFlags.includes('ROT_270');
   return {
@@ -358,7 +358,7 @@ export class RectsComputation implements Computation {
     let ty = transform.matrix.ty;
     const layerStackSpaceRect = Rect.from(layerStackSpaceRectNode);
 
-    const typeFlags = TransformUtils.getTypeFlags(transform.type);
+    const typeFlags = TransformType.getTypeFlags(transform.type);
     if (typeFlags.includes('ROT_180')) {
       tx += layerStackSpaceRect.w;
       ty += layerStackSpaceRect.h;
