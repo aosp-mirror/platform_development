@@ -42,9 +42,12 @@ export class TracesParserInput extends AbstractTracesParser<PropertyTreeNode> {
     super(timestampConverter);
     this.keyEventTrace = traces.getTrace(TraceType.INPUT_KEY_EVENT);
     this.motionEventTrace = traces.getTrace(TraceType.INPUT_MOTION_EVENT);
-    this.descriptors = (this.keyEventTrace?.getDescriptors() ?? []).concat(
-      this.keyEventTrace?.getDescriptors() ?? [],
-    );
+    this.descriptors = this.keyEventTrace?.getDescriptors() ?? [];
+    this.motionEventTrace?.getDescriptors().forEach((d) => {
+      if (!this.descriptors.includes(d)) {
+        this.descriptors.push(d);
+      }
+    });
   }
 
   override async parse() {

@@ -57,6 +57,10 @@ describe('Parser', () => {
       )) as Parser<HierarchyTreeNode>;
     });
 
+    it('has expected descriptors', () => {
+      expect(parser.getDescriptors()).toEqual(['WindowManager.pb']);
+    });
+
     it('provides timestamps', () => {
       const expected = [
         TimestampConverterUtils.makeRealTimestamp(1659107089075566202n),
