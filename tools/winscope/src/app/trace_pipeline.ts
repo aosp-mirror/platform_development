@@ -121,7 +121,7 @@ export class TracePipeline {
   filterTracesWithoutVisualization() {
     const tracesWithoutVisualization = this.traces
       .mapTrace((trace) => {
-        if (!TraceTypeUtils.canVisualizeTrace(trace.type)) {
+        if (!TraceTypeUtils.isTraceTypeWithViewer(trace.type)) {
           return trace;
         }
         return undefined;
