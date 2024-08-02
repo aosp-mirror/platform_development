@@ -394,7 +394,12 @@ export function makeDisplayIdentifiers(
   displayRects.forEach((rect: UiRect) => {
     if (!rect.isDisplay) return;
     const displayId = rect.id.slice(10, rect.id.length);
-    ids.push({displayId, groupId: rect.groupId, name: rect.label});
+    ids.push({
+      displayId,
+      groupId: rect.groupId,
+      name: rect.label,
+      isActive: rect.isActiveDisplay,
+    });
   });
 
   let offscreenDisplayCount = 0;
@@ -406,17 +411,9 @@ export function makeDisplayIdentifiers(
       const name =
         'Offscreen Display' +
         (offscreenDisplayCount > 1 ? ` ${offscreenDisplayCount}` : '');
-      ids.push({displayId: -1, groupId: rect.groupId, name});
+      ids.push({displayId: -1, groupId: rect.groupId, name, isActive: false});
     }
   });
 
-  return ids.sort((a, b) => {
-    if (a.name < b.name) {
-      return -1;
-    }
-    if (a.name > b.name) {
-      return 1;
-    }
-    return 0;
-  });
+  return ids;
 }

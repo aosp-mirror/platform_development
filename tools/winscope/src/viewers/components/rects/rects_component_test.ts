@@ -151,19 +151,43 @@ describe('RectsComponent', () => {
 
   it('renders display selector', () => {
     component.displays = [
-      {displayId: 0, groupId: 0, name: 'Display 0'},
-      {displayId: 1, groupId: 1, name: 'Display 1'},
-      {displayId: 2, groupId: 2, name: 'Display 2'},
+      {displayId: 0, groupId: 0, name: 'Display 0', isActive: false},
+      {displayId: 1, groupId: 1, name: 'Display 1', isActive: false},
+      {displayId: 2, groupId: 2, name: 'Display 2', isActive: false},
     ];
     fixture.detectChanges();
     checkSelectedDisplay('Display 0');
   });
 
+  it('sorts displays by name on initial and subsequent changes', () => {
+    component.displays = [
+      {displayId: 1, groupId: 1, name: 'Display 1', isActive: false},
+      {displayId: 0, groupId: 0, name: 'Display 0', isActive: false},
+      {displayId: 2, groupId: 2, name: 'Display 2', isActive: false},
+    ];
+    fixture.detectChanges();
+
+    const trigger = assertDefined(
+      htmlElement.querySelector('.displays-section .mat-select-trigger'),
+    );
+    (trigger as HTMLElement).click();
+    fixture.detectChanges();
+    checkDisplayOptions(['Display 0', 'Display 1', 'Display 2']);
+
+    component.displays = [
+      {displayId: 2, groupId: 2, name: 'Display 2', isActive: false},
+      {displayId: 1, groupId: 1, name: 'Display 1', isActive: false},
+      {displayId: 0, groupId: 0, name: 'Display 0', isActive: false},
+    ];
+    fixture.detectChanges();
+    checkDisplayOptions(['Display 0', 'Display 1', 'Display 2']);
+  });
+
   it('handles display change', () => {
     component.displays = [
-      {displayId: 0, groupId: 0, name: 'Display 0'},
-      {displayId: 1, groupId: 1, name: 'Display 1'},
-      {displayId: 2, groupId: 2, name: 'Display 2'},
+      {displayId: 0, groupId: 0, name: 'Display 0', isActive: false},
+      {displayId: 1, groupId: 1, name: 'Display 1', isActive: false},
+      {displayId: 2, groupId: 2, name: 'Display 2', isActive: false},
     ];
     fixture.detectChanges();
     checkSelectedDisplay('Display 0');
@@ -190,15 +214,15 @@ describe('RectsComponent', () => {
 
   it('tracks selected display', () => {
     component.displays = [
-      {displayId: 10, groupId: 0, name: 'Display 0'},
-      {displayId: 20, groupId: 1, name: 'Display 1'},
+      {displayId: 10, groupId: 0, name: 'Display 0', isActive: false},
+      {displayId: 20, groupId: 1, name: 'Display 1', isActive: false},
     ];
     fixture.detectChanges();
     checkSelectedDisplay('Display 0');
 
     component.displays = [
-      {displayId: 20, groupId: 2, name: 'Display 1'},
-      {displayId: 10, groupId: 1, name: 'Display 0'},
+      {displayId: 20, groupId: 2, name: 'Display 1', isActive: false},
+      {displayId: 10, groupId: 1, name: 'Display 0', isActive: false},
     ];
     fixture.detectChanges();
     checkSelectedDisplay('Display 0');
@@ -279,12 +303,24 @@ describe('RectsComponent', () => {
     expect(newRectsComponent.getShadingMode()).toEqual(ShadingMode.WIRE_FRAME);
   });
 
+  it('defaults initial selection to first active display with rects', () => {
+    const inputRect1 = makeRectWithGroupId(0);
+    const inputRect2 = makeRectWithGroupId(1);
+    component.rects = [inputRect1, inputRect2];
+    component.displays = [
+      {displayId: 10, groupId: 1, name: 'Display 0', isActive: false},
+      {displayId: 20, groupId: 0, name: 'Display 1', isActive: true},
+    ];
+    fixture.detectChanges();
+    checkSelectedDisplay('Display 1');
+  });
+
   it('defaults initial selection to first display with non-display rects and groupId 0', () => {
     const inputRect = makeRectWithGroupId(0);
     component.rects = [inputRect];
     component.displays = [
-      {displayId: 10, groupId: 1, name: 'Display 0'},
-      {displayId: 20, groupId: 0, name: 'Display 1'},
+      {displayId: 10, groupId: 1, name: 'Display 0', isActive: true},
+      {displayId: 20, groupId: 0, name: 'Display 1', isActive: false},
     ];
     fixture.detectChanges();
     checkSelectedDisplay('Display 1');
@@ -294,8 +330,8 @@ describe('RectsComponent', () => {
     const inputRect = makeRectWithGroupId(1);
     component.rects = [inputRect];
     component.displays = [
-      {displayId: 10, groupId: 0, name: 'Display 0'},
-      {displayId: 20, groupId: 1, name: 'Display 1'},
+      {displayId: 10, groupId: 0, name: 'Display 0', isActive: false},
+      {displayId: 20, groupId: 1, name: 'Display 1', isActive: false},
     ];
     fixture.detectChanges();
     checkSelectedDisplay('Display 1');
@@ -306,7 +342,9 @@ describe('RectsComponent', () => {
     const inputRect = makeRectWithGroupId(0);
     const miniRect = makeRectWithGroupId(2);
     component.rects = [inputRect];
-    component.displays = [{displayId: 10, groupId: 0, name: 'Display 0'}];
+    component.displays = [
+      {displayId: 10, groupId: 0, name: 'Display 0', isActive: false},
+    ];
     component.miniRects = [miniRect];
     const spy = spyOn(Canvas.prototype, 'draw').and.callThrough();
     fixture.detectChanges();
@@ -327,7 +365,9 @@ describe('RectsComponent', () => {
 
     const inputRect = makeRectWithGroupId(0);
     component.rects = [inputRect, inputRect];
-    component.displays = [{displayId: 10, groupId: 0, name: 'Display 0'}];
+    component.displays = [
+      {displayId: 10, groupId: 0, name: 'Display 0', isActive: false},
+    ];
     component.miniRects = [inputRect, inputRect];
     const spy = spyOn(Canvas.prototype, 'draw').and.callThrough();
     fixture.detectChanges();
@@ -363,6 +403,15 @@ describe('RectsComponent', () => {
     fixture.detectChanges();
     expect(spy).toHaveBeenCalled();
   });
+
+  function checkDisplayOptions(expectedOptions: string[]) {
+    const options = Array.from(
+      document.querySelectorAll<HTMLElement>('.mat-option'),
+    ).map((option) => {
+      return option.textContent?.trim();
+    });
+    expect(options).toEqual(expectedOptions);
+  }
 
   function checkSelectedDisplay(selectedDisplay: string) {
     const displaySelect = assertDefined(
@@ -431,6 +480,7 @@ describe('RectsComponent', () => {
       )
       .setIsVisible(isVisible)
       .setIsDisplay(false)
+      .setIsActiveDisplay(false)
       .setId('test-id-1234')
       .setGroupId(groupId)
       .setIsClickable(false)

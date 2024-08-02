@@ -198,6 +198,14 @@ class PresenterSurfaceFlingerTest extends AbstractHierarchyViewerPresenterTest<U
           ?.getChildByName('byteOffset'),
       ).formattedValue(),
     ).toEqual('2919');
+    expect(uiData.displays).toEqual([
+      {
+        displayId: '4619827677550801152',
+        groupId: 0,
+        name: 'Common Panel',
+        isActive: false,
+      },
+    ]);
   }
 
   override executeChecksForPropertiesTreeAfterSecondPositionUpdate(
@@ -275,14 +283,35 @@ class PresenterSurfaceFlingerTest extends AbstractHierarchyViewerPresenterTest<U
         // we want the displays to be sorted by name
         expect(uiData?.displays).toEqual([
           {
+            displayId: '4619827259835644672',
+            groupId: 0,
+            name: 'EMU_display_0',
+            isActive: false,
+          },
+          {
+            displayId: '4619827551948147201',
+            groupId: 2,
+            name: 'EMU_display_1',
+            isActive: false,
+          },
+          {
+            displayId: '4619827540095559171',
+            groupId: 4,
+            name: 'EMU_display_3',
+            isActive: false,
+          },
+          {
+            displayId: '4619827124781842690',
+            groupId: 3,
+            name: 'EMU_display_2',
+            isActive: false,
+          },
+          {
             displayId: '11529215046312967684',
             groupId: 5,
             name: 'ClusterOsDouble-VD',
+            isActive: false,
           },
-          {displayId: '4619827259835644672', groupId: 0, name: 'EMU_display_0'},
-          {displayId: '4619827551948147201', groupId: 2, name: 'EMU_display_1'},
-          {displayId: '4619827124781842690', groupId: 3, name: 'EMU_display_2'},
-          {displayId: '4619827540095559171', groupId: 4, name: 'EMU_display_3'},
         ]);
       });
 

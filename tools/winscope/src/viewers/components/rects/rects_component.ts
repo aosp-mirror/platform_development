@@ -376,7 +376,7 @@ export class RectsComponent implements OnInit, OnDestroy {
 
     this.currentDisplay =
       this.internalDisplays.length > 0
-        ? this.getFirstDisplayWithRectsOrFirstDisplay(this.internalDisplays)
+        ? this.getActiveDisplay(this.internalDisplays)
         : undefined;
     this.mapper3d.increaseZoomFactor(this.zoomFactor - 1);
     this.drawLargeRectsAndLabels();
@@ -447,6 +447,8 @@ export class RectsComponent implements OnInit, OnDestroy {
   onDisplaysChange(change: SimpleChange) {
     const displays = change.currentValue;
     this.internalDisplays = displays;
+    const activeDisplay = this.getActiveDisplay(this.internalDisplays);
+    this.internalDisplays.sort(this.sortDisplaysByName);
     this.displayNames = this.internalDisplays.map((d) => d.name);
 
     if (displays.length === 0) {
@@ -454,9 +456,7 @@ export class RectsComponent implements OnInit, OnDestroy {
     }
 
     if (change.firstChange) {
-      this.updateCurrentDisplay(
-        this.getFirstDisplayWithRectsOrFirstDisplay(this.internalDisplays),
-      );
+      this.updateCurrentDisplay(activeDisplay);
       return;
     }
 
@@ -472,14 +472,12 @@ export class RectsComponent implements OnInit, OnDestroy {
       (display) => display.groupId === this.mapper3d.getCurrentGroupId(),
     );
     if (displaysWithCurrentGroupId.length === 0) {
-      this.updateCurrentDisplay(
-        this.getFirstDisplayWithRectsOrFirstDisplay(this.internalDisplays),
-      );
+      this.updateCurrentDisplay(activeDisplay);
       return;
     }
 
     this.updateCurrentDisplay(
-      this.getFirstDisplayWithRectsOrFirstDisplay(displaysWithCurrentGroupId),
+      this.getActiveDisplay(displaysWithCurrentGroupId),
     );
     return;
   }
@@ -642,15 +640,26 @@ export class RectsComponent implements OnInit, OnDestroy {
     components.forEach((c) => (c.color = 'accent'));
   }
 
-  private getFirstDisplayWithRectsOrFirstDisplay(
-    displays: DisplayIdentifier[],
-  ): DisplayIdentifier {
+  private sortDisplaysByName(a: DisplayIdentifier, b: DisplayIdentifier) {
+    if (a.name < b.name) {
+      return -1;
+    }
+    if (a.name > b.name) {
+      return 1;
+    }
+    return 0;
+  }
+
+  private getActiveDisplay(displays: DisplayIdentifier[]): DisplayIdentifier {
+    const displaysWithRects = displays.filter((display) =>
+      this.internalRects.some(
+        (rect) => !rect.isDisplay && rect.groupId === display.groupId,
+      ),
+    );
     return (
-      displays.find((display) =>
-        this.internalRects.some(
-          (rect) => !rect.isDisplay && rect.groupId === display.groupId,
-        ),
-      ) ?? assertDefined(displays.at(0))
+      displaysWithRects.find((display) => display.isActive) ??
+      displaysWithRects.at(0) ?? // fallback if no active displays
+      displays[0]
     );
   }
 
