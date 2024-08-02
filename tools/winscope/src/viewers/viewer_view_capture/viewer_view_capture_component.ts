@@ -72,6 +72,7 @@ import {UiData} from './ui_data';
         [traceType]="${TraceType.VIEW_CAPTURE}"
         [store]="store"
         [isProtoDump]="false"
+        placeholderText="No selected item."
         (collapseButtonClicked)="sections.onCollapseStateChange(CollapsibleSectionType.PROPERTIES, true)"></properties-view>
     </div>
   `,
