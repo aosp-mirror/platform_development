@@ -103,6 +103,7 @@ class UiRectFactory {
         .setHasContent(hasContent(traceRect.id))
         .setDepth(traceRect.depth)
         .setOpacity(opacity)
+        .setFillRegion(traceRect.fillRegion)
         .build();
     });
   }

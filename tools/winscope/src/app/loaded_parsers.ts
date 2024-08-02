@@ -25,7 +25,7 @@ import {FileAndParsers} from 'parsers/file_and_parsers';
 import {Parser} from 'trace/parser';
 import {TraceFile} from 'trace/trace_file';
 import {TRACE_INFO} from 'trace/trace_info';
-import {TraceType} from 'trace/trace_type';
+import {TraceEntryTypeMap, TraceType} from 'trace/trace_type';
 
 export class LoadedParsers {
   static readonly MAX_ALLOWED_TIME_GAP_BETWEEN_TRACES_NS = BigInt(
@@ -72,7 +72,7 @@ export class LoadedParsers {
     return fileAndParsers.map((fileAndParser) => fileAndParser.parser);
   }
 
-  remove(parser: Parser<object>) {
+  remove<T extends TraceType>(parser: Parser<TraceEntryTypeMap[T]>) {
     this.legacyParsers = this.legacyParsers.filter(
       (fileAndParser) => fileAndParser.parser !== parser,
     );
