@@ -15,7 +15,7 @@
  */
 
 import {assertDefined} from 'common/assert_utils';
-import {Rect} from 'common/rect';
+import {Rect} from 'common/geometry/rect';
 import {TracePositionUpdate} from 'messaging/winscope_event';
 import {TimestampConverterUtils} from 'test/unit/timestamp_converter_utils';
 import {TreeNodeUtils} from 'test/unit/tree_node_utils';

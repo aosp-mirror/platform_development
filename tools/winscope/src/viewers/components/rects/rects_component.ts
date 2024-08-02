@@ -29,7 +29,7 @@ import {
 } from '@angular/core';
 import {CanColor} from '@angular/material/core';
 import {MatIconRegistry} from '@angular/material/icon';
-import {MatSelectChange} from '@angular/material/select';
+import {MatSelect, MatSelectChange} from '@angular/material/select';
 import {DomSanitizer} from '@angular/platform-browser';
 import {assertDefined} from 'common/assert_utils';
 import {PersistentStore} from 'common/persistent_store';
@@ -157,11 +157,13 @@ import {Distance2D, ShadingMode} from './types3d';
           <span class="mat-body-1"> {{groupLabel}}: </span>
           <mat-form-field appearance="none" class="displays-select">
             <mat-select
+              #displaySelect
               (selectionChange)="onDisplayChange($event)"
               [value]="currentDisplay?.name">
               <mat-option
                 *ngFor="let name of displayNames"
-                [value]="name">
+                [value]="name"
+                (click)="onOptionClick(displaySelect, name)">
                 {{ name }}
               </mat-option>
             </mat-select>
@@ -393,6 +395,15 @@ export class RectsComponent implements OnInit, OnDestroy {
 
   blurTab() {
     (document.activeElement as HTMLElement).blur();
+  }
+
+  onOptionClick(select: MatSelect, option: string) {
+    if (select.value === option) {
+      const selectElement = assertDefined(
+        document.querySelector<HTMLElement>('mat-select'),
+      );
+      selectElement.blur();
+    }
   }
 
   ngOnChanges(simpleChanges: SimpleChanges) {

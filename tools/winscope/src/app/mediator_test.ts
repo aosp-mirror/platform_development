@@ -22,7 +22,11 @@ import {TimestampConverter} from 'common/timestamp_converter';
 import {CrossToolProtocol} from 'cross_tool/cross_tool_protocol';
 import {ProgressListener} from 'messaging/progress_listener';
 import {ProgressListenerStub} from 'messaging/progress_listener_stub';
-import {IncompleteFrameMapping, NoValidFiles} from 'messaging/user_warnings';
+import {
+  IncompleteFrameMapping,
+  NoValidFiles,
+  UnsupportedFileFormat,
+} from 'messaging/user_warnings';
 import {
   ActiveTraceChanged,
   AppFilesCollected,
@@ -218,6 +222,20 @@ describe('Mediator', () => {
   it('handles collected traces from Winscope', async () => {
     await mediator.onWinscopeEvent(new AppFilesCollected(inputFiles));
     await checkLoadTraceViewEvents(collectTracesComponent);
+  });
+
+  it('handles invalid collected traces from Winscope', async () => {
+    await mediator.onWinscopeEvent(
+      new AppFilesCollected([
+        await UnitTestUtils.getFixtureFile('traces/empty.pb'),
+      ]),
+    );
+    expect(
+      userNotifierChecker.expectNotified([
+        new UnsupportedFileFormat('empty.pb'),
+      ]),
+    );
+    expect(appComponent.onWinscopeEvent).not.toHaveBeenCalled();
   });
 
   it('handles empty collected traces from Winscope', async () => {
