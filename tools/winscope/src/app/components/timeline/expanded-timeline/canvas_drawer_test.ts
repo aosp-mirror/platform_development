@@ -15,7 +15,7 @@
  */
 
 import {assertDefined} from 'common/assert_utils';
-import {Rect} from 'common/rect';
+import {Rect} from 'common/geometry/rect';
 import {CanvasDrawer} from './canvas_drawer';
 
 describe('CanvasDrawer', () => {
