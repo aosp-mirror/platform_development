@@ -14,10 +14,10 @@
  * limitations under the License.
  */
 
-import {IDENTITY_MATRIX} from 'common/geometry_types';
+import {IDENTITY_MATRIX} from 'common/geometry/transform_matrix';
 import {
   Transform,
-  TransformType,
+  TransformTypeFlags,
 } from 'parsers/surface_flinger/transform_utils';
 import {android} from 'protos/surfaceflinger/udc/static';
 import {HierarchyTreeBuilder} from 'test/unit/hierarchy_tree_builder';
@@ -28,7 +28,7 @@ import {InputConfig, RectsComputation} from './rects_computation';
 
 describe('RectsComputation', () => {
   const rotationTransform = new Transform(
-    TransformType.ROT_90_VAL,
+    TransformTypeFlags.ROT_90_VAL,
     IDENTITY_MATRIX,
   );
   let computation: RectsComputation;

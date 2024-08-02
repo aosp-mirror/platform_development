@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import {Rect} from 'common/rect';
+import {Rect} from 'common/geometry/rect';
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
 
 export class RawDataUtils {

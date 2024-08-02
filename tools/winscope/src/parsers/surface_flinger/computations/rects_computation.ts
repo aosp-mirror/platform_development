@@ -15,10 +15,12 @@
  */
 
 import {assertDefined} from 'common/assert_utils';
-import {Rect} from 'common/rect';
+import {Rect} from 'common/geometry/rect';
+import {Region} from 'common/geometry/region';
+import {TransformMatrix} from 'common/geometry/transform_matrix';
 import {
   Transform,
-  TransformUtils,
+  TransformType,
 } from 'parsers/surface_flinger/transform_utils';
 import {TraceRect} from 'trace/trace_rect';
 import {TraceRectBuilder} from 'trace/trace_rect_builder';
@@ -34,7 +36,7 @@ function getDisplaySize(display: PropertyTreeNode): Size {
   const transformType =
     display.getChildByName('transform')?.getChildByName('type')?.getValue() ??
     0;
-  const typeFlags = TransformUtils.getTypeFlags(transformType);
+  const typeFlags = TransformType.getTypeFlags(transformType);
   const isRotated =
     typeFlags.includes('ROT_90') || typeFlags.includes('ROT_270');
   return {
@@ -46,6 +48,7 @@ function getDisplaySize(display: PropertyTreeNode): Size {
 // InputConfig constants defined in the platform:
 //   frameworks/native/libs/input/android/os/InputConfig.aidl
 export enum InputConfig {
+  NOT_TOUCHABLE = 1 << 3,
   IS_WALLPAPER = 1 << 6,
   SPY = 1 << 14,
 }
@@ -154,6 +157,7 @@ class RectSfFactory {
     absoluteZ: number,
     invalidBoundsFromDisplays: Rect[],
     display?: TraceRect,
+    displayTransform?: TransformMatrix,
   ): TraceRect {
     const name = assertDefined(layer.getEagerPropertyByName('name')).getValue();
     const inputWindowInfo = assertDefined(
@@ -182,6 +186,35 @@ class RectSfFactory {
         layer.getEagerPropertyByName('isComputedVisible'),
       ).getValue();
 
+    const layerTransform = Transform.from(
+      assertDefined(layer.getEagerPropertyByName('transform')),
+    ).matrix;
+
+    let touchableRegion: Region | undefined;
+    const isTouchable = (inputConfig & InputConfig.NOT_TOUCHABLE) === 0;
+    const touchableRegionNode =
+      inputWindowInfo.getChildByName('touchableRegion');
+    if (!isTouchable) {
+      touchableRegion = Region.createEmpty();
+    } else if (touchableRegionNode !== undefined) {
+      // The touchable region is given in the display space, not layer space.
+      touchableRegion = Region.from(touchableRegionNode);
+      // First, transform the region into layer stack space.
+      touchableRegion =
+        displayTransform?.transformRegion(touchableRegion) ?? touchableRegion;
+      // Second, transform the region into layer space.
+      touchableRegion = layerTransform
+        .inverse()
+        .transformRegion(touchableRegion);
+      if (shouldCropToDisplay && display !== undefined) {
+        touchableRegion = new Region(
+          touchableRegion.rects.map((rect) => {
+            return rect.cropRect(display);
+          }),
+        );
+      }
+    }
+
     return new TraceRectBuilder()
       .setX(inputWindowRect.x)
       .setY(inputWindowRect.y)
@@ -190,15 +223,13 @@ class RectSfFactory {
       .setId(`${assertDefined(layer.getEagerPropertyByName('id')).getValue()}`)
       .setName(name)
       .setCornerRadius(0)
-      .setTransform(
-        Transform.from(assertDefined(layer.getEagerPropertyByName('transform')))
-          .matrix,
-      )
+      .setTransform(layerTransform)
       .setGroupId(layerStack)
       .setIsVisible(isVisible)
       .setIsDisplay(false)
       .setDepth(absoluteZ)
       .setIsSpy((inputConfig & InputConfig.SPY) !== 0)
+      .setFillRegion(touchableRegion)
       .build();
   }
 }
@@ -213,6 +244,7 @@ export class RectsComputation implements Computation {
 
   private root?: HierarchyTreeNode;
   private displaysByLayerStack?: Map<number, TraceRect>;
+  private displayTransformsByLayerStack?: Map<number, TransformMatrix>;
   private invalidBoundsFromDisplays?: Rect[];
 
   setRoot(value: HierarchyTreeNode): this {
@@ -295,6 +327,47 @@ export class RectsComputation implements Computation {
 
     this.invalidBoundsFromDisplays =
       RectsComputation.getInvalidBoundsFromDisplays(displays);
+
+    this.displayTransformsByLayerStack = new Map();
+    displays.forEach((display) => {
+      const layerStack = assertDefined(
+        display.getChildByName('layerStack'),
+      ).getValue();
+      const matrix = RectsComputation.extractDisplayTransform(display);
+      if (matrix) {
+        assertDefined(this.displayTransformsByLayerStack).set(
+          layerStack,
+          matrix,
+        );
+      }
+    });
+  }
+
+  private static extractDisplayTransform(
+    display: PropertyTreeNode,
+  ): TransformMatrix | undefined {
+    const transformNode = display.getChildByName('transform');
+    const layerStackSpaceRectNode = assertDefined(
+      display.getChildByName('layerStackSpaceRect'),
+    );
+    if (!transformNode || !layerStackSpaceRectNode) {
+      return undefined;
+    }
+    const transform = Transform.from(transformNode);
+    let tx = transform.matrix.tx;
+    let ty = transform.matrix.ty;
+    const layerStackSpaceRect = Rect.from(layerStackSpaceRectNode);
+
+    const typeFlags = TransformType.getTypeFlags(transform.type);
+    if (typeFlags.includes('ROT_180')) {
+      tx += layerStackSpaceRect.w;
+      ty += layerStackSpaceRect.h;
+    } else if (typeFlags.includes('ROT_270')) {
+      tx += layerStackSpaceRect.w;
+    } else if (typeFlags.includes('ROT_90')) {
+      ty += layerStackSpaceRect.h;
+    }
+    return TransformMatrix.from({tx, ty}, transform.matrix);
   }
 
   private processLayers(
@@ -308,6 +381,7 @@ export class RectsComputation implements Computation {
       absoluteZ: number,
       invalidBoundsFromDisplays: Rect[],
       display?: TraceRect,
+      displayTransform?: TransformMatrix,
     ) => TraceRect,
     isPrimaryRects: boolean,
   ) {
@@ -333,6 +407,7 @@ export class RectsComputation implements Computation {
         absoluteZ,
         assertDefined(this.invalidBoundsFromDisplays),
         this.displaysByLayerStack?.get(layerStack),
+        this.displayTransformsByLayerStack?.get(layerStack),
       );
       isPrimaryRects ? layer.setRects([rect]) : layer.setSecondaryRects([rect]);
       curAbsoluteZByLayerStack.set(layerStack, absoluteZ + 1);
