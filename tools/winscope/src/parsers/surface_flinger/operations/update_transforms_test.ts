@@ -15,7 +15,7 @@
  */
 
 import {assertDefined} from 'common/assert_utils';
-import {TransformType} from 'parsers/surface_flinger/transform_utils';
+import {TransformTypeFlags} from 'parsers/surface_flinger/transform_utils';
 import {PropertyTreeBuilder} from 'test/unit/property_tree_builder';
 import {TreeNodeUtils} from 'test/unit/tree_node_utils';
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
@@ -39,7 +39,7 @@ describe('UpdateTransforms', () => {
       dtdx: 2,
       dtdy: 3,
       dsdy: 4,
-      type: TransformType.ROT_INVALID_VAL,
+      type: TransformTypeFlags.ROT_INVALID_VAL,
     };
     protoPosition = {
       x: 0,

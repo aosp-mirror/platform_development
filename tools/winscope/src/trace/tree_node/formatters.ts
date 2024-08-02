@@ -17,7 +17,7 @@
 import {Timestamp} from 'common/time';
 import {TimeDuration} from 'common/time_duration';
 import {RawDataUtils} from 'parsers/raw_data_utils';
-import {TransformUtils} from 'parsers/surface_flinger/transform_utils';
+import {TransformType} from 'parsers/surface_flinger/transform_utils';
 import {CujType} from 'trace/cuj_type';
 import {PropertyTreeNode} from './property_tree_node';
 
@@ -148,7 +148,7 @@ class TransformFormatter implements PropertyFormatter {
   format(node: PropertyTreeNode): string {
     const type = node.getChildByName('type');
     return type !== undefined
-      ? TransformUtils.getTypeFlags(type.getValue() ?? 0)
+      ? TransformType.getTypeFlags(type.getValue() ?? 0)
       : 'null';
   }
 }

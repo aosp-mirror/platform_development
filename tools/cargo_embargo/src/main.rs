@@ -429,10 +429,13 @@ fn write_all_build_files(
     Ok(())
 }
 
-/// Runs the given command, and returns its standard output and standard error as a string.
-fn run_cargo(cmd: &mut Command) -> Result<String> {
+/// Runs the given command, and returns its standard output and (optionally) standard error as a string.
+fn run_cargo(cmd: &mut Command, include_stderr: bool) -> Result<String> {
     let (pipe_read, pipe_write) = pipe2(OFlag::O_CLOEXEC)?;
-    cmd.stdout(pipe_write.try_clone()?).stderr(pipe_write).stdin(Stdio::null());
+    if include_stderr {
+        cmd.stderr(pipe_write.try_clone()?);
+    }
+    cmd.stdout(pipe_write).stdin(Stdio::null());
     debug!("Running: {:?}\n", cmd);
     let mut child = cmd.spawn()?;
 
@@ -469,7 +472,7 @@ fn generate_cargo_out(cfg: &VariantConfig, intermediates_dir: &Path) -> Result<C
     let target_dir = intermediates_dir.join("target.tmp");
 
     // cargo clean
-    run_cargo(Command::new("cargo").arg("clean").arg("--target-dir").arg(&target_dir))
+    run_cargo(Command::new("cargo").arg("clean").arg("--target-dir").arg(&target_dir), true)
         .context("Running cargo clean")?;
 
     let default_target = "x86_64-unknown-linux-gnu";
@@ -504,6 +507,7 @@ fn generate_cargo_out(cfg: &VariantConfig, intermediates_dir: &Path) -> Result<C
             .arg("--format-version")
             .arg("1")
             .args(&feature_args),
+        false,
     )
     .context("Running cargo metadata")?;
 
@@ -532,6 +536,7 @@ fn generate_cargo_out(cfg: &VariantConfig, intermediates_dir: &Path) -> Result<C
                 .arg(&target_dir)
                 .args(&workspace_args)
                 .args(&feature_args),
+            true,
         )?;
 
         if cfg.tests {
@@ -545,6 +550,7 @@ fn generate_cargo_out(cfg: &VariantConfig, intermediates_dir: &Path) -> Result<C
                     .arg(&target_dir)
                     .args(&workspace_args)
                     .args(&feature_args),
+                true,
             )?;
             // cargo test -- --list
             cargo_out += &run_cargo(
@@ -556,6 +562,7 @@ fn generate_cargo_out(cfg: &VariantConfig, intermediates_dir: &Path) -> Result<C
                     .args(&workspace_args)
                     .args(&feature_args)
                     .args(["--", "--list"]),
+                true,
             )?;
         }
     }

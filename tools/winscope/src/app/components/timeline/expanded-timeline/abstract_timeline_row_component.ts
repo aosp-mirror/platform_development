@@ -23,7 +23,7 @@ import {
   ViewChild,
 } from '@angular/core';
 import {assertDefined} from 'common/assert_utils';
-import {Point} from 'common/geometry_types';
+import {Point} from 'common/geometry/point';
 import {TimeRange} from 'common/time';
 import {ComponentTimestampConverter} from 'common/timestamp_converter';
 import {Trace, TraceEntry} from 'trace/trace';
