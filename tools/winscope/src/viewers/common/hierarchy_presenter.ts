@@ -15,6 +15,7 @@
  */
 
 import {assertDefined} from 'common/assert_utils';
+import {InMemoryStorage} from 'common/store/in_memory_storage';
 import {Trace, TraceEntry} from 'trace/trace';
 import {TraceType} from 'trace/trace_type';
 import {HierarchyTreeNode} from 'trace/tree_node/hierarchy_tree_node';
@@ -43,10 +44,12 @@ export type GetHierarchyTreeNameType = (
   tree: HierarchyTreeNode,
 ) => string;
 
+type FormattedTreeIndex = number;
+
 export interface SelectedTree {
   trace: Trace<HierarchyTreeNode>;
   tree: HierarchyTreeNode;
-  index: number;
+  index: FormattedTreeIndex;
 }
 
 export interface TraceAndTrees {
@@ -65,6 +68,7 @@ export class HierarchyPresenter {
   private previousTrees?: TraceAndTrees[] = [];
   private currentTrees?: TraceAndTrees[] = [];
   private selectedTree: SelectedTree | undefined;
+  private treeStore: InMemoryStorage | undefined;
 
   constructor(
     private userOptions: UserOptions,
@@ -178,6 +182,40 @@ export class HierarchyPresenter {
 
   setSelectedTree(value: SelectedTree | undefined) {
     this.selectedTree = value;
+  }
+
+  getAdjacentVisibleNode(
+    treeStore: InMemoryStorage,
+    getPrevious: boolean,
+  ): UiHierarchyTreeNode | undefined {
+    if (!this.selectedTree) {
+      return this.currentTrees?.at(0)?.formattedTrees?.at(0);
+    }
+    let selectedTree: UiHierarchyTreeNode;
+    if (this.selectedTree.tree instanceof UiHierarchyTreeNode) {
+      selectedTree = this.selectedTree.tree;
+    } else {
+      selectedTree =
+        (this.findSelectedTreeById(this.selectedTree.tree.id, true)
+          ?.tree as UiHierarchyTreeNode) ?? undefined;
+      if (!selectedTree) {
+        return this.currentTrees?.at(0)?.formattedTrees?.at(0);
+      }
+    }
+
+    this.treeStore = treeStore;
+    const adjNode = this.findAdjacentNonHiddenNode(
+      selectedTree,
+      getPrevious ? (n) => n.getPrevDfs() : (n) => n.getNextDfs(),
+    );
+    if (adjNode) {
+      return adjNode;
+    }
+    const adjacentNode = getPrevious
+      ? this.getPrevNonHiddenNode(this.selectedTree.index)
+      : this.getNextNonHiddenNode(selectedTree, this.selectedTree.index);
+    this.treeStore = undefined;
+    return adjacentNode;
   }
 
   async updatePreviousHierarchyTrees() {
@@ -352,6 +390,7 @@ export class HierarchyPresenter {
     );
     this.pinnedItems.push(...this.extractPinnedItems(formattedTree));
     const filteredTree = this.filterTree(formattedTree);
+    filteredTree.assignDfsOrder();
     return filteredTree;
   }
 
@@ -473,6 +512,76 @@ export class HierarchyPresenter {
       indexOffset += treesToSearch.length;
     }
     return undefined;
+  }
+
+  private findAdjacentNonHiddenNode(
+    node: UiHierarchyTreeNode,
+    getAdj: (n: UiHierarchyTreeNode) => UiHierarchyTreeNode | undefined,
+  ): UiHierarchyTreeNode | undefined {
+    const adjNode = getAdj(node);
+    if (adjNode && this.isHidden(adjNode)) {
+      return this.findAdjacentNonHiddenNode(adjNode, getAdj);
+    }
+    return adjNode;
+  }
+
+  private getPrevNonHiddenNode(
+    index: FormattedTreeIndex,
+  ): UiHierarchyTreeNode | undefined {
+    if (index > 0) {
+      const trees = assertDefined(this.getAllFormattedTrees());
+      return this.findFinalChild(trees[index - 1]);
+    }
+    return undefined;
+  }
+
+  private findFinalChild(node: UiHierarchyTreeNode): UiHierarchyTreeNode {
+    const children = node.getAllChildren();
+    if (this.isCollapsed(node) || children.length === 0) {
+      return node;
+    }
+    return this.findFinalChild(children[children.length - 1]);
+  }
+
+  private getNextNonHiddenNode(
+    tree: UiHierarchyTreeNode,
+    index: FormattedTreeIndex,
+  ): UiHierarchyTreeNode | undefined {
+    const trees = assertDefined(this.getAllFormattedTrees());
+    if (index < trees.length - 1) {
+      return trees[index + 1];
+    }
+    if (this.isHidden(tree)) {
+      return this.findFirstNonHiddenParent(tree);
+    }
+    return undefined;
+  }
+
+  private findFirstNonHiddenParent(
+    node: UiHierarchyTreeNode,
+  ): UiHierarchyTreeNode | undefined {
+    const parent = assertDefined(node.getParent());
+    if (!this.isHidden(parent)) {
+      return parent;
+    }
+    return this.findFirstNonHiddenParent(parent);
+  }
+
+  private isHidden(node: UiHierarchyTreeNode): boolean {
+    const parent = node.getParent();
+    if (!parent) {
+      return false;
+    }
+    if (this.isCollapsed(parent)) {
+      return true;
+    }
+    return this.isHidden(parent);
+  }
+
+  private isCollapsed(node: UiHierarchyTreeNode): boolean {
+    return (
+      assertDefined(this.treeStore).get(`${node.id}.collapsedState`) === 'true'
+    );
   }
 
   private getCurrentTreesByTrace(

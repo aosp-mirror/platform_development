@@ -16,6 +16,7 @@
 
 import {assertDefined} from 'common/assert_utils';
 import {FunctionUtils} from 'common/function_utils';
+import {InMemoryStorage} from 'common/store/in_memory_storage';
 import {parseMap, stringifyMap} from 'common/store/persistent_store_proxy';
 import {Store} from 'common/store/store';
 import {
@@ -84,6 +85,16 @@ export abstract class AbstractHierarchyViewerPresenter<
         await this.onHighlightedIdChange((event as CustomEvent).detail.id),
     );
     htmlElement.addEventListener(
+      ViewerEvents.ArrowDownPress,
+      async (event) =>
+        await this.onArrowPress((event as CustomEvent).detail, false),
+    );
+    htmlElement.addEventListener(
+      ViewerEvents.ArrowUpPress,
+      async (event) =>
+        await this.onArrowPress((event as CustomEvent).detail, true),
+    );
+    htmlElement.addEventListener(
       ViewerEvents.HighlightedPropertyChange,
       (event) =>
         this.onHighlightedPropertyChange((event as CustomEvent).detail.id),
@@ -144,6 +155,16 @@ export abstract class AbstractHierarchyViewerPresenter<
     this.hierarchyPresenter.applyPinnedItemChange(pinnedItem);
     this.uiData.pinnedItems = this.hierarchyPresenter.getPinnedItems();
     this.copyUiDataAndNotifyView();
+  }
+
+  async onArrowPress(storage: InMemoryStorage, getPrevious: boolean) {
+    const newNode = this.hierarchyPresenter.getAdjacentVisibleNode(
+      storage,
+      getPrevious,
+    );
+    if (newNode) {
+      await this.onHighlightedNodeChange(newNode);
+    }
   }
 
   onHighlightedPropertyChange(id: string) {

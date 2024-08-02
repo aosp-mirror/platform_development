@@ -177,7 +177,7 @@ describe('AbstractHierarchyViewerPresenter', () => {
     expect(uiData.displays?.length).toBeGreaterThan(0);
   });
 
-  it('adds events listeners', () => {
+  it('adds event listeners', () => {
     const element = document.createElement('div');
     presenter.addEventListeners(element);
 
@@ -258,6 +258,17 @@ describe('AbstractHierarchyViewerPresenter', () => {
       }),
     );
     expect(spy).toHaveBeenCalledWith({});
+
+    spy = spyOn(presenter, 'onArrowPress');
+    element.dispatchEvent(
+      new CustomEvent(ViewerEvents.ArrowDownPress, {detail: storage}),
+    );
+    expect(spy).toHaveBeenCalledWith(storage, false);
+
+    element.dispatchEvent(
+      new CustomEvent(ViewerEvents.ArrowUpPress, {detail: storage}),
+    );
+    expect(spy).toHaveBeenCalledWith(storage, true);
   });
 
   it('is robust to empty trace', async () => {
@@ -490,6 +501,16 @@ describe('AbstractHierarchyViewerPresenter', () => {
     userOptions['ignoreRectShowState'].enabled = true;
     presenter.onRectsUserOptionsChange(userOptions);
     checkRectUiData(uiData, 2, 3, 1);
+  });
+
+  it('handles arrow up/down press', async () => {
+    await presenter.onAppEvent(positionUpdate);
+    await presenter.onArrowPress(storage, false);
+    expect(uiData.propertiesTree?.id).toContain('Test Trace entry');
+    await presenter.onArrowPress(storage, false);
+    expect(uiData.propertiesTree?.id).toContain('1 p1');
+    await presenter.onArrowPress(storage, true);
+    expect(uiData.propertiesTree?.id).toContain('Test Trace entry');
   });
 
   function pinNode(node: UiHierarchyTreeNode) {
