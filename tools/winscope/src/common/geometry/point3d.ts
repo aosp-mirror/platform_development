@@ -14,7 +14,8 @@
  * limitations under the License.
  */
 
-export interface Point {
-  x: number;
-  y: number;
+import {Point} from './point';
+
+export interface Point3D extends Point {
+  z: number;
 }

@@ -17,6 +17,7 @@
 import {assertDefined} from 'common/assert_utils';
 import {Rect} from 'common/geometry/rect';
 import {Region} from 'common/geometry/region';
+import {Size} from 'common/geometry/size';
 import {TransformMatrix} from 'common/geometry/transform_matrix';
 import {
   Transform,
@@ -28,7 +29,6 @@ import {TraceRectBuilder} from 'trace/trace_rect_builder';
 import {Computation} from 'trace/tree_node/computation';
 import {HierarchyTreeNode} from 'trace/tree_node/hierarchy_tree_node';
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
-import {Size} from 'viewers/components/rects/types2d';
 
 function getDisplaySize(display: PropertyTreeNode): Size {
   const displaySize = assertDefined(display.getChildByName('size'));

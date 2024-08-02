@@ -1,11 +1,11 @@
 /*
- * Copyright (C) 2024, The Android Open Source Project
+ * Copyright (C) 2024 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *      http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,7 +14,14 @@
  * limitations under the License.
  */
 
-export interface Point {
-  x: number;
-  y: number;
+import {Circle3D} from 'common/geometry/circle3d';
+import {Point3D} from 'common/geometry/point3d';
+
+export interface RectLabel {
+  circle: Circle3D;
+  linePoints: Point3D[];
+  textCenter: Point3D;
+  text: string;
+  isHighlighted: boolean;
+  rectId: string;
 }

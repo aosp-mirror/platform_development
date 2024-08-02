@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 import {assertDefined} from 'common/assert_utils';
+import {Circle3D} from 'common/geometry/circle3d';
+import {Point3D} from 'common/geometry/point3d';
 import {TransformMatrix} from 'common/geometry/transform_matrix';
 import * as THREE from 'three';
 import {
@@ -21,14 +23,10 @@ import {
   CSS2DRenderer,
 } from 'three/examples/jsm/renderers/CSS2DRenderer';
 import {ViewerEvents} from 'viewers/common/viewer_events';
-import {
-  Circle3D,
-  ColorType,
-  Label3D,
-  Point3D,
-  Scene3D,
-  UiRect3D,
-} from './types3d';
+import {ColorType} from './color_type';
+import {RectLabel} from './rect_label';
+import {Scene} from './scene';
+import {UiRect3D} from './ui_rect3d';
 
 export class Canvas {
   static readonly TARGET_SCENE_DIAGONAL = 4;
@@ -66,7 +64,7 @@ export class Canvas {
     private isDarkMode = () => false,
   ) {}
 
-  draw(scene: Scene3D) {
+  draw(scene: Scene) {
     // Must set 100% width and height so the HTML element expands to the parent's
     // boundaries and the correct clientWidth and clientHeight values can be read
     this.canvasRects.style.width = '100%';
@@ -189,7 +187,7 @@ export class Canvas {
     });
   }
 
-  private drawLabels(labels: Label3D[], isDarkMode: boolean) {
+  private drawLabels(labels: RectLabel[], isDarkMode: boolean) {
     this.clearLabels();
     labels.forEach((label) => {
       const circleMesh = this.makeLabelCircleMesh(label.circle, isDarkMode);
@@ -213,7 +211,7 @@ export class Canvas {
     });
   }
 
-  private drawLabelTextHtml(label: Label3D) {
+  private drawLabelTextHtml(label: RectLabel) {
     // Add rectangle label
     const spanText: HTMLElement = document.createElement('span');
     spanText.innerText = label.text;
