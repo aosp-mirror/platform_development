@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import {TransformMatrix} from 'common/geometry/transform_matrix';
 import {UiRectBuilder} from 'viewers/components/rects/ui_rect_builder';
 import {RectFilter} from './rect_filter';
 import {RectShowState} from './rect_show_state';
@@ -242,14 +243,16 @@ describe('RectFilter', () => {
       .setWidth(1)
       .setHeight(1)
       .setLabel(id)
-      .setTransform({
-        dsdx: 1,
-        dsdy: 0,
-        dtdx: 0,
-        dtdy: 1,
-        tx: 0,
-        ty: 0,
-      })
+      .setTransform(
+        TransformMatrix.from({
+          dsdx: 1,
+          dsdy: 0,
+          dtdx: 0,
+          dtdy: 1,
+          tx: 0,
+          ty: 0,
+        }),
+      )
       .setIsVisible(isVisible)
       .setIsDisplay(isDisplay)
       .setId(id)
