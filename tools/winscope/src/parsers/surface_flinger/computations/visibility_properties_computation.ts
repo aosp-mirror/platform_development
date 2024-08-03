@@ -15,12 +15,12 @@
  */
 
 import {assertDefined} from 'common/assert_utils';
-import {Rect} from 'common/rect';
+import {Rect} from 'common/geometry/rect';
 import {RawDataUtils} from 'parsers/raw_data_utils';
 import {LayerFlag} from 'parsers/surface_flinger/layer_flag';
 import {
   Transform,
-  TransformUtils,
+  TransformType,
 } from 'parsers/surface_flinger/transform_utils';
 import {Computation} from 'trace/tree_node/computation';
 import {HierarchyTreeNode} from 'trace/tree_node/hierarchy_tree_node';
@@ -263,10 +263,7 @@ export class VisibilityPropertiesComputation implements Computation {
       reasons.push('crop is 0x0');
     }
     const transform = layer.getEagerPropertyByName('transform');
-    if (
-      transform &&
-      !TransformUtils.isValidTransform(Transform.from(transform))
-    ) {
+    if (transform && !Transform.from(transform).matrix.isValid()) {
       reasons.push('transform is invalid');
     }
 
@@ -353,12 +350,12 @@ export class VisibilityPropertiesComputation implements Computation {
     crop = new Rect(0, 0, 0, 0),
   ): boolean {
     if (
-      !TransformUtils.isSimpleRotation(
+      !TransformType.isSimpleRotation(
         assertDefined(layer.getEagerPropertyByName('transform'))
           .getChildByName('type')
           ?.getValue() ?? 0,
       ) ||
-      !TransformUtils.isSimpleRotation(
+      !TransformType.isSimpleRotation(
         assertDefined(other.getEagerPropertyByName('transform'))
           .getChildByName('type')
           ?.getValue() ?? 0,

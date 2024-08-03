@@ -64,7 +64,7 @@ export class Presenter extends AbstractLogViewerPresenter<UiData> {
   private readonly layerIdToName = new Map<number, string>();
   private readonly allInputLayerIds = new Set<number>();
 
-  protected override logPresenter = new LogPresenter<InputEntry>(false);
+  protected override logPresenter = new LogPresenter<InputEntry>(true);
   protected override propertiesPresenter = new PropertiesPresenter({}, []);
   protected dispatchPropertiesPresenter = new PropertiesPresenter(
     {},
