@@ -133,7 +133,7 @@ export const LogFieldClassNames: ReadonlyMap<LogFieldType, string> = new Map([
   [LogFieldType.END_TIME, 'end-time time'],
   [LogFieldType.DURATION, 'duration'],
   [LogFieldType.STATUS, 'status'],
-  [LogFieldType.INPUT_TYPE, 'input-type'],
+  [LogFieldType.INPUT_TYPE, 'input-type inline'],
   [LogFieldType.INPUT_SOURCE, 'input-source'],
   [LogFieldType.INPUT_ACTION, 'input-action'],
   [LogFieldType.INPUT_DEVICE_ID, 'input-device-id'],
