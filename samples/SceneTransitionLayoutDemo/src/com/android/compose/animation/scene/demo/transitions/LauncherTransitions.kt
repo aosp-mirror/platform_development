@@ -36,5 +36,5 @@ fun SceneTransitionsBuilder.launcherTransitions() {
         }
     }
 
-    overscroll(Scenes.Launcher, Orientation.Vertical) {}
+    overscrollDisabled(Scenes.Launcher, Orientation.Vertical)
 }

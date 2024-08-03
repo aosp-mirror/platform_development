@@ -23,6 +23,7 @@ import {FileAndParser} from 'parsers/file_and_parser';
 import {FileAndParsers} from 'parsers/file_and_parsers';
 import {ParserBuilder} from 'test/unit/parser_builder';
 import {TimestampConverterUtils} from 'test/unit/timestamp_converter_utils';
+import {UserNotifierChecker} from 'test/unit/user_notifier_checker';
 import {Parser} from 'trace/parser';
 import {TraceFile} from 'trace/trace_file';
 import {TraceType} from 'trace/trace_type';
@@ -134,11 +135,16 @@ describe('LoadedParsers', () => {
     .build();
 
   let loadedParsers: LoadedParsers;
-  let warnings: UserWarning[] = [];
+  let userNotifierChecker: UserNotifierChecker;
 
-  beforeEach(async () => {
+  beforeAll(() => {
+    userNotifierChecker = new UserNotifierChecker();
+  });
+
+  beforeEach(() => {
     loadedParsers = new LoadedParsers();
     expect(loadedParsers.getParsers().length).toEqual(0);
+    userNotifierChecker.reset();
   });
 
   it('can load a single legacy parser', () => {
@@ -544,18 +550,7 @@ describe('LoadedParsers', () => {
         ? new FileAndParsers(perfettoTraceFile, perfetto)
         : undefined;
 
-    warnings = [];
-    const listener = {
-      onNotifications(notifications: UserWarning[]) {
-        warnings.push(...notifications);
-      },
-    };
-
-    loadedParsers.addParsers(
-      legacyFileAndParsers,
-      perfettoFileAndParsers,
-      listener,
-    );
+    loadedParsers.addParsers(legacyFileAndParsers, perfettoFileAndParsers);
   }
 
   function expectLoadResult(
@@ -566,6 +561,6 @@ describe('LoadedParsers', () => {
     expect(actualParsers.length).toEqual(expectedParsers.length);
     expect(new Set([...actualParsers])).toEqual(new Set([...expectedParsers]));
 
-    expect(warnings).toEqual(expectedWarnings);
+    userNotifierChecker.expectAdded(expectedWarnings);
   }
 });

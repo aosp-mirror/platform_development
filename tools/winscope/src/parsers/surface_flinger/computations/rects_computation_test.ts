@@ -14,10 +14,10 @@
  * limitations under the License.
  */
 
-import {IDENTITY_MATRIX} from 'common/geometry_types';
+import {IDENTITY_MATRIX} from 'common/geometry/transform_matrix';
 import {
   Transform,
-  TransformType,
+  TransformTypeFlags,
 } from 'parsers/surface_flinger/transform_utils';
 import {android} from 'protos/surfaceflinger/udc/static';
 import {HierarchyTreeBuilder} from 'test/unit/hierarchy_tree_builder';
@@ -28,7 +28,7 @@ import {InputConfig, RectsComputation} from './rects_computation';
 
 describe('RectsComputation', () => {
   const rotationTransform = new Transform(
-    TransformType.ROT_90_VAL,
+    TransformTypeFlags.ROT_90_VAL,
     IDENTITY_MATRIX,
   );
   let computation: RectsComputation;
@@ -750,26 +750,8 @@ describe('RectsComputation', () => {
       ])
       .build();
 
-    const expectedRects = [
-      new TraceRectBuilder()
-        .setX(-50)
-        .setY(-100)
-        .setWidth(100)
-        .setHeight(200)
-        .setId('1 layer1')
-        .setName('layer1')
-        .setCornerRadius(0)
-        .setTransform(Transform.EMPTY.matrix)
-        .setDepth(1)
-        .setGroupId(0)
-        .setIsVisible(false)
-        .setIsDisplay(false)
-        .setIsSpy(false)
-        .build(),
-    ];
-
     computation.setRoot(hierarchyRoot).executeInPlace();
-    checkLayerRects(hierarchyRoot, expectedRects);
+    checkLayerRects(hierarchyRoot, []);
   });
 
   it('makes input window rects', () => {

@@ -43,7 +43,7 @@ fun SceneTransitionsBuilder.lockscreenTransitions(configuration: DemoConfigurati
     commonLockscreenTransitions(Scenes.SplitLockscreen)
 
     if (configuration.useOverscrollSpec) {
-        overscroll(Scenes.Lockscreen, Orientation.Vertical) {}
+        overscrollDisabled(Scenes.Lockscreen, Orientation.Vertical)
 
         overscroll(Scenes.StubStart, Orientation.Horizontal) {
             progressConverter = configuration.overscrollProgress::convert

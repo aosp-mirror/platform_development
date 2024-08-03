@@ -27,7 +27,6 @@ import {
 import {MatDialog} from '@angular/material/dialog';
 import {assertDefined} from 'common/assert_utils';
 import {FunctionUtils} from 'common/function_utils';
-import {PersistentStoreProxy} from 'common/persistent_store_proxy';
 import {Analytics} from 'logging/analytics';
 import {ProgressListener} from 'messaging/progress_listener';
 import {
@@ -46,9 +45,11 @@ import {ConnectionState} from 'trace_collection/connection_state';
 import {ProxyConnection} from 'trace_collection/proxy_connection';
 import {
   EnableConfiguration,
+  makeDefaultDumpConfigMap,
+  makeDefaultTraceConfigMap,
   SelectionConfiguration,
   TraceConfigurationMap,
-} from 'trace_collection/trace_collection_utils';
+} from 'trace_collection/trace_configuration';
 import {TraceRequest, TraceRequestConfig} from 'trace_collection/trace_request';
 import {LoadProgressComponent} from './load_progress_component';
 import {
@@ -152,7 +153,12 @@ import {
               [disabled]="disableTraceSection()">
               <div class="tabbed-section">
                 <div class="trace-section" *ngIf="adbConnection.getState() === ${ConnectionState.IDLE}">
-                  <trace-config [traceConfig]="traceConfig"></trace-config>
+                  <trace-config
+                    title="Trace targets"
+                    [initialTraceConfig]="traceConfig"
+                    [storage]="storage"
+                    traceConfigStoreKey="TraceSettings"
+                    (traceConfigChange)="onTraceConfigChange($event)"></trace-config>
                   <div class="start-btn">
                     <button color="primary" mat-raised-button (click)="startTracing()">
                       Start trace
@@ -211,15 +217,12 @@ import {
             <mat-tab label="Dump" [disabled]="isTracingOrLoading()">
               <div class="tabbed-section">
                 <div class="dump-section" *ngIf="adbConnection.getState() === ${ConnectionState.IDLE} && !refreshDumps">
-                  <h3 class="mat-subheading-2">Dump targets</h3>
-                  <div class="selection">
-                    <mat-checkbox
-                      *ngFor="let dumpKey of objectKeys(dumpConfig)"
-                      color="primary"
-                      class="dump-checkbox"
-                      [(ngModel)]="dumpConfig[dumpKey].run"
-                      >{{ dumpConfig[dumpKey].name }}</mat-checkbox>
-                  </div>
+                  <trace-config
+                    title="Dump targets"
+                    [initialTraceConfig]="dumpConfig"
+                    [storage]="storage"
+                    traceConfigStoreKey="DumpSettings"
+                    (traceConfigChange)="onDumpConfigChange($event)"></trace-config>
                   <div class="dump-btn" *ngIf="!refreshDumps">
                     <button color="primary" mat-raised-button (click)="dumpState()">
                       Dump state
@@ -411,6 +414,8 @@ export class CollectTracesComponent
   lastUiProgressUpdateTimeMs?: number;
   refreshDumps = false;
   selectedTabIndex = 0;
+  traceConfig: TraceConfigurationMap;
+  dumpConfig: TraceConfigurationMap;
 
   private readonly storeKeyImeWarning = 'doNotShowImeWarningDialog';
   private readonly storeKeyLastDevice = 'adb.lastDevice';
@@ -425,8 +430,6 @@ export class CollectTracesComponent
   ];
 
   @Input() adbConnection: AdbConnection | undefined;
-  @Input() traceConfig: TraceConfigurationMap | undefined;
-  @Input() dumpConfig: TraceConfigurationMap | undefined;
   @Input() storage: Storage | undefined;
 
   @Output() readonly filesCollected = new EventEmitter<File[]>();
@@ -435,7 +438,10 @@ export class CollectTracesComponent
     @Inject(ChangeDetectorRef) private changeDetectorRef: ChangeDetectorRef,
     @Inject(MatDialog) private dialog: MatDialog,
     @Inject(NgZone) private ngZone: NgZone,
-  ) {}
+  ) {
+    this.traceConfig = makeDefaultTraceConfigMap();
+    this.dumpConfig = makeDefaultDumpConfigMap();
+  }
 
   ngOnChanges() {
     if (!this.adbConnection) {
@@ -444,7 +450,7 @@ export class CollectTracesComponent
     this.adbConnection.initialize(
       () => this.onConnectionStateChange(),
       (progress) => this.onLoadProgressUpdate(progress),
-      this.setTraceConfigForAvailableTraces,
+      this.toggleAvailabilityOfTraces,
     );
   }
 
@@ -547,6 +553,14 @@ export class CollectTracesComponent
     );
   }
 
+  onTraceConfigChange(newConfig: TraceConfigurationMap) {
+    this.traceConfig = newConfig;
+  }
+
+  onDumpConfigChange(newConfig: TraceConfigurationMap) {
+    this.dumpConfig = newConfig;
+  }
+
   async onChangeDeviceButton() {
     this.storage?.setItem(this.storeKeyLastDevice, '');
     this.selectedDevice = undefined;
@@ -598,14 +612,16 @@ export class CollectTracesComponent
         data,
         disableClose: true,
       });
-      dialogRef.beforeClosed().subscribe((result: WarningDialogResult) => {
-        if (this.storage && result.selectedOptions.includes(optionText)) {
-          this.storage.setItem(this.storeKeyImeWarning, 'true');
-        }
-        if (result.closeActionText === closeText) {
-          this.requestTraces(requestedTraces);
-        }
-      });
+      dialogRef
+        .beforeClosed()
+        .subscribe((result: WarningDialogResult | undefined) => {
+          if (this.storage && result?.selectedOptions.includes(optionText)) {
+            this.storage.setItem(this.storeKeyImeWarning, 'true');
+          }
+          if (result?.closeActionText === closeText) {
+            this.requestTraces(requestedTraces);
+          }
+        });
     });
   }
 
@@ -748,21 +764,21 @@ export class CollectTracesComponent
   private getRequestedTraces(): string[] {
     const tracingConfig = assertDefined(this.traceConfig);
     return Object.keys(tracingConfig).filter((traceKey: string) => {
-      return tracingConfig[traceKey].run;
+      return tracingConfig[traceKey].enabled;
     });
   }
 
   private getRequestedDumps(): string[] {
     const dumpConfig = assertDefined(this.dumpConfig);
     return Object.keys(dumpConfig).filter((dumpKey: string) => {
-      return dumpConfig[dumpKey].run;
+      return dumpConfig[dumpKey].enabled;
     });
   }
 
   private requestedEnabledConfig(traceName: string): TraceRequestConfig[] {
     const req: TraceRequestConfig[] = [];
     const trace = assertDefined(this.traceConfig)[traceName];
-    if (trace?.run) {
+    if (trace?.enabled) {
       trace.config?.enableConfigs?.forEach((con: EnableConfiguration) => {
         if (con.enabled) {
           req.push({key: con.key});
@@ -775,7 +791,7 @@ export class CollectTracesComponent
   private requestedSelectedConfig(traceName: string): TraceRequestConfig[] {
     const tracingConfig = assertDefined(this.traceConfig);
     const trace = tracingConfig[traceName];
-    if (!trace?.run) {
+    if (!trace?.enabled) {
       return [];
     }
     return (
@@ -790,12 +806,9 @@ export class CollectTracesComponent
     this.changeDetectorRef.detectChanges();
   }
 
-  private setTraceConfigForAvailableTraces = (
-    availableTracesConfig: TraceConfigurationMap,
-  ) =>
-    (this.traceConfig = PersistentStoreProxy.new<TraceConfigurationMap>(
-      'TraceConfiguration',
-      availableTracesConfig,
-      assertDefined(this.storage),
-    ));
+  private toggleAvailabilityOfTraces = (traces: string[]) =>
+    traces.forEach((trace) => {
+      const config = assertDefined(this.traceConfig)[trace];
+      config.available = !config.available;
+    });
 }
