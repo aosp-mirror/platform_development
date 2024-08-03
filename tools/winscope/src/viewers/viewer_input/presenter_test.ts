@@ -57,7 +57,7 @@ class PresenterInputTest extends AbstractLogViewerPresenterTest<UiData> {
 
   override readonly shouldExecuteHeaderTests = true;
   override readonly shouldExecuteFilterTests = true;
-  override readonly shouldExecuteCurrentIndexTests = false;
+  override readonly shouldExecuteCurrentIndexTests = true;
   override readonly shouldExecutePropertiesTests = true;
 
   override readonly totalOutputEntries = 8;
@@ -125,6 +125,16 @@ class PresenterInputTest extends AbstractLogViewerPresenterTest<UiData> {
       ],
     ],
   ]);
+
+  override readonly filterNameForCurrentIndexTest =
+    LogFieldType.INPUT_DISPATCH_WINDOWS;
+  override readonly filterChangeForCurrentIndexTest = [wrappedName('98')];
+  override readonly secondFilterChangeForCurrentIndexTest = [
+    wrappedName('98'),
+    wrappedName('515'),
+  ];
+  override readonly expectedCurrentIndexAfterFilterChange = 0;
+  override readonly expectedCurrentIndexAfterSecondFilterChange = 0;
 
   override async setUpTestEnvironment(): Promise<void> {
     const parser = (await UnitTestUtils.getTracesParser([
@@ -211,7 +221,8 @@ class PresenterInputTest extends AbstractLogViewerPresenterTest<UiData> {
     uiDataLog: UiDataLog,
   ): void {
     expect(uiDataLog.entries.length).toEqual(8);
-    expect(uiDataLog.selectedIndex).toEqual(0);
+    expect(uiDataLog.currentIndex).toEqual(0);
+    expect(uiDataLog.selectedIndex).toBeUndefined();
     const curEntry = uiDataLog.entries[0];
     const expectedFields = [
       {

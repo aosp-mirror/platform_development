@@ -33,7 +33,10 @@ import {
   TimestampClickDetail,
   ViewerEvents,
 } from 'viewers/common/viewer_events';
-import {timeButtonStyle} from 'viewers/components/styles/clickable_property.styles';
+import {
+  inlineButtonStyle,
+  timeButtonStyle,
+} from 'viewers/components/styles/clickable_property.styles';
 import {currentElementStyle} from 'viewers/components/styles/current_element.styles';
 import {logComponentStyles} from 'viewers/components/styles/log_component.styles';
 import {selectedElementStyle} from 'viewers/components/styles/selected_element.styles';
@@ -47,7 +50,6 @@ import {
   LogFieldClassNames,
   LogFieldNames,
   LogFieldType,
-  LogFieldValue,
   LogFilter,
 } from './ui_data_log';
 
@@ -167,13 +169,13 @@ import {
           </div>
 
           <div [class]="getLogFieldClass(field.type)" *ngFor="let field of entry.fields; index as i">
-            <span class="mat-body-1" *ngIf="!showTimestampButton(field.value)">{{ field.value }}</span>
+            <span class="mat-body-1" *ngIf="!showFieldButton(field)">{{ field.value }}</span>
             <button
-                *ngIf="showTimestampButton(field.value)"
+                *ngIf="showFieldButton(field)"
                 mat-button
                 color="primary"
-                (click)="onTimestampClick($event, entry, field)">
-              {{ field.value.format() }}
+                (click)="onFieldButtonClick($event, entry, field)">
+              {{ formatFieldButton(field) }}
             </button>
             <mat-icon
                 *ngIf="field.icon"
@@ -195,6 +197,7 @@ import {
     selectedElementStyle,
     currentElementStyle,
     timeButtonStyle,
+    inlineButtonStyle,
     viewerCardStyle,
     viewerCardInnerStyle,
     logComponentStyles,
@@ -223,8 +226,16 @@ export class LogComponent {
 
   constructor(@Inject(ElementRef) private elementRef: ElementRef) {}
 
-  showTimestampButton(value: LogFieldValue) {
-    return value instanceof Timestamp;
+  showFieldButton(field: LogField) {
+    return (
+      field.value instanceof Timestamp || field.type === LogFieldType.INPUT_TYPE
+    );
+  }
+
+  formatFieldButton(field: LogField): string | number {
+    return field.value instanceof Timestamp
+      ? field.value.format()
+      : field.value;
   }
 
   getLogFieldClass(fieldType: LogFieldType) {
@@ -272,11 +283,14 @@ export class LogComponent {
     );
   }
 
-  onTimestampClick(event: MouseEvent, entry: LogEntry, field: LogField) {
+  onFieldButtonClick(event: MouseEvent, entry: LogEntry, field: LogField) {
     event.stopPropagation();
-    if (field.type === LogFieldType.DISPATCH_TIME) {
+    if (
+      field.type === LogFieldType.DISPATCH_TIME ||
+      field.type === LogFieldType.INPUT_TYPE
+    ) {
       this.onTraceEntryTimestampClick(event, entry);
-    } else {
+    } else if (field.value instanceof Timestamp) {
       this.onRawTimestampClick(field.value as Timestamp);
     }
   }
