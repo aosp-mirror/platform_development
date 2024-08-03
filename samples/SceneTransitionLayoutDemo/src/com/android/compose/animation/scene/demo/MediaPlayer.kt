@@ -49,17 +49,18 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.clipRect
 import androidx.compose.ui.unit.dp
+import com.android.compose.animation.scene.ContentKey
 import com.android.compose.animation.scene.ElementKey
-import com.android.compose.animation.scene.ElementScenePicker
-import com.android.compose.animation.scene.SceneKey
+import com.android.compose.animation.scene.MovableElementKey
 import com.android.compose.animation.scene.SceneScope
-import com.android.compose.animation.scene.TransitionState
+import com.android.compose.animation.scene.StaticElementContentPicker
+import com.android.compose.animation.scene.content.state.ContentState
 import kotlin.math.ceil
 import kotlin.math.roundToInt
 
 object MediaPlayer {
     object Elements {
-        val MediaPlayer = ElementKey("MediaPlayer", scenePicker = ScenePicker)
+        val MediaPlayer = MovableElementKey("MediaPlayer", contentPicker = ContentPicker)
     }
 
     object Dimensions {
@@ -70,9 +71,8 @@ object MediaPlayer {
         val Background = RoundedCornerShape(24.dp)
     }
 
-    object ScenePicker : ElementScenePicker {
-        /** The different scenes in which the movable Media player can be composed. */
-        private val SCENES =
+    object ContentPicker : StaticElementContentPicker {
+        override val contents =
             setOf(
                 Scenes.Lockscreen,
                 Scenes.SplitLockscreen,
@@ -81,12 +81,12 @@ object MediaPlayer {
                 Scenes.QuickSettings,
             )
 
-        override fun sceneDuringTransition(
+        override fun contentDuringTransition(
             element: ElementKey,
-            transition: TransitionState.Transition,
-            fromSceneZIndex: Float,
-            toSceneZIndex: Float
-        ): SceneKey? {
+            transition: ContentState.Transition<*>,
+            fromContentZIndex: Float,
+            toContentZIndex: Float
+        ): ContentKey {
             return when {
                 // During the Lockscreen => Shade transition, the media player is visible in the
                 // Lockscreen when progress is in [0; 0.5]. It is then visible in the Shade scene
@@ -120,7 +120,7 @@ object MediaPlayer {
                     Scenes.SplitShade
                 transition.isTransitioningBetween(Scenes.Lockscreen, Scenes.QuickSettings) ->
                     Scenes.QuickSettings
-                else -> pickSingleSceneIn(SCENES, transition, element)
+                else -> pickSingleContentIn(contents, transition, element)
             }
         }
     }

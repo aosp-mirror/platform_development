@@ -18,9 +18,10 @@ import {TRACE_INFO} from 'trace/trace_info';
 import {TraceType} from 'trace/trace_type';
 
 export interface TraceConfiguration {
-  name: string | undefined;
-  run: boolean | undefined;
+  name: string;
+  enabled: boolean;
   config: ConfigurationOptions | undefined;
+  available: boolean;
 }
 
 export interface TraceConfigurationMap {
@@ -112,84 +113,116 @@ const sfTraceSelectionConfigs: SelectionConfiguration[] = [
   },
 ];
 
-const traceConfigurations: TraceConfigurationMap = {
+const traceDefaultConfig: TraceConfigurationMap = {
   layers_trace: {
     name: TRACE_INFO[TraceType.SURFACE_FLINGER].name,
-    run: true,
+    enabled: true,
     config: {
       enableConfigs: sfTraceEnableConfigs,
       selectionConfigs: sfTraceSelectionConfigs,
     },
+    available: true,
   },
   window_trace: {
     name: TRACE_INFO[TraceType.WINDOW_MANAGER].name,
-    run: true,
+    enabled: true,
     config: {
       enableConfigs: [],
       selectionConfigs: wmTraceSelectionConfigs,
     },
+    available: true,
   },
   screen_recording: {
     name: TRACE_INFO[TraceType.SCREEN_RECORDING].name,
-    run: true,
+    enabled: true,
     config: undefined,
+    available: true,
   },
   ime: {
     name: 'IME',
-    run: true,
+    enabled: true,
     config: undefined,
+    available: true,
   },
   transactions: {
     name: TRACE_INFO[TraceType.TRANSACTIONS].name,
-    run: true,
+    enabled: true,
     config: undefined,
+    available: true,
   },
   proto_log: {
     name: TRACE_INFO[TraceType.PROTO_LOG].name,
-    run: false,
+    enabled: false,
     config: undefined,
+    available: true,
   },
   wayland_trace: {
     name: TRACE_INFO[TraceType.WAYLAND].name,
-    run: false,
+    enabled: false,
     config: undefined,
+    available: false,
   },
   eventlog: {
     name: TRACE_INFO[TraceType.EVENT_LOG].name,
-    run: false,
+    enabled: false,
     config: undefined,
+    available: true,
   },
   transition_traces: {
     name: TRACE_INFO[TraceType.SHELL_TRANSITION].name,
-    run: false,
+    enabled: false,
     config: undefined,
+    available: true,
   },
   view_capture_traces: {
     name: 'View Capture',
-    run: false,
+    enabled: false,
     config: undefined,
+    available: true,
   },
   input: {
     name: 'Input',
-    run: false,
+    enabled: false,
     config: undefined,
+    available: true,
   },
 };
 
-export const TRACES: {[key: string]: TraceConfigurationMap} = {
-  default: {
-    window_trace: traceConfigurations['window_trace'],
-    layers_trace: traceConfigurations['layers_trace'],
-    transactions: traceConfigurations['transactions'],
-    proto_log: traceConfigurations['proto_log'],
-    screen_recording: traceConfigurations['screen_recording'],
-    ime: traceConfigurations['ime'],
-    eventlog: traceConfigurations['eventlog'],
-    transition_traces: traceConfigurations['transition_traces'],
-    view_capture_trace: traceConfigurations['view_capture_traces'],
-    input: traceConfigurations['input'],
-  },
-  arc: {
-    wayland_trace: traceConfigurations['wayland_trace'],
-  },
-};
+export function makeDefaultTraceConfigMap(): TraceConfigurationMap {
+  return structuredClone({
+    window_trace: traceDefaultConfig['window_trace'],
+    layers_trace: traceDefaultConfig['layers_trace'],
+    transactions: traceDefaultConfig['transactions'],
+    proto_log: traceDefaultConfig['proto_log'],
+    screen_recording: traceDefaultConfig['screen_recording'],
+    ime: traceDefaultConfig['ime'],
+    eventlog: traceDefaultConfig['eventlog'],
+    transition_traces: traceDefaultConfig['transition_traces'],
+    view_capture_trace: traceDefaultConfig['view_capture_traces'],
+    input: traceDefaultConfig['input'],
+    wayland_trace: traceDefaultConfig['wayland_trace'],
+  });
+}
+
+export function makeDefaultDumpConfigMap(): TraceConfigurationMap {
+  return structuredClone({
+    window_dump: {
+      name: 'Window Manager',
+      enabled: true,
+      config: undefined,
+      available: true,
+    },
+    layers_dump: {
+      name: 'Surface Flinger',
+      enabled: true,
+      config: undefined,
+      available: true,
+    },
+    screenshot: {
+      name: 'Screenshot',
+      enabled: true,
+      config: undefined,
+      available: true,
+    },
+  });
+}

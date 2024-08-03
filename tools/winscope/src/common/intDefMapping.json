@@ -299,15 +299,23 @@
   "android.app.ActivityManager.RestrictionReason": {
     "flag": false,
     "values": {
-      "0": "RESTRICTION_REASON_UNKNOWN",
       "1": "RESTRICTION_REASON_DEFAULT",
       "2": "RESTRICTION_REASON_DORMANT",
       "3": "RESTRICTION_REASON_USAGE",
       "4": "RESTRICTION_REASON_USER",
-      "5": "RESTRICTION_REASON_USER_NUDGED",
-      "6": "RESTRICTION_REASON_SYSTEM_HEALTH",
-      "7": "RESTRICTION_REASON_REMOTE_TRIGGER",
-      "8": "RESTRICTION_REASON_OTHER"
+      "5": "RESTRICTION_REASON_SYSTEM_HEALTH",
+      "6": "RESTRICTION_REASON_POLICY",
+      "7": "RESTRICTION_REASON_OTHER"
+    }
+  },
+  "android.app.ActivityManager.RestrictionSource": {
+    "flag": false,
+    "values": {
+      "1": "RESTRICTION_SOURCE_USER",
+      "2": "RESTRICTION_SOURCE_USER_NUDGED",
+      "3": "RESTRICTION_SOURCE_SYSTEM",
+      "4": "RESTRICTION_SOURCE_COMMAND_LINE",
+      "5": "RESTRICTION_SOURCE_REMOTE_TRIGGER"
     }
   },
   "android.app.ActivityManager.RunningAppProcessInfo.Importance": {
@@ -371,7 +379,8 @@
       "19": "OOM_ADJ_REASON_STOP_SERVICE",
       "20": "OOM_ADJ_REASON_EXECUTING_SERVICE",
       "21": "OOM_ADJ_REASON_RESTRICTION_CHANGE",
-      "22": "OOM_ADJ_REASON_COMPONENT_DISABLED"
+      "22": "OOM_ADJ_REASON_COMPONENT_DISABLED",
+      "23": "OOM_ADJ_REASON_FOLLOW_UP"
     }
   },
   "android.app.ActivityOptions.BackgroundActivityStartMode": {
@@ -380,7 +389,9 @@
       "0": "MODE_BACKGROUND_ACTIVITY_START_SYSTEM_DEFINED",
       "1": "MODE_BACKGROUND_ACTIVITY_START_ALLOWED",
       "2": "MODE_BACKGROUND_ACTIVITY_START_DENIED",
-      "-1": "MODE_BACKGROUND_ACTIVITY_START_COMPAT"
+      "-1": "MODE_BACKGROUND_ACTIVITY_START_COMPAT",
+      "3": "MODE_BACKGROUND_ACTIVITY_START_ALLOW_ALWAYS",
+      "4": "MODE_BACKGROUND_ACTIVITY_START_ALLOW_IF_VISIBLE"
     }
   },
   "android.app.ActivityOptions.SourceInfo.SourceType": {
@@ -608,7 +619,8 @@
     "flag": true,
     "values": {
       "1": "FIELD_NAME",
-      "2": "FIELD_INTERRUPTION_FILTER"
+      "2": "FIELD_INTERRUPTION_FILTER",
+      "4": "FIELD_ICON"
     }
   },
   "android.app.AutomaticZenRule.Type": {
@@ -838,7 +850,8 @@
       "4096": "FLAG_BUBBLE",
       "8192": "FLAG_NO_DISMISS",
       "16384": "FLAG_FSI_REQUESTED_BUT_DENIED",
-      "32768": "FLAG_USER_INITIATED_JOB"
+      "32768": "FLAG_USER_INITIATED_JOB",
+      "131072": "FLAG_SILENT"
     }
   },
   "android.app.Notification.NotificationVisibilityOverride": {
@@ -2331,7 +2344,8 @@
     "values": {
       "2": "POLICY_TYPE_RECENTS",
       "3": "POLICY_TYPE_ACTIVITY",
-      "4": "POLICY_TYPE_CLIPBOARD"
+      "4": "POLICY_TYPE_CLIPBOARD",
+      "6": "POLICY_TYPE_BLOCKED_ACTIVITY_BEHAVIOR"
     }
   },
   "android.companion.virtual.VirtualDeviceParams.LockState": {
@@ -2745,7 +2759,9 @@
       "8192": "CONFIG_LAYOUT_DIRECTION",
       "16384": "CONFIG_COLOR_MODE",
       "1073741824": "CONFIG_FONT_SCALE",
-      "32768": "CONFIG_GRAMMATICAL_GENDER"
+      "32768": "CONFIG_GRAMMATICAL_GENDER",
+      "-2147483648": "CONFIG_ASSETS_PATHS",
+      "134217728": "CONFIG_RESOURCES_UNUSED"
     }
   },
   "android.content.pm.ActivityInfo.LaunchMode": {
@@ -4564,7 +4580,8 @@
       "15": "BIOMETRIC_STRONG",
       "255": "BIOMETRIC_WEAK",
       "4095": "BIOMETRIC_CONVENIENCE",
-      "32768": "DEVICE_CREDENTIAL"
+      "32768": "DEVICE_CREDENTIAL",
+      "65536": "MANDATORY_BIOMETRICS"
     }
   },
   "android.hardware.biometrics.BiometricManager.BiometricError": {
@@ -9644,6 +9661,14 @@
       "2": "POWER_MODEL_ENERGY_CONSUMPTION"
     }
   },
+  "android.os.BatteryConsumer.PowerState": {
+    "flag": false,
+    "values": {
+      "0": "POWER_STATE_ANY",
+      "1": "POWER_STATE_BATTERY",
+      "2": "POWER_STATE_OTHER"
+    }
+  },
   "android.os.BatteryConsumer.ProcessState": {
     "flag": false,
     "values": {
@@ -9652,6 +9677,14 @@
       "2": "PROCESS_STATE_BACKGROUND",
       "3": "PROCESS_STATE_FOREGROUND_SERVICE",
       "4": "PROCESS_STATE_CACHED"
+    }
+  },
+  "android.os.BatteryConsumer.ScreenState": {
+    "flag": false,
+    "values": {
+      "0": "SCREEN_STATE_ANY",
+      "1": "SCREEN_STATE_ON",
+      "2": "SCREEN_STATE_OTHER"
     }
   },
   "android.os.BatteryStats.RadioAccessTechnology": {
@@ -10025,8 +10058,7 @@
       "0": "BRIGHTNESS_CONSTRAINT_TYPE_MINIMUM",
       "1": "BRIGHTNESS_CONSTRAINT_TYPE_MAXIMUM",
       "2": "BRIGHTNESS_CONSTRAINT_TYPE_DEFAULT",
-      "3": "BRIGHTNESS_CONSTRAINT_TYPE_DIM",
-      "4": "BRIGHTNESS_CONSTRAINT_TYPE_DOZE"
+      "3": "BRIGHTNESS_CONSTRAINT_TYPE_DIM"
     }
   },
   "android.os.PowerManager.GoToSleepReason": {
@@ -11453,6 +11485,16 @@
       "2": "RESULT_FLAG_ON_LOAD_ITEM_NOT_IMPLEMENTED"
     }
   },
+  "android.service.notification.Adjustment.Types": {
+    "flag": false,
+    "values": {
+      "0": "TYPE_OTHER",
+      "1": "TYPE_PROMOTION",
+      "2": "TYPE_SOCIAL_MEDIA",
+      "3": "TYPE_NEWS",
+      "4": "TYPE_CONTENT_RECOMMENDATION"
+    }
+  },
   "android.service.notification.Condition.Source": {
     "flag": false,
     "values": {
@@ -12549,6 +12591,22 @@
       "-2": "CARRIER_PRIVILEGE_STATUS_ERROR_LOADING_RULES"
     }
   },
+  "android.telephony.Annotation.ConnectivityTransport": {
+    "flag": false,
+    "values": {
+      "0": "TRANSPORT_CELLULAR",
+      "1": "TRANSPORT_WIFI",
+      "2": "TRANSPORT_BLUETOOTH",
+      "3": "TRANSPORT_ETHERNET",
+      "4": "TRANSPORT_VPN",
+      "5": "TRANSPORT_WIFI_AWARE",
+      "6": "TRANSPORT_LOWPAN",
+      "7": "TRANSPORT_TEST",
+      "8": "TRANSPORT_USB",
+      "9": "TRANSPORT_THREAD",
+      "10": "TRANSPORT_SATELLITE"
+    }
+  },
   "android.telephony.Annotation.DataActivityType": {
     "flag": false,
     "values": {
@@ -13525,6 +13583,14 @@
       "2": "ID_TYPE_FQDN",
       "3": "ID_TYPE_RFC822_ADDR",
       "11": "ID_TYPE_KEY_ID"
+    }
+  },
+  "android.telephony.CarrierConfigManager.SATELLITE_DATA_SUPPORT_MODE": {
+    "flag": false,
+    "values": {
+      "0": "SATELLITE_DATA_SUPPORT_ONLY_RESTRICTED",
+      "1": "SATELLITE_DATA_SUPPORT_BANDWIDTH_CONSTRAINED",
+      "2": "SATELLITE_DATA_SUPPORT_ALL"
     }
   },
   "android.telephony.CarrierRestrictionRules.CarrierRestrictionDefault": {
@@ -16217,7 +16283,8 @@
       "2": "DATAGRAM_TYPE_LOCATION_SHARING",
       "3": "DATAGRAM_TYPE_KEEP_ALIVE",
       "4": "DATAGRAM_TYPE_LAST_SOS_MESSAGE_STILL_NEED_HELP",
-      "5": "DATAGRAM_TYPE_LAST_SOS_MESSAGE_NO_HELP_NEEDED"
+      "5": "DATAGRAM_TYPE_LAST_SOS_MESSAGE_NO_HELP_NEEDED",
+      "6": "DATAGRAM_TYPE_SMS"
     }
   },
   "android.telephony.satellite.SatelliteManager.DeviceHoldPosition": {
@@ -16314,7 +16381,9 @@
       "21": "SATELLITE_RESULT_REQUEST_IN_PROGRESS",
       "22": "SATELLITE_RESULT_MODEM_BUSY",
       "23": "SATELLITE_RESULT_ILLEGAL_STATE",
-      "24": "SATELLITE_RESULT_MODEM_TIMEOUT"
+      "24": "SATELLITE_RESULT_MODEM_TIMEOUT",
+      "25": "SATELLITE_RESULT_LOCATION_DISABLED",
+      "26": "SATELLITE_RESULT_LOCATION_NOT_AVAILABLE"
     }
   },
   "android.text.FontConfig.Customization.LocaleFallback.Operation": {
@@ -16661,6 +16730,19 @@
       "0": "NO_GRAVITY"
     }
   },
+  "android.view.HapticFeedbackConstants.Flags": {
+    "flag": true,
+    "values": {
+      "1": "FLAG_IGNORE_VIEW_SETTING",
+      "2": "FLAG_IGNORE_GLOBAL_SETTING"
+    }
+  },
+  "android.view.HapticFeedbackConstants.PrivateFlags": {
+    "flag": true,
+    "values": {
+      "1": "PRIVATE_FLAG_APPLY_INPUT_METHOD_SETTINGS"
+    }
+  },
   "android.view.InputDevice.InputSourceClass": {
     "flag": true,
     "values": {
@@ -16943,6 +17025,24 @@
       "3": "ERROR_SOURCE_NO_DATA",
       "4": "ERROR_SOURCE_INVALID",
       "5": "ERROR_DESTINATION_INVALID"
+    }
+  },
+  "android.view.PointerIcon.PointerIconVectorStyleFill": {
+    "flag": false,
+    "values": {
+      "0": "POINTER_ICON_VECTOR_STYLE_FILL_BLACK",
+      "1": "POINTER_ICON_VECTOR_STYLE_FILL_GREEN",
+      "2": "POINTER_ICON_VECTOR_STYLE_FILL_YELLOW",
+      "3": "POINTER_ICON_VECTOR_STYLE_FILL_PINK",
+      "4": "POINTER_ICON_VECTOR_STYLE_FILL_BLUE"
+    }
+  },
+  "android.view.PointerIcon.PointerIconVectorStyleStroke": {
+    "flag": false,
+    "values": {
+      "0": "POINTER_ICON_VECTOR_STYLE_STROKE_WHITE",
+      "1": "POINTER_ICON_VECTOR_STYLE_STROKE_BLACK",
+      "2": "POINTER_ICON_VECTOR_STYLE_STROKE_NONE"
     }
   },
   "android.view.RemoteAnimationTarget.Mode": {
@@ -17479,6 +17579,7 @@
       "16": "SYSTEM_FLAG_SHOW_FOR_ALL_USERS",
       "32": "PRIVATE_FLAG_UNRESTRICTED_GESTURE_EXCLUSION",
       "64": "PRIVATE_FLAG_NO_MOVE_ANIMATION",
+      "128": "PRIVATE_FLAG_APP_PROGRESS_GENERATION_ALLOWED",
       "256": "PRIVATE_FLAG_SYSTEM_ERROR",
       "512": "PRIVATE_FLAG_OPTIMIZE_MEASURE",
       "1024": "PRIVATE_FLAG_DISABLE_WALLPAPER_TOUCH_EVENTS",
@@ -18051,7 +18152,25 @@
       "44": "PHASE_IME_SHOW_WINDOW",
       "45": "PHASE_IME_HIDE_WINDOW",
       "46": "PHASE_IME_PRIVILEGED_OPERATIONS",
-      "47": "PHASE_SERVER_CURRENT_ACTIVE_IME"
+      "47": "PHASE_SERVER_CURRENT_ACTIVE_IME",
+      "48": "PHASE_CLIENT_REPORT_REQUESTED_VISIBLE_TYPES",
+      "49": "PHASE_WM_SET_REMOTE_TARGET_IME_VISIBILITY",
+      "50": "PHASE_WM_POST_LAYOUT_NOTIFY_CONTROLS_CHANGED",
+      "51": "PHASE_CLIENT_HANDLE_DISPATCH_IME_VISIBILITY_CHANGED",
+      "52": "PHASE_CLIENT_NOTIFY_IME_VISIBILITY_CHANGED",
+      "53": "PHASE_CLIENT_UPDATE_REQUESTED_VISIBLE_TYPES",
+      "54": "PHASE_WM_REMOTE_INSETS_CONTROL_TARGET_SET_REQUESTED_VISIBILITY",
+      "55": "PHASE_WM_GET_CONTROL_WITH_LEASH",
+      "56": "PHASE_WM_UPDATE_REQUESTED_VISIBLE_TYPES",
+      "57": "PHASE_SERVER_SET_VISIBILITY_ON_FOCUSED_WINDOW",
+      "58": "PHASE_CLIENT_HANDLE_SET_IME_VISIBILITY",
+      "59": "PHASE_CLIENT_SET_IME_VISIBILITY",
+      "60": "PHASE_WM_DISPATCH_IME_REQUESTED_CHANGED",
+      "61": "PHASE_CLIENT_NO_ONGOING_USER_ANIMATION",
+      "62": "PHASE_WM_NOTIFY_IME_VISIBILITY_CHANGED_FROM_CLIENT",
+      "63": "PHASE_WM_POSTING_CHANGED_IME_VISIBILITY",
+      "64": "PHASE_WM_INVOKING_IME_REQUESTED_LISTENER",
+      "65": "PHASE_CLIENT_ALREADY_HIDDEN"
     }
   },
   "android.view.inputmethod.ImeTracker.Status": {
@@ -18776,7 +18895,7 @@
     }
   },
   "android.window.TransitionInfo.ChangeFlags": {
-    "flag": false,
+    "flag": true,
     "values": {
       "0": "FLAG_NONE",
       "1": "FLAG_SHOW_WALLPAPER",
@@ -18863,7 +18982,8 @@
       "2": "HARDWARE",
       "4": "TRIPLETAP",
       "8": "TWOFINGER_DOUBLETAP",
-      "16": "QUICK_SETTINGS"
+      "16": "QUICK_SETTINGS",
+      "32": "GESTURE"
     }
   },
   "com.android.internal.accessibility.util.AccessibilityUtils.A11yTextChangeType": {
@@ -19176,7 +19296,20 @@
       "99": "CUJ_LAUNCHER_WIDGET_PICKER_SEARCH_BACK",
       "100": "CUJ_LAUNCHER_WIDGET_BOTTOM_SHEET_CLOSE_BACK",
       "102": "CUJ_LAUNCHER_PRIVATE_SPACE_LOCK",
-      "103": "CUJ_LAUNCHER_PRIVATE_SPACE_UNLOCK"
+      "103": "CUJ_LAUNCHER_PRIVATE_SPACE_UNLOCK",
+      "104": "CUJ_DESKTOP_MODE_MAXIMIZE_WINDOW",
+      "105": "CUJ_FOLD_ANIM",
+      "106": "CUJ_DESKTOP_MODE_RESIZE_WINDOW",
+      "107": "CUJ_DESKTOP_MODE_ENTER_APP_HANDLE_DRAG_HOLD",
+      "112": "CUJ_DESKTOP_MODE_ENTER_MODE_APP_HANDLE_MENU",
+      "108": "CUJ_DESKTOP_MODE_EXIT_MODE",
+      "109": "CUJ_DESKTOP_MODE_MINIMIZE_WINDOW",
+      "110": "CUJ_DESKTOP_MODE_DRAG_WINDOW",
+      "111": "CUJ_STATUS_BAR_LAUNCH_DIALOG_FROM_CHIP",
+      "113": "CUJ_LAUNCHER_KEYBOARD_QUICK_SWITCH_OPEN",
+      "114": "CUJ_LAUNCHER_KEYBOARD_QUICK_SWITCH_CLOSE",
+      "115": "CUJ_LAUNCHER_KEYBOARD_QUICK_SWITCH_APP_LAUNCH",
+      "116": "CUJ_DESKTOP_MODE_ENTER_APP_HANDLE_DRAG_RELEASE"
     }
   },
   "com.android.internal.jank.DisplayRefreshRate.RefreshRate": {
@@ -19224,8 +19357,7 @@
       "6": "CONTENT_PROVIDER",
       "7": "APP_REGISTERED",
       "8": "SHORT_FGS_TIMEOUT",
-      "9": "JOB_SERVICE",
-      "11": "FGS_TIMEOUT"
+      "9": "JOB_SERVICE"
     }
   },
   "com.android.internal.os.anr.AnrLatencyTracker.EarlyDumpStatus": {
@@ -19349,7 +19481,8 @@
       "24": "ACTION_KEYGUARD_FPS_UNLOCK_TO_HOME",
       "25": "ACTION_BACK_SYSTEM_ANIMATION",
       "26": "ACTION_NOTIFICATIONS_HIDDEN_FOR_MEASURE",
-      "27": "ACTION_NOTIFICATIONS_HIDDEN_FOR_MEASURE_WITH_SHADE_OPEN"
+      "27": "ACTION_NOTIFICATIONS_HIDDEN_FOR_MEASURE_WITH_SHADE_OPEN",
+      "28": "ACTION_KEYGUARD_FACE_UNLOCK_TO_HOME"
     }
   },
   "com.android.internal.util.ObservableServiceConnection.DisconnectReason": {
