@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+import {CommonModule} from '@angular/common';
 import {Component, NO_ERRORS_SCHEMA, ViewChild} from '@angular/core';
 import {ComponentFixture, TestBed} from '@angular/core/testing';
 import {FormsModule} from '@angular/forms';
@@ -28,17 +29,12 @@ import {MatSnackBar, MatSnackBarModule} from '@angular/material/snack-bar';
 import {BrowserAnimationsModule} from '@angular/platform-browser/animations';
 import {assertDefined} from 'common/assert_utils';
 import {InMemoryStorage} from 'common/in_memory_storage';
-import {PersistentStoreProxy} from 'common/persistent_store_proxy';
 import {NoTraceTargetsSelected, WinscopeEvent} from 'messaging/winscope_event';
 import {MockAdbConnection} from 'test/unit/mock_adb_connection';
 import {AdbConnection} from 'trace_collection/adb_connection';
 import {AdbDevice} from 'trace_collection/adb_device';
 import {ConnectionState} from 'trace_collection/connection_state';
 import {ProxyConnection} from 'trace_collection/proxy_connection';
-import {
-  TraceConfigurationMap,
-  TRACES,
-} from 'trace_collection/trace_collection_utils';
 import {AdbProxyComponent} from './adb_proxy_component';
 import {CollectTracesComponent} from './collect_traces_component';
 import {LoadProgressComponent} from './load_progress_component';
@@ -59,6 +55,7 @@ describe('CollectTracesComponent', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [
+        CommonModule,
         MatIconModule,
         MatCardModule,
         MatListModule,
@@ -241,11 +238,61 @@ describe('CollectTracesComponent', () => {
     expect(el.innerHTML).toContain('Pixel 6');
     expect(el.innerHTML).toContain('35562');
 
-    const traceSection = htmlElement.querySelector('.trace-section');
-    expect(traceSection).toBeTruthy();
+    const traceSection = assertDefined(
+      htmlElement.querySelector('.trace-section'),
+    );
+    expect(traceSection.querySelector('trace-config')?.textContent).toContain(
+      'Trace targets',
+    );
+    expect(traceSection.querySelector('.start-btn')?.textContent).toContain(
+      'Start trace',
+    );
 
-    const dumpSection = htmlElement.querySelector('.dump-section');
-    expect(dumpSection).toBeTruthy();
+    const dumpSection = assertDefined(
+      htmlElement.querySelector('.dump-section'),
+    );
+    expect(dumpSection.querySelector('trace-config')?.textContent).toContain(
+      'Dump targets',
+    );
+    expect(dumpSection.querySelector('.dump-btn')?.textContent).toContain(
+      'Dump state',
+    );
+  });
+
+  it('updates config on change in trace config component', async () => {
+    goToConfigSection();
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    expect(
+      component.collectTracesComponent?.traceConfig['window_trace']?.enabled,
+    ).toBeTrue();
+    const traceSection = assertDefined(
+      htmlElement.querySelector('.trace-section'),
+    );
+    const traceCheckboxInput = assertDefined(
+      traceSection.querySelector<HTMLInputElement>('.trace-checkbox input'),
+    );
+    traceCheckboxInput.click();
+    fixture.detectChanges();
+    expect(
+      component.collectTracesComponent?.traceConfig['window_trace']?.enabled,
+    ).toBeFalse();
+
+    expect(
+      component.collectTracesComponent?.dumpConfig['window_dump']?.enabled,
+    ).toBeTrue();
+    const dumpSection = assertDefined(
+      htmlElement.querySelector('.dump-section'),
+    );
+    const dumpCheckboxInput = assertDefined(
+      dumpSection.querySelector<HTMLInputElement>('.trace-checkbox input'),
+    );
+    dumpCheckboxInput.click();
+    fixture.detectChanges();
+    expect(
+      component.collectTracesComponent?.dumpConfig['window_dump']?.enabled,
+    ).toBeFalse();
   });
 
   it('start trace button works as expected', async () => {
@@ -264,9 +311,9 @@ describe('CollectTracesComponent', () => {
       lastEvent = event;
     });
 
-    Object.values(assertDefined(component.traceConfig)).forEach(
-      (c) => (c.run = false),
-    );
+    Object.values(
+      assertDefined(component.collectTracesComponent?.traceConfig),
+    ).forEach((c) => (c.enabled = false));
     const spy = spyOn(getConnection(), 'startTrace');
     await clickStartTraceButton();
 
@@ -291,9 +338,9 @@ describe('CollectTracesComponent', () => {
       lastEvent = event;
     });
 
-    Object.values(assertDefined(component.dumpConfig)).forEach(
-      (c) => (c.run = false),
-    );
+    Object.values(
+      assertDefined(component.collectTracesComponent?.dumpConfig),
+    ).forEach((c) => (c.enabled = false));
     const filesSpy = spyOn(getCollectTracesComponent().filesCollected, 'emit');
     await clickDumpStateButton();
 
@@ -546,6 +593,17 @@ describe('CollectTracesComponent', () => {
     expect(spy).toHaveBeenCalled();
   });
 
+  it('update available traces from connection', () => {
+    expect(
+      component.collectTracesComponent?.traceConfig['wayland_trace']?.available,
+    ).toBeFalse();
+    getConnection().availableTracesChangeCallback(['wayland_trace']);
+    fixture.detectChanges();
+    expect(
+      component.collectTracesComponent?.traceConfig['wayland_trace']?.available,
+    ).toBeTrue();
+  });
+
   describe('ProxyConnection', () => {
     beforeEach(async () => {
       await startProxyConnection();
@@ -606,9 +664,9 @@ describe('CollectTracesComponent', () => {
   }
 
   function updateTraceConfigToInvalidIMEFrameMapping() {
-    const config = assertDefined(component.traceConfig);
-    config['ime'].run = true;
-    config['layers_trace'].run = false;
+    const config = assertDefined(component.collectTracesComponent?.traceConfig);
+    config['ime'].enabled = true;
+    config['layers_trace'].enabled = false;
   }
 
   async function clickStartTraceButton() {
@@ -656,35 +714,12 @@ describe('CollectTracesComponent', () => {
     template: `
       <collect-traces
         [adbConnection]="adbConnection"
-        [storage]="storage"
-        [traceConfig]="traceConfig"
-        [dumpConfig]="dumpConfig"></collect-traces>
+        [storage]="storage"></collect-traces>
     `,
   })
   class TestHostComponent {
     adbConnection: AdbConnection = new MockAdbConnection();
     storage = new InMemoryStorage();
-    traceConfig = PersistentStoreProxy.new<TraceConfigurationMap>(
-      'TracingSettings',
-      TRACES['default'],
-      this.storage,
-    );
-    dumpConfig = PersistentStoreProxy.new<TraceConfigurationMap>(
-      'DumpSettings',
-      {
-        window_dump: {
-          name: 'Window Manager',
-          run: true,
-          config: undefined,
-        },
-        layers_dump: {
-          name: 'Surface Flinger',
-          run: true,
-          config: undefined,
-        },
-      },
-      this.storage,
-    );
 
     @ViewChild(CollectTracesComponent)
     collectTracesComponent: CollectTracesComponent | undefined;

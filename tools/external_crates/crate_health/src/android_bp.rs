@@ -17,7 +17,6 @@ use std::{
     env,
     path::Path,
     process::{Command, Output},
-    str::from_utf8,
     sync::mpsc::channel,
 };
 
@@ -40,7 +39,7 @@ pub fn generate_android_bps<'a, T: Iterator<Item = &'a Crate>>(
         let crate_version = krate.version().clone();
         let staging_path = krate.staging_path();
         pool.execute(move || {
-            tx.send((crate_name, crate_version, generate_android_bp(&staging_path)))
+            tx.send((crate_name, crate_version, run_cargo_embargo(&staging_path)))
                 .expect("Failed to send");
         });
     }
@@ -51,20 +50,8 @@ pub fn generate_android_bps<'a, T: Iterator<Item = &'a Crate>>(
     Ok(results)
 }
 
-pub(crate) fn generate_android_bp(staging_path: &RepoPath) -> Result<Output> {
-    let generate_android_bp_output = run_cargo_embargo(staging_path)?;
-    if !generate_android_bp_output.status.success() {
-        println!(
-            "cargo_embargo failed for {}\nstdout:\n{}\nstderr:\n{}",
-            staging_path,
-            from_utf8(&generate_android_bp_output.stdout)?,
-            from_utf8(&generate_android_bp_output.stderr)?
-        );
-    }
-    Ok(generate_android_bp_output)
-}
-
 fn run_cargo_embargo(staging_path: &RepoPath) -> Result<Output> {
+    maybe_build_cargo_embargo(&staging_path.root(), false)?;
     // Make sure we can find bpfmt.
     let host_bin = staging_path.with_same_root(&"out/host/linux-x86/bin").abs();
     let new_path = match env::var_os("PATH") {

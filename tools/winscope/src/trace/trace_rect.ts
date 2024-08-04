@@ -14,8 +14,9 @@
  * limitations under the License.
  */
 
-import {TransformMatrix} from 'common/geometry_types';
-import {Rect} from 'common/rect';
+import {Rect} from 'common/geometry/rect';
+import {Region} from 'common/geometry/region';
+import {TransformMatrix} from 'common/geometry/transform_matrix';
 import {Item} from 'trace/item';
 
 export class TraceRect extends Rect implements Item {
@@ -34,6 +35,7 @@ export class TraceRect extends Rect implements Item {
     readonly depth: number,
     readonly opacity: number | undefined,
     readonly isSpy: boolean,
+    readonly fillRegion: Region | undefined,
   ) {
     super(x, y, w, h);
   }

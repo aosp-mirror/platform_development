@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023 The Android Open Source Project
+ * Copyright (C) 2024 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,25 +14,22 @@
  * limitations under the License.
  */
 
-export interface Point {
-  x: number;
-  y: number;
-}
+import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
+import {Rect} from './rect';
 
-export interface TransformMatrix {
-  dsdx: number;
-  dtdx: number;
-  tx: number;
-  dsdy: number;
-  dtdy: number;
-  ty: number;
-}
+export class Region {
+  constructor(readonly rects: Rect[]) {}
 
-export const IDENTITY_MATRIX = {
-  dsdx: 1,
-  dtdx: 0,
-  tx: 0,
-  dsdy: 0,
-  dtdy: 1,
-  ty: 0,
-};
+  static from(node: PropertyTreeNode): Region {
+    const rects =
+      node
+        .getChildByName('rect')
+        ?.getAllChildren()
+        .map((rectNode) => Rect.from(rectNode)) ?? [];
+    return new Region(rects);
+  }
+
+  static createEmpty(): Region {
+    return new Region([]);
+  }
+}
