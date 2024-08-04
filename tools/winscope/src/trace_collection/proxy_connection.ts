@@ -32,7 +32,7 @@ import {
 
 export class ProxyConnection implements Connection {
   proxy = proxyClient;
-  keep_alive_worker: any = null;
+  keep_alive_worker: number | undefined;
   notConnected = [
     ProxyState.NO_PROXY,
     ProxyState.UNAUTH,
@@ -131,8 +131,8 @@ export class ProxyConnection implements Connection {
 
   keepAliveTrace(view: ProxyConnection) {
     if (!view.isEndTraceState()) {
-      clearInterval(view.keep_alive_worker);
-      view.keep_alive_worker = null;
+      window.clearInterval(view.keep_alive_worker);
+      view.keep_alive_worker = undefined;
       return;
     }
     proxyRequest.keepTraceAlive(view);
