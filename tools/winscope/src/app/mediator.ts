@@ -141,7 +141,9 @@ export class Mediator {
       this.currentProgressListener = this.collectTracesComponent;
       if (event.files.length > 0) {
         await this.loadFiles(event.files, FilesSource.COLLECTED);
-        await this.loadViewers();
+        if (this.tracePipeline.getTraces().getSize() > 0) {
+          await this.loadViewers();
+        }
       } else {
         UserNotifier.add(new NoValidFiles()).notify();
       }

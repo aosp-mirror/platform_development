@@ -35,7 +35,6 @@ import {FileUtils} from 'common/file_utils';
 import {globalConfig} from 'common/global_config';
 import {InMemoryStorage} from 'common/in_memory_storage';
 import {PersistentStore} from 'common/persistent_store';
-import {PersistentStoreProxy} from 'common/persistent_store_proxy';
 import {Timestamp} from 'common/time';
 import {UrlUtils} from 'common/url_utils';
 import {UserNotifier} from 'common/user_notifier';
@@ -55,10 +54,6 @@ import {
 import {WinscopeEventListener} from 'messaging/winscope_event_listener';
 import {AdbConnection} from 'trace_collection/adb_connection';
 import {ProxyConnection} from 'trace_collection/proxy_connection';
-import {
-  TraceConfigurationMap,
-  TRACES,
-} from 'trace_collection/trace_collection_utils';
 import {iconDividerStyle} from 'viewers/components/styles/icon_divider.styles';
 import {ViewerInputMethodComponent} from 'viewers/components/viewer_input_method_component';
 import {Viewer} from 'viewers/viewer';
@@ -225,8 +220,6 @@ import {UploadTracesComponent} from './upload_traces_component';
           <div class="card-grid landing-grid">
             <collect-traces
               class="collect-traces-card homepage-card"
-              [traceConfig]="traceConfig"
-              [dumpConfig]="dumpConfig"
               [storage]="traceConfigStorage"
               [adbConnection]="adbConnection"
               (filesCollected)="onFilesCollected($event)"></collect-traces>
@@ -354,8 +347,6 @@ export class AppComponent implements WinscopeEventListener {
     ]),
   );
   adbConnection: AdbConnection = new ProxyConnection();
-  traceConfig: TraceConfigurationMap;
-  dumpConfig: TraceConfigurationMap;
   traceConfigStorage: Storage;
 
   @ViewChild(UploadTracesComponent)
@@ -459,33 +450,6 @@ export class AppComponent implements WinscopeEventListener {
 
     this.traceConfigStorage =
       globalConfig.MODE === 'PROD' ? localStorage : new InMemoryStorage();
-
-    this.traceConfig = PersistentStoreProxy.new<TraceConfigurationMap>(
-      'TracingSettings',
-      TRACES['default'],
-      this.traceConfigStorage,
-    );
-    this.dumpConfig = PersistentStoreProxy.new<TraceConfigurationMap>(
-      'DumpSettings',
-      {
-        window_dump: {
-          name: 'Window Manager',
-          run: true,
-          config: undefined,
-        },
-        layers_dump: {
-          name: 'Surface Flinger',
-          run: true,
-          config: undefined,
-        },
-        screenshot: {
-          name: 'Screenshot',
-          run: true,
-          config: undefined,
-        },
-      },
-      this.traceConfigStorage,
-    );
 
     window.onunhandledrejection = (evt) => {
       Analytics.Error.logGlobalException(evt.reason);
