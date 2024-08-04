@@ -16,7 +16,7 @@
 
 import {TimelineUtils} from 'app/components/timeline/timeline_utils';
 import {assertDefined} from 'common/assert_utils';
-import {Rect} from 'common/rect';
+import {Rect} from 'common/geometry/rect';
 
 export class CanvasDrawer {
   private canvas: HTMLCanvasElement | undefined;

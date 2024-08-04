@@ -17,14 +17,15 @@
 import {assertDefined} from 'common/assert_utils';
 import {Timestamp} from 'common/time';
 import {ParserTimestampConverter} from 'common/timestamp_converter';
+import {SetFormatters} from 'parsers/operations/set_formatters';
 import {AbstractTracesParser} from 'parsers/traces/abstract_traces_parser';
 import {CoarseVersion} from 'trace/coarse_version';
 import {Trace} from 'trace/trace';
 import {Traces} from 'trace/traces';
 import {TraceType} from 'trace/trace_type';
+import {CUJ_TYPE_FORMATTER} from 'trace/tree_node/formatters';
 import {PropertyTreeBuilderFromProto} from 'trace/tree_node/property_tree_builder_from_proto';
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
-import {CujType} from './cuj_type';
 import {EventTag} from './event_tag';
 import {AddCujProperties} from './operations/add_cuj_properties';
 
@@ -127,7 +128,7 @@ export class TracesParserCujs extends AbstractTracesParser<PropertyTreeNode> {
     const cujs: PropertyTreeNode[] = [];
 
     for (const startEvent of startEvents) {
-      const cujType: CujType = assertDefined(
+      const cujType = assertDefined(
         startEvent.getChildByName('cujType'),
       ).getValue();
       const startTimestamp = assertDefined(
@@ -185,7 +186,7 @@ export class TracesParserCujs extends AbstractTracesParser<PropertyTreeNode> {
 
   private findMatchingEvent(
     events: PropertyTreeNode[],
-    targetCujType: CujType,
+    targetCujType: number,
     startTimestamp: PropertyTreeNode,
   ): PropertyTreeNode | undefined {
     return events.find((event) => {
@@ -239,16 +240,22 @@ export class TracesParserCujs extends AbstractTracesParser<PropertyTreeNode> {
   }
 
   private makeCujPropertyTree(cuj: Cuj): PropertyTreeNode {
-    return new PropertyTreeBuilderFromProto()
+    const tree = new PropertyTreeBuilderFromProto()
       .setData(cuj)
       .setRootId('CujTrace')
       .setRootName('cuj')
       .build();
+
+    new SetFormatters(
+      undefined,
+      new Map([['cujType', CUJ_TYPE_FORMATTER]]),
+    ).apply(tree);
+    return tree;
   }
 }
 
 interface Cuj {
-  cujType: CujType;
+  cujType: number;
   startTimestamp: Timestamp;
   endTimestamp: Timestamp;
   canceled: boolean;

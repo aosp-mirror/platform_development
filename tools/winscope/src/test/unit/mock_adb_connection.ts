@@ -24,6 +24,8 @@ export class MockAdbConnection extends AdbConnection {
   state: ConnectionState = ConnectionState.CONNECTING;
   errorText = '';
   files = [new File([], 'test_file')];
+  availableTracesChangeCallback: (traces: string[]) => void =
+    FunctionUtils.DO_NOTHING;
   devices: AdbDevice[] = [];
   private detectStateChangeInUi: () => Promise<void> =
     FunctionUtils.DO_NOTHING_ASYNC;
@@ -32,9 +34,11 @@ export class MockAdbConnection extends AdbConnection {
   async initialize(
     detectStateChangeInUi: () => Promise<void>,
     progressCallback: OnProgressUpdateType,
+    availableTracesChangeCallback: (traces: string[]) => void,
   ) {
     this.detectStateChangeInUi = detectStateChangeInUi;
     this.progressCallback = progressCallback;
+    this.availableTracesChangeCallback = availableTracesChangeCallback;
     this.setState(ConnectionState.CONNECTING);
   }
 

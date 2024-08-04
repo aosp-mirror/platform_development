@@ -15,6 +15,7 @@
  */
 
 import {assertDefined} from 'common/assert_utils';
+import {TransformTypeFlags} from 'parsers/surface_flinger/transform_utils';
 import {PropertyTreeBuilder} from 'test/unit/property_tree_builder';
 import {TreeNodeUtils} from 'test/unit/tree_node_utils';
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
@@ -23,7 +24,7 @@ import {UpdateTransforms} from './update_transforms';
 describe('UpdateTransforms', () => {
   let propertyRoot: PropertyTreeNode;
   let operation: UpdateTransforms;
-  let protoTransform: any;
+  let deprecatedProtoTransform: any;
   let protoPosition: any;
 
   beforeEach(() => {
@@ -33,12 +34,12 @@ describe('UpdateTransforms', () => {
       .setName('node')
       .setIsRoot(true)
       .build();
-    protoTransform = {
-      dsdx: 0,
-      dtdx: 0,
-      dsdy: 0,
-      dtdy: 0,
-      type: 0,
+    deprecatedProtoTransform = {
+      dsdx: 1,
+      dtdx: 2,
+      dtdy: 3,
+      dsdy: 4,
+      type: TransformTypeFlags.ROT_INVALID_VAL,
     };
     protoPosition = {
       x: 0,
@@ -50,7 +51,7 @@ describe('UpdateTransforms', () => {
       TreeNodeUtils.makePropertyNode(
         propertyRoot.id,
         'transform',
-        protoTransform,
+        deprecatedProtoTransform,
       ),
     );
     propertyRoot.addOrReplaceChild(
@@ -75,7 +76,7 @@ describe('UpdateTransforms', () => {
       TreeNodeUtils.makePropertyNode(
         propertyRoot.id,
         'requestedTransform',
-        protoTransform,
+        deprecatedProtoTransform,
       ),
     );
     propertyRoot.addOrReplaceChild(
@@ -103,7 +104,7 @@ describe('UpdateTransforms', () => {
       TreeNodeUtils.makePropertyNode(
         propertyRoot.id,
         'bufferTransform',
-        protoTransform,
+        deprecatedProtoTransform,
       ),
     );
 
@@ -124,7 +125,7 @@ describe('UpdateTransforms', () => {
       propertyRoot.id,
       'inputWindowInfo',
       {
-        transform: protoTransform,
+        transform: deprecatedProtoTransform,
       },
     );
 
@@ -154,10 +155,10 @@ describe('UpdateTransforms', () => {
       'matrix',
       {
         dsdx: 1,
-        dtdx: 0,
+        dtdx: 4,
         tx: 0,
-        dsdy: 0,
-        dtdy: 1,
+        dtdy: 2,
+        dsdy: 3,
         ty: 0,
       },
     );

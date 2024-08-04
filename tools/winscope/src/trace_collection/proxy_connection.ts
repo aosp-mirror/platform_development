@@ -29,11 +29,10 @@ import {AdbConnection, OnRequestSuccessCallback} from './adb_connection';
 import {AdbDevice} from './adb_device';
 import {ConnectionState} from './connection_state';
 import {ProxyEndpoint} from './proxy_endpoint';
-import {TraceConfigurationMap, TRACES} from './trace_collection_utils';
 import {TraceRequest} from './trace_request';
 
 export class ProxyConnection extends AdbConnection {
-  static readonly VERSION = '2.3.0';
+  static readonly VERSION = '2.4.0';
   static readonly WINSCOPE_PROXY_URL = 'http://localhost:5544';
 
   private readonly store = new PersistentStore();
@@ -43,24 +42,21 @@ export class ProxyConnection extends AdbConnection {
   private errorText = '';
   private securityToken = '';
   private devices: AdbDevice[] = [];
-  private selectedDevice: AdbDevice | undefined;
+  selectedDevice: AdbDevice | undefined;
   private requestedTraces: TraceRequest[] = [];
   private adbData: File[] = [];
-  private keep_trace_alive_worker: NodeJS.Timeout | undefined;
-  private refresh_devices_worker: NodeJS.Timeout | undefined;
+  private keepTraceAliveWorker: number | undefined;
+  private refreshDevicesWorker: number | undefined;
   private detectStateChangeInUi: () => Promise<void> =
     FunctionUtils.DO_NOTHING_ASYNC;
   private progressCallback: OnProgressUpdateType = FunctionUtils.DO_NOTHING;
-  private availableTracesChangeCallback: (
-    availableTracesConfig: TraceConfigurationMap,
-  ) => void = FunctionUtils.DO_NOTHING;
+  private availableTracesChangeCallback: (traces: string[]) => void =
+    FunctionUtils.DO_NOTHING;
 
   async initialize(
     detectStateChangeInUi: () => Promise<void>,
     progressCallback: OnProgressUpdateType,
-    availableTracesChangeCallback: (
-      availableTracesConfig: TraceConfigurationMap,
-    ) => void,
+    availableTracesChangeCallback: (traces: string[]) => void,
   ): Promise<void> {
     this.detectStateChangeInUi = detectStateChangeInUi;
     this.progressCallback = progressCallback;
@@ -99,10 +95,10 @@ export class ProxyConnection extends AdbConnection {
   }
 
   onDestroy() {
-    clearInterval(this.refresh_devices_worker);
-    this.refresh_devices_worker = undefined;
-    clearInterval(this.keep_trace_alive_worker);
-    this.keep_trace_alive_worker = undefined;
+    window.clearInterval(this.refreshDevicesWorker);
+    this.refreshDevicesWorker = undefined;
+    window.clearInterval(this.keepTraceAliveWorker);
+    this.keepTraceAliveWorker = undefined;
   }
 
   async startTrace(
@@ -182,12 +178,10 @@ export class ProxyConnection extends AdbConnection {
         return;
 
       case ConnectionState.IDLE:
-        if (this.selectedDevice) {
+        {
           const isWaylandAvailable = await this.isWaylandAvailable();
           if (isWaylandAvailable) {
-            const availableTracesConfig = TRACES['default'];
-            Object.assign(availableTracesConfig, TRACES['arc']);
-            this.availableTracesChangeCallback(availableTracesConfig);
+            this.availableTracesChangeCallback(['wayland_trace']);
           }
         }
         return;
@@ -239,8 +233,8 @@ export class ProxyConnection extends AdbConnection {
       state !== ConnectionState.STARTING_TRACE &&
       state !== ConnectionState.TRACING
     ) {
-      clearInterval(this.keep_trace_alive_worker);
-      this.keep_trace_alive_worker = undefined;
+      window.clearInterval(this.keepTraceAliveWorker);
+      this.keepTraceAliveWorker = undefined;
       return;
     }
 
@@ -249,8 +243,8 @@ export class ProxyConnection extends AdbConnection {
       async (request: HttpResponse) => {
         if (request.text !== 'True') {
           this.endTrace();
-        } else if (this.keep_trace_alive_worker === undefined) {
-          this.keep_trace_alive_worker = setInterval(
+        } else if (this.keepTraceAliveWorker === undefined) {
+          this.keepTraceAliveWorker = window.setInterval(
             () => this.keepTraceAlive(),
             1000,
           );
@@ -284,9 +278,9 @@ export class ProxyConnection extends AdbConnection {
       this.state !== ConnectionState.IDLE &&
       this.state !== ConnectionState.CONNECTING
     ) {
-      if (this.refresh_devices_worker !== undefined) {
-        clearInterval(this.refresh_devices_worker);
-        this.refresh_devices_worker = undefined;
+      if (this.refreshDevicesWorker !== undefined) {
+        window.clearInterval(this.refreshDevicesWorker);
+        this.refreshDevicesWorker = undefined;
       }
       return;
     }
@@ -306,8 +300,8 @@ export class ProxyConnection extends AdbConnection {
           model: devices[deviceId].model,
         };
       });
-      if (this.refresh_devices_worker === undefined) {
-        this.refresh_devices_worker = setInterval(
+      if (this.refreshDevicesWorker === undefined) {
+        this.refreshDevicesWorker = window.setInterval(
           () => this.requestDevices(),
           1000,
         );

@@ -99,7 +99,6 @@ class UnitTestUtils {
       [file],
       converter,
       undefined,
-      undefined,
     );
 
     if (initializeRealToElapsedTimeOffsetNs) {
