@@ -37,6 +37,11 @@
         </activity>
 
         <activity
+            android:name=".ActivityPolicyDemoActivity"
+            android:exported="true"
+            android:label="@string/activity_policy_demo" />
+
+        <activity
             android:name=".SensorDemoActivity"
             android:exported="false"
             android:label="@string/sensor_demo" />
@@ -75,6 +80,17 @@
             android:name=".StylusDemoActivity"
             android:exported="true"
             android:label="@string/stylus_demo" />
+
+        <activity
+            android:name=".BlockedActivity"
+            android:exported="true"
+            android:label="@string/blocked_activity" />
+
+        <activity
+            android:name=".OptedOutActivity"
+            android:canDisplayOnRemoteDevices="false"
+            android:exported="true"
+            android:label="@string/opted_out_activity" />
 
     </application>
     <!-- LINT.ThenChange(/samples/VirtualDeviceManager/README.md:demos) -->
