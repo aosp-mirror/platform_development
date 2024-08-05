@@ -167,10 +167,10 @@ export class ProxyConnection extends AdbConnection {
     }
   }
 
-  private async onConnectionStateChange() {
+  private async onConnectionStateChange(newState: ConnectionState) {
     await this.detectStateChangeInUi();
 
-    switch (this.state) {
+    switch (newState) {
       case ConnectionState.ERROR:
         Analytics.Error.logProxyError(this.errorText);
         return;
@@ -209,7 +209,19 @@ export class ProxyConnection extends AdbConnection {
           (request: HttpResponse) => {
             const errors = JSON.parse(request.body);
             if (Array.isArray(errors) && errors.length > 0) {
-              UserNotifier.add(new ProxyTracingErrors(errors)).notify();
+              const processedErrors: string[] = errors.map((error: string) => {
+                const processed = error
+                  .replace("b'", "'")
+                  .replace('\\n', '')
+                  .replace(
+                    'please check your display state',
+                    'please check your display state (must be on at start of trace)',
+                  );
+                return processed;
+              });
+              UserNotifier.add(
+                new ProxyTracingErrors(processedErrors),
+              ).notify();
             }
           },
         );
@@ -225,7 +237,7 @@ export class ProxyConnection extends AdbConnection {
 
       case ConnectionState.LOADING_DATA:
         if (this.selectedDevice === undefined) {
-          throw new Error('No device found');
+          throw new Error('No device selected');
         }
         await this.updateAdbData(assertDefined(this.selectedDevice));
         return;
@@ -250,7 +262,12 @@ export class ProxyConnection extends AdbConnection {
       `${ProxyEndpoint.STATUS}${assertDefined(this.selectedDevice).id}/`,
       async (request: HttpResponse) => {
         if (request.text !== 'True') {
-          this.endTrace();
+          window.clearInterval(this.keepTraceAliveWorker);
+          this.keepTraceAliveWorker = undefined;
+          await this.endTrace();
+          if (this.state === ConnectionState.ENDING_TRACE) {
+            await this.setState(ConnectionState.TRACE_TIMEOUT);
+          }
         } else if (this.keepTraceAliveWorker === undefined) {
           this.keepTraceAliveWorker = window.setInterval(
             () => this.keepTraceAlive(),
@@ -278,7 +295,7 @@ export class ProxyConnection extends AdbConnection {
     }
     this.state = state;
     this.errorText = errorText;
-    await this.onConnectionStateChange();
+    await this.onConnectionStateChange(state);
   }
 
   private async requestDevices() {

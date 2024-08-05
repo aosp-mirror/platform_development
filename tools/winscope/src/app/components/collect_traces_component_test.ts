@@ -34,8 +34,10 @@ import {MatSnackBar, MatSnackBarModule} from '@angular/material/snack-bar';
 import {BrowserAnimationsModule} from '@angular/platform-browser/animations';
 import {assertDefined} from 'common/assert_utils';
 import {InMemoryStorage} from 'common/in_memory_storage';
+import {ProxyTracingErrors} from 'messaging/user_warnings';
 import {NoTraceTargetsSelected, WinscopeEvent} from 'messaging/winscope_event';
 import {MockAdbConnection} from 'test/unit/mock_adb_connection';
+import {UserNotifierChecker} from 'test/unit/user_notifier_checker';
 import {AdbConnection} from 'trace_collection/adb_connection';
 import {AdbDevice} from 'trace_collection/adb_device';
 import {ConnectionState} from 'trace_collection/connection_state';
@@ -620,6 +622,17 @@ describe('CollectTracesComponent', () => {
     ]);
   });
 
+  it('does not refresh dumps if no device selected', async () => {
+    const connection = getConnection();
+    connection.state = ConnectionState.IDLE;
+    const collectTracesComponent = getCollectTracesComponent();
+    collectTracesComponent.refreshDumps = true;
+    const spy = spyOn(connection, 'dumpState');
+    fixture.detectChanges();
+    await fixture.whenStable();
+    expect(spy).not.toHaveBeenCalled();
+  });
+
   it('refreshes dumps using stored dump config', async () => {
     goToConfigSection();
     await fixture.whenStable();
@@ -659,6 +672,20 @@ describe('CollectTracesComponent', () => {
     getConnection().availableTracesChangeCallback(['wayland_trace']);
     fixture.detectChanges();
     expect(config['wayland_trace']?.available).toBeTrue();
+  });
+
+  it('fetches tracing data if trace times out', async () => {
+    goToConfigSection();
+    const userNotifierChecker = new UserNotifierChecker();
+    const connection = getConnection();
+    const emitSpy = spyOn(getCollectTracesComponent().filesCollected, 'emit');
+    connection.setState(ConnectionState.TRACE_TIMEOUT);
+
+    await fixture.whenStable();
+    expect(emitSpy).toHaveBeenCalled();
+    userNotifierChecker.expectNotified([
+      new ProxyTracingErrors(['tracing timed out']),
+    ]);
   });
 
   describe('ProxyConnection', () => {

@@ -287,6 +287,45 @@ describe('ProxyConnection', () => {
       expect(connection.getState()).toEqual(ConnectionState.TRACING);
     });
 
+    it('handles trace timeout', async () => {
+      const requestObj = [mockTraceRequest];
+      getSpy.and.returnValue(
+        Promise.resolve({
+          status: HttpRequestStatus.SUCCESS,
+          type: '',
+          text: 'False',
+          body: undefined,
+          getHeader: getVersionHeader,
+        }),
+      );
+      postSpy.and.returnValue(
+        Promise.resolve({
+          status: HttpRequestStatus.SUCCESS,
+          type: '',
+          text: 'True',
+          body: '[]',
+          getHeader: getVersionHeader,
+        }),
+      );
+      await connection.startTrace(mockDevice, requestObj);
+
+      expect(postSpy).toHaveBeenCalledWith(
+        ProxyConnection.WINSCOPE_PROXY_URL +
+          ProxyEndpoint.START_TRACE +
+          `${mockDevice.id}/`,
+        [['Winscope-Token', '']],
+        requestObj,
+      );
+      expect(postSpy).toHaveBeenCalledWith(
+        ProxyConnection.WINSCOPE_PROXY_URL +
+          ProxyEndpoint.END_TRACE +
+          `${mockDevice.id}/`,
+        [['Winscope-Token', '']],
+        undefined,
+      );
+      expect(connection.getState()).toEqual(ConnectionState.TRACE_TIMEOUT);
+    });
+
     it('posts end trace request to proxy and handles response without errors', async () => {
       await startAndEndTrace(successfulEndTraceResponse);
       checkTraceEndedSuccessfully();
@@ -297,13 +336,16 @@ describe('ProxyConnection', () => {
       await startAndEndTrace({
         status: HttpRequestStatus.SUCCESS,
         type: '',
-        text: '["Error tracing device"]',
-        body: '["Error tracing device"]',
+        text: '["please check your display state", "b\'unknown error\'"]',
+        body: '["please check your display state", "b\'unknown error\'"]',
         getHeader: getVersionHeader,
       });
       checkTraceEndedSuccessfully();
       userNotifierChecker.expectNotified([
-        new ProxyTracingErrors(['Error tracing device']),
+        new ProxyTracingErrors([
+          'please check your display state (must be on at start of trace)',
+          "'unknown error'",
+        ]),
       ]);
     });
 

@@ -27,8 +27,10 @@ import {
 import {MatDialog} from '@angular/material/dialog';
 import {assertDefined} from 'common/assert_utils';
 import {FunctionUtils} from 'common/function_utils';
+import {UserNotifier} from 'common/user_notifier';
 import {Analytics} from 'logging/analytics';
 import {ProgressListener} from 'messaging/progress_listener';
+import {ProxyTracingErrors} from 'messaging/user_warnings';
 import {
   NoTraceTargetsSelected,
   WinscopeEvent,
@@ -749,6 +751,15 @@ export class CollectTracesComponent
     this.changeDetectorRef.detectChanges();
 
     const state = this.adbConnection?.getState();
+    if (state === ConnectionState.TRACE_TIMEOUT) {
+      UserNotifier.add(new ProxyTracingErrors(['tracing timed out'])).notify();
+      this.filesCollected.emit(
+        await this.adbConnection?.fetchLastTracingSessionData(
+          assertDefined(this.selectedDevice),
+        ),
+      );
+      return;
+    }
 
     if (
       !this.refreshDumps ||
@@ -757,7 +768,7 @@ export class CollectTracesComponent
     ) {
       return;
     }
-    if (state === ConnectionState.IDLE) {
+    if (state === ConnectionState.IDLE && this.selectedDevice) {
       this.dumpState();
     } else {
       // device is not connected or proxy is not started/invalid/in error state

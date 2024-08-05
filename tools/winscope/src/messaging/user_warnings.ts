@@ -230,6 +230,6 @@ export class ProxyTracingErrors extends UserWarning {
   }
 
   getMessage(): string {
-    return `Errors occurred during tracing:\n${this.errorMessages.join('\n')}}`;
+    return `Errors occurred during tracing: ${this.errorMessages.join(', ')}`;
   }
 }
