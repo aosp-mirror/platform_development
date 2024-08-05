@@ -36,6 +36,9 @@
     <uses-permission
         android:name="android.permission.ADD_TRUSTED_DISPLAY"
         tools:ignore="ProtectedPermissions" />
+    <uses-permission
+        android:name="android.permission.SUBSCRIBE_TO_KEYGUARD_LOCKED_STATE"
+        tools:ignore="ProtectedPermissions" />
 
     <queries>
         <intent>
@@ -73,7 +76,13 @@
             android:exported="true"
             android:launchMode="singleTop"
             android:theme="@style/AppTheme.FullScreen" />
-
+        <activity
+            android:name=".UnlockKeyguardDialog"
+            android:exported="false"
+            android:excludeFromRecents="true"
+            android:launchMode="singleInstance"
+            android:label="@string/unlock_dialog_title"
+            android:theme="@style/Theme.AppCompat.Dialog.Alert" />
         <service
             android:name=".VdmService"
             android:exported="false"
