@@ -42,6 +42,32 @@
             android:label="@string/activity_policy_demo" />
 
         <activity
+            android:name=".MainActivityWithDisplayCategory"
+            android:requiredDisplayCategory="@string/display_category"
+            android:exported="true"
+            android:label="VDM Demos Restricted">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+                <category android:name="com.example.android.vdmdemo.DISPLAY_CATEGORY" />
+            </intent-filter>
+        </activity>
+
+        <activity
+            android:name=".CalculatorWithDisplayCategory"
+            android:requiredDisplayCategory="@string/display_category"
+            android:exported="true"
+            android:label="Calculator Restricted">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.APP_CALCULATOR" />
+                <category android:name="android.intent.category.LAUNCHER" />
+                <category android:name="com.example.android.vdmdemo.DISPLAY_CATEGORY" />
+            </intent-filter>
+        </activity>
+
+        <activity
             android:name=".SensorDemoActivity"
             android:exported="false"
             android:label="@string/sensor_demo" />

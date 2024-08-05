@@ -280,6 +280,12 @@ Each input screen has a "Back", "Home" and "Forward" buttons.
     adb shell am force-stop com.example.android.vdmdemo.host
     ```
 
+-   **Display category**: Whether to specify a custom display category for the
+    virtual displays. This means that only activities that have explicitly set
+    a matching `android:requiredDisplayCategory` activity attribute can be
+    launched on that display. \
+    *Changing this will recreate the virtual device.*
+
 -   **Always unlocked**: Whether the virtual displays should remain unlocked and
     interactive when the host device is locked. Disabling this will result in a
     simple lock screen shown on these displays when the host device is locked. \
@@ -390,7 +396,7 @@ display, if the mouse pointer is currently positioned on a streamed display.
     client, which will rotate the user-visible surface.
 
 -   **Home**: A simple activity with utilities around launching HOME and
-    SECONDARY_HOME Intents.
+    SECONDARY_HOME Intents, as well as other implicit intents.
 
 -   **Secure Window**: A simple activity that declares the Window as secure.
     This showcases the FLAG_SECURE streaming policies in VDM.
@@ -411,6 +417,10 @@ display, if the mouse pointer is currently positioned on a streamed display.
 
 -   **Stylus**: A simple drawing activity that reacts on stylus input events.
     Use together with the simulated stylus input feature of the host app.
+
+The demo activity depends on whether the **Display Category** Host preference is
+enabled or not. If enabled, it becomes equivalent to the **Home** demo activity,
+which showcases implicit intent handling.
 
 <!-- LINT.ThenChange(README.md) -->
 
@@ -459,6 +469,8 @@ display, if the mouse pointer is currently positioned on a streamed display.
 -   Fixed bugs with hiding streamed apps from the host's recent apps.
 
 ### Android 14 / Upside Down Cake / SDK level 34
+
+-   Added support for display categories and restricted activities.
 
 -   Added support for virtual sensors.
 
