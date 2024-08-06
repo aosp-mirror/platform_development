@@ -65,6 +65,12 @@
             android:defaultValue="true"
             app:iconSpaceReserved="false" />
         <SwitchPreferenceCompat
+            android:key="@string/pref_enable_display_category"
+            android:title="Enable display category"
+            android:summary="Set a category for the remote display to restrict activity launches"
+            android:defaultValue="true"
+            app:iconSpaceReserved="false" />
+        <SwitchPreferenceCompat
             android:key="@string/pref_always_unlocked_device"
             android:title="Always unlocked"
             android:summary="Remote displays remain unlocked even when the host is locked"

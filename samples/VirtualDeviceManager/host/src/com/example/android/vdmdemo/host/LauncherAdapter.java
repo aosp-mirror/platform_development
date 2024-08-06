@@ -19,6 +19,7 @@ package com.example.android.vdmdemo.host;
 import android.app.WallpaperColors;
 import android.app.WallpaperManager;
 import android.content.ComponentName;
+import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.content.pm.PackageManager.ResolveInfoFlags;
@@ -36,19 +37,26 @@ import android.widget.TextView;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 final class LauncherAdapter extends BaseAdapter {
 
+    private static final Intent LAUNCHER_INTENT =
+            new Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_LAUNCHER);
+
     private final List<ResolveInfo> mAvailableApps = new ArrayList<>();
-    private final PackageManager mPackageManager;
+    private final Context mContext;
+    private final PreferenceController mPreferenceController;
     private int mTextColor = Color.BLACK;
 
-    LauncherAdapter(PackageManager packageManager) {
-        this(packageManager, null);
+    LauncherAdapter(Context context, PreferenceController preferenceController) {
+        this(context, preferenceController, null);
     }
 
-    LauncherAdapter(PackageManager packageManager, WallpaperManager wallpaperManager) {
-        mPackageManager = packageManager;
+    LauncherAdapter(Context context, PreferenceController preferenceController,
+            WallpaperManager wallpaperManager) {
+        mContext = context;
+        mPreferenceController = preferenceController;
 
         if (wallpaperManager != null) {
             WallpaperColors wallpaperColors =
@@ -58,10 +66,34 @@ final class LauncherAdapter extends BaseAdapter {
             }
         }
 
-        mAvailableApps.addAll(
-                packageManager.queryIntentActivities(
-                        new Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_LAUNCHER),
-                        ResolveInfoFlags.of(PackageManager.MATCH_ALL)));
+        buildAppList();
+    }
+
+    public void update() {
+        buildAppList();
+        notifyDataSetChanged();
+    }
+
+    void buildAppList() {
+        String requiredDisplayCategory = null;
+        if (mPreferenceController.getBoolean(R.string.pref_enable_display_category)) {
+            requiredDisplayCategory = mContext.getString(R.string.display_category);
+        }
+
+        Intent launchIntent = new Intent(LAUNCHER_INTENT);
+        if (requiredDisplayCategory != null) {
+            launchIntent.addCategory(requiredDisplayCategory);
+        }
+
+        mAvailableApps.clear();
+        for (ResolveInfo resolveInfo : mContext.getPackageManager().queryIntentActivities(
+                launchIntent, ResolveInfoFlags.of(PackageManager.MATCH_ALL))) {
+            // Note: this filtering is not necessary after Android V.
+            if (resolveInfo.activityInfo != null && Objects.equals(
+                    resolveInfo.activityInfo.requiredDisplayCategory, requiredDisplayCategory)) {
+                mAvailableApps.add(resolveInfo);
+            }
+        }
     }
 
     @Override
@@ -82,7 +114,7 @@ final class LauncherAdapter extends BaseAdapter {
     @Override
     public View getView(int position, View convertView, ViewGroup parent) {
         final ResolveInfo ri = mAvailableApps.get(position);
-        final Drawable img = ri.loadIcon(mPackageManager);
+        final Drawable img = ri.loadIcon(mContext.getPackageManager());
         if (convertView == null) {
             convertView =
                     LayoutInflater.from(parent.getContext())
@@ -94,7 +126,7 @@ final class LauncherAdapter extends BaseAdapter {
         imageView.setImageDrawable(img);
 
         TextView textView = convertView.requireViewById(R.id.app_title);
-        textView.setText(ri.loadLabel(mPackageManager));
+        textView.setText(ri.loadLabel(mContext.getPackageManager()));
         textView.setTextColor(mTextColor);
         return convertView;
     }
@@ -107,15 +139,8 @@ final class LauncherAdapter extends BaseAdapter {
         if (ri == null) {
             return null;
         }
-        Intent intent = new Intent(Intent.ACTION_MAIN);
-        intent.addCategory(Intent.CATEGORY_LAUNCHER);
-        if (ri.activityInfo != null) {
-            intent.setComponent(
-                    new ComponentName(ri.activityInfo.packageName, ri.activityInfo.name));
-        } else {
-            intent.setComponent(new ComponentName(ri.serviceInfo.packageName, ri.serviceInfo.name));
-        }
-        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-        return intent;
+        return new Intent(LAUNCHER_INTENT)
+                .setComponent(new ComponentName(ri.activityInfo.packageName, ri.activityInfo.name))
+                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
     }
 }

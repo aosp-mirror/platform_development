@@ -16,6 +16,8 @@
     <string name="opted_out_activity" translatable="false">VDM Opted Out Activity</string>
     <string name="blocked_activity" translatable="false">VDM Blocked Activity</string>
 
+    <string name="display_category" translatable="false">com.example.android.vdmdemo.DISPLAY_CATEGORY</string>
+
     <string name="current_device" translatable="false">Device: %s</string>
     <string name="change_device" translatable="false">Change</string>
 
@@ -31,6 +33,7 @@
     <string name="secure_text" translatable="false">You shall only be able to read this on the host device screen</string>
     <string name="opted_out_activity_text" translatable="false">This activity can not be launched on the virtual device because cas opted out via canDisplayOnRemoteDevices</string>
     <string name="blocked_activity_text" translatable="false">This activity can not be launched on the virtual device because of the activity policy of the virtual device</string>
+    <string name="calculator_text" translatable="false">This \"calculator\" activity can only be shown on displays with the matching category</string>
 
     <string name="request_device_aware_permissions" translatable="false">Request device aware permissions</string>
     <string name="revoke_device_aware_permissions" translatable="false">Revoke device aware permissions</string>

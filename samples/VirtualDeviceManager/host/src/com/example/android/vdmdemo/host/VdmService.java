@@ -497,8 +497,14 @@ public final class VdmService extends Hilt_VdmService {
         }
 
         if (mPreferenceController.getBoolean(R.string.pref_enable_custom_home)) {
-            virtualDeviceBuilder.setHomeComponent(
-                    new ComponentName(this, CustomLauncherActivity.class));
+            if (mPreferenceController.getBoolean(R.string.pref_enable_display_category)) {
+                virtualDeviceBuilder.setHomeComponent(
+                        new ComponentName(
+                                this, CustomLauncherActivityWithRequiredDisplayCategory.class));
+            } else {
+                virtualDeviceBuilder.setHomeComponent(
+                        new ComponentName(this, CustomLauncherActivity.class));
+            }
         }
 
         if (mPreferenceController.getBoolean(R.string.pref_hide_from_recents)) {
@@ -697,6 +703,7 @@ public final class VdmService extends Hilt_VdmService {
         observers.put(R.string.pref_always_unlocked_device, v -> recreateVirtualDevice());
         observers.put(R.string.pref_enable_client_native_ime, v -> recreateVirtualDevice());
         observers.put(R.string.pref_enable_custom_home, v -> recreateVirtualDevice());
+        observers.put(R.string.pref_enable_display_category, v -> recreateVirtualDevice());
 
         return observers;
     }
