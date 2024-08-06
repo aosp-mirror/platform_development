@@ -13,10 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+import {assertTrue} from 'common/assert_utils';
 import {ParserTimestampConverter} from 'common/timestamp_converter';
 import {UserNotifier} from 'common/user_notifier';
 import {ProgressListener} from 'messaging/progress_listener';
-import {UnsupportedFileFormat} from 'messaging/user_warnings';
+import {
+  InvalidLegacyTrace,
+  UnsupportedFileFormat,
+} from 'messaging/user_warnings';
 import {ParserEventLog} from 'parsers/events/parser_eventlog';
 import {FileAndParser} from 'parsers/file_and_parser';
 import {ParserInputMethodClients} from 'parsers/input_method/legacy/parser_input_method_clients';
@@ -77,14 +81,28 @@ export class ParserFactory {
           hasFoundParser = true;
 
           if (p instanceof ParserViewCapture) {
-            p.getWindowParsers().forEach((subParser) =>
-              parsers.push(new FileAndParser(traceFile, subParser)),
-            );
+            p.getWindowParsers().forEach((subParser) => {
+              assertTrue(
+                subParser.getLengthEntries() > 0,
+                () => 'Trace has no entries',
+              );
+              parsers.push(new FileAndParser(traceFile, subParser));
+            });
           } else {
+            assertTrue(p.getLengthEntries() > 0, () => 'Trace has no entries');
             parsers.push({file: traceFile, parser: p});
           }
           break;
         } catch (error) {
+          if (hasFoundParser) {
+            UserNotifier.add(
+              new InvalidLegacyTrace(
+                traceFile.getDescriptor(),
+                (error as Error).message,
+              ),
+            );
+            break;
+          }
           // skip current parser
         }
       }

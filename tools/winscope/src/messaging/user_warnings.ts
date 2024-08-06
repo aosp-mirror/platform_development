@@ -16,6 +16,7 @@
 
 import {TimeRange} from 'common/time';
 import {TimeDuration} from 'common/time_duration';
+import {TRACE_INFO} from 'trace/trace_info';
 import {TraceType} from 'trace/trace_type';
 import {UserWarning} from './user_warning';
 
@@ -104,10 +105,27 @@ export class UnsupportedFileFormat extends UserWarning {
   }
 }
 
+export class InvalidLegacyTrace extends UserWarning {
+  constructor(
+    private readonly descriptor: string,
+    private readonly errorMessage: string,
+  ) {
+    super();
+  }
+
+  getDescriptor(): string {
+    return 'invalid legacy trace';
+  }
+
+  getMessage(): string {
+    return `${this.descriptor}: ${this.errorMessage}`;
+  }
+}
+
 export class InvalidPerfettoTrace extends UserWarning {
   constructor(
     private readonly descriptor: string,
-    private readonly parserErrorMessages: string[],
+    private readonly errorMessages: string[],
   ) {
     super();
   }
@@ -117,7 +135,26 @@ export class InvalidPerfettoTrace extends UserWarning {
   }
 
   getMessage(): string {
-    return `${this.descriptor}: ${this.parserErrorMessages.join(', ')}`;
+    return `${this.descriptor}: ${this.errorMessages.join(', ')}`;
+  }
+}
+
+export class FailedToCreateTracesParser extends UserWarning {
+  constructor(
+    private readonly traceType: TraceType,
+    private readonly errorMessage: string,
+  ) {
+    super();
+  }
+
+  getDescriptor(): string {
+    return 'failed to create traces parser';
+  }
+
+  getMessage(): string {
+    return `Failed to create ${TRACE_INFO[this.traceType].name} parser: ${
+      this.errorMessage
+    }`;
   }
 }
 

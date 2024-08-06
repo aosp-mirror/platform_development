@@ -26,6 +26,10 @@ export const nodeStyles =
         width: 100%;
     }
 
+    .node:not(.selected):not(.full-opacity) {
+        opacity: 0.5;
+    }
+
     .node.clickable {
         cursor: pointer;
     }
@@ -168,5 +172,13 @@ export const nodeInnerItemStyles = `
     .expand-tree-btn.added,
     .expand-tree-btn.addedMove {
         background: ${Color.ADDED_ELEMENT_BACKGROUND};
+    }
+
+    .icon-wrapper-show-state {
+        opacity: 1;
+    }
+
+    :host:not(:hover):not(.selected) .icon-wrapper-show-state {
+        visibility: hidden;
     }
 `;
