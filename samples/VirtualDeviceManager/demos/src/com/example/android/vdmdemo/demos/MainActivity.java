@@ -34,6 +34,8 @@ public class MainActivity extends AppCompatActivity {
     /** Handles demo launch request. */
     public void onDemoSelected(View view) {
         switch (view.getId()) {
+            case R.id.activity_policy_demo -> startActivity(
+                    new Intent(this, ActivityPolicyDemoActivity.class));
             case R.id.home_demo -> startActivity(new Intent(this, HomeDemoActivity.class));
             case R.id.sensor_demo -> startActivity(new Intent(this, SensorDemoActivity.class));
             case R.id.rotation_demo -> startActivity(new Intent(this, RotationDemoActivity.class));
