@@ -68,7 +68,10 @@ export class TimelineData {
           transitionTrace.mapEntry(async (entry) => await entry.getValue()),
         );
       } catch (error) {
-        transitionTrace.setCorruptedState(true);
+        transitionTrace.setCorruptedState(
+          true,
+          'Cannot parse all transitions.',
+        );
         throw error;
       }
     }
