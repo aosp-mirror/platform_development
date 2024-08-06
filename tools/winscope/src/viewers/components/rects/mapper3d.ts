@@ -30,6 +30,7 @@ import {UiRect3D} from './ui_rect3d';
 
 class Mapper3D {
   private static readonly CAMERA_ROTATION_FACTOR_INIT = 1;
+  private static readonly DISPLAY_CLUSTER_SPACING = 750;
   private static readonly LABEL_FIRST_Y_OFFSET = 100;
   private static readonly LABEL_CIRCLE_RADIUS = 15;
   private static readonly LABEL_SPACING_INIT_FACTOR = 12.5;
@@ -160,15 +161,32 @@ class Mapper3D {
   }
 
   computeScene(): Scene {
-    const rects2d = this.selectRectsToDraw(this.rects);
-    rects2d.sort(this.compareDepth); // decreasing order of depth
-    const rects3d = this.computeRects(rects2d);
-    const labels3d = this.computeLabels(rects2d, rects3d);
-    const boundingBox = this.computeBoundingBox(rects3d, labels3d);
+    const rects3d: UiRect3D[] = [];
+    const labels3d: RectLabel[] = [];
+    let clusterYOffset = 0;
+    let boundingBox: Box3D | undefined;
+
+    for (const groupId of this.currentGroupIds) {
+      const rects2dForGroupId = this.selectRectsToDraw(this.rects, groupId);
+      rects2dForGroupId.sort(this.compareDepth); // decreasing order of depth
+      const rects3dForGroupId = this.computeRects(
+        rects2dForGroupId,
+        clusterYOffset,
+      );
+      const labels3dForGroupId = this.computeLabels(
+        rects2dForGroupId,
+        rects3dForGroupId,
+      );
+      rects3d.push(...rects3dForGroupId);
+      labels3d.push(...labels3dForGroupId);
+
+      boundingBox = this.computeBoundingBox(rects3d, labels3d);
+      clusterYOffset += boundingBox.height + Mapper3D.DISPLAY_CLUSTER_SPACING;
+    }
 
     const angleX = this.getCameraXAxisAngle();
     const scene: Scene = {
-      boundingBox,
+      boundingBox: boundingBox ?? this.computeBoundingBox(rects3d, labels3d),
       camera: {
         rotationAngleX: angleX,
         rotationAngleY: angleX * Mapper3D.Y_AXIS_ROTATION_FACTOR,
@@ -187,14 +205,16 @@ class Mapper3D {
   }
 
   private compareDepth(a: UiRect, b: UiRect): number {
+    if (a.isDisplay && !b.isDisplay) return 1;
+    if (!a.isDisplay && b.isDisplay) return -1;
     return b.depth - a.depth;
   }
 
-  private selectRectsToDraw(rects: UiRect[]): UiRect[] {
-    return rects.filter((rect) => this.currentGroupIds.includes(rect.groupId));
+  private selectRectsToDraw(rects: UiRect[], groupId: number): UiRect[] {
+    return rects.filter((rect) => rect.groupId === groupId);
   }
 
-  private computeRects(rects2d: UiRect[]): UiRect3D[] {
+  private computeRects(rects2d: UiRect[], clusterYOffset: number): UiRect3D[] {
     let visibleRectsSoFar = 0;
     let visibleRectsTotal = 0;
     let nonVisibleRectsSoFar = 0;
@@ -248,6 +268,7 @@ class Mapper3D {
           };
         });
       }
+      const transform = rect2d.transform ?? IDENTITY_MATRIX;
 
       const rect = {
         id: rect2d.id,
@@ -266,7 +287,7 @@ class Mapper3D {
         darkFactor,
         colorType: this.getColorType(rect2d),
         isClickable: rect2d.isClickable,
-        transform: rect2d.transform ?? IDENTITY_MATRIX,
+        transform: clusterYOffset ? transform.addTy(clusterYOffset) : transform,
         fillRegion,
       };
       return this.cropOversizedRect(rect, maxDisplaySize);
@@ -369,7 +390,7 @@ class Mapper3D {
         return;
       }
       const j = rects2d.length - 1 - index; // rects sorted in decreasing order of depth; increment labelY by depth at L - 1 - i
-      if (rects2d.length > Mapper3D.MAX_RENDERED_LABELS) {
+      if (this.onlyRenderSelectedLabel(rects2d)) {
         // only render the selected rect label
         if (!this.isHighlighted(rect2d)) {
           return;
@@ -489,7 +510,7 @@ class Mapper3D {
     });
 
     // if only selected rect label rendered, do not include in bounding box
-    if (rects.length <= Mapper3D.MAX_RENDERED_LABELS) {
+    if (!this.onlyRenderSelectedLabel(rects)) {
       labels.forEach((label) => {
         label.linePoints.forEach((point) => {
           updateMinMaxCoordinates(point);
@@ -518,6 +539,13 @@ class Mapper3D {
 
   isHighlighted(rect: UiRect): boolean {
     return rect.isClickable && this.highlightedRectId === rect.id;
+  }
+
+  private onlyRenderSelectedLabel(rects: Array<UiRect | UiRect3D>): boolean {
+    return (
+      rects.length > Mapper3D.MAX_RENDERED_LABELS ||
+      this.currentGroupIds.length > 1
+    );
   }
 }
 
