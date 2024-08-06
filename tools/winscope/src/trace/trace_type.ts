@@ -134,18 +134,16 @@ export class TraceTypeUtils {
     return tIndex - uIndex;
   }
 
-  static canVisualizeTrace(t: TraceType): boolean {
-    return t !== TraceType.WM_TRANSITION && t !== TraceType.SHELL_TRANSITION;
-  }
-
   static getReasonForNoTraceVisualization(t: TraceType): string {
     switch (t) {
       case TraceType.WM_TRANSITION:
-        return 'Must also upload a shell transitions trace to visualize transitions';
+        return 'Must also upload a shell transitions trace to visualize transitions.';
       case TraceType.SHELL_TRANSITION:
-        return 'Must also upload a wm transitions trace to visualize transitions';
+        return 'Must also upload a wm transitions trace to visualize transitions.';
+      case TraceType.EVENT_LOG:
+        return 'Uploaded file does not contain CUJs. Only CUJ visualization is supported in Winscope.';
       default:
-        return 'Visualization for this trace is not supported in Winscope';
+        return 'Visualization for this trace is not supported in Winscope.';
     }
   }
 

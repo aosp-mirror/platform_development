@@ -18,7 +18,6 @@ import {TimestampConverterUtils} from 'test/unit/timestamp_converter_utils';
 import {UnitTestUtils} from 'test/unit/utils';
 import {Parser} from 'trace/parser';
 import {TraceFile} from 'trace/trace_file';
-import {TraceType} from 'trace/trace_type';
 import {HierarchyTreeNode} from 'trace/tree_node/hierarchy_tree_node';
 import {ParserFactory} from './parser_factory';
 
@@ -40,12 +39,29 @@ describe('Parser', () => {
   });
 
   it('is robust to trace with no entries', async () => {
-    const parser = await UnitTestUtils.getParser(
-      'traces/no_entries_InputMethodClients.pb',
+    const trace = new TraceFile(
+      await UnitTestUtils.getFixtureFile(
+        'traces/no_entries_InputMethodClients.pb',
+      ),
+      undefined,
     );
+    const parsers = await new ParserFactory().createParsers(
+      [trace],
+      TimestampConverterUtils.TIMESTAMP_CONVERTER,
+    );
+    expect(parsers.length).toEqual(0);
+  });
 
-    expect(parser.getTraceType()).toEqual(TraceType.INPUT_METHOD_CLIENTS);
-    expect(parser.getTimestamps()).toEqual([]);
+  it('is robust to view capture trace with no entries', async () => {
+    const trace = new TraceFile(
+      await UnitTestUtils.getFixtureFile('traces/no_entries_view_capture.vc'),
+      undefined,
+    );
+    const parsers = await new ParserFactory().createParsers(
+      [trace],
+      TimestampConverterUtils.TIMESTAMP_CONVERTER,
+    );
+    expect(parsers.length).toEqual(0);
   });
 
   describe('real timestamp', () => {
