@@ -27,11 +27,18 @@ class PerfettoLogMessageTableRow {
   location = '<NO_LOC>';
   timestamp: bigint = 0n;
 
-  constructor(timestamp: bigint, tag: string, level: string, message: string) {
+  constructor(
+      timestamp: bigint,
+      tag: string,
+      level: string,
+      message: string,
+      location: string
+  ) {
     this.timestamp = timestamp ?? this.timestamp;
     this.tag = tag ?? this.tag;
     this.level = level ?? this.level;
     this.message = message ?? this.message;
+    this.location = location ?? this.location;
   }
 }
 
@@ -84,6 +91,7 @@ export class ParserProtolog extends AbstractParser<PropertyTreeNode> {
       entry.get('tag') as string,
       entry.get('level') as string,
       entry.get('message') as string,
+      entry.get('location') as string,
     );
   }
 }
