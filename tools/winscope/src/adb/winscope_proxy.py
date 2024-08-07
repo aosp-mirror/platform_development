@@ -62,7 +62,7 @@ def create_argument_parser() -> argparse.ArgumentParser:
     return parser
 
 # Keep in sync with ProxyConnection#VERSION in Winscope
-VERSION = '2.4.1'
+VERSION = '2.5.0'
 
 PERFETTO_TRACE_CONFIG_FILE = '/data/misc/perfetto-configs/winscope-proxy-trace.conf'
 PERFETTO_DUMP_CONFIG_FILE = '/data/misc/perfetto-configs/winscope-proxy-dump.conf'
@@ -92,7 +92,9 @@ function is_any_perfetto_data_source_available {{
        is_perfetto_data_source_available android.protolog || \
        is_perfetto_data_source_available android.surfaceflinger.layers || \
        is_perfetto_data_source_available android.surfaceflinger.transactions || \
-       is_perfetto_data_source_available com.android.wm.shell.transition; then
+       is_perfetto_data_source_available com.android.wm.shell.transition || \
+       is_perfetto_data_source_available android.viewcapture || \
+       is_perfetto_data_source_available android.windowmanager; then
         return 0
     else
         return 1
@@ -221,8 +223,18 @@ fi
     "window_trace": TraceTarget(
         "window_trace",
         WinscopeFileMatcher(WINSCOPE_DIR, "wm_trace", "window_trace"),
-        'su root cmd window tracing start\necho "WM trace started."',
-        'su root cmd window tracing stop >/dev/null 2>&1'
+        f"""
+if ! is_perfetto_data_source_available android.windowmanager; then
+    su root cmd window tracing start
+    echo 'WM trace (legacy) started.'
+fi
+        """,
+        f"""
+if ! is_perfetto_data_source_available android.windowmanager; then
+    su root cmd window tracing stop >/dev/null 2>&1
+    echo 'WM trace (legacy) stopped.'
+fi
+        """
     ),
     "layers_trace": TraceTarget(
         "layers_trace",
@@ -395,6 +407,25 @@ def get_shell_args(device_id: str, type: str) -> list[str]:
     log.debug(f"Starting {type} shell {' '.join(shell)}")
     return shell
 
+def is_perfetto_data_source_available(device_id: str, name: str) -> bool:
+    log.debug(f"Checking presence of perfetto data source '{name}' on device {device_id}")
+    shell = get_shell_args(device_id, 'perfetto data source check')
+    command = f"""
+{PERFETTO_UTILS}
+
+if is_perfetto_data_source_available {name}; then
+    exit 0
+else
+    exit 1
+fi
+"""
+    process = subprocess.Popen(shell, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                                stdin=subprocess.PIPE, start_new_session=True)
+    out, err = process.communicate(command.encode('utf-8'))
+    is_available = process.returncode == 0
+    log.debug(f"Perfetto data source {name} on device {device_id} is {'not ' if not is_available else ''} available")
+    return is_available
+
 
 class TraceConfig:
     @abstractmethod
@@ -409,8 +440,6 @@ class TraceConfig:
     def execute_command(self, server, device_id):
         pass
 
-
-class OptionalTraceConfig(TraceConfig):
     def execute_optional_config_command(self, server, device_id, shell, command, config_key, config_value):
         process = subprocess.Popen(shell, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
                                     stdin=subprocess.PIPE, start_new_session=True)
@@ -422,8 +451,6 @@ class OptionalTraceConfig(TraceConfig):
         log.debug(f"Optional trace config changed on device {device_id}")
         server.respond(HTTPStatus.OK, b'', "text/plain")
 
-
-class PerfettoTraceConfig(TraceConfig):
     def execute_perfetto_config_command(self, server, shell, command, trace_name):
         process = subprocess.Popen(shell, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
                                     stdin=subprocess.PIPE, start_new_session=True)
@@ -435,8 +462,7 @@ class PerfettoTraceConfig(TraceConfig):
         server.respond(HTTPStatus.OK, b'', "text/plain")
 
 
-
-class SurfaceFlingerTraceConfig(OptionalTraceConfig):
+class SurfaceFlingerTraceConfig(TraceConfig):
     """Handles optional configuration for Surface Flinger traces.
     """
     LEGACY_FLAGS_MAP = {
@@ -477,43 +503,56 @@ class SurfaceFlingerTraceConfig(OptionalTraceConfig):
 
     def execute_command(self, server, device_id):
         shell = get_shell_args(device_id, "sf config")
-        self.execute_optional_config_command(server, device_id, shell, self._flags_command(), "sf flags", self.flags)
-        self.execute_optional_config_command(server, device_id, shell, self._buffer_size_command(), "sf buffer size", self.selected_configs["sfbuffersize"])
 
-    def _buffer_size_command(self) -> str:
-        return f'su root service call SurfaceFlinger 1029 i32 {self.selected_configs["sfbuffersize"]}'
+        if is_perfetto_data_source_available(device_id, "android.surfaceflinger.layers"):
+            self.execute_perfetto_config_command(server, shell, self._perfetto_config_command(), "SurfaceFlinger")
+        else:
+            self.execute_optional_config_command(server, device_id, shell, self._legacy_flags_command(), "sf flags", self.flags)
+            self.execute_optional_config_command(server, device_id, shell, self._legacy_buffer_size_command(), "sf buffer size", self.selected_configs["sfbuffersize"])
 
-    def _flags_command(self) -> str:
-        legacy_flags = 0
-        for flag in self.flags:
-            legacy_flags |= SurfaceFlingerTraceConfig.LEGACY_FLAGS_MAP[flag]
-
-        perfetto_flags = "\n".join([f"""trace_flags: {SurfaceFlingerTraceConfig.PERFETTO_FLAGS_MAP[flag]}""" for flag in self.flags])
+    def _perfetto_config_command(self) -> str:
+        flags = "\n".join([f"""trace_flags: {SurfaceFlingerTraceConfig.PERFETTO_FLAGS_MAP[flag]}""" for flag in self.flags])
 
         return f"""
 {PERFETTO_UTILS}
 
-if is_perfetto_data_source_available android.surfaceflinger.layers; then
-    cat << EOF >> {PERFETTO_TRACE_CONFIG_FILE}
+cat << EOF >> {PERFETTO_TRACE_CONFIG_FILE}
 data_sources: {{
     config {{
         name: "android.surfaceflinger.layers"
         surfaceflinger_layers_config: {{
             mode: MODE_ACTIVE
-            {perfetto_flags}
+            {flags}
         }}
     }}
 }}
 EOF
-    echo 'SF trace (perfetto) configured.'
-else
-    su root service call SurfaceFlinger 1033 i32 {legacy_flags}
-    echo 'SF trace (legacy) configured.'
-fi
+echo 'SF trace (perfetto) configured.'
 """
 
+    def _legacy_buffer_size_command(self) -> str:
+        return f'su root service call SurfaceFlinger 1029 i32 {self.selected_configs["sfbuffersize"]}'
 
-class WindowManagerTraceConfig(OptionalTraceConfig):
+    def _legacy_flags_command(self) -> str:
+        flags = 0
+        for flag in self.flags:
+            flags |= SurfaceFlingerTraceConfig.LEGACY_FLAGS_MAP[flag]
+
+        return f"su root service call SurfaceFlinger 1033 i32 {flags}"
+
+
+class WindowManagerTraceConfig(TraceConfig):
+    PERFETTO_LOG_LEVEL_MAP = {
+       "verbose": "LOG_LEVEL_VERBOSE",
+       "debug": "LOG_LEVEL_DEBUG",
+       "critical": "LOG_LEVEL_CRITICAL",
+    }
+
+    PERFETTO_LOG_FREQUENCY_MAP = {
+       "frame": "LOG_FREQUENCY_FRAME",
+       "transaction": "LOG_FREQUENCY_TRANSACTION",
+    }
+
     """Handles optional selected configuration for Window Manager traces.
     """
 
@@ -533,23 +572,44 @@ class WindowManagerTraceConfig(OptionalTraceConfig):
 
     def execute_command(self, server, device_id):
         shell = get_shell_args(device_id, "wm config")
-        self.execute_optional_config_command(server, device_id, shell, self._tracing_type_command(), "tracing type", self.selected_configs["tracingtype"])
-        self.execute_optional_config_command(server, device_id, shell, self._tracing_level_command(), "tracing level", self.selected_configs["tracinglevel"])
-        # /!\ buffer size must be configured last
-        # otherwise the other configurations might override it
-        self.execute_optional_config_command(server, device_id, shell, self._buffer_size_command(), "wm buffer size", self.selected_configs["wmbuffersize"])
 
-    def _tracing_type_command(self) -> str:
+        if is_perfetto_data_source_available(device_id, "android.windowmanager"):
+            self.execute_perfetto_config_command(server, shell, self._perfetto_config_command(), "WM")
+        else:
+            self.execute_optional_config_command(server, device_id, shell, self._legacy_tracing_type_command(), "tracing type", self.selected_configs["tracingtype"])
+            self.execute_optional_config_command(server, device_id, shell, self._legacy_tracing_level_command(), "tracing level", self.selected_configs["tracinglevel"])
+            # /!\ buffer size must be configured last
+            # otherwise the other configurations might override it
+            self.execute_optional_config_command(server, device_id, shell, self._legacy_buffer_size_command(), "wm buffer size", self.selected_configs["wmbuffersize"])
+
+    def _perfetto_config_command(self) -> str:
+        log_level = WindowManagerTraceConfig.PERFETTO_LOG_LEVEL_MAP[self.selected_configs["tracinglevel"]]
+        log_frequency = WindowManagerTraceConfig.PERFETTO_LOG_FREQUENCY_MAP[self.selected_configs["tracingtype"]]
+        return f"""
+cat << EOF >> {PERFETTO_TRACE_CONFIG_FILE}
+data_sources: {{
+    config {{
+        name: "android.windowmanager"
+        windowmanager_config: {{
+            log_level: {log_level}
+            log_frequency: {log_frequency}
+        }}
+    }}
+}}
+EOF
+"""
+
+    def _legacy_tracing_type_command(self) -> str:
         return f'su root cmd window tracing {self.selected_configs["tracingtype"]}'
 
-    def _tracing_level_command(self) -> str:
+    def _legacy_tracing_level_command(self) -> str:
         return f'su root cmd window tracing level {self.selected_configs["tracinglevel"]}'
 
-    def _buffer_size_command(self) -> str:
+    def _legacy_buffer_size_command(self) -> str:
         return f'su root cmd window tracing size {self.selected_configs["wmbuffersize"]}'
 
 
-class ViewCaptureTraceConfig(PerfettoTraceConfig):
+class ViewCaptureTraceConfig(TraceConfig):
     """Handles perfetto config for View Capture traces."""
 
     COMMAND = f"""
@@ -570,7 +630,7 @@ fi
         shell = get_shell_args(device_id, "perfetto config view capture")
         self.execute_perfetto_config_command(server, shell, ViewCaptureTraceConfig.COMMAND, "View Capture")
 
-class TransactionsConfig(PerfettoTraceConfig):
+class TransactionsConfig(TraceConfig):
     """Handles perfetto config for Transactions traces."""
 
     COMMAND = f"""
@@ -594,7 +654,8 @@ fi
         shell = get_shell_args(device_id, "perfetto config transactions")
         self.execute_perfetto_config_command(server, shell, TransactionsConfig.COMMAND, "SF transactions")
 
-class ProtoLogConfig(PerfettoTraceConfig):
+
+class ProtoLogConfig(TraceConfig):
     """Handles perfetto config for ProtoLog traces."""
 
     COMMAND = f"""
@@ -619,7 +680,8 @@ fi
         shell = get_shell_args(device_id, "perfetto config protolog")
         self.execute_perfetto_config_command(server, shell, ProtoLogConfig.COMMAND, "ProtoLog")
 
-class ImeConfig(PerfettoTraceConfig):
+
+class ImeConfig(TraceConfig):
     """Handles perfetto config for IME traces."""
 
     COMMAND = f"""
@@ -640,7 +702,8 @@ fi
         shell = get_shell_args(device_id, "perfetto config ime")
         self.execute_perfetto_config_command(server, shell, ImeConfig.COMMAND, "IME tracing")
 
-class TransitionTracesConfig(PerfettoTraceConfig):
+
+class TransitionTracesConfig(TraceConfig):
     """Handles perfetto config for Transition traces."""
 
     COMMAND = f"""
@@ -662,7 +725,8 @@ fi
         shell = get_shell_args(device_id, "perfetto config transitions")
         self.execute_perfetto_config_command(server, shell, TransitionTracesConfig.COMMAND, "Transitions")
 
-class InputConfig(PerfettoTraceConfig):
+
+class InputConfig(TraceConfig):
     """Handles perfetto config for Input traces."""
 
     COMMAND = f"""
