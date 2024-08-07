@@ -32,6 +32,7 @@ import {MatIconRegistry} from '@angular/material/icon';
 import {MatSelect, MatSelectChange} from '@angular/material/select';
 import {DomSanitizer} from '@angular/platform-browser';
 import {assertDefined} from 'common/assert_utils';
+import {Distance} from 'common/geometry/distance';
 import {PersistentStore} from 'common/persistent_store';
 import {UrlUtils} from 'common/url_utils';
 import {Analytics} from 'logging/analytics';
@@ -40,13 +41,13 @@ import {TraceType} from 'trace/trace_type';
 import {DisplayIdentifier} from 'viewers/common/display_identifier';
 import {UserOptions} from 'viewers/common/user_options';
 import {RectDblClickDetail, ViewerEvents} from 'viewers/common/viewer_events';
-import {UiRect} from 'viewers/components/rects/types2d';
+import {UiRect} from 'viewers/components/rects/ui_rect';
 import {iconDividerStyle} from 'viewers/components/styles/icon_divider.styles';
 import {multlineTooltip} from 'viewers/components/styles/tooltip.styles';
 import {viewerCardInnerStyle} from 'viewers/components/styles/viewer_card.styles';
 import {Canvas} from './canvas';
 import {Mapper3D} from './mapper3d';
-import {Distance2D, ShadingMode} from './types3d';
+import {ShadingMode} from './shading_mode';
 
 @Component({
   selector: 'rects-view',
@@ -546,7 +547,7 @@ export class RectsComponent implements OnInit, OnDestroy {
   }
 
   onMouseMove(event: MouseEvent) {
-    const distance = new Distance2D(event.movementX, event.movementY);
+    const distance = new Distance(event.movementX, event.movementY);
     this.mapper3d.addPanScreenDistance(distance);
     this.drawLargeRectsAndLabels();
   }
@@ -685,7 +686,7 @@ export class RectsComponent implements OnInit, OnDestroy {
   private drawLargeRectsAndLabels() {
     // TODO(b/258593034): Re-create scene only when input rects change. With the other input events
     // (rotation, spacing, ...) we can just update the camera and/or update the mesh positions.
-    // We'd probably need to get rid of the intermediate layer (Scene3D, Rect3D, ... types) and
+    // We'd probably need to get rid of the intermediate layer (Scene, Rect3D, ... types) and
     // work directly with three.js's meshes.
     this.mapper3d.setRects(this.internalRects);
     this.largeRectsCanvas?.draw(this.mapper3d.computeScene());
@@ -694,7 +695,7 @@ export class RectsComponent implements OnInit, OnDestroy {
   private drawMiniRects() {
     // TODO(b/258593034): Re-create scene only when input rects change. With the other input events
     // (rotation, spacing, ...) we can just update the camera and/or update the mesh positions.
-    // We'd probably need to get rid of the intermediate layer (Scene3D, Rect3D, ... types) and
+    // We'd probably need to get rid of the intermediate layer (Scene, Rect3D, ... types) and
     // work directly with three.js's meshes.
     if (this.internalMiniRects) {
       const largeRectShadingMode = this.mapper3d.getShadingMode();

@@ -14,12 +14,6 @@
  * limitations under the License.
  */
 
-import {Rect} from './rect';
-
-export class Region {
-  constructor(readonly rects: Rect[]) {}
-
-  static createEmpty(): Region {
-    return new Region([]);
-  }
+export class Distance {
+  constructor(public dx: number, public dy: number) {}
 }

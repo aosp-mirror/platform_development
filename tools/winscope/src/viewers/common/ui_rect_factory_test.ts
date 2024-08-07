@@ -19,7 +19,7 @@ import {Transform} from 'parsers/surface_flinger/transform_utils';
 import {HierarchyTreeBuilder} from 'test/unit/hierarchy_tree_builder';
 import {TraceRectBuilder} from 'trace/trace_rect_builder';
 import {HierarchyTreeNode} from 'trace/tree_node/hierarchy_tree_node';
-import {UiRect} from 'viewers/components/rects/types2d';
+import {UiRect} from 'viewers/components/rects/ui_rect';
 import {UiRectBuilder} from 'viewers/components/rects/ui_rect_builder';
 import {UI_RECT_FACTORY} from './ui_rect_factory';
 
