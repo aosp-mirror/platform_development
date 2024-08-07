@@ -174,9 +174,13 @@ fn main() -> Result<()> {
                     .to_str()
                     .ok_or(anyhow!("Failed to convert path *.bp to str"))?,
             )? {
-                remove_file(entry?)?
+                remove_file(entry?)?;
             }
             remove_file(src_dir.join("cargo_embargo.json"))?;
+            let test_mapping = src_dir.join("TEST_MAPPING");
+            if test_mapping.exists() {
+                remove_file(test_mapping)?;
+            }
             write(
                 src_dir.join("Android.bp"),
                 "// This crate has been migrated to external/rust/android-crates-io.\n",
