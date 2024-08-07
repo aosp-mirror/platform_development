@@ -17,7 +17,7 @@
 #
 # This is an ADB proxy for Winscope.
 #
-# Requirements: python3.5 and ADB installed and in system PATH.
+# Requirements: python3.10 and ADB installed and in system PATH.
 #
 # Usage:
 #     run: python3 winscope_proxy.py
