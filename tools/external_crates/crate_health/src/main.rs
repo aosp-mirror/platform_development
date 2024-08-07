@@ -51,18 +51,18 @@ struct Cli {
 enum Cmd {
     /// Check the health of a crate, and whether it is safe to migrate.
     MigrationHealth {
-        /// The crate name. Also the directory name in external/rust/crates
+        /// The crate name. Also the directory name in external/rust/crates.
         crate_name: String,
     },
     /// Migrate a crate from external/rust/crates to the monorepo.
     Migrate {
-        /// The crate name. Also the directory name in external/rust/crates
-        crate_name: String,
+        /// The crate names. Also the directory names in external/rust/crates.
+        crates: Vec<String>,
     },
     /// Regenerate a crate directory.
     Regenerate {
-        /// The crate name.
-        crate_name: String,
+        /// The crate names.
+        crates: Vec<String>,
     },
     /// Regenerate all crates
     RegenerateAll {},
@@ -151,46 +151,50 @@ fn main() -> Result<()> {
             migration_health(&args.repo_root, &crate_name, args.verbose)?;
             Ok(())
         }
-        Cmd::Migrate { crate_name } => {
-            let version = migration_health(&args.repo_root, &crate_name, args.verbose)?;
-            let src_dir = args.repo_root.join("external/rust/crates").join(&crate_name);
-
-            let monorepo_crate_dir = args.repo_root.join("external/rust/android-crates-io/crates");
-            if !monorepo_crate_dir.exists() {
-                create_dir(&monorepo_crate_dir)?;
-            }
-            copy_dir(&src_dir, &monorepo_crate_dir.join(&crate_name))?;
+        Cmd::Migrate { crates } => {
             let pseudo_crate = PseudoCrate::new(RepoPath::new(
                 &args.repo_root,
                 "external/rust/android-crates-io/pseudo_crate",
             ));
-            pseudo_crate.add(&NameAndVersionRef::new(&crate_name, &version))?;
+            for crate_name in &crates {
+                let version = migration_health(&args.repo_root, &crate_name, args.verbose)?;
+                let src_dir = args.repo_root.join("external/rust/crates").join(&crate_name);
 
-            regenerate(&args.repo_root, [crate_name.as_str()].into_iter())?;
+                let monorepo_crate_dir =
+                    args.repo_root.join("external/rust/android-crates-io/crates");
+                if !monorepo_crate_dir.exists() {
+                    create_dir(&monorepo_crate_dir)?;
+                }
+                copy_dir(&src_dir, &monorepo_crate_dir.join(&crate_name))?;
+                pseudo_crate.add(&NameAndVersionRef::new(&crate_name, &version))?;
+            }
 
-            for entry in glob(
-                src_dir
-                    .join("*.bp")
-                    .to_str()
-                    .ok_or(anyhow!("Failed to convert path *.bp to str"))?,
-            )? {
-                remove_file(entry?)?;
+            regenerate(&args.repo_root, crates.iter())?;
+
+            for crate_name in &crates {
+                let src_dir = args.repo_root.join("external/rust/crates").join(&crate_name);
+                for entry in glob(
+                    src_dir
+                        .join("*.bp")
+                        .to_str()
+                        .ok_or(anyhow!("Failed to convert path *.bp to str"))?,
+                )? {
+                    remove_file(entry?)?;
+                }
+                remove_file(src_dir.join("cargo_embargo.json"))?;
+                let test_mapping = src_dir.join("TEST_MAPPING");
+                if test_mapping.exists() {
+                    remove_file(test_mapping)?;
+                }
+                write(
+                    src_dir.join("Android.bp"),
+                    "// This crate has been migrated to external/rust/android-crates-io.\n",
+                )?;
             }
-            remove_file(src_dir.join("cargo_embargo.json"))?;
-            let test_mapping = src_dir.join("TEST_MAPPING");
-            if test_mapping.exists() {
-                remove_file(test_mapping)?;
-            }
-            write(
-                src_dir.join("Android.bp"),
-                "// This crate has been migrated to external/rust/android-crates-io.\n",
-            )?;
 
             Ok(())
         }
-        Cmd::Regenerate { crate_name } => {
-            regenerate(&args.repo_root, [crate_name.as_str()].into_iter())
-        }
+        Cmd::Regenerate { crates } => regenerate(&args.repo_root, crates.iter()),
         Cmd::RegenerateAll {} => regenerate_all(&args.repo_root),
         Cmd::PreuploadCheck { files: _ } => preupload_check(&args.repo_root),
     }
@@ -396,9 +400,9 @@ pub fn migration_health(
     }
 }
 
-pub fn regenerate<'a>(
+pub fn regenerate<T: AsRef<str>>(
     repo_root: &impl AsRef<Path>,
-    crates: impl Iterator<Item = &'a str>,
+    crates: impl Iterator<Item = T>,
 ) -> Result<()> {
     let repo_root = repo_root.as_ref();
 
@@ -421,14 +425,15 @@ pub fn regenerate<'a>(
     Ok(())
 }
 
-pub fn stage<'a>(
+pub fn stage<T: AsRef<str>>(
     repo_root: &impl AsRef<Path>,
-    crates: impl Iterator<Item = &'a str>,
+    crates: impl Iterator<Item = T>,
 ) -> Result<VersionMatch<CrateCollection>> {
     let repo_root = repo_root.as_ref();
 
     let mut cc = CrateCollection::new(repo_root);
     for crate_name in crates {
+        let crate_name = crate_name.as_ref();
         let android_crate_dir =
             repo_root.join("external/rust/android-crates-io/crates").join(crate_name);
         if !android_crate_dir.exists() {
