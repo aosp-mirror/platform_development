@@ -14,12 +14,8 @@
  * limitations under the License.
  */
 
-import {Rect} from './rect';
-
-export class Region {
-  constructor(readonly rects: Rect[]) {}
-
-  static createEmpty(): Region {
-    return new Region([]);
-  }
+export enum ShadingMode {
+  WIRE_FRAME = 'Wire frame',
+  GRADIENT = 'Shaded by gradient',
+  OPACITY = 'Shaded by opacity',
 }

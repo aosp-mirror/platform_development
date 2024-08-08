@@ -22,6 +22,7 @@ import {
   Transform,
   TransformType,
 } from 'parsers/surface_flinger/transform_utils';
+import {GeometryFactory} from 'trace/geometry_factory';
 import {Computation} from 'trace/tree_node/computation';
 import {HierarchyTreeNode} from 'trace/tree_node/hierarchy_tree_node';
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
@@ -319,7 +320,7 @@ export class VisibilityPropertiesComputation implements Computation {
 
   private getRect(rectNode: PropertyTreeNode): Rect | undefined {
     if (rectNode.getAllChildren().length === 0) return undefined;
-    return Rect.from(rectNode);
+    return GeometryFactory.makeRect(rectNode);
   }
 
   private getColor(layer: HierarchyTreeNode): PropertyTreeNode | undefined {

@@ -21,6 +21,16 @@ struct ChangeTypeInStruct {
   int member_4[0];
 };
 
+union ReorderAnonymousType {
+  struct {
+    int rename_2;
+  };
+  struct {
+    int rename_1;
+  } member_1;
+};
+
 extern "C" {
-void function(ChangeType, Rename, Swap, ChangeTypeInStruct);
+void function(ChangeType, Rename, Swap, ChangeTypeInStruct,
+              ReorderAnonymousType);
 }

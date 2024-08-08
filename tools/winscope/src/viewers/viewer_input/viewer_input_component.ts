@@ -19,7 +19,7 @@ import {PersistentStore} from 'common/persistent_store';
 import {TraceType} from 'trace/trace_type';
 import {CollapsibleSections} from 'viewers/common/collapsible_sections';
 import {CollapsibleSectionType} from 'viewers/common/collapsible_section_type';
-import {ShadingMode} from 'viewers/components/rects/types3d';
+import {ShadingMode} from 'viewers/components/rects/shading_mode';
 import {
   viewerCardInnerStyle,
   viewerCardStyle,

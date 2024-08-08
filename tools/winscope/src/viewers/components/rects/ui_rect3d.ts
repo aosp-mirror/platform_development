@@ -14,17 +14,20 @@
  * limitations under the License.
  */
 
-export enum ConnectionState {
-  ERROR,
-  CONNECTING,
-  NOT_FOUND,
-  INVALID_VERSION,
-  UNAUTH,
-  IDLE,
-  STARTING_TRACE,
-  TRACING,
-  ENDING_TRACE,
-  DUMPING_STATE,
-  LOADING_DATA,
-  TRACE_TIMEOUT,
+import {Point3D} from 'common/geometry/point3d';
+import {Rect3D} from 'common/geometry/rect3d';
+import {TransformMatrix} from 'common/geometry/transform_matrix';
+import {ColorType} from './color_type';
+
+export interface UiRect3D extends Rect3D {
+  id: string;
+  topLeft: Point3D;
+  bottomRight: Point3D;
+  cornerRadius: number;
+  darkFactor: number;
+  colorType: ColorType;
+  isClickable: boolean;
+  transform: TransformMatrix;
+  isOversized: boolean;
+  fillRegion: Rect3D[] | undefined;
 }
