@@ -219,3 +219,17 @@ export class MissingVsyncId extends UserWarning {
     return `missing vsync_id value for one or more entries in ${this.tableName}`;
   }
 }
+
+export class ProxyTracingErrors extends UserWarning {
+  constructor(private readonly errorMessages: string[]) {
+    super();
+  }
+
+  getDescriptor(): string {
+    return 'proxy tracing errors';
+  }
+
+  getMessage(): string {
+    return `Errors occurred during tracing: ${this.errorMessages.join(', ')}`;
+  }
+}

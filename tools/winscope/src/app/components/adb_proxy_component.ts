@@ -26,7 +26,7 @@ import {ConnectionState} from 'trace_collection/connection_state';
           <p class="mat-body-1">
             Launch the Winscope ADB Connect proxy to capture traces directly from your browser.
           </p>
-          <p class="mat-body-1">Python 3.5+ and ADB are required. Run this command:</p>
+          <p class="mat-body-1">Python 3.10+ and ADB are required. Run this command:</p>
           <mat-form-field class="proxy-command-form" appearance="outline">
             <input matInput readonly [value]="proxyCommand" />
             <button

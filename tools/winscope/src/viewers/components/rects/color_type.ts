@@ -14,12 +14,12 @@
  * limitations under the License.
  */
 
-import {Rect} from './rect';
-
-export class Region {
-  constructor(readonly rects: Rect[]) {}
-
-  static createEmpty(): Region {
-    return new Region([]);
-  }
+export enum ColorType {
+  VISIBLE,
+  VISIBLE_WITH_OPACITY,
+  NOT_VISIBLE,
+  HIGHLIGHTED,
+  HAS_CONTENT,
+  EMPTY,
+  HAS_CONTENT_AND_OPACITY,
 }

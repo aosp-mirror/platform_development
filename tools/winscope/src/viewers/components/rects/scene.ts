@@ -14,12 +14,21 @@
  * limitations under the License.
  */
 
-import {Rect} from './rect';
+import {Box3D} from 'common/geometry/box3d';
+import {Distance} from 'common/geometry/distance';
+import {RectLabel} from './rect_label';
+import {UiRect3D} from './ui_rect3d';
 
-export class Region {
-  constructor(readonly rects: Rect[]) {}
+export interface Scene {
+  boundingBox: Box3D;
+  camera: Camera;
+  rects: UiRect3D[];
+  labels: RectLabel[];
+}
 
-  static createEmpty(): Region {
-    return new Region([]);
-  }
+interface Camera {
+  rotationAngleX: number;
+  rotationAngleY: number;
+  zoomFactor: number;
+  panScreenDistance: Distance;
 }
