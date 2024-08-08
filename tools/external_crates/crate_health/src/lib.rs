@@ -28,10 +28,6 @@ mod crate_type;
 pub use self::crate_collection::CrateCollection;
 mod crate_collection;
 
-pub use self::reports::{ReportEngine, SizeReport, Table};
-mod reports;
-
-pub use self::migration::migrate;
 mod migration;
 
 pub use self::pseudo_crate::PseudoCrate;
@@ -78,14 +74,6 @@ pub fn default_repo_root() -> Result<PathBuf> {
         }
     }
     Err(anyhow!(".repo directory not found in any ancestor of {}", cwd.display()))
-}
-
-pub fn default_output_dir(filename: &str) -> PathBuf {
-    PathBuf::from("/google/data/rw/users")
-        .join(&whoami::username()[..2])
-        .join(whoami::username())
-        .join("www")
-        .join(filename)
 }
 
 pub fn ensure_exists_and_empty(dir: &impl AsRef<Path>) -> Result<()> {
