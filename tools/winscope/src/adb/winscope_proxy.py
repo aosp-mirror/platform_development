@@ -205,16 +205,7 @@ TRACE_TARGETS = {
         "view_capture_trace",
         File('/data/misc/wmtrace/view_capture_trace.zip', "view_capture_trace.zip"),
     f"""
-if is_flag_set windowing_tools/android.tracing.perfetto_view_capture_tracing; then
-    cat << EOF >> {PERFETTO_TRACE_CONFIG_FILE}
-data_sources: {{
-    config {{
-        name: "android.viewcapture"
-    }}
-}}
-EOF
-    echo 'ViewCapture tracing (perfetto) configured to start along the other perfetto traces.'
-else
+if ! is_flag_set windowing_tools/android.tracing.perfetto_view_capture_tracing; then
     su root settings put global view_capture_enabled 1
     echo 'ViewCapture tracing (legacy) started.'
 fi
@@ -267,19 +258,7 @@ fi
         "transactions",
         WinscopeFileMatcher(WINSCOPE_DIR, "transactions_trace", "transactions"),
         f"""
-if is_perfetto_data_source_available android.surfaceflinger.transactions; then
-    cat << EOF >> {PERFETTO_TRACE_CONFIG_FILE}
-data_sources: {{
-    config {{
-        name: "android.surfaceflinger.transactions"
-        surfaceflinger_transactions_config: {{
-            mode: MODE_ACTIVE
-        }}
-    }}
-}}
-EOF
-    echo 'SF transactions trace (perfetto) configured to start along the other perfetto traces.'
-else
+if ! is_perfetto_data_source_available android.surfaceflinger.transactions; then
     su root service call SurfaceFlinger 1041 i32 1
     echo 'SF transactions trace (legacy) started.'
 fi
@@ -303,20 +282,8 @@ fi
          "proto_log",
         WinscopeFileMatcher(WINSCOPE_DIR, "wm_log", "proto_log"),
         f"""
-if is_perfetto_data_source_available android.protolog && \
-    is_flag_set windowing_tools/android.tracing.perfetto_protolog_tracing; then
-    cat << EOF >> {PERFETTO_TRACE_CONFIG_FILE}
-data_sources: {{
-    config {{
-        name: "android.protolog"
-        protolog_config: {{
-            tracing_mode: ENABLE_ALL
-        }}
-    }}
-}}
-EOF
-    echo 'ProtoLog (perfetto) configured to start along the other perfetto traces.'
-else
+if ! is_perfetto_data_source_available android.protolog && \
+    ! is_flag_set windowing_tools/android.tracing.perfetto_protolog_tracing; then
     su root cmd window logging start
     echo "ProtoLog (legacy) started."
 fi
@@ -335,16 +302,7 @@ fi
          WinscopeFileMatcher(WINSCOPE_DIR, "ime_trace_service", "ime_trace_service"),
          WinscopeFileMatcher(WINSCOPE_DIR, "ime_trace_managerservice", "ime_trace_managerservice")],
          f"""
-if is_flag_set windowing_tools/android.tracing.perfetto_ime; then
-    cat << EOF >> {PERFETTO_TRACE_CONFIG_FILE}
-data_sources: {{
-    config {{
-        name: "android.inputmethod"
-    }}
-}}
-EOF
-    echo 'IME tracing (perfetto) configured to start along the other perfetto traces.'
-else
+if ! is_flag_set windowing_tools/android.tracing.perfetto_ime; then
     su root ime tracing start
     echo "IME tracing (legacy) started."
 fi
@@ -373,17 +331,8 @@ fi
         [WinscopeFileMatcher(WINSCOPE_DIR, "wm_transition_trace", "wm_transition_trace"),
          WinscopeFileMatcher(WINSCOPE_DIR, "shell_transition_trace", "shell_transition_trace")],
          f"""
-if is_perfetto_data_source_available com.android.wm.shell.transition && \
-    is_flag_set windowing_tools/android.tracing.perfetto_transition_tracing; then
-    cat << EOF >> {PERFETTO_TRACE_CONFIG_FILE}
-data_sources: {{
-    config {{
-        name: "com.android.wm.shell.transition"
-    }}
-}}
-EOF
-    echo 'Transition trace (perfetto) configured to start along the other perfetto traces.'
-else
+if ! is_perfetto_data_source_available com.android.wm.shell.transition && \
+    ! is_flag_set windowing_tools/android.tracing.perfetto_transition_tracing; then
     su root cmd window shell tracing start && su root dumpsys activity service SystemUIService WMShell transitions tracing start
     echo "Transition traces (legacy) started."
 fi
@@ -395,6 +344,12 @@ if ! is_perfetto_data_source_available com.android.wm.shell.transition && \
     echo 'Transition traces (legacy) stopped.'
 fi
 """
+    ),
+    "input": TraceTarget(
+        "input",
+        [WinscopeFileMatcher(WINSCOPE_DIR, "input_trace", "input_trace")],
+        "",
+        ""
     ),
     "perfetto_trace": TraceTarget(
          "perfetto_trace",
@@ -432,26 +387,6 @@ if is_any_perfetto_data_source_available; then
 fi
 """,
     ),
-    "input": TraceTarget(
-        "input",
-        [WinscopeFileMatcher(WINSCOPE_DIR, "input_trace", "input_trace")],
-        f"""
-if is_perfetto_data_source_available android.input.inputevent; then
-    cat << EOF >> {PERFETTO_TRACE_CONFIG_FILE}
-data_sources: {{
-    config {{
-        name: "android.input.inputevent"
-        android_input_event_config {{
-            mode: TRACE_MODE_TRACE_ALL
-        }}
-    }}
-}}
-EOF
-    echo 'Input trace (perfetto) configured to start along the other perfetto traces.'
-fi
-        """,
-        ""
-    ),
 }
 
 
@@ -474,19 +409,34 @@ class TraceConfig:
     def execute_command(self, server, device_id):
         pass
 
-    def execute_config_command(self, server, device_id, shell, command, config_key, config_value):
+
+class OptionalTraceConfig(TraceConfig):
+    def execute_optional_config_command(self, server, device_id, shell, command, config_key, config_value):
         process = subprocess.Popen(shell, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
                                     stdin=subprocess.PIPE, start_new_session=True)
-        log.debug(f"Changing trace config on device {device_id} {config_key}:{config_value}")
+        log.debug(f"Changing optional trace config on device {device_id} {config_key}:{config_value}")
         out, err = process.communicate(command.encode('utf-8'))
         if process.returncode != 0:
             raise AdbError(
                 f"Error executing command:\n {command}\n\n### OUTPUT ###{out.decode('utf-8')}\n{err.decode('utf-8')}")
-        log.debug(f"Changing trace config finished on device {device_id}")
+        log.debug(f"Optional trace config changed on device {device_id}")
         server.respond(HTTPStatus.OK, b'', "text/plain")
 
 
-class SurfaceFlingerTraceConfig(TraceConfig):
+class PerfettoTraceConfig(TraceConfig):
+    def execute_perfetto_config_command(self, server, shell, command, trace_name):
+        process = subprocess.Popen(shell, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                                    stdin=subprocess.PIPE, start_new_session=True)
+        out, err = process.communicate(command.encode('utf-8'))
+        if process.returncode != 0:
+            raise AdbError(
+                f"Error executing command:\n {command}\n\n### OUTPUT ###{out.decode('utf-8')}\n{err.decode('utf-8')}")
+        log.debug(f'{trace_name} (perfetto) configured to start along the other perfetto traces.')
+        server.respond(HTTPStatus.OK, b'', "text/plain")
+
+
+
+class SurfaceFlingerTraceConfig(OptionalTraceConfig):
     """Handles optional configuration for Surface Flinger traces.
     """
     LEGACY_FLAGS_MAP = {
@@ -527,8 +477,8 @@ class SurfaceFlingerTraceConfig(TraceConfig):
 
     def execute_command(self, server, device_id):
         shell = get_shell_args(device_id, "sf config")
-        self.execute_config_command(server, device_id, shell, self._flags_command(), "sf flags", self.flags)
-        self.execute_config_command(server, device_id, shell, self._buffer_size_command(), "sf buffer size", self.selected_configs["sfbuffersize"])
+        self.execute_optional_config_command(server, device_id, shell, self._flags_command(), "sf flags", self.flags)
+        self.execute_optional_config_command(server, device_id, shell, self._buffer_size_command(), "sf buffer size", self.selected_configs["sfbuffersize"])
 
     def _buffer_size_command(self) -> str:
         return f'su root service call SurfaceFlinger 1029 i32 {self.selected_configs["sfbuffersize"]}'
@@ -544,7 +494,7 @@ class SurfaceFlingerTraceConfig(TraceConfig):
 {PERFETTO_UTILS}
 
 if is_perfetto_data_source_available android.surfaceflinger.layers; then
-    cat << EOF > {PERFETTO_TRACE_CONFIG_FILE}
+    cat << EOF >> {PERFETTO_TRACE_CONFIG_FILE}
 data_sources: {{
     config {{
         name: "android.surfaceflinger.layers"
@@ -563,7 +513,7 @@ fi
 """
 
 
-class WindowManagerTraceConfig(TraceConfig):
+class WindowManagerTraceConfig(OptionalTraceConfig):
     """Handles optional selected configuration for Window Manager traces.
     """
 
@@ -583,11 +533,11 @@ class WindowManagerTraceConfig(TraceConfig):
 
     def execute_command(self, server, device_id):
         shell = get_shell_args(device_id, "wm config")
-        self.execute_config_command(server, device_id, shell, self._tracing_type_command(), "tracing type", self.selected_configs["tracingtype"])
-        self.execute_config_command(server, device_id, shell, self._tracing_level_command(), "tracing level", self.selected_configs["tracinglevel"])
+        self.execute_optional_config_command(server, device_id, shell, self._tracing_type_command(), "tracing type", self.selected_configs["tracingtype"])
+        self.execute_optional_config_command(server, device_id, shell, self._tracing_level_command(), "tracing level", self.selected_configs["tracinglevel"])
         # /!\ buffer size must be configured last
         # otherwise the other configurations might override it
-        self.execute_config_command(server, device_id, shell, self._buffer_size_command(), "wm buffer size", self.selected_configs["wmbuffersize"])
+        self.execute_optional_config_command(server, device_id, shell, self._buffer_size_command(), "wm buffer size", self.selected_configs["wmbuffersize"])
 
     def _tracing_type_command(self) -> str:
         return f'su root cmd window tracing {self.selected_configs["tracingtype"]}'
@@ -599,9 +549,153 @@ class WindowManagerTraceConfig(TraceConfig):
         return f'su root cmd window tracing size {self.selected_configs["wmbuffersize"]}'
 
 
+class ViewCaptureTraceConfig(PerfettoTraceConfig):
+    """Handles perfetto config for View Capture traces."""
+
+    COMMAND = f"""
+    {PERFETTO_UTILS}
+
+if is_flag_set windowing_tools/android.tracing.perfetto_view_capture_tracing; then
+    cat << EOF >> {PERFETTO_TRACE_CONFIG_FILE}
+data_sources: {{
+    config {{
+        name: "android.viewcapture"
+    }}
+}}
+EOF
+fi
+    """
+
+    def execute_command(self, server, device_id):
+        shell = get_shell_args(device_id, "perfetto config view capture")
+        self.execute_perfetto_config_command(server, shell, ViewCaptureTraceConfig.COMMAND, "View Capture")
+
+class TransactionsConfig(PerfettoTraceConfig):
+    """Handles perfetto config for Transactions traces."""
+
+    COMMAND = f"""
+    {PERFETTO_UTILS}
+
+if is_perfetto_data_source_available android.surfaceflinger.transactions; then
+    cat << EOF >> {PERFETTO_TRACE_CONFIG_FILE}
+data_sources: {{
+    config {{
+        name: "android.surfaceflinger.transactions"
+        surfaceflinger_transactions_config: {{
+            mode: MODE_ACTIVE
+        }}
+    }}
+}}
+EOF
+fi
+    """
+
+    def execute_command(self, server, device_id):
+        shell = get_shell_args(device_id, "perfetto config transactions")
+        self.execute_perfetto_config_command(server, shell, TransactionsConfig.COMMAND, "SF transactions")
+
+class ProtoLogConfig(PerfettoTraceConfig):
+    """Handles perfetto config for ProtoLog traces."""
+
+    COMMAND = f"""
+    {PERFETTO_UTILS}
+
+if is_perfetto_data_source_available android.protolog && \
+    is_flag_set windowing_tools/android.tracing.perfetto_protolog_tracing; then
+    cat << EOF >> {PERFETTO_TRACE_CONFIG_FILE}
+data_sources: {{
+    config {{
+        name: "android.protolog"
+        protolog_config: {{
+            tracing_mode: ENABLE_ALL
+        }}
+    }}
+}}
+EOF
+fi
+    """
+
+    def execute_command(self, server, device_id):
+        shell = get_shell_args(device_id, "perfetto config protolog")
+        self.execute_perfetto_config_command(server, shell, ProtoLogConfig.COMMAND, "ProtoLog")
+
+class ImeConfig(PerfettoTraceConfig):
+    """Handles perfetto config for IME traces."""
+
+    COMMAND = f"""
+    {PERFETTO_UTILS}
+
+if is_flag_set windowing_tools/android.tracing.perfetto_ime; then
+    cat << EOF >> {PERFETTO_TRACE_CONFIG_FILE}
+data_sources: {{
+    config {{
+        name: "android.inputmethod"
+    }}
+}}
+EOF
+fi
+    """
+
+    def execute_command(self, server, device_id):
+        shell = get_shell_args(device_id, "perfetto config ime")
+        self.execute_perfetto_config_command(server, shell, ImeConfig.COMMAND, "IME tracing")
+
+class TransitionTracesConfig(PerfettoTraceConfig):
+    """Handles perfetto config for Transition traces."""
+
+    COMMAND = f"""
+    {PERFETTO_UTILS}
+
+if is_perfetto_data_source_available com.android.wm.shell.transition && \
+    is_flag_set windowing_tools/android.tracing.perfetto_transition_tracing; then
+    cat << EOF >> {PERFETTO_TRACE_CONFIG_FILE}
+data_sources: {{
+    config {{
+        name: "com.android.wm.shell.transition"
+    }}
+}}
+EOF
+fi
+    """
+
+    def execute_command(self, server, device_id):
+        shell = get_shell_args(device_id, "perfetto config transitions")
+        self.execute_perfetto_config_command(server, shell, TransitionTracesConfig.COMMAND, "Transitions")
+
+class InputConfig(PerfettoTraceConfig):
+    """Handles perfetto config for Input traces."""
+
+    COMMAND = f"""
+    {PERFETTO_UTILS}
+
+if is_perfetto_data_source_available android.input.inputevent; then
+    cat << EOF >> {PERFETTO_TRACE_CONFIG_FILE}
+data_sources: {{
+    config {{
+        name: "android.input.inputevent"
+        android_input_event_config {{
+            mode: TRACE_MODE_TRACE_ALL
+        }}
+    }}
+}}
+EOF
+fi
+    """
+
+    def execute_command(self, server, device_id):
+        shell = get_shell_args(device_id, "perfetto config input")
+        self.execute_perfetto_config_command(server, shell, InputConfig.COMMAND, "Input trace")
+
+
 TRACE_CONFIG: dict[str, Callable[[], TraceConfig]] = {
     "window_trace": lambda: WindowManagerTraceConfig(),
-    "layers_trace": lambda: SurfaceFlingerTraceConfig()
+    "layers_trace": lambda: SurfaceFlingerTraceConfig(),
+    "view_capture_trace": lambda: ViewCaptureTraceConfig(),
+    "transactions": lambda: TransactionsConfig(),
+    "proto_log": lambda: ProtoLogConfig(),
+    "ime": lambda: ImeConfig(),
+    "transition_traces": lambda: TransitionTracesConfig(),
+    "input": lambda: InputConfig(),
 }
 
 
@@ -1119,6 +1213,8 @@ while true; do sleep 0.1; done
             device_id, ','.join([t.get("name") for t in trace_requests])))
 
         for t in trace_targets:
+            if len(t.trace_start) == 0:
+                continue
             command = StartTraceEndpoint.TRACE_COMMAND.format(
                 perfetto_utils=PERFETTO_UTILS,
                 winscope_status=WINSCOPE_STATUS,
