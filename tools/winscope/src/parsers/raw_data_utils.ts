@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import {Rect} from 'common/geometry/rect';
+import {GeometryFactory} from 'trace/geometry_factory';
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
 
 export class RawDataUtils {
@@ -24,7 +24,7 @@ export class RawDataUtils {
     }
 
     if (RawDataUtils.isRect(obj)) {
-      return Rect.from(obj).isEmpty();
+      return GeometryFactory.makeRect(obj).isEmpty();
     }
 
     return false;

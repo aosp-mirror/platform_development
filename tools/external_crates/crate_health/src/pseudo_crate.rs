@@ -90,8 +90,6 @@ impl PseudoCrate {
             .context("Failed to create src/lib.rs")?;
 
         self.vendor()
-
-        // TODO: Run "cargo deny"
     }
     pub fn get_path(&self) -> &RepoPath {
         &self.path

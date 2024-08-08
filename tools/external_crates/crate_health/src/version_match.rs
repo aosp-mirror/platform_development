@@ -113,25 +113,6 @@ impl<CollectionType: NameAndVersionMap> VersionMatch<CollectionType> {
             },
         )
     }
-    pub fn print(&self) {
-        for (nv, compatibility) in self.compatibility.iter() {
-            match compatibility {
-                Some(dest) => {
-                    println!("{} old {} -> new {}", nv.name(), nv.version(), dest.version())
-                }
-                None => {
-                    if self.dest.contains_name(nv.name()) {
-                        println!("{} {} -> NO MATCHING VERSION", nv.name(), nv.version())
-                    } else {
-                        println!("{} {} -> NOT FOUND IN NEW", nv.name(), nv.version())
-                    }
-                }
-            }
-        }
-        for (nv, _) in self.superfluous() {
-            println!("{} {} -> NOT FOUND IN OLD", nv.name(), nv.version());
-        }
-    }
 }
 
 impl<CollectionType: NameAndVersionMap> VersionMatch<CollectionType>

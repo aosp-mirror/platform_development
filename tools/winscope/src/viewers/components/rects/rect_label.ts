@@ -14,12 +14,14 @@
  * limitations under the License.
  */
 
-import {Rect} from './rect';
+import {Circle3D} from 'common/geometry/circle3d';
+import {Point3D} from 'common/geometry/point3d';
 
-export class Region {
-  constructor(readonly rects: Rect[]) {}
-
-  static createEmpty(): Region {
-    return new Region([]);
-  }
+export interface RectLabel {
+  circle: Circle3D;
+  linePoints: Point3D[];
+  textCenter: Point3D;
+  text: string;
+  isHighlighted: boolean;
+  rectId: string;
 }

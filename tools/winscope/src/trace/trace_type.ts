@@ -92,6 +92,7 @@ export class TraceTypeUtils {
 
   private static TRACES_WITH_VIEWERS_DISPLAY_ORDER = [
     TraceType.SCREEN_RECORDING,
+    TraceType.SCREENSHOT,
     TraceType.SURFACE_FLINGER,
     TraceType.WINDOW_MANAGER,
     TraceType.INPUT_EVENT_MERGED,

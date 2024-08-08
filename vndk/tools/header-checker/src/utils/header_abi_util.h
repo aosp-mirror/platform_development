@@ -93,6 +93,11 @@ std::vector<std::pair<T, T>> FindCommonElements(
   return common_elements;
 }
 
+template <typename T>
+void InsertAll(std::vector<T> &first, const std::vector<T> &second) {
+  first.insert(first.end(), second.begin(), second.end());
+}
+
 
 }  // namespace utils
 }  // namespace header_checker
