@@ -28,11 +28,11 @@ class PerfettoLogMessageTableRow {
   timestamp: bigint = 0n;
 
   constructor(
-      timestamp: bigint,
-      tag: string,
-      level: string,
-      message: string,
-      location: string
+    timestamp: bigint,
+    tag: string,
+    level: string,
+    message: string,
+    location: string,
   ) {
     this.timestamp = timestamp ?? this.timestamp;
     this.tag = tag ?? this.tag;
@@ -71,7 +71,7 @@ export class ParserProtolog extends AbstractParser<PropertyTreeNode> {
   private async queryEntry(index: number): Promise<PerfettoLogMessageTableRow> {
     const sql = `
       SELECT
-        ts, tag, level, message
+        ts, tag, level, location, message
       FROM
         protolog
       WHERE protolog.id = ${this.entryIndexToRowIdMap[index]};

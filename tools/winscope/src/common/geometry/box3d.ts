@@ -14,12 +14,12 @@
  * limitations under the License.
  */
 
-import {Rect} from './rect';
+import {Point3D} from './point3d';
 
-export class Region {
-  constructor(readonly rects: Rect[]) {}
-
-  static createEmpty(): Region {
-    return new Region([]);
-  }
+export interface Box3D {
+  width: number;
+  height: number;
+  depth: number;
+  center: Point3D;
+  diagonal: number;
 }
