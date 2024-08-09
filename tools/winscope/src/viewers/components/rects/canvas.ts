@@ -98,12 +98,17 @@ export class Canvas {
       scene.camera.zoomFactor;
     this.scene.scale.set(scaleFactor, -scaleFactor, scaleFactor);
     this.scene.translateX(
-      scaleFactor * -scene.boundingBox.center.x + cameraWidth * panFactorX,
+      scaleFactor *
+        -(
+          scene.boundingBox.depth * scene.camera.rotationAngleX +
+          scene.boundingBox.center.x
+        ) +
+        cameraWidth * panFactorX,
     );
     this.scene.translateY(
       scaleFactor * scene.boundingBox.center.y - cameraHeight * panFactorY,
     );
-    this.scene.translateZ(scaleFactor * -scene.boundingBox.center.z);
+    this.scene.translateZ(scaleFactor * -scene.boundingBox.depth);
 
     this.camera = new THREE.OrthographicCamera(
       -cameraWidth / 2,
