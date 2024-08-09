@@ -58,7 +58,7 @@ export class VisibilityPropertiesComputation implements Computation {
       .reverse();
 
     const opaqueLayers: HierarchyTreeNode[] = [];
-    const transparentLayers: HierarchyTreeNode[] = [];
+    const translucentLayers: HierarchyTreeNode[] = [];
 
     for (const layer of rootLayersOrderedByZ) {
       let isVisible = this.getIsVisible(layer);
@@ -145,7 +145,7 @@ export class VisibilityPropertiesComputation implements Computation {
           ),
         );
 
-        const coveredBy = transparentLayers
+        const coveredBy = translucentLayers
           .filter((other) => {
             if (
               this.getDefinedValue(other, 'layerStack') !==
@@ -167,7 +167,7 @@ export class VisibilityPropertiesComputation implements Computation {
 
         this.isOpaque(layer)
           ? opaqueLayers.push(layer)
-          : transparentLayers.push(layer);
+          : translucentLayers.push(layer);
       }
 
       if (!isVisible) {

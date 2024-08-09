@@ -248,16 +248,15 @@ export class Presenter extends AbstractHierarchyViewerPresenter<UiData> {
   }
 
   private getWindows(windowNames: string[]): DisplayIdentifier[] {
-    return this.viewCaptureTraces
-      .map((trace, i) => {
-        const traceId = this.getIdFromViewCaptureTrace(trace);
-        return {
-          displayId: traceId,
-          groupId: traceId,
-          name: windowNames[i],
-        };
-      })
-      .sort((a, b) => a.name.localeCompare(b.name));
+    return this.viewCaptureTraces.map((trace, i) => {
+      const traceId = this.getIdFromViewCaptureTrace(trace);
+      return {
+        displayId: traceId,
+        groupId: traceId,
+        name: windowNames[i],
+        isActive: true,
+      };
+    });
   }
 
   private updateCuratedProperties() {
