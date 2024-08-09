@@ -169,17 +169,14 @@ export class Presenter extends AbstractHierarchyViewerPresenter<UiData> {
     rects.forEach((rect: UiRect) => {
       if (!rect.isDisplay) return;
       const displayName = rect.label.slice(10, rect.label.length);
-      ids.push({displayId: rect.id, groupId: rect.groupId, name: displayName});
+      ids.push({
+        displayId: rect.id,
+        groupId: rect.groupId,
+        name: displayName,
+        isActive: rect.isActiveDisplay,
+      });
     });
-    return ids.sort((a, b) => {
-      if (a.name < b.name) {
-        return -1;
-      }
-      if (a.name > b.name) {
-        return 1;
-      }
-      return 0;
-    });
+    return ids.sort();
   }
 
   private refreshUIData() {

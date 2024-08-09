@@ -90,12 +90,12 @@ const sfTraceEnableConfigs: EnableConfiguration[] = [
   {
     name: 'hwc',
     key: 'hwc',
-    enabled: true,
+    enabled: false,
   },
   {
     name: 'trace buffers',
     key: 'tracebuffers',
-    enabled: true,
+    enabled: false,
   },
   {
     name: 'virtual displays',
