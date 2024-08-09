@@ -32,7 +32,6 @@ export enum ViewerEvents {
   PropertiesFilterChange = 'PropertiesFilterChange',
   HighlightedPropertyChange = 'HighlightedPropertyChange',
 
-  RectGroupIdChange = 'RectGroupIdChange',
   RectsUserOptionsChange = 'RectsUserOptionsChange',
 
   AdditionalPropertySelected = 'AdditionalPropertySelected',

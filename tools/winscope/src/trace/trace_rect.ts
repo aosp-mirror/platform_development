@@ -32,6 +32,7 @@ export class TraceRect extends Rect implements Item {
     readonly groupId: number,
     readonly isVisible: boolean,
     readonly isDisplay: boolean,
+    readonly isActiveDisplay: boolean,
     readonly depth: number,
     readonly opacity: number | undefined,
     readonly isSpy: boolean,

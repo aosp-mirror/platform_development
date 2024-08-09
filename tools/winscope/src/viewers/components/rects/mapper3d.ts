@@ -52,7 +52,7 @@ class Mapper3D {
   private zSpacingFactor = Mapper3D.Z_SPACING_FACTOR_INIT;
   private zoomFactor = Mapper3D.ZOOM_FACTOR_INIT;
   private panScreenDistance = new Distance(0, 0);
-  private currentGroupId = 0; // default stack id is usually 0
+  private currentGroupIds = [0]; // default stack id is usually 0
   private shadingModeIndex = 0;
   private allowedShadingModes: ShadingMode[] = [ShadingMode.GRADIENT];
 
@@ -107,12 +107,12 @@ class Mapper3D {
     this.panScreenDistance.dy = 0;
   }
 
-  getCurrentGroupId(): number {
-    return this.currentGroupId;
+  getCurrentGroupIds(): number[] {
+    return this.currentGroupIds;
   }
 
-  setCurrentGroupId(id: number) {
-    this.currentGroupId = id;
+  setCurrentGroupIds(ids: number[]) {
+    this.currentGroupIds = ids;
   }
 
   setAllowedShadingModes(modes: ShadingMode[]) {
@@ -191,7 +191,7 @@ class Mapper3D {
   }
 
   private selectRectsToDraw(rects: UiRect[]): UiRect[] {
-    return rects.filter((rect) => rect.groupId === this.currentGroupId);
+    return rects.filter((rect) => this.currentGroupIds.includes(rect.groupId));
   }
 
   private computeRects(rects2d: UiRect[]): UiRect3D[] {
