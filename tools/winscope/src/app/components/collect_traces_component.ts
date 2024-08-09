@@ -476,8 +476,6 @@ export class CollectTracesComponent
       WinscopeEventType.APP_REFRESH_DUMPS_REQUEST,
       async (event) => {
         this.selectedTabIndex = 1;
-        this.progressMessage = 'Refreshing dumps...';
-        this.progressPercentage = 0;
         this.refreshDumps = true;
       },
     );

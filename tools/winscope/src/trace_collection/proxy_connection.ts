@@ -130,7 +130,6 @@ export class ProxyConnection extends AdbConnection {
     if (requestedDumps.length === 0) {
       throw new Error('No dumps requested');
     }
-    this.progressCallback(0);
     this.selectedDevice = device;
     this.requestedTraces = requestedDumps;
     await this.setState(ConnectionState.DUMPING_STATE);

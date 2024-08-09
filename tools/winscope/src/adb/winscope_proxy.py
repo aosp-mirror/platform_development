@@ -1226,6 +1226,21 @@ while true; do sleep 0.1; done
         trace_config.execute_command(server, device_id)
 
 
+def move_collected_files(files: list[File | FileMatcher], device_id):
+    for f in files:
+        file_paths = f.get_filepaths(device_id)
+        file_type = f.get_filetype()
+
+        for file_path in file_paths:
+            log.debug(f"Moving file {file_path} to {WINSCOPE_BACKUP_DIR}{file_type} on device")
+            try:
+                call_adb(
+                    f"shell su root [ ! -f {file_path} ] || su root mv {file_path} {WINSCOPE_BACKUP_DIR}{file_type}",
+                    device_id)
+            except AdbError as ex:
+                log.warning(f"Unable to move file {file_path} - {repr(ex)}")
+
+
 class EndTraceEndpoint(DeviceRequestEndpoint):
     def process_with_device(self, server, path, device_id):
         if device_id not in TRACE_THREADS:
@@ -1253,32 +1268,15 @@ class EndTraceEndpoint(DeviceRequestEndpoint):
                         "utf-8")
                 )
                 errors.append("Error ending trace {} on the device: {}".format(thread.trace_name, thread.err))
-            self.move_collected_files(thread.trace_name, device_id)
+            if thread.trace_name in TRACE_TARGETS:
+                files = TRACE_TARGETS[thread.trace_name].files
+                move_collected_files(files, device_id)
+            else:
+                errors.append(f"File location unknown for {thread.trace_name}")
 
         call_adb(f"shell su root rm {WINSCOPE_STATUS}", device=device_id)
         TRACE_THREADS.pop(device_id)
         server.respond(HTTPStatus.OK, json.dumps(errors).encode("utf-8"), "text/plain")
-
-    def move_collected_files(self, trace_name: str, device_id):
-        if trace_name in TRACE_TARGETS:
-            files = TRACE_TARGETS[trace_name].files
-        elif trace_name in DUMP_TARGETS:
-            files = DUMP_TARGETS[trace_name].files
-        else:
-            raise BadRequest(f"File location unknown for {trace_name}")
-
-        for f in files:
-            file_paths = f.get_filepaths(device_id)
-            file_type = f.get_filetype()
-
-            for file_path in file_paths:
-                log.debug(f"Moving file {file_path} to {WINSCOPE_BACKUP_DIR}{file_type} on device")
-                try:
-                    call_adb(
-                        f"shell su root [ ! -f {file_path} ] || su root mv {file_path} {WINSCOPE_BACKUP_DIR}{file_type}",
-                        device_id)
-                except AdbError as ex:
-                    log.warning(f"Unable to move file {file_path} - {repr(ex)}")
 
 
 class StatusEndpoint(DeviceRequestEndpoint):
@@ -1294,7 +1292,7 @@ class DumpEndpoint(DeviceRequestEndpoint):
     def process_with_device(self, server, path, device_id):
         try:
             requested_types = self.get_request(server)
-            requested_dumps = [DUMP_TARGETS[t] for t in requested_types]
+            requested_dumps: list[DumpTarget] = [DUMP_TARGETS[t] for t in requested_types]
             requested_dumps = self.move_perfetto_target_to_end_of_list(requested_dumps)
         except KeyError as err:
             raise BadRequest("Unsupported trace target\n" + str(err))
@@ -1328,6 +1326,9 @@ rm -f {PERFETTO_DUMP_CONFIG_FILE}
             raise AdbError("Error executing dump command." + "\n\n### OUTPUT ###" + out.decode('utf-8') + "\n"
                            + err.decode('utf-8'))
         log.debug("Dump finished on device {}".format(device_id))
+
+        for dump in requested_dumps:
+            move_collected_files(dump.files, device_id)
         server.respond(HTTPStatus.OK, b'', "text/plain")
 
 
