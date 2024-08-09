@@ -255,6 +255,7 @@ describe('RectFilter', () => {
       )
       .setIsVisible(isVisible)
       .setIsDisplay(isDisplay)
+      .setIsActiveDisplay(false)
       .setId(id)
       .setGroupId(0)
       .setIsClickable(false)

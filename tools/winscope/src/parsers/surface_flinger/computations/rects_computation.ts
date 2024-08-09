@@ -88,6 +88,10 @@ class RectSfFactory {
         nameCounts.set(displayName, 1);
       }
 
+      const isOn = display.getChildByName('isOn')?.getValue() ?? false;
+      const isVirtual =
+        display.getChildByName('isVirtual')?.getValue() ?? false;
+
       return new TraceRectBuilder()
         .setX(displayRect.x)
         .setY(displayRect.y)
@@ -100,6 +104,7 @@ class RectSfFactory {
         .setGroupId(layerStack)
         .setIsVisible(false)
         .setIsDisplay(true)
+        .setIsActiveDisplay(isOn && !isVirtual)
         .setDepth(index)
         .setIsSpy(false)
         .build();

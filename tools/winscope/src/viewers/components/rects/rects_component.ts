@@ -29,7 +29,7 @@ import {
 } from '@angular/core';
 import {CanColor} from '@angular/material/core';
 import {MatIconRegistry} from '@angular/material/icon';
-import {MatSelect, MatSelectChange} from '@angular/material/select';
+import {MatSelectChange} from '@angular/material/select';
 import {DomSanitizer} from '@angular/platform-browser';
 import {assertDefined} from 'common/assert_utils';
 import {Distance} from 'common/geometry/distance';
@@ -159,13 +159,26 @@ import {ShadingMode} from './shading_mode';
           <mat-form-field appearance="none" class="displays-select">
             <mat-select
               #displaySelect
-              (selectionChange)="onDisplayChange($event)"
-              [value]="currentDisplay?.name">
+              disableOptionCentering
+              (selectionChange)="onDisplaySelectChange($event)"
+              [value]="currentDisplays"
+              [disabled]="internalDisplays.length === 1"
+              multiple>
+              <mat-select-trigger>
+                <span>
+                  {{ getSelectTriggerValue() }}
+                </span>
+              </mat-select-trigger>
               <mat-option
-                *ngFor="let name of displayNames"
-                [value]="name"
-                (click)="onOptionClick(displaySelect, name)">
-                {{ name }}
+                *ngFor="let display of internalDisplays"
+                [value]="display">
+                <div class="option-label">
+                  <button
+                    mat-flat-button
+                    class="option-only-button"
+                    (click)="onOnlyButtonClick($event, display)"> Only </button>
+                  <span class="option-label-text"> {{ display.name }} </span>
+                </div>
               </mat-option>
             </mat-select>
           </mat-form-field>
@@ -174,6 +187,7 @@ import {ShadingMode} from './shading_mode';
     </div>
     <mat-divider></mat-divider>
     <span class="mat-body-1 placeholder-text" *ngIf="rects.length===0"> No rects found. </span>
+    <span class="mat-body-1 placeholder-text" *ngIf="currentDisplays.length===0"> No displays selected. </span>
     <div class="rects-content">
       <div class="canvas-container">
         <canvas
@@ -278,6 +292,28 @@ import {ShadingMode} from './shading_mode';
         position: absolute;
         z-index: 1000;
       }
+
+      .option-label {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+      }
+
+      .option-only-button {
+        padding: 0 10px;
+        border-radius: 10px;
+        background-color: var(--disabled-color) !important;
+        color: var(--default-text-color);
+        min-width: fit-content;
+        height: 18px;
+        align-items: center;
+        display: flex;
+      }
+
+      .option-label-text {
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
     `,
     multlineTooltip,
     iconDividerStyle,
@@ -307,10 +343,9 @@ export class RectsComponent implements OnInit, OnDestroy {
   private internalMiniRects?: UiRect[];
   private storeKeyZSpacingFactor = '';
   private storeKeyShadingMode = '';
-  private displayNames: string[] = [];
   private internalDisplays: DisplayIdentifier[] = [];
   private internalHighlightedItem = '';
-  private currentDisplay: DisplayIdentifier | undefined;
+  private currentDisplays: DisplayIdentifier[] = [];
   private mapper3d: Mapper3D;
   private largeRectsCanvas?: Canvas;
   private miniRectsCanvas?: Canvas;
@@ -374,10 +409,10 @@ export class RectsComponent implements OnInit, OnDestroy {
       this.updateControlsFromStore();
     }
 
-    this.currentDisplay =
+    this.currentDisplays =
       this.internalDisplays.length > 0
-        ? this.getFirstDisplayWithRectsOrFirstDisplay(this.internalDisplays)
-        : undefined;
+        ? [this.getActiveDisplay(this.internalDisplays)]
+        : [];
     this.mapper3d.increaseZoomFactor(this.zoomFactor - 1);
     this.drawLargeRectsAndLabels();
 
@@ -390,21 +425,13 @@ export class RectsComponent implements OnInit, OnDestroy {
       isDarkMode,
     );
     if (this.miniRects && this.miniRects.length > 0) {
+      this.internalMiniRects = this.miniRects;
       this.drawMiniRects();
     }
   }
 
   blurTab() {
     (document.activeElement as HTMLElement).blur();
-  }
-
-  onOptionClick(select: MatSelect, option: string) {
-    if (select.value === option) {
-      const selectElement = assertDefined(
-        document.querySelector<HTMLElement>('mat-select'),
-      );
-      selectElement.blur();
-    }
   }
 
   ngOnChanges(simpleChanges: SimpleChanges) {
@@ -419,8 +446,8 @@ export class RectsComponent implements OnInit, OnDestroy {
     let displayChange = false;
     if (simpleChanges['displays']) {
       const curr: DisplayIdentifier[] = simpleChanges['displays'].currentValue;
-      const prev: DisplayIdentifier[] | null =
-        simpleChanges['displays'].previousValue;
+      const prev: DisplayIdentifier[] | undefined =
+        simpleChanges['displays'].previousValue ?? undefined;
       displayChange =
         curr.length > 0 &&
         !curr.every((d, index) => d.displayId === prev?.at(index)?.displayId);
@@ -447,40 +474,37 @@ export class RectsComponent implements OnInit, OnDestroy {
   onDisplaysChange(change: SimpleChange) {
     const displays = change.currentValue;
     this.internalDisplays = displays;
-    this.displayNames = this.internalDisplays.map((d) => d.name);
+    const activeDisplay = this.getActiveDisplay(this.internalDisplays);
 
     if (displays.length === 0) {
       return;
     }
 
     if (change.firstChange) {
-      this.updateCurrentDisplay(
-        this.getFirstDisplayWithRectsOrFirstDisplay(this.internalDisplays),
-      );
+      this.updateCurrentDisplays([activeDisplay]);
       return;
     }
 
-    const curr = this.internalDisplays.find(
-      (display) => display.displayId === this.currentDisplay?.displayId,
+    const curr = this.internalDisplays.filter((display) =>
+      this.currentDisplays.some((curr) => curr.displayId === display.displayId),
     );
     if (curr) {
-      this.updateCurrentDisplay(curr);
+      this.updateCurrentDisplays(curr);
       return;
     }
 
-    const displaysWithCurrentGroupId = this.internalDisplays.filter(
-      (display) => display.groupId === this.mapper3d.getCurrentGroupId(),
+    const currGroupIds = this.mapper3d.getCurrentGroupIds();
+    const displaysWithCurrentGroupId = this.internalDisplays.filter((display) =>
+      currGroupIds.some((curr) => curr === display.groupId),
     );
     if (displaysWithCurrentGroupId.length === 0) {
-      this.updateCurrentDisplay(
-        this.getFirstDisplayWithRectsOrFirstDisplay(this.internalDisplays),
-      );
+      this.updateCurrentDisplays([activeDisplay]);
       return;
     }
 
-    this.updateCurrentDisplay(
-      this.getFirstDisplayWithRectsOrFirstDisplay(displaysWithCurrentGroupId),
-    );
+    this.updateCurrentDisplays([
+      this.getActiveDisplay(displaysWithCurrentGroupId),
+    ]);
     return;
   }
 
@@ -567,18 +591,19 @@ export class RectsComponent implements OnInit, OnDestroy {
     this.doZoomOut();
   }
 
-  onDisplayChange(event: MatSelectChange) {
-    const displayName = event.value;
-    const display = assertDefined(
-      this.internalDisplays.find((d) => d.name === displayName),
-    );
-    this.updateCurrentDisplay(display);
-    const viewerEvent = new CustomEvent(ViewerEvents.RectGroupIdChange, {
-      bubbles: true,
-      detail: {groupId: display.groupId},
-    });
-    this.elementRef.nativeElement.dispatchEvent(viewerEvent);
-    event.source.close();
+  onDisplaySelectChange(event: MatSelectChange) {
+    const selectedDisplays = event.value;
+    this.updateCurrentDisplays(selectedDisplays);
+  }
+
+  getSelectTriggerValue(): string {
+    return this.currentDisplays.map((d) => d.name).join(', ');
+  }
+
+  onOnlyButtonClick(event: MouseEvent, selected: DisplayIdentifier) {
+    event.preventDefault();
+    event.stopPropagation();
+    this.updateCurrentDisplays([selected]);
   }
 
   onRectClick(event: MouseEvent) {
@@ -642,21 +667,22 @@ export class RectsComponent implements OnInit, OnDestroy {
     components.forEach((c) => (c.color = 'accent'));
   }
 
-  private getFirstDisplayWithRectsOrFirstDisplay(
-    displays: DisplayIdentifier[],
-  ): DisplayIdentifier {
+  private getActiveDisplay(displays: DisplayIdentifier[]): DisplayIdentifier {
+    const displaysWithRects = displays.filter((display) =>
+      this.internalRects.some(
+        (rect) => !rect.isDisplay && rect.groupId === display.groupId,
+      ),
+    );
     return (
-      displays.find((display) =>
-        this.internalRects.some(
-          (rect) => !rect.isDisplay && rect.groupId === display.groupId,
-        ),
-      ) ?? assertDefined(displays.at(0))
+      displaysWithRects.find((display) => display.isActive) ??
+      displaysWithRects.at(0) ?? // fallback if no active displays
+      displays[0]
     );
   }
 
-  private updateCurrentDisplay(display: DisplayIdentifier) {
-    this.currentDisplay = display;
-    this.mapper3d.setCurrentGroupId(display.groupId);
+  private updateCurrentDisplays(displays: DisplayIdentifier[]) {
+    this.currentDisplays = displays;
+    this.mapper3d.setCurrentGroupIds(displays.map((d) => d.groupId));
     this.drawLargeRectsAndLabels();
   }
 
@@ -699,12 +725,12 @@ export class RectsComponent implements OnInit, OnDestroy {
     // work directly with three.js's meshes.
     if (this.internalMiniRects) {
       const largeRectShadingMode = this.mapper3d.getShadingMode();
-      const largeRectGroupId = this.mapper3d.getCurrentGroupId();
+      const largeRectGroupIds = this.mapper3d.getCurrentGroupIds();
       const largeRectZSpacing = this.mapper3d.getZSpacingFactor();
       const largeRectCameraRotation = this.mapper3d.getCameraRotationFactor();
 
       this.mapper3d.setShadingMode(ShadingMode.GRADIENT);
-      this.mapper3d.setCurrentGroupId(this.internalMiniRects[0]?.groupId);
+      this.mapper3d.setCurrentGroupIds([this.internalMiniRects[0]?.groupId]);
       this.mapper3d.resetToOrthogonalState();
 
       this.mapper3d.setRects(this.internalMiniRects);
@@ -719,7 +745,7 @@ export class RectsComponent implements OnInit, OnDestroy {
       }
 
       this.mapper3d.setShadingMode(largeRectShadingMode);
-      this.mapper3d.setCurrentGroupId(largeRectGroupId);
+      this.mapper3d.setCurrentGroupIds(largeRectGroupIds);
       this.mapper3d.setZSpacingFactor(largeRectZSpacing);
       this.mapper3d.setCameraRotationFactor(largeRectCameraRotation);
     }

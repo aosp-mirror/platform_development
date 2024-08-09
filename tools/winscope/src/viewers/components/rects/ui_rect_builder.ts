@@ -27,6 +27,7 @@ export class UiRectBuilder {
   transform: TransformMatrix | undefined;
   isVisible: boolean | undefined;
   isDisplay: boolean | undefined;
+  isActiveDisplay: boolean | undefined;
   id: string | undefined;
   groupId: number | undefined;
   isClickable: boolean | undefined;
@@ -73,6 +74,11 @@ export class UiRectBuilder {
 
   setIsDisplay(value: boolean) {
     this.isDisplay = value;
+    return this;
+  }
+
+  setIsActiveDisplay(value: boolean) {
+    this.isActiveDisplay = value;
     return this;
   }
 
@@ -145,6 +151,10 @@ export class UiRectBuilder {
       throw new Error('isDisplay not set');
     }
 
+    if (this.isActiveDisplay === undefined) {
+      throw new Error('isActiveDisplay not set');
+    }
+
     if (this.id === undefined) {
       throw new Error('id not set');
     }
@@ -173,6 +183,7 @@ export class UiRectBuilder {
       this.label,
       this.isVisible,
       this.isDisplay,
+      this.isActiveDisplay,
       this.id,
       this.groupId,
       this.isClickable,
