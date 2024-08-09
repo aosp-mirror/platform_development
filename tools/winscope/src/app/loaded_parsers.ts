@@ -16,6 +16,7 @@
 
 import {assertDefined} from 'common/assert_utils';
 import {FileUtils} from 'common/file_utils';
+import {OnProgressUpdateType} from 'common/function_utils';
 import {INVALID_TIME_NS, TimeRange, Timestamp} from 'common/time';
 import {TIME_UNIT_TO_NANO} from 'common/time_units';
 import {UserNotifier} from 'common/user_notifier';
@@ -103,9 +104,17 @@ export class LoadedParsers {
     this.perfettoParsers = [];
   }
 
-  async makeZipArchive(): Promise<Blob> {
+  async makeZipArchive(onProgressUpdate?: OnProgressUpdateType): Promise<Blob> {
     const outputFilesSoFar = new Set<File>();
     const outputFilenameToFiles = new Map<string, File[]>();
+
+    if (onProgressUpdate) onProgressUpdate(0);
+    const totalParsers =
+      this.perfettoParsers.length +
+      this.perfettoParsersKeptForDownload.length +
+      this.legacyParsers.length +
+      this.legacyParsersKeptForDownload.length;
+    let progress = 0;
 
     const tryPushOutputFile = (file: File, filename: string) => {
       // Remove duplicates because some parsers (e.g. view capture) could share the same file
@@ -157,6 +166,12 @@ export class LoadedParsers {
     } else if (this.perfettoParsersKeptForDownload.length > 0) {
       tryPushOutPerfettoFile(this.perfettoParsersKeptForDownload);
     }
+    if (onProgressUpdate) {
+      progress =
+        this.perfettoParsers.length +
+        this.perfettoParsersKeptForDownload.length;
+      onProgressUpdate((0.5 * progress) / totalParsers);
+    }
 
     const tryPushOutputLegacyFile = (fileAndParser: FileAndParser) => {
       const {file, parser} = fileAndParser;
@@ -171,6 +186,10 @@ export class LoadedParsers {
         outputFilename += TRACE_INFO[traceType].legacyExt;
       }
       tryPushOutputFile(file.file, outputFilename);
+      if (onProgressUpdate) {
+        progress++;
+        onProgressUpdate((0.5 * progress) / totalParsers);
+      }
     };
 
     this.legacyParsers.forEach(tryPushOutputLegacyFile);
@@ -184,7 +203,12 @@ export class LoadedParsers {
       })
       .flat();
 
-    return await FileUtils.createZipArchive(archiveFiles);
+    return await FileUtils.createZipArchive(
+      archiveFiles,
+      onProgressUpdate
+        ? (perc: number) => onProgressUpdate(0.5 * (1 + perc))
+        : undefined,
+    );
   }
 
   getLatestRealToMonotonicOffset(

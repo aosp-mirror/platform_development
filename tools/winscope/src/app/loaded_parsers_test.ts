@@ -540,6 +540,21 @@ describe('LoadedParsers', () => {
     ]);
   });
 
+  it('makes zip archive with progress listener', async () => {
+    loadParsers([parserSf0], [parserWm0]);
+    expectLoadResult([parserSf0, parserWm0], []);
+
+    const progressSpy = jasmine.createSpy();
+    await loadedParsers.makeZipArchive(progressSpy);
+
+    expect(progressSpy).toHaveBeenCalledTimes(5);
+    expect(progressSpy).toHaveBeenCalledWith(0);
+    expect(progressSpy).toHaveBeenCalledWith(0.25);
+    expect(progressSpy).toHaveBeenCalledWith(0.5);
+    expect(progressSpy).toHaveBeenCalledWith(0.75);
+    expect(progressSpy).toHaveBeenCalledWith(1);
+  });
+
   function loadParsers(
     legacy: Array<Parser<object>>,
     perfetto: Array<Parser<object>>,
