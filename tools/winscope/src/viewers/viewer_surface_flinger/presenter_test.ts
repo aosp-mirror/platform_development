@@ -223,6 +223,7 @@ class PresenterSurfaceFlingerTest extends AbstractHierarchyViewerPresenterTest<U
     expect(curatedProperties.summary).toEqual([
       {
         key: 'Covered by',
+        desc: 'Partially or fully covered by these likely translucent layers',
         layerValues: [
           {
             layerId: '65',

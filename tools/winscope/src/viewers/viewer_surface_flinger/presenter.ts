@@ -325,6 +325,7 @@ export class Presenter extends AbstractHierarchyViewerPresenter<UiData> {
       summary.push({
         key: 'Occluded by',
         layerValues: occludedBy.map((layer) => this.getLayerSummary(layer)),
+        desc: 'Fully occluded by these opaque layers',
       });
     }
 
@@ -337,6 +338,7 @@ export class Presenter extends AbstractHierarchyViewerPresenter<UiData> {
         layerValues: partiallyOccludedBy.map((layer) =>
           this.getLayerSummary(layer),
         ),
+        desc: 'Partially occluded by these opaque layers',
       });
     }
 
@@ -345,6 +347,7 @@ export class Presenter extends AbstractHierarchyViewerPresenter<UiData> {
       summary.push({
         key: 'Covered by',
         layerValues: coveredBy.map((layer) => this.getLayerSummary(layer)),
+        desc: 'Partially or fully covered by these likely translucent layers',
       });
     }
     return summary;
