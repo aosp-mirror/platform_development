@@ -31,7 +31,7 @@ type WindowStateProto =
   | com.android.server.wm.IWindowStateProto
   | perfetto.protos.IWindowStateProto;
 
-describe('RectsComputation', () => {
+describe('WindowManager RectsComputation', () => {
   let hierarchyRoot: HierarchyTreeNode;
   let computation: RectsComputation;
   let displayContent: HierarchyTreeNode;
@@ -40,6 +40,7 @@ describe('RectsComputation', () => {
     hierarchyRoot = new HierarchyTreeBuilder()
       .setId('WindowManagerState')
       .setName('root')
+      .setProperties({focusedApp: 'testApp'})
       .setChildren([
         {
           id: 1,
@@ -51,6 +52,19 @@ describe('RectsComputation', () => {
               logicalWidth: 5,
               logicalHeight: 5,
             },
+          } as DisplayContentProto,
+        },
+        {
+          id: 2,
+          name: 'Focused Display',
+          properties: {
+            id: 2,
+            name: 'Focused Display',
+            displayInfo: {
+              logicalWidth: 5,
+              logicalHeight: 5,
+            },
+            focusedApp: 'testApp',
           } as DisplayContentProto,
         },
       ])
@@ -75,12 +89,38 @@ describe('RectsComputation', () => {
         .setGroupId(1)
         .setIsVisible(false)
         .setIsDisplay(true)
+        .setIsActiveDisplay(false)
+        .setIsSpy(false)
+        .build(),
+
+      new TraceRectBuilder()
+        .setX(0)
+        .setY(0)
+        .setWidth(5)
+        .setHeight(5)
+        .setId('2 Focused Display')
+        .setName('Display - Focused Display')
+        .setCornerRadius(0)
+        .setDepth(0)
+        .setGroupId(2)
+        .setIsVisible(false)
+        .setIsDisplay(true)
+        .setIsActiveDisplay(true)
         .setIsSpy(false)
         .build(),
     ];
 
     computation.setRoot(hierarchyRoot).executeInPlace();
-    expect(displayContent.getRects()).toEqual(expectedDisplayRects);
+
+    const displayRects = displayContent
+      .getRects()
+      ?.concat(
+        assertDefined(
+          hierarchyRoot.getChildByName('Focused Display')?.getRects(),
+        ),
+      );
+
+    expect(displayRects).toEqual(expectedDisplayRects);
   });
 
   it('makes window state rects', () => {

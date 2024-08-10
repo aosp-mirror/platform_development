@@ -516,7 +516,7 @@ describe('ProxyConnection', () => {
       expect(getSpy).toHaveBeenCalledOnceWith(
         ProxyConnection.WINSCOPE_PROXY_URL +
           ProxyEndpoint.FETCH +
-          `${mockDevice.id}/${mockTraceRequest.name}/`,
+          `${mockDevice.id}/`,
         [['Winscope-Token', '']],
         'arraybuffer',
       );
