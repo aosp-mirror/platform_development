@@ -61,12 +61,6 @@ impl CrateCollection {
     pub fn repo_root(&self) -> &Path {
         self.repo_root.as_path()
     }
-    pub fn print(&self) -> Result<()> {
-        for krate in self.crates.values() {
-            krate.print()?
-        }
-        Ok(())
-    }
     pub fn stage_crates(&self) -> Result<()> {
         for krate in self.crates.values() {
             krate.stage_crate()?

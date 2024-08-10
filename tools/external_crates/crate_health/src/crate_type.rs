@@ -16,7 +16,6 @@ use std::{
     fs::{read_dir, remove_dir_all},
     path::{Path, PathBuf},
     process::{Command, Output},
-    str::from_utf8,
 };
 
 use anyhow::{anyhow, Context, Result};
@@ -116,30 +115,6 @@ impl Crate {
         format!("{}-{}", self.name(), self.version().to_string())
     }
 
-    pub fn aosp_url(&self) -> Option<String> {
-        if self.path.rel().starts_with("external/rust/crates") {
-            if self.path.rel().ends_with(self.name()) {
-                Some(format!(
-                    "https://android.googlesource.com/platform/{}/+/refs/heads/main",
-                    self.path()
-                ))
-            } else if self.path.rel().parent()?.ends_with(self.name()) {
-                Some(format!(
-                    "https://android.googlesource.com/platform/{}/+/refs/heads/main/{}",
-                    self.path().rel().parent()?.display(),
-                    self.path().rel().file_name()?.to_str()?
-                ))
-            } else {
-                None
-            }
-        } else {
-            None
-        }
-    }
-    pub fn crates_io_url(&self) -> String {
-        format!("https://crates.io/crates/{}", self.name())
-    }
-
     pub fn is_crates_io(&self) -> bool {
         const NOT_CRATES_IO: &'static [&'static str] = &[
             "external/rust/beto-rust/",                 // Google crates
@@ -172,21 +147,6 @@ impl Crate {
     }
     pub fn android_bp_unchanged(&self) -> bool {
         self.android_bp_diff.as_ref().is_some_and(|output| output.status.success())
-    }
-
-    pub fn print(&self) -> Result<()> {
-        println!("{} {} {}", self.name(), self.version(), self.path());
-        if let Some(output) = &self.generate_android_bp_output {
-            println!("generate Android.bp exit status: {}", output.status);
-            println!("{}", from_utf8(&output.stdout)?);
-            println!("{}", from_utf8(&output.stderr)?);
-        }
-        if let Some(output) = &self.android_bp_diff {
-            println!("diff exit status: {}", output.status);
-            println!("{}", from_utf8(&output.stdout)?);
-            println!("{}", from_utf8(&output.stderr)?);
-        }
-        Ok(())
     }
 
     // Make a clean copy of the crate in out/
