@@ -26,6 +26,7 @@ export enum Color {
   TEXT_BLACK = 'rgba(0, 0, 0, 0.87)',
   TEXT_GRAY = '#9b9b9b',
   CHIP_BLUE = '#448aff',
+  CHIP_GRAY = '#aaa',
   CHIP_GREEN = '#00c853',
   CHIP_RED = '#ff6b6b',
   CHIP_ORANGE = '#ffaa6b',

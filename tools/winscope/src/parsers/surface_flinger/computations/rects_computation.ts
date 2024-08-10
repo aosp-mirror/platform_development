@@ -17,17 +17,18 @@
 import {assertDefined} from 'common/assert_utils';
 import {Rect} from 'common/geometry/rect';
 import {Region} from 'common/geometry/region';
+import {Size} from 'common/geometry/size';
 import {TransformMatrix} from 'common/geometry/transform_matrix';
 import {
   Transform,
   TransformType,
 } from 'parsers/surface_flinger/transform_utils';
+import {GeometryFactory} from 'trace/geometry_factory';
 import {TraceRect} from 'trace/trace_rect';
 import {TraceRectBuilder} from 'trace/trace_rect_builder';
 import {Computation} from 'trace/tree_node/computation';
 import {HierarchyTreeNode} from 'trace/tree_node/hierarchy_tree_node';
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
-import {Size} from 'viewers/components/rects/types2d';
 
 function getDisplaySize(display: PropertyTreeNode): Size {
   const displaySize = assertDefined(display.getChildByName('size'));
@@ -61,7 +62,7 @@ class RectSfFactory {
         display.getChildByName('layerStackSpaceRect'),
       );
 
-      let displayRect = Rect.from(layerStackSpaceRect);
+      let displayRect = GeometryFactory.makeRect(layerStackSpaceRect);
       const isEmptyLayerStackRect = displayRect.isEmpty();
 
       if (isEmptyLayerStackRect) {
@@ -87,6 +88,10 @@ class RectSfFactory {
         nameCounts.set(displayName, 1);
       }
 
+      const isOn = display.getChildByName('isOn')?.getValue() ?? false;
+      const isVirtual =
+        display.getChildByName('isVirtual')?.getValue() ?? false;
+
       return new TraceRectBuilder()
         .setX(displayRect.x)
         .setY(displayRect.y)
@@ -99,6 +104,7 @@ class RectSfFactory {
         .setGroupId(layerStack)
         .setIsVisible(false)
         .setIsDisplay(true)
+        .setIsActiveDisplay(isOn && !isVirtual)
         .setDepth(index)
         .setIsSpy(false)
         .build();
@@ -116,7 +122,7 @@ class RectSfFactory {
 
     const name = assertDefined(layer.getEagerPropertyByName('name')).getValue();
     const bounds = assertDefined(layer.getEagerPropertyByName('bounds'));
-    const boundsRect = Rect.from(bounds);
+    const boundsRect = GeometryFactory.makeRect(bounds);
 
     let opacity = layer
       .getEagerPropertyByName('color')
@@ -163,7 +169,7 @@ class RectSfFactory {
     const inputWindowInfo = assertDefined(
       layer.getEagerPropertyByName('inputWindowInfo'),
     );
-    let inputWindowRect = Rect.from(
+    let inputWindowRect = GeometryFactory.makeRect(
       assertDefined(layer.getEagerPropertyByName('bounds')),
     );
     const inputConfig = assertDefined(
@@ -198,7 +204,7 @@ class RectSfFactory {
       touchableRegion = Region.createEmpty();
     } else if (touchableRegionNode !== undefined) {
       // The touchable region is given in the display space, not layer space.
-      touchableRegion = Region.from(touchableRegionNode);
+      touchableRegion = GeometryFactory.makeRegion(touchableRegionNode);
       // First, transform the region into layer stack space.
       touchableRegion =
         displayTransform?.transformRegion(touchableRegion) ?? touchableRegion;
@@ -356,7 +362,9 @@ export class RectsComputation implements Computation {
     const transform = Transform.from(transformNode);
     let tx = transform.matrix.tx;
     let ty = transform.matrix.ty;
-    const layerStackSpaceRect = Rect.from(layerStackSpaceRectNode);
+    const layerStackSpaceRect = GeometryFactory.makeRect(
+      layerStackSpaceRectNode,
+    );
 
     const typeFlags = TransformType.getTypeFlags(transform.type);
     if (typeFlags.includes('ROT_180')) {
@@ -433,7 +441,7 @@ export class RectsComputation implements Computation {
     if (!screenBounds) return false;
 
     if (screenBounds && !isVisible) {
-      const screenBoundsRect = Rect.from(screenBounds);
+      const screenBoundsRect = GeometryFactory.makeRect(screenBounds);
       const isInvalidFromDisplays =
         invalidBoundsFromDisplays.length > 0 &&
         invalidBoundsFromDisplays.some((invalid) => {

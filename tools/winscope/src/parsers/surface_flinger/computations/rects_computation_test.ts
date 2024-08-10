@@ -26,7 +26,7 @@ import {TraceRectBuilder} from 'trace/trace_rect_builder';
 import {HierarchyTreeNode} from 'trace/tree_node/hierarchy_tree_node';
 import {InputConfig, RectsComputation} from './rects_computation';
 
-describe('RectsComputation', () => {
+describe('SurfaceFlinger RectsComputation', () => {
   const rotationTransform = new Transform(
     TransformTypeFlags.ROT_90_VAL,
     IDENTITY_MATRIX,
@@ -274,6 +274,7 @@ describe('RectsComputation', () => {
             transform: Transform.EMPTY,
             name: 'Test Display',
             size: {w: 5, h: 5},
+            isOn: true,
           },
           {
             id: 2,
@@ -282,6 +283,8 @@ describe('RectsComputation', () => {
             size: {w: 5, h: 10},
             transform: Transform.EMPTY,
             name: 'Test Display 2',
+            isOn: true,
+            isVirtual: true,
           },
           {
             id: 3,
@@ -290,6 +293,8 @@ describe('RectsComputation', () => {
             size: {w: 5, h: 10},
             transform: rotationTransform,
             name: 'Test Display 3',
+            isOn: false,
+            isVirtual: true,
           },
         ],
       })
@@ -309,6 +314,7 @@ describe('RectsComputation', () => {
         .setGroupId(0)
         .setIsVisible(false)
         .setIsDisplay(true)
+        .setIsActiveDisplay(true)
         .setIsSpy(false)
         .build(),
       new TraceRectBuilder()
@@ -324,6 +330,7 @@ describe('RectsComputation', () => {
         .setGroupId(0)
         .setIsVisible(false)
         .setIsDisplay(true)
+        .setIsActiveDisplay(false)
         .setIsSpy(false)
         .build(),
       new TraceRectBuilder()
@@ -339,6 +346,7 @@ describe('RectsComputation', () => {
         .setGroupId(0)
         .setIsVisible(false)
         .setIsDisplay(true)
+        .setIsActiveDisplay(false)
         .setIsSpy(false)
         .build(),
     ];
