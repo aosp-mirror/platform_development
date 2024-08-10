@@ -41,6 +41,8 @@ export class LoadedParsers {
 
   private legacyParsers = new Array<FileAndParser>();
   private perfettoParsers = new Array<FileAndParser>();
+  private legacyParsersKeptForDownload = new Array<FileAndParser>();
+  private perfettoParsersKeptForDownload = new Array<FileAndParser>();
 
   addParsers(
     legacyParsers: FileAndParser[],
@@ -72,12 +74,27 @@ export class LoadedParsers {
     return fileAndParsers.map((fileAndParser) => fileAndParser.parser);
   }
 
-  remove<T extends TraceType>(parser: Parser<TraceEntryTypeMap[T]>) {
+  remove<T extends TraceType>(
+    parser: Parser<TraceEntryTypeMap[T]>,
+    keepForDownload = false,
+  ) {
+    const predicate = (
+      fileAndParser: FileAndParser,
+      parsersToKeep: FileAndParser[],
+    ) => {
+      const shouldRemove = fileAndParser.parser === parser;
+      if (shouldRemove && keepForDownload) {
+        parsersToKeep.push(fileAndParser);
+      }
+      return !shouldRemove;
+    };
     this.legacyParsers = this.legacyParsers.filter(
-      (fileAndParser) => fileAndParser.parser !== parser,
+      (fileAndParser: FileAndParser) =>
+        predicate(fileAndParser, this.legacyParsersKeptForDownload),
     );
     this.perfettoParsers = this.perfettoParsers.filter(
-      (fileAndParser) => fileAndParser.parser !== parser,
+      (fileAndParser: FileAndParser) =>
+        predicate(fileAndParser, this.perfettoParsersKeptForDownload),
     );
   }
 
@@ -126,16 +143,23 @@ export class LoadedParsers {
       );
     };
 
-    if (this.perfettoParsers.length > 0) {
-      const file: TraceFile = this.perfettoParsers.values().next().value.file;
+    const tryPushOutPerfettoFile = (parsers: FileAndParser[]) => {
+      const file: TraceFile = parsers.values().next().value.file;
       let outputFilename = FileUtils.removeDirFromFileName(file.file.name);
       if (FileUtils.getFileExtension(file.file.name) === undefined) {
         outputFilename += '.perfetto-trace';
       }
       tryPushOutputFile(file.file, outputFilename);
+    };
+
+    if (this.perfettoParsers.length > 0) {
+      tryPushOutPerfettoFile(this.perfettoParsers);
+    } else if (this.perfettoParsersKeptForDownload.length > 0) {
+      tryPushOutPerfettoFile(this.perfettoParsersKeptForDownload);
     }
 
-    this.legacyParsers.forEach(({file, parser}) => {
+    const tryPushOutputLegacyFile = (fileAndParser: FileAndParser) => {
+      const {file, parser} = fileAndParser;
       const traceType = parser.getTraceType();
       const archiveDir =
         TRACE_INFO[traceType].downloadArchiveDir.length > 0
@@ -147,7 +171,10 @@ export class LoadedParsers {
         outputFilename += TRACE_INFO[traceType].legacyExt;
       }
       tryPushOutputFile(file.file, outputFilename);
-    });
+    };
+
+    this.legacyParsers.forEach(tryPushOutputLegacyFile);
+    this.legacyParsersKeptForDownload.forEach(tryPushOutputLegacyFile);
 
     const archiveFiles = [...outputFilenameToFiles.entries()]
       .map(([filename, files]) => {

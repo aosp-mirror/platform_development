@@ -24,7 +24,9 @@ import {
 } from 'common/http_request';
 import {PersistentStore} from 'common/persistent_store';
 import {TimeUtils} from 'common/time_utils';
+import {UserNotifier} from 'common/user_notifier';
 import {Analytics} from 'logging/analytics';
+import {ProxyTracingErrors} from 'messaging/user_warnings';
 import {AdbConnection, OnRequestSuccessCallback} from './adb_connection';
 import {AdbDevice} from './adb_device';
 import {ConnectionState} from './connection_state';
@@ -32,7 +34,7 @@ import {ProxyEndpoint} from './proxy_endpoint';
 import {TraceRequest} from './trace_request';
 
 export class ProxyConnection extends AdbConnection {
-  static readonly VERSION = '2.4.0';
+  static readonly VERSION = '2.6.0';
   static readonly WINSCOPE_PROXY_URL = 'http://localhost:5544';
 
   private readonly store = new PersistentStore();
@@ -118,6 +120,7 @@ export class ProxyConnection extends AdbConnection {
       throw new Error('Trace not started before stopping');
     }
     await this.setState(ConnectionState.ENDING_TRACE);
+    this.requestedTraces = [];
   }
 
   async dumpState(
@@ -127,7 +130,6 @@ export class ProxyConnection extends AdbConnection {
     if (requestedDumps.length === 0) {
       throw new Error('No dumps requested');
     }
-    this.progressCallback(0);
     this.selectedDevice = device;
     this.requestedTraces = requestedDumps;
     await this.setState(ConnectionState.DUMPING_STATE);
@@ -142,33 +144,20 @@ export class ProxyConnection extends AdbConnection {
   }
 
   private async updateAdbData(device: AdbDevice) {
-    if (this.requestedTraces.length === 0) {
-      await this.getFromProxy(
-        `${ProxyEndpoint.FETCH}${device.id}/`,
-        this.onSuccessFetchFiles,
-        'arraybuffer',
-      );
-    } else {
-      const fileNames = this.requestedTraces.map((t) => t.name);
-      for (let idx = 0; idx < fileNames.length; idx++) {
-        await this.getFromProxy(
-          `${ProxyEndpoint.FETCH}${device.id}/${fileNames[idx]}/`,
-          this.onSuccessFetchFiles,
-          'arraybuffer',
-        );
-        this.progressCallback((100 * (idx + 1)) / fileNames.length);
-      }
-      if (this.adbData.length === 0) {
-        Analytics.Proxy.logNoFilesFound();
-      }
-      this.requestedTraces = [];
+    await this.getFromProxy(
+      `${ProxyEndpoint.FETCH}${device.id}/`,
+      this.onSuccessFetchFiles,
+      'arraybuffer',
+    );
+    if (this.adbData.length === 0) {
+      Analytics.Proxy.logNoFilesFound();
     }
   }
 
-  private async onConnectionStateChange() {
+  private async onConnectionStateChange(newState: ConnectionState) {
     await this.detectStateChangeInUi();
 
-    switch (this.state) {
+    switch (newState) {
       case ConnectionState.ERROR:
         Analytics.Error.logProxyError(this.errorText);
         return;
@@ -204,6 +193,24 @@ export class ProxyConnection extends AdbConnection {
       case ConnectionState.ENDING_TRACE:
         await this.postToProxy(
           `${ProxyEndpoint.END_TRACE}${assertDefined(this.selectedDevice).id}/`,
+          (response: HttpResponse) => {
+            const errors = JSON.parse(response.body);
+            if (Array.isArray(errors) && errors.length > 0) {
+              const processedErrors: string[] = errors.map((error: string) => {
+                const processed = error
+                  .replace("b'", "'")
+                  .replace('\\n', '')
+                  .replace(
+                    'please check your display state',
+                    'please check your display state (must be on at start of trace)',
+                  );
+                return processed;
+              });
+              UserNotifier.add(
+                new ProxyTracingErrors(processedErrors),
+              ).notify();
+            }
+          },
         );
         return;
 
@@ -217,7 +224,7 @@ export class ProxyConnection extends AdbConnection {
 
       case ConnectionState.LOADING_DATA:
         if (this.selectedDevice === undefined) {
-          throw new Error('No device found');
+          throw new Error('No device selected');
         }
         await this.updateAdbData(assertDefined(this.selectedDevice));
         return;
@@ -242,7 +249,12 @@ export class ProxyConnection extends AdbConnection {
       `${ProxyEndpoint.STATUS}${assertDefined(this.selectedDevice).id}/`,
       async (request: HttpResponse) => {
         if (request.text !== 'True') {
-          this.endTrace();
+          window.clearInterval(this.keepTraceAliveWorker);
+          this.keepTraceAliveWorker = undefined;
+          await this.endTrace();
+          if (this.state === ConnectionState.ENDING_TRACE) {
+            await this.setState(ConnectionState.TRACE_TIMEOUT);
+          }
         } else if (this.keepTraceAliveWorker === undefined) {
           this.keepTraceAliveWorker = window.setInterval(
             () => this.keepTraceAlive(),
@@ -270,7 +282,7 @@ export class ProxyConnection extends AdbConnection {
     }
     this.state = state;
     this.errorText = errorText;
-    await this.onConnectionStateChange();
+    await this.onConnectionStateChange(state);
   }
 
   private async requestDevices() {
@@ -306,7 +318,11 @@ export class ProxyConnection extends AdbConnection {
           1000,
         );
       }
-      this.setState(ConnectionState.IDLE);
+      if (this.state === ConnectionState.CONNECTING) {
+        this.setState(ConnectionState.IDLE);
+      } else if (this.state === ConnectionState.IDLE) {
+        this.detectStateChangeInUi();
+      }
     } catch (err) {
       this.setState(
         ConnectionState.ERROR,

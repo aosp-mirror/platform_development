@@ -1384,12 +1384,16 @@ describe('Trace', () => {
       )
       .build();
     expect(trace.isCorrupted()).toBeFalse();
+    expect(trace.getCorruptedReason()).toBeUndefined();
 
     expectAsync(trace.getEntry(0).getValue()).toBeRejected();
     try {
       await trace.getEntry(0).getValue();
     } catch (e) {
       expect(trace.isCorrupted()).toBeTrue();
+      expect(trace.getCorruptedReason()).toEqual(
+        'Cannot parse entry at index 0',
+      );
     }
   });
 });

@@ -9,7 +9,12 @@
       "features": ["default", "std"],
       "cfgs": [],
       "externs": [
-        { "name": "memchr", "lib_name": "memchr", "raw_name": "memchr", "extern_type": "Rust" }
+        {
+          "name": "memchr",
+          "lib_name": "memchr",
+          "raw_name": "memchr",
+          "extern_type": "Rust"
+        }
       ],
       "codegens": [],
       "cap_lints": "",
@@ -18,6 +23,8 @@
       "edition": "2018",
       "package_dir": "/usr/local/google/home/qwandor/aosp/external/rust/crates/aho-corasick",
       "main_src": "src/lib.rs",
+      "license": "Unlicense OR MIT",
+      "license_file": null,
       "empty_test": false
     },
     {
@@ -29,7 +36,12 @@
       "features": ["default", "std"],
       "cfgs": [],
       "externs": [
-        { "name": "memchr", "lib_name": "memchr", "raw_name": "memchr", "extern_type": "Rust" }
+        {
+          "name": "memchr",
+          "lib_name": "memchr",
+          "raw_name": "memchr",
+          "extern_type": "Rust"
+        }
       ],
       "codegens": [],
       "cap_lints": "",
@@ -38,6 +50,8 @@
       "edition": "2018",
       "package_dir": "/usr/local/google/home/qwandor/aosp/external/rust/crates/aho-corasick",
       "main_src": "src/lib.rs",
+      "license": "Unlicense OR MIT",
+      "license_file": null,
       "empty_test": false
     }
   ]

@@ -15,7 +15,6 @@
  */
 
 import {Point} from 'common/geometry/point';
-import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
 
 export class Rect {
   constructor(
@@ -24,14 +23,6 @@ export class Rect {
     readonly w: number,
     readonly h: number,
   ) {}
-
-  static from(node: PropertyTreeNode): Rect {
-    const left = node.getChildByName('left')?.getValue() ?? 0;
-    const top = node.getChildByName('top')?.getValue() ?? 0;
-    const right = node.getChildByName('right')?.getValue() ?? 0;
-    const bottom = node.getChildByName('bottom')?.getValue() ?? 0;
-    return new Rect(left, top, right - left, bottom - top);
-  }
 
   isAlmostEqual(other: Rect, eps: number): boolean {
     const isClose = (a: number, b: number) => Math.abs(a - b) <= eps;

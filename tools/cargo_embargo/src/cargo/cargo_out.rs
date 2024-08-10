@@ -457,6 +457,8 @@ impl Crate {
         out.package_name.clone_from(&package_metadata.name);
         out.version = Some(package_metadata.version.clone());
         out.edition.clone_from(&package_metadata.edition);
+        out.license.clone_from(&package_metadata.license);
+        out.license_file.clone_from(&package_metadata.license_file);
 
         let output_filename = out.name.clone() + &extra_filename;
         if let Some(test_contents) = tests.get(&output_filename).and_then(|m| m.get(&out.main_src))

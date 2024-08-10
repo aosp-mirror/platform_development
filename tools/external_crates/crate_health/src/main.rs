@@ -23,7 +23,8 @@ use anyhow::{anyhow, Result};
 use clap::{Parser, Subcommand};
 use crate_health::{
     copy_dir, default_repo_root, maybe_build_cargo_embargo, CrateCollection, Migratable,
-    NameAndVersionMap, NameAndVersionRef, NamedAndVersioned, PseudoCrate, RepoPath, VersionMatch,
+    NameAndVersion, NameAndVersionMap, NameAndVersionRef, NamedAndVersioned, PseudoCrate, RepoPath,
+    VersionMatch,
 };
 use glob::glob;
 use semver::Version;
@@ -33,6 +34,7 @@ struct Cli {
     #[command(subcommand)]
     command: Cmd,
 
+    // The path to the Android source repo.
     #[arg(long, default_value_os_t=default_repo_root().unwrap_or(PathBuf::from(".")))]
     repo_root: PathBuf,
 
@@ -49,18 +51,21 @@ struct Cli {
 enum Cmd {
     /// Check the health of a crate, and whether it is safe to migrate.
     MigrationHealth {
-        /// The crate name. Also the directory name in external/rust/crates
+        /// The crate name. Also the directory name in external/rust/crates.
         crate_name: String,
     },
     /// Migrate a crate from external/rust/crates to the monorepo.
     Migrate {
-        /// The crate name. Also the directory name in external/rust/crates
-        crate_name: String,
+        /// The crate names. Also the directory names in external/rust/crates.
+        crates: Vec<String>,
     },
+    /// Regenerate a crate directory.
     Regenerate {
-        /// The crate name.
-        crate_name: String,
+        /// The crate names.
+        crates: Vec<String>,
     },
+    /// Regenerate all crates
+    RegenerateAll {},
     /// Run pre-upload checks.
     PreuploadCheck {
         /// List of changed files
@@ -146,41 +151,52 @@ fn main() -> Result<()> {
             migration_health(&args.repo_root, &crate_name, args.verbose)?;
             Ok(())
         }
-        Cmd::Migrate { crate_name } => {
-            let version = migration_health(&args.repo_root, &crate_name, args.verbose)?;
-            let src_dir = args.repo_root.join("external/rust/crates").join(&crate_name);
-
-            let monorepo_crate_dir = args.repo_root.join("external/rust/android-crates-io/crates");
-            if !monorepo_crate_dir.exists() {
-                create_dir(&monorepo_crate_dir)?;
-            }
-            copy_dir(&src_dir, &monorepo_crate_dir.join(&crate_name))?;
+        Cmd::Migrate { crates } => {
             let pseudo_crate = PseudoCrate::new(RepoPath::new(
                 &args.repo_root,
                 "external/rust/android-crates-io/pseudo_crate",
             ));
-            pseudo_crate.add(&NameAndVersionRef::new(&crate_name, &version))?;
+            for crate_name in &crates {
+                let version = migration_health(&args.repo_root, &crate_name, args.verbose)?;
+                let src_dir = args.repo_root.join("external/rust/crates").join(&crate_name);
 
-            regenerate(&args.repo_root, &crate_name)?;
-
-            for entry in glob(
-                src_dir
-                    .join("*.bp")
-                    .to_str()
-                    .ok_or(anyhow!("Failed to convert path *.bp to str"))?,
-            )? {
-                remove_file(entry?)?
+                let monorepo_crate_dir =
+                    args.repo_root.join("external/rust/android-crates-io/crates");
+                if !monorepo_crate_dir.exists() {
+                    create_dir(&monorepo_crate_dir)?;
+                }
+                copy_dir(&src_dir, &monorepo_crate_dir.join(&crate_name))?;
+                pseudo_crate.add(&NameAndVersionRef::new(&crate_name, &version))?;
             }
-            remove_file(src_dir.join("cargo_embargo.json"))?;
-            write(
-                src_dir.join("Android.bp"),
-                "// This crate has been migrated to external/rust/android-crates-io.\n",
-            )?;
+
+            regenerate(&args.repo_root, crates.iter(), false)?;
+
+            for crate_name in &crates {
+                let src_dir = args.repo_root.join("external/rust/crates").join(&crate_name);
+                for entry in glob(
+                    src_dir
+                        .join("*.bp")
+                        .to_str()
+                        .ok_or(anyhow!("Failed to convert path *.bp to str"))?,
+                )? {
+                    remove_file(entry?)?;
+                }
+                remove_file(src_dir.join("cargo_embargo.json"))?;
+                let test_mapping = src_dir.join("TEST_MAPPING");
+                if test_mapping.exists() {
+                    remove_file(test_mapping)?;
+                }
+                write(
+                    src_dir.join("Android.bp"),
+                    "// This crate has been migrated to external/rust/android-crates-io.\n",
+                )?;
+            }
 
             Ok(())
         }
-        Cmd::Regenerate { crate_name } => regenerate(&args.repo_root, &crate_name),
-        Cmd::PreuploadCheck { files: _ } => Ok(()),
+        Cmd::Regenerate { crates } => regenerate(&args.repo_root, crates.iter(), true),
+        Cmd::RegenerateAll {} => regenerate_all(&args.repo_root, true),
+        Cmd::PreuploadCheck { files: _ } => preupload_check(&args.repo_root),
     }
 }
 
@@ -384,32 +400,69 @@ pub fn migration_health(
     }
 }
 
-pub fn regenerate(repo_root: &impl AsRef<Path>, crate_name: &str) -> Result<()> {
+pub fn regenerate<T: AsRef<str>>(
+    repo_root: &impl AsRef<Path>,
+    crates: impl Iterator<Item = T>,
+    update_metadata: bool,
+) -> Result<()> {
     let repo_root = repo_root.as_ref();
-    let android_crate_dir =
-        repo_root.join("external/rust/android-crates-io/crates").join(&crate_name);
-    if !android_crate_dir.exists() {
-        return Err(anyhow!(
-            "Crate {} not found in external/rust/android-crates-io/crates",
-            crate_name
-        ));
+
+    let version_match = stage(&repo_root, crates)?;
+    if update_metadata {
+        version_match.update_metadata()?;
+    }
+
+    for pair in version_match.pairs() {
+        let source_version = NameAndVersion::from(&pair.source.key());
+        let pair = pair.to_compatible().ok_or(anyhow!(
+            "No compatible vendored crate found for {} v{}",
+            source_version.name(),
+            source_version.version()
+        ))?;
+
+        let android_crate_dir =
+            repo_root.join("external/rust/android-crates-io/crates").join(pair.source.name());
+        remove_dir_all(&android_crate_dir)?;
+        rename(pair.dest.staging_path().abs(), &android_crate_dir)?;
+    }
+
+    Ok(())
+}
+
+pub fn stage<T: AsRef<str>>(
+    repo_root: &impl AsRef<Path>,
+    crates: impl Iterator<Item = T>,
+) -> Result<VersionMatch<CrateCollection>> {
+    let repo_root = repo_root.as_ref();
+
+    let mut cc = CrateCollection::new(repo_root);
+    for crate_name in crates {
+        let crate_name = crate_name.as_ref();
+        let android_crate_dir =
+            repo_root.join("external/rust/android-crates-io/crates").join(crate_name);
+        if !android_crate_dir.exists() {
+            return Err(anyhow!(
+                "Crate {} not found in external/rust/android-crates-io/crates",
+                crate_name
+            ));
+        }
+
+        // Source
+        cc.add_from(&android_crate_dir)?;
+        cc.map_field_mut().retain(|_nv, krate| krate.is_crates_io());
+        let num_versions = cc.get_versions(crate_name).count();
+        if num_versions != 1 {
+            return Err(anyhow!(
+                "Expected a single crate version for {}, but found {}. Crates with multiple versions are not supported yet.",
+                crate_name,
+                num_versions
+            ));
+        }
     }
 
     let pseudo_crate =
         PseudoCrate::new(RepoPath::new(repo_root, "external/rust/android-crates-io/pseudo_crate"));
     pseudo_crate.vendor()?;
-
-    // Source
-    let mut cc = CrateCollection::new(repo_root);
-    cc.add_from(&android_crate_dir)?;
-    cc.map_field_mut().retain(|_nv, krate| krate.is_crates_io());
-    if cc.map_field().len() != 1 {
-        return Err(anyhow!(
-            "Expected a single crate version for {}, but found {}. Crates with multiple versions are not supported yet.",
-            crate_name,
-            cc.map_field().len()
-        ));
-    }
 
     // Dest
     let mut dest = CrateCollection::new(repo_root);
@@ -423,14 +476,45 @@ pub fn regenerate(repo_root: &impl AsRef<Path>, crate_name: &str) -> Result<()> 
     version_match.generate_android_bps()?;
     version_match.diff_android_bps()?;
 
-    let compatible_pairs = version_match.compatible_pairs().collect::<Vec<_>>();
-    if compatible_pairs.len() != 1 {
-        return Err(anyhow!("Couldn't find a compatible version to migrate to"));
-    }
-    let pair = compatible_pairs.first().unwrap();
+    Ok(version_match)
+}
 
-    remove_dir_all(&android_crate_dir)?;
-    rename(pair.dest.staging_path().abs(), &android_crate_dir)?;
+pub fn regenerate_all(repo_root: &impl AsRef<Path>, update_metadata: bool) -> Result<()> {
+    let repo_root = repo_root.as_ref();
+    let pseudo_crate =
+        PseudoCrate::new(RepoPath::new(repo_root, "external/rust/android-crates-io/pseudo_crate"));
+    regenerate(&repo_root, pseudo_crate.deps()?.keys().map(|k| k.as_str()), update_metadata)
+}
+
+pub fn preupload_check(repo_root: &impl AsRef<Path>) -> Result<()> {
+    let repo_root = repo_root.as_ref();
+    let pseudo_crate =
+        PseudoCrate::new(RepoPath::new(repo_root, "external/rust/android-crates-io/pseudo_crate"));
+    let version_match = stage(&repo_root, pseudo_crate.deps()?.keys().map(|k| k.as_str()))?;
+
+    for pair in version_match.pairs() {
+        let source_version = NameAndVersion::from(&pair.source.key());
+        let pair = pair.to_compatible().ok_or(anyhow!(
+            "No compatible vendored crate found for {} v{}",
+            source_version.name(),
+            source_version.version()
+        ))?;
+
+        let diff_status = Command::new("diff")
+            .args(["-u", "-r", "-w", "--no-dereference"])
+            .arg(pair.dest.staging_path().rel())
+            .arg(Path::new("external/rust/android-crates-io/crates").join(pair.source.name()))
+            .current_dir(repo_root)
+            .spawn()?
+            .wait()?;
+        if !diff_status.success() {
+            return Err(anyhow!(
+                "Found differences between {} and {}",
+                pair.source.path(),
+                pair.dest.staging_path()
+            ));
+        }
+    }
 
     Ok(())
 }

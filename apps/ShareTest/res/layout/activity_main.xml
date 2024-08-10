@@ -437,6 +437,19 @@
                 android:layout_height="wrap_content"
                 android:text="Include Caller Direct Target"
                 />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                style="@style/subtitle"
+                android:text="Exclude Targets"
+                />
+            <CheckBox
+                android:id="@+id/exclude_self"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Exclude self from targets (for Shareousel payload change: set for an odd number of items)"
+                />
         </LinearLayout>
     </ScrollView>
     <Button

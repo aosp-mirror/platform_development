@@ -24,6 +24,7 @@ export interface SfLayerSummary {
 
 export interface SfSummaryProperty {
   key: string;
+  desc?: string;
   simpleValue?: string;
   layerValues?: SfLayerSummary[];
 }

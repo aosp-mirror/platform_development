@@ -31,6 +31,7 @@ export class TraceRectBuilder {
   groupId: number | undefined;
   isVisible: boolean | undefined;
   isDisplay: boolean | undefined;
+  isActiveDisplay = false;
   depth: number | undefined;
   opacity: number | undefined;
   isSpy: boolean | undefined;
@@ -88,6 +89,11 @@ export class TraceRectBuilder {
 
   setIsDisplay(value: boolean) {
     this.isDisplay = value;
+    return this;
+  }
+
+  setIsActiveDisplay(value: boolean) {
+    this.isActiveDisplay = value;
     return this;
   }
 
@@ -172,6 +178,7 @@ export class TraceRectBuilder {
       this.groupId,
       this.isVisible,
       this.isDisplay,
+      this.isActiveDisplay,
       this.depth,
       this.opacity,
       this.isSpy,
