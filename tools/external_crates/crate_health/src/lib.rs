@@ -47,6 +47,9 @@ mod name_and_version;
 pub use self::repo_path::RepoPath;
 mod repo_path;
 
+pub use self::google_metadata::GoogleMetadata;
+mod google_metadata;
+
 #[cfg(test)]
 pub use self::name_and_version_map::try_name_version_map_from_iter;
 pub use self::name_and_version_map::{
@@ -99,3 +102,5 @@ pub fn copy_dir(src: &impl AsRef<Path>, dst: &impl AsRef<Path>) -> Result<()> {
     }
     Ok(())
 }
+
+include!(concat!(env!("OUT_DIR"), "/protos/mod.rs"));

@@ -20,8 +20,9 @@ android_test {
     // not available for the host.
     // Therefore, we are relying on 'android_test' here until ravenwood is ready.
     name: "monkey_test",
-    srcs: ["**/*.java",
-           "**/*.kt",
+    srcs: [
+        "**/*.java",
+        "**/*.kt",
     ],
 
     kotlincflags: [
