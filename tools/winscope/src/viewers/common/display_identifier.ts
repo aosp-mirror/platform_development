@@ -18,4 +18,5 @@ export interface DisplayIdentifier {
   displayId: number | string;
   groupId: number;
   name: string;
+  isActive: boolean;
 }

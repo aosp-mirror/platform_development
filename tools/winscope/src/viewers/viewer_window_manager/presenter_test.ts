@@ -159,6 +159,14 @@ class PresenterWindowManagerTest extends AbstractHierarchyViewerPresenterTest<Ui
     expect(
       assertDefined(propertiesTree.getChildByName('state')).formattedValue(),
     ).toEqual('STOPPED');
+    expect(uiData.displays).toEqual([
+      {
+        displayId: 'DisplayContent 1f3454e Built-in Screen',
+        groupId: 0,
+        name: 'Built-in Screen',
+        isActive: true,
+      },
+    ]);
   }
 
   override executeChecksForPropertiesTreeAfterSecondPositionUpdate(

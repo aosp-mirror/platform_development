@@ -34,7 +34,7 @@ import {ProxyEndpoint} from './proxy_endpoint';
 import {TraceRequest} from './trace_request';
 
 export class ProxyConnection extends AdbConnection {
-  static readonly VERSION = '2.4.1';
+  static readonly VERSION = '2.6.0';
   static readonly WINSCOPE_PROXY_URL = 'http://localhost:5544';
 
   private readonly store = new PersistentStore();
@@ -120,6 +120,7 @@ export class ProxyConnection extends AdbConnection {
       throw new Error('Trace not started before stopping');
     }
     await this.setState(ConnectionState.ENDING_TRACE);
+    this.requestedTraces = [];
   }
 
   async dumpState(
@@ -129,7 +130,6 @@ export class ProxyConnection extends AdbConnection {
     if (requestedDumps.length === 0) {
       throw new Error('No dumps requested');
     }
-    this.progressCallback(0);
     this.selectedDevice = device;
     this.requestedTraces = requestedDumps;
     await this.setState(ConnectionState.DUMPING_STATE);
@@ -144,26 +144,13 @@ export class ProxyConnection extends AdbConnection {
   }
 
   private async updateAdbData(device: AdbDevice) {
-    if (this.requestedTraces.length === 0) {
-      await this.getFromProxy(
-        `${ProxyEndpoint.FETCH}${device.id}/`,
-        this.onSuccessFetchFiles,
-        'arraybuffer',
-      );
-    } else {
-      const fileNames = this.requestedTraces.map((t) => t.name);
-      for (let idx = 0; idx < fileNames.length; idx++) {
-        await this.getFromProxy(
-          `${ProxyEndpoint.FETCH}${device.id}/${fileNames[idx]}/`,
-          this.onSuccessFetchFiles,
-          'arraybuffer',
-        );
-        this.progressCallback((100 * (idx + 1)) / fileNames.length);
-      }
-      if (this.adbData.length === 0) {
-        Analytics.Proxy.logNoFilesFound();
-      }
-      this.requestedTraces = [];
+    await this.getFromProxy(
+      `${ProxyEndpoint.FETCH}${device.id}/`,
+      this.onSuccessFetchFiles,
+      'arraybuffer',
+    );
+    if (this.adbData.length === 0) {
+      Analytics.Proxy.logNoFilesFound();
     }
   }
 
@@ -206,8 +193,8 @@ export class ProxyConnection extends AdbConnection {
       case ConnectionState.ENDING_TRACE:
         await this.postToProxy(
           `${ProxyEndpoint.END_TRACE}${assertDefined(this.selectedDevice).id}/`,
-          (request: HttpResponse) => {
-            const errors = JSON.parse(request.body);
+          (response: HttpResponse) => {
+            const errors = JSON.parse(response.body);
             if (Array.isArray(errors) && errors.length > 0) {
               const processedErrors: string[] = errors.map((error: string) => {
                 const processed = error
@@ -331,7 +318,11 @@ export class ProxyConnection extends AdbConnection {
           1000,
         );
       }
-      this.setState(ConnectionState.IDLE);
+      if (this.state === ConnectionState.CONNECTING) {
+        this.setState(ConnectionState.IDLE);
+      } else if (this.state === ConnectionState.IDLE) {
+        this.detectStateChangeInUi();
+      }
     } catch (err) {
       this.setState(
         ConnectionState.ERROR,

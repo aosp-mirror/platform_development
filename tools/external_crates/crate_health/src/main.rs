@@ -169,7 +169,7 @@ fn main() -> Result<()> {
                 pseudo_crate.add(&NameAndVersionRef::new(&crate_name, &version))?;
             }
 
-            regenerate(&args.repo_root, crates.iter())?;
+            regenerate(&args.repo_root, crates.iter(), false)?;
 
             for crate_name in &crates {
                 let src_dir = args.repo_root.join("external/rust/crates").join(&crate_name);
@@ -194,8 +194,8 @@ fn main() -> Result<()> {
 
             Ok(())
         }
-        Cmd::Regenerate { crates } => regenerate(&args.repo_root, crates.iter()),
-        Cmd::RegenerateAll {} => regenerate_all(&args.repo_root),
+        Cmd::Regenerate { crates } => regenerate(&args.repo_root, crates.iter(), true),
+        Cmd::RegenerateAll {} => regenerate_all(&args.repo_root, true),
         Cmd::PreuploadCheck { files: _ } => preupload_check(&args.repo_root),
     }
 }
@@ -403,10 +403,14 @@ pub fn migration_health(
 pub fn regenerate<T: AsRef<str>>(
     repo_root: &impl AsRef<Path>,
     crates: impl Iterator<Item = T>,
+    update_metadata: bool,
 ) -> Result<()> {
     let repo_root = repo_root.as_ref();
 
     let version_match = stage(&repo_root, crates)?;
+    if update_metadata {
+        version_match.update_metadata()?;
+    }
 
     for pair in version_match.pairs() {
         let source_version = NameAndVersion::from(&pair.source.key());
@@ -475,11 +479,11 @@ pub fn stage<T: AsRef<str>>(
     Ok(version_match)
 }
 
-pub fn regenerate_all(repo_root: &impl AsRef<Path>) -> Result<()> {
+pub fn regenerate_all(repo_root: &impl AsRef<Path>, update_metadata: bool) -> Result<()> {
     let repo_root = repo_root.as_ref();
     let pseudo_crate =
         PseudoCrate::new(RepoPath::new(repo_root, "external/rust/android-crates-io/pseudo_crate"));
-    regenerate(&repo_root, pseudo_crate.deps()?.keys().map(|k| k.as_str()))
+    regenerate(&repo_root, pseudo_crate.deps()?.keys().map(|k| k.as_str()), update_metadata)
 }
 
 pub fn preupload_check(repo_root: &impl AsRef<Path>) -> Result<()> {
