@@ -23,7 +23,9 @@ import {CrossToolProtocol} from 'cross_tool/cross_tool_protocol';
 import {ProgressListener} from 'messaging/progress_listener';
 import {ProgressListenerStub} from 'messaging/progress_listener_stub';
 import {
+  FailedToCreateTracesParser,
   IncompleteFrameMapping,
+  InvalidLegacyTrace,
   NoValidFiles,
   UnsupportedFileFormat,
 } from 'messaging/user_warnings';
@@ -233,6 +235,42 @@ describe('Mediator', () => {
     expect(
       userNotifierChecker.expectNotified([
         new UnsupportedFileFormat('empty.pb'),
+      ]),
+    );
+    expect(appComponent.onWinscopeEvent).not.toHaveBeenCalled();
+  });
+
+  it('handles collected traces with no entries from Winscope', async () => {
+    await mediator.onWinscopeEvent(
+      new AppFilesCollected([
+        await UnitTestUtils.getFixtureFile(
+          'traces/no_entries_InputMethodClients.pb',
+        ),
+      ]),
+    );
+    expect(
+      userNotifierChecker.expectNotified([
+        new InvalidLegacyTrace(
+          'no_entries_InputMethodClients.pb',
+          'Trace has no entries',
+        ),
+      ]),
+    );
+    expect(appComponent.onWinscopeEvent).not.toHaveBeenCalled();
+  });
+
+  it('handles collected trace with no visualization from Winscope', async () => {
+    await mediator.onWinscopeEvent(
+      new AppFilesCollected([
+        await UnitTestUtils.getFixtureFile('traces/eventlog_no_cujs.winscope'),
+      ]),
+    );
+    expect(
+      userNotifierChecker.expectNotified([
+        new FailedToCreateTracesParser(
+          TraceType.CUJS,
+          'eventlog_no_cujs.winscope has no relevant entries',
+        ),
       ]),
     );
     expect(appComponent.onWinscopeEvent).not.toHaveBeenCalled();

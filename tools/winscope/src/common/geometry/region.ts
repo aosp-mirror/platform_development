@@ -14,20 +14,10 @@
  * limitations under the License.
  */
 
-import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
 import {Rect} from './rect';
 
 export class Region {
   constructor(readonly rects: Rect[]) {}
-
-  static from(node: PropertyTreeNode): Region {
-    const rects =
-      node
-        .getChildByName('rect')
-        ?.getAllChildren()
-        .map((rectNode) => Rect.from(rectNode)) ?? [];
-    return new Region(rects);
-  }
 
   static createEmpty(): Region {
     return new Region([]);

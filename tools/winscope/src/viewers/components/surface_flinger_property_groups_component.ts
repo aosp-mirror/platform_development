@@ -49,7 +49,7 @@ import {viewerCardInnerStyle} from './styles/viewer_card.styles';
             {{ properties.flags }}
           </p>
           <span *ngFor="let summaryProperty of properties.summary" class="mat-body-1 summary inline">
-            <span class="mat-body-2">{{ summaryProperty.key }}:</span>
+            <span class="mat-body-2" [matTooltip]="summaryProperty.desc" [matTooltipShowDelay]="400">{{ summaryProperty.key }}:</span>
             <ng-container *ngIf="summaryProperty.simpleValue">
               {{ summaryProperty.simpleValue }}
             </ng-container>
