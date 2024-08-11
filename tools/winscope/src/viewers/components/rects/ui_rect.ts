@@ -1,5 +1,5 @@
 /*
- * Copyright 2020, The Android Open Source Project
+ * Copyright (C) 2024, The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -27,6 +27,7 @@ export class UiRect extends Rect {
     readonly label: string,
     readonly isVisible: boolean,
     readonly isDisplay: boolean,
+    readonly isActiveDisplay: boolean,
     readonly id: string,
     readonly groupId: number,
     readonly isClickable: boolean,
@@ -39,9 +40,4 @@ export class UiRect extends Rect {
   ) {
     super(x, y, w, h);
   }
-}
-
-export interface Size {
-  width: number;
-  height: number;
 }

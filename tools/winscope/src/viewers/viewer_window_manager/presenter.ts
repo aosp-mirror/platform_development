@@ -32,7 +32,7 @@ import {RectsPresenter} from 'viewers/common/rects_presenter';
 import {UiHierarchyTreeNode} from 'viewers/common/ui_hierarchy_tree_node';
 import {UI_RECT_FACTORY} from 'viewers/common/ui_rect_factory';
 import {UserOptions} from 'viewers/common/user_options';
-import {UiRect} from 'viewers/components/rects/types2d';
+import {UiRect} from 'viewers/components/rects/ui_rect';
 import {UpdateDisplayNames} from './operations/update_display_names';
 import {UiData} from './ui_data';
 
@@ -169,17 +169,14 @@ export class Presenter extends AbstractHierarchyViewerPresenter<UiData> {
     rects.forEach((rect: UiRect) => {
       if (!rect.isDisplay) return;
       const displayName = rect.label.slice(10, rect.label.length);
-      ids.push({displayId: rect.id, groupId: rect.groupId, name: displayName});
+      ids.push({
+        displayId: rect.id,
+        groupId: rect.groupId,
+        name: displayName,
+        isActive: rect.isActiveDisplay,
+      });
     });
-    return ids.sort((a, b) => {
-      if (a.name < b.name) {
-        return -1;
-      }
-      if (a.name > b.name) {
-        return 1;
-      }
-      return 0;
-    });
+    return ids.sort();
   }
 
   private refreshUIData() {

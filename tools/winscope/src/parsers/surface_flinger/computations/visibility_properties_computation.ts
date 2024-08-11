@@ -22,6 +22,7 @@ import {
   Transform,
   TransformType,
 } from 'parsers/surface_flinger/transform_utils';
+import {GeometryFactory} from 'trace/geometry_factory';
 import {Computation} from 'trace/tree_node/computation';
 import {HierarchyTreeNode} from 'trace/tree_node/hierarchy_tree_node';
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
@@ -57,7 +58,7 @@ export class VisibilityPropertiesComputation implements Computation {
       .reverse();
 
     const opaqueLayers: HierarchyTreeNode[] = [];
-    const transparentLayers: HierarchyTreeNode[] = [];
+    const translucentLayers: HierarchyTreeNode[] = [];
 
     for (const layer of rootLayersOrderedByZ) {
       let isVisible = this.getIsVisible(layer);
@@ -144,7 +145,7 @@ export class VisibilityPropertiesComputation implements Computation {
           ),
         );
 
-        const coveredBy = transparentLayers
+        const coveredBy = translucentLayers
           .filter((other) => {
             if (
               this.getDefinedValue(other, 'layerStack') !==
@@ -166,7 +167,7 @@ export class VisibilityPropertiesComputation implements Computation {
 
         this.isOpaque(layer)
           ? opaqueLayers.push(layer)
-          : transparentLayers.push(layer);
+          : translucentLayers.push(layer);
       }
 
       if (!isVisible) {
@@ -319,7 +320,7 @@ export class VisibilityPropertiesComputation implements Computation {
 
   private getRect(rectNode: PropertyTreeNode): Rect | undefined {
     if (rectNode.getAllChildren().length === 0) return undefined;
-    return Rect.from(rectNode);
+    return GeometryFactory.makeRect(rectNode);
   }
 
   private getColor(layer: HierarchyTreeNode): PropertyTreeNode | undefined {

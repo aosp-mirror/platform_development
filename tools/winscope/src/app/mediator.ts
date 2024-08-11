@@ -143,6 +143,8 @@ export class Mediator {
         await this.loadFiles(event.files, FilesSource.COLLECTED);
         if (this.tracePipeline.getTraces().getSize() > 0) {
           await this.loadViewers();
+        } else {
+          this.currentProgressListener?.onOperationFinished(false);
         }
       } else {
         UserNotifier.add(new NoValidFiles()).notify();
@@ -365,6 +367,11 @@ export class Mediator {
     await TimeUtils.sleepMs(10);
 
     this.tracePipeline.filterTracesWithoutVisualization();
+    if (this.tracePipeline.getTraces().getSize() === 0) {
+      this.currentProgressListener?.onOperationFinished(false);
+      return;
+    }
+
     try {
       await this.tracePipeline.buildTraces();
       this.currentProgressListener?.onOperationFinished(true);

@@ -28,10 +28,6 @@ mod crate_type;
 pub use self::crate_collection::CrateCollection;
 mod crate_collection;
 
-pub use self::reports::{ReportEngine, SizeReport, Table};
-mod reports;
-
-pub use self::migration::migrate;
 mod migration;
 
 pub use self::pseudo_crate::PseudoCrate;
@@ -50,6 +46,9 @@ mod name_and_version;
 
 pub use self::repo_path::RepoPath;
 mod repo_path;
+
+pub use self::google_metadata::GoogleMetadata;
+mod google_metadata;
 
 #[cfg(test)]
 pub use self::name_and_version_map::try_name_version_map_from_iter;
@@ -80,14 +79,6 @@ pub fn default_repo_root() -> Result<PathBuf> {
     Err(anyhow!(".repo directory not found in any ancestor of {}", cwd.display()))
 }
 
-pub fn default_output_dir(filename: &str) -> PathBuf {
-    PathBuf::from("/google/data/rw/users")
-        .join(&whoami::username()[..2])
-        .join(whoami::username())
-        .join("www")
-        .join(filename)
-}
-
 pub fn ensure_exists_and_empty(dir: &impl AsRef<Path>) -> Result<()> {
     let dir = dir.as_ref();
     if dir.exists() {
@@ -111,3 +102,5 @@ pub fn copy_dir(src: &impl AsRef<Path>, dst: &impl AsRef<Path>) -> Result<()> {
     }
     Ok(())
 }
+
+include!(concat!(env!("OUT_DIR"), "/protos/mod.rs"));
