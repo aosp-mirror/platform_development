@@ -13,6 +13,7 @@
 // limitations under the License.
 
 use std::{
+    collections::BTreeMap,
     fs::{create_dir, write},
     process::Command,
     str::from_utf8,
@@ -20,6 +21,7 @@ use std::{
 
 use anyhow::{anyhow, Context, Result};
 use serde::Serialize;
+use serde_json::Value;
 use tinytemplate::TinyTemplate;
 
 use crate::{ensure_exists_and_empty, NamedAndVersioned, RepoPath};
@@ -88,8 +90,6 @@ impl PseudoCrate {
             .context("Failed to create src/lib.rs")?;
 
         self.vendor()
-
-        // TODO: Run "cargo deny"
     }
     pub fn get_path(&self) -> &RepoPath {
         &self.path
@@ -136,5 +136,33 @@ impl PseudoCrate {
             ));
         }
         Ok(())
+    }
+    pub fn deps(&self) -> Result<BTreeMap<String, String>> {
+        let output = Command::new("cargo")
+            .args(["metadata", "--offline", "--format-version=1"])
+            .current_dir(self.path.abs())
+            .output()?;
+        if !output.status.success() {
+            println!("{}", from_utf8(&output.stderr)?);
+            return Err(anyhow!("Failed to run 'cargo metadata'"));
+        }
+        let metadata: Value = serde_json::from_slice(&output.stdout)?;
+        let mut deps = BTreeMap::new();
+        for dep in metadata["packages"][0]["dependencies"]
+            .as_array()
+            .ok_or(anyhow!("Failed to deserialize cargo metadata"))?
+        {
+            deps.insert(
+                dep["name"]
+                    .as_str()
+                    .ok_or(anyhow!("Failed to deserialize cargo metadata"))?
+                    .to_string(),
+                dep["req"]
+                    .as_str()
+                    .ok_or(anyhow!("Failed to deserialize cargo metadata"))?
+                    .to_string(),
+            );
+        }
+        Ok(deps)
     }
 }

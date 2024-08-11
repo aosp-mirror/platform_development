@@ -49,6 +49,8 @@ pub struct PackageMetadata {
     pub features: BTreeMap<String, Vec<String>>,
     pub id: String,
     pub targets: Vec<TargetMetadata>,
+    pub license: Option<String>,
+    pub license_file: Option<String>,
 }
 
 #[derive(Clone, Debug, Deserialize, Eq, PartialEq)]
@@ -169,6 +171,8 @@ fn parse_cargo_metadata(
                     types: target.crate_types.clone(),
                     features: features_without_deps.clone(),
                     edition: package.edition.to_owned(),
+                    license: package.license.clone(),
+                    license_file: package.license_file.clone(),
                     package_dir: package_dir.clone(),
                     main_src: main_src.to_owned(),
                     target: target_triple.clone(),
@@ -193,6 +197,8 @@ fn parse_cargo_metadata(
                     types: vec![CrateType::Test],
                     features: features_without_deps.clone(),
                     edition: package.edition.to_owned(),
+                    license: package.license.clone(),
+                    license_file: package.license_file.clone(),
                     package_dir: package_dir.clone(),
                     main_src: main_src.to_owned(),
                     target: target_triple.clone(),
