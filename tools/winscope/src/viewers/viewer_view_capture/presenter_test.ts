@@ -178,6 +178,10 @@ class PresenterViewCaptureTest extends AbstractHierarchyViewerPresenterTest<UiDa
         propertiesTree.getChildByName('translationY'),
       ).formattedValue(),
     ).toEqual('-0.633');
+    expect(uiData.displays).toEqual([
+      {displayId: 0, groupId: 0, name: 'Taskbar', isActive: true},
+      {displayId: 1, groupId: 1, name: 'PhoneWindow@25063d9', isActive: true},
+    ]);
   }
 
   override executeChecksForPropertiesTreeAfterSecondPositionUpdate(

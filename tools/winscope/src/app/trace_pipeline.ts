@@ -109,8 +109,11 @@ export class TracePipeline {
     }
   }
 
-  removeTrace<T extends TraceType>(trace: Trace<TraceEntryTypeMap[T]>) {
-    this.loadedParsers.remove(trace.getParser());
+  removeTrace<T extends TraceType>(
+    trace: Trace<TraceEntryTypeMap[T]>,
+    keepFileForDownload = false,
+  ) {
+    this.loadedParsers.remove(trace.getParser(), keepFileForDownload);
     this.traces.deleteTrace(trace);
   }
 
@@ -121,7 +124,7 @@ export class TracePipeline {
   filterTracesWithoutVisualization() {
     const tracesWithoutVisualization = this.traces
       .mapTrace((trace) => {
-        if (!TraceTypeUtils.canVisualizeTrace(trace.type)) {
+        if (!TraceTypeUtils.isTraceTypeWithViewer(trace.type)) {
           return trace;
         }
         return undefined;
@@ -316,7 +319,7 @@ export class TracePipeline {
   private removeTracesAndParsersByType(type: TraceType) {
     const traces = this.traces.getTraces(type);
     traces.forEach((trace) => {
-      this.removeTrace(trace);
+      this.removeTrace(trace, true);
     });
   }
 }

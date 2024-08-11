@@ -295,7 +295,10 @@ export class UploadTracesComponent implements ProgressListener {
     return this.ngZone.run(() => {
       let hasFilesWithViewers = false;
       this.tracePipeline?.getTraces().forEachTrace((trace) => {
-        if (TraceTypeUtils.isTraceTypeWithViewer(trace.type)) {
+        if (
+          !trace.isCorrupted() &&
+          TraceTypeUtils.isTraceTypeWithViewer(trace.type)
+        ) {
           hasFilesWithViewers = true;
         }
       });
@@ -305,21 +308,16 @@ export class UploadTracesComponent implements ProgressListener {
   }
 
   canVisualizeTrace(trace: Trace<object>): boolean {
-    return TraceTypeUtils.canVisualizeTrace(trace.type);
-  }
-
-  traceErrorTooltip(trace: Trace<object>): string {
-    if (trace.isCorrupted()) {
-      return `${TRACE_INFO[trace.type].name} trace is corrupted.`;
-    }
-    return `Cannot visualize ${TRACE_INFO[trace.type].name} trace.`;
+    return TraceTypeUtils.isTraceTypeWithViewer(trace.type);
   }
 
   cannotVisualizeTraceTooltip(trace: Trace<object>): string {
-    if (trace.isCorrupted()) {
-      return `${TRACE_INFO[trace.type].name} trace is corrupted.`;
-    }
     return TraceTypeUtils.getReasonForNoTraceVisualization(trace.type);
+  }
+
+  traceErrorTooltip(trace: Trace<object>): string {
+    const reason = trace.getCorruptedReason() ?? 'Trace is corrupted.';
+    return 'Cannot visualize trace. ' + reason;
   }
 
   private getInputFiles(event: Event): File[] {

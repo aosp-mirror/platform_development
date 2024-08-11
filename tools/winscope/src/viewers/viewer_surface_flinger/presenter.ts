@@ -18,6 +18,7 @@ import {assertDefined} from 'common/assert_utils';
 import {PersistentStoreProxy} from 'common/persistent_store_proxy';
 import {
   TabbedViewSwitchRequest,
+  TracePositionUpdate,
   WinscopeEvent,
   WinscopeEventType,
 } from 'messaging/winscope_event';
@@ -25,6 +26,7 @@ import {LayerFlag} from 'parsers/surface_flinger/layer_flag';
 import {CustomQueryType} from 'trace/custom_query';
 import {Trace} from 'trace/trace';
 import {Traces} from 'trace/traces';
+import {TraceEntryFinder} from 'trace/trace_entry_finder';
 import {TraceType} from 'trace/trace_type';
 import {EMPTY_OBJ_STRING} from 'trace/tree_node/formatters';
 import {HierarchyTreeNode} from 'trace/tree_node/hierarchy_tree_node';
@@ -46,7 +48,7 @@ import {RectsPresenter} from 'viewers/common/rects_presenter';
 import {UiHierarchyTreeNode} from 'viewers/common/ui_hierarchy_tree_node';
 import {UI_RECT_FACTORY} from 'viewers/common/ui_rect_factory';
 import {UserOptions} from 'viewers/common/user_options';
-import {UiRect} from 'viewers/components/rects/types2d';
+import {UiRect} from 'viewers/components/rects/ui_rect';
 import {UiData} from './ui_data';
 
 export class Presenter extends AbstractHierarchyViewerPresenter<UiData> {
@@ -106,7 +108,8 @@ export class Presenter extends AbstractHierarchyViewerPresenter<UiData> {
     ),
     (tree: HierarchyTreeNode) =>
       UI_RECT_FACTORY.makeUiRects(tree, this.viewCapturePackageNames),
-    makeDisplayIdentifiers,
+    (displays: UiRect[]) =>
+      makeDisplayIdentifiers(displays, this.wmFocusedDisplayId),
   );
   protected override propertiesPresenter = new PropertiesPresenter(
     PersistentStoreProxy.new<UserOptions>(
@@ -138,6 +141,8 @@ export class Presenter extends AbstractHierarchyViewerPresenter<UiData> {
   private viewCapturePackageNames: string[] = [];
   private curatedProperties: SfCuratedProperties | undefined;
   private displayPropertyGroups = false;
+  private wmTrace: Trace<HierarchyTreeNode> | undefined;
+  private wmFocusedDisplayId: number | undefined;
 
   constructor(
     trace: Trace<HierarchyTreeNode>,
@@ -146,6 +151,7 @@ export class Presenter extends AbstractHierarchyViewerPresenter<UiData> {
     notifyViewCallback: NotifyHierarchyViewCallbackType<UiData>,
   ) {
     super(trace, traces, storage, notifyViewCallback, new UiData());
+    this.wmTrace = traces.getTrace(TraceType.WINDOW_MANAGER);
   }
 
   async onRectDoubleClick(rectId: string) {
@@ -167,6 +173,7 @@ export class Presenter extends AbstractHierarchyViewerPresenter<UiData> {
       WinscopeEventType.TRACE_POSITION_UPDATE,
       async (event) => {
         await this.initializeIfNeeded();
+        await this.setInitialWmActiveDisplay(event);
         await this.applyTracePositionUpdate(event);
         this.updateCuratedProperties();
         this.refreshUIData();
@@ -325,6 +332,7 @@ export class Presenter extends AbstractHierarchyViewerPresenter<UiData> {
       summary.push({
         key: 'Occluded by',
         layerValues: occludedBy.map((layer) => this.getLayerSummary(layer)),
+        desc: 'Fully occluded by these opaque layers',
       });
     }
 
@@ -337,6 +345,7 @@ export class Presenter extends AbstractHierarchyViewerPresenter<UiData> {
         layerValues: partiallyOccludedBy.map((layer) =>
           this.getLayerSummary(layer),
         ),
+        desc: 'Partially occluded by these opaque layers',
       });
     }
 
@@ -345,6 +354,7 @@ export class Presenter extends AbstractHierarchyViewerPresenter<UiData> {
       summary.push({
         key: 'Covered by',
         layerValues: coveredBy.map((layer) => this.getLayerSummary(layer)),
+        desc: 'Partially or fully covered by these likely translucent layers',
       });
     }
     return summary;
@@ -379,6 +389,22 @@ export class Presenter extends AbstractHierarchyViewerPresenter<UiData> {
     return propVal !== 'null' ? propVal : 'no color found';
   }
 
+  private async setInitialWmActiveDisplay(event: TracePositionUpdate) {
+    if (!this.wmTrace || this.wmFocusedDisplayId !== undefined) {
+      return;
+    }
+    const wmEntry: HierarchyTreeNode | undefined =
+      await TraceEntryFinder.findCorrespondingEntry<HierarchyTreeNode>(
+        this.wmTrace,
+        event.position,
+      )?.getValue();
+    if (wmEntry) {
+      this.wmFocusedDisplayId = wmEntry
+        .getEagerPropertyByName('focusedDisplayId')
+        ?.getValue();
+    }
+  }
+
   private refreshUIData() {
     this.uiData.curatedProperties = this.curatedProperties;
     this.uiData.displayPropertyGroups = this.displayPropertyGroups;
@@ -387,18 +413,32 @@ export class Presenter extends AbstractHierarchyViewerPresenter<UiData> {
 }
 
 export function makeDisplayIdentifiers(
-  displayRects: UiRect[],
+  rects: UiRect[],
+  focusedDisplayId?: number,
 ): DisplayIdentifier[] {
   const ids: DisplayIdentifier[] = [];
 
-  displayRects.forEach((rect: UiRect) => {
+  const isActive = (display: UiRect) => {
+    if (focusedDisplayId !== undefined) {
+      return display.groupId === focusedDisplayId;
+    }
+    return display.isActiveDisplay;
+  };
+
+  rects.forEach((rect: UiRect) => {
     if (!rect.isDisplay) return;
+
     const displayId = rect.id.slice(10, rect.id.length);
-    ids.push({displayId, groupId: rect.groupId, name: rect.label});
+    ids.push({
+      displayId,
+      groupId: rect.groupId,
+      name: rect.label,
+      isActive: isActive(rect),
+    });
   });
 
   let offscreenDisplayCount = 0;
-  displayRects.forEach((rect: UiRect) => {
+  rects.forEach((rect: UiRect) => {
     if (rect.isDisplay) return;
 
     if (!ids.find((identifier) => identifier.groupId === rect.groupId)) {
@@ -406,17 +446,9 @@ export function makeDisplayIdentifiers(
       const name =
         'Offscreen Display' +
         (offscreenDisplayCount > 1 ? ` ${offscreenDisplayCount}` : '');
-      ids.push({displayId: -1, groupId: rect.groupId, name});
+      ids.push({displayId: -1, groupId: rect.groupId, name, isActive: false});
     }
   });
 
-  return ids.sort((a, b) => {
-    if (a.name < b.name) {
-      return -1;
-    }
-    if (a.name > b.name) {
-      return 1;
-    }
-    return 0;
-  });
+  return ids;
 }

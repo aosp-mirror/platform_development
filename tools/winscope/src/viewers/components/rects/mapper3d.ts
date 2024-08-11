@@ -15,20 +15,18 @@
  */
 
 import {assertDefined} from 'common/assert_utils';
+import {Box3D} from 'common/geometry/box3d';
+import {Distance} from 'common/geometry/distance';
+import {Point3D} from 'common/geometry/point3d';
+import {Rect3D} from 'common/geometry/rect3d';
+import {Size} from 'common/geometry/size';
 import {IDENTITY_MATRIX} from 'common/geometry/transform_matrix';
-import {Size, UiRect} from 'viewers/components/rects/types2d';
-import {
-  Box3D,
-  ColorType,
-  Distance2D,
-  Label3D,
-  Point3D,
-  Rect3D,
-  Scene3D,
-  ShadingMode,
-  transformPoint3D,
-  UiRect3D,
-} from './types3d';
+import {UiRect} from 'viewers/components/rects/ui_rect';
+import {ColorType} from './color_type';
+import {RectLabel} from './rect_label';
+import {Scene} from './scene';
+import {ShadingMode} from './shading_mode';
+import {UiRect3D} from './ui_rect3d';
 
 class Mapper3D {
   private static readonly CAMERA_ROTATION_FACTOR_INIT = 1;
@@ -53,8 +51,8 @@ class Mapper3D {
   private cameraRotationFactor = Mapper3D.CAMERA_ROTATION_FACTOR_INIT;
   private zSpacingFactor = Mapper3D.Z_SPACING_FACTOR_INIT;
   private zoomFactor = Mapper3D.ZOOM_FACTOR_INIT;
-  private panScreenDistance = new Distance2D(0, 0);
-  private currentGroupId = 0; // default stack id is usually 0
+  private panScreenDistance = new Distance(0, 0);
+  private currentGroupIds = [0]; // default stack id is usually 0
   private shadingModeIndex = 0;
   private allowedShadingModes: ShadingMode[] = [ShadingMode.GRADIENT];
 
@@ -92,7 +90,7 @@ class Mapper3D {
     this.zoomFactor = Math.max(this.zoomFactor, Mapper3D.ZOOM_FACTOR_MIN);
   }
 
-  addPanScreenDistance(distance: Distance2D) {
+  addPanScreenDistance(distance: Distance) {
     this.panScreenDistance.dx += distance.dx;
     this.panScreenDistance.dy += distance.dy;
   }
@@ -109,12 +107,12 @@ class Mapper3D {
     this.panScreenDistance.dy = 0;
   }
 
-  getCurrentGroupId(): number {
-    return this.currentGroupId;
+  getCurrentGroupIds(): number[] {
+    return this.currentGroupIds;
   }
 
-  setCurrentGroupId(id: number) {
-    this.currentGroupId = id;
+  setCurrentGroupIds(ids: number[]) {
+    this.currentGroupIds = ids;
   }
 
   setAllowedShadingModes(modes: ShadingMode[]) {
@@ -161,7 +159,7 @@ class Mapper3D {
     );
   }
 
-  computeScene(): Scene3D {
+  computeScene(): Scene {
     const rects2d = this.selectRectsToDraw(this.rects);
     rects2d.sort(this.compareDepth); // decreasing order of depth
     const rects3d = this.computeRects(rects2d);
@@ -169,7 +167,7 @@ class Mapper3D {
     const boundingBox = this.computeBoundingBox(rects3d, labels3d);
 
     const angleX = this.getCameraXAxisAngle();
-    const scene: Scene3D = {
+    const scene: Scene = {
       boundingBox,
       camera: {
         rotationAngleX: angleX,
@@ -193,7 +191,7 @@ class Mapper3D {
   }
 
   private selectRectsToDraw(rects: UiRect[]): UiRect[] {
-    return rects.filter((rect) => rect.groupId === this.currentGroupId);
+    return rects.filter((rect) => this.currentGroupIds.includes(rect.groupId));
   }
 
   private computeRects(rects2d: UiRect[]): UiRect3D[] {
@@ -343,11 +341,11 @@ class Mapper3D {
     return rect3d;
   }
 
-  private computeLabels(rects2d: UiRect[], rects3d: UiRect3D[]): Label3D[] {
-    const labels3d: Label3D[] = [];
+  private computeLabels(rects2d: UiRect[], rects3d: UiRect3D[]): RectLabel[] {
+    const labels3d: RectLabel[] = [];
 
     const bottomRightCorners = rects3d.map((rect) =>
-      transformPoint3D(rect.transform, rect.bottomRight),
+      rect.transform.transformPoint3D(rect.bottomRight),
     );
     const lowestYPoint = Math.max(...bottomRightCorners.map((p) => p.y));
     const rightmostXPoint = Math.max(...bottomRightCorners.map((p) => p.x));
@@ -402,10 +400,10 @@ class Mapper3D {
         z: rect3d.bottomRight.z,
       };
       const lineStarts = [
-        transformPoint3D(rect3d.transform, rect3d.topLeft),
-        transformPoint3D(rect3d.transform, rect3d.bottomRight),
-        transformPoint3D(rect3d.transform, bottomLeft),
-        transformPoint3D(rect3d.transform, topRight),
+        rect3d.transform.transformPoint3D(rect3d.topLeft),
+        rect3d.transform.transformPoint3D(rect3d.bottomRight),
+        rect3d.transform.transformPoint3D(bottomLeft),
+        rect3d.transform.transformPoint3D(topRight),
       ];
       let maxIndex = 0;
       for (let i = 1; i < lineStarts.length; i++) {
@@ -427,7 +425,7 @@ class Mapper3D {
 
       const isHighlighted = this.isHighlighted(rect2d);
 
-      const label3d: Label3D = {
+      const RectLabel: RectLabel = {
         circle: {
           radius: Mapper3D.LABEL_CIRCLE_RADIUS,
           center: {
@@ -442,13 +440,13 @@ class Mapper3D {
         isHighlighted,
         rectId: rect2d.id,
       };
-      labels3d.push(label3d);
+      labels3d.push(RectLabel);
     });
 
     return labels3d;
   }
 
-  private computeBoundingBox(rects: UiRect3D[], labels: Label3D[]): Box3D {
+  private computeBoundingBox(rects: UiRect3D[], labels: RectLabel[]): Box3D {
     if (rects.length === 0) {
       return {
         width: 1,

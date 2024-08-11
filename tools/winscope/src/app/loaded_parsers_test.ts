@@ -460,6 +460,19 @@ describe('LoadedParsers', () => {
     expectLoadResult([], []);
   });
 
+  it('can remove parsers but keep for download', async () => {
+    loadParsers([parserSf0, parserWm0], []);
+    expectLoadResult([parserSf0, parserWm0], []);
+
+    loadedParsers.remove(parserWm0, true);
+    expectLoadResult([parserSf0], []);
+
+    await expectDownloadResult([
+      'sf/filename.winscope',
+      'wm/filename.winscope',
+    ]);
+  });
+
   it('can be cleared', () => {
     loadedParsers.clear();
     loadParsers([parserSf0], [parserWm0]);
@@ -518,20 +531,13 @@ describe('LoadedParsers', () => {
       [],
     );
 
-    const zipArchive = await loadedParsers.makeZipArchive();
-    const zipFile = new File([zipArchive], 'winscope.zip');
-    const actualArchiveContents = (await FileUtils.unzipFile(zipFile))
-      .map((file) => file.name)
-      .sort();
-
-    const expectedArchiveContents = [
+    await expectDownloadResult([
       'filename.mp4',
       'filename.perfetto-trace',
       'vc/filename.winscope',
       'wm/filename (1).pb',
       'wm/filename.pb',
-    ];
-    expect(actualArchiveContents).toEqual(expectedArchiveContents);
+    ]);
   });
 
   function loadParsers(
@@ -562,5 +568,13 @@ describe('LoadedParsers', () => {
     expect(new Set([...actualParsers])).toEqual(new Set([...expectedParsers]));
 
     userNotifierChecker.expectAdded(expectedWarnings);
+  }
+
+  async function expectDownloadResult(expectedArchiveContents: string[]) {
+    const zipArchive = await loadedParsers.makeZipArchive();
+    const actualArchiveContents = (await FileUtils.unzipFile(zipArchive))
+      .map((file) => file.name)
+      .sort();
+    expect(actualArchiveContents).toEqual(expectedArchiveContents);
   }
 });
