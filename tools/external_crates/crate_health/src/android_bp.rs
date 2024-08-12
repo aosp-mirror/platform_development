@@ -68,6 +68,7 @@ fn run_cargo_embargo(staging_path: &RepoPath) -> Result<Output> {
     cmd.args(["generate", "cargo_embargo.json"])
         .env("PATH", new_path)
         .env("ANDROID_BUILD_TOP", staging_path.root())
+        .env_remove("OUT_DIR")
         .current_dir(staging_path.abs())
         .output()
         .context(format!("Failed to execute {:?}", cmd.get_program()))
@@ -85,7 +86,7 @@ pub fn maybe_build_cargo_embargo(repo_root: &impl AsRef<Path>, force_rebuild: bo
 pub fn build_cargo_embargo(repo_root: &impl AsRef<Path>) -> Result<()> {
     let status = Command::new("/usr/bin/bash")
         .args(["-c", "source build/envsetup.sh && lunch aosp_cf_x86_64_phone-trunk_staging-eng && m cargo_embargo"])
-        .current_dir(repo_root).spawn().context("Failed to spawn build of cargo embargo")?.wait().context("Failed to wait on child process building cargo embargo")?;
+        .env_remove("OUT_DIR").current_dir(repo_root).spawn().context("Failed to spawn build of cargo embargo")?.wait().context("Failed to wait on child process building cargo embargo")?;
     match status.success() {
         true => Ok(()),
         false => Err(anyhow!(
