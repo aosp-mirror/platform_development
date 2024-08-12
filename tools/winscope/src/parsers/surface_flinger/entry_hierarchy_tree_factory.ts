@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023 The Android Open Source Project
+ * Copyright (C) 2024 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,6 +16,7 @@
 
 import {assertDefined} from 'common/assert_utils';
 import {UserNotifier} from 'common/user_notifier';
+import {MissingLayerIds} from 'messaging/user_warnings';
 import {perfetto} from 'protos/surfaceflinger/latest/static';
 import {android} from 'protos/surfaceflinger/udc/static';
 import {HierarchyTreeNode} from 'trace/tree_node/hierarchy_tree_node';
@@ -49,9 +50,14 @@ export class EntryHierarchyTreeFactory {
       : COMMON_OPERATIONS.AddExcludesCompositionStateFalse;
 
     const processed = new Map<number, number>();
+    let missingLayerIds = false;
 
     const layers = layerProtos.reduce(
       (allLayerProps: PropertiesProvider[], layer: LayerType) => {
+        if (layer.id === null || layer.id === undefined) {
+          missingLayerIds = true;
+          return allLayerProps;
+        }
         const duplicateCount = processed.get(assertDefined(layer.id)) ?? 0;
         processed.set(assertDefined(layer.id), duplicateCount + 1);
         const eagerProperties = this.makeEagerPropertiesTree(
@@ -86,6 +92,10 @@ export class EntryHierarchyTreeFactory {
       },
       [] as PropertiesProvider[],
     );
+
+    if (missingLayerIds) {
+      UserNotifier.add(new MissingLayerIds()).notify();
+    }
 
     const entry = new PropertiesProviderBuilder()
       .setEagerProperties(this.makeEntryEagerPropertiesTree(entryProto))

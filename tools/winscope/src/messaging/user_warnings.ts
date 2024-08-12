@@ -233,3 +233,13 @@ export class ProxyTracingErrors extends UserWarning {
     return `Errors occurred during tracing: ${this.errorMessages.join(', ')}`;
   }
 }
+
+export class MissingLayerIds extends UserWarning {
+  getDescriptor(): string {
+    return 'missing layer ids';
+  }
+
+  getMessage(): string {
+    return 'Cannot parse some layers due to null or undefined layer id';
+  }
+}
