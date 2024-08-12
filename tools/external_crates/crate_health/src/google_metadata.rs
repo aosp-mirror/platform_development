@@ -65,7 +65,7 @@ impl GoogleMetadata {
             .mut_or_insert_default();
         date.set_day(now.day().try_into()?);
         date.set_month(now.month().try_into()?);
-        date.set_day(now.year());
+        date.set_year(now.year());
         Ok(())
     }
     pub fn set_identifier(&mut self, nv: &dyn NamedAndVersioned) -> Result<()> {
