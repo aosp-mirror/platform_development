@@ -22,6 +22,7 @@ import {
 } from 'common/http_request';
 import {ProxyTracingErrors} from 'messaging/user_warnings';
 import {UserNotifierChecker} from 'test/unit/user_notifier_checker';
+import {waitToBeCalled} from 'test/utils';
 import {AdbDevice} from 'trace_collection/adb_device';
 import {ConnectionState} from 'trace_collection/connection_state';
 import {ProxyConnection} from 'trace_collection/proxy_connection';
@@ -123,7 +124,6 @@ describe('ProxyConnection', () => {
         getHeader: getVersionHeader,
       };
       await setUpTestEnvironment(unauthResponse);
-      await postToProxy();
       expect(connection.getState()).toEqual(ConnectionState.UNAUTH);
     });
 
@@ -158,7 +158,6 @@ describe('ProxyConnection', () => {
         getHeader: getVersionHeader,
       };
       await setUpTestEnvironment(errorResponse);
-      await postToProxy();
       expect(connection.getState()).toEqual(ConnectionState.ERROR);
       expect(connection.getErrorText()).toEqual(errorResponse.text);
     });
@@ -172,7 +171,6 @@ describe('ProxyConnection', () => {
         getHeader: getVersionHeader,
       };
       await setUpTestEnvironment(errorResponse);
-      await postToProxy();
       expect(connection.getState()).toEqual(ConnectionState.ERROR);
       expect(connection.getErrorText()).toEqual(errorResponse.text);
     });
@@ -186,14 +184,8 @@ describe('ProxyConnection', () => {
         getHeader: getVersionHeader,
       };
       await setUpTestEnvironment(errorResponse);
-      await postToProxy();
       expect(connection.getState()).toEqual(ConnectionState.ERROR);
     });
-
-    async function postToProxy() {
-      const requestObj = [mockTraceRequest];
-      await connection.startTrace(mockDevice, requestObj);
-    }
 
     async function checkInvalidVersion(getHeader: () => string | undefined) {
       const invalidResponse: HttpResponse = {
@@ -204,7 +196,6 @@ describe('ProxyConnection', () => {
         getHeader,
       };
       await setUpTestEnvironment(invalidResponse);
-      await postToProxy();
       expect(connection.getState()).toEqual(ConnectionState.INVALID_VERSION);
     }
   });
@@ -349,6 +340,27 @@ describe('ProxyConnection', () => {
       ]);
     });
 
+    it('posts end trace request to proxy and handles non-serializable errors', async () => {
+      await startAndEndTrace({
+        status: HttpRequestStatus.SUCCESS,
+        type: '',
+        text: '["please check your display state", "b\'unknown error\'"]',
+        body: undefined,
+        getHeader: getVersionHeader,
+      });
+      expect(postSpy).toHaveBeenCalledOnceWith(
+        ProxyConnection.WINSCOPE_PROXY_URL +
+          ProxyEndpoint.END_TRACE +
+          `${mockDevice.id}/`,
+        [['Winscope-Token', '']],
+        undefined,
+      );
+      expect(connection.getState()).toEqual(ConnectionState.ERROR);
+      expect(connection.getErrorText()).toContain(
+        'Error handling request response',
+      );
+    });
+
     it('posts dump state request to proxy', async () => {
       const requestObj = [mockTraceRequest];
       await connection.dumpState(mockDevice, requestObj);
@@ -446,6 +458,40 @@ describe('ProxyConnection', () => {
       checkGetDevicesRequest();
       expect(connection.getState()).toEqual(ConnectionState.IDLE);
       expect(connection.getDevices()).toEqual([mockDevice]);
+    });
+
+    it('sets up worker to fetch devices', async () => {
+      const devicesResponse: HttpResponse = {
+        status: HttpRequestStatus.SUCCESS,
+        type: 'text',
+        text: JSON.stringify({
+          '35562': {authorized: mockDevice.authorized, model: mockDevice.model},
+        }),
+        body: undefined,
+        getHeader: getVersionHeader,
+      };
+      await setUpTestEnvironment(devicesResponse);
+      checkGetDevicesRequest();
+      expect(connection.getState()).toEqual(ConnectionState.IDLE);
+      expect(connection.getDevices()).toEqual([mockDevice]);
+      expect(getSpy).toHaveBeenCalledWith(
+        ProxyConnection.WINSCOPE_PROXY_URL + ProxyEndpoint.CHECK_WAYLAND,
+        [['Winscope-Token', '']],
+        undefined,
+      );
+
+      getSpy.calls.reset();
+      detectStateChangesInUi.calls.reset();
+
+      await waitToBeCalled(detectStateChangesInUi, 1);
+      checkGetDevicesRequest();
+      expect(connection.getState()).toEqual(ConnectionState.IDLE);
+      expect(connection.getDevices()).toEqual([mockDevice]);
+      expect(getSpy).not.toHaveBeenCalledWith(
+        ProxyConnection.WINSCOPE_PROXY_URL + ProxyEndpoint.CHECK_WAYLAND,
+        [['Winscope-Token', '']],
+        undefined,
+      );
     });
   });
 

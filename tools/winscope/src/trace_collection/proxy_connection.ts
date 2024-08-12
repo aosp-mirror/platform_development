@@ -68,7 +68,7 @@ export class ProxyConnection extends AdbConnection {
     if (urlParams.has('token')) {
       this.securityToken = assertDefined(urlParams.get('token'));
     } else {
-      this.securityToken = this.store?.get(this.storeKeySecurityToken) ?? '';
+      this.securityToken = this.store.get(this.storeKeySecurityToken) ?? '';
     }
     await this.setState(ConnectionState.CONNECTING);
   }
@@ -80,7 +80,7 @@ export class ProxyConnection extends AdbConnection {
   setSecurityToken(token: string) {
     if (token.length > 0) {
       this.securityToken = token;
-      this.store?.add(this.storeKeySecurityToken, token);
+      this.store.add(this.storeKeySecurityToken, token);
     }
   }
 
@@ -434,7 +434,7 @@ export class ProxyConnection extends AdbConnection {
   }
 
   private getSecurityTokenHeader(): HttpRequestHeaderType {
-    const lastKey = this.store?.get(this.storeKeySecurityToken);
+    const lastKey = this.store.get(this.storeKeySecurityToken);
     if (lastKey !== undefined) {
       this.securityToken = lastKey;
     }
