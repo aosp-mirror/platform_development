@@ -89,6 +89,12 @@ impl Crate {
         }
     }
 
+    pub fn description(&self) -> &str {
+        self.manifest.metadata().description.as_ref().map(|x| x.as_str()).unwrap_or("")
+    }
+    pub fn license(&self) -> &str {
+        self.manifest.metadata().license.as_ref().map(|x| x.as_str()).unwrap_or("")
+    }
     pub fn path(&self) -> &RepoPath {
         &self.path
     }
