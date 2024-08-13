@@ -365,6 +365,7 @@ pub fn migration_health(
         }
         let diff_status = diff_cmd
             .args(IGNORED_FILES.iter().map(|ignored| format!("--exclude={}", ignored)))
+            .args(["-I", r#"default_team: "trendy_team_android_rust""#])
             .arg(pair.source.path().rel())
             .arg(pair.dest.staging_path().rel())
             .current_dir(repo_root)
