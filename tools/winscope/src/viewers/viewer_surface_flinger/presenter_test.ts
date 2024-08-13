@@ -204,7 +204,7 @@ class PresenterSurfaceFlingerTest extends AbstractHierarchyViewerPresenterTest<U
         displayId: '4619827677550801152',
         groupId: 0,
         name: 'Common Panel',
-        isActive: false,
+        isActive: true,
       },
     ]);
   }
@@ -288,25 +288,25 @@ class PresenterSurfaceFlingerTest extends AbstractHierarchyViewerPresenterTest<U
             displayId: '4619827259835644672',
             groupId: 0,
             name: 'EMU_display_0',
-            isActive: false,
+            isActive: true,
           },
           {
             displayId: '4619827551948147201',
             groupId: 2,
             name: 'EMU_display_1',
-            isActive: false,
+            isActive: true,
           },
           {
             displayId: '4619827540095559171',
             groupId: 4,
             name: 'EMU_display_3',
-            isActive: false,
+            isActive: true,
           },
           {
             displayId: '4619827124781842690',
             groupId: 3,
             name: 'EMU_display_2',
-            isActive: false,
+            isActive: true,
           },
           {
             displayId: '11529215046312967684',

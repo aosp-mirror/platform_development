@@ -35,6 +35,8 @@ import {MatDividerModule} from '@angular/material/divider';
 import {MatFormFieldModule} from '@angular/material/form-field';
 import {MatIconModule} from '@angular/material/icon';
 import {MatInputModule} from '@angular/material/input';
+import {MatListModule} from '@angular/material/list';
+import {MatProgressBarModule} from '@angular/material/progress-bar';
 import {MatSelectModule} from '@angular/material/select';
 import {MatSliderModule} from '@angular/material/slider';
 import {MatSnackBarModule} from '@angular/material/snack-bar';
@@ -56,6 +58,7 @@ import {
 } from 'messaging/winscope_event';
 import {TimestampConverterUtils} from 'test/unit/timestamp_converter_utils';
 import {TracesBuilder} from 'test/unit/traces_builder';
+import {waitToBeCalled} from 'test/utils';
 import {ViewerSurfaceFlingerComponent} from 'viewers/viewer_surface_flinger/viewer_surface_flinger_component';
 import {AdbProxyComponent} from './adb_proxy_component';
 import {AppComponent} from './app_component';
@@ -78,6 +81,7 @@ describe('AppComponent', () => {
   let fixture: ComponentFixture<AppComponent>;
   let component: AppComponent;
   let htmlElement: HTMLElement;
+  let downloadTracesSpy: jasmine.Spy;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
@@ -101,6 +105,8 @@ describe('AppComponent', () => {
         ClipboardModule,
         MatDialogModule,
         HttpClientModule,
+        MatListModule,
+        MatProgressBarModule,
       ],
       declarations: [
         AdbProxyComponent,
@@ -134,6 +140,7 @@ describe('AppComponent', () => {
         Validators.pattern(FileUtils.DOWNLOAD_FILENAME_REGEX),
       ]),
     );
+    downloadTracesSpy = spyOn(component, 'downloadTraces');
     fixture.detectChanges();
   });
 
@@ -203,31 +210,58 @@ describe('AppComponent', () => {
     expect(winscopeEventSpy).toHaveBeenCalledWith(new AppRefreshDumpsRequest());
   });
 
-  it('downloads traces on download button click', () => {
+  it('shows download progress bar', () => {
     component.showDataLoadedElements = true;
     fixture.detectChanges();
-    const spy = spyOn(component, 'downloadTraces');
+    expect(
+      htmlElement.querySelector('.download-files-section mat-progress-bar'),
+    ).toBeNull();
 
-    clickDownloadTracesButton();
-    expect(spy).toHaveBeenCalledTimes(1);
+    component.onProgressUpdate('Progress update', 10);
+    fixture.detectChanges();
+    expect(
+      htmlElement.querySelector('.download-files-section mat-progress-bar'),
+    ).toBeTruthy();
 
-    clickDownloadTracesButton();
-    expect(spy).toHaveBeenCalledTimes(2);
+    component.onOperationFinished(true);
+    fixture.detectChanges();
+    expect(
+      htmlElement.querySelector('.download-files-section mat-progress-bar'),
+    ).toBeNull();
   });
 
-  it('downloads traces after valid file name change', () => {
+  it('downloads traces on download button click and shows download progress bar', async () => {
     component.showDataLoadedElements = true;
     fixture.detectChanges();
-    const spy = spyOn(component, 'downloadTraces');
+    clickDownloadTracesButton();
+    expect(
+      htmlElement.querySelector('.download-files-section mat-progress-bar'),
+    ).toBeTruthy();
+    await waitToBeCalled(downloadTracesSpy);
+  });
+
+  it('downloads traces after valid file name change', async () => {
+    component.showDataLoadedElements = true;
+    fixture.detectChanges();
 
     clickEditFilenameButton();
     updateFilenameInputAndDownloadTraces('Winscope2', true);
-    expect(spy).toHaveBeenCalledTimes(1);
+    await waitToBeCalled(downloadTracesSpy);
+    expect(downloadTracesSpy).toHaveBeenCalledOnceWith(
+      jasmine.any(Blob),
+      'Winscope2.zip',
+    );
+
+    downloadTracesSpy.calls.reset();
 
     // check it works twice in a row
     clickEditFilenameButton();
     updateFilenameInputAndDownloadTraces('win_scope', true);
-    expect(spy).toHaveBeenCalledTimes(2);
+    await waitToBeCalled(downloadTracesSpy);
+    expect(downloadTracesSpy).toHaveBeenCalledOnceWith(
+      jasmine.any(Blob),
+      'win_scope.zip',
+    );
   });
 
   it('changes page title based on archive name', async () => {
@@ -252,29 +286,35 @@ describe('AppComponent', () => {
   it('does not download traces if invalid file name chosen', () => {
     component.showDataLoadedElements = true;
     fixture.detectChanges();
-    const spy = spyOn(component, 'downloadTraces');
 
     clickEditFilenameButton();
     updateFilenameInputAndDownloadTraces('w?n$cope', false);
-    expect(spy).not.toHaveBeenCalled();
+    expect(downloadTracesSpy).not.toHaveBeenCalled();
   });
 
-  it('behaves as expected when entering valid then invalid then valid file names', () => {
+  it('behaves as expected when entering valid then invalid then valid file names', async () => {
     component.showDataLoadedElements = true;
     fixture.detectChanges();
 
-    const spy = spyOn(component, 'downloadTraces');
-
     clickEditFilenameButton();
     updateFilenameInputAndDownloadTraces('Winscope2', true);
-    expect(spy).toHaveBeenCalled();
+    await waitToBeCalled(downloadTracesSpy);
+    expect(downloadTracesSpy).toHaveBeenCalledOnceWith(
+      jasmine.any(Blob),
+      'Winscope2.zip',
+    );
+    downloadTracesSpy.calls.reset();
 
     clickEditFilenameButton();
     updateFilenameInputAndDownloadTraces('w?n$cope', false);
-    expect(spy).toHaveBeenCalledTimes(1);
+    expect(downloadTracesSpy).not.toHaveBeenCalled();
 
     updateFilenameInputAndDownloadTraces('win.scope', true);
-    expect(spy).toHaveBeenCalledTimes(2);
+    await waitToBeCalled(downloadTracesSpy);
+    expect(downloadTracesSpy).toHaveBeenCalledOnceWith(
+      jasmine.any(Blob),
+      'win.scope.zip',
+    );
   });
 
   it('validates filename on enter key', () => {
@@ -296,6 +336,25 @@ describe('AppComponent', () => {
 
     fixture.detectChanges();
     expect(spy).toHaveBeenCalled();
+  });
+
+  it('downloads traces from upload traces section', () => {
+    const traces = assertDefined(component.tracePipeline.getTraces());
+    spyOn(traces, 'getSize').and.returnValue(1);
+    fixture.detectChanges();
+    const downloadButtonClickSpy = spyOn(
+      component,
+      'onDownloadTracesButtonClick',
+    );
+
+    const downloadButton = assertDefined(
+      htmlElement.querySelector<HTMLElement>('upload-traces .download-btn'),
+    );
+    downloadButton.click();
+    fixture.detectChanges();
+    expect(downloadButtonClickSpy).toHaveBeenCalledOnceWith(
+      component.uploadTracesComponent,
+    );
   });
 
   it('opens shortcuts dialog', () => {
