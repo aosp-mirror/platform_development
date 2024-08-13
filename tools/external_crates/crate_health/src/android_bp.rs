@@ -15,6 +15,7 @@
 use std::{
     collections::BTreeMap,
     env,
+    ffi::OsString,
     path::Path,
     process::{Command, Output},
     sync::mpsc::channel,
@@ -50,10 +51,8 @@ pub fn generate_android_bps<'a, T: Iterator<Item = &'a Crate>>(
     Ok(results)
 }
 
-fn run_cargo_embargo(staging_path: &RepoPath) -> Result<Output> {
-    maybe_build_cargo_embargo(&staging_path.root(), false)?;
-    // Make sure we can find bpfmt.
-    let host_bin = staging_path.with_same_root(&"prebuilts/build-tools/linux-x86/bin").abs();
+fn add_bpfmt_to_path(repo_root: impl AsRef<Path>) -> Result<OsString> {
+    let host_bin = repo_root.as_ref().join("prebuilts/build-tools/linux-x86/bin");
     let new_path = match env::var_os("PATH") {
         Some(p) => {
             let mut paths = vec![host_bin];
@@ -62,6 +61,12 @@ fn run_cargo_embargo(staging_path: &RepoPath) -> Result<Output> {
         }
         None => host_bin.as_os_str().into(),
     };
+    Ok(new_path)
+}
+
+fn run_cargo_embargo(staging_path: &RepoPath) -> Result<Output> {
+    maybe_build_cargo_embargo(&staging_path.root(), false)?;
+    let new_path = add_bpfmt_to_path(staging_path.root())?;
 
     let mut cmd =
         Command::new(staging_path.with_same_root(&"out/host/linux-x86/bin/cargo_embargo").abs());
@@ -70,6 +75,20 @@ fn run_cargo_embargo(staging_path: &RepoPath) -> Result<Output> {
         .env("ANDROID_BUILD_TOP", staging_path.root())
         .env_remove("OUT_DIR")
         .current_dir(staging_path.abs())
+        .output()
+        .context(format!("Failed to execute {:?}", cmd.get_program()))
+}
+
+pub fn cargo_embargo_autoconfig(path: &RepoPath) -> Result<Output> {
+    maybe_build_cargo_embargo(&path.root(), false)?;
+    let new_path = add_bpfmt_to_path(path.root())?;
+
+    let mut cmd = Command::new(path.with_same_root(&"out/host/linux-x86/bin/cargo_embargo").abs());
+    cmd.args(["autoconfig", "cargo_embargo.json"])
+        .env("PATH", new_path)
+        .env("ANDROID_BUILD_TOP", path.root())
+        .env_remove("OUT_DIR")
+        .current_dir(path.abs())
         .output()
         .context(format!("Failed to execute {:?}", cmd.get_program()))
 }
