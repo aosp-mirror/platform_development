@@ -16,7 +16,6 @@ use std::{
     collections::BTreeMap,
     fs::{create_dir, write},
     process::Command,
-    str::from_utf8,
 };
 
 use anyhow::{anyhow, Context, Result};
@@ -24,7 +23,7 @@ use serde::Serialize;
 use serde_json::Value;
 use tinytemplate::TinyTemplate;
 
-use crate::{ensure_exists_and_empty, NamedAndVersioned, RepoPath};
+use crate::{ensure_exists_and_empty, NamedAndVersioned, RepoPath, RunQuiet};
 
 static CARGO_TOML_TEMPLATE: &'static str = include_str!("templates/Cargo.toml.template");
 
@@ -95,57 +94,31 @@ impl PseudoCrate {
         &self.path
     }
     pub fn add(&self, krate: &impl NamedAndVersioned) -> Result<()> {
-        let status = Command::new("cargo")
+        Command::new("cargo")
             .args(["add", format!("{}@={}", krate.name(), krate.version()).as_str()])
             .current_dir(self.path.abs())
-            .spawn()
-            .context("Failed to spawn 'cargo add'")?
-            .wait()
-            .context("Failed to wait on 'cargo add'")?;
-        if !status.success() {
-            return Err(anyhow!("Failed to run 'cargo add {}@{}'", krate.name(), krate.version()));
-        }
+            .run_quiet_and_expect_success()?;
         Ok(())
     }
     pub fn remove(&self, krate: &impl NamedAndVersioned) -> Result<()> {
-        let status = Command::new("cargo")
+        Command::new("cargo")
             .args(["remove", krate.name()])
             .current_dir(self.path.abs())
-            .spawn()
-            .context("Failed to spawn 'cargo remove'")?
-            .wait()
-            .context("Failed to wait on 'cargo remove'")?;
-        if !status.success() {
-            return Err(anyhow!("Failed to run 'cargo remove {}'", krate.name()));
-        }
+            .run_quiet_and_expect_success()?;
         Ok(())
     }
     pub fn vendor(&self) -> Result<()> {
-        let output =
-            Command::new("cargo").args(["vendor"]).current_dir(self.path.abs()).output()?;
-        if !output.status.success() {
-            return Err(anyhow!(
-                "cargo vendor failed with exit code {}\nstdout:\n{}\nstderr:\n{}",
-                output
-                    .status
-                    .code()
-                    .map(|code| { format!("{}", code) })
-                    .unwrap_or("(unknown)".to_string()),
-                from_utf8(&output.stdout)?,
-                from_utf8(&output.stderr)?
-            ));
-        }
+        Command::new("cargo")
+            .args(["vendor"])
+            .current_dir(self.path.abs())
+            .run_quiet_and_expect_success()?;
         Ok(())
     }
     pub fn deps(&self) -> Result<BTreeMap<String, String>> {
         let output = Command::new("cargo")
             .args(["metadata", "--offline", "--format-version=1"])
             .current_dir(self.path.abs())
-            .output()?;
-        if !output.status.success() {
-            println!("{}", from_utf8(&output.stderr)?);
-            return Err(anyhow!("Failed to run 'cargo metadata'"));
-        }
+            .run_quiet_and_expect_success()?;
         let metadata: Value = serde_json::from_slice(&output.stdout)?;
         let mut deps = BTreeMap::new();
         for dep in metadata["packages"][0]["dependencies"]
