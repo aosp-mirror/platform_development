@@ -12,13 +12,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use std::collections::BTreeMap;
+use std::{collections::BTreeMap, path::Path};
 
 use anyhow::{anyhow, Result};
 
 use crate::{
-    generate_android_bps, CrateCollection, Migratable, NameAndVersion, NameAndVersionMap,
-    NamedAndVersioned,
+    generate_android_bps, CrateCollection, GoogleMetadata, Migratable, NameAndVersion,
+    NameAndVersionMap, NamedAndVersioned,
 };
 
 #[derive(Debug)]
@@ -192,6 +192,20 @@ impl VersionMatch<CrateCollection> {
                 .get_mut(&nv)
                 .ok_or(anyhow!("Failed to get crate {} {}", nv.name(), nv.version()))?
                 .set_diff_output(output);
+        }
+        Ok(())
+    }
+
+    pub fn update_metadata(&self) -> Result<()> {
+        for pair in self.compatible_and_eligible() {
+            if pair.source.version() != pair.dest.version() {
+                let mut metadata = GoogleMetadata::try_from(
+                    pair.dest.staging_path().join(&Path::new("METADATA")).abs(),
+                )?;
+                metadata.set_date_to_today()?;
+                metadata.set_identifier(pair.dest)?;
+                metadata.write()?;
+            }
         }
         Ok(())
     }
