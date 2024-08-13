@@ -54,6 +54,7 @@ import {
 } from 'messaging/winscope_event';
 import {WinscopeEventListener} from 'messaging/winscope_event_listener';
 import {AdbConnection} from 'trace_collection/adb_connection';
+import {AdbFiles} from 'trace_collection/adb_files';
 import {ProxyConnection} from 'trace_collection/proxy_connection';
 import {iconDividerStyle} from 'viewers/components/styles/icon_divider.styles';
 import {ViewerInputMethodComponent} from 'viewers/components/viewer_input_method_component';
@@ -530,7 +531,7 @@ export class AppComponent implements WinscopeEventListener {
     progressListener.onOperationFinished(true);
   }
 
-  async onFilesCollected(files: File[]) {
+  async onFilesCollected(files: AdbFiles) {
     await this.mediator.onWinscopeEvent(new AppFilesCollected(files));
   }
 

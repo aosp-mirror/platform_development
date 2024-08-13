@@ -429,6 +429,7 @@ describe('RectsComponent', () => {
       expect(rect.id).toEqual(
         `test-id-${testIds ? testIds[index] : displayNumbers[index]}`,
       );
+      if (index > 0) expect(rect.transform.ty).toBeGreaterThan(0);
     });
   }
 

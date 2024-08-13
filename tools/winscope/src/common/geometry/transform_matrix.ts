@@ -112,6 +112,17 @@ export class TransformMatrix {
     return TransformMatrix.from(result);
   }
 
+  addTy(ty: number): TransformMatrix {
+    return new TransformMatrix(
+      this.dsdx,
+      this.dtdx,
+      this.tx,
+      this.dtdy,
+      this.dsdy,
+      this.ty + ty,
+    );
+  }
+
   private det(): number {
     return this.dsdx * this.dsdy - this.dtdx * this.dtdy;
   }
