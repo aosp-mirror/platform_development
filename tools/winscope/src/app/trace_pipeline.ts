@@ -15,6 +15,7 @@
  */
 
 import {FileUtils} from 'common/file_utils';
+import {OnProgressUpdateType} from 'common/function_utils';
 import {
   TimestampConverter,
   UTC_TIMEZONE_INFO,
@@ -117,8 +118,10 @@ export class TracePipeline {
     this.traces.deleteTrace(trace);
   }
 
-  async makeZipArchiveWithLoadedTraceFiles(): Promise<Blob> {
-    return this.loadedParsers.makeZipArchive();
+  async makeZipArchiveWithLoadedTraceFiles(
+    onProgressUpdate?: OnProgressUpdateType,
+  ): Promise<Blob> {
+    return this.loadedParsers.makeZipArchive(onProgressUpdate);
   }
 
   filterTracesWithoutVisualization() {
