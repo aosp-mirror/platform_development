@@ -700,6 +700,7 @@ fn generate_android_bp_package_header(
                 let license_name = format!("external_rust_crates_{}_license", package_name);
 
                 let mut package_module = BpModule::new("package".to_string());
+                package_module.props.set("default_team", "trendy_team_android_rust");
                 package_module.props.set("default_applicable_licenses", vec![license_name.clone()]);
                 modules.push(package_module);
 
