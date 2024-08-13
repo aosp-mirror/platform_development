@@ -15,7 +15,7 @@
 use std::env::current_dir;
 use std::fs::{create_dir_all, remove_dir_all};
 use std::path::{Path, PathBuf};
-use std::process::Command;
+use std::process::{Command, Output};
 use std::str::from_utf8;
 
 use anyhow::{anyhow, Context, Result};
@@ -87,19 +87,36 @@ pub fn ensure_exists_and_empty(dir: &impl AsRef<Path>) -> Result<()> {
     create_dir_all(&dir).context(format!("Failed to create {}", dir.display()))
 }
 
+pub trait RunQuiet {
+    fn run_quiet_and_expect_success(&mut self) -> Result<Output>;
+}
+impl RunQuiet for Command {
+    fn run_quiet_and_expect_success(&mut self) -> Result<Output> {
+        let output = self.output().context(format!("Failed to run {:?}", self))?;
+        if !output.status.success() {
+            return Err(anyhow!(
+                "Exit status {} for {:?}\nSTDOUT:\n{}\nSTDERR:\n{}",
+                output
+                    .status
+                    .code()
+                    .map(|code| { format!("{}", code) })
+                    .unwrap_or("(unknown)".to_string()),
+                self,
+                from_utf8(&output.stdout)?,
+                from_utf8(&output.stderr)?
+            ));
+        }
+        Ok(output)
+    }
+}
+
 // The copy_dir crate doesn't handle symlinks.
 pub fn copy_dir(src: &impl AsRef<Path>, dst: &impl AsRef<Path>) -> Result<()> {
-    let output =
-        Command::new("cp").arg("--archive").arg(src.as_ref()).arg(dst.as_ref()).output()?;
-    if !output.status.success() {
-        return Err(anyhow!(
-            "Failed to copy {} to {}\nstdout:\n{}\nstderr:\n{}",
-            src.as_ref().display(),
-            dst.as_ref().display(),
-            from_utf8(&output.stdout)?,
-            from_utf8(&output.stderr)?
-        ));
-    }
+    Command::new("cp")
+        .arg("--archive")
+        .arg(src.as_ref())
+        .arg(dst.as_ref())
+        .run_quiet_and_expect_success()?;
     Ok(())
 }
 
