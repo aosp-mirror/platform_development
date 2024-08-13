@@ -84,7 +84,6 @@ import {
           <adb-proxy
             *ngIf="isAdbProxy()"
             [state]="adbConnection.getState()"
-            [version]="${ProxyConnection.VERSION}"
             (retryConnection)="onRetryConnection($event)"></adb-proxy>
           <!-- <web-adb *ngIf="!isAdbProxy()"></web-adb> TODO: fix web adb workflow -->
         </div>
