@@ -24,6 +24,7 @@ import {MatSelectModule} from '@angular/material/select';
 import {BrowserAnimationsModule} from '@angular/platform-browser/animations';
 import {assertDefined} from 'common/assert_utils';
 import {InMemoryStorage} from 'common/in_memory_storage';
+import {TraceType} from 'trace/trace_type';
 import {TraceConfigComponent} from './trace_config_component';
 
 describe('TraceConfigComponent', () => {
@@ -227,6 +228,7 @@ describe('TraceConfigComponent', () => {
         name: 'layers_trace',
         enabled: true,
         available: true,
+        types: [TraceType.SURFACE_FLINGER],
         config: {
           enableConfigs: [
             {
@@ -249,12 +251,14 @@ describe('TraceConfigComponent', () => {
         name: 'window_trace',
         enabled: false,
         available: true,
+        types: [TraceType.WINDOW_MANAGER],
         config: undefined,
       },
       unavailable_trace: {
         name: 'unavailable_trace',
         enabled: false,
         available: false,
+        types: [TraceType.TEST_TRACE_STRING],
         config: undefined,
       },
     };

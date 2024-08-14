@@ -43,6 +43,7 @@ import {
 import {WinscopeEventListener} from 'messaging/winscope_event_listener';
 import {AdbConnection} from 'trace_collection/adb_connection';
 import {AdbDevice} from 'trace_collection/adb_device';
+import {AdbFiles, RequestedTraceTypes} from 'trace_collection/adb_files';
 import {ConnectionState} from 'trace_collection/connection_state';
 import {ProxyConnection} from 'trace_collection/proxy_connection';
 import {
@@ -83,7 +84,6 @@ import {
           <adb-proxy
             *ngIf="isAdbProxy()"
             [state]="adbConnection.getState()"
-            [version]="${ProxyConnection.VERSION}"
             (retryConnection)="onRetryConnection($event)"></adb-proxy>
           <!-- <web-adb *ngIf="!isAdbProxy()"></web-adb> TODO: fix web adb workflow -->
         </div>
@@ -418,6 +418,7 @@ export class CollectTracesComponent
   selectedTabIndex = 0;
   traceConfig: TraceConfigurationMap;
   dumpConfig: TraceConfigurationMap;
+  requestedTraceTypes: RequestedTraceTypes[] = [];
 
   private readonly storeKeyImeWarning = 'doNotShowImeWarningDialog';
   private readonly storeKeyLastDevice = 'adb.lastDevice';
@@ -435,7 +436,7 @@ export class CollectTracesComponent
   @Input() adbConnection: AdbConnection | undefined;
   @Input() storage: Storage | undefined;
 
-  @Output() readonly filesCollected = new EventEmitter<File[]>();
+  @Output() readonly filesCollected = new EventEmitter<AdbFiles>();
 
   constructor(
     @Inject(ChangeDetectorRef) private changeDetectorRef: ChangeDetectorRef,
@@ -628,6 +629,12 @@ export class CollectTracesComponent
 
   async dumpState() {
     const requestedDumps = this.getRequestedDumps();
+    const requestedTraceTypes = requestedDumps.map((req) => {
+      return {
+        name: this.dumpConfig[req].name,
+        types: this.dumpConfig[req].types,
+      };
+    });
     Analytics.Tracing.logCollectDumps(requestedDumps);
 
     if (requestedDumps.length === 0) {
@@ -647,9 +654,10 @@ export class CollectTracesComponent
     await connection.dumpState(device, requestedDumpsWithConfig);
     this.refreshDumps = false;
     if (connection.getState() === ConnectionState.DUMPING_STATE) {
-      this.filesCollected.emit(
-        await connection.fetchLastTracingSessionData(device),
-      );
+      this.filesCollected.emit({
+        requested: requestedTraceTypes,
+        collected: await connection.fetchLastTracingSessionData(device),
+      });
     }
   }
 
@@ -658,9 +666,10 @@ export class CollectTracesComponent
     const device = assertDefined(this.selectedDevice);
     await connection.endTrace(device);
     if (connection.getState() === ConnectionState.ENDING_TRACE) {
-      this.filesCollected.emit(
-        await connection.fetchLastTracingSessionData(device),
-      );
+      this.filesCollected.emit({
+        requested: this.requestedTraceTypes,
+        collected: await connection.fetchLastTracingSessionData(device),
+      });
     }
   }
 
@@ -714,13 +723,22 @@ export class CollectTracesComponent
     const files = await connection.fetchLastTracingSessionData(
       assertDefined(this.selectedDevice),
     );
-    this.filesCollected.emit(files);
+    this.filesCollected.emit({
+      requested: [],
+      collected: files,
+    });
     if (files.length === 0) {
       await connection.restartConnection();
     }
   }
 
   private async requestTraces(requestedTraces: string[]) {
+    this.requestedTraceTypes = requestedTraces.map((req) => {
+      return {
+        name: this.traceConfig[req].name,
+        types: this.traceConfig[req].types,
+      };
+    });
     Analytics.Tracing.logCollectTraces(requestedTraces);
 
     if (requestedTraces.length === 0) {
@@ -748,14 +766,16 @@ export class CollectTracesComponent
   private async onConnectionStateChange() {
     this.changeDetectorRef.detectChanges();
 
-    const state = this.adbConnection?.getState();
+    const connection = assertDefined(this.adbConnection);
+    const state = connection.getState();
     if (state === ConnectionState.TRACE_TIMEOUT) {
       UserNotifier.add(new ProxyTracingErrors(['tracing timed out'])).notify();
-      this.filesCollected.emit(
-        await this.adbConnection?.fetchLastTracingSessionData(
+      this.filesCollected.emit({
+        requested: this.requestedTraceTypes,
+        collected: await connection.fetchLastTracingSessionData(
           assertDefined(this.selectedDevice),
         ),
-      );
+      });
       return;
     }
 

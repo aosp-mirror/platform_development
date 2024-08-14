@@ -365,6 +365,7 @@ pub fn migration_health(
         }
         let diff_status = diff_cmd
             .args(IGNORED_FILES.iter().map(|ignored| format!("--exclude={}", ignored)))
+            .args(["-I", r#"default_team: "trendy_team_android_rust""#])
             .arg(pair.source.path().rel())
             .arg(pair.dest.staging_path().rel())
             .current_dir(repo_root)
@@ -420,6 +421,9 @@ pub fn regenerate<T: AsRef<str>>(
             source_version.version()
         ))?;
 
+        if !pair.dest.staging_path().abs().exists() {
+            return Err(anyhow!("Staged crate not found at {}", pair.dest.staging_path()));
+        }
         let android_crate_dir =
             repo_root.join("external/rust/android-crates-io/crates").join(pair.source.name());
         remove_dir_all(&android_crate_dir)?;
