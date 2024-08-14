@@ -63,7 +63,7 @@ def create_argument_parser() -> argparse.ArgumentParser:
     return parser
 
 # Keep in sync with ProxyConnection#VERSION in Winscope
-VERSION = '2.6.1'
+VERSION = '3.0.0'
 
 PERFETTO_TRACE_CONFIG_FILE = '/data/misc/perfetto-configs/winscope-proxy-trace.conf'
 PERFETTO_DUMP_CONFIG_FILE = '/data/misc/perfetto-configs/winscope-proxy-dump.conf'
