@@ -108,3 +108,41 @@ flag {
   bug: "336346880"
   is_fixed_read_only: false
 }
+
+flag {
+  name: "yet_another_test_flag"
+  namespace: "gantry"
+  description: "Another regular server-side flag moving on new path to gantry"
+  bug: "336346880"
+  is_fixed_read_only: false
+}
+
+flag {
+  name: "yet_another_mendel_gantry_disintegration_flag"
+  namespace: "core_experiments_team_internal"
+  description: "Another regular server-side flag moving on new path to gantry"
+  bug: "336346880"
+  is_fixed_read_only: false
+}
+
+flag {
+  name: "yet_another_test_bugfix_flag"
+  namespace: "gantry"
+  description: "Another regular server-side flag moving on new path to gantry"
+  bug: "336346880"
+  is_fixed_read_only: false
+  metadata {
+    purpose: PURPOSE_BUGFIX
+  }
+}
+
+flag {
+  name: "yet_another_mendel_gantry_disintegration_bugfix_flag"
+  namespace: "core_experiments_team_internal"
+  description: "Another regular server-side flag moving on new path to gantry"
+  bug: "336346880"
+  is_fixed_read_only: false
+  metadata {
+    purpose: PURPOSE_BUGFIX
+  }
+}

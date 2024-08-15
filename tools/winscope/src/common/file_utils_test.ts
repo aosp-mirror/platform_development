@@ -18,15 +18,9 @@ import {FileUtils} from './file_utils';
 
 describe('FileUtils', () => {
   it('extracts file extensions', () => {
-    expect(FileUtils.getFileExtension(new File([], 'winscope.zip'))).toEqual(
-      'zip',
-    );
-    expect(FileUtils.getFileExtension(new File([], 'win.scope.zip'))).toEqual(
-      'zip',
-    );
-    expect(FileUtils.getFileExtension(new File([], 'winscopezip'))).toEqual(
-      undefined,
-    );
+    expect(FileUtils.getFileExtension('winscope.zip')).toEqual('zip');
+    expect(FileUtils.getFileExtension('win.scope.zip')).toEqual('zip');
+    expect(FileUtils.getFileExtension('winscopezip')).toEqual(undefined);
   });
 
   it('removes directory from filename', () => {
@@ -52,6 +46,25 @@ describe('FileUtils', () => {
       new File([], 'test_file.txt'),
     ]);
     expect(zip).toBeInstanceOf(Blob);
+  });
+
+  it('creates zip archive with progress listener', async () => {
+    const progressSpy = jasmine.createSpy();
+    const zip = await FileUtils.createZipArchive(
+      [
+        new File([], 'test_file.txt'),
+        new File([], 'test_file_2.txt'),
+        new File([], 'test_file_3.txt'),
+        new File([], 'test_file_4.txt'),
+      ],
+      progressSpy,
+    );
+    expect(zip).toBeInstanceOf(Blob);
+    expect(progressSpy).toHaveBeenCalledTimes(4);
+    expect(progressSpy).toHaveBeenCalledWith(0.25);
+    expect(progressSpy).toHaveBeenCalledWith(0.5);
+    expect(progressSpy).toHaveBeenCalledWith(0.75);
+    expect(progressSpy).toHaveBeenCalledWith(1);
   });
 
   it('unzips archive', async () => {

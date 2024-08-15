@@ -22,8 +22,12 @@ export const nodeStyles =
     .node {
         position: relative;
         display: inline-flex;
-        padding: 2px 0;
+        padding: 1px 0;
         width: 100%;
+    }
+
+    .node:not(.selected):not(.full-opacity) {
+        opacity: 0.5;
     }
 
     .node.clickable {
@@ -63,9 +67,16 @@ export const nodeStyles =
 
 // FIXME: child-hover selector is not working.
 export const treeNodeDataViewStyles = `
-    .node + .children:not(.flattened) {
+    .node + .children:not(.flattened):not(.with-gutter) {
         margin-left: 12px;
         padding-left: 11px;
+    }
+
+    .node + .children:not(.flattened).with-gutter {
+        margin-left: 23px;
+    }
+
+    .node + .children:not(.flattened) {
         border-left: 1px solid var(--border-color);
     }
 
@@ -103,8 +114,16 @@ export const nodeInnerItemStyles = `
         display: inline-block;
     }
 
-    .toggle-tree-btn, .expand-tree-btn, .pin-node-btn {
+    .icon-wrapper-show-state {
+      position: absolute;
+    }
+
+    .toggle-tree-btn, .expand-tree-btn, .pin-node-btn, .toggle-rect-show-state-btn {
         padding: 0;
+    }
+
+    .toggle-rect-show-state-btn {
+        transform: scale(0.75);
     }
 
     .pin-node-btn {
@@ -120,7 +139,7 @@ export const nodeInnerItemStyles = `
     }
 
     .leaf-node-icon-wrapper {
-        padding-left: 6px;
+        margin-left: 6px;
         min-height: 24px;
         width: 24px;
     }
@@ -132,12 +151,13 @@ export const nodeInnerItemStyles = `
         vertical-align: middle;
         color: inherit;
         cursor: pointer;
+        height: 24px;
+        width: 24px;
+        line-height: 24px;
     }
 
     .expand-tree-btn {
         float: right;
-        padding-left: 0;
-        padding-right: 0;
     }
 
     .expand-tree-btn.modified {
@@ -152,5 +172,13 @@ export const nodeInnerItemStyles = `
     .expand-tree-btn.added,
     .expand-tree-btn.addedMove {
         background: ${Color.ADDED_ELEMENT_BACKGROUND};
+    }
+
+    .icon-wrapper-show-state {
+        opacity: 1;
+    }
+
+    :host:not(:hover):not(.selected) .icon-wrapper-show-state {
+        visibility: hidden;
     }
 `;

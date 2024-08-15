@@ -37,12 +37,15 @@ export class UiTreeUtils {
     );
   };
 
-  static isNotDefault: TreeNodeFilter = (node: TreeNode) => {
-    return (
-      node instanceof UiPropertyTreeNode &&
-      node.source !== PropertySource.DEFAULT
-    );
-  };
+  static makeIsNotDefaultFilter(allowList: string[]): TreeNodeFilter {
+    return (node: TreeNode) => {
+      return (
+        node instanceof UiPropertyTreeNode &&
+        (node.source !== PropertySource.DEFAULT ||
+          allowList.includes(node.name))
+      );
+    };
+  }
 
   static isNotCalculated: TreeNodeFilter = (node: TreeNode) => {
     return (
@@ -84,8 +87,12 @@ export class UiTreeUtils {
     };
   }
 
-  static makeDenyListFilter(denylist: string[]): TreeNodeFilter {
+  static makeDenyListFilterByName(denylist: string[]): TreeNodeFilter {
     return (node: TreeNode) => !denylist.includes(node.name);
+  }
+
+  static makeAllowListFilterById(allowlist: string[]): TreeNodeFilter {
+    return (node: TreeNode) => allowlist.includes(node.id);
   }
 
   static shouldGetProperties(node: UiHierarchyTreeNode): boolean {

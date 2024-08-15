@@ -101,9 +101,9 @@ describe('Cross-Tool Protocol', () => {
     await sendBoottimeTimestampToWinscope(TIMESTAMP_FROM_PERFETTO_BOOTTIME);
     await checkWinscopeTimestamp(TIMESTAMP_IN_FILES_MESSAGE_REALTIME);
 
-    await checkRemoteToolBoottimeTimestamp(TIMESTAMP_FROM_PERFETTO_BOOTTIME);
+    await checkRemoteToolBoottimeTimestamp('');
     await sendTimestampToRemoteTool(TIMESTAMP_IN_FILES_MESSAGE_REALTIME);
-    await checkRemoteToolBoottimeTimestamp(TIMESTAMP_FROM_PERFETTO_BOOTTIME);
+    await checkRemoteToolBoottimeTimestamp('');
   });
 
   async function openWinscopeTabFromRemoteTool() {
@@ -180,7 +180,7 @@ describe('Cross-Tool Protocol', () => {
       'Surface Flinger',
       'Transactions',
       'Transitions',
-      'Window Manager',
+      'Window Manager Dump',
     ];
 
     expect(actualTabParagraphs.sort()).toEqual(expectedTabParagraphs.sort());

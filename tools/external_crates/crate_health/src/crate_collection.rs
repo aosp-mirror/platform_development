@@ -40,19 +40,11 @@ impl CrateCollection {
     pub fn new<P: Into<PathBuf>>(repo_root: P) -> CrateCollection {
         CrateCollection { crates: BTreeMap::new(), repo_root: repo_root.into() }
     }
-    pub fn add_from(
-        &mut self,
-        path: &impl AsRef<Path>,
-        pseudo_crate: Option<&impl AsRef<Path>>,
-    ) -> Result<()> {
+    pub fn add_from(&mut self, path: &impl AsRef<Path>) -> Result<()> {
         for entry_or_err in WalkDir::new(self.repo_root.join(path)) {
             let entry = entry_or_err?;
             if entry.file_name() == "Cargo.toml" {
-                match Crate::from(
-                    &entry.path(),
-                    &self.repo_root.as_path(),
-                    pseudo_crate.map(|p| p.as_ref()),
-                ) {
+                match Crate::from(&entry.path(), &self.repo_root.as_path()) {
                     Ok(krate) => self.crates.insert_or_error(
                         NameAndVersion::new(krate.name().to_string(), krate.version().clone()),
                         krate,
@@ -69,12 +61,6 @@ impl CrateCollection {
     pub fn repo_root(&self) -> &Path {
         self.repo_root.as_path()
     }
-    pub fn print(&self) -> Result<()> {
-        for krate in self.crates.values() {
-            krate.print()?
-        }
-        Ok(())
-    }
     pub fn stage_crates(&self) -> Result<()> {
         for krate in self.crates.values() {
             krate.stage_crate()?
@@ -86,7 +72,13 @@ impl CrateCollection {
             self.crates
                 .get_mut(&nv)
                 .ok_or(anyhow!("Failed to get crate {} {}", nv.name(), nv.version()))?
-                .set_generate_android_bp_output(output.0, output.1);
+                .set_generate_android_bp_output(output);
+        }
+        Ok(())
+    }
+    pub fn diff_android_bps(&mut self) -> Result<()> {
+        for krate in self.crates.values_mut() {
+            krate.diff_android_bp()?;
         }
         Ok(())
     }

@@ -17,42 +17,52 @@
 import {
   Component,
   ElementRef,
+  EventEmitter,
   HostListener,
   Inject,
   Input,
   OnDestroy,
   OnInit,
+  Output,
   SimpleChange,
   SimpleChanges,
 } from '@angular/core';
 import {CanColor} from '@angular/material/core';
 import {MatIconRegistry} from '@angular/material/icon';
+import {MatSelectChange} from '@angular/material/select';
 import {DomSanitizer} from '@angular/platform-browser';
 import {assertDefined} from 'common/assert_utils';
+import {Distance} from 'common/geometry/distance';
 import {PersistentStore} from 'common/persistent_store';
 import {UrlUtils} from 'common/url_utils';
 import {Analytics} from 'logging/analytics';
-import {DisplayLayerStack} from 'trace/display_layer_stack';
+import {TRACE_INFO} from 'trace/trace_info';
+import {TraceType} from 'trace/trace_type';
 import {DisplayIdentifier} from 'viewers/common/display_identifier';
+import {UserOptions} from 'viewers/common/user_options';
 import {RectDblClickDetail, ViewerEvents} from 'viewers/common/viewer_events';
-import {UiRect} from 'viewers/components/rects/types2d';
+import {UiRect} from 'viewers/components/rects/ui_rect';
+import {iconDividerStyle} from 'viewers/components/styles/icon_divider.styles';
 import {multlineTooltip} from 'viewers/components/styles/tooltip.styles';
+import {viewerCardInnerStyle} from 'viewers/components/styles/viewer_card.styles';
 import {Canvas} from './canvas';
 import {Mapper3D} from './mapper3d';
-import {Distance2D, ShadingMode} from './types3d';
+import {ShadingMode} from './shading_mode';
 
 @Component({
   selector: 'rects-view',
   template: `
-    <div class="view-controls view-header">
-      <div class="title-zoom">
-        <h2 class="mat-title">{{ title.toUpperCase() }}</h2>
+    <div class="view-header">
+      <div class="title-section">
+        <collapsible-section-title
+          [title]="title"
+          (collapseButtonClicked)="collapseButtonClicked.emit()"></collapsible-section-title>
         <div class="right-btn-container">
           <button
             color="accent"
             class="shading-mode"
-            (mouseenter)="onInteractionStart(shadingModeButton)"
-            (mouseleave)="onInteractionEnd(shadingModeButton)"
+            (mouseenter)="onInteractionStart([shadingModeButton])"
+            (mouseleave)="onInteractionEnd([shadingModeButton])"
             mat-icon-button
             [matTooltip]="getShadingMode()"
             [disabled]="shadingModes.length < 2"
@@ -61,44 +71,16 @@ import {Distance2D, ShadingMode} from './types3d';
             <mat-icon *ngIf="mapper3d.isShadedByGradient()" svgIcon="cube_partial_shade"></mat-icon>
             <mat-icon *ngIf="mapper3d.isShadedByOpacity()" svgIcon="cube_full_shade"></mat-icon>
           </button>
-          <button
-            color="accent"
-            (mouseenter)="onInteractionStart(zoomInButton)"
-            (mouseleave)="onInteractionEnd(zoomInButton)"
-            mat-icon-button
-            (click)="onZoomInClick()" #zoomInButton>
-            <mat-icon aria-hidden="true"> zoom_in </mat-icon>
-          </button>
-          <button
-            color="accent"
-            (mouseenter)="onInteractionStart(zoomOutButton)"
-            (mouseleave)="onInteractionEnd(zoomOutButton)"
-            mat-icon-button
-            (click)="onZoomOutClick()" #zoomOutButton>
-            <mat-icon aria-hidden="true"> zoom_out </mat-icon>
-          </button>
-          <button
-            color="accent"
-            (mouseenter)="onInteractionStart(resetZoomButton)"
-            (mouseleave)="onInteractionEnd(resetZoomButton)"
-            mat-icon-button
-            matTooltip="Restore camera settings"
-            (click)="resetCamera()" #resetZoomButton>
-            <mat-icon aria-hidden="true"> restore </mat-icon>
-          </button>
-        </div>
-      </div>
-      <div class="top-view-controls">
-        <mat-checkbox
-          color="primary"
-          class="show-only-visible"
-          [checked]="getShowOnlyVisibleMode()"
-          (change)="onShowOnlyVisibleModeChange($event.checked!)"
-          >Only visible
-        </mat-checkbox>
-        <div class="slider-view-controls">
+
+          <div class="icon-divider"></div>
+
           <div class="slider-container">
-            <p class="slider-label mat-body-1">Rotation</p>
+            <mat-icon
+              color="accent"
+              matTooltip="Rotation"
+              class="slider-icon"
+              (mouseenter)="onInteractionStart([rotationSlider, rotationSliderIcon])"
+              (mouseleave)="onInteractionEnd([rotationSlider, rotationSliderIcon])" #rotationSliderIcon> rotate_90_degrees_ccw </mat-icon>
             <mat-slider
               class="slider-rotation"
               step="0.02"
@@ -109,11 +91,14 @@ import {Distance2D, ShadingMode} from './types3d';
               (input)="onRotationSliderChange($event.value)"
               (focus)="$event.target.blur()"
               color="accent"
-              (mousedown)="onInteractionStart(rotationSlider)"
-              (mouseup)="onInteractionEnd(rotationSlider)" #rotationSlider></mat-slider>
-          </div>
-          <div class="slider-container">
-            <p class="slider-label mat-body-1">Spacing</p>
+              (mousedown)="onInteractionStart([rotationSlider, rotationSliderIcon])"
+              (mouseup)="onInteractionEnd([rotationSlider, rotationSliderIcon])" #rotationSlider></mat-slider>
+            <mat-icon
+              color="accent"
+              matTooltip="Spacing"
+              class="slider-icon material-symbols-outlined"
+              (mouseenter)="onInteractionStart([spacingSlider, spacingSliderIcon])"
+              (mouseleave)="onInteractionEnd([spacingSlider, spacingSliderIcon])" #spacingSliderIcon> format_letter_spacing </mat-icon>
             <mat-slider
               class="slider-spacing"
               step="0.02"
@@ -124,13 +109,85 @@ import {Distance2D, ShadingMode} from './types3d';
               (input)="onSeparationSliderChange($event.value)"
               (focus)="$event.target.blur()"
               color="accent"
-              (mousedown)="onInteractionStart(spacingSlider)"
-              (mouseup)="onInteractionEnd(spacingSlider)" #spacingSlider></mat-slider>
+              (mousedown)="onInteractionStart([spacingSlider, spacingSliderIcon])"
+              (mouseup)="onInteractionEnd([spacingSlider, spacingSliderIcon])" #spacingSlider></mat-slider>
           </div>
+
+          <div class="icon-divider"></div>
+
+          <button
+            color="accent"
+            (mouseenter)="onInteractionStart([zoomInButton])"
+            (mouseleave)="onInteractionEnd([zoomInButton])"
+            mat-icon-button
+            (click)="onZoomInClick()" #zoomInButton>
+            <mat-icon aria-hidden="true"> zoom_in </mat-icon>
+          </button>
+          <button
+            color="accent"
+            (mouseenter)="onInteractionStart([zoomOutButton])"
+            (mouseleave)="onInteractionEnd([zoomOutButton])"
+            mat-icon-button
+            (click)="onZoomOutClick()" #zoomOutButton>
+            <mat-icon aria-hidden="true"> zoom_out </mat-icon>
+          </button>
+
+          <div class="icon-divider"></div>
+
+          <button
+            color="accent"
+            (mouseenter)="onInteractionStart([resetZoomButton])"
+            (mouseleave)="onInteractionEnd([resetZoomButton])"
+            mat-icon-button
+            matTooltip="Restore camera settings"
+            (click)="resetCamera()" #resetZoomButton>
+            <mat-icon aria-hidden="true"> restore </mat-icon>
+          </button>
+        </div>
+      </div>
+      <div class="filter-controls view-controls">
+        <user-options
+          class="block-filter-controls"
+          [userOptions]="userOptions"
+          [eventType]="ViewerEvents.RectsUserOptionsChange"
+          [traceType]="dependencies[0]"
+          [logCallback]="Analytics.Navigation.logRectSettingsChanged">
+        </user-options>
+
+        <div class="displays-section">
+          <span class="mat-body-1"> {{groupLabel}}: </span>
+          <mat-form-field appearance="none" class="displays-select">
+            <mat-select
+              #displaySelect
+              disableOptionCentering
+              (selectionChange)="onDisplaySelectChange($event)"
+              [value]="currentDisplays"
+              [disabled]="internalDisplays.length === 1"
+              multiple>
+              <mat-select-trigger>
+                <span>
+                  {{ getSelectTriggerValue() }}
+                </span>
+              </mat-select-trigger>
+              <mat-option
+                *ngFor="let display of internalDisplays"
+                [value]="display">
+                <div class="option-label">
+                  <button
+                    mat-flat-button
+                    class="option-only-button"
+                    (click)="onOnlyButtonClick($event, display)"> Only </button>
+                  <span class="option-label-text"> {{ display.name }} </span>
+                </div>
+              </mat-option>
+            </mat-select>
+          </mat-form-field>
         </div>
       </div>
     </div>
     <mat-divider></mat-divider>
+    <span class="mat-body-1 placeholder-text" *ngIf="rects.length===0"> No rects found. </span>
+    <span class="mat-body-1 placeholder-text" *ngIf="currentDisplays.length===0"> No displays selected. </span>
     <div class="rects-content">
       <div class="canvas-container">
         <canvas
@@ -144,74 +201,66 @@ import {Distance2D, ShadingMode} from './types3d';
           (dblclick)="onMiniRectDblClick($event)"
           oncontextmenu="return false"></canvas>
       </div>
-
-      <mat-tab-group
-        class="grouping-tabs"
-        mat-align-tabs="start"
-        *ngIf="internalDisplays.length > 0"
-        (selectedTabChange)="blurTab()"
-        dynamicHeight>
-        <mat-tab [label]="groupLabel">
-          <div class="display-button-container display-name-buttons">
-            <button
-              #tooltip="matTooltip"
-              *ngFor="let display of internalDisplays"
-              [color]="getDisplayButtonColor(display.groupId)"
-              [matTooltip]="getDisplayButtonTooltip(display, displayButtonText)"
-              [matTooltipDisabled]="shouldDisableTooltip(displayButtonText)"
-              matTooltipClass="multline-tooltip"
-              (mouseenter)="shouldDisableTooltip(displayButtonText) ? tooltip.disabled = true : tooltip.disabled = false"
-              (mouseleave)="tooltip.disabled = true"
-              mat-raised-button
-              (click)="onDisplayIdChange(display)">
-              <span #displayButtonText> {{ display.name }} </span>
-            </button>
-          </div>
-        </mat-tab>
-      </mat-tab-group>
     </div>
   `,
   styles: [
     `
-      .mat-title {
-        padding-top: 16px;
-      }
-      .title-zoom {
-        display: flex;
-        flex-direction: row;
-        justify-content: space-between;
-      }
-      .view-controls {
+      .view-header {
         display: flex;
         flex-direction: column;
       }
-      .right-btn-container {
+      .mat-title {
         padding-top: 8px;
       }
-      .top-view-controls,
-      .slider-view-controls {
+      .right-btn-container {
+        display: flex;
+        align-items: center;
+      }
+      .right-btn-container .mat-slider-horizontal {
+        min-width: 64px !important;
+      }
+      .icon-divider {
+        height: 50%;
+      }
+      .slider-container {
+        padding: 0 5px;
+        display: flex;
+        align-items: center;
+      }
+      .slider-icon {
+        min-width: 18px;
+        width: 18px;
+        height: 18px;
+        line-height: 18px;
+        font-size: 18px;
+      }
+      .filter-controls {
+        justify-content: space-between;
+      }
+      .block-filter-controls {
         display: flex;
         flex-direction: row;
         align-items: baseline;
       }
-      .top-view-controls {
-        justify-content: space-between;
+      .displays-section {
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        width: fit-content;
+        flex-wrap: nowrap;
       }
-      .slider-view-controls {
-        column-gap: 10px;
-      }
-      .slider-container {
-        position: relative;
-      }
-      .slider-label {
-        position: absolute;
-        top: 0;
+      .displays-select {
+        font-size: 14px;
+        background-color: var(--disabled-color);
+        border-radius: 4px;
+        height: 24px;
+        margin-left: 5px;
       }
       .rects-content {
         height: 100%;
-        width: 100%;
         display: flex;
         flex-direction: column;
+        padding: 0px 12px;
       }
       .canvas-container {
         height: 100%;
@@ -234,27 +283,6 @@ import {Distance2D, ShadingMode} from './types3d';
         height: 100%;
         pointer-events: none;
       }
-      .grouping-tabs {
-        max-height: 160px;
-      }
-      .display-button-container {
-        display: flex;
-        flex-direction: row;
-        flex-wrap: wrap;
-        column-gap: 10px;
-        padding-bottom: 5px;
-        max-height: 108px;
-        overflow-y: auto;
-      }
-      .display-button-container button {
-        font-size: 12px;
-        line-height: normal;
-        height: 28px;
-        margin-top: 5px;
-        max-width: 200px;
-        overflow-x: hidden;
-        text-overflow: ellipsis;
-      }
       .mini-rects-canvas {
         cursor: pointer;
         width: 30%;
@@ -264,11 +292,38 @@ import {Distance2D, ShadingMode} from './types3d';
         position: absolute;
         z-index: 1000;
       }
+
+      .option-label {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+      }
+
+      .option-only-button {
+        padding: 0 10px;
+        border-radius: 10px;
+        background-color: var(--disabled-color) !important;
+        color: var(--default-text-color);
+        min-width: fit-content;
+        height: 18px;
+        align-items: center;
+        display: flex;
+      }
+
+      .option-label-text {
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
     `,
     multlineTooltip,
+    iconDividerStyle,
+    viewerCardInnerStyle,
   ],
 })
 export class RectsComponent implements OnInit, OnDestroy {
+  Analytics = Analytics;
+  ViewerEvents = ViewerEvents;
+
   @Input() title = 'title';
   @Input() zoomFactor = 1;
   @Input() store?: PersistentStore;
@@ -279,15 +334,18 @@ export class RectsComponent implements OnInit, OnDestroy {
   @Input() groupLabel = 'Displays';
   @Input() isStackBased = false;
   @Input() shadingModes: ShadingMode[] = [ShadingMode.GRADIENT];
+  @Input() userOptions: UserOptions = {};
+  @Input() dependencies: TraceType[] = [];
+
+  @Output() collapseButtonClicked = new EventEmitter();
 
   private internalRects: UiRect[] = [];
   private internalMiniRects?: UiRect[];
-  private storeKeyShowOnlyVisibleState = '';
   private storeKeyZSpacingFactor = '';
   private storeKeyShadingMode = '';
   private internalDisplays: DisplayIdentifier[] = [];
   private internalHighlightedItem = '';
-  private currentDisplay: DisplayIdentifier | undefined;
+  private currentDisplays: DisplayIdentifier[] = [];
   private mapper3d: Mapper3D;
   private largeRectsCanvas?: Canvas;
   private miniRectsCanvas?: Canvas;
@@ -351,10 +409,10 @@ export class RectsComponent implements OnInit, OnDestroy {
       this.updateControlsFromStore();
     }
 
-    this.currentDisplay =
+    this.currentDisplays =
       this.internalDisplays.length > 0
-        ? this.getFirstDisplayWithRectsOrFirstDisplay(this.internalDisplays)
-        : undefined;
+        ? [this.getActiveDisplay(this.internalDisplays)]
+        : [];
     this.mapper3d.increaseZoomFactor(this.zoomFactor - 1);
     this.drawLargeRectsAndLabels();
 
@@ -367,6 +425,7 @@ export class RectsComponent implements OnInit, OnDestroy {
       isDarkMode,
     );
     if (this.miniRects && this.miniRects.length > 0) {
+      this.internalMiniRects = this.miniRects;
       this.drawMiniRects();
     }
   }
@@ -387,8 +446,8 @@ export class RectsComponent implements OnInit, OnDestroy {
     let displayChange = false;
     if (simpleChanges['displays']) {
       const curr: DisplayIdentifier[] = simpleChanges['displays'].currentValue;
-      const prev: DisplayIdentifier[] | null =
-        simpleChanges['displays'].previousValue;
+      const prev: DisplayIdentifier[] | undefined =
+        simpleChanges['displays'].previousValue ?? undefined;
       displayChange =
         curr.length > 0 &&
         !curr.every((d, index) => d.displayId === prev?.at(index)?.displayId);
@@ -415,53 +474,43 @@ export class RectsComponent implements OnInit, OnDestroy {
   onDisplaysChange(change: SimpleChange) {
     const displays = change.currentValue;
     this.internalDisplays = displays;
+    const activeDisplay = this.getActiveDisplay(this.internalDisplays);
 
     if (displays.length === 0) {
       return;
     }
 
     if (change.firstChange) {
-      this.updateCurrentDisplay(
-        this.getFirstDisplayWithRectsOrFirstDisplay(this.internalDisplays),
-      );
+      this.updateCurrentDisplays([activeDisplay]);
       return;
     }
 
-    const curr = this.internalDisplays.find(
-      (display) => display.displayId === this.currentDisplay?.displayId,
+    const curr = this.internalDisplays.filter((display) =>
+      this.currentDisplays.some((curr) => curr.displayId === display.displayId),
     );
     if (curr) {
-      this.updateCurrentDisplay(curr);
+      this.updateCurrentDisplays(curr);
       return;
     }
 
-    const displaysWithCurrentGroupId = this.internalDisplays.filter(
-      (display) => display.groupId === this.mapper3d.getCurrentGroupId(),
+    const currGroupIds = this.mapper3d.getCurrentGroupIds();
+    const displaysWithCurrentGroupId = this.internalDisplays.filter((display) =>
+      currGroupIds.some((curr) => curr === display.groupId),
     );
     if (displaysWithCurrentGroupId.length === 0) {
-      this.updateCurrentDisplay(
-        this.getFirstDisplayWithRectsOrFirstDisplay(this.internalDisplays),
-      );
+      this.updateCurrentDisplays([activeDisplay]);
       return;
     }
 
-    this.updateCurrentDisplay(
-      this.getFirstDisplayWithRectsOrFirstDisplay(displaysWithCurrentGroupId),
-    );
+    this.updateCurrentDisplays([
+      this.getActiveDisplay(displaysWithCurrentGroupId),
+    ]);
     return;
   }
 
   updateControlsFromStore() {
-    this.storeKeyShowOnlyVisibleState = `rectsView.${this.title}.showOnlyVisibleState`;
     this.storeKeyZSpacingFactor = `rectsView.${this.title}.zSpacingFactor`;
     this.storeKeyShadingMode = `rectsView.${this.title}.shadingMode`;
-
-    if (
-      assertDefined(this.store).get(this.storeKeyShowOnlyVisibleState) ===
-      'true'
-    ) {
-      this.mapper3d.setShowOnlyVisibleMode(true);
-    }
 
     const storedZSpacingFactor = assertDefined(this.store).get(
       this.storeKeyZSpacingFactor,
@@ -482,7 +531,11 @@ export class RectsComponent implements OnInit, OnDestroy {
   }
 
   onSeparationSliderChange(factor: number) {
-    Analytics.Navigation.logRectSettingsChanged('z spacing', factor);
+    Analytics.Navigation.logRectSettingsChanged(
+      'z spacing',
+      factor,
+      TRACE_INFO[this.dependencies[0]].name,
+    );
     this.store?.add(this.storeKeyZSpacingFactor, `${factor}`);
     this.mapper3d.setZSpacingFactor(factor);
     this.drawLargeRectsAndLabels();
@@ -518,7 +571,7 @@ export class RectsComponent implements OnInit, OnDestroy {
   }
 
   onMouseMove(event: MouseEvent) {
-    const distance = new Distance2D(event.movementX, event.movementY);
+    const distance = new Distance(event.movementX, event.movementY);
     this.mapper3d.addPanScreenDistance(distance);
     this.drawLargeRectsAndLabels();
   }
@@ -538,44 +591,19 @@ export class RectsComponent implements OnInit, OnDestroy {
     this.doZoomOut();
   }
 
-  onShowOnlyVisibleModeChange(enabled: boolean) {
-    Analytics.Navigation.logRectSettingsChanged('only visible', enabled);
-    this.store?.add(this.storeKeyShowOnlyVisibleState, `${enabled}`);
-    this.mapper3d.setShowOnlyVisibleMode(enabled);
-    this.drawLargeRectsAndLabels();
+  onDisplaySelectChange(event: MatSelectChange) {
+    const selectedDisplays = event.value;
+    this.updateCurrentDisplays(selectedDisplays);
   }
 
-  onDisplayIdChange(display: DisplayIdentifier) {
-    this.updateCurrentDisplay(display);
-    const event = new CustomEvent(ViewerEvents.RectGroupIdChange, {
-      bubbles: true,
-      detail: {groupId: display.groupId},
-    });
-    this.elementRef.nativeElement.dispatchEvent(event);
+  getSelectTriggerValue(): string {
+    return this.currentDisplays.map((d) => d.name).join(', ');
   }
 
-  getDisplayButtonColor(groupId: number) {
-    if (!this.currentDisplay) return 'primary';
-    return this.currentDisplay.groupId === groupId ? 'primary' : 'secondary';
-  }
-
-  shouldDisableTooltip(buttonText: HTMLElement): boolean {
-    return !this.isStackBased && buttonText.offsetWidth < 200;
-  }
-
-  getDisplayButtonTooltip(
-    display: DisplayIdentifier,
-    buttonText: HTMLElement,
-  ): string {
-    const hasLongDisplayName = buttonText.offsetWidth >= 200;
-    const displayName = hasLongDisplayName ? display.name + '\n' : '';
-    if (display.groupId === DisplayLayerStack.INVALID_LAYER_STACK) {
-      return (
-        displayName +
-        (this.isStackBased ? 'Invalid layer stack - display off' : '')
-      );
-    }
-    return displayName + (this.isStackBased ? 'display on' : '');
+  onOnlyButtonClick(event: MouseEvent, selected: DisplayIdentifier) {
+    event.preventDefault();
+    event.stopPropagation();
+    this.updateCurrentDisplays([selected]);
   }
 
   onRectClick(event: MouseEvent) {
@@ -611,10 +639,6 @@ export class RectsComponent implements OnInit, OnDestroy {
     );
   }
 
-  getShowOnlyVisibleMode(): boolean {
-    return this.mapper3d.getShowOnlyVisibleMode();
-  }
-
   getZSpacingFactor(): number {
     return this.mapper3d.getZSpacingFactor();
   }
@@ -626,34 +650,39 @@ export class RectsComponent implements OnInit, OnDestroy {
   onShadingModeButtonClicked() {
     this.mapper3d.updateShadingMode();
     const newMode = this.mapper3d.getShadingMode();
-    Analytics.Navigation.logRectSettingsChanged('shading mode', newMode);
+    Analytics.Navigation.logRectSettingsChanged(
+      'shading mode',
+      newMode,
+      TRACE_INFO[this.dependencies[0]].name,
+    );
     this.store?.add(this.storeKeyShadingMode, newMode);
     this.drawLargeRectsAndLabels();
   }
 
-  onInteractionStart(button: CanColor) {
-    button.color = 'primary';
+  onInteractionStart(components: CanColor[]) {
+    components.forEach((c) => (c.color = 'primary'));
   }
 
-  onInteractionEnd(button: CanColor) {
-    button.color = 'accent';
+  onInteractionEnd(components: CanColor[]) {
+    components.forEach((c) => (c.color = 'accent'));
   }
 
-  private getFirstDisplayWithRectsOrFirstDisplay(
-    displays: DisplayIdentifier[],
-  ): DisplayIdentifier {
+  private getActiveDisplay(displays: DisplayIdentifier[]): DisplayIdentifier {
+    const displaysWithRects = displays.filter((display) =>
+      this.internalRects.some(
+        (rect) => !rect.isDisplay && rect.groupId === display.groupId,
+      ),
+    );
     return (
-      displays.find((display) =>
-        this.internalRects.some(
-          (rect) => !rect.isDisplay && rect.groupId === display.groupId,
-        ),
-      ) ?? assertDefined(displays.at(0))
+      displaysWithRects.find((display) => display.isActive) ??
+      displaysWithRects.at(0) ?? // fallback if no active displays
+      displays[0]
     );
   }
 
-  private updateCurrentDisplay(display: DisplayIdentifier) {
-    this.currentDisplay = display;
-    this.mapper3d.setCurrentGroupId(display.groupId);
+  private updateCurrentDisplays(displays: DisplayIdentifier[]) {
+    this.currentDisplays = displays;
+    this.mapper3d.setCurrentGroupIds(displays.map((d) => d.groupId));
     this.drawLargeRectsAndLabels();
   }
 
@@ -683,7 +712,7 @@ export class RectsComponent implements OnInit, OnDestroy {
   private drawLargeRectsAndLabels() {
     // TODO(b/258593034): Re-create scene only when input rects change. With the other input events
     // (rotation, spacing, ...) we can just update the camera and/or update the mesh positions.
-    // We'd probably need to get rid of the intermediate layer (Scene3D, Rect3D, ... types) and
+    // We'd probably need to get rid of the intermediate layer (Scene, Rect3D, ... types) and
     // work directly with three.js's meshes.
     this.mapper3d.setRects(this.internalRects);
     this.largeRectsCanvas?.draw(this.mapper3d.computeScene());
@@ -692,16 +721,16 @@ export class RectsComponent implements OnInit, OnDestroy {
   private drawMiniRects() {
     // TODO(b/258593034): Re-create scene only when input rects change. With the other input events
     // (rotation, spacing, ...) we can just update the camera and/or update the mesh positions.
-    // We'd probably need to get rid of the intermediate layer (Scene3D, Rect3D, ... types) and
+    // We'd probably need to get rid of the intermediate layer (Scene, Rect3D, ... types) and
     // work directly with three.js's meshes.
     if (this.internalMiniRects) {
       const largeRectShadingMode = this.mapper3d.getShadingMode();
-      const largeRectGroupId = this.mapper3d.getCurrentGroupId();
+      const largeRectGroupIds = this.mapper3d.getCurrentGroupIds();
       const largeRectZSpacing = this.mapper3d.getZSpacingFactor();
       const largeRectCameraRotation = this.mapper3d.getCameraRotationFactor();
 
       this.mapper3d.setShadingMode(ShadingMode.GRADIENT);
-      this.mapper3d.setCurrentGroupId(this.internalMiniRects[0]?.groupId);
+      this.mapper3d.setCurrentGroupIds([this.internalMiniRects[0]?.groupId]);
       this.mapper3d.resetToOrthogonalState();
 
       this.mapper3d.setRects(this.internalMiniRects);
@@ -716,7 +745,7 @@ export class RectsComponent implements OnInit, OnDestroy {
       }
 
       this.mapper3d.setShadingMode(largeRectShadingMode);
-      this.mapper3d.setCurrentGroupId(largeRectGroupId);
+      this.mapper3d.setCurrentGroupIds(largeRectGroupIds);
       this.mapper3d.setZSpacingFactor(largeRectZSpacing);
       this.mapper3d.setCameraRotationFactor(largeRectCameraRotation);
     }

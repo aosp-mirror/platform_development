@@ -23,7 +23,9 @@ import {MatIconModule} from '@angular/material/icon';
 import {MatTooltipModule} from '@angular/material/tooltip';
 import {assertDefined} from 'common/assert_utils';
 import {HierarchyTreeBuilder} from 'test/unit/hierarchy_tree_builder';
+import {RectShowState} from 'viewers/common/rect_show_state';
 import {UiHierarchyTreeNode} from 'viewers/common/ui_hierarchy_tree_node';
+import {ViewerEvents} from 'viewers/common/viewer_events';
 import {HierarchyTreeNodeDataViewComponent} from './hierarchy_tree_node_data_view_component';
 import {PropertyTreeNodeDataViewComponent} from './property_tree_node_data_view_component';
 import {TreeComponent} from './tree_component';
@@ -152,6 +154,48 @@ describe('TreeComponent', () => {
     expect(treeComponent.isExpanded()).toBeFalse();
   });
 
+  it('renders show state button if applicable', () => {
+    expect(htmlElement.querySelector('.toggle-rect-show-state-btn')).toBeNull();
+
+    component.rectIdToShowState = new Map([
+      [component.tree.id, RectShowState.HIDE],
+    ]);
+    fixture.detectChanges();
+    expect(
+      assertDefined(htmlElement.querySelector('.toggle-rect-show-state-btn'))
+        .textContent,
+    ).toContain('visibility_off');
+
+    component.rectIdToShowState.set(component.tree.id, RectShowState.SHOW);
+    fixture.detectChanges();
+    expect(
+      assertDefined(htmlElement.querySelector('.toggle-rect-show-state-btn'))
+        .textContent,
+    ).toContain('visibility');
+  });
+
+  it('handles show state button click', () => {
+    component.rectIdToShowState = new Map([
+      [component.tree.id, RectShowState.HIDE],
+    ]);
+    fixture.detectChanges();
+    const button = assertDefined(
+      htmlElement.querySelector('.toggle-rect-show-state-btn'),
+    ) as HTMLElement;
+    expect(button.textContent).toContain('visibility_off');
+
+    let id: string | undefined;
+    let state: RectShowState | undefined;
+    htmlElement.addEventListener(ViewerEvents.RectShowStateChange, (event) => {
+      id = (event as CustomEvent).detail.rectId;
+      state = (event as CustomEvent).detail.state;
+    });
+    button.click();
+    fixture.detectChanges();
+    expect(id).toEqual(component.tree.id);
+    expect(state).toEqual(RectShowState.SHOW);
+  });
+
   function makeTree() {
     const children = [];
     for (let i = 0; i < 80; i++) {
@@ -176,7 +220,8 @@ describe('TreeComponent', () => {
         [isPinned]="false"
         [highlightedItem]="highlightedItem"
         [useStoredExpandedState]="useStoredExpandedState"
-        [itemsClickable]="true"></tree-view>
+        [itemsClickable]="true"
+        [rectIdToShowState]="rectIdToShowState"></tree-view>
     </div>
     `,
     styles: [
@@ -193,6 +238,7 @@ describe('TreeComponent', () => {
     highlightedItem = '';
     isFlattened = false;
     useStoredExpandedState = false;
+    rectIdToShowState: Map<string, RectShowState> | undefined;
 
     constructor() {
       this.tree = makeTree();

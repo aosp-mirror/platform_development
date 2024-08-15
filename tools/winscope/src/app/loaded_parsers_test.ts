@@ -23,12 +23,11 @@ import {FileAndParser} from 'parsers/file_and_parser';
 import {FileAndParsers} from 'parsers/file_and_parsers';
 import {ParserBuilder} from 'test/unit/parser_builder';
 import {TimestampConverterUtils} from 'test/unit/timestamp_converter_utils';
+import {UserNotifierChecker} from 'test/unit/user_notifier_checker';
 import {Parser} from 'trace/parser';
 import {TraceFile} from 'trace/trace_file';
 import {TraceType} from 'trace/trace_type';
 import {LoadedParsers} from './loaded_parsers';
-
-//TODO: filter out legacy parsers with same file? Or what if we download archive with same file?
 
 describe('LoadedParsers', () => {
   const realZeroTimestamp = TimestampConverterUtils.makeRealTimestamp(0n);
@@ -56,7 +55,6 @@ describe('LoadedParsers', () => {
   ];
 
   const filename = 'filename';
-  const file = new TraceFile(new File([], filename));
 
   const parserSf0 = new ParserBuilder<object>()
     .setType(TraceType.SURFACE_FLINGER)
@@ -125,13 +123,28 @@ describe('LoadedParsers', () => {
     .setTimestamps(timestamps)
     .setDescriptors([filename])
     .build();
+  const parserViewCapture0 = new ParserBuilder<object>()
+    .setType(TraceType.VIEW_CAPTURE)
+    .setEntries([])
+    .setDescriptors([filename])
+    .build();
+  const parserViewCapture1 = new ParserBuilder<object>()
+    .setType(TraceType.VIEW_CAPTURE)
+    .setEntries([])
+    .setDescriptors([filename])
+    .build();
 
   let loadedParsers: LoadedParsers;
-  let warnings: UserWarning[] = [];
+  let userNotifierChecker: UserNotifierChecker;
 
-  beforeEach(async () => {
+  beforeAll(() => {
+    userNotifierChecker = new UserNotifierChecker();
+  });
+
+  beforeEach(() => {
     loadedParsers = new LoadedParsers();
     expect(loadedParsers.getParsers().length).toEqual(0);
+    userNotifierChecker.reset();
   });
 
   it('can load a single legacy parser', () => {
@@ -447,6 +460,19 @@ describe('LoadedParsers', () => {
     expectLoadResult([], []);
   });
 
+  it('can remove parsers but keep for download', async () => {
+    loadParsers([parserSf0, parserWm0], []);
+    expectLoadResult([parserSf0, parserWm0], []);
+
+    loadedParsers.remove(parserWm0, true);
+    expectLoadResult([parserSf0], []);
+
+    await expectDownloadResult([
+      'sf/filename.winscope',
+      'wm/filename.winscope',
+    ]);
+  });
+
   it('can be cleared', () => {
     loadedParsers.clear();
     loadParsers([parserSf0], [parserWm0]);
@@ -460,57 +486,92 @@ describe('LoadedParsers', () => {
   });
 
   it('can make zip archive of traces with appropriate directories and extensions', async () => {
-    loadParsers([parserSf0, parserScreenRecording], [parserWmTransitions]);
-    expectLoadResult(
-      [parserSf0, parserScreenRecording, parserWmTransitions],
-      [],
-    );
+    const fileDuplicated = new File([], filename);
 
-    const fileWithExt = new TraceFile(new File([], filename + '.pb'));
-    loadParsers([parserWm0], [], fileWithExt);
-    expectLoadResult(
-      [parserSf0, parserScreenRecording, parserWmTransitions, parserWm0],
-      [],
-    );
+    const legacyFiles = [
+      // ScreenRecording
+      new File([], filename),
 
-    const zipArchive = await loadedParsers.makeZipArchive();
-    const zipFile = new File([zipArchive], 'winscope.zip');
-    const actualArchiveContents = (await FileUtils.unzipFile(zipFile))
-      .map((file) => file.name)
-      .sort();
+      // ViewCapture
+      // Multiple parsers point to the same viewcapture file,
+      // but we expect to see only one in the output archive (deduplicated)
+      fileDuplicated,
+      fileDuplicated,
 
-    const expectedArchiveContents = [
-      'filename.mp4', // adds .mp4
-      'filename.perfetto-trace', // adds .perfetto-trace
-      'sf/filename.winscope', // adds .winscope
-      'wm/filename.pb', // does not add/replace .pb
+      // WM
+      new File([], filename + '.pb'),
+
+      // WM
+      // Same filename as above.
+      // Expect this file to be automatically renamed to avoid clashes/overwrites
+      new File([], filename + '.pb'),
     ];
-    expect(actualArchiveContents).toEqual(expectedArchiveContents);
+
+    loadParsers(
+      [
+        parserScreenRecording,
+        parserViewCapture0,
+        parserViewCapture1,
+        parserWm0,
+        parserWm1,
+      ],
+      [parserSf0, parserWmTransitions],
+      legacyFiles,
+    );
+    expectLoadResult(
+      [
+        parserScreenRecording,
+        parserViewCapture0,
+        parserViewCapture1,
+        parserWm0,
+        parserWm1,
+        parserSf0,
+        parserWmTransitions,
+      ],
+      [],
+    );
+
+    await expectDownloadResult([
+      'filename.mp4',
+      'filename.perfetto-trace',
+      'vc/filename.winscope',
+      'wm/filename (1).pb',
+      'wm/filename.pb',
+    ]);
+  });
+
+  it('makes zip archive with progress listener', async () => {
+    loadParsers([parserSf0], [parserWm0]);
+    expectLoadResult([parserSf0, parserWm0], []);
+
+    const progressSpy = jasmine.createSpy();
+    await loadedParsers.makeZipArchive(progressSpy);
+
+    expect(progressSpy).toHaveBeenCalledTimes(5);
+    expect(progressSpy).toHaveBeenCalledWith(0);
+    expect(progressSpy).toHaveBeenCalledWith(0.25);
+    expect(progressSpy).toHaveBeenCalledWith(0.5);
+    expect(progressSpy).toHaveBeenCalledWith(0.75);
+    expect(progressSpy).toHaveBeenCalledWith(1);
   });
 
   function loadParsers(
     legacy: Array<Parser<object>>,
     perfetto: Array<Parser<object>>,
-    testFile = file,
+    legacyFiles?: File[],
   ) {
-    const legacyFileAndParsers = legacy.map(
-      (parser) => new FileAndParser(testFile, parser),
-    );
+    const legacyFileAndParsers = legacy.map((parser, i) => {
+      const legacyFile = legacyFiles ? legacyFiles[i] : new File([], filename);
+      return new FileAndParser(new TraceFile(legacyFile), parser);
+    });
+
+    const perfettoTraceFile = new TraceFile(new File([], filename));
     const perfettoFileAndParsers =
-      perfetto.length > 0 ? new FileAndParsers(testFile, perfetto) : undefined;
+      perfetto.length > 0
+        ? new FileAndParsers(perfettoTraceFile, perfetto)
+        : undefined;
 
-    warnings = [];
-    const listener = {
-      onNotifications(notifications: UserWarning[]) {
-        warnings.push(...notifications);
-      },
-    };
-
-    loadedParsers.addParsers(
-      legacyFileAndParsers,
-      perfettoFileAndParsers,
-      listener,
-    );
+    loadedParsers.addParsers(legacyFileAndParsers, perfettoFileAndParsers);
   }
 
   function expectLoadResult(
@@ -521,6 +582,14 @@ describe('LoadedParsers', () => {
     expect(actualParsers.length).toEqual(expectedParsers.length);
     expect(new Set([...actualParsers])).toEqual(new Set([...expectedParsers]));
 
-    expect(warnings).toEqual(expectedWarnings);
+    userNotifierChecker.expectAdded(expectedWarnings);
+  }
+
+  async function expectDownloadResult(expectedArchiveContents: string[]) {
+    const zipArchive = await loadedParsers.makeZipArchive();
+    const actualArchiveContents = (await FileUtils.unzipFile(zipArchive))
+      .map((file) => file.name)
+      .sort();
+    expect(actualArchiveContents).toEqual(expectedArchiveContents);
   }
 });

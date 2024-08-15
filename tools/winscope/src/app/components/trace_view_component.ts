@@ -14,7 +14,13 @@
  * limitations under the License.
  */
 
-import {Component, ElementRef, Inject, Input} from '@angular/core';
+import {
+  Component,
+  ElementRef,
+  Inject,
+  Input,
+  SimpleChanges,
+} from '@angular/core';
 import {assertDefined} from 'common/assert_utils';
 import {FunctionUtils} from 'common/function_utils';
 import {PersistentStore} from 'common/persistent_store';
@@ -45,22 +51,24 @@ interface Tab {
       <div class="header-items-wrapper">
           <nav mat-tab-nav-bar class="tabs-navigation-bar">
               <a
-                      *ngFor="let tab of tabs; last as isLast"
-                      mat-tab-link
-                      [active]="isCurrentActiveTab(tab)"
-                      [class.active]="isCurrentActiveTab(tab)"
-                      (click)="onTabClick(tab)"
-                      (focus)="$event.target.blur()"
-                      [class.last]="isLast"
-                      class="tab">
-                  <mat-icon
-                          class="icon"
-                          [style]="{color: TRACE_INFO[tab.view.traces[0].type].color, marginRight: '0.5rem'}">
-                      {{ TRACE_INFO[tab.view.traces[0].type].icon }}
-                  </mat-icon>
-                  <span>
-            {{ tab.view.title }}
-          </span>
+                  *ngFor="let tab of tabs; last as isLast"
+                  mat-tab-link
+                  [active]="isCurrentActiveTab(tab)"
+                  [class.active]="isCurrentActiveTab(tab)"
+                  [matTooltip]="getTabTooltip(tab.view)"
+                  [matTooltipShowDelay]="300"
+                  (click)="onTabClick(tab)"
+                  (focus)="$event.target.blur()"
+                  [class.last]="isLast"
+                  class="tab">
+                <mat-icon
+                  class="icon"
+                  [style]="{color: TRACE_INFO[tab.view.traces[0].type].color, marginRight: '0.5rem'}">
+                    {{ TRACE_INFO[tab.view.traces[0].type].icon }}
+                </mat-icon>
+                <span>
+                  {{ getTitle(tab.view) }}
+                </span>
               </a>
           </nav>
       </div>
@@ -77,6 +85,7 @@ interface Tab {
         display: flex;
         flex-direction: row;
         justify-content: space-between;
+        overflow-x: auto;
       }
 
       .tabs-navigation-bar {
@@ -87,6 +96,7 @@ interface Tab {
       .trace-view-content {
         height: 100%;
         overflow: auto;
+        background-color: var(--trace-view-background-color);
       }
 
       .tab {
@@ -122,13 +132,13 @@ export class TraceViewComponent
     this.elementRef = elementRef;
   }
 
-  ngOnChanges() {
-    this.renderViewsTab();
+  ngOnChanges(changes: SimpleChanges) {
+    this.renderViewsTab(changes['viewers']?.firstChange ?? false);
     this.renderViewsOverlay();
   }
 
   async onTabClick(tab: Tab) {
-    await this.showTab(tab);
+    await this.showTab(tab, false);
   }
 
   async onWinscopeEvent(event: WinscopeEvent) {
@@ -138,7 +148,7 @@ export class TraceViewComponent
         const tab = this.tabs.find((tab) =>
           tab.view.traces.some((trace) => trace === event.newActiveTrace),
         );
-        await this.showTab(assertDefined(tab));
+        await this.showTab(assertDefined(tab), false);
       },
     );
   }
@@ -151,7 +161,16 @@ export class TraceViewComponent
     return tab === this.currentActiveTab;
   }
 
-  private renderViewsTab() {
+  getTabTooltip(view: View): string {
+    return view.traces.flatMap((trace) => trace.getDescriptors()).join(', ');
+  }
+
+  getTitle(view: View): string {
+    const isDump = view.traces.length === 1 && view.traces[0].isDump();
+    return view.title + (isDump ? ' Dump' : '');
+  }
+
+  private renderViewsTab(firstToRender: boolean) {
     this.tabs = this.viewers
       .map((viewer) => viewer.getViews())
       .flat()
@@ -170,7 +189,7 @@ export class TraceViewComponent
     });
 
     if (this.tabs.length > 0) {
-      this.showTab(this.tabs[0]);
+      this.showTab(this.tabs[0], firstToRender);
     }
   }
 
@@ -198,7 +217,7 @@ export class TraceViewComponent
     });
   }
 
-  private async showTab(tab: Tab) {
+  private async showTab(tab: Tab, firstToRender: boolean) {
     if (this.currentActiveTab) {
       this.currentActiveTab.view.htmlElement.style.display = 'none';
     }
@@ -220,9 +239,11 @@ export class TraceViewComponent
 
     this.currentActiveTab = tab;
 
-    Analytics.Navigation.logTabSwitched(
-      TRACE_INFO[tab.view.traces[0].type].name,
-    );
-    await this.emitAppEvent(new TabbedViewSwitched(tab.view));
+    if (!firstToRender) {
+      Analytics.Navigation.logTabSwitched(
+        TRACE_INFO[tab.view.traces[0].type].name,
+      );
+      await this.emitAppEvent(new TabbedViewSwitched(tab.view));
+    }
   }
 }

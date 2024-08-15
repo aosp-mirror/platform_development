@@ -25,7 +25,8 @@ import {MatSelectChange} from '@angular/material/select';
         (opened)="filter.focus()"
         (closed)="onSelectClosed()"
         (selectionChange)="onSelectChange($event)"
-        multiple>
+        [multiple]="multiple"
+        [value]="value">
         <mat-form-field class="select-filter" [style]="getInnerFormFieldStyle()">
           <mat-label>Filter options</mat-label>
           <input matInput #filter [(ngModel)]="filterString" />
@@ -33,7 +34,7 @@ import {MatSelectChange} from '@angular/material/select';
         <mat-option
           *ngFor="let option of options"
           [value]="option"
-          [class.hidden-option]="!option.includes(filterString)">
+          [class.hidden-option]="hideOption(option)">
           {{ option }}
         </mat-option>
       </mat-select>
@@ -58,6 +59,8 @@ export class SelectWithFilterComponent {
   @Input() outerFilterWidth = '75';
   @Input() innerFilterWidth = '100';
   @Input() flex = 'none';
+  @Input() multiple = true;
+  @Input() value?: string | string[] | undefined;
 
   @Output() readonly selectChange = new EventEmitter<MatSelectChange>();
 
@@ -86,5 +89,9 @@ export class SelectWithFilterComponent {
 
   onSelectClosed() {
     this.filterString = '';
+  }
+
+  hideOption(option: string) {
+    return !option.toLowerCase().includes(this.filterString.toLowerCase());
   }
 }

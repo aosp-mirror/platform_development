@@ -48,7 +48,7 @@ describe('Viewer Input Method Manager Service', () => {
     await clickWmState();
     await checkWmStateProperties();
 
-    await E2eTestUtils.applyStateToHierarchyCheckboxes(viewerSelector, false);
+    await E2eTestUtils.applyStateToHierarchyOptions(viewerSelector, false);
     await E2eTestUtils.selectItemInHierarchy(
       viewerSelector,
       'inputMethodManagerService',

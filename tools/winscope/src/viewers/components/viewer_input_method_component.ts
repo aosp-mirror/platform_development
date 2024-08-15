@@ -16,6 +16,8 @@
 import {Component, Input} from '@angular/core';
 import {PersistentStore} from 'common/persistent_store';
 import {TraceType} from 'trace/trace_type';
+import {CollapsibleSections} from 'viewers/common/collapsible_sections';
+import {CollapsibleSectionType} from 'viewers/common/collapsible_section_type';
 import {ImeUiData} from 'viewers/common/ime_ui_data';
 import {viewerCardStyle} from './styles/viewer_card.styles';
 
@@ -23,34 +25,44 @@ import {viewerCardStyle} from './styles/viewer_card.styles';
   selector: 'viewer-input-method',
   template: `
     <div class="card-grid">
-      <div class="left-views">
+      <collapsed-sections
+        [class.empty]="sections.areAllSectionsExpanded()"
+        [sections]="sections"
+        (sectionChange)="sections.onCollapseStateChange($event, false)">
+      </collapsed-sections>
+
+      <div class="left-views" *ngIf="!areLeftViewsCollapsed()">
         <hierarchy-view
           class="hierarchy-view"
-          [tree]="inputData?.tree"
-          [subtrees]="inputData?.sfSubtrees ?? []"
+          [tree]="inputData?.hierarchyTrees?.at(0)"
+          [subtrees]="getSfSubtrees()"
           [dependencies]="inputData ? [inputData.traceType] : []"
           [highlightedItem]="inputData?.highlightedItem"
           [pinnedItems]="inputData?.pinnedItems ?? []"
           [tableProperties]="inputData?.hierarchyTableProperties"
           [store]="store"
-          [userOptions]="inputData?.hierarchyUserOptions ?? {}"></hierarchy-view>
-
-        <mat-divider></mat-divider>
-
+          [userOptions]="inputData?.hierarchyUserOptions ?? {}"
+          (collapseButtonClicked)="sections.onCollapseStateChange(CollapsibleSectionType.HIERARCHY, true)"
+          [class.collapsed]="sections.isSectionCollapsed(CollapsibleSectionType.HIERARCHY)"
+          placeholderText="No IME entry found."></hierarchy-view>
         <ime-additional-properties
           class="ime-additional-properties"
           [isImeManagerService]="isImeManagerService()"
           [highlightedItem]="inputData?.highlightedItem ?? ''"
-          [additionalProperties]="inputData?.additionalProperties"></ime-additional-properties>
+          [additionalProperties]="inputData?.additionalProperties"
+          (collapseButtonClicked)="sections.onCollapseStateChange(CollapsibleSectionType.IME_ADDITIONAL_PROPERTIES, true)"
+          [class.collapsed]="sections.isSectionCollapsed(CollapsibleSectionType.IME_ADDITIONAL_PROPERTIES)"></ime-additional-properties>
       </div>
-
-      <mat-divider [vertical]="true"></mat-divider>
 
       <properties-view
         class="properties-view"
         [store]="store"
         [userOptions]="inputData?.propertiesUserOptions ?? {}"
-        [propertiesTree]="inputData?.propertiesTree"></properties-view>
+        [propertiesTree]="inputData?.propertiesTree"
+        [traceType]="inputData?.traceType"
+        (collapseButtonClicked)="sections.onCollapseStateChange(CollapsibleSectionType.PROPERTIES, true)"
+        [class.collapsed]="sections.isSectionCollapsed(CollapsibleSectionType.PROPERTIES)"
+        placeholderText="No selected item."></properties-view>
     </div>
   `,
   styles: [
@@ -59,6 +71,7 @@ import {viewerCardStyle} from './styles/viewer_card.styles';
         flex: 1;
         display: flex;
         flex-direction: column;
+        overflow: auto;
       }
     `,
     viewerCardStyle,
@@ -69,7 +82,45 @@ export class ViewerInputMethodComponent {
   @Input() store: PersistentStore = new PersistentStore();
   @Input() active = false;
 
+  CollapsibleSectionType = CollapsibleSectionType;
+  sections = new CollapsibleSections([
+    {
+      type: CollapsibleSectionType.HIERARCHY,
+      label: CollapsibleSectionType.HIERARCHY,
+      isCollapsed: false,
+    },
+    {
+      type: CollapsibleSectionType.IME_ADDITIONAL_PROPERTIES,
+      label: CollapsibleSectionType.IME_ADDITIONAL_PROPERTIES,
+      isCollapsed: false,
+    },
+    {
+      type: CollapsibleSectionType.PROPERTIES,
+      label: CollapsibleSectionType.PROPERTIES,
+      isCollapsed: false,
+    },
+  ]);
+
   isImeManagerService(): boolean {
     return this.inputData?.traceType === TraceType.INPUT_METHOD_MANAGER_SERVICE;
+  }
+
+  areLeftViewsCollapsed() {
+    return (
+      this.sections.isSectionCollapsed(CollapsibleSectionType.HIERARCHY) &&
+      this.sections.isSectionCollapsed(
+        CollapsibleSectionType.IME_ADDITIONAL_PROPERTIES,
+      )
+    );
+  }
+
+  getSfSubtrees() {
+    if (
+      !this.inputData?.hierarchyTrees ||
+      this.inputData.hierarchyTrees.length <= 1
+    ) {
+      return [];
+    }
+    return this.inputData.hierarchyTrees.slice(1);
   }
 }

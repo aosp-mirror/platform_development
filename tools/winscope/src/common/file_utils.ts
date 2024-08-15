@@ -24,12 +24,12 @@ export class FileUtils {
   static readonly DOWNLOAD_FILENAME_REGEX = /^\w+?((|#|-|\.)\w+)+$/;
   static readonly ILLEGAL_FILENAME_CHARACTERS_REGEX = /[^A-Za-z0-9-#._]/g;
 
-  static getFileExtension(file: File): string | undefined {
-    const split = file.name.split('.');
-    if (split.length > 1) {
-      return split.pop();
+  static getFileExtension(filename: string): string | undefined {
+    const lastDot = filename.lastIndexOf('.');
+    if (lastDot === -1) {
+      return undefined;
     }
-    return undefined;
+    return filename.slice(lastDot + 1);
   }
 
   static removeDirFromFileName(name: string): string {
@@ -50,12 +50,16 @@ export class FileUtils {
     }
   }
 
-  static async createZipArchive(files: File[]): Promise<Blob> {
+  static async createZipArchive(
+    files: File[],
+    progressCallback?: OnProgressUpdateType,
+  ): Promise<Blob> {
     const zip = new JSZip();
     for (let i = 0; i < files.length; i++) {
       const file = files[i];
       const blob = await file.arrayBuffer();
       zip.file(file.name, blob);
+      if (progressCallback) progressCallback((i + 1) / files.length);
     }
     return await zip.generateAsync({type: 'blob'});
   }

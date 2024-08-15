@@ -15,44 +15,67 @@
  */
 
 import {CommonModule} from '@angular/common';
-import {Component, CUSTOM_ELEMENTS_SCHEMA, ViewChild} from '@angular/core';
+import {Component, ViewChild} from '@angular/core';
 import {ComponentFixture, TestBed} from '@angular/core/testing';
 import {MatButtonModule} from '@angular/material/button';
-import {MatCheckboxModule} from '@angular/material/checkbox';
 import {MatDividerModule} from '@angular/material/divider';
-import {MatRadioModule} from '@angular/material/radio';
+import {MatFormFieldModule} from '@angular/material/form-field';
+import {MatIconModule} from '@angular/material/icon';
+import {MatIconTestingModule} from '@angular/material/icon/testing';
+import {MatSelectModule} from '@angular/material/select';
 import {MatSliderModule} from '@angular/material/slider';
 import {MatTooltipModule} from '@angular/material/tooltip';
+import {BrowserAnimationsModule} from '@angular/platform-browser/animations';
 import {assertDefined} from 'common/assert_utils';
+import {TransformMatrix} from 'common/geometry/transform_matrix';
 import {PersistentStore} from 'common/persistent_store';
+import {TraceType} from 'trace/trace_type';
+import {VISIBLE_CHIP} from 'viewers/common/chip';
 import {DisplayIdentifier} from 'viewers/common/display_identifier';
-import {ViewerEvents} from 'viewers/common/viewer_events';
+import {CollapsibleSectionTitleComponent} from 'viewers/components/collapsible_section_title_component';
 import {RectsComponent} from 'viewers/components/rects/rects_component';
-import {UiRect} from 'viewers/components/rects/types2d';
+import {UiRect} from 'viewers/components/rects/ui_rect';
+import {UserOptionsComponent} from 'viewers/components/user_options_component';
 import {Canvas} from './canvas';
-import {ColorType, ShadingMode} from './types3d';
+import {ColorType} from './color_type';
+import {Scene} from './scene';
+import {ShadingMode} from './shading_mode';
 import {UiRectBuilder} from './ui_rect_builder';
 
 describe('RectsComponent', () => {
+  const rectGroup0 = makeRectWithGroupId(0);
+  const rectGroup1 = makeRectWithGroupId(1);
+  const rectGroup2 = makeRectWithGroupId(2);
+
   let component: TestHostComponent;
   let fixture: ComponentFixture<TestHostComponent>;
   let htmlElement: HTMLElement;
+  let canvasSpy: jasmine.Spy<(scene: Scene) => Promise<void>>;
 
   beforeEach(async () => {
+    canvasSpy = spyOn(Canvas.prototype, 'draw').and.callThrough();
     localStorage.clear();
 
     await TestBed.configureTestingModule({
       imports: [
         CommonModule,
-        MatCheckboxModule,
         MatDividerModule,
         MatSliderModule,
-        MatRadioModule,
         MatButtonModule,
         MatTooltipModule,
+        MatIconModule,
+        MatIconTestingModule,
+        MatSelectModule,
+        BrowserAnimationsModule,
+        MatFormFieldModule,
       ],
-      declarations: [TestHostComponent, RectsComponent],
-      schemas: [CUSTOM_ELEMENTS_SCHEMA],
+      declarations: [
+        TestHostComponent,
+        RectsComponent,
+        CollapsibleSectionTitleComponent,
+        UserOptionsComponent,
+      ],
+      schemas: [],
     }).compileComponents();
 
     fixture = TestBed.createComponent(TestHostComponent);
@@ -81,39 +104,37 @@ describe('RectsComponent', () => {
 
   it('draws scene when input data changes', async () => {
     fixture.detectChanges();
-    spyOn(Canvas.prototype, 'draw').and.callThrough();
+    canvasSpy.calls.reset();
 
-    const inputRect = makeRectWithGroupId(0);
-
-    expect(Canvas.prototype.draw).toHaveBeenCalledTimes(0);
-    component.rects = [inputRect];
+    expect(canvasSpy).toHaveBeenCalledTimes(0);
+    component.rects = [rectGroup0];
     fixture.detectChanges();
-    expect(Canvas.prototype.draw).toHaveBeenCalledTimes(1);
-    component.rects = [inputRect];
+    expect(canvasSpy).toHaveBeenCalledTimes(1);
+    component.rects = [rectGroup0];
     fixture.detectChanges();
-    expect(Canvas.prototype.draw).toHaveBeenCalledTimes(2);
+    expect(canvasSpy).toHaveBeenCalledTimes(2);
   });
 
   it('draws scene when rotation slider changes', () => {
     fixture.detectChanges();
-    spyOn(Canvas.prototype, 'draw').and.callThrough();
+    canvasSpy.calls.reset();
     const slider = assertDefined(htmlElement.querySelector('.slider-rotation'));
 
-    expect(Canvas.prototype.draw).toHaveBeenCalledTimes(0);
+    expect(canvasSpy).toHaveBeenCalledTimes(0);
 
     slider.dispatchEvent(new MouseEvent('mousedown'));
-    expect(Canvas.prototype.draw).toHaveBeenCalledTimes(1);
+    expect(canvasSpy).toHaveBeenCalledTimes(1);
   });
 
   it('draws scene when spacing slider changes', () => {
     fixture.detectChanges();
-    spyOn(Canvas.prototype, 'draw').and.callThrough();
+    canvasSpy.calls.reset();
     const slider = assertDefined(htmlElement.querySelector('.slider-spacing'));
 
-    expect(Canvas.prototype.draw).toHaveBeenCalledTimes(0);
+    expect(canvasSpy).toHaveBeenCalledTimes(0);
 
     slider.dispatchEvent(new MouseEvent('mousedown'));
-    expect(Canvas.prototype.draw).toHaveBeenCalledTimes(1);
+    expect(canvasSpy).toHaveBeenCalledTimes(1);
   });
 
   it('unfocuses spacing slider on click', () => {
@@ -132,135 +153,140 @@ describe('RectsComponent', () => {
     checkSliderUnfocusesOnClick(rotationSlider, 1);
   });
 
-  it('draws display buttons', () => {
+  it('renders display selector', async () => {
+    component.rects = [rectGroup0];
     component.displays = [
-      {displayId: 0, groupId: 0, name: 'Display 0'},
-      {displayId: 1, groupId: 1, name: 'Display 1'},
-      {displayId: 2, groupId: 2, name: 'Display 2'},
+      {displayId: 0, groupId: 0, name: 'Display 0', isActive: false},
+      {displayId: 1, groupId: 1, name: 'Display 1', isActive: false},
+      {displayId: 2, groupId: 2, name: 'Display 2', isActive: false},
     ];
-    fixture.detectChanges();
-    checkButtons(
-      ['Display 0', 'Display 1', 'Display 2'],
-      ['primary', 'secondary', 'secondary'],
-      '.display-name-buttons',
-    );
+    await checkSelectedDisplay([0]);
   });
 
-  it('handles display button click', () => {
+  it('handles display change by checkbox', async () => {
+    component.rects = [rectGroup0, rectGroup1];
     component.displays = [
-      {displayId: 0, groupId: 0, name: 'Display 0'},
-      {displayId: 1, groupId: 1, name: 'Display 1'},
-      {displayId: 2, groupId: 2, name: 'Display 2'},
+      {displayId: 0, groupId: 0, name: 'Display 0', isActive: false},
+      {displayId: 1, groupId: 1, name: 'Display 1', isActive: false},
+      {displayId: 2, groupId: 2, name: 'Display 2', isActive: false},
     ];
+    await checkSelectedDisplay([0]);
+
+    const trigger = assertDefined(
+      htmlElement.querySelector('.displays-section .mat-select-trigger'),
+    );
+    (trigger as HTMLElement).click();
     fixture.detectChanges();
-    checkButtons(
-      ['Display 0', 'Display 1', 'Display 2'],
-      ['primary', 'secondary', 'secondary'],
-      '.display-name-buttons',
+
+    const options = document.querySelectorAll<HTMLElement>(
+      '.mat-select-panel .mat-option',
     );
 
-    const container = assertDefined(
-      htmlElement.querySelector('.display-name-buttons'),
+    options.item(1).click();
+    await checkSelectedDisplay([0, 1]);
+
+    options.item(0).click();
+    await checkSelectedDisplay([1]);
+
+    options.item(1).click();
+    await checkSelectedDisplay([]);
+    const placeholder = assertDefined(
+      htmlElement.querySelector('.placeholder-text'),
     );
-    let groupId = 0;
-    htmlElement.addEventListener(ViewerEvents.RectGroupIdChange, (event) => {
-      groupId = (event as CustomEvent).detail.groupId;
-    });
-    const button = Array.from(container.querySelectorAll('button'))[1];
-    button.click();
-    fixture.detectChanges();
-    checkButtons(
-      ['Display 0', 'Display 1', 'Display 2'],
-      ['secondary', 'primary', 'secondary'],
-      '.display-name-buttons',
-    );
-    expect(groupId).toEqual(1);
+    expect(placeholder.textContent?.trim()).toEqual('No displays selected.');
   });
 
-  it('tracks selected display', () => {
+  it('handles display change by "only" button', async () => {
+    component.rects = [rectGroup0, rectGroup1];
     component.displays = [
-      {displayId: 10, groupId: 0, name: 'Display 0'},
-      {displayId: 20, groupId: 1, name: 'Display 1'},
+      {displayId: 0, groupId: 0, name: 'Display 0', isActive: false},
+      {displayId: 1, groupId: 1, name: 'Display 1', isActive: false},
+      {displayId: 2, groupId: 2, name: 'Display 2', isActive: false},
     ];
+    await checkSelectedDisplay([0]);
+
+    const trigger = assertDefined(
+      htmlElement.querySelector('.displays-section .mat-select-trigger'),
+    );
+    (trigger as HTMLElement).click();
     fixture.detectChanges();
-    checkButtons(
-      ['Display 0', 'Display 1'],
-      ['primary', 'secondary'],
-      '.display-name-buttons',
+
+    const onlyButtons = document.querySelectorAll<HTMLElement>(
+      '.mat-select-panel .mat-option .option-only-button',
     );
 
+    const display0Button = onlyButtons.item(0);
+    const display1Button = onlyButtons.item(1);
+
+    // no change
+    display0Button.click();
+    await checkSelectedDisplay([0]);
+
+    display1Button.click();
+    await checkSelectedDisplay([1]);
+
+    assertDefined(display0Button.parentElement).click();
+    await checkSelectedDisplay([0, 1]);
+    display0Button.click();
+    await checkSelectedDisplay([0]);
+  });
+
+  it('tracks selected display', async () => {
     component.displays = [
-      {displayId: 20, groupId: 2, name: 'Display 1'},
-      {displayId: 10, groupId: 1, name: 'Display 0'},
+      {displayId: 10, groupId: 0, name: 'Display 0', isActive: false},
+      {displayId: 20, groupId: 1, name: 'Display 1', isActive: false},
     ];
-    fixture.detectChanges();
-    checkButtons(
-      ['Display 1', 'Display 0'],
-      ['secondary', 'primary'],
-      '.display-name-buttons',
-    );
+    component.rects = [rectGroup0, rectGroup1];
+    await checkSelectedDisplay([0]);
+
+    component.displays = [
+      {displayId: 20, groupId: 2, name: 'Display 1', isActive: false},
+      {displayId: 10, groupId: 1, name: 'Display 0', isActive: false},
+    ];
+    await checkSelectedDisplay([0], [1]);
   });
 
   it('updates scene on separation slider change', () => {
-    const inputRect = makeRectWithGroupId(0);
-    component.rects = [inputRect, inputRect];
-    const spy = spyOn(Canvas.prototype, 'draw').and.callThrough();
+    component.rects = [rectGroup0, rectGroup0];
     fixture.detectChanges();
     updateSeparationSlider();
 
-    expect(spy).toHaveBeenCalledTimes(2);
-    const sceneBefore = assertDefined(spy.calls.first().args.at(0));
-    const sceneAfter = assertDefined(spy.calls.mostRecent().args.at(0));
+    expect(canvasSpy).toHaveBeenCalledTimes(2);
+    const sceneBefore = assertDefined(canvasSpy.calls.first().args.at(0));
+    const sceneAfter = assertDefined(canvasSpy.calls.mostRecent().args.at(0));
 
-    expect(sceneBefore.rects[1].topLeft.z).toEqual(5);
-    expect(sceneAfter.rects[1].topLeft.z).toEqual(0.3);
+    expect(sceneBefore.rects[0].topLeft.z).toEqual(200);
+    expect(sceneAfter.rects[0].topLeft.z).toEqual(12);
   });
 
   it('updates scene on rotation slider change', () => {
-    const inputRect = makeRectWithGroupId(0);
-    component.rects = [inputRect];
-    const spy = spyOn(Canvas.prototype, 'draw').and.callThrough();
+    component.rects = [rectGroup0];
     fixture.detectChanges();
     updateRotationSlider();
 
-    expect(spy).toHaveBeenCalledTimes(2);
-    const sceneBefore = assertDefined(spy.calls.first().args.at(0));
-    const sceneAfter = assertDefined(spy.calls.mostRecent().args.at(0));
+    expect(canvasSpy).toHaveBeenCalledTimes(2);
+    const sceneBefore = assertDefined(canvasSpy.calls.first().args.at(0));
+    const sceneAfter = assertDefined(canvasSpy.calls.mostRecent().args.at(0));
 
-    expect(sceneBefore.camera.rotationFactor).toEqual(1);
-    expect(sceneAfter.camera.rotationFactor).toEqual(0.5);
-  });
-
-  it('updates scene on only visible mode change', () => {
-    const inputRect = makeRectWithGroupId(0);
-    const nonVisibleRect = makeRectWithGroupId(0, false);
-    component.rects = [inputRect, nonVisibleRect];
-    const spy = spyOn(Canvas.prototype, 'draw').and.callThrough();
-    fixture.detectChanges();
-
-    updateShowOnlyVisibleMode();
-
-    expect(spy).toHaveBeenCalledTimes(2);
-    const sceneBefore = assertDefined(spy.calls.first().args.at(0));
-    const sceneAfter = assertDefined(spy.calls.mostRecent().args.at(0));
-
-    expect(sceneBefore.rects.length).toEqual(2);
-    expect(sceneAfter.rects.length).toEqual(1);
+    expect(sceneAfter.camera.rotationAngleX).toEqual(
+      sceneBefore.camera.rotationAngleX * 0.5,
+    );
+    expect(sceneAfter.camera.rotationAngleY).toEqual(
+      sceneBefore.camera.rotationAngleY * 0.5,
+    );
   });
 
   it('updates scene on shading mode change', () => {
-    const inputRect = makeRectWithGroupId(0);
-    component.rects = [inputRect];
-    const spy = spyOn(Canvas.prototype, 'draw').and.callThrough();
+    component.rects = [rectGroup0];
     fixture.detectChanges();
 
     updateShadingMode(ShadingMode.GRADIENT, ShadingMode.WIRE_FRAME);
     updateShadingMode(ShadingMode.WIRE_FRAME, ShadingMode.OPACITY);
 
-    expect(spy).toHaveBeenCalledTimes(3);
-    const sceneGradient = assertDefined(spy.calls.first().args.at(0));
-    const sceneWireFrame = assertDefined(spy.calls.argsFor(1).at(0));
-    const sceneOpacity = assertDefined(spy.calls.mostRecent().args.at(0));
+    expect(canvasSpy).toHaveBeenCalledTimes(3);
+    const sceneGradient = assertDefined(canvasSpy.calls.first().args.at(0));
+    const sceneWireFrame = assertDefined(canvasSpy.calls.argsFor(1).at(0));
+    const sceneOpacity = assertDefined(canvasSpy.calls.mostRecent().args.at(0));
 
     expect(sceneGradient.rects[0].colorType).toEqual(ColorType.VISIBLE);
     expect(sceneGradient.rects[0].darkFactor).toEqual(1);
@@ -279,7 +305,6 @@ describe('RectsComponent', () => {
 
     updateSeparationSlider();
     updateShadingMode(ShadingMode.GRADIENT, ShadingMode.WIRE_FRAME);
-    updateShowOnlyVisibleMode();
 
     const newFixture = TestBed.createComponent(TestHostComponent);
     newFixture.detectChanges();
@@ -287,105 +312,125 @@ describe('RectsComponent', () => {
       newFixture.componentInstance.rectsComponent,
     );
     expect(newRectsComponent.getZSpacingFactor()).toEqual(0.06);
-    expect(newRectsComponent.getShowOnlyVisibleMode()).toBeTrue();
     expect(newRectsComponent.getShadingMode()).toEqual(ShadingMode.WIRE_FRAME);
   });
 
-  it('defaults initial selection to first display with non-display rects and groupId 0', () => {
-    const inputRect = makeRectWithGroupId(0);
-    component.rects = [inputRect];
+  it('defaults initial selection to first active display with rects', async () => {
+    component.rects = [rectGroup0, rectGroup1];
     component.displays = [
-      {displayId: 10, groupId: 1, name: 'Display 0'},
-      {displayId: 20, groupId: 0, name: 'Display 1'},
+      {displayId: 10, groupId: 1, name: 'Display 0', isActive: false},
+      {displayId: 20, groupId: 0, name: 'Display 1', isActive: true},
     ];
-    fixture.detectChanges();
-
-    checkButtons(
-      ['Display 0', 'Display 1'],
-      ['secondary', 'primary'],
-      '.display-name-buttons',
-    );
+    await checkSelectedDisplay([1], [0]);
   });
 
-  it('defaults initial selection to first display with non-display rects and groupId non-zero', () => {
-    const inputRect = makeRectWithGroupId(1);
-    component.rects = [inputRect];
+  it('defaults initial selection to first display with non-display rects and groupId 0', async () => {
     component.displays = [
-      {displayId: 10, groupId: 0, name: 'Display 0'},
-      {displayId: 20, groupId: 1, name: 'Display 1'},
+      {displayId: 10, groupId: 1, name: 'Display 0', isActive: true},
+      {displayId: 20, groupId: 0, name: 'Display 1', isActive: false},
     ];
-    fixture.detectChanges();
+    component.rects = [rectGroup0];
+    await checkSelectedDisplay([1], [0]);
+  });
 
-    checkButtons(
-      ['Display 0', 'Display 1'],
-      ['secondary', 'primary'],
-      '.display-name-buttons',
-    );
+  it('defaults initial selection to first display with non-display rects and groupId non-zero', async () => {
+    component.displays = [
+      {displayId: 10, groupId: 0, name: 'Display 0', isActive: false},
+      {displayId: 20, groupId: 1, name: 'Display 1', isActive: false},
+    ];
+    component.rects = [rectGroup1];
+    await checkSelectedDisplay([1]);
   });
 
   it('draws mini rects with non-present group id', () => {
+    component.displays = [
+      {displayId: 10, groupId: 0, name: 'Display 0', isActive: false},
+    ];
     fixture.detectChanges();
-    const inputRect = makeRectWithGroupId(0);
-    const miniRect = makeRectWithGroupId(2);
-    component.rects = [inputRect];
-    component.displays = [{displayId: 10, groupId: 0, name: 'Display 0'}];
-    component.miniRects = [miniRect];
-    const spy = spyOn(Canvas.prototype, 'draw').and.callThrough();
+    component.rects = [rectGroup0];
+    component.miniRects = [rectGroup2];
+    canvasSpy.calls.reset();
     fixture.detectChanges();
-    expect(spy).toHaveBeenCalledTimes(2);
+    expect(canvasSpy).toHaveBeenCalledTimes(2);
     expect(
-      spy.calls
+      canvasSpy.calls
         .all()
         .forEach((call) => expect(call.args[0].rects.length).toEqual(1)),
     );
   });
 
   it('draws mini rects with default spacing, rotation and shading mode', () => {
+    component.displays = [
+      {displayId: 10, groupId: 0, name: 'Display 0', isActive: false},
+    ];
     fixture.detectChanges();
 
     updateSeparationSlider();
     updateRotationSlider();
     updateShadingMode(ShadingMode.GRADIENT, ShadingMode.WIRE_FRAME);
 
-    const inputRect = makeRectWithGroupId(0);
-    component.rects = [inputRect, inputRect];
-    component.displays = [{displayId: 10, groupId: 0, name: 'Display 0'}];
-    component.miniRects = [inputRect, inputRect];
-    const spy = spyOn(Canvas.prototype, 'draw').and.callThrough();
+    component.rects = [rectGroup0, rectGroup0];
+    component.miniRects = [rectGroup0, rectGroup0];
+    canvasSpy.calls.reset();
     fixture.detectChanges();
-    expect(spy).toHaveBeenCalledTimes(2);
+    expect(canvasSpy).toHaveBeenCalledTimes(2);
 
-    const largeRectsScene = assertDefined(spy.calls.first().args.at(0));
-    const miniRectsScene = assertDefined(spy.calls.mostRecent().args.at(0));
+    const largeRectsScene = assertDefined(canvasSpy.calls.first().args.at(0));
+    const miniRectsScene = assertDefined(
+      canvasSpy.calls.mostRecent().args.at(0),
+    );
 
-    expect(largeRectsScene.camera.rotationFactor).toEqual(0.5);
-    expect(miniRectsScene.camera.rotationFactor).toEqual(1);
+    expect(largeRectsScene.camera.rotationAngleX).toEqual(
+      miniRectsScene.camera.rotationAngleX * 0.5,
+    );
+    expect(largeRectsScene.camera.rotationAngleY).toEqual(
+      miniRectsScene.camera.rotationAngleY * 0.5,
+    );
 
     expect(largeRectsScene.rects[0].colorType).toEqual(ColorType.EMPTY);
     expect(miniRectsScene.rects[0].colorType).toEqual(ColorType.VISIBLE);
 
-    expect(largeRectsScene.rects[1].topLeft.z).toEqual(0.3);
-    expect(miniRectsScene.rects[1].topLeft.z).toEqual(5);
+    expect(largeRectsScene.rects[0].topLeft.z).toEqual(12);
+    expect(miniRectsScene.rects[0].topLeft.z).toEqual(200);
   });
 
-  function checkButtons(
-    buttonValues: string[],
-    buttonColors: string[],
-    selector: string,
-  ) {
-    const displayButtonContainer = assertDefined(
-      htmlElement.querySelector(selector),
+  it('handles collapse button click', () => {
+    fixture.detectChanges();
+    const spy = spyOn(
+      assertDefined(component.rectsComponent).collapseButtonClicked,
+      'emit',
     );
-    const buttons = Array.from(
-      displayButtonContainer.querySelectorAll('button'),
-    );
-    expect(buttons.map((it) => it.textContent?.trim())).toEqual(buttonValues);
+    const collapseButton = assertDefined(
+      htmlElement.querySelector('collapsible-section-title button'),
+    ) as HTMLButtonElement;
+    collapseButton.click();
+    fixture.detectChanges();
+    expect(spy).toHaveBeenCalled();
+  });
 
-    for (let i = 0; i < buttonValues.length; i++) {
-      expect((buttons[i] as HTMLButtonElement).outerHTML).toContain(
-        buttonColors[i],
+  async function checkSelectedDisplay(
+    displayNumbers: number[],
+    testIds?: number[],
+  ) {
+    fixture.detectChanges();
+    await fixture.whenStable();
+    fixture.detectChanges();
+    const displaySelect = assertDefined(
+      htmlElement.querySelector('.displays-select'),
+    );
+    expect(displaySelect.textContent?.trim()).toEqual(
+      displayNumbers
+        .map((displayNumber) => `Display ${displayNumber}`)
+        .join(', '),
+    );
+    const drawnRects = canvasSpy.calls.mostRecent().args[0].rects;
+    expect(drawnRects.length).toEqual(displayNumbers.length);
+    drawnRects.forEach((rect, index) => {
+      expect(rect.id).toEqual(
+        `test-id-${testIds ? testIds[index] : displayNumbers[index]}`,
       );
-    }
+      if (index > 0) expect(rect.transform.ty).toBeGreaterThan(0);
+    });
   }
 
   function findAndClickElement(selector: string) {
@@ -429,13 +474,6 @@ describe('RectsComponent', () => {
     expect(rectsComponent.getShadingMode()).toEqual(after);
   }
 
-  function updateShowOnlyVisibleMode() {
-    const rectsComponent = assertDefined(component.rectsComponent);
-    expect(rectsComponent.getShowOnlyVisibleMode()).toBeFalse();
-    findAndClickElement('.top-view-controls .show-only-visible  input');
-    expect(rectsComponent.getShowOnlyVisibleMode()).toBeTrue();
-  }
-
   function makeRectWithGroupId(groupId: number, isVisible = true): UiRect {
     return new UiRectBuilder()
       .setX(0)
@@ -443,19 +481,21 @@ describe('RectsComponent', () => {
       .setWidth(1)
       .setHeight(1)
       .setLabel('rectangle1')
-      .setTransform({
-        dsdx: 1,
-        dsdy: 0,
-        dtdx: 0,
-        dtdy: 1,
-        tx: 0,
-        ty: 0,
-      })
+      .setTransform(
+        TransformMatrix.from({
+          dsdx: 1,
+          dsdy: 0,
+          dtdx: 0,
+          dtdy: 1,
+          tx: 0,
+          ty: 0,
+        }),
+      )
       .setIsVisible(isVisible)
       .setIsDisplay(false)
-      .setId('test-id-1234')
+      .setIsActiveDisplay(false)
+      .setId('test-id-' + groupId)
       .setGroupId(groupId)
-      .setIsVirtual(false)
       .setIsClickable(false)
       .setCornerRadius(0)
       .setDepth(0)
@@ -470,10 +510,12 @@ describe('RectsComponent', () => {
         title="TestRectsView"
         [store]="store"
         [rects]="rects"
-        [isStackBased]="isStackBased"
-        [displays]="displays"
         [miniRects]="miniRects"
-        [shadingModes]="shadingModes"></rects-view>
+        [displays]="displays"
+        [isStackBased]="isStackBased"
+        [shadingModes]="shadingModes"
+        [userOptions]="userOptions"
+        [dependencies]="dependencies"></rects-view>
     `,
   })
   class TestHostComponent {
@@ -487,6 +529,14 @@ describe('RectsComponent', () => {
       ShadingMode.WIRE_FRAME,
       ShadingMode.OPACITY,
     ];
+    userOptions = {
+      showOnlyVisible: {
+        name: 'Show only',
+        chip: VISIBLE_CHIP,
+        enabled: false,
+      },
+    };
+    dependencies = [TraceType.SURFACE_FLINGER];
 
     @ViewChild(RectsComponent)
     rectsComponent: RectsComponent | undefined;

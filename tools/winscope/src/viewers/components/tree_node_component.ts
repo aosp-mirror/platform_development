@@ -30,8 +30,21 @@ import {nodeInnerItemStyles} from 'viewers/components/styles/node.styles';
 @Component({
   selector: 'tree-node',
   template: `
+    <div *ngIf="showStateIcon" class="icon-wrapper-show-state" [style]="getShowStateIconStyle()">
+      <button
+        mat-icon-button
+        class="icon-button toggle-rect-show-state-btn"
+        (click)="toggleRectShowState($event)">
+        <mat-icon class="material-symbols-outlined">
+          {{ showStateIcon }}
+        </mat-icon>
+      </button>
+    </div>
     <div *ngIf="showChevron()" class="icon-wrapper">
-      <button class="icon-button toggle-tree-btn" (click)="toggleTree($event)">
+      <button
+        mat-icon-button
+        class="icon-button toggle-tree-btn"
+        (click)="toggleTree($event)">
         <mat-icon>
           {{ isExpanded ? 'arrow_drop_down' : 'chevron_right' }}
         </mat-icon>
@@ -43,7 +56,10 @@ import {nodeInnerItemStyles} from 'viewers/components/styles/node.styles';
     </div>
 
     <div *ngIf="showPinNodeIcon()" class="icon-wrapper">
-      <button class="icon-button pin-node-btn" (click)="pinNode($event)">
+      <button
+        mat-icon-button
+        class="icon-button pin-node-btn"
+        (click)="pinNode($event)">
         <mat-icon [class.material-symbols-outlined]="!isPinned"> push_pin </mat-icon>
       </button>
     </div>
@@ -59,6 +75,7 @@ import {nodeInnerItemStyles} from 'viewers/components/styles/node.styles';
 
     <div *ngIf="!isLeaf && !isExpanded && !isPinned" class="icon-wrapper">
       <button
+        mat-icon-button
         class="icon-button expand-tree-btn"
         [class]="collapseDiffClass"
         (click)="expandTree($event)">
@@ -76,14 +93,17 @@ export class TreeNodeComponent {
   @Input() isPinned = false;
   @Input() isInPinnedSection = false;
   @Input() isSelected = false;
+  @Input() showStateIcon?: string;
 
   @Output() readonly toggleTreeChange = new EventEmitter<void>();
+  @Output() readonly rectShowStateChange = new EventEmitter<void>();
   @Output() readonly expandTreeChange = new EventEmitter<boolean>();
   @Output() readonly pinNodeChange = new EventEmitter<UiHierarchyTreeNode>();
 
   collapseDiffClass = '';
   private el: HTMLElement;
   private treeWrapper: HTMLElement | undefined;
+  private readonly gutterOffset = -13;
 
   constructor(@Inject(ElementRef) public elementRef: ElementRef) {
     this.el = elementRef.nativeElement;
@@ -138,6 +158,11 @@ export class TreeNodeComponent {
     this.toggleTreeChange.emit();
   }
 
+  toggleRectShowState(event: MouseEvent) {
+    event.stopPropagation();
+    this.rectShowStateChange.emit();
+  }
+
   showChevron() {
     return !this.isLeaf && !this.flattened && !this.isInPinnedSection;
   }
@@ -176,6 +201,15 @@ export class TreeNodeComponent {
       return diffType;
     }
     return DiffType.MODIFIED;
+  }
+
+  getShowStateIconStyle() {
+    const nodeMargin = this.flattened
+      ? 0
+      : Number(this.el.style.marginLeft.split('px')[0]);
+    return {
+      marginLeft: nodeMargin + this.gutterOffset + 'px',
+    };
   }
 
   private getAllDiffTypesOfChildren(

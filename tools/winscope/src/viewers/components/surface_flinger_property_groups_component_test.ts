@@ -20,12 +20,14 @@ import {
   TestBed,
 } from '@angular/core/testing';
 import {MatDividerModule} from '@angular/material/divider';
+import {MatIconModule} from '@angular/material/icon';
 import {MatTooltipModule} from '@angular/material/tooltip';
 import {assertDefined} from 'common/assert_utils';
 import {TreeNodeUtils} from 'test/unit/tree_node_utils';
 import {EMPTY_OBJ_STRING} from 'trace/tree_node/formatters';
 import {SfCuratedProperties} from 'viewers/common/curated_properties';
 import {ViewerEvents} from 'viewers/common/viewer_events';
+import {CollapsibleSectionTitleComponent} from './collapsible_section_title_component';
 import {SurfaceFlingerPropertyGroupsComponent} from './surface_flinger_property_groups_component';
 import {TransformMatrixComponent} from './transform_matrix_component';
 
@@ -37,11 +39,12 @@ describe('SurfaceFlingerPropertyGroupsComponent', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       providers: [{provide: ComponentFixtureAutoDetect, useValue: true}],
-      imports: [MatDividerModule, MatTooltipModule],
+      imports: [MatDividerModule, MatTooltipModule, MatIconModule],
       declarations: [
         TestHostComponent,
         SurfaceFlingerPropertyGroupsComponent,
         TransformMatrixComponent,
+        CollapsibleSectionTitleComponent,
       ],
       schemas: [],
     }).compileComponents();
@@ -196,10 +199,22 @@ describe('SurfaceFlingerPropertyGroupsComponent', () => {
     ).toContain('null');
   });
 
+  it('handles collapse button click', () => {
+    expect(component.collapseButtonClicked).toBeFalse();
+    const collapseButton = assertDefined(
+      htmlElement.querySelector('collapsible-section-title button'),
+    ) as HTMLButtonElement;
+    collapseButton.click();
+    fixture.detectChanges();
+    expect(component.collapseButtonClicked).toBeTrue();
+  });
+
   @Component({
     selector: 'host-component',
     template: `
-      <surface-flinger-property-groups [properties]="properties"></surface-flinger-property-groups>
+      <surface-flinger-property-groups
+        [properties]="properties"
+        (collapseButtonClicked)="onCollapseButtonClick()"></surface-flinger-property-groups>
     `,
   })
   class TestHostComponent {
@@ -257,5 +272,11 @@ describe('SurfaceFlingerPropertyGroupsComponent', () => {
       hasInputChannel: false,
       ignoreDestinationFrame: true,
     };
+
+    collapseButtonClicked = false;
+
+    onCollapseButtonClick() {
+      this.collapseButtonClicked = true;
+    }
   }
 });

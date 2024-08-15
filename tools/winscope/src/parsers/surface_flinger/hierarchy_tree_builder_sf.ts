@@ -18,7 +18,10 @@ import {assertDefined} from 'common/assert_utils';
 import {HierarchyTreeBuilder} from 'parsers/hierarchy_tree_builder';
 import {HierarchyTreeNode} from 'trace/tree_node/hierarchy_tree_node';
 import {PropertiesProvider} from 'trace/tree_node/properties_provider';
-import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
+import {
+  PropertySource,
+  PropertyTreeNode,
+} from 'trace/tree_node/property_tree_node';
 import {DEFAULT_PROPERTY_TREE_NODE_FACTORY} from 'trace/tree_node/property_tree_node_factory';
 
 export class HierarchyTreeBuilderSf extends HierarchyTreeBuilder {
@@ -67,9 +70,10 @@ export class HierarchyTreeBuilderSf extends HierarchyTreeBuilder {
         const parentIdNode = assertDefined(
           child.getEagerPropertyByName('parent'),
         );
+        const isDefault = parentIdNode.source === PropertySource.DEFAULT;
         const parentId = this.getIdentifierValue(parentIdNode);
         const parent = identifierToChildren.get(parentId)?.at(0);
-        if (parent) {
+        if (!isDefault && parent) {
           this.setParentChildRelationship(parent, child);
         } else {
           this.setParentChildRelationship(root, child);

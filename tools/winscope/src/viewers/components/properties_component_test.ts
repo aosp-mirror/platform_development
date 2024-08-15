@@ -20,22 +20,26 @@ import {
   TestBed,
 } from '@angular/core/testing';
 import {FormsModule, ReactiveFormsModule} from '@angular/forms';
-import {MatCheckboxModule} from '@angular/material/checkbox';
+import {MatButtonModule} from '@angular/material/button';
 import {MatDividerModule} from '@angular/material/divider';
 import {MatFormFieldModule} from '@angular/material/form-field';
 import {MatIconModule} from '@angular/material/icon';
 import {MatInputModule} from '@angular/material/input';
 import {MatTooltipModule} from '@angular/material/tooltip';
 import {BrowserAnimationsModule} from '@angular/platform-browser/animations';
+import {assertDefined} from 'common/assert_utils';
 import {PersistentStore} from 'common/persistent_store';
 import {PropertyTreeBuilder} from 'test/unit/property_tree_builder';
+import {TraceType} from 'trace/trace_type';
 import {UiPropertyTreeNode} from 'viewers/common/ui_property_tree_node';
-import {HierarchyTreeNodeDataViewComponent} from './hierarchy_tree_node_data_view_component';
+import {ViewerEvents} from 'viewers/common/viewer_events';
+import {CollapsibleSectionTitleComponent} from './collapsible_section_title_component';
 import {PropertiesComponent} from './properties_component';
 import {PropertyTreeNodeDataViewComponent} from './property_tree_node_data_view_component';
 import {SurfaceFlingerPropertyGroupsComponent} from './surface_flinger_property_groups_component';
 import {TreeComponent} from './tree_component';
 import {TreeNodeComponent} from './tree_node_component';
+import {UserOptionsComponent} from './user_options_component';
 
 describe('PropertiesComponent', () => {
   let fixture: ComponentFixture<PropertiesComponent>;
@@ -50,14 +54,15 @@ describe('PropertiesComponent', () => {
         SurfaceFlingerPropertyGroupsComponent,
         TreeComponent,
         TreeNodeComponent,
-        HierarchyTreeNodeDataViewComponent,
         PropertyTreeNodeDataViewComponent,
+        CollapsibleSectionTitleComponent,
+        UserOptionsComponent,
       ],
       imports: [
         CommonModule,
         MatInputModule,
         MatFormFieldModule,
-        MatCheckboxModule,
+        MatButtonModule,
         MatDividerModule,
         BrowserAnimationsModule,
         FormsModule,
@@ -79,6 +84,7 @@ describe('PropertiesComponent', () => {
         isUnavailable: false,
       },
     };
+    component.traceType = TraceType.SURFACE_FLINGER;
 
     fixture.detectChanges();
   });
@@ -95,30 +101,8 @@ describe('PropertiesComponent', () => {
   it('renders view controls', () => {
     const viewControls = htmlElement.querySelector('.view-controls');
     expect(viewControls).toBeTruthy();
-    const box = htmlElement.querySelector('.view-controls input');
+    const box = htmlElement.querySelector('.view-controls .user-option');
     expect(box).toBeTruthy(); //renders at least one view control option
-  });
-
-  it('disables checkboxes if option unavailable', () => {
-    let box = htmlElement.querySelector('.view-controls input');
-    expect(box).toBeTruthy();
-    expect((box as HTMLInputElement).disabled).toBeFalse();
-
-    component.userOptions['showDiff'].isUnavailable = true;
-    fixture.detectChanges();
-    box = htmlElement.querySelector('.view-controls input');
-    expect((box as HTMLInputElement).disabled).toBeTrue();
-  });
-
-  it('updates tree on user option checkbox change', () => {
-    const box = htmlElement.querySelector('.view-controls input');
-    expect(box).toBeTruthy();
-
-    const spy = spyOn(component, 'onUserOptionChange');
-    (box as HTMLInputElement).checked = true;
-    (box as HTMLInputElement).dispatchEvent(new Event('click'));
-    fixture.detectChanges();
-    expect(spy).toHaveBeenCalled();
   });
 
   it('renders tree in proto dump upon selected item', () => {
@@ -134,15 +118,66 @@ describe('PropertiesComponent', () => {
     expect(treeEl).toBeTruthy();
   });
 
-  it('handles change in filter', () => {
-    const inputEl = htmlElement.querySelector('.title-filter input');
-    expect(inputEl).toBeTruthy();
+  it('renders placeholder text', () => {
+    component.propertiesTree = undefined;
+    component.placeholderText = 'Placeholder text';
+    fixture.detectChanges();
+    expect(
+      htmlElement.querySelector('.placeholder-text')?.textContent,
+    ).toContain('Placeholder text');
+  });
 
-    const spy = spyOn(component, 'filterTree');
-    (inputEl as HTMLInputElement).value = 'Root';
-    (inputEl as HTMLInputElement).dispatchEvent(new Event('input'));
+  it('handles node click', () => {
+    const tree = new PropertyTreeBuilder()
+      .setRootId('selectedItem')
+      .setName('property')
+      .setValue(null)
+      .build();
+    tree.setIsRoot(true);
+    component.propertiesTree = UiPropertyTreeNode.from(tree);
+    fixture.detectChanges();
+
+    let highlightedItem: string | undefined;
+    htmlElement.addEventListener(
+      ViewerEvents.HighlightedPropertyChange,
+      (event) => {
+        highlightedItem = (event as CustomEvent).detail.id;
+      },
+    );
+
+    const node = assertDefined(
+      htmlElement.querySelector('tree-node'),
+    ) as HTMLElement;
+    node.click();
+    fixture.detectChanges();
+    expect(highlightedItem).toEqual(tree.id);
+  });
+
+  it('handles change in filter', () => {
+    let filterString: string | undefined;
+    htmlElement.addEventListener(
+      ViewerEvents.PropertiesFilterChange,
+      (event) => {
+        filterString = (event as CustomEvent).detail.filterString;
+      },
+    );
+    const inputEl = assertDefined(
+      htmlElement.querySelector('.title-section input'),
+    ) as HTMLInputElement;
+
+    inputEl.value = 'Root';
+    inputEl.dispatchEvent(new Event('input'));
+    fixture.detectChanges();
+    expect(filterString).toBe('Root');
+  });
+
+  it('handles collapse button click', () => {
+    const spy = spyOn(component.collapseButtonClicked, 'emit');
+    const collapseButton = assertDefined(
+      htmlElement.querySelector('collapsible-section-title button'),
+    ) as HTMLButtonElement;
+    collapseButton.click();
     fixture.detectChanges();
     expect(spy).toHaveBeenCalled();
-    expect(component.filterString).toBe('Root');
   });
 });

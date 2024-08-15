@@ -17,7 +17,7 @@
 import {assertDefined} from 'common/assert_utils';
 import {TraceRect} from 'trace/trace_rect';
 import {HierarchyTreeNode} from 'trace/tree_node/hierarchy_tree_node';
-import {UiRect} from 'viewers/components/rects/types2d';
+import {UiRect} from 'viewers/components/rects/ui_rect';
 import {UiRectBuilder} from 'viewers/components/rects/ui_rect_builder';
 
 class UiRectFactory {
@@ -36,9 +36,9 @@ class UiRectFactory {
         .setTransform(traceRect.transform)
         .setIsVisible(traceRect.isVisible)
         .setIsDisplay(traceRect.isDisplay)
+        .setIsActiveDisplay(traceRect.isActiveDisplay)
         .setId(traceRect.id)
         .setGroupId(traceRect.groupId)
-        .setIsVirtual(traceRect.isVirtual)
         .setIsClickable(!traceRect.isDisplay)
         .setCornerRadius(traceRect.cornerRadius)
         .setHasContent(
@@ -53,7 +53,9 @@ class UiRectFactory {
   }
 
   makeVcUiRects(hierarchyRoot: HierarchyTreeNode, groupId: number): UiRect[] {
-    const traceRects = this.extractRects(hierarchyRoot);
+    const traceRects = this.extractRects(hierarchyRoot).filter((traceRect) => {
+      return traceRect.h > 0 && traceRect.w > 0;
+    });
     return traceRects.map((traceRect) => {
       return new UiRectBuilder()
         .setX(traceRect.x)
@@ -64,9 +66,9 @@ class UiRectFactory {
         .setTransform(traceRect.transform)
         .setIsVisible(traceRect.isVisible)
         .setIsDisplay(traceRect.isDisplay)
+        .setIsActiveDisplay(traceRect.isActiveDisplay)
         .setId(traceRect.id)
         .setGroupId(groupId)
-        .setIsVirtual(traceRect.isVirtual)
         .setIsClickable(true)
         .setCornerRadius(traceRect.cornerRadius)
         .setHasContent(traceRect.isVisible)
@@ -76,11 +78,47 @@ class UiRectFactory {
     });
   }
 
-  private extractRects(hierarchyRoot: HierarchyTreeNode): TraceRect[] {
+  makeInputRects(
+    hierarchyRoot: HierarchyTreeNode,
+    hasContent: (id: string) => boolean,
+  ): UiRect[] {
+    const traceRects = this.extractRects(hierarchyRoot, (node) =>
+      // The root node contains the display rects, so use the primary rects for the displays.
+      // For nodes, the input windows are the secondary rects.
+      node.isRoot() ? node.getRects() : node.getSecondaryRects(),
+    );
+    return traceRects.map((traceRect) => {
+      const opacity = traceRect.isDisplay ? 1 : traceRect.isSpy ? 0.25 : 0.9;
+      return new UiRectBuilder()
+        .setX(traceRect.x)
+        .setY(traceRect.y)
+        .setWidth(traceRect.w)
+        .setHeight(traceRect.h)
+        .setLabel(traceRect.name)
+        .setTransform(traceRect.transform)
+        .setIsVisible(traceRect.isVisible)
+        .setIsDisplay(traceRect.isDisplay)
+        .setIsActiveDisplay(traceRect.isActiveDisplay)
+        .setId(traceRect.id)
+        .setGroupId(traceRect.groupId)
+        .setIsClickable(true)
+        .setCornerRadius(traceRect.cornerRadius)
+        .setHasContent(hasContent(traceRect.id))
+        .setDepth(traceRect.depth)
+        .setOpacity(opacity)
+        .setFillRegion(traceRect.fillRegion)
+        .build();
+    });
+  }
+
+  private extractRects(
+    hierarchyRoot: HierarchyTreeNode,
+    extractNodeRects = (node: HierarchyTreeNode) => node.getRects(),
+  ): TraceRect[] {
     const rects: TraceRect[] = [];
 
     hierarchyRoot.forEachNodeDfs((node) => {
-      const nodeRects = node.getRects();
+      const nodeRects = extractNodeRects(node);
       if (nodeRects && nodeRects.length > 0) {
         rects.push(...nodeRects);
       }

@@ -13,31 +13,31 @@
 // limitations under the License.
 
 use std::{
-    fs::copy,
-    path::{Path, PathBuf},
+    fs::{copy, read_link},
+    os::unix::fs::symlink,
+    process::Output,
 };
 
 use anyhow::{anyhow, Context, Result};
-use copy_dir::copy_dir;
 use glob::glob;
 
-use crate::{
-    most_recent_version, write_pseudo_crate, CompatibleVersionPair, Crate, CrateCollection,
-    Migratable, NameAndVersionMap, VersionMatch,
-};
+use crate::{copy_dir, crate_type::diff_android_bp, CompatibleVersionPair, Crate};
 
 static CUSTOMIZATIONS: &'static [&'static str] =
     &["*.bp", "cargo_embargo.json", "patches", "METADATA", "TEST_MAPPING", "MODULE_LICENSE_*"];
 
+static SYMLINKS: &'static [&'static str] = &["LICENSE", "NOTICE"];
+
 impl<'a> CompatibleVersionPair<'a, Crate> {
     pub fn copy_customizations(&self) -> Result<()> {
-        let dest_dir_absolute = self.dest.path();
+        let dest_dir_absolute = self.dest.staging_path().abs();
         for pattern in CUSTOMIZATIONS {
             let full_pattern = self.source.path().join(pattern);
             for entry in glob(
                 full_pattern
+                    .abs()
                     .to_str()
-                    .ok_or(anyhow!("Failed to convert path {} to str", full_pattern.display()))?,
+                    .ok_or(anyhow!("Failed to convert path {} to str", full_pattern))?,
             )? {
                 let entry = entry?;
                 let filename = entry
@@ -45,10 +45,10 @@ impl<'a> CompatibleVersionPair<'a, Crate> {
                     .context(format!("Failed to get file name for {}", entry.display()))?
                     .to_os_string();
                 if entry.is_dir() {
-                    copy_dir(&entry, dest_dir_absolute.join(filename)).context(format!(
+                    copy_dir(&entry, &dest_dir_absolute.join(filename)).context(format!(
                         "Failed to copy {} to {}",
                         entry.display(),
-                        dest_dir_absolute.display()
+                        self.dest.staging_path()
                     ))?;
                 } else {
                     let dest_file = dest_dir_absolute.join(&filename);
@@ -63,37 +63,28 @@ impl<'a> CompatibleVersionPair<'a, Crate> {
                 }
             }
         }
+        for link in SYMLINKS {
+            let src_path = self.source.path().join(link);
+            if src_path.abs().is_symlink() {
+                let dest = read_link(src_path.abs())?;
+                if dest.exists() {
+                    return Err(anyhow!(
+                        "Can't symlink {} -> {} because destination exists",
+                        link,
+                        dest.display(),
+                    ));
+                }
+                symlink(dest, dest_dir_absolute.join(link))?;
+            }
+        }
         Ok(())
     }
-}
-
-pub fn migrate<P: Into<PathBuf>>(
-    repo_root: P,
-    source_dir: &impl AsRef<Path>,
-    pseudo_crate_dir: &impl AsRef<Path>,
-) -> Result<VersionMatch<CrateCollection>> {
-    let mut source = CrateCollection::new(repo_root);
-    source.add_from(source_dir, None::<&&str>)?;
-    source.map_field_mut().retain(|_nv, krate| krate.is_crates_io());
-
-    let pseudo_crate_dir_absolute = source.repo_root().join(pseudo_crate_dir);
-    write_pseudo_crate(
-        &pseudo_crate_dir_absolute,
-        source
-            .filter_versions(&most_recent_version)
-            .filter(|(_nv, krate)| krate.is_migration_eligible())
-            .map(|(_nv, krate)| krate),
-    )?;
-
-    let mut dest = CrateCollection::new(source.repo_root());
-    dest.add_from(&pseudo_crate_dir.as_ref().join("android/vendor"), Some(pseudo_crate_dir))?;
-
-    let mut version_match = VersionMatch::new(source, dest)?;
-
-    version_match.copy_customizations()?;
-    version_match.stage_crates()?;
-    version_match.apply_patches()?;
-    version_match.generate_android_bps()?;
-
-    Ok(version_match)
+    pub fn diff_android_bps(&self) -> Result<Output> {
+        diff_android_bp(
+            &self.source.android_bp().rel(),
+            &self.dest.staging_path().join(&"Android.bp").rel(),
+            &self.source.path().root(),
+        )
+        .context("Failed to diff Android.bp".to_string())
+    }
 }

@@ -102,7 +102,7 @@ class E2eTestUtils {
         return;
       }
     }
-    throw Error(`could not find tab corresponding to ${title}`);
+    throw new Error(`could not find tab corresponding to ${title}`);
   }
 
   static async checkTimelineTraceSelector(trace: {
@@ -163,7 +163,7 @@ class E2eTestUtils {
 
   static async filterHierarchy(viewer: string, filterString: string) {
     await E2eTestUtils.updateInputField(
-      `${viewer} hierarchy-view .title-filter`,
+      `${viewer} hierarchy-view .title-section`,
       'filter',
       filterString,
     );
@@ -195,23 +195,24 @@ class E2eTestUtils {
         return;
       }
     }
-    throw Error(`could not find item matching ${itemName} in hierarchy`);
+    throw new Error(`could not find item matching ${itemName} in hierarchy`);
   }
 
-  static async applyStateToHierarchyCheckboxes(
+  static async applyStateToHierarchyOptions(
     viewerSelector: string,
     shouldEnable: boolean,
   ) {
-    const checkboxes: ElementFinder[] = await element.all(
-      by.css(`${viewerSelector} hierarchy-view .view-controls .mat-checkbox`),
+    const options: ElementFinder[] = await element.all(
+      by.css(`${viewerSelector} hierarchy-view .view-controls .user-option`),
     );
-    for (const box of checkboxes) {
-      const input = box.element(by.css('input'));
-      const isEnabled = await input.isSelected();
+    for (const option of options) {
+      const isEnabled = !(await option.getAttribute('class')).includes(
+        'not-enabled',
+      );
       if (shouldEnable && !isEnabled) {
-        await box.click();
+        await option.click();
       } else if (!shouldEnable && isEnabled) {
-        await box.click();
+        await option.click();
       }
     }
   }
@@ -230,7 +231,7 @@ class E2eTestUtils {
         return;
       }
     }
-    throw Error(`could not find item ${itemName} in properties tree`);
+    throw new Error(`could not find item ${itemName} in properties tree`);
   }
 
   static async checkRectLabel(viewer: string, expectedLabel: string) {
@@ -252,15 +253,13 @@ class E2eTestUtils {
   }
 
   static async checkTotalScrollEntries(
-    selectors: {viewer: string; scroll: string; entry: string},
+    viewerSelector: string,
     scrollViewport: Function,
     numberOfEntries: number,
     scrollToBottomOffset?: number | undefined,
   ) {
     if (scrollToBottomOffset !== undefined) {
-      const viewport = element(
-        by.css(`${selectors.viewer} ${selectors.scroll}`),
-      );
+      const viewport = element(by.css(`${viewerSelector} .scroll`));
       await browser.executeAsyncScript(
         scrollViewport,
         viewport,
@@ -268,7 +267,7 @@ class E2eTestUtils {
       );
     }
     const entries: ElementFinder[] = await element.all(
-      by.css(`${selectors.viewer} ${selectors.scroll} ${selectors.entry}`),
+      by.css(`${viewerSelector} .scroll .entry`),
     );
     expect(await entries[entries.length - 1].getAttribute('item-id')).toEqual(
       `${numberOfEntries - 1}`,

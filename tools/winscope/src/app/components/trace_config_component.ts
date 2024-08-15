@@ -13,27 +13,38 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import {Component, EventEmitter, Input, Output} from '@angular/core';
+import {
+  ChangeDetectorRef,
+  Component,
+  EventEmitter,
+  Inject,
+  Input,
+  Output,
+} from '@angular/core';
+import {MatSelect, MatSelectChange} from '@angular/material/select';
 import {assertDefined} from 'common/assert_utils';
+import {globalConfig} from 'common/global_config';
+import {PersistentStoreProxy} from 'common/persistent_store_proxy';
 import {
   EnableConfiguration,
   SelectionConfiguration,
   TraceConfiguration,
   TraceConfigurationMap,
-} from 'trace_collection/trace_collection_utils';
+} from 'trace_collection/trace_configuration';
 
 @Component({
   selector: 'trace-config',
   template: `
-    <h3 class="mat-subheading-2">Trace targets</h3>
+    <h3 class="mat-subheading-2">{{title}}</h3>
 
     <div class="checkboxes">
       <mat-checkbox
         *ngFor="let traceKey of objectKeys(this.traceConfig)"
         color="primary"
         class="trace-checkbox"
-        [checked]="this.traceConfig[traceKey].run"
-        (change)="changeRunTrace($event.checked, this.traceConfig[traceKey])"
+        [disabled]="!this.traceConfig[traceKey].available"
+        [(ngModel)]="this.traceConfig[traceKey].enabled"
+        (ngModelChange)="onTraceConfigChange()"
         >{{ this.traceConfig[traceKey].name }}</mat-checkbox
       >
     </div>
@@ -50,8 +61,9 @@ import {
           *ngFor="let enableConfig of traceEnableConfigs(this.traceConfig[traceKey])"
           color="primary"
           class="enable-config"
-          [disabled]="!this.traceConfig[traceKey].run"
+          [disabled]="!this.traceConfig[traceKey].enabled"
           [(ngModel)]="enableConfig.enabled"
+          (ngModelChange)="onTraceConfigChange()"
           >{{ enableConfig.name }}</mat-checkbox
         >
       </div>
@@ -59,21 +71,26 @@ import {
       <div
         *ngIf="this.traceConfig[traceKey].config?.selectionConfigs.length > 0"
         class="selection-config-opt">
-        <mat-form-field
-          *ngFor="let selectionConfig of traceSelectionConfigs(this.traceConfig[traceKey])"
-          class="config-selection"
-          appearance="fill">
-          <mat-label>{{ selectionConfig.name }}</mat-label>
+        <ng-container *ngFor="let selectionConfig of traceSelectionConfigs(this.traceConfig[traceKey])">
+          <mat-form-field
+            class="config-selection"
+            appearance="fill">
+            <mat-label>{{ selectionConfig.name }}</mat-label>
 
-          <mat-select
-            class="selected-value"
-            [(value)]="selectionConfig.value"
-            [disabled]="!this.traceConfig[traceKey].run">
-            <mat-option *ngFor="let option of selectionConfig.options" value="{{ option }}">{{
-              option
-            }}</mat-option>
-          </mat-select>
-        </mat-form-field>
+            <mat-select
+              #matSelect
+              disableOptionCentering
+              class="selected-value"
+              [attr.label]="traceKey + selectionConfig.name"
+              [value]="selectionConfig.value"
+              [disabled]="!this.traceConfig[traceKey].enabled"
+              (selectionChange)="onSelectChange($event, selectionConfig)">
+              <mat-option *ngFor="let option of selectionConfig.options" (click)="onOptionClick(matSelect, option, traceKey + selectionConfig.name)" [value]="option">{{
+                option
+              }}</mat-option>
+            </mat-select>
+          </mat-form-field>
+        </ng-container>
       </div>
     </ng-container>
   `,
@@ -91,15 +108,51 @@ import {
         flex-wrap: wrap;
         gap: 10px;
       }
+      .config-panel {
+        position: absolute;
+        left: 0px;
+        top: 100px;
+      }
     `,
   ],
 })
 export class TraceConfigComponent {
   objectKeys = Object.keys;
+  changeDetectionWorker: number | undefined;
+  traceConfig: TraceConfigurationMap | undefined;
 
-  @Input() traceConfig: TraceConfigurationMap | undefined;
+  @Input() title: string | undefined;
+  @Input() traceConfigStoreKey: string | undefined;
+  @Input() initialTraceConfig: TraceConfigurationMap | undefined;
+  @Input() storage: Storage | undefined;
   @Output() readonly traceConfigChange =
     new EventEmitter<TraceConfigurationMap>();
+
+  constructor(
+    @Inject(ChangeDetectorRef) private changeDetectorRef: ChangeDetectorRef,
+  ) {}
+
+  ngOnInit() {
+    this.traceConfig = PersistentStoreProxy.new<TraceConfigurationMap>(
+      assertDefined(this.traceConfigStoreKey),
+      assertDefined(
+        JSON.parse(JSON.stringify(assertDefined(this.initialTraceConfig))),
+        () => 'component initialized without config',
+      ),
+      assertDefined(this.storage),
+    );
+    if (globalConfig.MODE !== 'KARMA_TEST') {
+      this.changeDetectionWorker = window.setInterval(
+        () => this.changeDetectorRef.detectChanges(),
+        200,
+      );
+    }
+    this.traceConfigChange.emit(this.traceConfig);
+  }
+
+  ngOnDestroy() {
+    window.clearInterval(this.changeDetectionWorker);
+  }
 
   advancedConfigTraces() {
     const advancedConfigs: string[] = [];
@@ -129,12 +182,27 @@ export class TraceConfigComponent {
 
   someTraces(trace: TraceConfiguration): boolean {
     return (
-      !trace.run &&
+      !trace.enabled &&
       this.traceEnableConfigs(trace).filter((trace) => trace.enabled).length > 0
     );
   }
 
-  changeRunTrace(run: boolean, trace: TraceConfiguration): void {
-    trace.run = run;
+  onSelectChange(event: MatSelectChange, config: SelectionConfiguration) {
+    config.value = event.value;
+    event.source.close();
+    this.onTraceConfigChange();
+  }
+
+  onOptionClick(select: MatSelect, option: string, configName: string) {
+    if (select.value === option) {
+      const selectElement = assertDefined(
+        document.querySelector(`mat-select[label="${configName}"]`),
+      );
+      (selectElement as HTMLElement).blur();
+    }
+  }
+
+  onTraceConfigChange() {
+    this.traceConfigChange.emit(this.traceConfig);
   }
 }

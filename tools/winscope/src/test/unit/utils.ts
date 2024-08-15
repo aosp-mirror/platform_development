@@ -14,13 +14,14 @@
  * limitations under the License.
  */
 
+import {ComponentFixture} from '@angular/core/testing';
 import {assertDefined} from 'common/assert_utils';
 import {Timestamp} from 'common/time';
 import {TimestampConverter} from 'common/timestamp_converter';
 import {UrlUtils} from 'common/url_utils';
 import {ParserFactory as LegacyParserFactory} from 'parsers/legacy/parser_factory';
-import {TracesParserFactory} from 'parsers/legacy/traces_parser_factory';
 import {ParserFactory as PerfettoParserFactory} from 'parsers/perfetto/parser_factory';
+import {TracesParserFactory} from 'parsers/traces/traces_parser_factory';
 import {Parser} from 'trace/parser';
 import {Trace} from 'trace/trace';
 import {Traces} from 'trace/traces';
@@ -77,6 +78,11 @@ class UnitTestUtils {
       converter,
       initializeRealToElapsedTimeOffsetNs,
     );
+
+    expect(parsers.length)
+      .withContext(`Should have been able to create a parser for ${filename}`)
+      .toBeGreaterThanOrEqual(1);
+
     return parsers[0];
   }
 
@@ -92,7 +98,6 @@ class UnitTestUtils {
     const fileAndParsers = await new LegacyParserFactory().createParsers(
       [file],
       converter,
-      undefined,
       undefined,
     );
 
@@ -117,16 +122,10 @@ class UnitTestUtils {
       }
     }
 
-    const parsers = fileAndParsers.map((fileAndParser) => {
+    return fileAndParsers.map((fileAndParser) => {
       fileAndParser.parser.createTimestamps();
       return fileAndParser.parser;
     });
-
-    expect(parsers.length)
-      .withContext(`Should have been able to create a parser for ${filename}`)
-      .toBeGreaterThanOrEqual(1);
-
-    return parsers;
   }
 
   static async getPerfettoParser<T extends TraceType>(
@@ -170,11 +169,24 @@ class UnitTestUtils {
     withUTCOffset = false,
   ): Promise<Parser<object>> {
     const converter = UnitTestUtils.getTimestampConverter(withUTCOffset);
-    const parsersArray = await Promise.all(
-      filenames.map(async (filename) =>
-        UnitTestUtils.getParser(filename, converter, true),
-      ),
-    );
+    const legacyParsers = (
+      await Promise.all(
+        filenames.map(async (filename) =>
+          UnitTestUtils.getParsers(filename, converter, true),
+        ),
+      )
+    ).reduce((acc, cur) => acc.concat(cur), []);
+
+    const perfettoParsers = (
+      await Promise.all(
+        filenames.map(async (filename) =>
+          UnitTestUtils.getPerfettoParsers(filename),
+        ),
+      )
+    ).reduce((acc, cur) => acc.concat(cur), []);
+
+    const parsersArray = legacyParsers.concat(perfettoParsers);
+
     const offset = parsersArray
       .filter((parser) => parser.getRealToBootTimeOffsetNs() !== undefined)
       .sort((a, b) =>
@@ -241,7 +253,7 @@ class UnitTestUtils {
   }
 
   static async getImeTraceEntries(): Promise<
-    Map<TraceType, HierarchyTreeNode>
+    [Map<TraceType, HierarchyTreeNode>, Map<TraceType, HierarchyTreeNode>]
   > {
     let surfaceFlingerEntry: HierarchyTreeNode | undefined;
     {
@@ -277,7 +289,15 @@ class UnitTestUtils {
     entries.set(TraceType.SURFACE_FLINGER, surfaceFlingerEntry);
     entries.set(TraceType.WINDOW_MANAGER, windowManagerEntry);
 
-    return entries;
+    const secondEntries = new Map<TraceType, HierarchyTreeNode>();
+    secondEntries.set(
+      TraceType.INPUT_METHOD_CLIENTS,
+      await UnitTestUtils.getTraceEntry('traces/ime/InputMethodClients.pb', 1),
+    );
+    secondEntries.set(TraceType.SURFACE_FLINGER, surfaceFlingerEntry);
+    secondEntries.set(TraceType.WINDOW_MANAGER, windowManagerEntry);
+
+    return [entries, secondEntries];
   }
 
   static timestampEqualityTester(first: any, second: any): boolean | undefined {
@@ -285,6 +305,40 @@ class UnitTestUtils {
       return UnitTestUtils.testTimestamps(first, second);
     }
     return undefined;
+  }
+
+  static checkSectionCollapseAndExpand<T>(
+    htmlElement: HTMLElement,
+    fixture: ComponentFixture<T>,
+    selector: string,
+    sectionTitle: string,
+  ) {
+    const section = assertDefined(htmlElement.querySelector(selector));
+    const collapseButton = assertDefined(
+      section.querySelector('collapsible-section-title button'),
+    ) as HTMLElement;
+    collapseButton.click();
+    fixture.detectChanges();
+    expect(section.classList).toContain('collapsed');
+    const collapsedSections = assertDefined(
+      htmlElement.querySelector('collapsed-sections'),
+    );
+    const collapsedSection = assertDefined(
+      collapsedSections.querySelector('.collapsed-section'),
+    ) as HTMLElement;
+    expect(collapsedSection.textContent).toContain(sectionTitle);
+    collapsedSection.click();
+    fixture.detectChanges();
+    UnitTestUtils.checkNoCollapsedSectionButtons(htmlElement);
+  }
+
+  static checkNoCollapsedSectionButtons(htmlElement: HTMLElement) {
+    const collapsedSections = assertDefined(
+      htmlElement.querySelector('collapsed-sections'),
+    );
+    expect(
+      collapsedSections.querySelectorAll('.collapsed-section').length,
+    ).toEqual(0);
   }
 
   private static testTimestamps(

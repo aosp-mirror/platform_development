@@ -36,7 +36,10 @@ async function build() {
 
         // ProtoLog
         buildProtos([
-            '../../../../frameworks/base/core/proto/android/internal/protolog.proto'
+            'protolog/udc/protolog.proto'
+        ], 'protolog/udc'),
+        buildProtos([
+            '../../../../external/perfetto/protos/perfetto/trace/android/protolog.proto'
         ], 'protolog/latest'),
 
         // SurfaceFlinger
@@ -75,7 +78,16 @@ async function build() {
         // WindowManager
         buildProtos([
             '../../../../frameworks/base/core/proto/android/server/windowmanagertrace.proto',
+        ], 'windowmanager/udc'),
+        buildProtos([
+            'windowmanager/latest/wrapper.proto',
         ], 'windowmanager/latest'),
+
+        // Input
+        buildProtos([
+            '../../../../external/perfetto/protos/perfetto/trace/android/android_input_event.proto',
+            'input/latest/input_event_wrapper.proto',
+        ], 'input/latest'),
 
         // Test proto fields
         buildProtos([

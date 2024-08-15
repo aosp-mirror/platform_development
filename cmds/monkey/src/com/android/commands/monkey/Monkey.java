@@ -46,8 +46,8 @@ import java.io.Writer;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Arrays;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -188,13 +188,18 @@ public class Monkey {
     /** Categories we are allowed to launch **/
     private ArrayList<String> mMainCategories = new ArrayList<String>();
 
-    /** Applications we can switch to, as well as their corresponding categories. */
+    /**
+     * Applications we can switch to, as well as their corresponding categories.
+     */
     private HashMap<ComponentName, String> mMainApps = new HashMap<>();
 
     /** The delay between event inputs **/
     long mThrottle = 0;
 
-    /** Whether to randomize each throttle (0-mThrottle ms) inserted between events. */
+    /**
+     * Whether to randomize each throttle (0-mThrottle ms) inserted between
+     * events.
+     */
     boolean mRandomizeThrottle = false;
 
     /** The number of iterations **/
@@ -274,8 +279,8 @@ public class Monkey {
                 // around this region for the monkey to minimize
                 // harmless dropbox uploads from monkeys.
                 StrictMode.ThreadPolicy savedPolicy = StrictMode.allowThreadDiskWrites();
-                Logger.out.println("    // " + (allow ? "Allowing" : "Rejecting") + " start of "
-                        + intent + " in package " + pkg);
+                Logger.out.println("    // " + (allow ? "Allowing" : "Rejecting")
+                        + " start of " + intent + " in package " + pkg);
                 StrictMode.setThreadPolicy(savedPolicy);
             }
             currentPackage = pkg;
@@ -293,13 +298,11 @@ public class Monkey {
             // In case the activity is launching home and the default launcher
             // package is disabled, allow anyway to prevent ANR (see b/38121026)
             final Set<String> categories = intent.getCategories();
-            if (intent.getAction() == Intent.ACTION_MAIN
-                    && categories != null
+            if (intent.getAction() == Intent.ACTION_MAIN && categories != null
                     && categories.contains(Intent.CATEGORY_HOME)) {
                 try {
-                    final ResolveInfo resolveInfo =
-                            mPm.resolveIntent(intent, intent.getType(), 0,
-                                    ActivityManager.getCurrentUser());
+                    final ResolveInfo resolveInfo = mPm.resolveIntent(
+                            intent, intent.getType(), 0, ActivityManager.getCurrentUser());
                     final String launcherPackage = resolveInfo.activityInfo.packageName;
                     if (pkg.equals(launcherPackage)) {
                         return true;
@@ -315,8 +318,9 @@ public class Monkey {
         public boolean activityResuming(String pkg) {
             StrictMode.ThreadPolicy savedPolicy = StrictMode.allowThreadDiskWrites();
             Logger.out.println("    // activityResuming(" + pkg + ")");
-            boolean allow = MonkeyUtils.getPackageFilter().checkEnteringPackage(pkg)
-                    || (DEBUG_ALLOW_ANY_RESTARTS != 0);
+            boolean allow =
+                    MonkeyUtils.getPackageFilter().checkEnteringPackage(pkg)
+                            || (DEBUG_ALLOW_ANY_RESTARTS != 0);
             if (!allow) {
                 if (mVerbose > 0) {
                     Logger.out.println("    // " + (allow ? "Allowing" : "Rejecting")
@@ -328,9 +332,9 @@ public class Monkey {
             return allow;
         }
 
-        public boolean appCrashed(String processName, int pid,
-                String shortMsg, String longMsg,
-                long timeMillis, String stackTrace) {
+        public boolean appCrashed(String processName, int pid, String shortMsg,
+                                String longMsg, long timeMillis,
+                                String stackTrace) {
             StrictMode.ThreadPolicy savedPolicy = StrictMode.allowThreadDiskWrites();
             Logger.err.println("// CRASH: " + processName + " (pid " + pid + ")");
             Logger.err.println("// Short Msg: " + shortMsg);
@@ -350,7 +354,7 @@ public class Monkey {
                         if (!mIgnoreCrashes) {
                             mAbort = true;
                         }
-                        if (mRequestBugreport){
+                        if (mRequestBugreport) {
                             mRequestAppCrashBugreport = true;
                             mReportProcessName = processName;
                         }
@@ -365,7 +369,8 @@ public class Monkey {
             return 0;
         }
 
-        public int appNotResponding(String processName, int pid, String processStats) {
+        public int appNotResponding(String processName, int pid,
+                                    String processStats) {
             StrictMode.ThreadPolicy savedPolicy = StrictMode.allowThreadDiskWrites();
             Logger.err.println("// NOT RESPONDING: " + processName + " (pid " + pid + ")");
             Logger.err.println(processStats);
@@ -481,18 +486,14 @@ public class Monkey {
     private void commandLineReport(String reportName, String command) {
         Logger.err.println(reportName + ":");
         Runtime rt = Runtime.getRuntime();
-        Writer logOutput = null;
 
-        try {
+         try (Writer logOutput = mRequestBugreport ?
+            new BufferedWriter(new FileWriter(new File(Environment
+                    .getLegacyExternalStorageDirectory(), reportName), true)) : null) {
             // Process must be fully qualified here because android.os.Process
             // is used elsewhere
             java.lang.Process p = Runtime.getRuntime().exec(command);
 
-            if (mRequestBugreport) {
-                logOutput =
-                        new BufferedWriter(new FileWriter(new File(Environment
-                                .getLegacyExternalStorageDirectory(), reportName), true));
-            }
             // pipe everything from process stdout -> System.err
             InputStream inStream = p.getInputStream();
             InputStreamReader inReader = new InputStreamReader(inStream);
@@ -519,10 +520,6 @@ public class Monkey {
 
             int status = p.waitFor();
             Logger.err.println("// " + reportName + " status was " + status);
-
-            if (logOutput != null) {
-                logOutput.close();
-            }
         } catch (Exception e) {
             Logger.err.println("// Exception from " + reportName + ":");
             Logger.err.println(e.toString());
@@ -1027,6 +1024,7 @@ public class Monkey {
         }
 
         mWm = IWindowManager.Stub.asInterface(ServiceManager.getService("window"));
+
         if (mWm == null) {
             Logger.err.println("** Error: Unable to connect to window manager; is the system "
                     + "running?");
