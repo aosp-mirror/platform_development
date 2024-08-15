@@ -178,50 +178,39 @@ describe('TimelineComponent', () => {
     );
     fixture.detectChanges();
 
-    const timelineComponent = assertDefined(component.timeline);
+    expect(htmlElement.querySelector('.time-selector')).toBeNull();
+    expect(htmlElement.querySelector('.trace-selector')).toBeNull();
 
-    // no expand button
-    const button = htmlElement.querySelector(
-      `.${timelineComponent.TOGGLE_BUTTON_CLASS}`,
-    );
-    expect(button).toBeFalsy();
-
-    // no timelines shown
-    const miniTimelineElement = fixture.debugElement.query(
-      By.directive(MiniTimelineComponent),
-    );
-    expect(miniTimelineElement).toBeFalsy();
-
-    // error message shown
     const errorMessageContainer = assertDefined(
-      htmlElement.querySelector('.no-timestamps-msg'),
+      htmlElement.querySelector('.no-timeline-msg'),
     );
     expect(errorMessageContainer.textContent).toContain('No timeline to show!');
+    expect(errorMessageContainer.textContent).toContain(
+      'All loaded traces contain no timestamps.',
+    );
 
-    // arrow key presses don't do anything
-    const spyNextEntry = spyOn(timelineComponent, 'moveToNextEntry');
-    const spyPrevEntry = spyOn(timelineComponent, 'moveToPreviousEntry');
-
-    document.dispatchEvent(new KeyboardEvent('keydown', {key: 'ArrowRight'}));
-    fixture.detectChanges();
-    expect(spyNextEntry).not.toHaveBeenCalled();
-
-    document.dispatchEvent(new KeyboardEvent('keydown', {key: 'ArrowLeft'}));
-    fixture.detectChanges();
-    expect(spyPrevEntry).not.toHaveBeenCalled();
+    checkNoTimelineNavigation();
   });
 
-  it('handles some empty traces', () => {
-    const traces = new TracesBuilder()
-      .setTimestamps(TraceType.SURFACE_FLINGER, [])
-      .setTimestamps(TraceType.WINDOW_MANAGER, [time100])
-      .build();
-    assertDefined(component.timelineData).initialize(
-      traces,
-      undefined,
-      TimestampConverterUtils.TIMESTAMP_CONVERTER,
+  it('handles some empty traces and some with one timestamp', async () => {
+    await loadTracesWithOneTimestamp();
+
+    expect(htmlElement.querySelector('#time-selector')).toBeTruthy();
+    const shownSelection = assertDefined(
+      htmlElement.querySelector('#trace-selector .shown-selection'),
     );
-    fixture.detectChanges();
+    expect(shownSelection.innerHTML).toContain('Window Manager');
+    expect(shownSelection.innerHTML).not.toContain('Surface Flinger');
+
+    const errorMessageContainer = assertDefined(
+      htmlElement.querySelector('.no-timeline-msg'),
+    );
+    expect(errorMessageContainer.textContent).toContain('No timeline to show!');
+    expect(errorMessageContainer.textContent).toContain(
+      'Only a single timestamp has been recorded.',
+    );
+
+    checkNoTimelineNavigation();
   });
 
   it('processes active trace input and updates selected traces', async () => {
@@ -801,6 +790,24 @@ describe('TimelineComponent', () => {
     );
   });
 
+  it('does not apply stored trace deselection if only one timestamp available', async () => {
+    loadAllTraces();
+    await updateActiveTrace(TraceType.PROTO_LOG);
+    await openSelectPanel();
+    clickTraceFromSelectPanel(2);
+
+    const secondFixture = TestBed.createComponent(TestHostComponent);
+    const secondHost = secondFixture.componentInstance;
+    const secondElement = secondFixture.nativeElement;
+    await loadTracesWithOneTimestamp(secondHost, secondFixture);
+
+    const shownSelection = assertDefined(
+      secondElement.querySelector('#trace-selector .shown-selection'),
+    );
+    expect(shownSelection.innerHTML).toContain('Window Manager');
+    expect(shownSelection.textContent).not.toContain('Surface Flinger');
+  });
+
   it('does not store traces based on active view trace type', async () => {
     loadAllTraces();
     expectSelectedTraceTypes(
@@ -1114,6 +1121,25 @@ describe('TimelineComponent', () => {
     return trace;
   }
 
+  async function loadTracesWithOneTimestamp(
+    hostComponent = component,
+    hostFixture = fixture,
+  ) {
+    const traces = new TracesBuilder()
+      .setTimestamps(TraceType.SURFACE_FLINGER, [])
+      .setTimestamps(TraceType.WINDOW_MANAGER, [time100])
+      .build();
+    assertDefined(hostComponent.timelineData).initialize(
+      traces,
+      undefined,
+      TimestampConverterUtils.TIMESTAMP_CONVERTER,
+    );
+    hostComponent.allTraces = traces;
+    hostFixture.detectChanges();
+    await hostFixture.whenStable();
+    hostFixture.detectChanges();
+  }
+
   async function updateActiveTrace(type: TraceType) {
     const trace = getLoadedTrace(type);
     const timelineData = assertDefined(component.timelineData);
@@ -1216,6 +1242,32 @@ describe('TimelineComponent', () => {
   ) {
     expect(prevEntryButton.getAttribute('disabled')).toEqual('true');
     expect(nextEntryButton.getAttribute('disabled')).toEqual('true');
+  }
+
+  function checkNoTimelineNavigation() {
+    const timelineComponent = assertDefined(component.timeline);
+    // no expand button
+    expect(
+      htmlElement.querySelector(`.${timelineComponent.TOGGLE_BUTTON_CLASS}`),
+    ).toBeNull();
+
+    // no timelines shown
+    const miniTimelineElement = fixture.debugElement.query(
+      By.directive(MiniTimelineComponent),
+    );
+    expect(miniTimelineElement).toBeFalsy();
+
+    // arrow key presses don't do anything
+    const spyNextEntry = spyOn(timelineComponent, 'moveToNextEntry');
+    const spyPrevEntry = spyOn(timelineComponent, 'moveToPreviousEntry');
+
+    document.dispatchEvent(new KeyboardEvent('keydown', {key: 'ArrowRight'}));
+    fixture.detectChanges();
+    expect(spyNextEntry).not.toHaveBeenCalled();
+
+    document.dispatchEvent(new KeyboardEvent('keydown', {key: 'ArrowLeft'}));
+    fixture.detectChanges();
+    expect(spyPrevEntry).not.toHaveBeenCalled();
   }
 
   function openContextMenu(xOffset = 0, clickBelowMarker = false) {
