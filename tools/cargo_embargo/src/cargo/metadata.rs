@@ -49,6 +49,8 @@ pub struct PackageMetadata {
     pub features: BTreeMap<String, Vec<String>>,
     pub id: String,
     pub targets: Vec<TargetMetadata>,
+    pub license: Option<String>,
+    pub license_file: Option<String>,
 }
 
 #[derive(Clone, Debug, Deserialize, Eq, PartialEq)]
@@ -169,6 +171,8 @@ fn parse_cargo_metadata(
                     types: target.crate_types.clone(),
                     features: features_without_deps.clone(),
                     edition: package.edition.to_owned(),
+                    license: package.license.clone(),
+                    license_file: package.license_file.clone(),
                     package_dir: package_dir.clone(),
                     main_src: main_src.to_owned(),
                     target: target_triple.clone(),
@@ -193,6 +197,8 @@ fn parse_cargo_metadata(
                     types: vec![CrateType::Test],
                     features: features_without_deps.clone(),
                     edition: package.edition.to_owned(),
+                    license: package.license.clone(),
+                    license_file: package.license_file.clone(),
                     package_dir: package_dir.clone(),
                     main_src: main_src.to_owned(),
                     target: target_triple.clone(),
@@ -246,6 +252,7 @@ fn get_externs(
                 externs.push(Extern {
                     name: lib_name.clone(),
                     lib_name,
+                    raw_name: target.name.clone(),
                     extern_type: ExternType::Rust,
                 });
             }
@@ -267,6 +274,7 @@ fn make_extern(packages: &[PackageMetadata], dependency: &DependencyMetadata) ->
         bail!("Package {} didn't have any library or proc-macro targets", dependency.name);
     };
     let lib_name = target.name.replace('-', "_");
+    let raw_name = target.name.clone();
     let name =
         if let Some(rename) = &dependency.rename { rename.clone() } else { lib_name.clone() };
 
@@ -278,7 +286,7 @@ fn make_extern(packages: &[PackageMetadata], dependency: &DependencyMetadata) ->
             ExternType::Rust
         };
 
-    Ok(Extern { name, lib_name, extern_type })
+    Ok(Extern { name, lib_name, raw_name, extern_type })
 }
 
 /// Given a Cargo package ID, returns the path.
@@ -516,11 +524,13 @@ mod tests {
                 Extern {
                     name: "alwayslib".to_string(),
                     lib_name: "alwayslib".to_string(),
+                    raw_name: "alwayslib".to_string(),
                     extern_type: ExternType::Rust
                 },
                 Extern {
                     name: "unixlib".to_string(),
                     lib_name: "unixlib".to_string(),
+                    raw_name: "unixlib".to_string(),
                     extern_type: ExternType::Rust
                 },
             ]
@@ -577,6 +587,7 @@ mod tests {
             vec![Extern {
                 name: "foolib".to_string(),
                 lib_name: "foolib".to_string(),
+                raw_name: "foolib".to_string(),
                 extern_type: ExternType::Rust
             },]
         );
@@ -638,11 +649,13 @@ mod tests {
                 Extern {
                     name: "bar".to_string(),
                     lib_name: "bar".to_string(),
+                    raw_name: "bar".to_string(),
                     extern_type: ExternType::Rust
                 },
                 Extern {
                     name: "foo2".to_string(),
                     lib_name: "foo".to_string(),
+                    raw_name: "foo".to_string(),
                     extern_type: ExternType::Rust
                 },
             ]
@@ -653,11 +666,13 @@ mod tests {
                 Extern {
                     name: "baz".to_string(),
                     lib_name: "bar".to_string(),
+                    raw_name: "bar".to_string(),
                     extern_type: ExternType::Rust
                 },
                 Extern {
                     name: "foo2".to_string(),
                     lib_name: "foo".to_string(),
+                    raw_name: "foo".to_string(),
                     extern_type: ExternType::Rust
                 },
             ]

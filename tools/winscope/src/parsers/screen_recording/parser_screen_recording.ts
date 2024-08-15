@@ -53,7 +53,9 @@ class ParserScreenRecording extends AbstractParser {
     );
 
     if (metadataVersion !== 1 && metadataVersion !== 2) {
-      throw TypeError(`Metadata version "${metadataVersion}" not supported`);
+      throw new TypeError(
+        `Metadata version "${metadataVersion}" not supported`,
+      );
     }
 
     if (metadataVersion === 1) {

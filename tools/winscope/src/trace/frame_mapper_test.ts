@@ -282,33 +282,26 @@ describe('FrameMapper', () => {
     });
   });
 
-  describe('Transactions <-> SurfaceFlinger', () => {
-    let transactions: Trace<PropertyTreeNode>;
+  describe('ViewCapture <-> SurfaceFlinger', () => {
+    let viewCapture: Trace<PropertyTreeNode>;
     let surfaceFlinger: Trace<HierarchyTreeNode>;
     let traces: Traces;
 
     beforeAll(async () => {
-      // TRANSACTIONS:   0  1--2        3  4
-      //                  \     \        \
-      //                   \     \        \
-      // SURFACE_FLINGER:   0     1        2
-      transactions = new TraceBuilder<PropertyTreeNode>()
-        .setType(TraceType.TRANSACTIONS)
+      // VIEW_CAPTURE:   0  1  2---     3
+      //                  \     \  \     \
+      //                   \     \  \     \
+      // SURFACE_FLINGER:   0     1  2     3
+      // Time:           0  1  2  3  4  5  6
+      viewCapture = new TraceBuilder<PropertyTreeNode>()
+        .setType(TraceType.VIEW_CAPTURE)
         .setEntries([
           'entry-0' as unknown as PropertyTreeNode,
           'entry-1' as unknown as PropertyTreeNode,
           'entry-2' as unknown as PropertyTreeNode,
           'entry-3' as unknown as PropertyTreeNode,
-          'entry-4' as unknown as PropertyTreeNode,
         ])
-        .setTimestamps([time0, time1, time2, time5, time6])
-        .setParserCustomQueryResult(CustomQueryType.VSYNCID, [
-          0n,
-          10n,
-          10n,
-          20n,
-          30n,
-        ])
+        .setTimestamps([time0, time1, time2, time5])
         .build();
 
       surfaceFlinger = new TraceBuilder<HierarchyTreeNode>()
@@ -317,13 +310,17 @@ describe('FrameMapper', () => {
           'entry-0' as unknown as HierarchyTreeNode,
           'entry-1' as unknown as HierarchyTreeNode,
           'entry-2' as unknown as HierarchyTreeNode,
+          'entry-3' as unknown as HierarchyTreeNode,
         ])
-        .setTimestamps([time0, time1, time2])
-        .setParserCustomQueryResult(CustomQueryType.VSYNCID, [0n, 10n, 20n])
+        .setTimestamps([time1, time3, time4, time6])
+        .setFrame(0, 0)
+        .setFrame(1, 1)
+        .setFrame(2, 2)
+        .setFrame(3, 3)
         .build();
 
       traces = new Traces();
-      traces.addTrace(transactions);
+      traces.addTrace(viewCapture);
       traces.addTrace(surfaceFlinger);
       await new FrameMapper(traces).computeMapping();
     });
@@ -336,7 +333,7 @@ describe('FrameMapper', () => {
       expectedFrames.set(
         0,
         new Map<TraceType, Array<{}>>([
-          [TraceType.TRANSACTIONS, [await transactions.getEntry(0).getValue()]],
+          [TraceType.VIEW_CAPTURE, [await viewCapture.getEntry(0).getValue()]],
           [
             TraceType.SURFACE_FLINGER,
             [await surfaceFlinger.getEntry(0).getValue()],
@@ -346,13 +343,7 @@ describe('FrameMapper', () => {
       expectedFrames.set(
         1,
         new Map<TraceType, Array<{}>>([
-          [
-            TraceType.TRANSACTIONS,
-            [
-              await transactions.getEntry(1).getValue(),
-              await transactions.getEntry(2).getValue(),
-            ],
-          ],
+          [TraceType.VIEW_CAPTURE, [await viewCapture.getEntry(2).getValue()]],
           [
             TraceType.SURFACE_FLINGER,
             [await surfaceFlinger.getEntry(1).getValue()],
@@ -362,15 +353,124 @@ describe('FrameMapper', () => {
       expectedFrames.set(
         2,
         new Map<TraceType, Array<{}>>([
-          [TraceType.TRANSACTIONS, [await transactions.getEntry(3).getValue()]],
+          [TraceType.VIEW_CAPTURE, [await viewCapture.getEntry(2).getValue()]],
           [
             TraceType.SURFACE_FLINGER,
             [await surfaceFlinger.getEntry(2).getValue()],
           ],
         ]),
       );
+      expectedFrames.set(
+        3,
+        new Map<TraceType, Array<{}>>([
+          [TraceType.VIEW_CAPTURE, [await viewCapture.getEntry(3).getValue()]],
+          [
+            TraceType.SURFACE_FLINGER,
+            [await surfaceFlinger.getEntry(3).getValue()],
+          ],
+        ]),
+      );
 
       expect(await TracesUtils.extractFrames(traces)).toEqual(expectedFrames);
+    });
+  });
+
+  const TRACES_WITH_VSYNC_IDS = [
+    TraceType.TRANSACTIONS,
+    TraceType.INPUT_EVENT_MERGED,
+  ];
+
+  TRACES_WITH_VSYNC_IDS.forEach((traceType) => {
+    describe(`TraceType[${traceType}] <-> SurfaceFlinger`, () => {
+      let trace: Trace<PropertyTreeNode>;
+      let surfaceFlinger: Trace<HierarchyTreeNode>;
+      let traces: Traces;
+
+      beforeAll(async () => {
+        // TRACE:          0  1--2        3  4
+        //                  \     \        \
+        //                   \     \        \
+        // SURFACE_FLINGER:   0     1        2
+        trace = new TraceBuilder<PropertyTreeNode>()
+          .setType(traceType)
+          .setEntries([
+            'entry-0' as unknown as PropertyTreeNode,
+            'entry-1' as unknown as PropertyTreeNode,
+            'entry-2' as unknown as PropertyTreeNode,
+            'entry-3' as unknown as PropertyTreeNode,
+            'entry-4' as unknown as PropertyTreeNode,
+          ])
+          .setTimestamps([time0, time1, time2, time5, time6])
+          .setParserCustomQueryResult(CustomQueryType.VSYNCID, [
+            0n,
+            10n,
+            10n,
+            20n,
+            30n,
+          ])
+          .build();
+
+        surfaceFlinger = new TraceBuilder<HierarchyTreeNode>()
+          .setType(TraceType.SURFACE_FLINGER)
+          .setEntries([
+            'entry-0' as unknown as HierarchyTreeNode,
+            'entry-1' as unknown as HierarchyTreeNode,
+            'entry-2' as unknown as HierarchyTreeNode,
+          ])
+          .setTimestamps([time0, time1, time2])
+          .setParserCustomQueryResult(CustomQueryType.VSYNCID, [0n, 10n, 20n])
+          .build();
+
+        traces = new Traces();
+        traces.addTrace(trace);
+        traces.addTrace(surfaceFlinger);
+        await new FrameMapper(traces).computeMapping();
+      });
+
+      it('associates entries/frames', async () => {
+        const expectedFrames = new Map<
+          AbsoluteFrameIndex,
+          Map<TraceType, Array<{}>>
+        >();
+        expectedFrames.set(
+          0,
+          new Map<TraceType, Array<{}>>([
+            [traceType, [await trace.getEntry(0).getValue()]],
+            [
+              TraceType.SURFACE_FLINGER,
+              [await surfaceFlinger.getEntry(0).getValue()],
+            ],
+          ]),
+        );
+        expectedFrames.set(
+          1,
+          new Map<TraceType, Array<{}>>([
+            [
+              traceType,
+              [
+                await trace.getEntry(1).getValue(),
+                await trace.getEntry(2).getValue(),
+              ],
+            ],
+            [
+              TraceType.SURFACE_FLINGER,
+              [await surfaceFlinger.getEntry(1).getValue()],
+            ],
+          ]),
+        );
+        expectedFrames.set(
+          2,
+          new Map<TraceType, Array<{}>>([
+            [traceType, [await trace.getEntry(3).getValue()]],
+            [
+              TraceType.SURFACE_FLINGER,
+              [await surfaceFlinger.getEntry(2).getValue()],
+            ],
+          ]),
+        );
+
+        expect(await TracesUtils.extractFrames(traces)).toEqual(expectedFrames);
+      });
     });
   });
 
@@ -467,6 +567,53 @@ describe('FrameMapper', () => {
       );
 
       expect(await TracesUtils.extractFrames(traces)).toEqual(expectedFrames);
+    });
+  });
+
+  it('supports multiple traces with same type', async () => {
+    // SURFACE_FLINGER_0:    0
+    //                        \
+    //                         \
+    // SURFACE_FLINGER_1:    0  \
+    //                        \ |
+    //                         \|
+    // SCREEN_RECORDING:        0
+    // Time:                 0  1
+    const surfaceFlinger0 = new TraceBuilder<HierarchyTreeNode>()
+      .setType(TraceType.SURFACE_FLINGER)
+      .setEntries(['entry-0' as unknown as HierarchyTreeNode])
+      .setTimestamps([time0])
+      .build();
+
+    const surfaceFlinger1 = new TraceBuilder<HierarchyTreeNode>()
+      .setType(TraceType.SURFACE_FLINGER)
+      .setEntries(['entry-0' as unknown as HierarchyTreeNode])
+      .setTimestamps([time0])
+      .build();
+
+    const screenRecording = new TraceBuilder<ScreenRecordingTraceEntry>()
+      .setType(TraceType.SCREEN_RECORDING)
+      .setEntries(['entry-0' as unknown as ScreenRecordingTraceEntry])
+      .setTimestamps([time1])
+      .build();
+
+    const traces = new Traces();
+    traces.addTrace(surfaceFlinger0);
+    traces.addTrace(surfaceFlinger1);
+    traces.addTrace(screenRecording);
+    await new FrameMapper(traces).computeMapping();
+
+    expect(surfaceFlinger0.getEntry(0).getFramesRange()).toEqual({
+      start: 0,
+      end: 1,
+    });
+    expect(surfaceFlinger1.getEntry(0).getFramesRange()).toEqual({
+      start: 0,
+      end: 1,
+    });
+    expect(screenRecording.getEntry(0).getFramesRange()).toEqual({
+      start: 0,
+      end: 1,
     });
   });
 });

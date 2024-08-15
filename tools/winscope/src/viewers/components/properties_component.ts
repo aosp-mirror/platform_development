@@ -82,7 +82,7 @@ import {viewerCardInnerStyle} from './styles/viewer_card.styles';
       </div>
     </div>
 
-    <span class="mat-body-1 placeholder-text" *ngIf="!showPropertiesTree() && placeholderText"> {{ placeholderText }} </span>
+    <span class="mat-body-1 placeholder-text" *ngIf="showPlaceholderText()"> {{ placeholderText }} </span>
   `,
   styles: [
     `
@@ -105,10 +105,6 @@ import {viewerCardInnerStyle} from './styles/viewer_card.styles';
         flex-direction: column;
         overflow-y: auto;
         padding: 0px 12px;
-      }
-
-      .placeholder-text {
-        padding: 8px 12px;
       }
     `,
     nodeStyles,
@@ -170,5 +166,11 @@ export class PropertiesComponent {
 
   showPropertiesTree(): boolean {
     return !!this.propertiesTree && !this.showViewCaptureFormat();
+  }
+
+  showPlaceholderText(): boolean {
+    return (
+      !this.propertiesTree && !this.curatedProperties && !!this.placeholderText
+    );
   }
 }

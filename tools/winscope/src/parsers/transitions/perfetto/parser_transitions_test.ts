@@ -44,7 +44,7 @@ describe('Perfetto ParserTransitions', () => {
 
     it('provides timestamps', () => {
       const expected = [
-        TimestampConverterUtils.makeRealTimestamp(1700572945845474854n),
+        TimestampConverterUtils.makeZeroTimestamp(),
         TimestampConverterUtils.makeRealTimestamp(1700573425448299306n),
         TimestampConverterUtils.makeRealTimestamp(1700573426522433299n),
       ];

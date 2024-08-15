@@ -20,6 +20,7 @@ import {android} from 'protos/surfaceflinger/udc/static';
 import {HierarchyTreeBuilder} from 'test/unit/hierarchy_tree_builder';
 import {HierarchyTreeNode} from 'trace/tree_node/hierarchy_tree_node';
 import {VisibilityPropertiesComputation} from './visibility_properties_computation';
+import {ZOrderPathsComputation} from './z_order_paths_computation';
 
 describe('VisibilityPropertiesComputation', () => {
   let computation: VisibilityPropertiesComputation;
@@ -124,9 +125,14 @@ describe('VisibilityPropertiesComputation', () => {
       ).getValue(),
     ).toBeFalse();
     expect(getVisibilityReasons(invisibleLayer)).toEqual(['flag is hidden']);
+    expect(
+      assertDefined(
+        invisibleLayer.getEagerPropertyByName('isHiddenByPolicy'),
+      ).getValue(),
+    ).toBeTrue();
   });
 
-  it('detects non-visible layer that is hidden by parent', () => {
+  it('detects non-visible layer that is hidden by parent, even if rel-z parent is not hidden', () => {
     const hierarchyRoot = new HierarchyTreeBuilder()
       .setId('LayerTraceEntry')
       .setName('root')
@@ -176,6 +182,7 @@ describe('VisibilityPropertiesComputation', () => {
                 backgroundBlurRadius: 0,
                 layerStack: 0,
                 z: 0,
+                zOrderRelativeOf: 3,
                 transform: {
                   type: 0,
                   dsdx: 1,
@@ -189,19 +196,55 @@ describe('VisibilityPropertiesComputation', () => {
             },
           ],
         },
+        {
+          id: 3,
+          name: 'relZParent',
+          properties: {
+            id: 3,
+            name: 'relZParent',
+            parent: -1,
+            children: [],
+            visibleRegion: {rect: [{left: 0, right: 1, top: 0, bottom: 1}]},
+            activeBuffer: {width: 1, height: 1, stride: 1, format: 1},
+            flags: 0,
+            color: {r: 0, g: 0, b: 0, a: 1},
+            cornerRadius: 0,
+            shadowRadius: 0,
+            backgroundBlurRadius: 0,
+            layerStack: 0,
+            z: 0,
+            transform: {
+              type: 0,
+              dsdx: 1,
+              dtdx: 0,
+              dsdy: 0,
+              dtdy: 1,
+            },
+            screenBounds: null,
+            isOpaque: false,
+          } as android.surfaceflinger.ILayerProto,
+        },
       ])
       .build();
+    new ZOrderPathsComputation().setRoot(hierarchyRoot).executeInPlace();
 
     computation.setRoot(hierarchyRoot).executeInPlace();
-    const visibleLayer = assertDefined(hierarchyRoot.getChildByName('parent'));
+    const nonVisibleLayer = assertDefined(
+      hierarchyRoot.getChildByName('parent'),
+    );
     expect(
       assertDefined(
-        visibleLayer.getEagerPropertyByName('isComputedVisible'),
+        nonVisibleLayer.getEagerPropertyByName('isComputedVisible'),
       ).getValue(),
     ).toBeFalse();
+    expect(
+      assertDefined(
+        nonVisibleLayer.getEagerPropertyByName('isHiddenByPolicy'),
+      ).getValue(),
+    ).toBeTrue();
 
     const hiddenLayer = assertDefined(
-      visibleLayer.getChildByName('childHiddenByParent'),
+      nonVisibleLayer.getChildByName('childHiddenByParent'),
     );
     expect(
       assertDefined(
@@ -209,6 +252,11 @@ describe('VisibilityPropertiesComputation', () => {
       ).getValue(),
     ).toBeFalse();
     expect(getVisibilityReasons(hiddenLayer)).toEqual(['hidden by parent 1']);
+    expect(
+      assertDefined(
+        hiddenLayer.getEagerPropertyByName('isHiddenByPolicy'),
+      ).getValue(),
+    ).toBeFalse();
   });
 
   it('detects non-visible layer due to zero alpha', () => {
@@ -462,7 +510,7 @@ describe('VisibilityPropertiesComputation', () => {
     ]);
   });
 
-  it('adds occludedBy layers and updates isVisible', () => {
+  it('adds occludedBy layers and updates isVisible and visibilityReason', () => {
     const hierarchyRoot = new HierarchyTreeBuilder()
       .setId('LayerTraceEntry')
       .setName('root')
@@ -557,9 +605,7 @@ describe('VisibilityPropertiesComputation', () => {
     expect(
       invisibleLayer.getEagerPropertyByName('partiallyOccludedBy')?.getValue(),
     ).toEqual([]);
-    expect(
-      invisibleLayer.getEagerPropertyByName('visibilityReason'),
-    ).toBeUndefined();
+    expect(getVisibilityReasons(invisibleLayer)).toEqual(['occluded']);
 
     expect(
       assertDefined(
@@ -702,7 +748,7 @@ describe('VisibilityPropertiesComputation', () => {
         ?.getValue(),
     ).toEqual('2 occludingLayer');
     expect(
-      coveringLayer.getEagerPropertyByName('partiallyOccludedBy')?.getValue(),
+      occludedLayer.getEagerPropertyByName('partiallyOccludedBy')?.getValue(),
     ).toEqual([]);
     expect(
       occludedLayer.getEagerPropertyByName('coveredBy')?.getAllChildren()
@@ -714,9 +760,7 @@ describe('VisibilityPropertiesComputation', () => {
         ?.getChildByName('0')
         ?.getValue(),
     ).toEqual('3 coveringLayer');
-    expect(
-      occludedLayer.getEagerPropertyByName('visibilityReason'),
-    ).toBeUndefined();
+    expect(getVisibilityReasons(occludedLayer)).toEqual(['occluded']);
 
     expect(
       assertDefined(
@@ -855,7 +899,7 @@ describe('VisibilityPropertiesComputation', () => {
         ?.getValue(),
     ).toEqual('2 partiallyOccludingLayer');
     expect(
-      visibleLayer.getEagerPropertyByName('visibilityReason'),
+      partiallyVisibleLayer.getEagerPropertyByName('visibilityReason'),
     ).toBeUndefined();
 
     expect(
@@ -964,7 +1008,7 @@ describe('VisibilityPropertiesComputation', () => {
         ?.getValue(),
     ).toEqual('2 coveringLayer');
     expect(
-      visibleLayer.getEagerPropertyByName('visibilityReason'),
+      coveredVisibleLayer.getEagerPropertyByName('visibilityReason'),
     ).toBeUndefined();
 
     expect(

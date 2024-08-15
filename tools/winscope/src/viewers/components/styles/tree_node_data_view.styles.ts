@@ -25,7 +25,7 @@ export const hierarchyTreeNodeDataViewStyles = `
         margin: 0 5px;
         padding: 0 10px;
         border-radius: 10px;
-        background-color: #aaa;
+        background-color: ${Color.CHIP_GRAY};
         color: ${Color.TEXT_BLACK};
     }
 
@@ -43,6 +43,10 @@ export const hierarchyTreeNodeDataViewStyles = `
 
     .tree-view-chip.tree-view-chip-hwc {
         background-color: ${Color.CHIP_BLUE};
+    }
+
+    .tree-view-chip.tree-view-chip-hidden {
+        background-color: ${Color.CHIP_PINK};
     }
 `;
 

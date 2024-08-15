@@ -93,6 +93,8 @@ pub struct Crate {
     pub edition: String,
     pub package_dir: PathBuf, // canonicalized
     pub main_src: PathBuf,    // relative to package_dir
+    pub license: Option<String>,
+    pub license_file: Option<String>,
     /// Whether it is a test crate which doesn't actually contain any tests or benchmarks.
     pub empty_test: bool,
 }
@@ -102,6 +104,7 @@ pub struct Crate {
 pub struct Extern {
     pub name: String,
     pub lib_name: String,
+    pub raw_name: String,
     pub extern_type: ExternType,
 }
 

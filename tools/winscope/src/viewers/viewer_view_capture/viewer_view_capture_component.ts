@@ -19,7 +19,8 @@ import {PersistentStore} from 'common/persistent_store';
 import {TraceType} from 'trace/trace_type';
 import {CollapsibleSections} from 'viewers/common/collapsible_sections';
 import {CollapsibleSectionType} from 'viewers/common/collapsible_section_type';
-import {ShadingMode} from 'viewers/components/rects/types3d';
+import {ShadingMode} from 'viewers/components/rects/shading_mode';
+
 import {viewerCardStyle} from 'viewers/components/styles/viewer_card.styles';
 import {UiData} from './ui_data';
 
@@ -41,11 +42,11 @@ import {UiData} from './ui_data';
         [class.collapsed]="sections.isSectionCollapsed(CollapsibleSectionType.RECTS)"
         [title]="rectsTitle"
         [store]="store"
-        [rects]="inputData?.vcRectsToDraw ?? []"
+        [rects]="inputData?.rectsToDraw ?? []"
         [zoomFactor]="4"
         [miniRects]="inputData?.sfRects ?? []"
         [highlightedItem]="inputData?.highlightedItem ?? ''"
-        [displays]="inputData?.windows ?? []"
+        [displays]="inputData?.displays ?? []"
         groupLabel="Windows"
         [shadingModes]="shadingModes"
         [dependencies]="inputData?.dependencies ?? []"
@@ -54,13 +55,13 @@ import {UiData} from './ui_data';
       <hierarchy-view
         class="hierarchy-view"
         [class.collapsed]="sections.isSectionCollapsed(CollapsibleSectionType.HIERARCHY)"
-        [subtrees]="inputData?.trees"
+        [subtrees]="inputData?.hierarchyTrees"
         [dependencies]="inputData?.dependencies ?? []"
         [highlightedItem]="inputData?.highlightedItem ?? ''"
         [pinnedItems]="inputData?.pinnedItems ?? []"
         [store]="store"
         [userOptions]="inputData?.hierarchyUserOptions ?? {}"
-        [rectIdToShowState]="inputData?.vcRectIdToShowState"
+        [rectIdToShowState]="inputData?.rectIdToShowState"
         (collapseButtonClicked)="sections.onCollapseStateChange(CollapsibleSectionType.HIERARCHY, true)"></hierarchy-view>
       <properties-view
         class="properties-view"
@@ -71,6 +72,7 @@ import {UiData} from './ui_data';
         [traceType]="${TraceType.VIEW_CAPTURE}"
         [store]="store"
         [isProtoDump]="false"
+        placeholderText="No selected item."
         (collapseButtonClicked)="sections.onCollapseStateChange(CollapsibleSectionType.PROPERTIES, true)"></properties-view>
     </div>
   `,

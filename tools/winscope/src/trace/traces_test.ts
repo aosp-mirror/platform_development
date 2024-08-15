@@ -189,7 +189,7 @@ describe('Traces', () => {
     expect(TracesUtils.extractTraces(traces)).toEqual([]);
   });
 
-  it('deleteTracesByType()', () => {
+  it('hasTrace()', () => {
     const trace0 = new TraceBuilder<string>()
       .setType(TraceType.TEST_TRACE_STRING)
       .setEntries([])
@@ -198,26 +198,12 @@ describe('Traces', () => {
       .setType(TraceType.TEST_TRACE_NUMBER)
       .setEntries([])
       .build();
-    const trace2 = new TraceBuilder<number>()
-      .setType(TraceType.TEST_TRACE_NUMBER)
-      .setEntries([])
-      .build();
 
     const traces = new Traces();
     traces.addTrace(trace0);
-    traces.addTrace(trace1);
-    traces.addTrace(trace2);
 
-    expect(TracesUtils.extractTraces(traces)).toEqual([trace0, trace1, trace2]);
-
-    traces.deleteTracesByType(TraceType.TEST_TRACE_NUMBER);
-    expect(TracesUtils.extractTraces(traces)).toEqual([trace0]);
-
-    traces.deleteTracesByType(TraceType.TEST_TRACE_STRING);
-    expect(TracesUtils.extractTraces(traces)).toEqual([]);
-
-    traces.deleteTracesByType(TraceType.TEST_TRACE_STRING);
-    expect(TracesUtils.extractTraces(traces)).toEqual([]);
+    expect(traces.hasTrace(trace0)).toBeTrue();
+    expect(traces.hasTrace(trace1)).toBeFalse();
   });
 
   it('sliceTime()', async () => {
