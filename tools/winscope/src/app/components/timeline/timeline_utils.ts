@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import {assertDefined} from 'common/assert_utils';
 import {TimeRange, Timestamp} from 'common/time';
 import {ComponentTimestampConverter} from 'common/timestamp_converter';
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
@@ -69,7 +70,6 @@ export class TimelineUtils {
     }
 
     const timeRangeMin = fullTimeRange.from.getValueNs();
-    const timeRangeMax = fullTimeRange.to.getValueNs();
 
     if (
       finishOrAbortTimestamp &&
@@ -78,12 +78,21 @@ export class TimelineUtils {
       return undefined;
     }
 
+    if (
+      !finishOrAbortTimestamp &&
+      assertDefined(dispatchTimestamp).getValueNs() < timeRangeMin
+    ) {
+      return undefined;
+    }
+
     const dispatchTimeNs = dispatchTimestamp
       ? dispatchTimestamp.getValueNs()
+      : finishOrAbortTimestamp
+      ? finishOrAbortTimestamp.getValueNs() - 1n
       : timeRangeMin;
     const finishTimeNs = finishOrAbortTimestamp
       ? finishOrAbortTimestamp.getValueNs()
-      : timeRangeMax;
+      : dispatchTimeNs + 1n;
 
     const startTime = converter.makeTimestampFromNs(
       dispatchTimeNs > timeRangeMin ? dispatchTimeNs : timeRangeMin,

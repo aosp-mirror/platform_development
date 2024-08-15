@@ -51,6 +51,8 @@ describe('TransitionTimelineComponent', () => {
   const time110 = TimestampConverterUtils.makeRealTimestamp(110n);
   const time160 = TimestampConverterUtils.makeRealTimestamp(160n);
 
+  const range10to110 = new TimeRange(time10, time110);
+
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [
@@ -75,6 +77,7 @@ describe('TransitionTimelineComponent', () => {
     component = fixture.componentInstance;
     htmlElement = fixture.nativeElement;
     component.timestampConverter = TimestampConverterUtils.TIMESTAMP_CONVERTER;
+    component.fullRange = range10to110;
   });
 
   it('can be created', () => {
@@ -126,7 +129,7 @@ describe('TransitionTimelineComponent', () => {
       ])
       .build();
     component.transitionEntries = transitions;
-    component.selectionRange = new TimeRange(time10, time110);
+    component.selectionRange = range10to110;
 
     const drawRectSpy = spyOn(component.canvasDrawer, 'drawRect');
 
@@ -201,7 +204,7 @@ describe('TransitionTimelineComponent', () => {
       .setTimestamps([time10, time60])
       .build();
     component.transitionEntries = transitions;
-    component.selectionRange = new TimeRange(time10, time110);
+    component.selectionRange = range10to110;
 
     const drawRectSpy = spyOn(component.canvasDrawer, 'drawRect');
 
@@ -255,8 +258,7 @@ describe('TransitionTimelineComponent', () => {
       Math.floor(width / 2),
       oneRowHeight,
     );
-    expect(drawRectSpy).toHaveBeenCalledTimes(2); // once drawn as a normal entry another time with rect border
-    expect(drawRectSpy).toHaveBeenCalledWith(
+    expect(drawRectSpy).toHaveBeenCalledOnceWith(
       expectedRect,
       component.color,
       1,
@@ -352,7 +354,7 @@ describe('TransitionTimelineComponent', () => {
       .setTimestamps([time10, time60])
       .build();
     component.transitionEntries = transitions;
-    component.selectionRange = new TimeRange(time10, time110);
+    component.selectionRange = range10to110;
 
     const drawRectSpy = spyOn(component.canvasDrawer, 'drawRect');
 
@@ -429,7 +431,7 @@ describe('TransitionTimelineComponent', () => {
       .setTimestamps([time10, time35])
       .build();
     component.transitionEntries = transitions;
-    component.selectionRange = new TimeRange(time10, time110);
+    component.selectionRange = range10to110;
 
     const drawRectSpy = spyOn(component.canvasDrawer, 'drawRect');
 
@@ -493,7 +495,7 @@ describe('TransitionTimelineComponent', () => {
       .setTimestamps([time35])
       .build();
     component.transitionEntries = transitions;
-    component.selectionRange = new TimeRange(time10, time110);
+    component.selectionRange = range10to110;
 
     const drawRectSpy = spyOn(component.canvasDrawer, 'drawRect');
 
@@ -545,7 +547,7 @@ describe('TransitionTimelineComponent', () => {
       .setTimestamps([time85])
       .build();
     component.transitionEntries = transitions;
-    component.selectionRange = new TimeRange(time10, time110);
+    component.selectionRange = range10to110;
 
     const drawRectSpy = spyOn(component.canvasDrawer, 'drawRect');
 
@@ -555,11 +557,15 @@ describe('TransitionTimelineComponent', () => {
     const padding = 5;
     const oneRowTotalHeight = 30;
     const oneRowHeight = oneRowTotalHeight - padding;
-    const width = component.canvasDrawer.getScaledCanvasWidth();
 
     expect(drawRectSpy).toHaveBeenCalledTimes(1);
     expect(drawRectSpy).toHaveBeenCalledWith(
-      new Rect(0, padding, Math.floor((width * 3) / 4), oneRowHeight),
+      new Rect(
+        Math.floor((component.canvasDrawer.getScaledCanvasWidth() * 74) / 100),
+        padding,
+        oneRowHeight,
+        oneRowHeight,
+      ),
       component.color,
       1,
       true,
@@ -592,7 +598,7 @@ describe('TransitionTimelineComponent', () => {
       .setTimestamps([time35])
       .build();
     component.transitionEntries = transitions;
-    component.selectionRange = new TimeRange(time10, time110);
+    component.selectionRange = range10to110;
 
     const drawRectSpy = spyOn(component.canvasDrawer, 'drawRect');
 
@@ -602,14 +608,13 @@ describe('TransitionTimelineComponent', () => {
     const padding = 5;
     const oneRowTotalHeight = 30;
     const oneRowHeight = oneRowTotalHeight - padding;
-    const width = component.canvasDrawer.getScaledCanvasWidth();
 
     expect(drawRectSpy).toHaveBeenCalledTimes(1);
     expect(drawRectSpy).toHaveBeenCalledWith(
       new Rect(
-        Math.floor((width * 1) / 4),
+        Math.floor((component.canvasDrawer.getScaledCanvasWidth() * 1) / 4),
         padding,
-        Math.floor((width * 3) / 4),
+        oneRowHeight,
         oneRowHeight,
       ),
       component.color,
@@ -643,7 +648,8 @@ describe('TransitionTimelineComponent', () => {
       .setTimestamps([time10])
       .build();
     component.transitionEntries = transitions;
-    component.selectionRange = new TimeRange(time10, time110);
+    component.selectionRange = range10to110;
+
     const drawRectSpy = spyOn(component.canvasDrawer, 'drawRect');
 
     fixture.detectChanges();
@@ -692,7 +698,8 @@ describe('TransitionTimelineComponent', () => {
       .setTimestamps([time10, time20])
       .build();
     component.transitionEntries = [transition0];
-    component.selectionRange = new TimeRange(time10, time110);
+    component.selectionRange = range10to110;
+
     const drawRectSpy = spyOn(component.canvasDrawer, 'drawRect');
 
     fixture.detectChanges();
@@ -760,9 +767,6 @@ describe('TransitionTimelineComponent', () => {
       .setTimestamps([time35])
       .build();
     component.transitionEntries = transitions;
-    component.selectionRange = new TimeRange(
-      TimestampConverterUtils.makeRealTimestamp(10n),
-      TimestampConverterUtils.makeRealTimestamp(110n),
-    );
+    component.selectionRange = range10to110;
   }
 });
