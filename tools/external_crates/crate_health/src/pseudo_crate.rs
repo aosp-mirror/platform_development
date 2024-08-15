@@ -16,11 +16,11 @@ use std::{
     collections::BTreeMap,
     fs::{create_dir, write},
     process::Command,
+    str::from_utf8,
 };
 
 use anyhow::{anyhow, Context, Result};
 use serde::Serialize;
-use serde_json::Value;
 use tinytemplate::TinyTemplate;
 
 use crate::{ensure_exists_and_empty, NamedAndVersioned, RepoPath, RunQuiet};
@@ -116,25 +116,22 @@ impl PseudoCrate {
     }
     pub fn deps(&self) -> Result<BTreeMap<String, String>> {
         let output = Command::new("cargo")
-            .args(["metadata", "--offline", "--format-version=1"])
+            .args(["tree", "--depth=1", "--prefix=none"])
             .current_dir(self.path.abs())
             .run_quiet_and_expect_success()?;
-        let metadata: Value = serde_json::from_slice(&output.stdout)?;
         let mut deps = BTreeMap::new();
-        for dep in metadata["packages"][0]["dependencies"]
-            .as_array()
-            .ok_or(anyhow!("Failed to deserialize cargo metadata"))?
-        {
-            deps.insert(
-                dep["name"]
-                    .as_str()
-                    .ok_or(anyhow!("Failed to deserialize cargo metadata"))?
-                    .to_string(),
-                dep["req"]
-                    .as_str()
-                    .ok_or(anyhow!("Failed to deserialize cargo metadata"))?
-                    .to_string(),
-            );
+        for line in from_utf8(&output.stderr)?.lines().skip(1) {
+            let words = line.split(" ").collect::<Vec<_>>();
+            if words.len() < 2 {
+                return Err(anyhow!(
+                    "Failed to parse crate name and version from cargo tree: {}",
+                    line
+                ));
+            }
+            let version = words[1]
+                .strip_prefix("v")
+                .ok_or(anyhow!("Failed to parse version: {}", words[1]))?;
+            deps.insert(words[0].to_string(), version.to_string());
         }
         Ok(deps)
     }
