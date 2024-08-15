@@ -488,7 +488,7 @@ export class RectsComponent implements OnInit, OnDestroy {
     const curr = this.internalDisplays.filter((display) =>
       this.currentDisplays.some((curr) => curr.displayId === display.displayId),
     );
-    if (curr) {
+    if (curr.length > 0) {
       this.updateCurrentDisplays(curr);
       return;
     }
