@@ -268,3 +268,13 @@ export class MonotonicScreenRecording extends UserWarning {
       other traces. Metadata contains monotonic time instead of elapsed.`;
   }
 }
+
+export class CannotParseAllTransitions extends UserWarning {
+  getDescriptor(): string {
+    return 'cannot parse all transitions';
+  }
+
+  getMessage(): string {
+    return 'Cannot parse all transitions. Some may be missing in Transitions viewer.';
+  }
+}
