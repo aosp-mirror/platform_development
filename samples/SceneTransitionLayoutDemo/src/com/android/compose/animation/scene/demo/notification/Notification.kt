@@ -31,7 +31,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import com.android.compose.animation.scene.ElementKey
+import com.android.compose.animation.scene.MovableElementKey
 import com.android.compose.animation.scene.MutableSceneTransitionLayoutState
 import com.android.compose.animation.scene.SceneKey
 import com.android.compose.animation.scene.SceneScope
@@ -55,7 +55,7 @@ object Notification {
 
 @Stable
 interface NotificationViewModel {
-    val key: ElementKey
+    val key: MovableElementKey
     val state: MutableSceneTransitionLayoutState
     val isExpanded: Boolean
         get() = state.transitionState.currentScene == Notification.Scenes.Expanded

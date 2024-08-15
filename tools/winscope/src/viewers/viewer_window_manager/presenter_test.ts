@@ -15,8 +15,8 @@
  */
 
 import {assertDefined} from 'common/assert_utils';
+import {Rect} from 'common/geometry/rect';
 import {InMemoryStorage} from 'common/in_memory_storage';
-import {Rect} from 'common/rect';
 import {TracePositionUpdate} from 'messaging/winscope_event';
 import {TraceBuilder} from 'test/unit/trace_builder';
 import {UnitTestUtils} from 'test/unit/utils';
@@ -159,6 +159,14 @@ class PresenterWindowManagerTest extends AbstractHierarchyViewerPresenterTest<Ui
     expect(
       assertDefined(propertiesTree.getChildByName('state')).formattedValue(),
     ).toEqual('STOPPED');
+    expect(uiData.displays).toEqual([
+      {
+        displayId: 'DisplayContent 1f3454e Built-in Screen',
+        groupId: 0,
+        name: 'Built-in Screen',
+        isActive: true,
+      },
+    ]);
   }
 
   override executeChecksForPropertiesTreeAfterSecondPositionUpdate(

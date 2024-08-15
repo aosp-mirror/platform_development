@@ -20,6 +20,9 @@ import {
   HttpRequestStatus,
   HttpResponse,
 } from 'common/http_request';
+import {ProxyTracingErrors} from 'messaging/user_warnings';
+import {UserNotifierChecker} from 'test/unit/user_notifier_checker';
+import {waitToBeCalled} from 'test/utils';
 import {AdbDevice} from 'trace_collection/adb_device';
 import {ConnectionState} from 'trace_collection/connection_state';
 import {ProxyConnection} from 'trace_collection/proxy_connection';
@@ -52,6 +55,14 @@ describe('ProxyConnection', () => {
     config: [],
   };
   const getVersionHeader = () => ProxyConnection.VERSION;
+  const successfulEndTraceResponse: HttpResponse = {
+    status: HttpRequestStatus.SUCCESS,
+    type: '',
+    text: '[]',
+    body: '[]',
+    getHeader: getVersionHeader,
+  };
+
   let connection: ProxyConnection;
   let getSpy: jasmine.Spy<HttpRequestGetType>;
   let postSpy: jasmine.Spy<HttpRequestPostType>;
@@ -113,7 +124,6 @@ describe('ProxyConnection', () => {
         getHeader: getVersionHeader,
       };
       await setUpTestEnvironment(unauthResponse);
-      await postToProxy();
       expect(connection.getState()).toEqual(ConnectionState.UNAUTH);
     });
 
@@ -148,7 +158,6 @@ describe('ProxyConnection', () => {
         getHeader: getVersionHeader,
       };
       await setUpTestEnvironment(errorResponse);
-      await postToProxy();
       expect(connection.getState()).toEqual(ConnectionState.ERROR);
       expect(connection.getErrorText()).toEqual(errorResponse.text);
     });
@@ -162,7 +171,6 @@ describe('ProxyConnection', () => {
         getHeader: getVersionHeader,
       };
       await setUpTestEnvironment(errorResponse);
-      await postToProxy();
       expect(connection.getState()).toEqual(ConnectionState.ERROR);
       expect(connection.getErrorText()).toEqual(errorResponse.text);
     });
@@ -176,14 +184,8 @@ describe('ProxyConnection', () => {
         getHeader: getVersionHeader,
       };
       await setUpTestEnvironment(errorResponse);
-      await postToProxy();
       expect(connection.getState()).toEqual(ConnectionState.ERROR);
     });
-
-    async function postToProxy() {
-      const requestObj = [mockTraceRequest];
-      await connection.startTrace(mockDevice, requestObj);
-    }
 
     async function checkInvalidVersion(getHeader: () => string | undefined) {
       const invalidResponse: HttpResponse = {
@@ -194,13 +196,19 @@ describe('ProxyConnection', () => {
         getHeader,
       };
       await setUpTestEnvironment(invalidResponse);
-      await postToProxy();
       expect(connection.getState()).toEqual(ConnectionState.INVALID_VERSION);
     }
   });
 
   describe('successful responses to tracing process', () => {
+    let userNotifierChecker: UserNotifierChecker;
+
+    beforeAll(() => {
+      userNotifierChecker = new UserNotifierChecker();
+    });
+
     beforeEach(async () => {
+      userNotifierChecker.reset();
       const successfulResponse: HttpResponse = {
         status: HttpRequestStatus.SUCCESS,
         type: '',
@@ -270,18 +278,86 @@ describe('ProxyConnection', () => {
       expect(connection.getState()).toEqual(ConnectionState.TRACING);
     });
 
-    it('posts end trace request to proxy', async () => {
+    it('handles trace timeout', async () => {
       const requestObj = [mockTraceRequest];
+      getSpy.and.returnValue(
+        Promise.resolve({
+          status: HttpRequestStatus.SUCCESS,
+          type: '',
+          text: 'False',
+          body: undefined,
+          getHeader: getVersionHeader,
+        }),
+      );
+      postSpy.and.returnValue(
+        Promise.resolve({
+          status: HttpRequestStatus.SUCCESS,
+          type: '',
+          text: 'True',
+          body: '[]',
+          getHeader: getVersionHeader,
+        }),
+      );
       await connection.startTrace(mockDevice, requestObj);
-      resetSpies();
-      await connection.endTrace();
 
+      expect(postSpy).toHaveBeenCalledWith(
+        ProxyConnection.WINSCOPE_PROXY_URL +
+          ProxyEndpoint.START_TRACE +
+          `${mockDevice.id}/`,
+        [['Winscope-Token', '']],
+        requestObj,
+      );
+      expect(postSpy).toHaveBeenCalledWith(
+        ProxyConnection.WINSCOPE_PROXY_URL +
+          ProxyEndpoint.END_TRACE +
+          `${mockDevice.id}/`,
+        [['Winscope-Token', '']],
+        undefined,
+      );
+      expect(connection.getState()).toEqual(ConnectionState.TRACE_TIMEOUT);
+    });
+
+    it('posts end trace request to proxy and handles response without errors', async () => {
+      await startAndEndTrace(successfulEndTraceResponse);
+      checkTraceEndedSuccessfully();
+      userNotifierChecker.expectNone();
+    });
+
+    it('posts end trace request to proxy and handles response with errors', async () => {
+      await startAndEndTrace({
+        status: HttpRequestStatus.SUCCESS,
+        type: '',
+        text: '["please check your display state", "b\'unknown error\'"]',
+        body: '["please check your display state", "b\'unknown error\'"]',
+        getHeader: getVersionHeader,
+      });
+      checkTraceEndedSuccessfully();
+      userNotifierChecker.expectNotified([
+        new ProxyTracingErrors([
+          'please check your display state (must be on at start of trace)',
+          "'unknown error'",
+        ]),
+      ]);
+    });
+
+    it('posts end trace request to proxy and handles non-serializable errors', async () => {
+      await startAndEndTrace({
+        status: HttpRequestStatus.SUCCESS,
+        type: '',
+        text: '["please check your display state", "b\'unknown error\'"]',
+        body: undefined,
+        getHeader: getVersionHeader,
+      });
       expect(postSpy).toHaveBeenCalledOnceWith(
         ProxyConnection.WINSCOPE_PROXY_URL +
           ProxyEndpoint.END_TRACE +
           `${mockDevice.id}/`,
         [['Winscope-Token', '']],
         undefined,
+      );
+      expect(connection.getState()).toEqual(ConnectionState.ERROR);
+      expect(connection.getErrorText()).toContain(
+        'Error handling request response',
       );
     });
 
@@ -298,6 +374,17 @@ describe('ProxyConnection', () => {
       );
       expect(connection.getState()).toEqual(ConnectionState.DUMPING_STATE);
     });
+
+    function checkTraceEndedSuccessfully() {
+      expect(postSpy).toHaveBeenCalledOnceWith(
+        ProxyConnection.WINSCOPE_PROXY_URL +
+          ProxyEndpoint.END_TRACE +
+          `${mockDevice.id}/`,
+        [['Winscope-Token', '']],
+        undefined,
+      );
+      expect(connection.getState()).toEqual(ConnectionState.ENDING_TRACE);
+    }
   });
 
   describe('wayland trace availability', () => {
@@ -372,6 +459,40 @@ describe('ProxyConnection', () => {
       expect(connection.getState()).toEqual(ConnectionState.IDLE);
       expect(connection.getDevices()).toEqual([mockDevice]);
     });
+
+    it('sets up worker to fetch devices', async () => {
+      const devicesResponse: HttpResponse = {
+        status: HttpRequestStatus.SUCCESS,
+        type: 'text',
+        text: JSON.stringify({
+          '35562': {authorized: mockDevice.authorized, model: mockDevice.model},
+        }),
+        body: undefined,
+        getHeader: getVersionHeader,
+      };
+      await setUpTestEnvironment(devicesResponse);
+      checkGetDevicesRequest();
+      expect(connection.getState()).toEqual(ConnectionState.IDLE);
+      expect(connection.getDevices()).toEqual([mockDevice]);
+      expect(getSpy).toHaveBeenCalledWith(
+        ProxyConnection.WINSCOPE_PROXY_URL + ProxyEndpoint.CHECK_WAYLAND,
+        [['Winscope-Token', '']],
+        undefined,
+      );
+
+      getSpy.calls.reset();
+      detectStateChangesInUi.calls.reset();
+
+      await waitToBeCalled(detectStateChangesInUi, 1);
+      checkGetDevicesRequest();
+      expect(connection.getState()).toEqual(ConnectionState.IDLE);
+      expect(connection.getDevices()).toEqual([mockDevice]);
+      expect(getSpy).not.toHaveBeenCalledWith(
+        ProxyConnection.WINSCOPE_PROXY_URL + ProxyEndpoint.CHECK_WAYLAND,
+        [['Winscope-Token', '']],
+        undefined,
+      );
+    });
   });
 
   describe('files', () => {
@@ -434,16 +555,14 @@ describe('ProxyConnection', () => {
 
     it('fetches last tracing session data from ongoing tracing', async () => {
       await setUpTestEnvironment(successfulResponse);
-      const requestObj = [mockTraceRequest];
-      await connection.startTrace(mockDevice, requestObj);
-      await connection.endTrace();
+      await startAndEndTrace(successfulEndTraceResponse);
       resetSpies();
       const files = await connection.fetchLastTracingSessionData(mockDevice);
 
       expect(getSpy).toHaveBeenCalledOnceWith(
         ProxyConnection.WINSCOPE_PROXY_URL +
           ProxyEndpoint.FETCH +
-          `${mockDevice.id}/${mockTraceRequest.name}/`,
+          `${mockDevice.id}/`,
         [['Winscope-Token', '']],
         'arraybuffer',
       );
@@ -468,6 +587,13 @@ describe('ProxyConnection', () => {
       [['Winscope-Token', header]],
       undefined,
     );
+  }
+
+  async function startAndEndTrace(endingTraceResponse: HttpResponse) {
+    await connection.startTrace(mockDevice, [mockTraceRequest]);
+    resetSpies();
+    postSpy.and.returnValue(Promise.resolve(endingTraceResponse));
+    await connection.endTrace();
   }
 
   function resetSpies() {

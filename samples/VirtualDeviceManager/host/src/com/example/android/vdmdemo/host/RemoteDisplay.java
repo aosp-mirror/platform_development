@@ -70,6 +70,8 @@ import com.example.android.vdmdemo.common.VideoManager;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
+import java.util.Collections;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
 
@@ -140,9 +142,17 @@ class RemoteDisplay implements AutoCloseable {
             flags &= ~DisplayManager.VIRTUAL_DISPLAY_FLAG_OWN_CONTENT_ONLY;
         }
 
+        Set<String> displayCategories;
+        if (mPreferenceController.getBoolean(R.string.pref_enable_display_category)) {
+            displayCategories = Set.of(context.getString(R.string.display_category));
+        } else {
+            displayCategories = Collections.emptySet();
+        }
+
         VirtualDisplayConfig.Builder virtualDisplayBuilder =
                 new VirtualDisplayConfig.Builder(
                                 "VirtualDisplay" + mRemoteDisplayId, mWidth, mHeight, mDpi)
+                        .setDisplayCategories(displayCategories)
                         .setFlags(flags);
 
         if (mDisplayType == DISPLAY_TYPE_HOME) {

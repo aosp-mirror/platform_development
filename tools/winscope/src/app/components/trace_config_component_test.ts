@@ -24,6 +24,7 @@ import {MatSelectModule} from '@angular/material/select';
 import {BrowserAnimationsModule} from '@angular/platform-browser/animations';
 import {assertDefined} from 'common/assert_utils';
 import {InMemoryStorage} from 'common/in_memory_storage';
+import {TraceType} from 'trace/trace_type';
 import {TraceConfigComponent} from './trace_config_component';
 
 describe('TraceConfigComponent', () => {
@@ -51,55 +52,57 @@ describe('TraceConfigComponent', () => {
     component = fixture.componentInstance;
     htmlElement = fixture.nativeElement;
     configChangeSpy = spyOn(component.traceConfigChange, 'emit');
-
-    component.title = 'Targets';
-    component.initialTraceConfig = {
-      layers_trace: {
-        name: 'layers_trace',
-        enabled: true,
-        available: true,
-        config: {
-          enableConfigs: [
-            {
-              name: 'trace buffers',
-              key: 'tracebuffers',
-              enabled: true,
-            },
-          ],
-          selectionConfigs: [
-            {
-              key: 'tracinglevel',
-              name: 'tracing level',
-              options: ['verbose', 'debug', 'critical'],
-              value: 'debug',
-            },
-          ],
-        },
-      },
-      window_trace: {
-        name: 'window_trace',
-        enabled: false,
-        available: true,
-        config: undefined,
-      },
-      unavailable_trace: {
-        name: 'unavailable_trace',
-        enabled: false,
-        available: false,
-        config: undefined,
-      },
-    };
-    component.traceConfigStoreKey = 'TestConfigSettings';
-    component.storage = new InMemoryStorage();
-    await detectNgModelChanges();
-    fixture.detectChanges();
+    await setComponentInputs(component);
   });
 
   it('can be created', () => {
     expect(component).toBeTruthy();
   });
 
+  it('applies stored config and emits event on init', async () => {
+    expect(
+      assertDefined(component.traceConfig)['layers_trace'].enabled,
+    ).toBeTrue();
+    const inputElement = assertDefined(
+      htmlElement.querySelector<HTMLInputElement>('.trace-checkbox input'),
+    );
+    inputElement.click();
+    fixture.detectChanges();
+    expect(
+      assertDefined(component.traceConfig)['layers_trace'].enabled,
+    ).toBeFalse();
+
+    const newFixture = TestBed.createComponent(TraceConfigComponent);
+    const newComponent = newFixture.componentInstance;
+    const spy = spyOn(newComponent.traceConfigChange, 'emit');
+    await setComponentInputs(
+      newComponent,
+      newFixture,
+      assertDefined(component.storage),
+    );
+    expect(spy).toHaveBeenCalledTimes(1);
+    expect(
+      assertDefined(newComponent.traceConfig)['layers_trace'].enabled,
+    ).toBeFalse();
+  });
+
+  it('handles proxy initial trace config', async () => {
+    const newFixture = TestBed.createComponent(TraceConfigComponent);
+    const newComponent = newFixture.componentInstance;
+    const spy = spyOn(newComponent.traceConfigChange, 'emit');
+
+    newComponent.title = 'Targets';
+    newComponent.initialTraceConfig = component.traceConfig;
+    newComponent.traceConfigStoreKey = 'TestConfigSettings';
+    newComponent.storage = component.storage;
+    await detectNgModelChanges(newFixture);
+    newFixture.detectChanges();
+
+    expect(spy).toHaveBeenCalledTimes(1);
+  });
+
   it('trace checkbox enabled by default', () => {
+    configChangeSpy.calls.reset();
     const config = assertDefined(component.traceConfig);
 
     const box = assertDefined(htmlElement.querySelector('.trace-checkbox'));
@@ -121,6 +124,7 @@ describe('TraceConfigComponent', () => {
   });
 
   it('trace checkbox not enabled by default', () => {
+    configChangeSpy.calls.reset();
     const config = assertDefined(component.traceConfig);
 
     const box = assertDefined(
@@ -188,6 +192,7 @@ describe('TraceConfigComponent', () => {
   });
 
   it('changing enable config by DOM interaction emits event', async () => {
+    configChangeSpy.calls.reset();
     const inputElement = assertDefined(
       htmlElement.querySelector<HTMLInputElement>('.enable-config input'),
     );
@@ -197,6 +202,7 @@ describe('TraceConfigComponent', () => {
   });
 
   it('check that changing selected config causes select to change', async () => {
+    configChangeSpy.calls.reset();
     const selectTrigger = assertDefined(
       htmlElement.querySelector('.mat-select-trigger'),
     );
@@ -211,9 +217,62 @@ describe('TraceConfigComponent', () => {
     expect(configChangeSpy).toHaveBeenCalledTimes(1);
   });
 
-  async function detectNgModelChanges() {
-    fixture.detectChanges();
-    await fixture.whenStable();
-    fixture.detectChanges();
+  async function setComponentInputs(
+    c: TraceConfigComponent,
+    f: ComponentFixture<TraceConfigComponent> = fixture,
+    storage: Storage = new InMemoryStorage(),
+  ) {
+    c.title = 'Targets';
+    c.initialTraceConfig = {
+      layers_trace: {
+        name: 'layers_trace',
+        enabled: true,
+        available: true,
+        types: [TraceType.SURFACE_FLINGER],
+        config: {
+          enableConfigs: [
+            {
+              name: 'trace buffers',
+              key: 'tracebuffers',
+              enabled: true,
+            },
+          ],
+          selectionConfigs: [
+            {
+              key: 'tracinglevel',
+              name: 'tracing level',
+              options: ['verbose', 'debug', 'critical'],
+              value: 'debug',
+            },
+          ],
+        },
+      },
+      window_trace: {
+        name: 'window_trace',
+        enabled: false,
+        available: true,
+        types: [TraceType.WINDOW_MANAGER],
+        config: undefined,
+      },
+      unavailable_trace: {
+        name: 'unavailable_trace',
+        enabled: false,
+        available: false,
+        types: [TraceType.TEST_TRACE_STRING],
+        config: undefined,
+      },
+    };
+    c.traceConfigStoreKey = 'TestConfigSettings';
+    c.storage = storage;
+    await detectNgModelChanges(f);
+    f.detectChanges();
+  }
+
+  async function detectNgModelChanges(
+    f: ComponentFixture<TraceConfigComponent> = fixture,
+  ) {
+    f.detectChanges();
+    await f.whenStable();
+    f.detectChanges();
   }
 });

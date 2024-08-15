@@ -52,6 +52,7 @@ fun SceneTransitionLayoutBenchmarkScope.startDemoActivity(initialScene: String) 
                 addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK)
                 putExtra(StlDemoConstants.INITIAL_SCENE_EXTRA, initialScene)
                 putExtra(StlDemoConstants.FULLSCREEN_EXTRA, true)
+                putExtra(StlDemoConstants.DISABLE_RIPPLE_EXTRA, true)
             }
 
     val device = device()
@@ -148,6 +149,7 @@ object StlDemoConstants {
 
     internal const val INITIAL_SCENE_EXTRA = "initial_scene"
     internal const val FULLSCREEN_EXTRA = "fullscreen"
+    internal const val DISABLE_RIPPLE_EXTRA = "disable_ripple"
     internal val ROOT_STL_SELECTOR = By.res("SystemUiSceneTransitionLayout")
 }
 

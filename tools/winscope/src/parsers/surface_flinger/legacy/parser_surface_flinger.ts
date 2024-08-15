@@ -20,11 +20,9 @@ import {AbstractParser} from 'parsers/legacy/abstract_parser';
 import {AddDefaults} from 'parsers/operations/add_defaults';
 import {SetFormatters} from 'parsers/operations/set_formatters';
 import {TranslateIntDef} from 'parsers/operations/translate_intdef';
-import {RectsComputation} from 'parsers/surface_flinger/computations/rects_computation';
-import {VisibilityPropertiesComputation} from 'parsers/surface_flinger/computations/visibility_properties_computation';
-import {ZOrderPathsComputation} from 'parsers/surface_flinger/computations/z_order_paths_computation';
-import {HierarchyTreeBuilderSf} from 'parsers/surface_flinger/hierarchy_tree_builder_sf';
-import {ParserSfUtils} from 'parsers/surface_flinger/parser_surface_flinger_utils';
+import {DENYLIST_PROPERTIES} from 'parsers/surface_flinger/denylist_properties';
+import {EAGER_PROPERTIES} from 'parsers/surface_flinger/eager_properties';
+import {EntryHierarchyTreeFactory} from 'parsers/surface_flinger/entry_hierarchy_tree_factory';
 import {TamperedMessageType} from 'parsers/tampered_message_type';
 import root from 'protos/surfaceflinger/udc/json';
 import {android} from 'protos/surfaceflinger/udc/static';
@@ -37,8 +35,6 @@ import {EntriesRange} from 'trace/trace';
 import {TraceType} from 'trace/trace_type';
 import {EnumFormatter, LAYER_ID_FORMATTER} from 'trace/tree_node/formatters';
 import {HierarchyTreeNode} from 'trace/tree_node/hierarchy_tree_node';
-import {PropertiesProvider} from 'trace/tree_node/properties_provider';
-import {PropertiesProviderBuilder} from 'trace/tree_node/properties_provider_builder';
 
 class ParserSurfaceFlinger extends AbstractParser<HierarchyTreeNode> {
   private static readonly MAGIC_NUMBER = [
@@ -63,7 +59,7 @@ class ParserSurfaceFlinger extends AbstractParser<HierarchyTreeNode> {
       .tamperedMessageType,
   ).fields['layers'];
 
-  private static readonly Operations = {
+  static readonly Operations = {
     SetFormattersLayer: new SetFormatters(
       ParserSurfaceFlinger.layerField,
       ParserSurfaceFlinger.CUSTOM_FORMATTERS,
@@ -71,12 +67,12 @@ class ParserSurfaceFlinger extends AbstractParser<HierarchyTreeNode> {
     TranslateIntDefLayer: new TranslateIntDef(ParserSurfaceFlinger.layerField),
     AddDefaultsLayerEager: new AddDefaults(
       ParserSurfaceFlinger.layerField,
-      ParserSfUtils.EAGER_PROPERTIES,
+      EAGER_PROPERTIES,
     ),
     AddDefaultsLayerLazy: new AddDefaults(
       ParserSurfaceFlinger.layerField,
       undefined,
-      ParserSfUtils.EAGER_PROPERTIES.concat(ParserSfUtils.DENYLIST_PROPERTIES),
+      EAGER_PROPERTIES.concat(DENYLIST_PROPERTIES),
     ),
     SetFormattersEntry: new SetFormatters(
       ParserSurfaceFlinger.entryField,
@@ -89,10 +85,11 @@ class ParserSurfaceFlinger extends AbstractParser<HierarchyTreeNode> {
     AddDefaultsEntryLazy: new AddDefaults(
       ParserSurfaceFlinger.entryField,
       undefined,
-      ParserSfUtils.DENYLIST_PROPERTIES,
+      DENYLIST_PROPERTIES,
     ),
   };
 
+  private readonly factory = new EntryHierarchyTreeFactory();
   private realToMonotonicTimeOffsetNs: bigint | undefined;
   private isDump = false;
 
@@ -147,7 +144,11 @@ class ParserSurfaceFlinger extends AbstractParser<HierarchyTreeNode> {
     index: number,
     entry: android.surfaceflinger.ILayersTraceProto,
   ): HierarchyTreeNode {
-    return this.makeHierarchyTree(entry);
+    return this.factory.makeEntryHierarchyTree(
+      entry,
+      assertDefined(entry.layers?.layers),
+      ParserSurfaceFlinger,
+    );
   }
 
   override customQuery<Q extends CustomQueryType>(
@@ -180,81 +181,6 @@ class ParserSurfaceFlinger extends AbstractParser<HierarchyTreeNode> {
         return Promise.resolve(result);
       })
       .getResult();
-  }
-
-  private makeHierarchyTree(
-    entryProto: android.surfaceflinger.ILayersTraceProto,
-  ): HierarchyTreeNode {
-    const excludesCompositionState =
-      entryProto?.excludesCompositionState ?? false;
-    const addExcludesCompositionState = excludesCompositionState
-      ? ParserSfUtils.OPERATIONS.AddExcludesCompositionStateTrue
-      : ParserSfUtils.OPERATIONS.AddExcludesCompositionStateFalse;
-
-    const processed = new Map<number, number>();
-
-    const layers: PropertiesProvider[] = assertDefined(
-      entryProto.layers?.layers,
-    ).map((layer: android.surfaceflinger.ILayerProto) => {
-      const duplicateCount = processed.get(assertDefined(layer.id)) ?? 0;
-      processed.set(assertDefined(layer.id), duplicateCount + 1);
-      const eagerProperties = ParserSfUtils.makeEagerPropertiesTree(
-        layer,
-        duplicateCount,
-      );
-      const lazyPropertiesStrategy =
-        ParserSfUtils.makeLayerLazyPropertiesStrategy(layer, duplicateCount);
-
-      const layerProps = new PropertiesProviderBuilder()
-        .setEagerProperties(eagerProperties)
-        .setLazyPropertiesStrategy(lazyPropertiesStrategy)
-        .setCommonOperations([
-          ParserSurfaceFlinger.Operations.SetFormattersLayer,
-          ParserSurfaceFlinger.Operations.TranslateIntDefLayer,
-        ])
-        .setEagerOperations([
-          ParserSurfaceFlinger.Operations.AddDefaultsLayerEager,
-          ParserSfUtils.OPERATIONS.AddCompositionType,
-          ParserSfUtils.OPERATIONS.UpdateTransforms,
-          ParserSfUtils.OPERATIONS.AddVerboseFlags,
-          addExcludesCompositionState,
-        ])
-        .setLazyOperations([
-          ParserSurfaceFlinger.Operations.AddDefaultsLayerLazy,
-        ])
-        .build();
-      return layerProps;
-    });
-
-    const entry = new PropertiesProviderBuilder()
-      .setEagerProperties(
-        ParserSfUtils.makeEntryEagerPropertiesTree(entryProto),
-      )
-      .setLazyPropertiesStrategy(
-        ParserSfUtils.makeEntryLazyPropertiesStrategy(entryProto),
-      )
-      .setCommonOperations([
-        ParserSurfaceFlinger.Operations.SetFormattersEntry,
-        ParserSurfaceFlinger.Operations.TranslateIntDefEntry,
-      ])
-      .setEagerOperations([
-        ParserSurfaceFlinger.Operations.AddDefaultsEntryEager,
-      ])
-      .setLazyOperations([
-        ParserSurfaceFlinger.Operations.AddDefaultsEntryLazy,
-        ParserSfUtils.OPERATIONS.AddDisplayProperties,
-      ])
-      .build();
-
-    return new HierarchyTreeBuilderSf()
-      .setRoot(entry)
-      .setChildren(layers)
-      .setComputations([
-        new ZOrderPathsComputation(),
-        new VisibilityPropertiesComputation(),
-        new RectsComputation(),
-      ])
-      .build();
   }
 }
 

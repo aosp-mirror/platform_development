@@ -14,21 +14,19 @@
  * limitations under the License.
  */
 import {assertDefined} from 'common/assert_utils';
-import {TransformMatrix} from 'common/geometry_types';
+import {Circle3D} from 'common/geometry/circle3d';
+import {Point3D} from 'common/geometry/point3d';
+import {TransformMatrix} from 'common/geometry/transform_matrix';
 import * as THREE from 'three';
 import {
   CSS2DObject,
   CSS2DRenderer,
 } from 'three/examples/jsm/renderers/CSS2DRenderer';
 import {ViewerEvents} from 'viewers/common/viewer_events';
-import {
-  Circle3D,
-  ColorType,
-  Label3D,
-  Point3D,
-  Rect3D,
-  Scene3D,
-} from './types3d';
+import {ColorType} from './color_type';
+import {RectLabel} from './rect_label';
+import {Scene} from './scene';
+import {UiRect3D} from './ui_rect3d';
 
 export class Canvas {
   static readonly TARGET_SCENE_DIAGONAL = 4;
@@ -49,6 +47,11 @@ export class Canvas {
   private static readonly OPACITY_REGULAR = 0.75;
   private static readonly OPACITY_OVERSIZED = 0.25;
 
+  private static readonly TRANSPARENT_MATERIAL = new THREE.MeshBasicMaterial({
+    opacity: 0,
+    transparent: true,
+  });
+
   private camera?: THREE.OrthographicCamera;
   private scene?: THREE.Scene;
   private renderer?: THREE.WebGLRenderer;
@@ -61,7 +64,7 @@ export class Canvas {
     private isDarkMode = () => false,
   ) {}
 
-  draw(scene: Scene3D) {
+  draw(scene: Scene) {
     // Must set 100% width and height so the HTML element expands to the parent's
     // boundaries and the correct clientWidth and clientHeight values can be read
     this.canvasRects.style.width = '100%';
@@ -95,12 +98,17 @@ export class Canvas {
       scene.camera.zoomFactor;
     this.scene.scale.set(scaleFactor, -scaleFactor, scaleFactor);
     this.scene.translateX(
-      scaleFactor * -scene.boundingBox.center.x + cameraWidth * panFactorX,
+      scaleFactor *
+        -(
+          scene.boundingBox.depth * scene.camera.rotationAngleX +
+          scene.boundingBox.center.x
+        ) +
+        cameraWidth * panFactorX,
     );
     this.scene.translateY(
       scaleFactor * scene.boundingBox.center.y - cameraHeight * panFactorY,
     );
-    this.scene.translateZ(scaleFactor * -scene.boundingBox.center.z);
+    this.scene.translateZ(scaleFactor * -scene.boundingBox.depth);
 
     this.camera = new THREE.OrthographicCamera(
       -cameraWidth / 2,
@@ -169,7 +177,7 @@ export class Canvas {
     return undefined;
   }
 
-  private drawRects(rects: Rect3D[]) {
+  private drawRects(rects: UiRect3D[]) {
     this.clickableObjects = [];
     rects.forEach((rect) => {
       const rectMesh = Canvas.makeRectMesh(rect, this.isDarkMode());
@@ -184,7 +192,7 @@ export class Canvas {
     });
   }
 
-  private drawLabels(labels: Label3D[], isDarkMode: boolean) {
+  private drawLabels(labels: RectLabel[], isDarkMode: boolean) {
     this.clearLabels();
     labels.forEach((label) => {
       const circleMesh = this.makeLabelCircleMesh(label.circle, isDarkMode);
@@ -208,7 +216,7 @@ export class Canvas {
     });
   }
 
-  private drawLabelTextHtml(label: Label3D) {
+  private drawLabelTextHtml(label: RectLabel) {
     // Add rectangle label
     const spanText: HTMLElement = document.createElement('span');
     spanText.innerText = label.text;
@@ -270,8 +278,8 @@ export class Canvas {
     );
   }
 
-  private static makeRectMesh(rect: Rect3D, isDarkMode: boolean): THREE.Mesh {
-    const rectShape = Canvas.createRectShape(rect);
+  private static makeRectMesh(rect: UiRect3D, isDarkMode: boolean): THREE.Mesh {
+    const rectShape = Canvas.createRoundedRectShape(rect);
     const rectGeometry = new THREE.ShapeGeometry(rectShape);
     const rectBorders = Canvas.createRectBorders(
       rect,
@@ -280,16 +288,8 @@ export class Canvas {
     );
 
     const color = Canvas.getColor(rect, isDarkMode);
-    let mesh: THREE.Mesh | undefined;
-    if (color === undefined) {
-      mesh = new THREE.Mesh(
-        rectGeometry,
-        new THREE.MeshBasicMaterial({
-          opacity: 0,
-          transparent: true,
-        }),
-      );
-    } else {
+    let fillMaterial: THREE.MeshBasicMaterial = Canvas.TRANSPARENT_MATERIAL;
+    if (color !== undefined) {
       let opacity: number | undefined;
       if (
         rect.colorType === ColorType.VISIBLE_WITH_OPACITY ||
@@ -301,16 +301,30 @@ export class Canvas {
           ? Canvas.OPACITY_OVERSIZED
           : Canvas.OPACITY_REGULAR;
       }
-      mesh = new THREE.Mesh(
-        rectGeometry,
-        new THREE.MeshBasicMaterial({
-          color,
-          opacity,
-          transparent: true,
-        }),
-      );
+      fillMaterial = new THREE.MeshBasicMaterial({
+        color,
+        opacity,
+        transparent: true,
+      });
     }
 
+    const mesh = new THREE.Mesh(
+      rectGeometry,
+      rect.fillRegion ? Canvas.TRANSPARENT_MATERIAL : fillMaterial,
+    );
+    if (rect.fillRegion) {
+      const fillShapes = rect.fillRegion.map((fillRect) =>
+        Canvas.createRectShape(fillRect.topLeft, fillRect.bottomRight),
+      );
+      const fillMesh = new THREE.Mesh(
+        new THREE.ShapeGeometry(fillShapes),
+        fillMaterial,
+      );
+      // Prevent z-fighting with the parent mesh
+      fillMesh.position.z = 1;
+      fillMesh.name = rect.id;
+      mesh.add(fillMesh);
+    }
     mesh.add(rectBorders);
     mesh.position.x = 0;
     mesh.position.y = 0;
@@ -320,7 +334,7 @@ export class Canvas {
     return mesh;
   }
 
-  private static createRectShape(rect: Rect3D): THREE.Shape {
+  private static createRoundedRectShape(rect: UiRect3D): THREE.Shape {
     const bottomLeft: Point3D = {
       x: rect.topLeft.x,
       y: rect.bottomRight.y,
@@ -376,6 +390,30 @@ export class Canvas {
       );
   }
 
+  private static createRectShape(
+    topLeft: Point3D,
+    bottomRight: Point3D,
+  ): THREE.Shape {
+    const bottomLeft: Point3D = {
+      x: topLeft.x,
+      y: bottomRight.y,
+      z: topLeft.z,
+    };
+    const topRight: Point3D = {
+      x: bottomRight.x,
+      y: topLeft.y,
+      z: bottomRight.z,
+    };
+
+    // Create rect shape
+    return new THREE.Shape()
+      .moveTo(topLeft.x, topLeft.y)
+      .lineTo(bottomLeft.x, bottomLeft.y)
+      .lineTo(bottomRight.x, bottomRight.y)
+      .lineTo(topRight.x, topRight.y)
+      .lineTo(topLeft.x, topLeft.y);
+  }
+
   private static getVisibleRectColor(darkFactor: number) {
     const red = ((200 - 45) * darkFactor + 45) / 255;
     const green = ((232 - 182) * darkFactor + 182) / 255;
@@ -384,7 +422,7 @@ export class Canvas {
   }
 
   private static getColor(
-    rect: Rect3D,
+    rect: UiRect3D,
     isDarkMode: boolean,
   ): THREE.Color | undefined {
     switch (rect.colorType) {
@@ -424,7 +462,7 @@ export class Canvas {
   }
 
   private static createRectBorders(
-    rect: Rect3D,
+    rect: UiRect3D,
     rectGeometry: THREE.ShapeGeometry,
     isDarkMode: boolean,
   ): THREE.LineSegments {

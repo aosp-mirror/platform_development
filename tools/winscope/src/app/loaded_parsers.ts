@@ -16,6 +16,7 @@
 
 import {assertDefined} from 'common/assert_utils';
 import {FileUtils} from 'common/file_utils';
+import {OnProgressUpdateType} from 'common/function_utils';
 import {INVALID_TIME_NS, TimeRange, Timestamp} from 'common/time';
 import {TIME_UNIT_TO_NANO} from 'common/time_units';
 import {UserNotifier} from 'common/user_notifier';
@@ -25,7 +26,7 @@ import {FileAndParsers} from 'parsers/file_and_parsers';
 import {Parser} from 'trace/parser';
 import {TraceFile} from 'trace/trace_file';
 import {TRACE_INFO} from 'trace/trace_info';
-import {TraceType} from 'trace/trace_type';
+import {TraceEntryTypeMap, TraceType} from 'trace/trace_type';
 
 export class LoadedParsers {
   static readonly MAX_ALLOWED_TIME_GAP_BETWEEN_TRACES_NS = BigInt(
@@ -41,6 +42,8 @@ export class LoadedParsers {
 
   private legacyParsers = new Array<FileAndParser>();
   private perfettoParsers = new Array<FileAndParser>();
+  private legacyParsersKeptForDownload = new Array<FileAndParser>();
+  private perfettoParsersKeptForDownload = new Array<FileAndParser>();
 
   addParsers(
     legacyParsers: FileAndParser[],
@@ -72,12 +75,27 @@ export class LoadedParsers {
     return fileAndParsers.map((fileAndParser) => fileAndParser.parser);
   }
 
-  remove(parser: Parser<object>) {
+  remove<T extends TraceType>(
+    parser: Parser<TraceEntryTypeMap[T]>,
+    keepForDownload = false,
+  ) {
+    const predicate = (
+      fileAndParser: FileAndParser,
+      parsersToKeep: FileAndParser[],
+    ) => {
+      const shouldRemove = fileAndParser.parser === parser;
+      if (shouldRemove && keepForDownload) {
+        parsersToKeep.push(fileAndParser);
+      }
+      return !shouldRemove;
+    };
     this.legacyParsers = this.legacyParsers.filter(
-      (fileAndParser) => fileAndParser.parser !== parser,
+      (fileAndParser: FileAndParser) =>
+        predicate(fileAndParser, this.legacyParsersKeptForDownload),
     );
     this.perfettoParsers = this.perfettoParsers.filter(
-      (fileAndParser) => fileAndParser.parser !== parser,
+      (fileAndParser: FileAndParser) =>
+        predicate(fileAndParser, this.perfettoParsersKeptForDownload),
     );
   }
 
@@ -86,9 +104,17 @@ export class LoadedParsers {
     this.perfettoParsers = [];
   }
 
-  async makeZipArchive(): Promise<Blob> {
+  async makeZipArchive(onProgressUpdate?: OnProgressUpdateType): Promise<Blob> {
     const outputFilesSoFar = new Set<File>();
     const outputFilenameToFiles = new Map<string, File[]>();
+
+    if (onProgressUpdate) onProgressUpdate(0);
+    const totalParsers =
+      this.perfettoParsers.length +
+      this.perfettoParsersKeptForDownload.length +
+      this.legacyParsers.length +
+      this.legacyParsersKeptForDownload.length;
+    let progress = 0;
 
     const tryPushOutputFile = (file: File, filename: string) => {
       // Remove duplicates because some parsers (e.g. view capture) could share the same file
@@ -126,16 +152,29 @@ export class LoadedParsers {
       );
     };
 
-    if (this.perfettoParsers.length > 0) {
-      const file: TraceFile = this.perfettoParsers.values().next().value.file;
+    const tryPushOutPerfettoFile = (parsers: FileAndParser[]) => {
+      const file: TraceFile = parsers.values().next().value.file;
       let outputFilename = FileUtils.removeDirFromFileName(file.file.name);
       if (FileUtils.getFileExtension(file.file.name) === undefined) {
         outputFilename += '.perfetto-trace';
       }
       tryPushOutputFile(file.file, outputFilename);
+    };
+
+    if (this.perfettoParsers.length > 0) {
+      tryPushOutPerfettoFile(this.perfettoParsers);
+    } else if (this.perfettoParsersKeptForDownload.length > 0) {
+      tryPushOutPerfettoFile(this.perfettoParsersKeptForDownload);
+    }
+    if (onProgressUpdate) {
+      progress =
+        this.perfettoParsers.length +
+        this.perfettoParsersKeptForDownload.length;
+      onProgressUpdate((0.5 * progress) / totalParsers);
     }
 
-    this.legacyParsers.forEach(({file, parser}) => {
+    const tryPushOutputLegacyFile = (fileAndParser: FileAndParser) => {
+      const {file, parser} = fileAndParser;
       const traceType = parser.getTraceType();
       const archiveDir =
         TRACE_INFO[traceType].downloadArchiveDir.length > 0
@@ -147,7 +186,14 @@ export class LoadedParsers {
         outputFilename += TRACE_INFO[traceType].legacyExt;
       }
       tryPushOutputFile(file.file, outputFilename);
-    });
+      if (onProgressUpdate) {
+        progress++;
+        onProgressUpdate((0.5 * progress) / totalParsers);
+      }
+    };
+
+    this.legacyParsers.forEach(tryPushOutputLegacyFile);
+    this.legacyParsersKeptForDownload.forEach(tryPushOutputLegacyFile);
 
     const archiveFiles = [...outputFilenameToFiles.entries()]
       .map(([filename, files]) => {
@@ -157,7 +203,12 @@ export class LoadedParsers {
       })
       .flat();
 
-    return await FileUtils.createZipArchive(archiveFiles);
+    return await FileUtils.createZipArchive(
+      archiveFiles,
+      onProgressUpdate
+        ? (perc: number) => onProgressUpdate(0.5 * (1 + perc))
+        : undefined,
+    );
   }
 
   getLatestRealToMonotonicOffset(

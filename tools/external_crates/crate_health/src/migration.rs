@@ -13,7 +13,7 @@
 // limitations under the License.
 
 use std::{
-    fs::{copy, read_link, remove_dir_all},
+    fs::{copy, read_link},
     os::unix::fs::symlink,
     process::Output,
 };
@@ -21,10 +21,7 @@ use std::{
 use anyhow::{anyhow, Context, Result};
 use glob::glob;
 
-use crate::{
-    copy_dir, crate_type::diff_android_bp, most_recent_version, CompatibleVersionPair, Crate,
-    CrateCollection, Migratable, NameAndVersionMap, PseudoCrate, RepoPath, VersionMatch,
-};
+use crate::{copy_dir, crate_type::diff_android_bp, CompatibleVersionPair, Crate};
 
 static CUSTOMIZATIONS: &'static [&'static str] =
     &["*.bp", "cargo_embargo.json", "patches", "METADATA", "TEST_MAPPING", "MODULE_LICENSE_*"];
@@ -90,40 +87,4 @@ impl<'a> CompatibleVersionPair<'a, Crate> {
         )
         .context("Failed to diff Android.bp".to_string())
     }
-}
-
-pub fn migrate(
-    source_dir: RepoPath,
-    pseudo_crate_dir: RepoPath,
-    exact_versions: bool,
-) -> Result<VersionMatch<CrateCollection>> {
-    let mut source = CrateCollection::new(source_dir.root());
-    source.add_from(&source_dir.rel())?;
-    source.map_field_mut().retain(|_nv, krate| krate.is_crates_io());
-
-    let pseudo_crate = PseudoCrate::new(pseudo_crate_dir);
-    if pseudo_crate.get_path().abs().exists() {
-        remove_dir_all(pseudo_crate.get_path().abs())
-            .context(format!("Failed to remove {}", pseudo_crate.get_path()))?;
-    }
-    pseudo_crate.init(
-        source
-            .filter_versions(&most_recent_version)
-            .filter(|(_nv, krate)| krate.is_migration_eligible())
-            .map(|(_nv, krate)| krate),
-        exact_versions,
-    )?;
-
-    let mut dest = CrateCollection::new(source.repo_root());
-    dest.add_from(&pseudo_crate.get_path().join(&"vendor").rel())?;
-
-    let mut version_match = VersionMatch::new(source, dest)?;
-
-    version_match.stage_crates()?;
-    version_match.copy_customizations()?;
-    version_match.apply_patches()?;
-    version_match.generate_android_bps()?;
-    version_match.diff_android_bps()?;
-
-    Ok(version_match)
 }

@@ -27,7 +27,7 @@ export const EAGER_PROPERTIES = new Map<ProtoType, string[]>([
       'focusedDisplayId',
     ]),
   ],
-  [ProtoType.RootWindowContainer, commonEagerProperties],
+  [ProtoType.RootWindowContainer, commonEagerProperties.concat('focusedApp')],
   [ProtoType.WindowContainer, commonEagerProperties.concat(['visible'])],
   [
     ProtoType.DisplayContent,
@@ -39,6 +39,7 @@ export const EAGER_PROPERTIES = new Map<ProtoType, string[]>([
       'inputMethodTarget',
       'imeInsetsSourceProvider',
       'windowContainer',
+      'focusedApp',
     ]),
   ],
   [ProtoType.DisplayArea, commonEagerProperties],

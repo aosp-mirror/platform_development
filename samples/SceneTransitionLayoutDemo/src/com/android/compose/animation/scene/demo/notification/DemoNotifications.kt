@@ -17,16 +17,15 @@
 package com.android.compose.animation.scene.demo.notification
 
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.text.TextMeasurer
+import com.android.compose.animation.scene.ContentKey
 import com.android.compose.animation.scene.ElementKey
-import com.android.compose.animation.scene.ElementScenePicker
+import com.android.compose.animation.scene.MovableElementKey
 import com.android.compose.animation.scene.MutableSceneTransitionLayoutState
-import com.android.compose.animation.scene.SceneKey
 import com.android.compose.animation.scene.SceneScope
 import com.android.compose.animation.scene.SceneTransitions
-import com.android.compose.animation.scene.TransitionState
+import com.android.compose.animation.scene.StaticElementContentPicker
+import com.android.compose.animation.scene.content.state.ContentState
 import com.android.compose.animation.scene.demo.Scenes
 import com.android.compose.animation.scene.demo.SpringConfiguration
 import com.android.compose.animation.scene.demo.transitions.ToShadeScrimFadeEndFraction
@@ -47,15 +46,15 @@ private fun notification(
     i: Int,
     transitions: SceneTransitions,
     textMeasurer: TextMeasurer,
-    key: ElementKey =
-        ElementKey(
+    key: MovableElementKey =
+        MovableElementKey(
             "Notification:$i",
             identity = NotificationIdentity(),
-            scenePicker = NotificationScenePicker,
+            contentPicker = NotificationContentPicker,
         ),
 ): NotificationViewModel {
     return object : NotificationViewModel {
-        override val key: ElementKey = key
+        override val key: MovableElementKey = key
         override val state: MutableSceneTransitionLayoutState =
             MutableSceneTransitionLayoutState(Notification.Scenes.Collapsed, transitions)
         override val isInteractive: Boolean = isInteractive
@@ -70,16 +69,16 @@ private fun notification(
     }
 }
 
-private object NotificationScenePicker : ElementScenePicker {
-    private val scenes =
+private object NotificationContentPicker : StaticElementContentPicker {
+    override val contents =
         setOf(Scenes.Lockscreen, Scenes.Shade, Scenes.SplitLockscreen, Scenes.SplitShade)
 
-    override fun sceneDuringTransition(
+    override fun contentDuringTransition(
         element: ElementKey,
-        transition: TransitionState.Transition,
-        fromSceneZIndex: Float,
-        toSceneZIndex: Float
-    ): SceneKey? {
+        transition: ContentState.Transition<*>,
+        fromContentZIndex: Float,
+        toContentZIndex: Float
+    ): ContentKey {
         return when {
             transition.isTransitioning(from = Scenes.Lockscreen, to = Scenes.Shade) -> Scenes.Shade
             transition.isTransitioning(from = Scenes.Shade, to = Scenes.Lockscreen) -> {
@@ -101,7 +100,7 @@ private object NotificationScenePicker : ElementScenePicker {
                     Scenes.SplitLockscreen
                 }
             }
-            else -> pickSingleSceneIn(scenes, transition, element)
+            else -> pickSingleContentIn(contents, transition, element)
         }
     }
 }

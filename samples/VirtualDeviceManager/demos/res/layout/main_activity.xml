@@ -7,6 +7,13 @@
     android:padding="10dp">
 
     <Button
+        android:id="@+id/activity_policy_demo"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:onClick="onDemoSelected"
+        android:text="@string/activity_policy_demo" />
+
+    <Button
         android:id="@+id/sensor_demo"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"

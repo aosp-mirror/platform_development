@@ -1,5 +1,5 @@
 /*
- * Copyright 2020, The Android Open Source Project
+ * Copyright (C) 2024, The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,8 +14,9 @@
  * limitations under the License.
  */
 
-import {TransformMatrix} from 'common/geometry_types';
-import {Rect} from 'common/rect';
+import {Rect} from 'common/geometry/rect';
+import {Region} from 'common/geometry/region';
+import {TransformMatrix} from 'common/geometry/transform_matrix';
 
 export class UiRect extends Rect {
   constructor(
@@ -26,6 +27,7 @@ export class UiRect extends Rect {
     readonly label: string,
     readonly isVisible: boolean,
     readonly isDisplay: boolean,
+    readonly isActiveDisplay: boolean,
     readonly id: string,
     readonly groupId: number,
     readonly isClickable: boolean,
@@ -34,12 +36,8 @@ export class UiRect extends Rect {
     readonly depth: number,
     readonly hasContent: boolean | undefined,
     readonly opacity: number | undefined,
+    readonly fillRegion: Region | undefined,
   ) {
     super(x, y, w, h);
   }
-}
-
-export interface Size {
-  width: number;
-  height: number;
 }
