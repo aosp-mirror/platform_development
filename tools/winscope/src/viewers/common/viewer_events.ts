@@ -17,7 +17,7 @@
 import {Timestamp} from 'common/time';
 import {TraceEntry} from 'trace/trace';
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
-import {LogFieldName} from './ui_data_log';
+import {LogFieldType} from './ui_data_log';
 
 export enum ViewerEvents {
   HighlightedNodeChange = 'HighlightedNodeChange',
@@ -32,7 +32,6 @@ export enum ViewerEvents {
   PropertiesFilterChange = 'PropertiesFilterChange',
   HighlightedPropertyChange = 'HighlightedPropertyChange',
 
-  RectGroupIdChange = 'RectGroupIdChange',
   RectsUserOptionsChange = 'RectsUserOptionsChange',
 
   AdditionalPropertySelected = 'AdditionalPropertySelected',
@@ -58,5 +57,5 @@ export class TimestampClickDetail {
 }
 
 export class LogFilterChangeDetail {
-  constructor(public name: LogFieldName, public value: string[] | string) {}
+  constructor(public type: LogFieldType, public value: string[] | string) {}
 }

@@ -18,9 +18,11 @@ import {CdkVirtualScrollViewport} from '@angular/cdk/scrolling';
 import {
   Component,
   ElementRef,
+  EventEmitter,
   HostListener,
   Inject,
   Input,
+  Output,
   ViewChild,
 } from '@angular/core';
 import {MatSelectChange} from '@angular/material/select';
@@ -31,135 +33,173 @@ import {
   TimestampClickDetail,
   ViewerEvents,
 } from 'viewers/common/viewer_events';
-import {timeButtonStyle} from 'viewers/components/styles/clickable_property.styles';
+import {
+  inlineButtonStyle,
+  timeButtonStyle,
+} from 'viewers/components/styles/clickable_property.styles';
 import {currentElementStyle} from 'viewers/components/styles/current_element.styles';
 import {logComponentStyles} from 'viewers/components/styles/log_component.styles';
 import {selectedElementStyle} from 'viewers/components/styles/selected_element.styles';
-import {viewerCardStyle} from 'viewers/components/styles/viewer_card.styles';
+import {
+  viewerCardInnerStyle,
+  viewerCardStyle,
+} from 'viewers/components/styles/viewer_card.styles';
 import {
   LogEntry,
   LogField,
   LogFieldClassNames,
-  LogFieldName,
-  LogFieldValue,
+  LogFieldNames,
+  LogFieldType,
   LogFilter,
 } from './ui_data_log';
 
 @Component({
   selector: 'log-view',
   template: `
-     <div class="log-view entries">
-        <div class="headers" *ngIf="headers.length > 0">
-          <div *ngFor="let header of headers" class="mat-body-2" [class]="getLogFieldClass(header)">{{header}}</div>
+    <div class="view-header" *ngIf="title">
+      <div class="title-section">
+        <collapsible-section-title
+            class="log-title"
+            [title]="title"
+            (collapseButtonClicked)="collapseButtonClicked.emit()"></collapsible-section-title>
+
+        <div class="filters" *ngIf="showFiltersInTitle && filters.length > 0">
+          <div class="filter" *ngFor="let filter of filters"
+               [class]="getLogFieldClass(filter.type)">
+            <select-with-filter
+                *ngIf="filter.options?.length > 0"
+                [label]="getLogFieldName(filter.type)"
+                [options]="filter.options"
+                [outerFilterWidth]="getOuterFilterWidth(filter.type)"
+                [innerFilterWidth]="getInnerFilterWidth(filter.type)"
+                (selectChange)="onFilterChange($event, filter.type)">
+            </select-with-filter>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="entries">
+      <div class="headers" *ngIf="headers.length > 0">
+        <div *ngFor="let header of headers" class="mat-body-2" [class]="getLogFieldClass(header)">{{getLogFieldName(header)}}</div>
+      </div>
+
+      <div class="filters" *ngIf="!showFiltersInTitle && filters.length > 0">
+        <div *ngIf="showTraceEntryTimes" class="time"></div>
+
+        <div class="filter" *ngFor="let filter of filters" [class]="getLogFieldClass(filter.type)">
+          <select-with-filter
+              *ngIf="filter.options?.length > 0"
+              [label]="getLogFieldName(filter.type)"
+              [options]="filter.options"
+              [outerFilterWidth]="getOuterFilterWidth(filter.type)"
+              [innerFilterWidth]="getInnerFilterWidth(filter.type)"
+              (selectChange)="onFilterChange($event, filter.type)">
+          </select-with-filter>
+
+          <mat-form-field *ngIf="filter.options === undefined" appearance="fill" (keydown.enter)="$event.target.blur()">
+            <mat-label>{{filter.type}}</mat-label>
+            <input
+                matInput
+                [name]="getLogFieldName(filter.type)"
+                [ngModel]="emptyFilterValue"
+                (ngModelChange)="onFilterChange($event, filter.type)" />
+          </mat-form-field>
         </div>
 
-        <div class="filters" *ngIf="filters.length > 0">
-          <div *ngIf="showTraceEntryTimes" class="time"></div>
-
-          <div class="filter" *ngFor="let filter of filters" [class]="getLogFieldClass(filter.name)">
-            <select-with-filter
-              *ngIf="filter.options?.length > 0"
-              [label]="filter.name"
-              [options]="filter.options"
-              [outerFilterWidth]="getOuterFilterWidth(filter.name)"
-              [innerFilterWidth]="getInnerFilterWidth(filter.name)"
-              (selectChange)="onFilterChange($event, filter.name)">
-            </select-with-filter>
-
-            <mat-form-field *ngIf="filter.options === undefined" appearance="fill" (keydown.enter)="$event.target.blur()">
-              <mat-label>{{filter.name}}</mat-label>
-              <input
-                matInput
-                [name]="filter.name"
-                [ngModel]="emptyFilterValue"
-                (ngModelChange)="onFilterChange($event, filter.name)" />
-            </mat-form-field>
-          </div>
-
-          <button
+        <button
             color="primary"
             mat-stroked-button
             class="go-to-current-time"
             *ngIf="showCurrentTimeButton"
             (click)="onGoToCurrentTimeClick()">
-            Go to Current Time
-          </button>
-        </div>
+          Go to Current Time
+        </button>
+      </div>
 
-        <div class="placeholder-text mat-body-1" *ngIf="entries.length === 0"> No entries found. </div>
+      <div class="placeholder-text mat-body-1" *ngIf="entries.length === 0"> No entries found. </div>
 
-        <cdk-virtual-scroll-viewport
+      <cdk-virtual-scroll-viewport
           *ngIf="isTransactions()"
           transactionsVirtualScroll
           class="scroll"
           [scrollItems]="entries">
-          <ng-container
+        <ng-container
             *cdkVirtualFor="let entry of entries; let i = index"
             [ngTemplateOutlet]="content"
             [ngTemplateOutletContext]="{entry: entry, i: i}"> </ng-container>
-        </cdk-virtual-scroll-viewport>
+      </cdk-virtual-scroll-viewport>
 
-        <cdk-virtual-scroll-viewport
+      <cdk-virtual-scroll-viewport
           *ngIf="isProtolog()"
           protologVirtualScroll
           class="scroll"
           [scrollItems]="entries">
-          <ng-container
+        <ng-container
             *cdkVirtualFor="let entry of entries; let i = index"
             [ngTemplateOutlet]="content"
             [ngTemplateOutletContext]="{entry: entry, i: i}"> </ng-container>
-        </cdk-virtual-scroll-viewport>
+      </cdk-virtual-scroll-viewport>
 
-        <cdk-virtual-scroll-viewport
+      <cdk-virtual-scroll-viewport
           *ngIf="isFixedSizeScrollViewport()"
           itemSize="36"
           class="scroll">
-          <ng-container
+        <ng-container
             *cdkVirtualFor="let entry of entries; let i = index"
             [ngTemplateOutlet]="content"
             [ngTemplateOutletContext]="{entry: entry, i: i}"> </ng-container>
-        </cdk-virtual-scroll-viewport>
+      </cdk-virtual-scroll-viewport>
 
-        <ng-template #content let-entry="entry" let-i="i">
-          <div
+      <ng-template #content let-entry="entry" let-i="i">
+        <div
             class="entry"
             [attr.item-id]="i"
             [class.current]="isCurrentEntry(i)"
             [class.selected]="isSelectedEntry(i)"
             (click)="onEntryClicked(i)">
-            <div *ngIf="showTraceEntryTimes" class="time">
-              <button
+          <div *ngIf="showTraceEntryTimes" class="time">
+            <button
                 mat-button
                 color="primary"
                 (click)="onTraceEntryTimestampClick($event, entry)"
                 [disabled]="!entry.traceEntry.hasValidTimestamp()">
-                {{ entry.traceEntry.getTimestamp().format() }}
-              </button>
-            </div>
-
-            <div [class]="getLogFieldClass(field.name)" *ngFor="let field of entry.fields; index as i">
-                <span class="mat-body-1" *ngIf="!showTimestampButton(field.value)">{{ field.value }}</span>
-                <button
-                  *ngIf="showTimestampButton(field.value)"
-                  mat-button
-                  color="primary"
-                  (click)="onTimestampClick($event, entry, field)">
-                  {{ field.value.format() }}
-                </button>
-                <mat-icon
-                  *ngIf="field.icon"
-                  aria-hidden="false"
-                  [style]="{color: field.iconColor}"> {{field.icon}} </mat-icon>
-            </div>
+              {{ entry.traceEntry.getTimestamp().format() }}
+            </button>
           </div>
-        </ng-template>
-      </div>
+
+          <div [class]="getLogFieldClass(field.type)" *ngFor="let field of entry.fields; index as i">
+            <span class="mat-body-1" *ngIf="!showFieldButton(field)">{{ field.value }}</span>
+            <button
+                *ngIf="showFieldButton(field)"
+                mat-button
+                color="primary"
+                (click)="onFieldButtonClick($event, entry, field)">
+              {{ formatFieldButton(field) }}
+            </button>
+            <mat-icon
+                *ngIf="field.icon"
+                aria-hidden="false"
+                [style]="{color: field.iconColor}"> {{field.icon}} </mat-icon>
+          </div>
+        </div>
+      </ng-template>
+    </div>
   `,
   styles: [
+    `
+        .view-header {
+          display: flex;
+          flex-direction: column;
+          flex: 0 0 auto
+        }
+      `,
     selectedElementStyle,
     currentElementStyle,
     timeButtonStyle,
+    inlineButtonStyle,
     viewerCardStyle,
+    viewerCardInnerStyle,
     logComponentStyles,
   ],
 })
@@ -167,27 +207,43 @@ export class LogComponent {
   emptyFilterValue = '';
   private lastClickedTimestamp: Timestamp | undefined;
 
+  @Input() title: string | undefined;
   @Input() selectedIndex: number | undefined;
   @Input() scrollToIndex: number | undefined;
   @Input() currentIndex: number | undefined;
-  @Input() headers: LogFieldName[] = [];
+  @Input() headers: LogFieldType[] = [];
   @Input() filters: LogFilter[] = [];
   @Input() entries: LogEntry[] = [];
   @Input() showCurrentTimeButton = true;
   @Input() traceType: TraceType | undefined;
   @Input() showTraceEntryTimes = true;
+  @Input() showFiltersInTitle = false;
+
+  @Output() collapseButtonClicked = new EventEmitter();
 
   @ViewChild(CdkVirtualScrollViewport)
   scrollComponent?: CdkVirtualScrollViewport;
 
   constructor(@Inject(ElementRef) private elementRef: ElementRef) {}
 
-  showTimestampButton(value: LogFieldValue) {
-    return value instanceof Timestamp;
+  showFieldButton(field: LogField) {
+    return (
+      field.value instanceof Timestamp || field.type === LogFieldType.INPUT_TYPE
+    );
   }
 
-  getLogFieldClass(fieldName: LogFieldName) {
-    return LogFieldClassNames.get(fieldName);
+  formatFieldButton(field: LogField): string | number {
+    return field.value instanceof Timestamp
+      ? field.value.format()
+      : field.value;
+  }
+
+  getLogFieldClass(fieldType: LogFieldType) {
+    return LogFieldClassNames.get(fieldType);
+  }
+
+  getLogFieldName(fieldType: LogFieldType) {
+    return LogFieldNames.get(fieldType);
   }
 
   ngOnChanges() {
@@ -200,11 +256,11 @@ export class LogComponent {
     }
   }
 
-  onFilterChange(event: MatSelectChange | string, filterName: LogFieldName) {
+  onFilterChange(event: MatSelectChange | string, filterType: LogFieldType) {
     const value = event instanceof MatSelectChange ? event.value : event;
     this.emitEvent(
       ViewerEvents.LogFilterChange,
-      new LogFilterChangeDetail(filterName, value),
+      new LogFilterChangeDetail(filterType, value),
     );
   }
 
@@ -227,11 +283,14 @@ export class LogComponent {
     );
   }
 
-  onTimestampClick(event: MouseEvent, entry: LogEntry, field: LogField) {
+  onFieldButtonClick(event: MouseEvent, entry: LogEntry, field: LogField) {
     event.stopPropagation();
-    if (field.name === LogFieldName.DISPATCH_TIME) {
+    if (
+      field.type === LogFieldType.DISPATCH_TIME ||
+      field.type === LogFieldType.INPUT_TYPE
+    ) {
       this.onTraceEntryTimestampClick(event, entry);
-    } else {
+    } else if (field.value instanceof Timestamp) {
       this.onRawTimestampClick(field.value as Timestamp);
     }
   }
@@ -263,42 +322,46 @@ export class LogComponent {
     return index === this.selectedIndex;
   }
 
-  getOuterFilterWidth(name: LogFieldName): string | undefined {
-    switch (name) {
-      case LogFieldName.TRANSACTION_ID:
+  getOuterFilterWidth(type: LogFieldType): string | undefined {
+    switch (type) {
+      case LogFieldType.TRANSACTION_ID:
         return '125';
-      case LogFieldName.VSYNC_ID:
+      case LogFieldType.VSYNC_ID:
         return '110';
-      case LogFieldName.LAYER_OR_DISPLAY_ID:
+      case LogFieldType.LAYER_OR_DISPLAY_ID:
         return '125';
-      case LogFieldName.FLAGS:
+      case LogFieldType.FLAGS:
         return '250';
-      case LogFieldName.LOG_LEVEL:
+      case LogFieldType.LOG_LEVEL:
         return '100';
-      case LogFieldName.TAG:
+      case LogFieldType.TAG:
         return '100';
-      case LogFieldName.SOURCE_FILE:
+      case LogFieldType.SOURCE_FILE:
         return '300';
+      case LogFieldType.INPUT_DISPATCH_WINDOWS:
+        return `300`;
       default:
         return '75';
     }
   }
 
-  getInnerFilterWidth(name: LogFieldName): string | undefined {
-    switch (name) {
-      case LogFieldName.TRANSACTION_ID:
+  getInnerFilterWidth(type: LogFieldType): string | undefined {
+    switch (type) {
+      case LogFieldType.TRANSACTION_ID:
         return '125';
-      case LogFieldName.VSYNC_ID:
+      case LogFieldType.VSYNC_ID:
         return '90';
-      case LogFieldName.TRANSACTION_TYPE:
+      case LogFieldType.TRANSACTION_TYPE:
         return '175';
-      case LogFieldName.LAYER_OR_DISPLAY_ID:
+      case LogFieldType.LAYER_OR_DISPLAY_ID:
         return '100';
-      case LogFieldName.FLAGS:
+      case LogFieldType.FLAGS:
         return '250';
-      case LogFieldName.TAG:
+      case LogFieldType.TAG:
         return '150';
-      case LogFieldName.SOURCE_FILE:
+      case LogFieldType.SOURCE_FILE:
+        return '300';
+      case LogFieldType.INPUT_DISPATCH_WINDOWS:
         return '300';
       default:
         return '100';

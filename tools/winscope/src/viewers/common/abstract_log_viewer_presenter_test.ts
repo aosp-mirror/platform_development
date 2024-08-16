@@ -21,13 +21,13 @@ import {
   AbstractLogViewerPresenter,
   NotifyLogViewCallbackType,
 } from './abstract_log_viewer_presenter';
-import {LogEntry, LogFieldName, LogFieldValue, UiDataLog} from './ui_data_log';
+import {LogEntry, LogFieldType, LogFieldValue, UiDataLog} from './ui_data_log';
 
-export abstract class AbstractLogViewerPresenterTest {
+export abstract class AbstractLogViewerPresenterTest<UiData extends UiDataLog> {
   execute() {
     describe('AbstractLogViewerPresenterTest', () => {
-      let uiData: UiDataLog;
-      let presenter: AbstractLogViewerPresenter;
+      let uiData: UiData;
+      let presenter: AbstractLogViewerPresenter<UiData>;
       beforeAll(async () => {
         await this.setUpTestEnvironment();
       });
@@ -39,7 +39,7 @@ export abstract class AbstractLogViewerPresenterTest {
       });
 
       it('is robust to empty trace', async () => {
-        const notifyViewCallback = (newData: UiDataLog) => {
+        const notifyViewCallback = (newData: UiData) => {
           uiData = newData;
         };
         const presenter =
@@ -70,6 +70,9 @@ export abstract class AbstractLogViewerPresenterTest {
         if (this.shouldExecutePropertiesTests) {
           expect(uiData.propertiesTree).toBeUndefined();
           expect(uiData.propertiesUserOptions).toBeDefined();
+          if (this.executePropertiesChecksForEmptyTrace) {
+            this.executePropertiesChecksForEmptyTrace(uiData);
+          }
         }
       });
 
@@ -77,13 +80,19 @@ export abstract class AbstractLogViewerPresenterTest {
         await assertDefined(presenter).onAppEvent(
           assertDefined(this.getPositionUpdate()),
         );
-        expect(uiData.scrollToIndex).toEqual(0);
+        expect(uiData.scrollToIndex).toEqual(
+          this.expectedIndexOfFirstPositionUpdate,
+        );
 
         if (this.shouldExecuteCurrentIndexTests) {
-          expect(uiData.currentIndex).toEqual(0);
+          expect(uiData.currentIndex).toEqual(
+            this.expectedIndexOfFirstPositionUpdate,
+          );
           expect(uiData.selectedIndex).toBeUndefined();
         } else {
-          expect(uiData.selectedIndex).toEqual(0);
+          expect(uiData.selectedIndex).toEqual(
+            this.expectedIndexOfFirstPositionUpdate,
+          );
         }
 
         expect(uiData.entries.length).toEqual(this.totalOutputEntries);
@@ -98,11 +107,11 @@ export abstract class AbstractLogViewerPresenterTest {
         }
 
         if (this.shouldExecuteFilterTests) {
-          for (const [logFieldName, expectedOptions] of assertDefined(
+          for (const [logFieldType, expectedOptions] of assertDefined(
             this.expectedInitialFilterOptions,
           )) {
             const options = assertDefined(
-              uiData.filters?.find((f) => f.name === logFieldName)?.options,
+              uiData.filters?.find((f) => f.type === logFieldType)?.options,
             );
             if (Array.isArray(expectedOptions)) {
               expect(options).toEqual(expectedOptions);
@@ -141,19 +150,19 @@ export abstract class AbstractLogViewerPresenterTest {
 
       if (this.shouldExecuteFilterTests) {
         it('filters entries', async () => {
-          for (const [name, valuesToSet] of assertDefined(
+          for (const [type, valuesToSet] of assertDefined(
             this.filterValuesToSet,
           )) {
             const expected = assertDefined(
-              this.expectedFieldValuesAfterFilter?.get(name),
+              this.expectedFieldValuesAfterFilter?.get(type),
             );
             for (let i = 0; i < valuesToSet.length; i++) {
               const filterValues = valuesToSet[i];
               const expectedFieldValues = expected[i];
 
-              await presenter.onFilterChange(name, filterValues);
+              await presenter.onFilterChange(type, filterValues);
               const fieldValues = uiData.entries.map((entry) =>
-                assertDefined(this.getFieldValue(entry, name)),
+                assertDefined(this.getFieldValue(entry, type)),
               );
               if (Array.isArray(expectedFieldValues)) {
                 expect(new Set(fieldValues)).toEqual(
@@ -162,7 +171,7 @@ export abstract class AbstractLogViewerPresenterTest {
               } else {
                 expect(fieldValues.length).toEqual(expectedFieldValues);
               }
-              await presenter.onFilterChange(name, []);
+              await presenter.onFilterChange(type, []);
             }
           }
         });
@@ -212,14 +221,7 @@ export abstract class AbstractLogViewerPresenterTest {
       });
 
       it('updates selected entry ui data when entry changed by key press', async () => {
-        await presenter.onAppEvent(this.getPositionUpdate());
-        this.checkInitialTracePositionUpdate(uiData);
-
-        if (this.shouldExecuteCurrentIndexTests) {
-          expect(uiData.selectedIndex).toEqual(undefined);
-        } else {
-          expect(uiData.selectedIndex).toEqual(0);
-        }
+        await presenter.onLogEntryClick(0);
 
         await presenter.onArrowDownPress();
         this.checkSelectedAndScrollIndices(uiData, 1);
@@ -241,9 +243,13 @@ export abstract class AbstractLogViewerPresenterTest {
       it('computes index based on trace position update', async () => {
         await presenter.onAppEvent(this.getPositionUpdate());
         if (this.shouldExecuteCurrentIndexTests) {
-          expect(uiData.currentIndex).toEqual(0);
+          expect(uiData.currentIndex).toEqual(
+            this.expectedIndexOfFirstPositionUpdate,
+          );
         } else {
-          expect(uiData.selectedIndex).toEqual(0);
+          expect(uiData.selectedIndex).toEqual(
+            this.expectedIndexOfFirstPositionUpdate,
+          );
         }
 
         await presenter.onAppEvent(this.getSecondPositionUpdate());
@@ -266,7 +272,9 @@ export abstract class AbstractLogViewerPresenterTest {
 
   checkInitialTracePositionUpdate(uiData: UiDataLog) {
     expect(uiData.entries.length).toEqual(this.totalOutputEntries);
-    expect(uiData.scrollToIndex).toEqual(0);
+    expect(uiData.scrollToIndex).toEqual(
+      this.expectedIndexOfFirstPositionUpdate,
+    );
 
     if (this.shouldExecuteFilterTests) {
       expect(uiData.filters?.length).toBeGreaterThan(0);
@@ -277,10 +285,14 @@ export abstract class AbstractLogViewerPresenterTest {
     }
 
     if (this.shouldExecuteCurrentIndexTests) {
-      expect(uiData.currentIndex).toEqual(0);
+      expect(uiData.currentIndex).toEqual(
+        this.expectedIndexOfFirstPositionUpdate,
+      );
       expect(uiData.selectedIndex).toBeUndefined();
     } else {
-      expect(uiData.selectedIndex).toEqual(0);
+      expect(uiData.selectedIndex).toEqual(
+        this.expectedIndexOfFirstPositionUpdate,
+      );
     }
 
     if (this.shouldExecutePropertiesTests) {
@@ -289,8 +301,8 @@ export abstract class AbstractLogViewerPresenterTest {
     }
   }
 
-  getFieldValue(entry: LogEntry, logFieldName: LogFieldName) {
-    return entry.fields.find((f) => f.name === logFieldName)?.value;
+  getFieldValue(entry: LogEntry, logFieldType: LogFieldType) {
+    return entry.fields.find((f) => f.type === logFieldType)?.value;
   }
 
   checkSelectedEntryUiData(uiData: UiDataLog, newIndex: number | undefined) {
@@ -320,16 +332,17 @@ export abstract class AbstractLogViewerPresenterTest {
   abstract readonly shouldExecutePropertiesTests: boolean;
 
   abstract readonly totalOutputEntries: number;
+  abstract readonly expectedIndexOfFirstPositionUpdate: number;
   abstract readonly expectedIndexOfSecondPositionUpdate: number;
   abstract readonly logEntryClickIndex: number;
 
-  readonly expectedInitialFilterOptions?: Map<LogFieldName, string[] | number>;
-  readonly filterValuesToSet?: Map<LogFieldName, Array<string[] | string>>;
+  readonly expectedInitialFilterOptions?: Map<LogFieldType, string[] | number>;
+  readonly filterValuesToSet?: Map<LogFieldType, Array<string[] | string>>;
   readonly expectedFieldValuesAfterFilter?: Map<
-    LogFieldName,
+    LogFieldType,
     Array<LogFieldValue[] | number>
   >;
-  readonly filterNameForCurrentIndexTest?: LogFieldName;
+  readonly filterNameForCurrentIndexTest?: LogFieldType;
   readonly filterChangeForCurrentIndexTest?: string[];
   readonly expectedCurrentIndexAfterFilterChange?: number;
   readonly secondFilterChangeForCurrentIndexTest?: string[];
@@ -337,14 +350,15 @@ export abstract class AbstractLogViewerPresenterTest {
 
   abstract setUpTestEnvironment(): Promise<void>;
   abstract createPresenter(
-    callback: NotifyLogViewCallbackType,
-  ): Promise<AbstractLogViewerPresenter>;
+    callback: NotifyLogViewCallbackType<UiData>,
+  ): Promise<AbstractLogViewerPresenter<UiData>>;
   abstract createPresenterWithEmptyTrace(
-    callback: NotifyLogViewCallbackType,
-  ): AbstractLogViewerPresenter;
+    callback: NotifyLogViewCallbackType<UiData>,
+  ): AbstractLogViewerPresenter<UiData>;
   abstract getPositionUpdate(): TracePositionUpdate;
   abstract getSecondPositionUpdate(): TracePositionUpdate;
 
+  executePropertiesChecksForEmptyTrace?(uiData: UiDataLog): void;
   executePropertiesChecksAfterPositionUpdate?(uiData: UiDataLog): void;
   executeSpecializedTests?(): void;
 }

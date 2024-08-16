@@ -30,6 +30,17 @@ pub trait NamedAndVersioned {
     fn name(&self) -> &str;
     fn version(&self) -> &Version;
     fn key<'a>(&'a self) -> NameAndVersionRef<'a>;
+    fn crate_archive_url(&self) -> String {
+        format!(
+            "https://static.crates.io/crates/{}/{}-{}.crate",
+            self.name(),
+            self.name(),
+            self.version()
+        )
+    }
+    fn crates_io_homepage(&self) -> String {
+        format!("https://crates.io/crates/{}", self.name())
+    }
 }
 
 #[derive(Debug, PartialOrd, Ord, PartialEq, Eq, Hash, Clone)]

@@ -16,7 +16,6 @@ use std::{
     fs::{read_dir, remove_dir_all},
     path::{Path, PathBuf},
     process::{Command, Output},
-    str::from_utf8,
 };
 
 use anyhow::{anyhow, Context, Result};
@@ -38,7 +37,7 @@ pub struct Crate {
 
     path: RepoPath,
 
-    patch_output: Vec<Output>,
+    patch_output: Vec<(String, Output)>,
     generate_android_bp_output: Option<Output>,
     android_bp_diff: Option<Output>,
 }
@@ -90,6 +89,15 @@ impl Crate {
         }
     }
 
+    pub fn description(&self) -> &str {
+        self.manifest.metadata().description.as_ref().map(|x| x.as_str()).unwrap_or("")
+    }
+    pub fn license(&self) -> Option<&str> {
+        self.manifest.metadata().license.as_ref().map(|x| x.as_str())
+    }
+    pub fn license_file(&self) -> Option<&str> {
+        self.manifest.metadata().license_file.as_ref().map(|x| x.as_str())
+    }
     pub fn path(&self) -> &RepoPath {
         &self.path
     }
@@ -114,30 +122,6 @@ impl Crate {
             }
         }
         format!("{}-{}", self.name(), self.version().to_string())
-    }
-
-    pub fn aosp_url(&self) -> Option<String> {
-        if self.path.rel().starts_with("external/rust/crates") {
-            if self.path.rel().ends_with(self.name()) {
-                Some(format!(
-                    "https://android.googlesource.com/platform/{}/+/refs/heads/main",
-                    self.path()
-                ))
-            } else if self.path.rel().parent()?.ends_with(self.name()) {
-                Some(format!(
-                    "https://android.googlesource.com/platform/{}/+/refs/heads/main/{}",
-                    self.path().rel().parent()?.display(),
-                    self.path().rel().file_name()?.to_str()?
-                ))
-            } else {
-                None
-            }
-        } else {
-            None
-        }
-    }
-    pub fn crates_io_url(&self) -> String {
-        format!("https://crates.io/crates/{}", self.name())
     }
 
     pub fn is_crates_io(&self) -> bool {
@@ -165,28 +149,13 @@ impl Crate {
             && self.android_bp_unchanged()
     }
     pub fn patch_success(&self) -> bool {
-        self.patch_output.iter().all(|output| output.status.success())
+        self.patch_output.iter().all(|output| output.1.status.success())
     }
     pub fn generate_android_bp_success(&self) -> bool {
         self.generate_android_bp_output.as_ref().is_some_and(|output| output.status.success())
     }
     pub fn android_bp_unchanged(&self) -> bool {
         self.android_bp_diff.as_ref().is_some_and(|output| output.status.success())
-    }
-
-    pub fn print(&self) -> Result<()> {
-        println!("{} {} {}", self.name(), self.version(), self.path());
-        if let Some(output) = &self.generate_android_bp_output {
-            println!("generate Android.bp exit status: {}", output.status);
-            println!("{}", from_utf8(&output.stdout)?);
-            println!("{}", from_utf8(&output.stderr)?);
-        }
-        if let Some(output) = &self.android_bp_diff {
-            println!("diff exit status: {}", output.status);
-            println!("{}", from_utf8(&output.stdout)?);
-            println!("{}", from_utf8(&output.stderr)?);
-        }
-        Ok(())
     }
 
     // Make a clean copy of the crate in out/
@@ -238,15 +207,10 @@ impl Crate {
                     .arg(&entry_path)
                     .current_dir(self.staging_path().abs())
                     .output()?;
-                if !output.status.success() {
-                    println!(
-                        "Failed to apply {}\nstdout:\n{}\nstderr:\n:{}",
-                        entry_path.display(),
-                        from_utf8(&output.stdout)?,
-                        from_utf8(&output.stderr)?
-                    );
-                }
-                self.patch_output.push(output);
+                self.patch_output.push((
+                    String::from_utf8_lossy(entry.file_name().as_encoded_bytes()).to_string(),
+                    output,
+                ));
             }
         }
         Ok(())
@@ -264,8 +228,11 @@ impl Crate {
     pub fn set_diff_output(&mut self, diff_output: Output) {
         self.android_bp_diff.replace(diff_output);
     }
-    pub fn set_patch_output(&mut self, patch_output: Vec<Output>) {
+    pub fn set_patch_output(&mut self, patch_output: Vec<(String, Output)>) {
         self.patch_output = patch_output;
+    }
+    pub fn patch_output(&self) -> &Vec<(String, Output)> {
+        &self.patch_output
     }
 }
 
@@ -341,6 +308,8 @@ pub fn diff_android_bp(
             "-u",
             "-w",
             "-B",
+            "-I",
+            r#"default_team: "trendy_team_android_rust""#,
             "-I",
             "// has rustc warnings",
             "-I",

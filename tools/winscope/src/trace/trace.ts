@@ -94,7 +94,15 @@ export class TraceEntryLazy<T> extends TraceEntry<T> {
   }
 
   override async getValue(): Promise<T> {
-    return await this.parser.getEntry(this.index);
+    try {
+      return await this.parser.getEntry(this.index);
+    } catch (e) {
+      this.fullTrace.setCorruptedState(
+        true,
+        `Cannot parse entry at index ${this.index}`,
+      );
+      throw e;
+    }
   }
 }
 
@@ -129,6 +137,7 @@ export class Trace<T> {
   private frameMap?: FrameMap;
   private framesRange?: FramesRange;
   private corruptedState = false;
+  private corruptedReason: string | undefined;
 
   static fromParser<T>(parser: Parser<T>): Trace<T> {
     return new Trace(
@@ -456,19 +465,25 @@ export class Trace<T> {
     return this.framesRange;
   }
 
-  isDumpWithoutTimestamp() {
-    return (
-      this.lengthEntries === 1 &&
-      this.getEntry(0).getTimestamp().getValueNs() === INVALID_TIME_NS
-    );
+  isDump(): boolean {
+    return this.lengthEntries === 1;
   }
 
-  isCorrupted() {
+  isDumpWithoutTimestamp(): boolean {
+    return this.isDump() && !this.getEntry(0).hasValidTimestamp();
+  }
+
+  isCorrupted(): boolean {
     return this.corruptedState;
   }
 
-  setCorruptedState(value: boolean) {
+  getCorruptedReason(): string | undefined {
+    return this.corruptedReason;
+  }
+
+  setCorruptedState(value: boolean, reason?: string) {
     this.corruptedState = value;
+    this.corruptedReason = reason;
   }
 
   private getEntryInternal<

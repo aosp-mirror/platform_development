@@ -21,12 +21,20 @@ import {Computation} from 'trace/tree_node/computation';
 import {HierarchyTreeNode} from 'trace/tree_node/hierarchy_tree_node';
 
 class RectWmFactory {
-  makeDisplayRect(display: HierarchyTreeNode, absoluteZ: number): TraceRect {
+  makeDisplayRect(
+    display: HierarchyTreeNode,
+    absoluteZ: number,
+    focusedApp: string,
+  ): TraceRect {
     const displayInfo = display.getEagerPropertyByName('displayInfo');
     const displayRectWidth =
       displayInfo?.getChildByName('logicalWidth')?.getValue() ?? 0;
     const displayRectHeight =
       displayInfo?.getChildByName('logicalHeight')?.getValue() ?? 0;
+
+    const displayFocusedApp = display
+      .getEagerPropertyByName('focusedApp')
+      ?.getValue();
 
     return new TraceRectBuilder()
       .setX(0)
@@ -41,8 +49,9 @@ class RectWmFactory {
       )
       .setIsVisible(false)
       .setIsDisplay(true)
-      .setIsVirtual(false)
+      .setIsActiveDisplay(focusedApp === displayFocusedApp)
       .setDepth(absoluteZ)
+      .setIsSpy(false)
       .build();
   }
 
@@ -88,9 +97,9 @@ class RectWmFactory {
       .setGroupId(displayId)
       .setIsVisible(isVisible)
       .setIsDisplay(false)
-      .setIsVirtual(false)
       .setDepth(absoluteZ)
       .setOpacity(alpha)
+      .setIsSpy(false)
       .build();
   }
 }
@@ -109,8 +118,16 @@ export class RectsComputation implements Computation {
       throw new Error('root not set in WM rects computation');
     }
 
+    const focusedApp = this.root
+      .getEagerPropertyByName('focusedApp')
+      ?.getValue();
+
     this.root.getAllChildren().forEach((displayContent) => {
-      const displayRect = this.rectsFactory.makeDisplayRect(displayContent, 0);
+      const displayRect = this.rectsFactory.makeDisplayRect(
+        displayContent,
+        0,
+        focusedApp,
+      );
       displayContent.setRects([displayRect]);
 
       let absoluteZ = 1;

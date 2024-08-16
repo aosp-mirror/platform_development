@@ -100,9 +100,6 @@ import {LoadProgressComponent} from './load_progress_component';
             <p matLine>{{ TRACE_INFO[trace.type].name }}</p>
             <p matLine *ngFor="let descriptor of trace.getDescriptors()">{{ descriptor }}</p>
 
-            <mat-icon class="info-icon" *ngIf="traceUploadInfo(trace)" [matTooltip]="traceUploadInfo(trace)">
-              info
-            </mat-icon>
             <mat-icon class="warning-icon" *ngIf="!canVisualizeTrace(trace)" [matTooltip]="cannotVisualizeTraceTooltip(trace)">
               warning
             </mat-icon>
@@ -298,7 +295,10 @@ export class UploadTracesComponent implements ProgressListener {
     return this.ngZone.run(() => {
       let hasFilesWithViewers = false;
       this.tracePipeline?.getTraces().forEachTrace((trace) => {
-        if (TraceTypeUtils.isTraceTypeWithViewer(trace.type)) {
+        if (
+          !trace.isCorrupted() &&
+          TraceTypeUtils.isTraceTypeWithViewer(trace.type)
+        ) {
           hasFilesWithViewers = true;
         }
       });
@@ -307,26 +307,17 @@ export class UploadTracesComponent implements ProgressListener {
     });
   }
 
-  traceUploadInfo(trace: Trace<object>): string | undefined {
-    return TraceTypeUtils.traceUploadInfo(trace.type);
-  }
-
   canVisualizeTrace(trace: Trace<object>): boolean {
-    return TraceTypeUtils.canVisualizeTrace(trace.type);
-  }
-
-  traceErrorTooltip(trace: Trace<object>): string {
-    if (trace.isCorrupted()) {
-      return `${TRACE_INFO[trace.type].name} trace is corrupted.`;
-    }
-    return `Cannot visualize ${TRACE_INFO[trace.type].name} trace.`;
+    return TraceTypeUtils.isTraceTypeWithViewer(trace.type);
   }
 
   cannotVisualizeTraceTooltip(trace: Trace<object>): string {
-    if (trace.isCorrupted()) {
-      return `${TRACE_INFO[trace.type].name} trace is corrupted.`;
-    }
     return TraceTypeUtils.getReasonForNoTraceVisualization(trace.type);
+  }
+
+  traceErrorTooltip(trace: Trace<object>): string {
+    const reason = trace.getCorruptedReason() ?? 'Trace is corrupted.';
+    return 'Cannot visualize trace. ' + reason;
   }
 
   private getInputFiles(event: Event): File[] {

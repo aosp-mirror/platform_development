@@ -15,7 +15,6 @@
  */
 
 import {DragDropModule} from '@angular/cdk/drag-drop';
-import {ChangeDetectionStrategy} from '@angular/core';
 import {ComponentFixture, TestBed} from '@angular/core/testing';
 import {FormsModule, ReactiveFormsModule} from '@angular/forms';
 import {MatButtonModule} from '@angular/material/button';
@@ -26,7 +25,7 @@ import {MatSelectModule} from '@angular/material/select';
 import {MatTooltipModule} from '@angular/material/tooltip';
 import {BrowserAnimationsModule} from '@angular/platform-browser/animations';
 import {assertDefined} from 'common/assert_utils';
-import {Rect} from 'common/rect';
+import {Rect} from 'common/geometry/rect';
 import {TimeRange} from 'common/time';
 import {TimestampConverterUtils} from 'test/unit/timestamp_converter_utils';
 import {TraceBuilder} from 'test/unit/trace_builder';
@@ -37,6 +36,7 @@ import {DefaultTimelineRowComponent} from './default_timeline_row_component';
 describe('DefaultTimelineRowComponent', () => {
   let fixture: ComponentFixture<DefaultTimelineRowComponent>;
   let component: DefaultTimelineRowComponent;
+  let htmlElement: HTMLElement;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
@@ -53,13 +53,10 @@ describe('DefaultTimelineRowComponent', () => {
         DragDropModule,
       ],
       declarations: [DefaultTimelineRowComponent],
-    })
-      .overrideComponent(DefaultTimelineRowComponent, {
-        set: {changeDetection: ChangeDetectionStrategy.Default},
-      })
-      .compileComponents();
+    }).compileComponents();
     fixture = TestBed.createComponent(DefaultTimelineRowComponent);
     component = fixture.componentInstance;
+    htmlElement = fixture.nativeElement;
   });
 
   it('can be created', () => {
@@ -150,12 +147,12 @@ describe('DefaultTimelineRowComponent', () => {
       waitToBeCalled(drawRectSpy, 1),
     ];
 
-    component.handleMouseMove({
-      offsetX: 5,
-      offsetY: component.canvasDrawer.getScaledCanvasHeight() / 2,
-      preventDefault: () => {},
-      stopPropagation: () => {},
-    } as MouseEvent);
+    const event = new MouseEvent('mousemove');
+    spyOnProperty(event, 'offsetX').and.returnValue(5);
+    spyOnProperty(event, 'offsetY').and.returnValue(
+      component.canvasDrawer.getScaledCanvasHeight() / 2,
+    );
+    component.getCanvas().dispatchEvent(event);
 
     fixture.detectChanges();
     await fixture.whenRenderingDone();
@@ -237,14 +234,14 @@ describe('DefaultTimelineRowComponent', () => {
     await drawCorrectEntryOnClick(entryPos, 70n, 3);
   });
 
-  //TODO(b/304982982): test via dom interactions, not calling listener directly
   it('emits scroll event', async () => {
     setTraceAndSelectionRange(10n, 110n);
     fixture.detectChanges();
     await fixture.whenRenderingDone();
 
     const spy = spyOn(component.onScrollEvent, 'emit');
-    component.updateScroll(new WheelEvent('scroll'));
+    htmlElement.dispatchEvent(new WheelEvent('wheel'));
+    fixture.detectChanges();
     expect(spy).toHaveBeenCalled();
   });
 
@@ -294,26 +291,20 @@ describe('DefaultTimelineRowComponent', () => {
     expectedTimestampNs: bigint,
     rectSpyCalls: number,
   ) {
-    const drawRectSpy = spyOn(
-      component.canvasDrawer,
-      'drawRect',
-    ).and.callThrough();
-    const drawRectBorderSpy = spyOn(
-      component.canvasDrawer,
-      'drawRectBorder',
-    ).and.callThrough();
+    const drawRectSpy = spyOn(component.canvasDrawer, 'drawRect');
+    const drawRectBorderSpy = spyOn(component.canvasDrawer, 'drawRectBorder');
 
     const waitPromises = [
       waitToBeCalled(drawRectSpy, rectSpyCalls),
       waitToBeCalled(drawRectBorderSpy, 1),
     ];
 
-    await component.handleMouseDown({
-      offsetX: xPos + 1,
-      offsetY: component.canvasDrawer.getScaledCanvasHeight() / 2,
-      preventDefault: () => {},
-      stopPropagation: () => {},
-    } as MouseEvent);
+    const event = new MouseEvent('mousedown');
+    spyOnProperty(event, 'offsetX').and.returnValue(xPos + 1);
+    spyOnProperty(event, 'offsetY').and.returnValue(
+      component.canvasDrawer.getScaledCanvasHeight() / 2,
+    );
+    component.getCanvas().dispatchEvent(event);
 
     fixture.detectChanges();
     await fixture.whenRenderingDone();

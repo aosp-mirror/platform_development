@@ -15,13 +15,14 @@
  */
 
 import {assertDefined} from 'common/assert_utils';
-import {Rect} from 'common/rect';
+import {Rect} from 'common/geometry/rect';
 import {RawDataUtils} from 'parsers/raw_data_utils';
 import {LayerFlag} from 'parsers/surface_flinger/layer_flag';
 import {
   Transform,
-  TransformUtils,
+  TransformType,
 } from 'parsers/surface_flinger/transform_utils';
+import {GeometryFactory} from 'trace/geometry_factory';
 import {Computation} from 'trace/tree_node/computation';
 import {HierarchyTreeNode} from 'trace/tree_node/hierarchy_tree_node';
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
@@ -57,7 +58,7 @@ export class VisibilityPropertiesComputation implements Computation {
       .reverse();
 
     const opaqueLayers: HierarchyTreeNode[] = [];
-    const transparentLayers: HierarchyTreeNode[] = [];
+    const translucentLayers: HierarchyTreeNode[] = [];
 
     for (const layer of rootLayersOrderedByZ) {
       let isVisible = this.getIsVisible(layer);
@@ -72,103 +73,112 @@ export class VisibilityPropertiesComputation implements Computation {
         layer.addEagerProperty(
           DEFAULT_PROPERTY_TREE_NODE_FACTORY.makeCalculatedProperty(
             layer.id,
+            'isHiddenByPolicy',
+            this.isHiddenByPolicy(layer),
+          ),
+        );
+      } else {
+        const displaySize = this.getDisplaySize(layer);
+
+        const occludedBy = opaqueLayers
+          .filter((other) => {
+            if (
+              this.getDefinedValue(other, 'layerStack') !==
+              this.getDefinedValue(layer, 'layerStack')
+            ) {
+              return false;
+            }
+            if (!this.layerContains(other, layer, displaySize)) {
+              return false;
+            }
+            const cornerRadiusOther =
+              other.getEagerPropertyByName('cornerRadius')?.getValue() ?? 0;
+
+            return (
+              cornerRadiusOther <= 0 ||
+              (cornerRadiusOther ===
+                layer.getEagerPropertyByName('cornerRadius')?.getValue() ??
+                0)
+            );
+          })
+          .map((other) => other.id);
+
+        if (occludedBy.length > 0) {
+          isVisible = false;
+        }
+
+        layer.addEagerProperty(
+          DEFAULT_PROPERTY_TREE_NODE_FACTORY.makeCalculatedProperty(
+            layer.id,
+            'isComputedVisible',
+            isVisible,
+          ),
+        );
+        layer.addEagerProperty(
+          DEFAULT_PROPERTY_TREE_NODE_FACTORY.makeCalculatedProperty(
+            layer.id,
+            'occludedBy',
+            occludedBy,
+          ),
+        );
+
+        const partiallyOccludedBy = opaqueLayers
+          .filter((other) => {
+            if (
+              this.getDefinedValue(other, 'layerStack') !==
+              this.getDefinedValue(layer, 'layerStack')
+            ) {
+              return false;
+            }
+            if (!this.layerOverlaps(other, layer, displaySize)) {
+              return false;
+            }
+            return !occludedBy.includes(other.id);
+          })
+          .map((other) => other.id);
+
+        layer.addEagerProperty(
+          DEFAULT_PROPERTY_TREE_NODE_FACTORY.makeCalculatedProperty(
+            layer.id,
+            'partiallyOccludedBy',
+            partiallyOccludedBy,
+          ),
+        );
+
+        const coveredBy = translucentLayers
+          .filter((other) => {
+            if (
+              this.getDefinedValue(other, 'layerStack') !==
+              this.getDefinedValue(layer, 'layerStack')
+            ) {
+              return false;
+            }
+            return this.layerOverlaps(other, layer, displaySize);
+          })
+          .map((other) => other.id);
+
+        layer.addEagerProperty(
+          DEFAULT_PROPERTY_TREE_NODE_FACTORY.makeCalculatedProperty(
+            layer.id,
+            'coveredBy',
+            coveredBy,
+          ),
+        );
+
+        this.isOpaque(layer)
+          ? opaqueLayers.push(layer)
+          : translucentLayers.push(layer);
+      }
+
+      if (!isVisible) {
+        layer.addEagerProperty(
+          DEFAULT_PROPERTY_TREE_NODE_FACTORY.makeCalculatedProperty(
+            layer.id,
             'visibilityReason',
             this.getVisibilityReasons(layer),
           ),
         );
-        continue;
       }
-
-      const displaySize = this.getDisplaySize(layer);
-
-      const occludedBy = opaqueLayers
-        .filter((other) => {
-          if (
-            this.getDefinedValue(other, 'layerStack') !==
-            this.getDefinedValue(layer, 'layerStack')
-          ) {
-            return false;
-          }
-          if (!this.layerContains(other, layer, displaySize)) {
-            return false;
-          }
-          const cornerRadiusOther =
-            other.getEagerPropertyByName('cornerRadius')?.getValue() ?? 0;
-
-          return (
-            cornerRadiusOther <= 0 ||
-            (cornerRadiusOther ===
-              layer.getEagerPropertyByName('cornerRadius')?.getValue() ??
-              0)
-          );
-        })
-        .map((other) => other.id);
-
-      if (occludedBy.length > 0) {
-        isVisible = false;
-      }
-
-      layer.addEagerProperty(
-        DEFAULT_PROPERTY_TREE_NODE_FACTORY.makeCalculatedProperty(
-          layer.id,
-          'isComputedVisible',
-          isVisible,
-        ),
-      );
-      layer.addEagerProperty(
-        DEFAULT_PROPERTY_TREE_NODE_FACTORY.makeCalculatedProperty(
-          layer.id,
-          'occludedBy',
-          occludedBy,
-        ),
-      );
-
-      const partiallyOccludedBy = opaqueLayers
-        .filter((other) => {
-          if (
-            this.getDefinedValue(other, 'layerStack') !==
-            this.getDefinedValue(layer, 'layerStack')
-          ) {
-            return false;
-          }
-          if (!this.layerOverlaps(other, layer, displaySize)) {
-            return false;
-          }
-          return !occludedBy.includes(other.id);
-        })
-        .map((other) => other.id);
-
-      layer.addEagerProperty(
-        DEFAULT_PROPERTY_TREE_NODE_FACTORY.makeCalculatedProperty(
-          layer.id,
-          'partiallyOccludedBy',
-          partiallyOccludedBy,
-        ),
-      );
-
-      const coveredBy = transparentLayers
-        .filter((other) => {
-          if (
-            this.getDefinedValue(other, 'layerStack') !==
-            this.getDefinedValue(layer, 'layerStack')
-          ) {
-            return false;
-          }
-          return this.layerOverlaps(other, layer, displaySize);
-        })
-        .map((other) => other.id);
-
-      layer.addEagerProperty(
-        DEFAULT_PROPERTY_TREE_NODE_FACTORY.makeCalculatedProperty(
-          layer.id,
-          'coveredBy',
-          coveredBy,
-        ),
-      );
-
-      this.isOpaque(layer)
-        ? opaqueLayers.push(layer)
-        : transparentLayers.push(layer);
     }
   }
 
@@ -254,10 +264,7 @@ export class VisibilityPropertiesComputation implements Computation {
       reasons.push('crop is 0x0');
     }
     const transform = layer.getEagerPropertyByName('transform');
-    if (
-      transform &&
-      !TransformUtils.isValidTransform(Transform.from(transform))
-    ) {
+    if (transform && !Transform.from(transform).matrix.isValid()) {
       reasons.push('transform is invalid');
     }
 
@@ -291,6 +298,11 @@ export class VisibilityPropertiesComputation implements Computation {
       reasons.push('null visible region');
     }
 
+    const occludedByNode = layer.getEagerPropertyByName('occludedBy');
+    if (occludedByNode && occludedByNode.getAllChildren().length > 0) {
+      reasons.push('occluded');
+    }
+
     if (reasons.length === 0) reasons.push('unknown');
     return reasons;
   }
@@ -308,7 +320,7 @@ export class VisibilityPropertiesComputation implements Computation {
 
   private getRect(rectNode: PropertyTreeNode): Rect | undefined {
     if (rectNode.getAllChildren().length === 0) return undefined;
-    return Rect.from(rectNode);
+    return GeometryFactory.makeRect(rectNode);
   }
 
   private getColor(layer: HierarchyTreeNode): PropertyTreeNode | undefined {
@@ -339,12 +351,12 @@ export class VisibilityPropertiesComputation implements Computation {
     crop = new Rect(0, 0, 0, 0),
   ): boolean {
     if (
-      !TransformUtils.isSimpleRotation(
+      !TransformType.isSimpleRotation(
         assertDefined(layer.getEagerPropertyByName('transform'))
           .getChildByName('type')
           ?.getValue() ?? 0,
       ) ||
-      !TransformUtils.isSimpleRotation(
+      !TransformType.isSimpleRotation(
         assertDefined(other.getEagerPropertyByName('transform'))
           .getChildByName('type')
           ?.getValue() ?? 0,

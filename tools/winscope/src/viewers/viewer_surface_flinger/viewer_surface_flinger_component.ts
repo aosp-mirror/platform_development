@@ -19,7 +19,7 @@ import {PersistentStore} from 'common/persistent_store';
 import {TraceType} from 'trace/trace_type';
 import {CollapsibleSections} from 'viewers/common/collapsible_sections';
 import {CollapsibleSectionType} from 'viewers/common/collapsible_section_type';
-import {ShadingMode} from 'viewers/components/rects/types3d';
+import {ShadingMode} from 'viewers/components/rects/shading_mode';
 import {viewerCardStyle} from 'viewers/components/styles/viewer_card.styles';
 import {UiData} from './ui_data';
 
@@ -50,7 +50,7 @@ import {UiData} from './ui_data';
       <hierarchy-view
         class="hierarchy-view"
         [class.collapsed]="sections.isSectionCollapsed(CollapsibleSectionType.HIERARCHY)"
-        [tree]="inputData?.hierarchyTrees[0]"
+        [tree]="inputData?.hierarchyTrees?.at(0)"
         [dependencies]="inputData?.dependencies ?? []"
         [highlightedItem]="inputData?.highlightedItem ?? ''"
         [pinnedItems]="inputData?.pinnedItems ?? []"

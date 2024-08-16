@@ -16,6 +16,9 @@
 
 import {assertDefined} from 'common/assert_utils';
 import {TracePositionUpdate} from 'messaging/winscope_event';
+import {ParserBuilder} from 'test/unit/parser_builder';
+import {PropertyTreeBuilder} from 'test/unit/property_tree_builder';
+import {TimestampConverterUtils} from 'test/unit/timestamp_converter_utils';
 import {TracesBuilder} from 'test/unit/traces_builder';
 import {TraceBuilder} from 'test/unit/trace_builder';
 import {UnitTestUtils} from 'test/unit/utils';
@@ -27,8 +30,9 @@ import {NotifyLogViewCallbackType} from 'viewers/common/abstract_log_viewer_pres
 import {AbstractLogViewerPresenterTest} from 'viewers/common/abstract_log_viewer_presenter_test';
 import {UiDataLog} from 'viewers/common/ui_data_log';
 import {Presenter} from './presenter';
+import {UiData} from './ui_data';
 
-class PresenterTransitionsTest extends AbstractLogViewerPresenterTest {
+class PresenterTransitionsTest extends AbstractLogViewerPresenterTest<UiData> {
   private trace: Trace<PropertyTreeNode> | undefined;
   private positionUpdate: TracePositionUpdate | undefined;
   private secondPositionUpdate: TracePositionUpdate | undefined;
@@ -39,8 +43,9 @@ class PresenterTransitionsTest extends AbstractLogViewerPresenterTest {
   override readonly shouldExecutePropertiesTests = true;
 
   override readonly totalOutputEntries = 4;
+  override readonly expectedIndexOfFirstPositionUpdate = 3;
   override readonly expectedIndexOfSecondPositionUpdate = 1;
-  override readonly logEntryClickIndex = 3;
+  override readonly logEntryClickIndex = 2;
 
   override async setUpTestEnvironment(): Promise<void> {
     const parser = await UnitTestUtils.getPerfettoParser(
@@ -62,7 +67,7 @@ class PresenterTransitionsTest extends AbstractLogViewerPresenterTest {
   }
 
   override createPresenterWithEmptyTrace(
-    callback: NotifyLogViewCallbackType,
+    callback: NotifyLogViewCallbackType<UiData>,
   ): Presenter {
     const traces = new TracesBuilder()
       .setEntries(TraceType.TRANSITION, [])
@@ -72,18 +77,16 @@ class PresenterTransitionsTest extends AbstractLogViewerPresenterTest {
   }
 
   override async createPresenter(
-    callback: NotifyLogViewCallbackType,
+    callback: NotifyLogViewCallbackType<UiData>,
+    trace = this.trace,
+    positionUpdate = assertDefined(this.getPositionUpdate()),
   ): Promise<Presenter> {
-    const trace = assertDefined(this.trace);
+    const transitionTrace = assertDefined(trace);
     const traces = new Traces();
-    traces.addTrace(trace);
+    traces.addTrace(transitionTrace);
 
-    const presenter = new Presenter(
-      trace,
-      traces,
-      callback as NotifyLogViewCallbackType,
-    );
-    await presenter.onAppEvent(this.getPositionUpdate()); // trigger initialization
+    const presenter = new Presenter(transitionTrace, traces, callback);
+    await presenter.onAppEvent(positionUpdate); // trigger initialization
     return presenter;
   }
 
@@ -95,16 +98,50 @@ class PresenterTransitionsTest extends AbstractLogViewerPresenterTest {
     return assertDefined(this.secondPositionUpdate);
   }
 
-  override executePropertiesChecksAfterPositionUpdate(uiData: UiDataLog): void {
+  override executePropertiesChecksAfterPositionUpdate(uiData: UiDataLog) {
     expect(uiData.entries.length).toEqual(4);
 
     const selectedTransition = assertDefined(uiData.propertiesTree);
     const wmData = assertDefined(selectedTransition.getChildByName('wmData'));
-    expect(wmData.getChildByName('id')?.formattedValue()).toEqual('32');
+    expect(wmData.getChildByName('id')?.formattedValue()).toEqual('35');
     expect(wmData.getChildByName('type')?.formattedValue()).toEqual('OPEN');
     expect(wmData.getChildByName('createTimeNs')?.formattedValue()).toEqual(
-      '2023-11-21, 13:30:25.428',
+      '2023-11-21, 13:30:33.176',
     );
+  }
+
+  override executeSpecializedTests() {
+    describe('Specialized tests', () => {
+      it('robust to corrupted transitions trace', async () => {
+        const timestamp10 = TimestampConverterUtils.makeRealTimestamp(10n);
+        const trace = new TraceBuilder<PropertyTreeNode>()
+          .setType(TraceType.TRANSITION)
+          .setParser(
+            new ParserBuilder<PropertyTreeNode>()
+              .setIsCorrupted(true)
+              .setEntries([
+                new PropertyTreeBuilder()
+                  .setRootId('TransitionsTraceEntry')
+                  .setName('transition0')
+                  .build(),
+              ])
+              .setTimestamps([timestamp10])
+              .build(),
+          )
+          .build();
+        const positionUpdate = TracePositionUpdate.fromTimestamp(timestamp10);
+        let uiData: UiData | undefined;
+        const presenter = await this.createPresenter(
+          (newData) => {
+            uiData = newData;
+          },
+          trace,
+          positionUpdate,
+        );
+        await presenter.onAppEvent(positionUpdate);
+        expect(uiData?.entries).toEqual([]);
+      });
+    });
   }
 }
 

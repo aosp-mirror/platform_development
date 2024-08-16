@@ -29,6 +29,7 @@ export class ParserMock<T> implements Parser<T> {
     private readonly customQueryResult: Map<CustomQueryType, object>,
     private readonly descriptors: string[],
     private readonly noOffsets: boolean,
+    private readonly isCorrupted: boolean,
   ) {
     if (timestamps.length !== entries.length) {
       throw new Error(`Timestamps and entries must have the same length`);
@@ -64,6 +65,7 @@ export class ParserMock<T> implements Parser<T> {
   }
 
   getEntry(index: AbsoluteEntryIndex): Promise<T> {
+    if (this.isCorrupted) throw new Error('Corrupted trace');
     return Promise.resolve(this.entries[index]);
   }
 
@@ -77,7 +79,10 @@ export class ParserMock<T> implements Parser<T> {
         `This mock was not configured to support custom query type '${type}'. Something missing in your test set up?`,
       );
     }
-    if (Array.isArray(result)) {
+    if (
+      type !== CustomQueryType.SF_LAYERS_ID_AND_NAME &&
+      Array.isArray(result)
+    ) {
       result = result.slice(entriesRange.start, entriesRange.end);
     }
     return Promise.resolve(result) as Promise<

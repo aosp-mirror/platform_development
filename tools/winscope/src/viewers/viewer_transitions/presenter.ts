@@ -27,18 +27,18 @@ import {
 } from 'viewers/common/abstract_log_viewer_presenter';
 import {LogPresenter} from 'viewers/common/log_presenter';
 import {PropertiesPresenter} from 'viewers/common/properties_presenter';
-import {LogField, LogFieldName} from 'viewers/common/ui_data_log';
+import {LogField, LogFieldType} from 'viewers/common/ui_data_log';
 import {UpdateTransitionChangesNames} from './operations/update_transition_changes_names';
 import {TransitionsEntry, TransitionStatus, UiData} from './ui_data';
 
-export class Presenter extends AbstractLogViewerPresenter {
-  static readonly FIELD_NAMES = [
-    LogFieldName.TRANSITION_ID,
-    LogFieldName.TRANSITION_TYPE,
-    LogFieldName.SEND_TIME,
-    LogFieldName.DISPATCH_TIME,
-    LogFieldName.DURATION,
-    LogFieldName.STATUS,
+export class Presenter extends AbstractLogViewerPresenter<UiData> {
+  static readonly FIELD_TYPES = [
+    LogFieldType.TRANSITION_ID,
+    LogFieldType.TRANSITION_TYPE,
+    LogFieldType.SEND_TIME,
+    LogFieldType.DISPATCH_TIME,
+    LogFieldType.DURATION,
+    LogFieldType.STATUS,
   ];
   private static readonly VALUE_NA = 'N/A';
 
@@ -50,7 +50,10 @@ export class Presenter extends AbstractLogViewerPresenter {
   private windowTokenToTitle = new Map<string, string>();
 
   protected override keepCalculated = false;
-  protected override logPresenter = new LogPresenter(false);
+  protected override logPresenter = new LogPresenter<TransitionsEntry>(
+    false,
+    false,
+  );
   protected override propertiesPresenter = new PropertiesPresenter(
     {},
     [],
@@ -65,9 +68,9 @@ export class Presenter extends AbstractLogViewerPresenter {
   constructor(
     trace: Trace<PropertyTreeNode>,
     traces: Traces,
-    notifyViewCallback: NotifyLogViewCallbackType,
+    notifyViewCallback: NotifyLogViewCallbackType<UiData>,
   ) {
-    super(trace, notifyViewCallback, UiData.EMPTY);
+    super(trace, notifyViewCallback, UiData.createEmpty());
     this.transitionTrace = trace;
     this.surfaceFlingerTrace = traces.getTrace(TraceType.SURFACE_FLINGER);
     this.windowManagerTrace = traces.getTrace(TraceType.WINDOW_MANAGER);
@@ -99,8 +102,8 @@ export class Presenter extends AbstractLogViewerPresenter {
     const allEntries = await this.makeUiDataEntries();
 
     this.logPresenter.setAllEntries(allEntries);
-    this.logPresenter.setHeaders(Presenter.FIELD_NAMES);
-    this.refreshUIData(UiData.EMPTY);
+    this.logPresenter.setHeaders(Presenter.FIELD_TYPES);
+    this.refreshUiData();
     this.isInitialized = true;
   }
 
@@ -114,7 +117,7 @@ export class Presenter extends AbstractLogViewerPresenter {
 
   private sortTransitions(transitions: TransitionsEntry[]) {
     const getId = (a: TransitionsEntry) =>
-      assertDefined(a.fields.find((f) => f.name === LogFieldName.TRANSITION_ID))
+      assertDefined(a.fields.find((f) => f.type === LogFieldType.TRANSITION_ID))
         .value;
     transitions.sort((a: TransitionsEntry, b: TransitionsEntry) => {
       return getId(a) <= getId(b) ? -1 : 1;
@@ -129,7 +132,12 @@ export class Presenter extends AbstractLogViewerPresenter {
       ++traceIndex
     ) {
       const entry = assertDefined(this.trace.getEntry(traceIndex));
-      const transitionNode = await entry.getValue();
+      let transitionNode: PropertyTreeNode;
+      try {
+        transitionNode = await entry.getValue();
+      } catch (e) {
+        continue;
+      }
       const wmDataNode = assertDefined(transitionNode.getChildByName('wmData'));
       const shellDataNode = assertDefined(
         transitionNode.getChildByName('shellData'),
@@ -158,33 +166,33 @@ export class Presenter extends AbstractLogViewerPresenter {
 
       const fields: LogField[] = [
         {
-          name: LogFieldName.TRANSITION_ID,
+          type: LogFieldType.TRANSITION_ID,
           value: assertDefined(transitionNode.getChildByName('id')).getValue(),
         },
         {
-          name: LogFieldName.TRANSITION_TYPE,
+          type: LogFieldType.TRANSITION_TYPE,
           value: wmDataNode.getChildByName('type')?.formattedValue() ?? 'NONE',
         },
         {
-          name: LogFieldName.SEND_TIME,
+          type: LogFieldType.SEND_TIME,
           value:
             wmDataNode.getChildByName('sendTimeNs')?.getValue() ??
             Presenter.VALUE_NA,
         },
         {
-          name: LogFieldName.DISPATCH_TIME,
+          type: LogFieldType.DISPATCH_TIME,
           value:
             shellDataNode.getChildByName('dispatchTimeNs')?.getValue() ??
             Presenter.VALUE_NA,
         },
         {
-          name: LogFieldName.DURATION,
+          type: LogFieldType.DURATION,
           value:
             transitionNode.getChildByName('duration')?.formattedValue() ??
             Presenter.VALUE_NA,
         },
         {
-          name: LogFieldName.STATUS,
+          type: LogFieldType.STATUS,
           value: status ?? Presenter.VALUE_NA,
           icon: statusIcon,
           iconColor: statusIconColor,

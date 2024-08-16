@@ -96,6 +96,7 @@ message CameraFrame {
 
 message StartStreaming {
   bool home_enabled = 1;
+  bool rotation_supported = 2;
 }
 
 message StopStreaming {

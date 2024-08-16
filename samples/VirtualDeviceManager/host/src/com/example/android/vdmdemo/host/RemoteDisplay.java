@@ -70,6 +70,8 @@ import com.example.android.vdmdemo.common.VideoManager;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
+import java.util.Collections;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
 
@@ -140,9 +142,17 @@ class RemoteDisplay implements AutoCloseable {
             flags &= ~DisplayManager.VIRTUAL_DISPLAY_FLAG_OWN_CONTENT_ONLY;
         }
 
+        Set<String> displayCategories;
+        if (mPreferenceController.getBoolean(R.string.pref_enable_display_category)) {
+            displayCategories = Set.of(context.getString(R.string.display_category));
+        } else {
+            displayCategories = Collections.emptySet();
+        }
+
         VirtualDisplayConfig.Builder virtualDisplayBuilder =
                 new VirtualDisplayConfig.Builder(
                                 "VirtualDisplay" + mRemoteDisplayId, mWidth, mHeight, mDpi)
+                        .setDisplayCategories(displayCategories)
                         .setFlags(flags);
 
         if (mDisplayType == DISPLAY_TYPE_HOME) {
@@ -262,6 +272,13 @@ class RemoteDisplay implements AutoCloseable {
             goHome();
         } else if (event.hasInputEvent()) {
             processInputEvent(event.getInputEvent());
+        } else if (event.hasDisplayRotation()) {
+            int rotation = mVirtualDisplay.getDisplay().getRotation();
+            // Change the rotation of the display. The rotation is a Surface rotation and has
+            // only 4 possible values.
+            rotation += 1;
+            rotation %= 4;
+            mVirtualDisplay.setRotation(rotation);
         } else if (event.hasStopStreaming() && event.getStopStreaming().getPause()) {
             if (mVideoManager != null) {
                 mVideoManager.stop();
@@ -456,8 +473,8 @@ class RemoteDisplay implements AutoCloseable {
     private static int displayRotationToDegrees(int displayRotation) {
         return switch (displayRotation) {
             case Surface.ROTATION_90 -> -90;
-            case Surface.ROTATION_180 -> 180;
-            case Surface.ROTATION_270 -> 90;
+            case Surface.ROTATION_180 -> -180;
+            case Surface.ROTATION_270 -> -270;
             default -> 0;
         };
     }
