@@ -27,7 +27,7 @@ import {MatTooltipModule} from '@angular/material/tooltip';
 import {BrowserAnimationsModule} from '@angular/platform-browser/animations';
 import {assertDefined} from 'common/assert_utils';
 import {Rect} from 'common/geometry/rect';
-import {TimeRange} from 'common/time';
+import {TimeRange, Timestamp} from 'common/time';
 import {PropertyTreeBuilder} from 'test/unit/property_tree_builder';
 import {TimestampConverterUtils} from 'test/unit/timestamp_converter_utils';
 import {TraceBuilder} from 'test/unit/trace_builder';
@@ -42,6 +42,7 @@ describe('TransitionTimelineComponent', () => {
   let htmlElement: HTMLElement;
 
   const time0 = TimestampConverterUtils.makeRealTimestamp(0n);
+  const time5 = TimestampConverterUtils.makeRealTimestamp(5n);
   const time10 = TimestampConverterUtils.makeRealTimestamp(10n);
   const time20 = TimestampConverterUtils.makeRealTimestamp(20n);
   const time30 = TimestampConverterUtils.makeRealTimestamp(30n);
@@ -49,9 +50,11 @@ describe('TransitionTimelineComponent', () => {
   const time60 = TimestampConverterUtils.makeRealTimestamp(60n);
   const time85 = TimestampConverterUtils.makeRealTimestamp(85n);
   const time110 = TimestampConverterUtils.makeRealTimestamp(110n);
+  const time120 = TimestampConverterUtils.makeRealTimestamp(120n);
   const time160 = TimestampConverterUtils.makeRealTimestamp(160n);
 
   const range10to110 = new TimeRange(time10, time110);
+  const range0to160 = new TimeRange(time0, time160);
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
@@ -77,7 +80,7 @@ describe('TransitionTimelineComponent', () => {
     component = fixture.componentInstance;
     htmlElement = fixture.nativeElement;
     component.timestampConverter = TimestampConverterUtils.TIMESTAMP_CONVERTER;
-    component.fullRange = range10to110;
+    component.fullRange = range0to160;
   });
 
   it('can be created', () => {
@@ -85,56 +88,13 @@ describe('TransitionTimelineComponent', () => {
   });
 
   it('can draw non-overlapping transitions', async () => {
-    const transitions = [
-      new PropertyTreeBuilder()
-        .setIsRoot(true)
-        .setRootId('TransitionsTraceEntry')
-        .setName('transition')
-        .setChildren([
-          {
-            name: 'wmData',
-            children: [{name: 'finishTimeNs', value: time30}],
-          },
-          {
-            name: 'shellData',
-            children: [{name: 'dispatchTimeNs', value: time10}],
-          },
-          {name: 'aborted', value: false},
-        ])
-        .build(),
-
-      new PropertyTreeBuilder()
-        .setIsRoot(true)
-        .setRootId('TransitionsTraceEntry')
-        .setName('transition')
-        .setChildren([
-          {
-            name: 'wmData',
-            children: [{name: 'finishTimeNs', value: time110}],
-          },
-          {
-            name: 'shellData',
-            children: [{name: 'dispatchTimeNs', value: time60}],
-          },
-          {name: 'aborted', value: false},
-        ])
-        .build(),
-    ];
-    component.trace = new TraceBuilder<PropertyTreeNode>()
-      .setType(TraceType.TRANSITION)
-      .setEntries(transitions)
-      .setTimestamps([
-        TimestampConverterUtils.makeRealTimestamp(10n),
-        TimestampConverterUtils.makeRealTimestamp(60n),
-      ])
-      .build();
-    component.transitionEntries = transitions;
-    component.selectionRange = range10to110;
-
     const drawRectSpy = spyOn(component.canvasDrawer, 'drawRect');
 
-    fixture.detectChanges();
-    await fixture.whenRenderingDone();
+    const transitions = [
+      makeTransition(time10, time30),
+      makeTransition(time60, time110),
+    ];
+    await setTraceAndSelectionRange(transitions, [time10, time60]);
 
     const padding = 5;
     const oneRowTotalHeight = 30;
@@ -164,59 +124,30 @@ describe('TransitionTimelineComponent', () => {
   });
 
   it('can draw transitions zoomed in', async () => {
-    const transitions = [
-      new PropertyTreeBuilder()
-        .setIsRoot(true)
-        .setRootId('TransitionsTraceEntry')
-        .setName('transition')
-        .setChildren([
-          {
-            name: 'wmData',
-            children: [{name: 'finishTimeNs', value: time20}],
-          },
-          {
-            name: 'shellData',
-            children: [{name: 'dispatchTimeNs', value: time0}],
-          },
-          {name: 'aborted', value: false},
-        ])
-        .build(),
-      new PropertyTreeBuilder()
-        .setIsRoot(true)
-        .setRootId('TransitionsTraceEntry')
-        .setName('transition')
-        .setChildren([
-          {
-            name: 'wmData',
-            children: [{name: 'finishTimeNs', value: time160}],
-          },
-          {
-            name: 'shellData',
-            children: [{name: 'dispatchTimeNs', value: time60}],
-          },
-          {name: 'aborted', value: false},
-        ])
-        .build(),
-    ];
-    component.trace = new TraceBuilder<PropertyTreeNode>()
-      .setType(TraceType.TRANSITION)
-      .setEntries(transitions)
-      .setTimestamps([time10, time60])
-      .build();
-    component.transitionEntries = transitions;
-    component.selectionRange = range10to110;
-
     const drawRectSpy = spyOn(component.canvasDrawer, 'drawRect');
 
-    fixture.detectChanges();
-    await fixture.whenRenderingDone();
+    const transitions = [
+      makeTransition(time10, time20), // drawn
+      makeTransition(time60, time160), // drawn
+      makeTransition(time120, time160), // not drawn - starts after selection range
+      makeTransition(time0, time5), // not drawn - finishes before selection range
+      makeTransition(time5, undefined), // not drawn - starts before selection range with unknown finish time
+    ];
+    await setTraceAndSelectionRange(transitions, [
+      time10,
+      time60,
+      time120,
+      time0,
+      time5,
+    ]);
 
     const padding = 5;
-    const oneRowTotalHeight = 30;
+    const oneRowTotalHeight =
+      (component.canvasDrawer.getScaledCanvasHeight() - 2 * padding) / 3;
     const oneRowHeight = oneRowTotalHeight - padding;
     const width = component.canvasDrawer.getScaledCanvasWidth();
 
-    expect(drawRectSpy).toHaveBeenCalledTimes(2);
+    expect(drawRectSpy).toHaveBeenCalledTimes(2); // does not draw final transition
     expect(drawRectSpy).toHaveBeenCalledWith(
       new Rect(0, padding, Math.floor(width / 10), oneRowHeight),
       component.color,
@@ -234,30 +165,16 @@ describe('TransitionTimelineComponent', () => {
   });
 
   it('can draw selected entry', async () => {
-    setDefaultTraceAndSelectionRange();
-    component.selectedEntry = assertDefined(component.trace).getEntry(0);
-
     const drawRectSpy = spyOn(component.canvasDrawer, 'drawRect');
     const drawRectBorderSpy = spyOn(component.canvasDrawer, 'drawRectBorder');
     const waitPromises = [
       waitToBeCalled(drawRectSpy, 1),
       waitToBeCalled(drawRectBorderSpy, 1),
     ];
-
-    fixture.detectChanges();
-    await fixture.whenRenderingDone();
+    await setDefaultTraceAndSelectionRange(true);
     await Promise.all(waitPromises);
 
-    const padding = 5;
-    const oneRowTotalHeight = 30;
-    const oneRowHeight = oneRowTotalHeight - padding;
-    const width = component.canvasDrawer.getScaledCanvasWidth();
-    const expectedRect = new Rect(
-      Math.floor((width * 1) / 4),
-      padding,
-      Math.floor(width / 2),
-      oneRowHeight,
-    );
+    const expectedRect = getExpectedBorderedRect();
     expect(drawRectSpy).toHaveBeenCalledOnceWith(
       expectedRect,
       component.color,
@@ -270,25 +187,11 @@ describe('TransitionTimelineComponent', () => {
   });
 
   it('can draw hovering entry', async () => {
-    setDefaultTraceAndSelectionRange();
     const drawRectSpy = spyOn(component.canvasDrawer, 'drawRect');
+    await setDefaultTraceAndSelectionRange();
+    const expectedRect = getExpectedBorderedRect();
 
-    fixture.detectChanges();
-    await fixture.whenRenderingDone();
-
-    const padding = 5;
-    const oneRowTotalHeight = 30;
-    const oneRowHeight = oneRowTotalHeight - padding;
-    const width = component.canvasDrawer.getScaledCanvasWidth();
-    const expectedRect = new Rect(
-      Math.floor((width * 1) / 4),
-      padding,
-      Math.floor(width / 2),
-      oneRowHeight,
-    );
-
-    expect(drawRectSpy).toHaveBeenCalledTimes(1);
-    expect(drawRectSpy).toHaveBeenCalledWith(
+    expect(drawRectSpy).toHaveBeenCalledOnceWith(
       expectedRect,
       component.color,
       1,
@@ -301,65 +204,54 @@ describe('TransitionTimelineComponent', () => {
       'drawRectBorder',
     ).and.callThrough();
 
-    const event = new MouseEvent('mousemove');
-    spyOnProperty(event, 'offsetX').and.returnValue(Math.floor(width / 2));
-    spyOnProperty(event, 'offsetY').and.returnValue(oneRowTotalHeight / 2);
-    component.getCanvas().dispatchEvent(event);
+    await dispatchMousemoveEvent();
+    expect(drawRectBorderSpy).toHaveBeenCalledOnceWith(expectedRect);
 
+    drawRectSpy.calls.reset();
+    drawRectBorderSpy.calls.reset();
+
+    await dispatchMousemoveEvent();
+    expect(drawRectSpy).toHaveBeenCalledOnceWith(
+      expectedRect,
+      component.color,
+      1,
+      false,
+      false,
+    );
+    expect(drawRectBorderSpy).toHaveBeenCalledOnceWith(expectedRect);
+  });
+
+  it('redraws timeline to clear hover entry after mouse out', async () => {
+    await setDefaultTraceAndSelectionRange();
+    const drawRectSpy = spyOn(component.canvasDrawer, 'drawRect');
+
+    const mouseoutEvent = new MouseEvent('mouseout');
+    component.getCanvas().dispatchEvent(mouseoutEvent);
+    fixture.detectChanges();
+    await fixture.whenRenderingDone();
+    expect(drawRectSpy).not.toHaveBeenCalled();
+
+    await dispatchMousemoveEvent();
+    component.getCanvas().dispatchEvent(mouseoutEvent);
     fixture.detectChanges();
     await fixture.whenRenderingDone();
 
-    expect(drawRectBorderSpy).toHaveBeenCalledTimes(1);
-    expect(drawRectBorderSpy).toHaveBeenCalledWith(expectedRect);
+    expect(drawRectSpy).toHaveBeenCalledOnceWith(
+      getExpectedBorderedRect(),
+      component.color,
+      1,
+      false,
+      false,
+    );
   });
 
   it('can draw overlapping transitions (default)', async () => {
-    const transitions = [
-      new PropertyTreeBuilder()
-        .setIsRoot(true)
-        .setRootId('TransitionsTraceEntry')
-        .setName('transition')
-        .setChildren([
-          {
-            name: 'wmData',
-            children: [{name: 'finishTimeNs', value: time85}],
-          },
-          {
-            name: 'shellData',
-            children: [{name: 'dispatchTimeNs', value: time10}],
-          },
-          {name: 'aborted', value: false},
-        ])
-        .build(),
-      new PropertyTreeBuilder()
-        .setIsRoot(true)
-        .setRootId('TransitionsTraceEntry')
-        .setName('transition')
-        .setChildren([
-          {
-            name: 'wmData',
-            children: [{name: 'finishTimeNs', value: time110}],
-          },
-          {
-            name: 'shellData',
-            children: [{name: 'dispatchTimeNs', value: time60}],
-          },
-          {name: 'aborted', value: false},
-        ])
-        .build(),
-    ];
-    component.trace = new TraceBuilder<PropertyTreeNode>()
-      .setType(TraceType.TRANSITION)
-      .setEntries(transitions)
-      .setTimestamps([time10, time60])
-      .build();
-    component.transitionEntries = transitions;
-    component.selectionRange = range10to110;
-
     const drawRectSpy = spyOn(component.canvasDrawer, 'drawRect');
-
-    fixture.detectChanges();
-    await fixture.whenRenderingDone();
+    const transitions = [
+      makeTransition(time10, time85),
+      makeTransition(time60, time110),
+    ];
+    await setTraceAndSelectionRange(transitions, [time10, time60]);
 
     const padding = 5;
     const rows = 2;
@@ -391,52 +283,12 @@ describe('TransitionTimelineComponent', () => {
   });
 
   it('can draw overlapping transitions (contained)', async () => {
-    const transitions = [
-      new PropertyTreeBuilder()
-        .setIsRoot(true)
-        .setRootId('TransitionsTraceEntry')
-        .setName('transition')
-        .setChildren([
-          {
-            name: 'wmData',
-            children: [{name: 'finishTimeNs', value: time85}],
-          },
-          {
-            name: 'shellData',
-            children: [{name: 'dispatchTimeNs', value: time10}],
-          },
-          {name: 'aborted', value: false},
-        ])
-        .build(),
-      new PropertyTreeBuilder()
-        .setIsRoot(true)
-        .setRootId('TransitionsTraceEntry')
-        .setName('transition')
-        .setChildren([
-          {
-            name: 'wmData',
-            children: [{name: 'finishTimeNs', value: time60}],
-          },
-          {
-            name: 'shellData',
-            children: [{name: 'dispatchTimeNs', value: time35}],
-          },
-          {name: 'aborted', value: false},
-        ])
-        .build(),
-    ];
-    component.trace = new TraceBuilder<PropertyTreeNode>()
-      .setType(TraceType.TRANSITION)
-      .setEntries(transitions)
-      .setTimestamps([time10, time35])
-      .build();
-    component.transitionEntries = transitions;
-    component.selectionRange = range10to110;
-
     const drawRectSpy = spyOn(component.canvasDrawer, 'drawRect');
-
-    fixture.detectChanges();
-    await fixture.whenRenderingDone();
+    const transitions = [
+      makeTransition(time10, time85),
+      makeTransition(time35, time60),
+    ];
+    await setTraceAndSelectionRange(transitions, [time10, time35]);
 
     const padding = 5;
     const rows = 2;
@@ -468,39 +320,9 @@ describe('TransitionTimelineComponent', () => {
   });
 
   it('can draw aborted transitions', async () => {
-    const transitions = [
-      new PropertyTreeBuilder()
-        .setIsRoot(true)
-        .setRootId('TransitionsTraceEntry')
-        .setName('transition')
-        .setChildren([
-          {
-            name: 'wmData',
-            value: null,
-          },
-          {
-            name: 'shellData',
-            children: [
-              {name: 'dispatchTimeNs', value: time35},
-              {name: 'abortTimeNs', value: time85},
-            ],
-          },
-          {name: 'aborted', value: true},
-        ])
-        .build(),
-    ];
-    component.trace = new TraceBuilder<PropertyTreeNode>()
-      .setType(TraceType.TRANSITION)
-      .setEntries(transitions)
-      .setTimestamps([time35])
-      .build();
-    component.transitionEntries = transitions;
-    component.selectionRange = range10to110;
-
     const drawRectSpy = spyOn(component.canvasDrawer, 'drawRect');
-
-    fixture.detectChanges();
-    await fixture.whenRenderingDone();
+    const transitions = [makeTransition(time35, undefined, time85)];
+    await setTraceAndSelectionRange(transitions, [time35]);
 
     const padding = 5;
     const oneRowTotalHeight = 30;
@@ -523,36 +345,9 @@ describe('TransitionTimelineComponent', () => {
   });
 
   it('can draw transition with unknown start time', async () => {
-    const transitions = [
-      new PropertyTreeBuilder()
-        .setIsRoot(true)
-        .setRootId('TransitionsTraceEntry')
-        .setName('transition')
-        .setChildren([
-          {
-            name: 'wmData',
-            children: [{name: 'finishTimeNs', value: time85}],
-          },
-          {
-            name: 'shellData',
-            value: null,
-          },
-          {name: 'aborted', value: false},
-        ])
-        .build(),
-    ];
-    component.trace = new TraceBuilder<PropertyTreeNode>()
-      .setType(TraceType.TRANSITION)
-      .setEntries(transitions)
-      .setTimestamps([time85])
-      .build();
-    component.transitionEntries = transitions;
-    component.selectionRange = range10to110;
-
     const drawRectSpy = spyOn(component.canvasDrawer, 'drawRect');
-
-    fixture.detectChanges();
-    await fixture.whenRenderingDone();
+    const transitions = [makeTransition(undefined, time85)];
+    await setTraceAndSelectionRange(transitions, [time0]);
 
     const padding = 5;
     const oneRowTotalHeight = 30;
@@ -574,36 +369,9 @@ describe('TransitionTimelineComponent', () => {
   });
 
   it('can draw transition with unknown end time', async () => {
-    const transitions = [
-      new PropertyTreeBuilder()
-        .setIsRoot(true)
-        .setRootId('TransitionsTraceEntry')
-        .setName('transition')
-        .setChildren([
-          {
-            name: 'wmData',
-            value: null,
-          },
-          {
-            name: 'shellData',
-            children: [{name: 'dispatchTimeNs', value: time35}],
-          },
-          {name: 'aborted', value: false},
-        ])
-        .build(),
-    ];
-    component.trace = new TraceBuilder<PropertyTreeNode>()
-      .setType(TraceType.TRANSITION)
-      .setEntries(transitions)
-      .setTimestamps([time35])
-      .build();
-    component.transitionEntries = transitions;
-    component.selectionRange = range10to110;
-
     const drawRectSpy = spyOn(component.canvasDrawer, 'drawRect');
-
-    fixture.detectChanges();
-    await fixture.whenRenderingDone();
+    const transitions = [makeTransition(time35, undefined)];
+    await setTraceAndSelectionRange(transitions, [time35]);
 
     const padding = 5;
     const oneRowTotalHeight = 30;
@@ -625,79 +393,22 @@ describe('TransitionTimelineComponent', () => {
   });
 
   it('does not render transition with create time but no dispatch time', async () => {
-    const transitions = [
-      new PropertyTreeBuilder()
-        .setIsRoot(true)
-        .setRootId('TransitionsTraceEntry')
-        .setName('transition')
-        .setChildren([
-          {
-            name: 'wmData',
-            children: [
-              {name: 'createTimeNs', value: time10},
-              {name: 'finishTimeNs', value: time85},
-            ],
-          },
-          {name: 'aborted', value: false},
-        ])
-        .build(),
-    ];
-    component.trace = new TraceBuilder<PropertyTreeNode>()
-      .setType(TraceType.TRANSITION)
-      .setEntries(transitions)
-      .setTimestamps([time10])
-      .build();
-    component.transitionEntries = transitions;
-    component.selectionRange = range10to110;
-
     const drawRectSpy = spyOn(component.canvasDrawer, 'drawRect');
-
-    fixture.detectChanges();
-    await fixture.whenRenderingDone();
-
+    const transitions = [makeTransition(undefined, time85, undefined, time10)];
+    await setTraceAndSelectionRange(transitions, [time10]);
     expect(drawRectSpy).not.toHaveBeenCalled();
   });
 
   it('handles missing trace entries', async () => {
-    const transition0 = new PropertyTreeBuilder()
-      .setIsRoot(true)
-      .setRootId('TransitionsTraceEntry')
-      .setName('transition')
-      .setChildren([
-        {
-          name: 'wmData',
-          children: [{name: 'finishTimeNs', value: time30}],
-        },
-        {
-          name: 'shellData',
-          children: [{name: 'dispatchTimeNs', value: time10}],
-        },
-        {name: 'aborted', value: false},
-      ])
-      .build();
-    const transition1 = new PropertyTreeBuilder()
-      .setIsRoot(true)
-      .setRootId('TransitionsTraceEntry')
-      .setName('transition')
-      .setChildren([
-        {
-          name: 'wmData',
-          children: [{name: 'finishTimeNs', value: time110}],
-        },
-        {
-          name: 'shellData',
-          children: [{name: 'dispatchTimeNs', value: time60}],
-        },
-        {name: 'aborted', value: false},
-      ])
-      .build();
+    const transition0 = makeTransition(time10, time30);
+    const transition1 = makeTransition(time60, time110);
 
     component.trace = new TraceBuilder<PropertyTreeNode>()
       .setType(TraceType.TRANSITION)
       .setEntries([transition0, transition1])
       .setTimestamps([time10, time20])
       .build();
-    component.transitionEntries = [transition0];
+    component.transitionEntries = [transition0, undefined];
     component.selectionRange = range10to110;
 
     const drawRectSpy = spyOn(component.canvasDrawer, 'drawRect');
@@ -709,10 +420,7 @@ describe('TransitionTimelineComponent', () => {
   });
 
   it('emits scroll event', async () => {
-    setDefaultTraceAndSelectionRange();
-
-    fixture.detectChanges();
-    await fixture.whenRenderingDone();
+    await setDefaultTraceAndSelectionRange();
 
     const spy = spyOn(component.onScrollEvent, 'emit');
     htmlElement.dispatchEvent(new WheelEvent('wheel'));
@@ -721,9 +429,7 @@ describe('TransitionTimelineComponent', () => {
   });
 
   it('tracks mouse position', async () => {
-    setDefaultTraceAndSelectionRange();
-    fixture.detectChanges();
-    await fixture.whenRenderingDone();
+    await setDefaultTraceAndSelectionRange();
 
     const spy = spyOn(component.onMouseXRatioUpdate, 'emit');
     const canvas = assertDefined(component.canvasRef).nativeElement;
@@ -742,25 +448,8 @@ describe('TransitionTimelineComponent', () => {
     expect(spy).toHaveBeenCalledWith(undefined);
   });
 
-  function setDefaultTraceAndSelectionRange() {
-    const transitions = [
-      new PropertyTreeBuilder()
-        .setIsRoot(true)
-        .setRootId('TransitionsTraceEntry')
-        .setName('transition')
-        .setChildren([
-          {
-            name: 'wmData',
-            children: [{name: 'finishTimeNs', value: time85}],
-          },
-          {
-            name: 'shellData',
-            children: [{name: 'dispatchTimeNs', value: time35}],
-          },
-          {name: 'aborted', value: false},
-        ])
-        .build(),
-    ];
+  async function setDefaultTraceAndSelectionRange(setSelectedEntry = false) {
+    const transitions = [makeTransition(time35, time85)];
     component.trace = new TraceBuilder<PropertyTreeNode>()
       .setType(TraceType.TRANSITION)
       .setEntries(transitions)
@@ -768,5 +457,88 @@ describe('TransitionTimelineComponent', () => {
       .build();
     component.transitionEntries = transitions;
     component.selectionRange = range10to110;
+    if (setSelectedEntry) component.selectedEntry = component.trace.getEntry(0);
+    fixture.detectChanges();
+    await fixture.whenRenderingDone();
+  }
+
+  function makeTransition(
+    dispatchTime: Timestamp | undefined,
+    finishTime: Timestamp | undefined,
+    abortTime?: Timestamp,
+    createTime?: Timestamp,
+  ): PropertyTreeNode {
+    const shellDataChildren = [];
+    if (dispatchTime !== undefined) {
+      shellDataChildren.push({name: 'dispatchTimeNs', value: dispatchTime});
+    }
+    if (dispatchTime !== undefined) {
+      shellDataChildren.push({name: 'abortTimeNs', value: abortTime});
+    }
+
+    const wmDataChildren = [];
+    if (finishTime !== undefined) {
+      wmDataChildren.push({name: 'finishTimeNs', value: finishTime});
+    }
+    if (createTime !== undefined) {
+      wmDataChildren.push({name: 'createTimeNs', value: createTime});
+    }
+
+    return new PropertyTreeBuilder()
+      .setIsRoot(true)
+      .setRootId('TransitionsTraceEntry')
+      .setName('transition')
+      .setChildren([
+        {
+          name: 'wmData',
+          children: wmDataChildren,
+        },
+        {
+          name: 'shellData',
+          children: shellDataChildren,
+        },
+        {name: 'aborted', value: abortTime !== undefined},
+      ])
+      .build();
+  }
+
+  async function setTraceAndSelectionRange(
+    transitions: PropertyTreeNode[],
+    timestamps: Timestamp[],
+    range = range10to110,
+  ) {
+    component.trace = new TraceBuilder<PropertyTreeNode>()
+      .setType(TraceType.TRANSITION)
+      .setEntries(transitions)
+      .setTimestamps(timestamps)
+      .build();
+    component.transitionEntries = transitions;
+    component.selectionRange = range;
+    fixture.detectChanges();
+    await fixture.whenRenderingDone();
+  }
+
+  function getExpectedBorderedRect(): Rect {
+    const padding = 5;
+    const oneRowTotalHeight = 30;
+    const oneRowHeight = oneRowTotalHeight - padding;
+    const width = component.canvasDrawer.getScaledCanvasWidth();
+    return new Rect(
+      Math.floor((width * 1) / 4),
+      padding,
+      Math.floor(width / 2),
+      oneRowHeight,
+    );
+  }
+
+  async function dispatchMousemoveEvent() {
+    const mousemoveEvent = new MouseEvent('mousemove');
+    spyOnProperty(mousemoveEvent, 'offsetX').and.returnValue(
+      Math.floor(component.canvasDrawer.getScaledCanvasWidth() / 2),
+    );
+    spyOnProperty(mousemoveEvent, 'offsetY').and.returnValue(25 / 2);
+    component.getCanvas().dispatchEvent(mousemoveEvent);
+    fixture.detectChanges();
+    await fixture.whenRenderingDone();
   }
 });

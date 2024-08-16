@@ -31,7 +31,9 @@ export class TimelineUtils {
   static isTransitionWithUnknownEnd(transition: PropertyTreeNode): boolean {
     const shellData = transition.getChildByName('shellData');
     const wmData = transition.getChildByName('wmData');
-    const aborted = transition.getChildByName('aborted')?.getValue() ?? false;
+    const aborted: boolean = assertDefined(
+      transition.getChildByName('aborted'),
+    ).getValue();
     const finishOrAbortTimestamp: Timestamp | undefined = aborted
       ? shellData?.getChildByName('abortTimeNs')?.getValue()
       : wmData?.getChildByName('finishTimeNs')?.getValue();
@@ -46,7 +48,9 @@ export class TimelineUtils {
     const shellData = transition.getChildByName('shellData');
     const wmData = transition.getChildByName('wmData');
 
-    const aborted = transition.getChildByName('aborted')?.getValue() ?? false;
+    const aborted: boolean = assertDefined(
+      transition.getChildByName('aborted'),
+    ).getValue();
 
     const dispatchTimestamp: Timestamp | undefined = shellData
       ?.getChildByName('dispatchTimeNs')
@@ -70,6 +74,7 @@ export class TimelineUtils {
     }
 
     const timeRangeMin = fullTimeRange.from.getValueNs();
+    const timeRangeMax = fullTimeRange.to.getValueNs();
 
     if (
       finishOrAbortTimestamp &&
@@ -85,11 +90,18 @@ export class TimelineUtils {
       return undefined;
     }
 
+    if (
+      dispatchTimestamp &&
+      finishOrAbortTimestamp &&
+      dispatchTimestamp.getValueNs() > timeRangeMax
+    ) {
+      return undefined;
+    }
+
     const dispatchTimeNs = dispatchTimestamp
       ? dispatchTimestamp.getValueNs()
-      : finishOrAbortTimestamp
-      ? finishOrAbortTimestamp.getValueNs() - 1n
-      : timeRangeMin;
+      : assertDefined(finishOrAbortTimestamp).getValueNs() - 1n;
+
     const finishTimeNs = finishOrAbortTimestamp
       ? finishOrAbortTimestamp.getValueNs()
       : dispatchTimeNs + 1n;

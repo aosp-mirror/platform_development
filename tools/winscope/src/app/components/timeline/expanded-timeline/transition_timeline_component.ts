@@ -16,7 +16,7 @@
 
 import {Component, Input} from '@angular/core';
 import {TimelineUtils} from 'app/components/timeline/timeline_utils';
-import {assertDefined} from 'common/assert_utils';
+import {assertDefined, assertTrue} from 'common/assert_utils';
 import {Point} from 'common/geometry/point';
 import {Rect} from 'common/geometry/rect';
 import {TimeRange, Timestamp} from 'common/time';
@@ -66,6 +66,7 @@ export class TransitionTimelineComponent extends AbstractTimelineRowComponent<Pr
 
   ngOnInit() {
     assertDefined(this.trace);
+    assertTrue(this.trace?.type === TraceType.TRANSITION);
     assertDefined(this.selectionRange);
     assertDefined(this.transitionEntries);
     assertDefined(this.fullRange);
@@ -130,10 +131,6 @@ export class TransitionTimelineComponent extends AbstractTimelineRowComponent<Pr
   protected override getEntryAt(
     mousePoint: Point,
   ): TraceEntry<PropertyTreeNode> | undefined {
-    if (assertDefined(this.trace).type !== TraceType.TRANSITION) {
-      return undefined;
-    }
-
     const transitionEntries = assertDefined(this.trace).mapEntry(
       (entry) => entry,
     );
@@ -263,17 +260,11 @@ export class TransitionTimelineComponent extends AbstractTimelineRowComponent<Pr
       }
 
       let rowToUse = 0;
-      while (
-        (rowAvailableFrom[rowToUse] ?? 0n) >
-        (timeRange.from.getValueNs() ??
-          assertDefined(this.fullRange).from.getValueNs())
-      ) {
+      while ((rowAvailableFrom[rowToUse] ?? 0n) > timeRange.from.getValueNs()) {
         rowToUse++;
       }
 
-      rowAvailableFrom[rowToUse] =
-        timeRange.to.getValueNs() ??
-        assertDefined(this.fullRange).to.getValueNs();
+      rowAvailableFrom[rowToUse] = timeRange.to.getValueNs();
 
       if (rowToUse + 1 > this.maxRowsRequires) {
         this.maxRowsRequires = rowToUse + 1;
