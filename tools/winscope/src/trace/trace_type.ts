@@ -40,6 +40,9 @@ export enum TraceType {
   TEST_TRACE_STRING,
   TEST_TRACE_NUMBER,
   VIEW_CAPTURE,
+  INPUT_MOTION_EVENT,
+  INPUT_KEY_EVENT,
+  INPUT_EVENT_MERGED,
 }
 
 export type ImeTraceType =
@@ -69,10 +72,14 @@ export interface TraceEntryTypeMap {
   [TraceType.TEST_TRACE_STRING]: string;
   [TraceType.TEST_TRACE_NUMBER]: number;
   [TraceType.VIEW_CAPTURE]: HierarchyTreeNode;
+  [TraceType.INPUT_MOTION_EVENT]: PropertyTreeNode;
+  [TraceType.INPUT_KEY_EVENT]: PropertyTreeNode;
+  [TraceType.INPUT_EVENT_MERGED]: PropertyTreeNode;
 }
 
 export class TraceTypeUtils {
   private static UI_PIPELINE_ORDER = [
+    TraceType.INPUT_EVENT_MERGED,
     TraceType.INPUT_METHOD_CLIENTS,
     TraceType.INPUT_METHOD_SERVICE,
     TraceType.INPUT_METHOD_MANAGER_SERVICE,
@@ -85,8 +92,10 @@ export class TraceTypeUtils {
 
   private static TRACES_WITH_VIEWERS_DISPLAY_ORDER = [
     TraceType.SCREEN_RECORDING,
+    TraceType.SCREENSHOT,
     TraceType.SURFACE_FLINGER,
     TraceType.WINDOW_MANAGER,
+    TraceType.INPUT_EVENT_MERGED,
     TraceType.INPUT_METHOD_CLIENTS,
     TraceType.INPUT_METHOD_MANAGER_SERVICE,
     TraceType.INPUT_METHOD_SERVICE,
@@ -95,6 +104,7 @@ export class TraceTypeUtils {
     TraceType.PROTO_LOG,
     TraceType.VIEW_CAPTURE,
     TraceType.TRANSITION,
+    TraceType.CUJS,
   ];
 
   static isTraceTypeWithViewer(t: TraceType): boolean {
@@ -125,27 +135,16 @@ export class TraceTypeUtils {
     return tIndex - uIndex;
   }
 
-  static canVisualizeTrace(t: TraceType): boolean {
-    return t !== TraceType.WM_TRANSITION && t !== TraceType.SHELL_TRANSITION;
-  }
-
-  static traceUploadInfo(t: TraceType): string | undefined {
-    switch (t) {
-      case TraceType.CUJS:
-        return 'Used to show CUJ boundaries in timeline';
-      default:
-        return undefined;
-    }
-  }
-
   static getReasonForNoTraceVisualization(t: TraceType): string {
     switch (t) {
       case TraceType.WM_TRANSITION:
-        return 'Must also upload a shell transitions trace to visualize transitions';
+        return 'Must also upload a shell transitions trace to visualize transitions.';
       case TraceType.SHELL_TRANSITION:
-        return 'Must also upload a wm transitions trace to visualize transitions';
+        return 'Must also upload a wm transitions trace to visualize transitions.';
+      case TraceType.EVENT_LOG:
+        return 'Uploaded file does not contain CUJs. Only CUJ visualization is supported in Winscope.';
       default:
-        return 'Visualization for this trace is not supported in Winscope';
+        return 'Visualization for this trace is not supported in Winscope.';
     }
   }
 

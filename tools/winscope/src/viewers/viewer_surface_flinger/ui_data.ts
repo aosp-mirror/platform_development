@@ -18,13 +18,14 @@ import {TraceType} from 'trace/trace_type';
 import {SfCuratedProperties} from 'viewers/common/curated_properties';
 import {DisplayIdentifier} from 'viewers/common/display_identifier';
 import {RectShowState} from 'viewers/common/rect_show_state';
+import {UiDataHierarchy} from 'viewers/common/ui_data_hierarchy';
 import {UiHierarchyTreeNode} from 'viewers/common/ui_hierarchy_tree_node';
 import {UiPropertyTreeNode} from 'viewers/common/ui_property_tree_node';
 import {UserOptions} from 'viewers/common/user_options';
-import {UiRect} from 'viewers/components/rects/types2d';
+import {UiRect} from 'viewers/components/rects/ui_rect';
 
-export class UiData {
-  dependencies: TraceType[];
+export class UiData implements UiDataHierarchy {
+  readonly dependencies: TraceType[] = [TraceType.SURFACE_FLINGER];
   rectsToDraw: UiRect[] = [];
   rectIdToShowState: Map<string, RectShowState> | undefined;
   displays: DisplayIdentifier[] = [];
@@ -34,12 +35,11 @@ export class UiData {
   rectsUserOptions: UserOptions = {};
   hierarchyUserOptions: UserOptions = {};
   propertiesUserOptions: UserOptions = {};
-  tree: UiHierarchyTreeNode | undefined;
+  hierarchyTrees: UiHierarchyTreeNode[] | undefined;
   propertiesTree: UiPropertyTreeNode | undefined;
-  curatedProperties: SfCuratedProperties | undefined;
-  displayPropertyGroups = true;
 
-  constructor(dependencies: TraceType[]) {
-    this.dependencies = dependencies;
-  }
+  constructor(
+    public curatedProperties: SfCuratedProperties | undefined = undefined,
+    public displayPropertyGroups = true,
+  ) {}
 }

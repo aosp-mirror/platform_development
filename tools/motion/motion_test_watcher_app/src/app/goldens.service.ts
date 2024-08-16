@@ -1,9 +1,14 @@
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Inject, Injectable, InjectionToken } from '@angular/core';
 import { Observable, of } from 'rxjs';
-import { catchError, map, tap } from 'rxjs/operators';
+import { catchError, filter, map, tap } from 'rxjs/operators';
 
-import { Golden } from './golden';
+import { MotionGolden, MotionGoldenData } from './golden';
+import { RecordedMotion } from './recorded-motion';
+import { Timeline } from './timeline';
+import { VideoSource } from './video-source';
+import { checkNotNull } from '../utils/preconditions';
+import { Feature, recordedFeatureFactory } from './feature';
 
 export const ACCESS_TOKEN = new InjectionToken<string>('token');
 export const SERVICE_PORT = new InjectionToken<string>('port');
@@ -24,20 +29,44 @@ export class GoldensService {
     };
   }
 
-  getGoldens(): Observable<Golden[]> {
+  getGoldens(): Observable<MotionGolden[]> {
     return this.http
       .get<
-        Golden[]
+        MotionGolden[]
       >(`${this.serverRoot}/service/list`, { headers: this.defaultHeaders })
       .pipe(
         tap((x) => console.log(`listed goldens, got ${x.length} results`)),
-        catchError(this.handleError<Golden[]>('e')),
+        catchError(this.handleError<MotionGolden[]>('e')),
       );
   }
 
-  refreshGoldens(clear: boolean): Observable<Golden[]> {
+  loadRecordedMotion(golden: MotionGolden): Observable<RecordedMotion> {
+    const videoUrl = checkNotNull(golden.videoUrl);
+    return this.getMotionGoldenData(golden).pipe(
+      map((data) => {
+        const timeline = new Timeline(data.frame_ids);
+        const videoSource = new VideoSource(videoUrl, timeline);
+        const features = data.features.map((it) => recordedFeatureFactory(it));
+
+        return new RecordedMotion(videoSource, timeline, features);
+      }),
+    );
+  }
+
+  getMotionGoldenData(golden: MotionGolden): Observable<MotionGoldenData> {
     return this.http
-      .post<Golden[]>(
+      .get<MotionGoldenData>(`${golden.actualUrl}`, {
+        headers: this.defaultHeaders,
+      })
+      .pipe(
+        tap((x) => console.log(`listed loaded golden data`)),
+        catchError(this.handleError<MotionGoldenData>('e')),
+      );
+  }
+
+  refreshGoldens(clear: boolean): Observable<MotionGolden[]> {
+    return this.http
+      .post<MotionGolden[]>(
         `${this.serverRoot}/service/refresh`,
         { clear },
         {
@@ -49,11 +78,11 @@ export class GoldensService {
       )
       .pipe(
         tap((_) => console.log(`refreshed goldens (clear)`)),
-        catchError(this.handleError<Golden[]>('e')),
+        catchError(this.handleError<MotionGolden[]>('e')),
       );
   }
 
-  updateGolden(golden: Golden): Observable<void> {
+  updateGolden(golden: MotionGolden): Observable<void> {
     return this.http
       .put<void>(
         `${this.serverRoot}/service/update?id=${golden.id}`,

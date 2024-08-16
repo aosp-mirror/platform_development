@@ -16,6 +16,8 @@
 
 import {ArrayUtils} from 'common/array_utils';
 import {Timestamp} from 'common/time';
+import {UserNotifier} from 'common/user_notifier';
+import {MonotonicScreenRecording} from 'messaging/user_warnings';
 import {AbstractParser} from 'parsers/legacy/abstract_parser';
 import {CoarseVersion} from 'trace/coarse_version';
 import {ScreenRecordingTraceEntry} from 'trace/screen_recording';
@@ -53,7 +55,9 @@ class ParserScreenRecording extends AbstractParser {
     );
 
     if (metadataVersion !== 1 && metadataVersion !== 2) {
-      throw TypeError(`Metadata version "${metadataVersion}" not supported`);
+      throw new TypeError(
+        `Metadata version "${metadataVersion}" not supported`,
+      );
     }
 
     if (metadataVersion === 1) {
@@ -66,8 +70,7 @@ class ParserScreenRecording extends AbstractParser {
       // If no device suspensions are involved, SYSTEM_TIME_MONOTONIC should
       // indeed correspond to SYSTEM_TIME_BOOTTIME and things will work as
       // expected.
-      console.warn(`Screen recording may not be synchronized with the
-        other traces. Metadata contains monotonic time instead of elapsed.`);
+      UserNotifier.add(new MonotonicScreenRecording());
     }
 
     const [posCount, timeOffsetNs] = this.parserealToBootTimeOffsetNs(

@@ -43,6 +43,7 @@ import com.example.android.vdmdemo.common.RemoteEventProto.DeviceCapabilities;
 import com.example.android.vdmdemo.common.RemoteEventProto.InputDeviceType;
 import com.example.android.vdmdemo.common.RemoteEventProto.RemoteEvent;
 import com.example.android.vdmdemo.common.RemoteIo;
+import com.example.android.vdmdemo.common.RotaryFragment;
 
 import dagger.hilt.android.AndroidEntryPoint;
 
@@ -136,6 +137,12 @@ public class MainActivity extends Hilt_MainActivity {
         navTouchpadFragment.setInputEventListener((event) ->
                 mInputManager.sendInputEventToFocusedDisplay(
                         InputDeviceType.DEVICE_TYPE_NAVIGATION_TOUCHPAD, event));
+        RotaryFragment rotaryFragment =
+                (RotaryFragment) getSupportFragmentManager().findFragmentById(
+                        R.id.rotary_fragment_container);
+        rotaryFragment.setInputEventListener((event) ->
+                mInputManager.sendInputEventToFocusedDisplay(
+                        InputDeviceType.DEVICE_TYPE_ROTARY_ENCODER, event));
 
         mConnectionManager.startClientSession();
     }
@@ -212,7 +219,8 @@ public class MainActivity extends Hilt_MainActivity {
     private void processRemoteEvent(RemoteEvent event) {
         if (event.hasStartStreaming()) {
             runOnUiThread(
-                    () -> mDisplayAdapter.addDisplay(event.getStartStreaming().getHomeEnabled()));
+                    () -> mDisplayAdapter.addDisplay(event.getStartStreaming().getHomeEnabled(),
+                            event.getStartStreaming().getRotationSupported()));
         } else if (event.hasStopStreaming()) {
             runOnUiThread(() -> mDisplayAdapter.removeDisplay(event.getDisplayId()));
         } else if (event.hasDisplayRotation()) {
@@ -235,6 +243,7 @@ public class MainActivity extends Hilt_MainActivity {
         int visibility = dpad.getVisibility() == View.VISIBLE ? View.GONE : View.VISIBLE;
         dpad.setVisibility(visibility);
         requireViewById(R.id.nav_touchpad_fragment_container).setVisibility(visibility);
+        requireViewById(R.id.rotary_fragment_container).setVisibility(visibility);
     }
 
     private static boolean hasRecordAudioPermission(Context context) {

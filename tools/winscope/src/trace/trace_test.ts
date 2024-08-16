@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import {ParserBuilder} from 'test/unit/parser_builder';
 import {TimestampConverterUtils} from 'test/unit/timestamp_converter_utils';
 import {TraceBuilder} from 'test/unit/trace_builder';
 import {TraceUtils} from 'test/unit/trace_utils';
@@ -1351,6 +1352,47 @@ describe('Trace', () => {
       expect(await TraceUtils.extractEntries(trace.sliceFrames())).toEqual([]);
       expect(await TraceUtils.extractFrames(trace.sliceFrames())).toEqual(
         new Map<AbsoluteFrameIndex, string[]>(),
+      );
+    }
+  });
+
+  it('isDump()', () => {
+    const trace = new TraceBuilder<string>()
+      .setEntries(['entry-0'])
+      .setTimestamps([time10])
+      .build();
+    expect(trace.isDump()).toBeTrue();
+    expect(trace.isDumpWithoutTimestamp()).toBeFalse();
+  });
+
+  it('isDumpWithoutTimestamp()', () => {
+    const trace = new TraceBuilder<string>()
+      .setEntries(['entry-0'])
+      .setTimestamps([TimestampConverterUtils.makeZeroTimestamp()])
+      .build();
+    expect(trace.isDumpWithoutTimestamp()).toBeTrue();
+  });
+
+  it('updates corruptedState on failure to parse entry', async () => {
+    const trace = new TraceBuilder<string>()
+      .setParser(
+        new ParserBuilder<string>()
+          .setIsCorrupted(true)
+          .setEntries(['entry-0'])
+          .setTimestamps([TimestampConverterUtils.makeZeroTimestamp()])
+          .build(),
+      )
+      .build();
+    expect(trace.isCorrupted()).toBeFalse();
+    expect(trace.getCorruptedReason()).toBeUndefined();
+
+    expectAsync(trace.getEntry(0).getValue()).toBeRejected();
+    try {
+      await trace.getEntry(0).getValue();
+    } catch (e) {
+      expect(trace.isCorrupted()).toBeTrue();
+      expect(trace.getCorruptedReason()).toEqual(
+        'Cannot parse entry at index 0',
       );
     }
   });

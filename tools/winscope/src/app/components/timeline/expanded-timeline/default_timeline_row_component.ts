@@ -16,8 +16,8 @@
 
 import {Component, Input} from '@angular/core';
 import {assertDefined} from 'common/assert_utils';
-import {Point} from 'common/geometry_types';
-import {Rect} from 'common/rect';
+import {Point} from 'common/geometry/point';
+import {Rect} from 'common/geometry/rect';
 import {Timestamp} from 'common/time';
 import {Trace, TraceEntry} from 'trace/trace';
 import {AbstractTimelineRowComponent} from './abstract_timeline_row_component';
@@ -85,7 +85,7 @@ export class DefaultTimelineRowComponent extends AbstractTimelineRowComponent<{}
     assertDefined(this.trace)
       .sliceTime(
         assertDefined(this.selectionRange).from,
-        assertDefined(this.selectionRange).to,
+        assertDefined(this.selectionRange).to.add(1n),
       )
       .forEachTimestamp((entry) => {
         this.drawEntry(entry);
@@ -167,7 +167,6 @@ export class DefaultTimelineRowComponent extends AbstractTimelineRowComponent<{}
 
   private drawEntry(entry: Timestamp) {
     const rect = this.entryRect(entry);
-
     this.canvasDrawer.drawRect(rect, this.color, 0.2);
   }
 

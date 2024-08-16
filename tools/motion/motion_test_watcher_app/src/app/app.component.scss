@@ -22,8 +22,8 @@ mat-toolbar button {
   position: relative;
   display: flex;
   flex-grow: 1;
-  overflow: scroll;
   align-content: stretch;
+  overflow: hidden;
 }
 
 mat-progress-bar {
@@ -31,4 +31,8 @@ mat-progress-bar {
   top: 0;
   left: 0;
   right: 0;
+  display: none;
+  &.show {
+    display: block;
+  }
 }

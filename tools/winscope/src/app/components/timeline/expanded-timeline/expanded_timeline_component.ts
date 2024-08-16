@@ -52,7 +52,7 @@ import {TransitionTimelineComponent} from './transition_timeline_component';
             *ngIf="trace.type === TraceType.TRANSITION"
             [color]="TRACE_INFO[trace.type].color"
             [trace]="trace"
-            [traceEntries]="timelineData.getTransitions()"
+            [transitionEntries]="timelineData.getTransitionEntries()"
             [selectedEntry]="timelineData.findCurrentEntryFor(trace)"
             [selectionRange]="timelineData.getSelectionTimeRange()"
             [timestampConverter]="timelineData.getTimestampConverter()"

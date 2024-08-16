@@ -18,11 +18,7 @@ import {browser, ElementFinder} from 'protractor';
 import {E2eTestUtils} from './utils';
 
 describe('Viewer Protolog', () => {
-  const scrollSelectors = {
-    viewer: 'viewer-protolog',
-    scroll: '.scroll-messages',
-    entry: '.message',
-  };
+  const viewerSelector = 'viewer-protolog';
   const totalEntries = 7295;
   const scrollToTotalBottomOffset = 700000;
 
@@ -36,10 +32,10 @@ describe('Viewer Protolog', () => {
     await E2eTestUtils.loadTraceAndCheckViewer(
       'traces/deployment_full_trace_phone.zip',
       'ProtoLog',
-      scrollSelectors.viewer,
+      viewerSelector,
     );
     await E2eTestUtils.checkTotalScrollEntries(
-      scrollSelectors,
+      viewerSelector,
       scrollViewport,
       totalEntries,
       scrollToTotalBottomOffset,
@@ -66,14 +62,14 @@ describe('Viewer Protolog', () => {
     );
 
     await E2eTestUtils.checkTotalScrollEntries(
-      scrollSelectors,
+      viewerSelector,
       scrollViewport,
       totalEntries,
       scrollToTotalBottomOffset,
     );
     await filterByText('FREEZE');
     await E2eTestUtils.checkTotalScrollEntries(
-      scrollSelectors,
+      viewerSelector,
       scrollViewport,
       4,
     );
@@ -85,23 +81,23 @@ describe('Viewer Protolog', () => {
     expectedFilteredEntries: number,
   ) {
     await E2eTestUtils.toggleSelectFilterOptions(
-      scrollSelectors.viewer,
+      viewerSelector,
       filterSelector,
       options,
     );
     await E2eTestUtils.checkTotalScrollEntries(
-      scrollSelectors,
+      viewerSelector,
       scrollViewport,
       expectedFilteredEntries,
     );
 
     await E2eTestUtils.toggleSelectFilterOptions(
-      scrollSelectors.viewer,
+      viewerSelector,
       filterSelector,
       options,
     );
     await E2eTestUtils.checkTotalScrollEntries(
-      scrollSelectors,
+      viewerSelector,
       scrollViewport,
       totalEntries,
       scrollToTotalBottomOffset,
@@ -110,8 +106,8 @@ describe('Viewer Protolog', () => {
 
   async function filterByText(filterString: string) {
     await E2eTestUtils.updateInputField(
-      `${scrollSelectors.viewer} .filters .text`,
-      'protologTextInput',
+      `${viewerSelector} .filters .text`,
+      'Search text',
       filterString,
     );
   }

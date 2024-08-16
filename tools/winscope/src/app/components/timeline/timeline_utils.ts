@@ -19,6 +19,24 @@ import {ComponentTimestampConverter} from 'common/timestamp_converter';
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
 
 export class TimelineUtils {
+  static isTransitionWithUnknownStart(transition: PropertyTreeNode): boolean {
+    const shellData = transition.getChildByName('shellData');
+    const dispatchTimestamp: Timestamp | undefined = shellData
+      ?.getChildByName('dispatchTimeNs')
+      ?.getValue();
+    return dispatchTimestamp === undefined;
+  }
+
+  static isTransitionWithUnknownEnd(transition: PropertyTreeNode): boolean {
+    const shellData = transition.getChildByName('shellData');
+    const wmData = transition.getChildByName('wmData');
+    const aborted = transition.getChildByName('aborted')?.getValue() ?? false;
+    const finishOrAbortTimestamp: Timestamp | undefined = aborted
+      ? shellData?.getChildByName('abortTimeNs')?.getValue()
+      : wmData?.getChildByName('finishTimeNs')?.getValue();
+    return finishOrAbortTimestamp === undefined;
+  }
+
   static getTimeRangeForTransition(
     transition: PropertyTreeNode,
     fullTimeRange: TimeRange,
@@ -53,6 +71,13 @@ export class TimelineUtils {
     const timeRangeMin = fullTimeRange.from.getValueNs();
     const timeRangeMax = fullTimeRange.to.getValueNs();
 
+    if (
+      finishOrAbortTimestamp &&
+      finishOrAbortTimestamp.getValueNs() < timeRangeMin
+    ) {
+      return undefined;
+    }
+
     const dispatchTimeNs = dispatchTimestamp
       ? dispatchTimestamp.getValueNs()
       : timeRangeMin;
@@ -66,5 +91,27 @@ export class TimelineUtils {
     const finishTime = converter.makeTimestampFromNs(finishTimeNs);
 
     return new TimeRange(startTime, finishTime);
+  }
+
+  static convertHexToRgb(
+    hex: string,
+  ): {r: number; g: number; b: number} | undefined {
+    // Expand shorthand form (e.g. "03F") to full form (e.g. "0033FF")
+    const shorthandRegex = /^#?([a-f\d])([a-f\d])([a-f\d])$/i;
+    hex = hex.replace(shorthandRegex, (m, r, g, b) => {
+      return r + r + g + g + b + b;
+    });
+
+    const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+    return result
+      ? {
+          // tslint:disable-next-line:ban
+          r: parseInt(result[1], 16),
+          // tslint:disable-next-line:ban
+          g: parseInt(result[2], 16),
+          // tslint:disable-next-line:ban
+          b: parseInt(result[3], 16),
+        }
+      : undefined;
   }
 }
