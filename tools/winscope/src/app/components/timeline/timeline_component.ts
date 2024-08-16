@@ -100,7 +100,7 @@ import {MiniTimelineComponent} from './mini-timeline/mini_timeline_component';
     </div>
     <div class="navbar-toggle">
       <div class="navbar" #collapsedTimeline>
-        <ng-template [ngIf]="timelineData.hasMoreThanOneDistinctTimestamp()">
+        <ng-template [ngIf]="timelineData.hasTimestamps()">
           <div id="time-selector">
             <form [formGroup]="timestampForm" class="time-selector-form">
               <mat-form-field
@@ -230,6 +230,7 @@ import {MiniTimelineComponent} from './mini-timeline/mini_timeline_component';
             </mat-form-field>
           </div>
           <mini-timeline
+            *ngIf="timelineData.hasMoreThanOneDistinctTimestamp()"
             [timelineData]="timelineData"
             [currentTracePosition]="getCurrentTracePosition()"
             [selectedTraces]="selectedTraces"
@@ -246,15 +247,16 @@ import {MiniTimelineComponent} from './mini-timeline/mini_timeline_component';
             id="mini-timeline"
             #miniTimeline></mini-timeline>
         </ng-template>
-        <div *ngIf="!timelineData.hasTimestamps()" class="no-timestamps-msg">
-          <p class="mat-body-2">No timeline to show!</p>
-          <p class="mat-body-1">All loaded traces contain no timestamps.</p>
-        </div>
         <div
-          *ngIf="timelineData.hasTimestamps() && !timelineData.hasMoreThanOneDistinctTimestamp()"
-          class="no-timestamps-msg">
-          <p class="mat-body-2">No timeline to show!</p>
-          <p class="mat-body-1">Only a single timestamp has been recorded.</p>
+          *ngIf="!timelineData.hasMoreThanOneDistinctTimestamp()"
+          class="no-timeline-msg">
+            <p class="mat-body-2">No timeline to show!</p>
+            <p
+              *ngIf="timelineData.hasTimestamps()"
+              class="mat-body-1">Only a single timestamp has been recorded.</p>
+            <p
+              *ngIf="!timelineData.hasTimestamps()"
+              class="mat-body-1">All loaded traces contain no timestamps.</p>
         </div>
       </div>
     </div>
@@ -464,11 +466,12 @@ import {MiniTimelineComponent} from './mini-timeline/mini_timeline_component';
         padding: 1rem;
         font-family: 'Roboto', sans-serif;
       }
-      .no-timestamps-msg {
+      .no-timeline-msg {
         padding: 1rem;
         align-items: center;
         display: flex;
         flex-direction: column;
+        width: 100%;
       }
     `,
     multlineTooltip,
@@ -556,7 +559,8 @@ export class TimelineComponent
       return (
         timelineData.hasTrace(trace) &&
         (!storedDeselectedTraces.includes(trace.type) ||
-          timelineData.getActiveTrace() === trace)
+          timelineData.getActiveTrace() === trace ||
+          !timelineData.hasMoreThanOneDistinctTimestamp())
       );
     });
     this.selectedTracesFormControl = new FormControl<Array<Trace<object>>>(
@@ -706,7 +710,7 @@ export class TimelineComponent
   async handleKeyboardEvent(event: KeyboardEvent) {
     if (
       this.isInputFormFocused ||
-      !assertDefined(this.timelineData).hasTimestamps()
+      !assertDefined(this.timelineData).hasMoreThanOneDistinctTimestamp()
     ) {
       return;
     }
