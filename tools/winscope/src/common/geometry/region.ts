@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023 The Android Open Source Project
+ * Copyright (C) 2024 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,13 +14,12 @@
  * limitations under the License.
  */
 
-import {UserNotification} from './user_notification';
-import {UserNotificationsListener} from './user_notifications_listener';
+import {Rect} from './rect';
 
-export class UserNotificationsListenerStub
-  implements UserNotificationsListener
-{
-  onNotifications(notifications: UserNotification[]) {
-    // do nothing
+export class Region {
+  constructor(readonly rects: Rect[]) {}
+
+  static createEmpty(): Region {
+    return new Region([]);
   }
 }

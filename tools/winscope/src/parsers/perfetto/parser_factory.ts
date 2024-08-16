@@ -17,8 +17,8 @@
 import {globalConfig} from 'common/global_config';
 import {ParserTimestampConverter} from 'common/timestamp_converter';
 import {UrlUtils} from 'common/url_utils';
+import {UserNotifier} from 'common/user_notifier';
 import {ProgressListener} from 'messaging/progress_listener';
-import {UserNotificationsListener} from 'messaging/user_notifications_listener';
 import {InvalidPerfettoTrace} from 'messaging/user_warnings';
 import {ParserKeyEvent} from 'parsers/input/perfetto/parser_key_event';
 import {ParserMotionEvent} from 'parsers/input/perfetto/parser_motion_event';
@@ -60,7 +60,6 @@ export class ParserFactory {
     traceFile: TraceFile,
     timestampConverter: ParserTimestampConverter,
     progressListener?: ProgressListener,
-    notificationListener?: UserNotificationsListener,
   ): Promise<Array<Parser<object>>> {
     const traceProcessor = await this.initializeTraceProcessor();
     for (
@@ -115,9 +114,9 @@ export class ParserFactory {
     }
 
     if (!hasFoundParser) {
-      notificationListener?.onNotifications([
+      UserNotifier.add(
         new InvalidPerfettoTrace(traceFile.getDescriptor(), errors),
-      ]);
+      );
     }
 
     return parsers;

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023 The Android Open Source Project
+ * Copyright (C) 2024 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,8 +14,14 @@
  * limitations under the License.
  */
 
-import {UserNotification} from './user_notification';
+import {TraceType} from 'trace/trace_type';
 
-export interface UserNotificationsListener {
-  onNotifications(notifications: UserNotification[]): void;
+export interface AdbFiles {
+  requested: RequestedTraceTypes[];
+  collected: File[];
+}
+
+export interface RequestedTraceTypes {
+  name: string;
+  types: TraceType[];
 }

@@ -76,6 +76,7 @@ class RectVcFactory {
         node.getEagerPropertyByName('isComputedVisible')?.getValue() ?? false,
       )
       .setIsDisplay(false)
+      .setIsActiveDisplay(false)
       .setDepth(depth * RectVcFactory.DEPTH_MAGNIFICATION)
       .setOpacity(nodeAlpha)
       .setIsSpy(false)

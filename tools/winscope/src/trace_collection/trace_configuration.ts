@@ -18,9 +18,11 @@ import {TRACE_INFO} from 'trace/trace_info';
 import {TraceType} from 'trace/trace_type';
 
 export interface TraceConfiguration {
-  name: string | undefined;
-  run: boolean | undefined;
+  name: string;
+  enabled: boolean;
   config: ConfigurationOptions | undefined;
+  available: boolean;
+  types: TraceType[];
 }
 
 export interface TraceConfigurationMap {
@@ -89,12 +91,12 @@ const sfTraceEnableConfigs: EnableConfiguration[] = [
   {
     name: 'hwc',
     key: 'hwc',
-    enabled: true,
+    enabled: false,
   },
   {
     name: 'trace buffers',
     key: 'tracebuffers',
-    enabled: true,
+    enabled: false,
   },
   {
     name: 'virtual displays',
@@ -112,84 +114,142 @@ const sfTraceSelectionConfigs: SelectionConfiguration[] = [
   },
 ];
 
-const traceConfigurations: TraceConfigurationMap = {
+const traceDefaultConfig: TraceConfigurationMap = {
   layers_trace: {
     name: TRACE_INFO[TraceType.SURFACE_FLINGER].name,
-    run: true,
+    enabled: true,
     config: {
       enableConfigs: sfTraceEnableConfigs,
       selectionConfigs: sfTraceSelectionConfigs,
     },
+    available: true,
+    types: [TraceType.SURFACE_FLINGER],
   },
   window_trace: {
     name: TRACE_INFO[TraceType.WINDOW_MANAGER].name,
-    run: true,
+    enabled: true,
     config: {
       enableConfigs: [],
       selectionConfigs: wmTraceSelectionConfigs,
     },
+    available: true,
+    types: [TraceType.WINDOW_MANAGER],
   },
   screen_recording: {
     name: TRACE_INFO[TraceType.SCREEN_RECORDING].name,
-    run: true,
+    enabled: true,
     config: undefined,
+    available: true,
+    types: [TraceType.SCREEN_RECORDING],
   },
   ime: {
     name: 'IME',
-    run: true,
+    enabled: true,
     config: undefined,
+    available: true,
+    types: [
+      TraceType.INPUT_METHOD_CLIENTS,
+      TraceType.INPUT_METHOD_SERVICE,
+      TraceType.INPUT_METHOD_MANAGER_SERVICE,
+    ],
   },
   transactions: {
     name: TRACE_INFO[TraceType.TRANSACTIONS].name,
-    run: true,
+    enabled: true,
     config: undefined,
+    available: true,
+    types: [TraceType.TRANSACTIONS, TraceType.TRANSACTIONS_LEGACY],
   },
   proto_log: {
     name: TRACE_INFO[TraceType.PROTO_LOG].name,
-    run: false,
+    enabled: false,
     config: undefined,
+    available: true,
+    types: [TraceType.PROTO_LOG],
   },
   wayland_trace: {
     name: TRACE_INFO[TraceType.WAYLAND].name,
-    run: false,
+    enabled: false,
     config: undefined,
+    available: false,
+    types: [TraceType.WAYLAND, TraceType.WAYLAND_DUMP],
   },
   eventlog: {
     name: TRACE_INFO[TraceType.EVENT_LOG].name,
-    run: false,
+    enabled: false,
     config: undefined,
+    available: true,
+    types: [TraceType.EVENT_LOG, TraceType.CUJS],
   },
   transition_traces: {
     name: TRACE_INFO[TraceType.SHELL_TRANSITION].name,
-    run: false,
+    enabled: false,
     config: undefined,
+    available: true,
+    types: [
+      TraceType.SHELL_TRANSITION,
+      TraceType.WM_TRANSITION,
+      TraceType.TRANSITION,
+    ],
   },
   view_capture_traces: {
-    name: 'View Capture',
-    run: false,
+    name: TRACE_INFO[TraceType.VIEW_CAPTURE].name,
+    enabled: false,
     config: undefined,
+    available: true,
+    types: [TraceType.VIEW_CAPTURE],
   },
   input: {
     name: 'Input',
-    run: false,
+    enabled: false,
     config: undefined,
+    available: true,
+    types: [
+      TraceType.INPUT_KEY_EVENT,
+      TraceType.INPUT_MOTION_EVENT,
+      TraceType.INPUT_EVENT_MERGED,
+    ],
   },
 };
 
-export const TRACES: {[key: string]: TraceConfigurationMap} = {
-  default: {
-    window_trace: traceConfigurations['window_trace'],
-    layers_trace: traceConfigurations['layers_trace'],
-    transactions: traceConfigurations['transactions'],
-    proto_log: traceConfigurations['proto_log'],
-    screen_recording: traceConfigurations['screen_recording'],
-    ime: traceConfigurations['ime'],
-    eventlog: traceConfigurations['eventlog'],
-    transition_traces: traceConfigurations['transition_traces'],
-    view_capture_trace: traceConfigurations['view_capture_traces'],
-    input: traceConfigurations['input'],
-  },
-  arc: {
-    wayland_trace: traceConfigurations['wayland_trace'],
-  },
-};
+export function makeDefaultTraceConfigMap(): TraceConfigurationMap {
+  return structuredClone({
+    window_trace: traceDefaultConfig['window_trace'],
+    layers_trace: traceDefaultConfig['layers_trace'],
+    transactions: traceDefaultConfig['transactions'],
+    proto_log: traceDefaultConfig['proto_log'],
+    screen_recording: traceDefaultConfig['screen_recording'],
+    ime: traceDefaultConfig['ime'],
+    eventlog: traceDefaultConfig['eventlog'],
+    transition_traces: traceDefaultConfig['transition_traces'],
+    view_capture_trace: traceDefaultConfig['view_capture_traces'],
+    input: traceDefaultConfig['input'],
+    wayland_trace: traceDefaultConfig['wayland_trace'],
+  });
+}
+
+export function makeDefaultDumpConfigMap(): TraceConfigurationMap {
+  return structuredClone({
+    window_dump: {
+      name: 'Window Manager',
+      enabled: true,
+      config: undefined,
+      available: true,
+      types: [TraceType.WINDOW_MANAGER],
+    },
+    layers_dump: {
+      name: 'Surface Flinger',
+      enabled: true,
+      config: undefined,
+      available: true,
+      types: [TraceType.SURFACE_FLINGER],
+    },
+    screenshot: {
+      name: 'Screenshot',
+      enabled: true,
+      config: undefined,
+      available: true,
+      types: [TraceType.SCREENSHOT],
+    },
+  });
+}

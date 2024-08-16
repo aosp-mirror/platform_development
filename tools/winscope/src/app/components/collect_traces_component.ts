@@ -27,9 +27,10 @@ import {
 import {MatDialog} from '@angular/material/dialog';
 import {assertDefined} from 'common/assert_utils';
 import {FunctionUtils} from 'common/function_utils';
-import {PersistentStoreProxy} from 'common/persistent_store_proxy';
+import {UserNotifier} from 'common/user_notifier';
 import {Analytics} from 'logging/analytics';
 import {ProgressListener} from 'messaging/progress_listener';
+import {ProxyTracingErrors} from 'messaging/user_warnings';
 import {
   NoTraceTargetsSelected,
   WinscopeEvent,
@@ -42,13 +43,16 @@ import {
 import {WinscopeEventListener} from 'messaging/winscope_event_listener';
 import {AdbConnection} from 'trace_collection/adb_connection';
 import {AdbDevice} from 'trace_collection/adb_device';
+import {AdbFiles, RequestedTraceTypes} from 'trace_collection/adb_files';
 import {ConnectionState} from 'trace_collection/connection_state';
 import {ProxyConnection} from 'trace_collection/proxy_connection';
 import {
   EnableConfiguration,
+  makeDefaultDumpConfigMap,
+  makeDefaultTraceConfigMap,
   SelectionConfiguration,
   TraceConfigurationMap,
-} from 'trace_collection/trace_collection_utils';
+} from 'trace_collection/trace_configuration';
 import {TraceRequest, TraceRequestConfig} from 'trace_collection/trace_request';
 import {LoadProgressComponent} from './load_progress_component';
 import {
@@ -80,7 +84,6 @@ import {
           <adb-proxy
             *ngIf="isAdbProxy()"
             [state]="adbConnection.getState()"
-            [version]="${ProxyConnection.VERSION}"
             (retryConnection)="onRetryConnection($event)"></adb-proxy>
           <!-- <web-adb *ngIf="!isAdbProxy()"></web-adb> TODO: fix web adb workflow -->
         </div>
@@ -152,7 +155,12 @@ import {
               [disabled]="disableTraceSection()">
               <div class="tabbed-section">
                 <div class="trace-section" *ngIf="adbConnection.getState() === ${ConnectionState.IDLE}">
-                  <trace-config [traceConfig]="traceConfig"></trace-config>
+                  <trace-config
+                    title="Trace targets"
+                    [initialTraceConfig]="traceConfig"
+                    [storage]="storage"
+                    traceConfigStoreKey="TraceSettings"
+                    (traceConfigChange)="onTraceConfigChange($event)"></trace-config>
                   <div class="start-btn">
                     <button color="primary" mat-raised-button (click)="startTracing()">
                       Start trace
@@ -211,15 +219,12 @@ import {
             <mat-tab label="Dump" [disabled]="isTracingOrLoading()">
               <div class="tabbed-section">
                 <div class="dump-section" *ngIf="adbConnection.getState() === ${ConnectionState.IDLE} && !refreshDumps">
-                  <h3 class="mat-subheading-2">Dump targets</h3>
-                  <div class="selection">
-                    <mat-checkbox
-                      *ngFor="let dumpKey of objectKeys(dumpConfig)"
-                      color="primary"
-                      class="dump-checkbox"
-                      [(ngModel)]="dumpConfig[dumpKey].run"
-                      >{{ dumpConfig[dumpKey].name }}</mat-checkbox>
-                  </div>
+                  <trace-config
+                    title="Dump targets"
+                    [initialTraceConfig]="dumpConfig"
+                    [storage]="storage"
+                    [traceConfigStoreKey]="storeKeyDumpConfig"
+                    (traceConfigChange)="onDumpConfigChange($event)"></trace-config>
                   <div class="dump-btn" *ngIf="!refreshDumps">
                     <button color="primary" mat-raised-button (click)="dumpState()">
                       Dump state
@@ -411,9 +416,13 @@ export class CollectTracesComponent
   lastUiProgressUpdateTimeMs?: number;
   refreshDumps = false;
   selectedTabIndex = 0;
+  traceConfig: TraceConfigurationMap;
+  dumpConfig: TraceConfigurationMap;
+  requestedTraceTypes: RequestedTraceTypes[] = [];
 
   private readonly storeKeyImeWarning = 'doNotShowImeWarningDialog';
   private readonly storeKeyLastDevice = 'adb.lastDevice';
+  private readonly storeKeyDumpConfig = 'DumpSettings';
 
   private selectedDevice: AdbDevice | undefined;
   private emitEvent: EmitEvent = FunctionUtils.DO_NOTHING_ASYNC;
@@ -425,17 +434,18 @@ export class CollectTracesComponent
   ];
 
   @Input() adbConnection: AdbConnection | undefined;
-  @Input() traceConfig: TraceConfigurationMap | undefined;
-  @Input() dumpConfig: TraceConfigurationMap | undefined;
   @Input() storage: Storage | undefined;
 
-  @Output() readonly filesCollected = new EventEmitter<File[]>();
+  @Output() readonly filesCollected = new EventEmitter<AdbFiles>();
 
   constructor(
     @Inject(ChangeDetectorRef) private changeDetectorRef: ChangeDetectorRef,
     @Inject(MatDialog) private dialog: MatDialog,
     @Inject(NgZone) private ngZone: NgZone,
-  ) {}
+  ) {
+    this.traceConfig = makeDefaultTraceConfigMap();
+    this.dumpConfig = makeDefaultDumpConfigMap();
+  }
 
   ngOnChanges() {
     if (!this.adbConnection) {
@@ -444,7 +454,7 @@ export class CollectTracesComponent
     this.adbConnection.initialize(
       () => this.onConnectionStateChange(),
       (progress) => this.onLoadProgressUpdate(progress),
-      this.setTraceConfigForAvailableTraces,
+      this.toggleAvailabilityOfTraces,
     );
   }
 
@@ -467,8 +477,6 @@ export class CollectTracesComponent
       WinscopeEventType.APP_REFRESH_DUMPS_REQUEST,
       async (event) => {
         this.selectedTabIndex = 1;
-        this.progressMessage = 'Refreshing dumps...';
-        this.progressPercentage = 0;
         this.refreshDumps = true;
       },
     );
@@ -547,6 +555,14 @@ export class CollectTracesComponent
     );
   }
 
+  onTraceConfigChange(newConfig: TraceConfigurationMap) {
+    this.traceConfig = newConfig;
+  }
+
+  onDumpConfigChange(newConfig: TraceConfigurationMap) {
+    this.dumpConfig = newConfig;
+  }
+
   async onChangeDeviceButton() {
     this.storage?.setItem(this.storeKeyLastDevice, '');
     this.selectedDevice = undefined;
@@ -598,19 +614,27 @@ export class CollectTracesComponent
         data,
         disableClose: true,
       });
-      dialogRef.beforeClosed().subscribe((result: WarningDialogResult) => {
-        if (this.storage && result.selectedOptions.includes(optionText)) {
-          this.storage.setItem(this.storeKeyImeWarning, 'true');
-        }
-        if (result.closeActionText === closeText) {
-          this.requestTraces(requestedTraces);
-        }
-      });
+      dialogRef
+        .beforeClosed()
+        .subscribe((result: WarningDialogResult | undefined) => {
+          if (this.storage && result?.selectedOptions.includes(optionText)) {
+            this.storage.setItem(this.storeKeyImeWarning, 'true');
+          }
+          if (result?.closeActionText === closeText) {
+            this.requestTraces(requestedTraces);
+          }
+        });
     });
   }
 
   async dumpState() {
     const requestedDumps = this.getRequestedDumps();
+    const requestedTraceTypes = requestedDumps.map((req) => {
+      return {
+        name: this.dumpConfig[req].name,
+        types: this.dumpConfig[req].types,
+      };
+    });
     Analytics.Tracing.logCollectDumps(requestedDumps);
 
     if (requestedDumps.length === 0) {
@@ -629,18 +653,24 @@ export class CollectTracesComponent
     const device = assertDefined(this.selectedDevice);
     await connection.dumpState(device, requestedDumpsWithConfig);
     this.refreshDumps = false;
-    this.filesCollected.emit(
-      await connection.fetchLastTracingSessionData(device),
-    );
+    if (connection.getState() === ConnectionState.DUMPING_STATE) {
+      this.filesCollected.emit({
+        requested: requestedTraceTypes,
+        collected: await connection.fetchLastTracingSessionData(device),
+      });
+    }
   }
 
   async endTrace() {
     const connection = assertDefined(this.adbConnection);
     const device = assertDefined(this.selectedDevice);
     await connection.endTrace(device);
-    this.filesCollected.emit(
-      await connection.fetchLastTracingSessionData(device),
-    );
+    if (connection.getState() === ConnectionState.ENDING_TRACE) {
+      this.filesCollected.emit({
+        requested: this.requestedTraceTypes,
+        collected: await connection.fetchLastTracingSessionData(device),
+      });
+    }
   }
 
   isAdbProxy(): boolean {
@@ -693,13 +723,22 @@ export class CollectTracesComponent
     const files = await connection.fetchLastTracingSessionData(
       assertDefined(this.selectedDevice),
     );
-    this.filesCollected.emit(files);
+    this.filesCollected.emit({
+      requested: [],
+      collected: files,
+    });
     if (files.length === 0) {
       await connection.restartConnection();
     }
   }
 
   private async requestTraces(requestedTraces: string[]) {
+    this.requestedTraceTypes = requestedTraces.map((req) => {
+      return {
+        name: this.traceConfig[req].name,
+        types: this.traceConfig[req].types,
+      };
+    });
     Analytics.Tracing.logCollectTraces(requestedTraces);
 
     if (requestedTraces.length === 0) {
@@ -727,7 +766,18 @@ export class CollectTracesComponent
   private async onConnectionStateChange() {
     this.changeDetectorRef.detectChanges();
 
-    const state = this.adbConnection?.getState();
+    const connection = assertDefined(this.adbConnection);
+    const state = connection.getState();
+    if (state === ConnectionState.TRACE_TIMEOUT) {
+      UserNotifier.add(new ProxyTracingErrors(['tracing timed out'])).notify();
+      this.filesCollected.emit({
+        requested: this.requestedTraceTypes,
+        collected: await connection.fetchLastTracingSessionData(
+          assertDefined(this.selectedDevice),
+        ),
+      });
+      return;
+    }
 
     if (
       !this.refreshDumps ||
@@ -736,7 +786,7 @@ export class CollectTracesComponent
     ) {
       return;
     }
-    if (state === ConnectionState.IDLE) {
+    if (state === ConnectionState.IDLE && this.selectedDevice) {
       this.dumpState();
     } else {
       // device is not connected or proxy is not started/invalid/in error state
@@ -748,21 +798,27 @@ export class CollectTracesComponent
   private getRequestedTraces(): string[] {
     const tracingConfig = assertDefined(this.traceConfig);
     return Object.keys(tracingConfig).filter((traceKey: string) => {
-      return tracingConfig[traceKey].run;
+      return tracingConfig[traceKey].enabled;
     });
   }
 
   private getRequestedDumps(): string[] {
-    const dumpConfig = assertDefined(this.dumpConfig);
+    let dumpConfig = assertDefined(this.dumpConfig);
+    if (this.refreshDumps && this.storage) {
+      const storedConfig = this.storage.getItem(this.storeKeyDumpConfig);
+      if (storedConfig) {
+        dumpConfig = JSON.parse(storedConfig);
+      }
+    }
     return Object.keys(dumpConfig).filter((dumpKey: string) => {
-      return dumpConfig[dumpKey].run;
+      return dumpConfig[dumpKey].enabled;
     });
   }
 
   private requestedEnabledConfig(traceName: string): TraceRequestConfig[] {
     const req: TraceRequestConfig[] = [];
     const trace = assertDefined(this.traceConfig)[traceName];
-    if (trace?.run) {
+    if (trace?.enabled) {
       trace.config?.enableConfigs?.forEach((con: EnableConfiguration) => {
         if (con.enabled) {
           req.push({key: con.key});
@@ -775,7 +831,7 @@ export class CollectTracesComponent
   private requestedSelectedConfig(traceName: string): TraceRequestConfig[] {
     const tracingConfig = assertDefined(this.traceConfig);
     const trace = tracingConfig[traceName];
-    if (!trace?.run) {
+    if (!trace?.enabled) {
       return [];
     }
     return (
@@ -790,12 +846,9 @@ export class CollectTracesComponent
     this.changeDetectorRef.detectChanges();
   }
 
-  private setTraceConfigForAvailableTraces = (
-    availableTracesConfig: TraceConfigurationMap,
-  ) =>
-    (this.traceConfig = PersistentStoreProxy.new<TraceConfigurationMap>(
-      'TraceConfiguration',
-      availableTracesConfig,
-      assertDefined(this.storage),
-    ));
+  private toggleAvailabilityOfTraces = (traces: string[]) =>
+    traces.forEach((trace) => {
+      const config = assertDefined(this.traceConfig)[trace];
+      config.available = !config.available;
+    });
 }

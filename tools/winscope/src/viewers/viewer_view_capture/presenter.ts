@@ -41,7 +41,7 @@ import {RectsPresenter} from 'viewers/common/rects_presenter';
 import {UiHierarchyTreeNode} from 'viewers/common/ui_hierarchy_tree_node';
 import {UI_RECT_FACTORY} from 'viewers/common/ui_rect_factory';
 import {UserOptions} from 'viewers/common/user_options';
-import {UiRect} from 'viewers/components/rects/types2d';
+import {UiRect} from 'viewers/components/rects/ui_rect';
 import {UiData} from './ui_data';
 
 export class Presenter extends AbstractHierarchyViewerPresenter<UiData> {
@@ -248,16 +248,15 @@ export class Presenter extends AbstractHierarchyViewerPresenter<UiData> {
   }
 
   private getWindows(windowNames: string[]): DisplayIdentifier[] {
-    return this.viewCaptureTraces
-      .map((trace, i) => {
-        const traceId = this.getIdFromViewCaptureTrace(trace);
-        return {
-          displayId: traceId,
-          groupId: traceId,
-          name: windowNames[i],
-        };
-      })
-      .sort((a, b) => a.name.localeCompare(b.name));
+    return this.viewCaptureTraces.map((trace, i) => {
+      const traceId = this.getIdFromViewCaptureTrace(trace);
+      return {
+        displayId: traceId,
+        groupId: traceId,
+        name: windowNames[i],
+        isActive: true,
+      };
+    });
   }
 
   private updateCuratedProperties() {

@@ -19,16 +19,13 @@ import {OnProgressUpdateType} from 'common/function_utils';
 import {HttpRequestStatus, HttpResponse} from 'common/http_request';
 import {AdbDevice} from './adb_device';
 import {ConnectionState} from './connection_state';
-import {TraceConfigurationMap} from './trace_collection_utils';
 import {TraceRequest} from './trace_request';
 
 export abstract class AdbConnection {
   abstract initialize(
     detectStateChangeInUi: () => Promise<void>,
     progressCallback: OnProgressUpdateType,
-    availableTracesChangeCallback: (
-      availableTracesConfig: TraceConfigurationMap,
-    ) => void,
+    availableTracesChangeCallback: (traces: string[]) => void,
   ): Promise<void>;
   abstract restartConnection(): Promise<void>;
   abstract setSecurityToken(token: string): void;
@@ -67,7 +64,6 @@ export abstract class AdbConnection {
         try {
           await onSuccess(resp);
         } catch (err) {
-          console.error(err);
           newState = ConnectionState.ERROR;
           errorMsg =
             `Error handling request response:\n${err}\n\n` +
@@ -80,6 +76,9 @@ export abstract class AdbConnection {
           errorMsg = resp.text;
         } else if (resp.type === 'arraybuffer') {
           errorMsg = String.fromCharCode.apply(null, new Array(resp.body));
+          if (errorMsg === '\x00') {
+            errorMsg = 'No data received.';
+          }
         }
         newState = ConnectionState.ERROR;
         break;

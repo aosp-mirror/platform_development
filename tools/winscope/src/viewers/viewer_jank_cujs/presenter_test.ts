@@ -91,6 +91,30 @@ class PresenterJankCujsTest extends AbstractLogViewerPresenterTest<UiData> {
   override getSecondPositionUpdate(): TracePositionUpdate {
     return assertDefined(this.secondPositionUpdate);
   }
+
+  override executePropertiesChecksAfterPositionUpdate(uiData: UiData) {
+    const cujTypeValues = uiData.entries.map((entry) => {
+      return entry.fields[0].value;
+    });
+    expect(cujTypeValues).toEqual([
+      'CUJ_LAUNCHER_QUICK_SWITCH (11)',
+      'CUJ_LAUNCHER_APP_CLOSE_TO_HOME (9)',
+      'CUJ_LAUNCHER_APP_SWIPE_TO_RECENTS (66)',
+      'CUJ_LAUNCHER_OPEN_ALL_APPS (25)',
+      'CUJ_LAUNCHER_CLOSE_ALL_APPS_SWIPE (67)',
+      'CUJ_LAUNCHER_APP_LAUNCH_FROM_ICON (8)',
+      'CUJ_SPLASHSCREEN_EXIT_ANIM (39)',
+      'CUJ_LAUNCHER_QUICK_SWITCH (11)',
+      'CUJ_LAUNCHER_APP_CLOSE_TO_HOME (9)',
+      'CUJ_LAUNCHER_APP_SWIPE_TO_RECENTS (66)',
+      'CUJ_NOTIFICATION_SHADE_EXPAND_COLLAPSE (0)',
+      'CUJ_NOTIFICATION_SHADE_EXPAND_COLLAPSE (0)',
+      'CUJ_NOTIFICATION_SHADE_QS_EXPAND_COLLAPSE (5)',
+      'CUJ_NOTIFICATION_SHADE_QS_EXPAND_COLLAPSE (5)',
+      'CUJ_NOTIFICATION_SHADE_EXPAND_COLLAPSE (0)',
+      'CUJ_NOTIFICATION_SHADE_EXPAND_COLLAPSE (0)',
+    ]);
+  }
 }
 
 describe('PresenterJankCujsTest', () => {
