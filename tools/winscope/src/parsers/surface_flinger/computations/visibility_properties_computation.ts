@@ -15,13 +15,14 @@
  */
 
 import {assertDefined} from 'common/assert_utils';
-import {Rect} from 'common/rect';
+import {Rect} from 'common/geometry/rect';
 import {RawDataUtils} from 'parsers/raw_data_utils';
 import {LayerFlag} from 'parsers/surface_flinger/layer_flag';
 import {
   Transform,
-  TransformUtils,
+  TransformType,
 } from 'parsers/surface_flinger/transform_utils';
+import {GeometryFactory} from 'trace/geometry_factory';
 import {Computation} from 'trace/tree_node/computation';
 import {HierarchyTreeNode} from 'trace/tree_node/hierarchy_tree_node';
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
@@ -57,7 +58,7 @@ export class VisibilityPropertiesComputation implements Computation {
       .reverse();
 
     const opaqueLayers: HierarchyTreeNode[] = [];
-    const transparentLayers: HierarchyTreeNode[] = [];
+    const translucentLayers: HierarchyTreeNode[] = [];
 
     for (const layer of rootLayersOrderedByZ) {
       let isVisible = this.getIsVisible(layer);
@@ -144,7 +145,7 @@ export class VisibilityPropertiesComputation implements Computation {
           ),
         );
 
-        const coveredBy = transparentLayers
+        const coveredBy = translucentLayers
           .filter((other) => {
             if (
               this.getDefinedValue(other, 'layerStack') !==
@@ -166,7 +167,7 @@ export class VisibilityPropertiesComputation implements Computation {
 
         this.isOpaque(layer)
           ? opaqueLayers.push(layer)
-          : transparentLayers.push(layer);
+          : translucentLayers.push(layer);
       }
 
       if (!isVisible) {
@@ -263,10 +264,7 @@ export class VisibilityPropertiesComputation implements Computation {
       reasons.push('crop is 0x0');
     }
     const transform = layer.getEagerPropertyByName('transform');
-    if (
-      transform &&
-      !TransformUtils.isValidTransform(Transform.from(transform))
-    ) {
+    if (transform && !Transform.from(transform).matrix.isValid()) {
       reasons.push('transform is invalid');
     }
 
@@ -322,7 +320,7 @@ export class VisibilityPropertiesComputation implements Computation {
 
   private getRect(rectNode: PropertyTreeNode): Rect | undefined {
     if (rectNode.getAllChildren().length === 0) return undefined;
-    return Rect.from(rectNode);
+    return GeometryFactory.makeRect(rectNode);
   }
 
   private getColor(layer: HierarchyTreeNode): PropertyTreeNode | undefined {
@@ -353,12 +351,12 @@ export class VisibilityPropertiesComputation implements Computation {
     crop = new Rect(0, 0, 0, 0),
   ): boolean {
     if (
-      !TransformUtils.isSimpleRotation(
+      !TransformType.isSimpleRotation(
         assertDefined(layer.getEagerPropertyByName('transform'))
           .getChildByName('type')
           ?.getValue() ?? 0,
       ) ||
-      !TransformUtils.isSimpleRotation(
+      !TransformType.isSimpleRotation(
         assertDefined(other.getEagerPropertyByName('transform'))
           .getChildByName('type')
           ?.getValue() ?? 0,

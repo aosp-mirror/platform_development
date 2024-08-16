@@ -52,7 +52,7 @@ import androidx.compose.ui.unit.dp
 import com.android.compose.animation.scene.Back
 import com.android.compose.animation.scene.Edge
 import com.android.compose.animation.scene.ElementKey
-import com.android.compose.animation.scene.LowestZIndexScenePicker
+import com.android.compose.animation.scene.LowestZIndexContentPicker
 import com.android.compose.animation.scene.NestedScrollBehavior
 import com.android.compose.animation.scene.SceneKey
 import com.android.compose.animation.scene.SceneScope
@@ -87,7 +87,7 @@ object QuickSettings {
 
     object Elements {
         val Background =
-            ElementKey("QuickSettingsBackground", scenePicker = LowestZIndexScenePicker)
+            ElementKey("QuickSettingsBackground", contentPicker = LowestZIndexContentPicker)
         val Date = ElementKey("QuickSettingsDate")
         val Operator = ElementKey("QuickSettingsOperator")
         val BrightnessSlider = ElementKey("QuickSettingsBrightnessSlider")

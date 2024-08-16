@@ -14,24 +14,44 @@
  * limitations under the License.
  */
 
+import {TransformMatrix} from 'common/geometry/transform_matrix';
 import {UiRectBuilder} from 'viewers/components/rects/ui_rect_builder';
 import {RectFilter} from './rect_filter';
 import {RectShowState} from './rect_show_state';
 
 describe('RectFilter', () => {
   let rectFilter: RectFilter;
-  const nonVisibleRect = makeRect('nonVisibleRect', false);
-  const visibleRect = makeRect('visibleRect', true);
-  const displayRect = makeRect('displayRect', false, true);
-  const allRects = [visibleRect, nonVisibleRect, displayRect];
-  const preFilteredRects = [visibleRect, nonVisibleRect];
+  const nonVisibleNoContentRect = makeRect(
+    'nonVisibleNoContentRect',
+    false,
+    false,
+  );
+  const nonVisibleContentRect = makeRect('nonVisibleContentRect', false, true);
+  const visibleContentRect = makeRect('visibleContentRect', true, true);
+  const visibleNoContentRect = makeRect('visibleNoContentRect', true, false);
+  const displayRect = makeRect('displayRect', false, false, true);
+  const allRects = [
+    visibleContentRect,
+    visibleNoContentRect,
+    nonVisibleContentRect,
+    nonVisibleNoContentRect,
+    displayRect,
+  ];
+  const preFilteredRects = [
+    visibleContentRect,
+    visibleNoContentRect,
+    nonVisibleContentRect,
+    nonVisibleNoContentRect,
+  ];
   let expectedRectIdToShowState: Map<string, RectShowState>;
 
   beforeEach(() => {
     rectFilter = new RectFilter();
     expectedRectIdToShowState = new Map([
-      [visibleRect.id, RectShowState.SHOW],
-      [nonVisibleRect.id, RectShowState.SHOW],
+      [visibleContentRect.id, RectShowState.SHOW],
+      [visibleNoContentRect.id, RectShowState.SHOW],
+      [nonVisibleContentRect.id, RectShowState.SHOW],
+      [nonVisibleNoContentRect.id, RectShowState.SHOW],
       [displayRect.id, RectShowState.SHOW],
     ]);
   });
@@ -56,21 +76,21 @@ describe('RectFilter', () => {
   });
 
   it('updates rect forced show state', () => {
-    expect(isShown(visibleRect.id)).toBeTrue();
+    expect(isShown(visibleContentRect.id)).toBeTrue();
 
     // robust to same state (RectShowState.SHOW)
-    rectFilter.updateRectShowState(visibleRect.id, RectShowState.SHOW);
-    expect(isShown(visibleRect.id)).toBeTrue();
+    rectFilter.updateRectShowState(visibleContentRect.id, RectShowState.SHOW);
+    expect(isShown(visibleContentRect.id)).toBeTrue();
 
-    rectFilter.updateRectShowState(visibleRect.id, RectShowState.HIDE);
-    expect(isShown(visibleRect.id)).toBeFalse();
+    rectFilter.updateRectShowState(visibleContentRect.id, RectShowState.HIDE);
+    expect(isShown(visibleContentRect.id)).toBeFalse();
 
     // robust to same state (RectShowState.HIDE)
-    rectFilter.updateRectShowState(visibleRect.id, RectShowState.HIDE);
-    expect(isShown(visibleRect.id)).toBeFalse();
+    rectFilter.updateRectShowState(visibleContentRect.id, RectShowState.HIDE);
+    expect(isShown(visibleContentRect.id)).toBeFalse();
 
-    rectFilter.updateRectShowState(visibleRect.id, RectShowState.SHOW);
-    expect(isShown(visibleRect.id)).toBeTrue();
+    rectFilter.updateRectShowState(visibleContentRect.id, RectShowState.SHOW);
+    expect(isShown(visibleContentRect.id)).toBeTrue();
 
     expect(isShown(displayRect.id)).toBeFalse();
     rectFilter.updateRectShowState(displayRect.id, RectShowState.SHOW);
@@ -78,56 +98,129 @@ describe('RectFilter', () => {
   });
 
   it('does not filter rects if applicable', () => {
-    expect(rectFilter.filterRects(allRects, false, true)).toEqual(allRects);
+    expect(rectFilter.filterRects(allRects, false, true, false)).toEqual(
+      allRects,
+    );
   });
 
   it('filters non visible rects', () => {
-    const filteredRects = rectFilter.filterRects(allRects, true, true);
-    expect(filteredRects).toEqual([visibleRect, displayRect]);
+    const filteredRects = rectFilter.filterRects(allRects, true, true, false);
+    expect(filteredRects).toEqual([
+      visibleContentRect,
+      visibleNoContentRect,
+      displayRect,
+    ]);
 
     // robust to all visible rects
-    expect(rectFilter.filterRects(filteredRects, true, true)).toEqual(
+    expect(rectFilter.filterRects(filteredRects, true, true, false)).toEqual(
       filteredRects,
     );
 
     // does not apply force-hide state
-    rectFilter.updateRectShowState(visibleRect.id, RectShowState.HIDE);
-    expect(rectFilter.filterRects(allRects, true, true)).toEqual(filteredRects);
-
-    // does not apply force-show state
-    rectFilter.updateRectShowState(nonVisibleRect.id, RectShowState.SHOW);
-    expect(rectFilter.filterRects(allRects, true, true)).toEqual(filteredRects);
-  });
-
-  it('applies show/hide states', () => {
-    rectFilter.updateRectShowState(visibleRect.id, RectShowState.HIDE);
-    const filteredRects = rectFilter.filterRects(allRects, false, false);
-    expect(filteredRects).toEqual([nonVisibleRect, displayRect]);
-
-    // robust to no change in show/hide states
-    expect(rectFilter.filterRects(filteredRects, false, false)).toEqual(
+    rectFilter.updateRectShowState(visibleContentRect.id, RectShowState.HIDE);
+    expect(rectFilter.filterRects(allRects, true, true, false)).toEqual(
       filteredRects,
     );
 
-    rectFilter.updateRectShowState(visibleRect.id, RectShowState.SHOW);
-    expect(rectFilter.filterRects(allRects, false, false)).toEqual(allRects);
+    // does not apply force-show state
+    rectFilter.updateRectShowState(
+      nonVisibleContentRect.id,
+      RectShowState.SHOW,
+    );
+    expect(rectFilter.filterRects(allRects, true, true, false)).toEqual(
+      filteredRects,
+    );
+  });
+
+  it('applies show/hide states', () => {
+    rectFilter.updateRectShowState(visibleContentRect.id, RectShowState.HIDE);
+    const filteredRects = rectFilter.filterRects(allRects, false, false, false);
+    expect(filteredRects).toEqual([
+      visibleNoContentRect,
+      nonVisibleContentRect,
+      nonVisibleNoContentRect,
+      displayRect,
+    ]);
+
+    // robust to no change in show/hide states
+    expect(rectFilter.filterRects(filteredRects, false, false, false)).toEqual(
+      filteredRects,
+    );
+
+    rectFilter.updateRectShowState(visibleContentRect.id, RectShowState.SHOW);
+    expect(rectFilter.filterRects(allRects, false, false, false)).toEqual(
+      allRects,
+    );
   });
 
   it('filters non visible rects and applies show/hide states', () => {
     // does not remove force-shown non-visible rect
-    rectFilter.updateRectShowState(nonVisibleRect.id, RectShowState.SHOW);
-    expect(rectFilter.filterRects(allRects, true, false)).toEqual(allRects);
+    rectFilter.updateRectShowState(
+      nonVisibleContentRect.id,
+      RectShowState.SHOW,
+    );
+    rectFilter.updateRectShowState(
+      nonVisibleNoContentRect.id,
+      RectShowState.SHOW,
+    );
+    expect(rectFilter.filterRects(allRects, true, false, false)).toEqual(
+      allRects,
+    );
 
     // removes force-hidden visible rect
-    rectFilter.updateRectShowState(visibleRect.id, RectShowState.HIDE);
-    const filteredRects = rectFilter.filterRects(allRects, true, false);
-    expect(filteredRects).toEqual([nonVisibleRect, displayRect]);
-
-    // removes non-visible rect but keeps visible rect that has not had hide/show state applied
-    rectFilter.updateRectShowState(nonVisibleRect.id, RectShowState.HIDE);
-    expect(rectFilter.filterRects(allRects, true, false)).toEqual([
+    rectFilter.updateRectShowState(visibleContentRect.id, RectShowState.HIDE);
+    const filteredRects = rectFilter.filterRects(allRects, true, false, false);
+    expect(filteredRects).toEqual([
+      visibleNoContentRect,
+      nonVisibleContentRect,
+      nonVisibleNoContentRect,
       displayRect,
     ]);
+
+    // removes non-visible rect but keeps visible rect that has not had hide/show state applied
+    rectFilter.updateRectShowState(
+      nonVisibleNoContentRect.id,
+      RectShowState.HIDE,
+    );
+    expect(rectFilter.filterRects(allRects, true, false, false)).toEqual([
+      visibleNoContentRect,
+      nonVisibleContentRect,
+      displayRect,
+    ]);
+  });
+
+  it('filters rects without content', () => {
+    const filteredRects = rectFilter.filterRects(allRects, false, true, true);
+    expect(filteredRects).toEqual([
+      visibleContentRect,
+      nonVisibleContentRect,
+      displayRect,
+    ]);
+
+    // robust to all rects with content
+    expect(rectFilter.filterRects(filteredRects, false, true, true)).toEqual(
+      filteredRects,
+    );
+  });
+
+  it('filters rects without content by show state and visibility', () => {
+    const filteredRects = rectFilter.filterRects(allRects, true, false, true);
+    expect(filteredRects).toEqual([visibleContentRect, displayRect]);
+
+    // does not apply force-hide state
+    rectFilter.updateRectShowState(visibleContentRect.id, RectShowState.HIDE);
+    expect(rectFilter.filterRects(allRects, true, true, true)).toEqual(
+      filteredRects,
+    );
+
+    // does not apply force-show state
+    rectFilter.updateRectShowState(
+      nonVisibleNoContentRect.id,
+      RectShowState.SHOW,
+    );
+    expect(rectFilter.filterRects(allRects, true, true, true)).toEqual(
+      filteredRects,
+    );
   });
 
   function isShown(rectId: string) {
@@ -138,30 +231,38 @@ describe('RectFilter', () => {
     return nonHiddenRectIds.get(rectId) === RectShowState.SHOW;
   }
 
-  function makeRect(id: string, isVisible: boolean, isDisplay = false) {
+  function makeRect(
+    id: string,
+    isVisible: boolean,
+    hasContent: boolean,
+    isDisplay = false,
+  ) {
     return new UiRectBuilder()
       .setX(0)
       .setY(0)
       .setWidth(1)
       .setHeight(1)
       .setLabel(id)
-      .setTransform({
-        dsdx: 1,
-        dsdy: 0,
-        dtdx: 0,
-        dtdy: 1,
-        tx: 0,
-        ty: 0,
-      })
+      .setTransform(
+        TransformMatrix.from({
+          dsdx: 1,
+          dsdy: 0,
+          dtdx: 0,
+          dtdy: 1,
+          tx: 0,
+          ty: 0,
+        }),
+      )
       .setIsVisible(isVisible)
       .setIsDisplay(isDisplay)
+      .setIsActiveDisplay(false)
       .setId(id)
       .setGroupId(0)
-      .setIsVirtual(false)
       .setIsClickable(false)
       .setCornerRadius(0)
       .setDepth(0)
       .setOpacity(0.5)
+      .setHasContent(hasContent)
       .build();
   }
 });

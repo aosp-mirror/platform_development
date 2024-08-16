@@ -15,9 +15,10 @@
  */
 
 import {assertDefined} from 'common/assert_utils';
+import {Rect} from 'common/geometry/rect';
 import {InMemoryStorage} from 'common/in_memory_storage';
-import {Rect} from 'common/rect';
 import {TracePositionUpdate} from 'messaging/winscope_event';
+import {HierarchyTreeBuilder} from 'test/unit/hierarchy_tree_builder';
 import {TraceBuilder} from 'test/unit/trace_builder';
 import {UnitTestUtils} from 'test/unit/utils';
 import {CustomQueryType} from 'trace/custom_query';
@@ -36,7 +37,7 @@ import {UserOptions} from 'viewers/common/user_options';
 import {Presenter} from './presenter';
 import {UiData} from './ui_data';
 
-class PresenterSurfaceFlingerTest extends AbstractHierarchyViewerPresenterTest {
+class PresenterSurfaceFlingerTest extends AbstractHierarchyViewerPresenterTest<UiData> {
   private traceSf: Trace<HierarchyTreeNode> | undefined;
   private positionUpdate: TracePositionUpdate | undefined;
   private secondPositionUpdate: TracePositionUpdate | undefined;
@@ -119,7 +120,7 @@ class PresenterSurfaceFlingerTest extends AbstractHierarchyViewerPresenterTest {
   }
 
   override createPresenterWithEmptyTrace(
-    callback: NotifyHierarchyViewCallbackType,
+    callback: NotifyHierarchyViewCallbackType<UiData>,
   ): Presenter {
     const trace = new TraceBuilder<HierarchyTreeNode>()
       .setType(TraceType.SURFACE_FLINGER)
@@ -131,12 +132,12 @@ class PresenterSurfaceFlingerTest extends AbstractHierarchyViewerPresenterTest {
   }
 
   override createPresenter(
-    callback: NotifyHierarchyViewCallbackType,
+    callback: NotifyHierarchyViewCallbackType<UiData>,
   ): Presenter {
     const traces = new Traces();
-    const trace = assertDefined(this.traceSf);
-    traces.addTrace(trace);
-    return new Presenter(trace, traces, new InMemoryStorage(), callback);
+    const traceSf = assertDefined(this.traceSf);
+    traces.addTrace(traceSf);
+    return new Presenter(traceSf, traces, new InMemoryStorage(), callback);
   }
 
   override getPositionUpdate(): TracePositionUpdate {
@@ -198,6 +199,14 @@ class PresenterSurfaceFlingerTest extends AbstractHierarchyViewerPresenterTest {
           ?.getChildByName('byteOffset'),
       ).formattedValue(),
     ).toEqual('2919');
+    expect(uiData.displays).toEqual([
+      {
+        displayId: '4619827677550801152',
+        groupId: 0,
+        name: 'Common Panel',
+        isActive: true,
+      },
+    ]);
   }
 
   override executeChecksForPropertiesTreeAfterSecondPositionUpdate(
@@ -223,6 +232,7 @@ class PresenterSurfaceFlingerTest extends AbstractHierarchyViewerPresenterTest {
     expect(curatedProperties.summary).toEqual([
       {
         key: 'Covered by',
+        desc: 'Partially or fully covered by these likely translucent layers',
         layerValues: [
           {
             layerId: '65',
@@ -263,7 +273,7 @@ class PresenterSurfaceFlingerTest extends AbstractHierarchyViewerPresenterTest {
           uiData = newData;
         };
         presenter = this.createPresenter(
-          notifyViewCallback as NotifyHierarchyViewCallbackType,
+          notifyViewCallback as NotifyHierarchyViewCallbackType<UiData>,
         );
       });
 
@@ -275,14 +285,73 @@ class PresenterSurfaceFlingerTest extends AbstractHierarchyViewerPresenterTest {
         // we want the displays to be sorted by name
         expect(uiData?.displays).toEqual([
           {
+            displayId: '4619827259835644672',
+            groupId: 0,
+            name: 'EMU_display_0',
+            isActive: true,
+          },
+          {
+            displayId: '4619827551948147201',
+            groupId: 2,
+            name: 'EMU_display_1',
+            isActive: true,
+          },
+          {
+            displayId: '4619827540095559171',
+            groupId: 4,
+            name: 'EMU_display_3',
+            isActive: true,
+          },
+          {
+            displayId: '4619827124781842690',
+            groupId: 3,
+            name: 'EMU_display_2',
+            isActive: true,
+          },
+          {
             displayId: '11529215046312967684',
             groupId: 5,
             name: 'ClusterOsDouble-VD',
+            isActive: false,
           },
-          {displayId: '4619827259835644672', groupId: 0, name: 'EMU_display_0'},
-          {displayId: '4619827551948147201', groupId: 2, name: 'EMU_display_1'},
-          {displayId: '4619827124781842690', groupId: 3, name: 'EMU_display_2'},
-          {displayId: '4619827540095559171', groupId: 4, name: 'EMU_display_3'},
+        ]);
+      });
+
+      it('uses WM focused display id to determine active display', async () => {
+        const traces = new Traces();
+        const traceSf = assertDefined(this.traceSf);
+        const traceWm = new TraceBuilder<HierarchyTreeNode>()
+          .setType(TraceType.WINDOW_MANAGER)
+          .setEntries([
+            new HierarchyTreeBuilder()
+              .setId('WindowManagerState entry')
+              .setName('root')
+              .setProperties({focusedDisplayId: 3})
+              .build(),
+          ])
+          .build();
+        traces.addTrace(traceSf);
+        traces.addTrace(traceWm);
+        const notifyViewCallback = (newData: UiData) => {
+          uiData = newData;
+        };
+        const presenter = new Presenter(
+          traceSf,
+          traces,
+          new InMemoryStorage(),
+          notifyViewCallback,
+        );
+        const positionUpdate = TracePositionUpdate.fromTraceEntry(
+          traceSf.getEntry(0),
+        );
+        await presenter.onAppEvent(positionUpdate);
+        expect(uiData?.displays).toEqual([
+          {
+            displayId: '4619827677550801152',
+            groupId: 0,
+            name: 'Common Panel',
+            isActive: false,
+          },
         ]);
       });
 
@@ -307,7 +376,7 @@ class PresenterSurfaceFlingerTest extends AbstractHierarchyViewerPresenterTest {
           traceSf,
           traces,
           new InMemoryStorage(),
-          notifyViewCallback as NotifyHierarchyViewCallbackType,
+          notifyViewCallback as NotifyHierarchyViewCallbackType<UiData>,
         );
 
         const firstEntry = traceSf.getEntry(0);

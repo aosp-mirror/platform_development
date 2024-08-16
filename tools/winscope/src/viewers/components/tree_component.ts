@@ -49,8 +49,8 @@ import {
       [class.selected]="isHighlighted(node, highlightedItem)"
       [class.clickable]="isClickable()"
       [class.child-selected]="hasSelectedChild()"
-      [class.hover]="nodeHover"
-      [class.childHover]="childHover"
+      [class.child-hover]="childHover"
+      [class.full-opacity]="showFullOpacity(node)"
       [class]="node.getDiff()"
       [style]="nodeOffsetStyle()"
       [node]="node"
@@ -118,7 +118,6 @@ export class TreeComponent {
   @Output() readonly hoverEnd = new EventEmitter<void>();
 
   localExpandedState = true;
-  nodeHover = false;
   childHover = false;
   readonly levelOffset = 24;
   nodeElement: HTMLElement;
@@ -274,6 +273,12 @@ export class TreeComponent {
     return showState === RectShowState.SHOW ? 'visibility' : 'visibility_off';
   }
 
+  showFullOpacity(node: UiPropertyTreeNode | UiHierarchyTreeNode) {
+    if (node instanceof UiPropertyTreeNode) return true;
+    const showState = this.rectIdToShowState?.get(node.id);
+    return node === undefined || showState === RectShowState.SHOW;
+  }
+
   toggleRectShowState() {
     const nodeId = assertDefined(this.node).id;
     const currentShowState = assertDefined(this.rectIdToShowState?.get(nodeId));
@@ -320,12 +325,10 @@ export class TreeComponent {
   };
 
   private nodeMouseEnterEventListener = () => {
-    this.nodeHover = true;
     this.hoverStart.emit();
   };
 
   private nodeMouseLeaveEventListener = () => {
-    this.nodeHover = false;
     this.hoverEnd.emit();
   };
 

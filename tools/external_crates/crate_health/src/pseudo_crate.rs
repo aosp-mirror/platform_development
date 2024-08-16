@@ -13,6 +13,7 @@
 // limitations under the License.
 
 use std::{
+    collections::BTreeMap,
     fs::{create_dir, write},
     process::Command,
     str::from_utf8,
@@ -22,7 +23,7 @@ use anyhow::{anyhow, Context, Result};
 use serde::Serialize;
 use tinytemplate::TinyTemplate;
 
-use crate::{ensure_exists_and_empty, NamedAndVersioned, RepoPath};
+use crate::{ensure_exists_and_empty, NamedAndVersioned, RepoPath, RunQuiet};
 
 static CARGO_TOML_TEMPLATE: &'static str = include_str!("templates/Cargo.toml.template");
 
@@ -48,6 +49,7 @@ impl PseudoCrate {
     pub fn init<'a>(
         &self,
         crates: impl Iterator<Item = &'a (impl NamedAndVersioned + 'a)>,
+        exact_version: bool,
     ) -> Result<()> {
         if self.path.abs().exists() {
             return Err(anyhow!("Can't init pseudo-crate because {} already exists", self.path));
@@ -62,13 +64,17 @@ impl PseudoCrate {
             if krate.name() != "libsqlite3-sys" {
                 deps.push(Dep {
                     name: krate.name().to_string(),
-                    version: if krate.name() == "remove_dir_all"
-                        && krate.version().to_string() == "0.7.1"
-                    {
-                        "0.7.0".to_string()
-                    } else {
-                        krate.version().to_string()
-                    },
+                    version: format!(
+                        "{}{}",
+                        if exact_version { "=" } else { "" },
+                        if krate.name() == "remove_dir_all"
+                            && krate.version().to_string() == "0.7.1"
+                        {
+                            "0.7.0".to_string()
+                        } else {
+                            krate.version().to_string()
+                        }
+                    ),
                 });
             }
         }
@@ -83,40 +89,50 @@ impl PseudoCrate {
             .context("Failed to create src/lib.rs")?;
 
         self.vendor()
-
-        // TODO: Run "cargo deny"
     }
     pub fn get_path(&self) -> &RepoPath {
         &self.path
     }
     pub fn add(&self, krate: &impl NamedAndVersioned) -> Result<()> {
-        let status = Command::new("cargo")
+        Command::new("cargo")
             .args(["add", format!("{}@={}", krate.name(), krate.version()).as_str()])
             .current_dir(self.path.abs())
-            .spawn()
-            .context("Failed to spawn 'cargo add'")?
-            .wait()
-            .context("Failed to wait on 'cargo add'")?;
-        if !status.success() {
-            return Err(anyhow!("Failed to run 'cargo add {}@{}'", krate.name(), krate.version()));
-        }
+            .run_quiet_and_expect_success()?;
+        Ok(())
+    }
+    pub fn remove(&self, krate: &impl NamedAndVersioned) -> Result<()> {
+        Command::new("cargo")
+            .args(["remove", krate.name()])
+            .current_dir(self.path.abs())
+            .run_quiet_and_expect_success()?;
         Ok(())
     }
     pub fn vendor(&self) -> Result<()> {
-        let output =
-            Command::new("cargo").args(["vendor"]).current_dir(self.path.abs()).output()?;
-        if !output.status.success() {
-            return Err(anyhow!(
-                "cargo vendor failed with exit code {}\nstdout:\n{}\nstderr:\n{}",
-                output
-                    .status
-                    .code()
-                    .map(|code| { format!("{}", code) })
-                    .unwrap_or("(unknown)".to_string()),
-                from_utf8(&output.stdout)?,
-                from_utf8(&output.stderr)?
-            ));
-        }
+        Command::new("cargo")
+            .args(["vendor"])
+            .current_dir(self.path.abs())
+            .run_quiet_and_expect_success()?;
         Ok(())
+    }
+    pub fn deps(&self) -> Result<BTreeMap<String, String>> {
+        let output = Command::new("cargo")
+            .args(["tree", "--depth=1", "--prefix=none"])
+            .current_dir(self.path.abs())
+            .run_quiet_and_expect_success()?;
+        let mut deps = BTreeMap::new();
+        for line in from_utf8(&output.stderr)?.lines().skip(1) {
+            let words = line.split(" ").collect::<Vec<_>>();
+            if words.len() < 2 {
+                return Err(anyhow!(
+                    "Failed to parse crate name and version from cargo tree: {}",
+                    line
+                ));
+            }
+            let version = words[1]
+                .strip_prefix("v")
+                .ok_or(anyhow!("Failed to parse version: {}", words[1]))?;
+            deps.insert(words[0].to_string(), version.to_string());
+        }
+        Ok(deps)
     }
 }

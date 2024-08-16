@@ -22,9 +22,14 @@ import {TimestampConverter} from 'common/timestamp_converter';
 import {CrossToolProtocol} from 'cross_tool/cross_tool_protocol';
 import {ProgressListener} from 'messaging/progress_listener';
 import {ProgressListenerStub} from 'messaging/progress_listener_stub';
-import {UserNotificationsListener} from 'messaging/user_notifications_listener';
-import {UserNotificationsListenerStub} from 'messaging/user_notifications_listener_stub';
-import {NoValidFiles} from 'messaging/user_warnings';
+import {
+  FailedToCreateTracesParser,
+  IncompleteFrameMapping,
+  InvalidLegacyTrace,
+  NoValidFiles,
+  ProxyTracingErrors,
+  UnsupportedFileFormat,
+} from 'messaging/user_warnings';
 import {
   ActiveTraceChanged,
   AppFilesCollected,
@@ -49,6 +54,7 @@ import {WinscopeEventListener} from 'messaging/winscope_event_listener';
 import {WinscopeEventListenerStub} from 'messaging/winscope_event_listener_stub';
 import {TimestampConverterUtils} from 'test/unit/timestamp_converter_utils';
 import {TraceBuilder} from 'test/unit/trace_builder';
+import {UserNotifierChecker} from 'test/unit/user_notifier_checker';
 import {UnitTestUtils} from 'test/unit/utils';
 import {Trace} from 'trace/trace';
 import {TracePosition} from 'trace/trace_position';
@@ -76,7 +82,7 @@ describe('Mediator', () => {
     .build();
 
   let inputFiles: File[];
-  let userNotificationsListener: UserNotificationsListener;
+  let eventLogFile: File;
   let tracePipeline: TracePipeline;
   let timelineData: TimelineData;
   let abtChromeExtensionProtocol: WinscopeEventEmitter & WinscopeEventListener;
@@ -84,10 +90,13 @@ describe('Mediator', () => {
   let appComponent: WinscopeEventListener;
   let timelineComponent: WinscopeEventEmitter & WinscopeEventListener;
   let uploadTracesComponent: ProgressListenerStub;
-  let collectTracesComponent: ProgressListenerStub & WinscopeEventListenerStub;
+  let collectTracesComponent: ProgressListenerStub &
+    WinscopeEventEmitterStub &
+    WinscopeEventListenerStub;
   let traceViewComponent: WinscopeEventEmitter & WinscopeEventListener;
   let mediator: Mediator;
-  let spies: Array<jasmine.Spy<any>>;
+  let spies: Array<jasmine.Spy<jasmine.Func>>;
+  let userNotifierChecker: UserNotifierChecker;
 
   const viewerStub0 = new ViewerStub('Title0', undefined, traceSf);
   const viewerStub1 = new ViewerStub('Title1', undefined, traceWm);
@@ -119,11 +128,15 @@ describe('Mediator', () => {
         'traces/elapsed_and_real_timestamp/screen_recording_metadata_v2.mp4',
       ),
     ];
+    eventLogFile = await UnitTestUtils.getFixtureFile(
+      'traces/eventlog_no_cujs.winscope',
+    );
+    userNotifierChecker = new UserNotifierChecker();
   });
 
-  beforeEach(async () => {
+  beforeEach(() => {
+    userNotifierChecker.reset();
     jasmine.addCustomEqualityTester(tracePositionUpdateEqualityTester);
-    userNotificationsListener = new UserNotificationsListenerStub();
     tracePipeline = new TracePipeline();
     timelineData = new TimelineData();
     abtChromeExtensionProtocol = FunctionUtils.mixin(
@@ -140,8 +153,11 @@ describe('Mediator', () => {
     );
     uploadTracesComponent = new ProgressListenerStub();
     collectTracesComponent = FunctionUtils.mixin(
-      new ProgressListenerStub(),
-      new WinscopeEventListenerStub(),
+      FunctionUtils.mixin(
+        new ProgressListenerStub(),
+        new WinscopeEventListenerStub(),
+      ),
+      new WinscopeEventEmitterStub(),
     );
     traceViewComponent = FunctionUtils.mixin(
       new WinscopeEventEmitterStub(),
@@ -153,7 +169,6 @@ describe('Mediator', () => {
       abtChromeExtensionProtocol,
       crossToolProtocol,
       appComponent,
-      userNotificationsListener,
       new InMemoryStorage(),
     );
     mediator.setTimelineComponent(timelineComponent);
@@ -181,7 +196,6 @@ describe('Mediator', () => {
       spyOn(traceViewComponent, 'onWinscopeEvent'),
       spyOn(uploadTracesComponent, 'onProgressUpdate'),
       spyOn(uploadTracesComponent, 'onOperationFinished'),
-      spyOn(userNotificationsListener, 'onNotifications'),
       spyOn(viewerStub0, 'onWinscopeEvent'),
       spyOn(viewerStub1, 'onWinscopeEvent'),
       spyOn(viewerOverlay, 'onWinscopeEvent'),
@@ -213,16 +227,102 @@ describe('Mediator', () => {
   });
 
   it('handles collected traces from Winscope', async () => {
-    await mediator.onWinscopeEvent(new AppFilesCollected(inputFiles));
+    await mediator.onWinscopeEvent(
+      new AppFilesCollected({requested: [], collected: inputFiles}),
+    );
     await checkLoadTraceViewEvents(collectTracesComponent);
   });
 
-  it('handles empty collected traces from Winscope', async () => {
-    await mediator.onWinscopeEvent(new AppFilesCollected([]));
-    expect(userNotificationsListener.onNotifications).toHaveBeenCalledWith([
-      new NoValidFiles(),
-    ]);
+  it('handles invalid collected traces from Winscope', async () => {
+    await mediator.onWinscopeEvent(
+      new AppFilesCollected({
+        requested: [],
+        collected: [await UnitTestUtils.getFixtureFile('traces/empty.pb')],
+      }),
+    );
+    expect(
+      userNotifierChecker.expectNotified([
+        new UnsupportedFileFormat('empty.pb'),
+      ]),
+    );
     expect(appComponent.onWinscopeEvent).not.toHaveBeenCalled();
+  });
+
+  it('handles collected traces with no entries from Winscope', async () => {
+    await mediator.onWinscopeEvent(
+      new AppFilesCollected({
+        requested: [],
+        collected: [
+          await UnitTestUtils.getFixtureFile(
+            'traces/no_entries_InputMethodClients.pb',
+          ),
+        ],
+      }),
+    );
+    expect(
+      userNotifierChecker.expectNotified([
+        new InvalidLegacyTrace(
+          'no_entries_InputMethodClients.pb',
+          'Trace has no entries',
+        ),
+      ]),
+    );
+    expect(appComponent.onWinscopeEvent).not.toHaveBeenCalled();
+  });
+
+  it('handles collected trace with no visualization from Winscope', async () => {
+    await mediator.onWinscopeEvent(
+      new AppFilesCollected({
+        requested: [],
+        collected: [eventLogFile],
+      }),
+    );
+    expect(
+      userNotifierChecker.expectNotified([
+        new FailedToCreateTracesParser(
+          TraceType.CUJS,
+          'eventlog_no_cujs.winscope has no relevant entries',
+        ),
+      ]),
+    );
+    expect(appComponent.onWinscopeEvent).not.toHaveBeenCalled();
+  });
+
+  it('handles empty collected traces from Winscope', async () => {
+    await mediator.onWinscopeEvent(
+      new AppFilesCollected({
+        requested: [],
+        collected: [],
+      }),
+    );
+    expect(userNotifierChecker.expectNotified([new NoValidFiles()]));
+    expect(appComponent.onWinscopeEvent).not.toHaveBeenCalled();
+  });
+
+  it('handles requested traces with missing collected traces from Winscope', async () => {
+    await mediator.onWinscopeEvent(
+      new AppFilesCollected({
+        requested: [
+          {
+            name: 'Collected Trace',
+            types: [TraceType.EVENT_LOG, TraceType.CUJS],
+          },
+          {
+            name: 'Uncollected Trace',
+            types: [TraceType.TRANSITION],
+          },
+        ],
+        collected: inputFiles.concat([eventLogFile]),
+      }),
+    );
+    expect(
+      userNotifierChecker.expectNotified([
+        new ProxyTracingErrors([
+          'Failed to find valid files for Uncollected Trace',
+        ]),
+      ]),
+    );
+    expect(appComponent.onWinscopeEvent).toHaveBeenCalled();
   });
 
   it('handles request to refresh dumps', async () => {
@@ -355,6 +455,20 @@ describe('Mediator', () => {
       new AppFilesUploaded([fileWithoutVisualization]),
     );
     await loadTraceView();
+  });
+
+  it('warns user if frame mapping fails', async () => {
+    const errorMsg = 'frame mapping failed';
+    spyOn(tracePipeline, 'buildTraces').and.throwError(errorMsg);
+    const dumpFile = await UnitTestUtils.getFixtureFile(
+      'traces/dump_WindowManager.pb',
+    );
+    await mediator.onWinscopeEvent(new AppFilesUploaded([dumpFile]));
+
+    resetSpyCalls();
+    await mediator.onWinscopeEvent(new AppTraceViewRequest());
+    await checkLoadTraceViewEvents(uploadTracesComponent);
+    userNotifierChecker.expectNotified([new IncompleteFrameMapping(errorMsg)]);
   });
 
   describe('timestamp received from remote tool', () => {
@@ -510,7 +624,7 @@ describe('Mediator', () => {
 
   async function loadFiles(files = inputFiles) {
     await mediator.onWinscopeEvent(new AppFilesUploaded(files));
-    expect(userNotificationsListener.onNotifications).not.toHaveBeenCalled();
+    userNotifierChecker.expectNone();
     reassignViewerStubTrace(viewerStub0);
     reassignViewerStubTrace(viewerStub1);
   }

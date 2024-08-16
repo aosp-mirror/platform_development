@@ -15,7 +15,7 @@
  */
 
 import {assertDefined} from 'common/assert_utils';
-import {Rect} from 'common/rect';
+import {Rect} from 'common/geometry/rect';
 import {TracePositionUpdate} from 'messaging/winscope_event';
 import {TimestampConverterUtils} from 'test/unit/timestamp_converter_utils';
 import {TreeNodeUtils} from 'test/unit/tree_node_utils';
@@ -31,11 +31,13 @@ import {UiTreeUtils} from 'viewers/common/ui_tree_utils';
 import {UserOptions} from 'viewers/common/user_options';
 import {UiDataHierarchy} from './ui_data_hierarchy';
 
-export abstract class AbstractHierarchyViewerPresenterTest {
+export abstract class AbstractHierarchyViewerPresenterTest<
+  UiData extends UiDataHierarchy,
+> {
   execute() {
     describe('AbstractHierarchyViewerPresenter', () => {
       let uiData: UiDataHierarchy;
-      let presenter: AbstractHierarchyViewerPresenter;
+      let presenter: AbstractHierarchyViewerPresenter<UiData>;
       beforeAll(async () => {
         jasmine.addCustomEqualityTester(TreeNodeUtils.treeNodeEqualityTester);
         await this.setUpTestEnvironment();
@@ -472,7 +474,7 @@ export abstract class AbstractHierarchyViewerPresenterTest {
 
         it('filters rects by show/hide state', async () => {
           const userOptions: UserOptions = {
-            ignoreNonHidden: {
+            ignoreRectShowState: {
               name: 'Ignore',
               icon: 'visibility',
               enabled: true,
@@ -488,7 +490,7 @@ export abstract class AbstractHierarchyViewerPresenterTest {
           );
           this.checkRectUiData(uiData, totalRects, totalRects, totalRects - 1);
 
-          userOptions['ignoreNonHidden'].enabled = false;
+          userOptions['ignoreRectShowState'].enabled = false;
           presenter.onRectsUserOptionsChange(userOptions);
           this.checkRectUiData(
             uiData,
@@ -500,7 +502,7 @@ export abstract class AbstractHierarchyViewerPresenterTest {
 
         it('handles both visibility and show/hide state in rects', async () => {
           const userOptions: UserOptions = {
-            ignoreNonHidden: {
+            ignoreRectShowState: {
               name: 'Ignore',
               icon: 'visibility',
               enabled: true,
@@ -521,7 +523,7 @@ export abstract class AbstractHierarchyViewerPresenterTest {
           );
           this.checkRectUiData(uiData, totalRects, totalRects, totalRects - 1);
 
-          userOptions['ignoreNonHidden'].enabled = false;
+          userOptions['ignoreRectShowState'].enabled = false;
           presenter.onRectsUserOptionsChange(userOptions);
           this.checkRectUiData(
             uiData,
@@ -539,7 +541,7 @@ export abstract class AbstractHierarchyViewerPresenterTest {
             visibleRects - 1,
           );
 
-          userOptions['ignoreNonHidden'].enabled = true;
+          userOptions['ignoreRectShowState'].enabled = true;
           presenter.onRectsUserOptionsChange(userOptions);
           this.checkRectUiData(
             uiData,
@@ -637,11 +639,11 @@ export abstract class AbstractHierarchyViewerPresenterTest {
 
   abstract setUpTestEnvironment(): Promise<void>;
   abstract createPresenter(
-    callback: NotifyHierarchyViewCallbackType,
-  ): AbstractHierarchyViewerPresenter;
+    callback: NotifyHierarchyViewCallbackType<UiData>,
+  ): AbstractHierarchyViewerPresenter<UiData>;
   abstract createPresenterWithEmptyTrace(
-    callback: NotifyHierarchyViewCallbackType,
-  ): AbstractHierarchyViewerPresenter;
+    callback: NotifyHierarchyViewCallbackType<UiData>,
+  ): AbstractHierarchyViewerPresenter<UiData>;
   abstract getPositionUpdate(): TracePositionUpdate;
   abstract getSecondPositionUpdate(): TracePositionUpdate | undefined;
   abstract getShowDiffPositionUpdate(): TracePositionUpdate;

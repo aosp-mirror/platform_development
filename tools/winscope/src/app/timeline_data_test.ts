@@ -16,11 +16,15 @@
 
 import {assertDefined} from 'common/assert_utils';
 import {TimeRange} from 'common/time';
+import {ParserBuilder} from 'test/unit/parser_builder';
+import {PropertyTreeBuilder} from 'test/unit/property_tree_builder';
 import {TimestampConverterUtils} from 'test/unit/timestamp_converter_utils';
 import {TracesBuilder} from 'test/unit/traces_builder';
 import {TraceBuilder} from 'test/unit/trace_builder';
+import {Traces} from 'trace/traces';
 import {TracePosition} from 'trace/trace_position';
 import {TraceType} from 'trace/trace_type';
+import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
 import {TimelineData} from './timeline_data';
 
 describe('TimelineData', () => {
@@ -368,5 +372,46 @@ describe('TimelineData', () => {
     timelineData.trySetActiveTrace(traceWm);
 
     expect(timelineData.getCurrentPosition()?.timestamp).toBe(timestamp11);
+  });
+
+  it('updates corrupted state of transition trace', async () => {
+    const traces = new Traces();
+    const trace = new TraceBuilder<PropertyTreeNode>()
+      .setType(TraceType.TRANSITION)
+      .setParser(
+        new ParserBuilder<PropertyTreeNode>()
+          .setIsCorrupted(true)
+          .setEntries([
+            new PropertyTreeBuilder()
+              .setRootId('TransitionsTraceEntry')
+              .setName('transition')
+              .build(),
+          ])
+          .setTimestamps([timestamp9])
+          .build(),
+      )
+      .build();
+    traces.addTrace(trace);
+
+    expectAsync(
+      timelineData.initialize(
+        traces,
+        undefined,
+        TimestampConverterUtils.TIMESTAMP_CONVERTER,
+      ),
+    ).toBeRejected();
+
+    try {
+      await timelineData.initialize(
+        traces,
+        undefined,
+        TimestampConverterUtils.TIMESTAMP_CONVERTER,
+      );
+    } catch {
+      expect(trace.isCorrupted()).toBeTrue();
+      expect(trace.getCorruptedReason()).toEqual(
+        'Cannot parse all transitions.',
+      );
+    }
   });
 });

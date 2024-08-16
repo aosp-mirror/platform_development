@@ -25,7 +25,7 @@ import {
 import {LogPresenter} from 'viewers/common/log_presenter';
 import {PropertiesPresenter} from 'viewers/common/properties_presenter';
 import {LogField, LogFieldType} from 'viewers/common/ui_data_log';
-import {CujEntry, CujStatus, CujType, UiData} from './ui_data';
+import {CujEntry, CujStatus, UiData} from './ui_data';
 
 export class Presenter extends AbstractLogViewerPresenter<UiData> {
   static readonly FIELD_NAMES = [
@@ -40,7 +40,7 @@ export class Presenter extends AbstractLogViewerPresenter<UiData> {
   private isInitialized = false;
   private transitionTrace: Trace<PropertyTreeNode>;
 
-  protected override logPresenter = new LogPresenter(false);
+  protected override logPresenter = new LogPresenter<CujEntry>(false);
   protected override propertiesPresenter = new PropertiesPresenter({}, [], []);
 
   constructor(
@@ -96,14 +96,14 @@ export class Presenter extends AbstractLogViewerPresenter<UiData> {
         timeDiff = new TimeDuration(timeDiffNs);
       }
 
-      const cujTypeId = assertDefined(
+      const cujType = assertDefined(
         cujNode.getChildByName('cujType'),
-      ).getValue();
+      ).formattedValue();
 
       const fields: LogField[] = [
         {
           type: LogFieldType.CUJ_TYPE,
-          value: `${CujType[cujTypeId]} (${cujTypeId})`,
+          value: cujType,
         },
         {
           type: LogFieldType.START_TIME,

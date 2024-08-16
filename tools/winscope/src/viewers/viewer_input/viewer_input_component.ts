@@ -19,6 +19,7 @@ import {PersistentStore} from 'common/persistent_store';
 import {TraceType} from 'trace/trace_type';
 import {CollapsibleSections} from 'viewers/common/collapsible_sections';
 import {CollapsibleSectionType} from 'viewers/common/collapsible_section_type';
+import {ShadingMode} from 'viewers/components/rects/shading_mode';
 import {
   viewerCardInnerStyle,
   viewerCardStyle,
@@ -34,6 +35,20 @@ import {UiData} from './ui_data';
           [sections]="sections"
           (sectionChange)="sections.onCollapseStateChange($event, false)">
       </collapsed-sections>
+
+      <rects-view *ngIf="inputData?.rectsToDraw"
+          class="rects-view"
+          [class.collapsed]="sections.isSectionCollapsed(CollapsibleSectionType.RECTS)"
+          [title]="rectsTitle"
+          [store]="store"
+          [isStackBased]="true"
+          [dependencies]="inputData?.dependencies"
+          [displays]="inputData?.displays"
+          [rects]="inputData?.rectsToDraw ?? []"
+          [shadingModes]="shadingModes"
+          [highlightedItem]="inputData?.highlightedRect ?? ''"
+          [userOptions]="inputData?.rectsUserOptions ?? {}"
+          (collapseButtonClicked)="sections.onCollapseStateChange(CollapsibleSectionType.RECTS, true)"></rects-view>
 
       <log-view
           class="log-view"
@@ -103,11 +118,19 @@ export class ViewerInputComponent {
   TraceType = TraceType;
   CollapsibleSectionType = CollapsibleSectionType;
 
+  rectsTitle = 'INPUT WINDOWS';
   eventLogTitle = 'EVENT LOG';
   eventPropertiesTitle = 'EVENT DETAILS';
   dispatchPropertiesTitle = 'DISPATCH DETAILS';
 
+  shadingModes = [ShadingMode.OPACITY];
+
   sections = new CollapsibleSections([
+    {
+      type: CollapsibleSectionType.RECTS,
+      label: this.rectsTitle,
+      isCollapsed: false,
+    },
     {
       type: CollapsibleSectionType.LOG,
       label: this.eventLogTitle,

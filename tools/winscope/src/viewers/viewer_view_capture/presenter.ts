@@ -41,10 +41,10 @@ import {RectsPresenter} from 'viewers/common/rects_presenter';
 import {UiHierarchyTreeNode} from 'viewers/common/ui_hierarchy_tree_node';
 import {UI_RECT_FACTORY} from 'viewers/common/ui_rect_factory';
 import {UserOptions} from 'viewers/common/user_options';
-import {UiRect} from 'viewers/components/rects/types2d';
+import {UiRect} from 'viewers/components/rects/ui_rect';
 import {UiData} from './ui_data';
 
-export class Presenter extends AbstractHierarchyViewerPresenter {
+export class Presenter extends AbstractHierarchyViewerPresenter<UiData> {
   static readonly DENYLIST_PROPERTY_NAMES = ['children', 'isComputedVisible'];
 
   private windowNames: string[] = [];
@@ -77,7 +77,7 @@ export class Presenter extends AbstractHierarchyViewerPresenter {
     PersistentStoreProxy.new<UserOptions>(
       'VcRectsOptions',
       {
-        ignoreNonHidden: {
+        ignoreRectShowState: {
           name: 'Ignore',
           icon: 'visibility',
           enabled: false,
@@ -131,7 +131,7 @@ export class Presenter extends AbstractHierarchyViewerPresenter {
   constructor(
     traces: Traces,
     storage: Readonly<Storage>,
-    notifyViewCallback: NotifyHierarchyViewCallbackType,
+    notifyViewCallback: NotifyHierarchyViewCallbackType<UiData>,
   ) {
     super(undefined, traces, storage, notifyViewCallback, new UiData());
     this.viewCaptureTraces = traces.getTraces(TraceType.VIEW_CAPTURE);
@@ -248,16 +248,15 @@ export class Presenter extends AbstractHierarchyViewerPresenter {
   }
 
   private getWindows(windowNames: string[]): DisplayIdentifier[] {
-    return this.viewCaptureTraces
-      .map((trace, i) => {
-        const traceId = this.getIdFromViewCaptureTrace(trace);
-        return {
-          displayId: traceId,
-          groupId: traceId,
-          name: windowNames[i],
-        };
-      })
-      .sort((a, b) => a.name.localeCompare(b.name));
+    return this.viewCaptureTraces.map((trace, i) => {
+      const traceId = this.getIdFromViewCaptureTrace(trace);
+      return {
+        displayId: traceId,
+        groupId: traceId,
+        name: windowNames[i],
+        isActive: true,
+      };
+    });
   }
 
   private updateCuratedProperties() {
@@ -311,8 +310,8 @@ export class Presenter extends AbstractHierarchyViewerPresenter {
   }
 
   private refreshUIData() {
-    this.refreshHierarchyViewerUiData(
-      new UiData(this.sfRects, this.curatedProperties),
-    );
+    this.uiData.sfRects = this.sfRects;
+    this.uiData.curatedProperties = this.curatedProperties;
+    this.refreshHierarchyViewerUiData();
   }
 }
