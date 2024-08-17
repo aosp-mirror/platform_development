@@ -23,8 +23,10 @@ import {MatIconModule} from '@angular/material/icon';
 import {MatTooltipModule} from '@angular/material/tooltip';
 import {assertDefined} from 'common/assert_utils';
 import {HierarchyTreeBuilder} from 'test/unit/hierarchy_tree_builder';
+import {TreeNodeUtils} from 'test/unit/tree_node_utils';
 import {RectShowState} from 'viewers/common/rect_show_state';
 import {UiHierarchyTreeNode} from 'viewers/common/ui_hierarchy_tree_node';
+import {UiPropertyTreeNode} from 'viewers/common/ui_property_tree_node';
 import {ViewerEvents} from 'viewers/common/viewer_events';
 import {HierarchyTreeNodeDataViewComponent} from './hierarchy_tree_node_data_view_component';
 import {PropertyTreeNodeDataViewComponent} from './property_tree_node_data_view_component';
@@ -196,6 +198,36 @@ describe('TreeComponent', () => {
     expect(state).toEqual(RectShowState.SHOW);
   });
 
+  it('shows node at full opacity when applicable', () => {
+    expect(htmlElement.querySelector('.node.full-opacity')).toBeTruthy();
+
+    component.rectIdToShowState = new Map([
+      [component.tree.id, RectShowState.SHOW],
+    ]);
+    fixture.detectChanges();
+    expect(htmlElement.querySelector('.node.full-opacity')).toBeTruthy();
+
+    component.tree = TreeNodeUtils.makeUiPropertyNode(
+      component.tree.id,
+      component.tree.name,
+      0,
+    );
+    fixture.detectChanges();
+    expect(htmlElement.querySelector('.node.full-opacity')).toBeTruthy();
+  });
+
+  it('shows node at non-full opacity when applicable', () => {
+    component.rectIdToShowState = new Map([]);
+    fixture.detectChanges();
+    expect(htmlElement.querySelector('.node.full-opacity')).toBeNull();
+
+    component.rectIdToShowState = new Map([
+      [component.tree.id, RectShowState.HIDE],
+    ]);
+    fixture.detectChanges();
+    expect(htmlElement.querySelector('.node.full-opacity')).toBeNull();
+  });
+
   function makeTree() {
     const children = [];
     for (let i = 0; i < 80; i++) {
@@ -234,7 +266,7 @@ describe('TreeComponent', () => {
     ],
   })
   class TestHostComponent {
-    tree: UiHierarchyTreeNode;
+    tree: UiHierarchyTreeNode | UiPropertyTreeNode;
     highlightedItem = '';
     isFlattened = false;
     useStoredExpandedState = false;

@@ -700,6 +700,7 @@ fn generate_android_bp_package_header(
                 let license_name = format!("external_rust_crates_{}_license", package_name);
 
                 let mut package_module = BpModule::new("package".to_string());
+                package_module.props.set("default_team", "trendy_team_android_rust");
                 package_module.props.set("default_applicable_licenses", vec![license_name.clone()]);
                 modules.push(package_module);
 
@@ -746,6 +747,7 @@ fn choose_license(license: &str) -> &str {
         "Apache-2.0 OR MIT" => "Apache-2.0",
         "MIT/Apache-2.0" => "Apache-2.0",
         "Apache-2.0/MIT" => "Apache-2.0",
+        "Apache-2.0 or BSD-3-Clause" => "Apache-2.0",
         "Unlicense OR MIT" => "MIT",
         _ => license,
     }

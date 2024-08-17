@@ -34,7 +34,7 @@ import {ProxyEndpoint} from './proxy_endpoint';
 import {TraceRequest} from './trace_request';
 
 export class ProxyConnection extends AdbConnection {
-  static readonly VERSION = '2.6.0';
+  static readonly VERSION = '3.0.0';
   static readonly WINSCOPE_PROXY_URL = 'http://localhost:5544';
 
   private readonly store = new PersistentStore();
@@ -68,7 +68,7 @@ export class ProxyConnection extends AdbConnection {
     if (urlParams.has('token')) {
       this.securityToken = assertDefined(urlParams.get('token'));
     } else {
-      this.securityToken = this.store?.get(this.storeKeySecurityToken) ?? '';
+      this.securityToken = this.store.get(this.storeKeySecurityToken) ?? '';
     }
     await this.setState(ConnectionState.CONNECTING);
   }
@@ -80,7 +80,7 @@ export class ProxyConnection extends AdbConnection {
   setSecurityToken(token: string) {
     if (token.length > 0) {
       this.securityToken = token;
-      this.store?.add(this.storeKeySecurityToken, token);
+      this.store.add(this.storeKeySecurityToken, token);
     }
   }
 
@@ -434,7 +434,7 @@ export class ProxyConnection extends AdbConnection {
   }
 
   private getSecurityTokenHeader(): HttpRequestHeaderType {
-    const lastKey = this.store?.get(this.storeKeySecurityToken);
+    const lastKey = this.store.get(this.storeKeySecurityToken);
     if (lastKey !== undefined) {
       this.securityToken = lastKey;
     }

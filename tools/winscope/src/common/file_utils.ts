@@ -50,12 +50,16 @@ export class FileUtils {
     }
   }
 
-  static async createZipArchive(files: File[]): Promise<Blob> {
+  static async createZipArchive(
+    files: File[],
+    progressCallback?: OnProgressUpdateType,
+  ): Promise<Blob> {
     const zip = new JSZip();
     for (let i = 0; i < files.length; i++) {
       const file = files[i];
       const blob = await file.arrayBuffer();
       zip.file(file.name, blob);
+      if (progressCallback) progressCallback((i + 1) / files.length);
     }
     return await zip.generateAsync({type: 'blob'});
   }
