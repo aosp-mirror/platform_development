@@ -243,3 +243,38 @@ export class MissingLayerIds extends UserWarning {
     return 'Cannot parse some layers due to null or undefined layer id';
   }
 }
+
+export class DuplicateLayerId extends UserWarning {
+  constructor(private readonly layerId: string) {
+    super();
+  }
+
+  getDescriptor(): string {
+    return 'duplicate layer id';
+  }
+
+  getMessage(): string {
+    return `Duplicate SF layer id ${this.layerId} found - adding it as "Duplicate" to the hierarchy`;
+  }
+}
+
+export class MonotonicScreenRecording extends UserWarning {
+  getDescriptor(): string {
+    return 'monotonic screen recording';
+  }
+
+  getMessage(): string {
+    return `Screen recording may not be synchronized with the
+      other traces. Metadata contains monotonic time instead of elapsed.`;
+  }
+}
+
+export class CannotParseAllTransitions extends UserWarning {
+  getDescriptor(): string {
+    return 'cannot parse all transitions';
+  }
+
+  getMessage(): string {
+    return 'Cannot parse all transitions. Some may be missing in Transitions viewer.';
+  }
+}
