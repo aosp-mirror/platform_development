@@ -94,7 +94,7 @@ export class EntryHierarchyTreeFactory {
     );
 
     if (missingLayerIds) {
-      UserNotifier.add(new MissingLayerIds()).notify();
+      UserNotifier.add(new MissingLayerIds());
     }
 
     const entry = new PropertiesProviderBuilder()
@@ -113,7 +113,7 @@ export class EntryHierarchyTreeFactory {
       .setLazyOperations([ParserSurfaceFlinger.Operations.AddDefaultsEntryLazy])
       .build();
 
-    return new HierarchyTreeBuilderSf()
+    const tree = new HierarchyTreeBuilderSf()
       .setRoot(entry)
       .setChildren(layers)
       .setComputations([
@@ -122,6 +122,8 @@ export class EntryHierarchyTreeFactory {
         new RectsComputation(),
       ])
       .build();
+    UserNotifier.notify();
+    return tree;
   }
 
   private makeEagerPropertiesTree(
