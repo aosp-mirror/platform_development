@@ -20,6 +20,7 @@ import {InMemoryStorage} from 'common/in_memory_storage';
 import {TracePositionUpdate} from 'messaging/winscope_event';
 import {HierarchyTreeBuilder} from 'test/unit/hierarchy_tree_builder';
 import {TraceBuilder} from 'test/unit/trace_builder';
+import {UserNotifierChecker} from 'test/unit/user_notifier_checker';
 import {UnitTestUtils} from 'test/unit/utils';
 import {CustomQueryType} from 'trace/custom_query';
 import {Trace} from 'trace/trace';
@@ -437,5 +438,16 @@ class PresenterSurfaceFlingerTest extends AbstractHierarchyViewerPresenterTest<U
 }
 
 describe('PresenterSurfaceFlinger', () => {
+  let userNotifierChecker: UserNotifierChecker;
+
+  beforeAll(() => {
+    userNotifierChecker = new UserNotifierChecker();
+  });
+
+  afterEach(() => {
+    userNotifierChecker.expectNone();
+    userNotifierChecker.reset();
+  });
+
   new PresenterSurfaceFlingerTest().execute();
 });
