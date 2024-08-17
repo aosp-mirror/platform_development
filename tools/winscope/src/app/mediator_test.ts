@@ -27,6 +27,7 @@ import {
   IncompleteFrameMapping,
   InvalidLegacyTrace,
   NoValidFiles,
+  ProxyTracingErrors,
   UnsupportedFileFormat,
 } from 'messaging/user_warnings';
 import {
@@ -81,6 +82,7 @@ describe('Mediator', () => {
     .build();
 
   let inputFiles: File[];
+  let eventLogFile: File;
   let tracePipeline: TracePipeline;
   let timelineData: TimelineData;
   let abtChromeExtensionProtocol: WinscopeEventEmitter & WinscopeEventListener;
@@ -126,6 +128,9 @@ describe('Mediator', () => {
         'traces/elapsed_and_real_timestamp/screen_recording_metadata_v2.mp4',
       ),
     ];
+    eventLogFile = await UnitTestUtils.getFixtureFile(
+      'traces/eventlog_no_cujs.winscope',
+    );
     userNotifierChecker = new UserNotifierChecker();
   });
 
@@ -222,15 +227,18 @@ describe('Mediator', () => {
   });
 
   it('handles collected traces from Winscope', async () => {
-    await mediator.onWinscopeEvent(new AppFilesCollected(inputFiles));
+    await mediator.onWinscopeEvent(
+      new AppFilesCollected({requested: [], collected: inputFiles}),
+    );
     await checkLoadTraceViewEvents(collectTracesComponent);
   });
 
   it('handles invalid collected traces from Winscope', async () => {
     await mediator.onWinscopeEvent(
-      new AppFilesCollected([
-        await UnitTestUtils.getFixtureFile('traces/empty.pb'),
-      ]),
+      new AppFilesCollected({
+        requested: [],
+        collected: [await UnitTestUtils.getFixtureFile('traces/empty.pb')],
+      }),
     );
     expect(
       userNotifierChecker.expectNotified([
@@ -242,11 +250,14 @@ describe('Mediator', () => {
 
   it('handles collected traces with no entries from Winscope', async () => {
     await mediator.onWinscopeEvent(
-      new AppFilesCollected([
-        await UnitTestUtils.getFixtureFile(
-          'traces/no_entries_InputMethodClients.pb',
-        ),
-      ]),
+      new AppFilesCollected({
+        requested: [],
+        collected: [
+          await UnitTestUtils.getFixtureFile(
+            'traces/no_entries_InputMethodClients.pb',
+          ),
+        ],
+      }),
     );
     expect(
       userNotifierChecker.expectNotified([
@@ -261,9 +272,10 @@ describe('Mediator', () => {
 
   it('handles collected trace with no visualization from Winscope', async () => {
     await mediator.onWinscopeEvent(
-      new AppFilesCollected([
-        await UnitTestUtils.getFixtureFile('traces/eventlog_no_cujs.winscope'),
-      ]),
+      new AppFilesCollected({
+        requested: [],
+        collected: [eventLogFile],
+      }),
     );
     expect(
       userNotifierChecker.expectNotified([
@@ -277,9 +289,40 @@ describe('Mediator', () => {
   });
 
   it('handles empty collected traces from Winscope', async () => {
-    await mediator.onWinscopeEvent(new AppFilesCollected([]));
+    await mediator.onWinscopeEvent(
+      new AppFilesCollected({
+        requested: [],
+        collected: [],
+      }),
+    );
     expect(userNotifierChecker.expectNotified([new NoValidFiles()]));
     expect(appComponent.onWinscopeEvent).not.toHaveBeenCalled();
+  });
+
+  it('handles requested traces with missing collected traces from Winscope', async () => {
+    await mediator.onWinscopeEvent(
+      new AppFilesCollected({
+        requested: [
+          {
+            name: 'Collected Trace',
+            types: [TraceType.EVENT_LOG, TraceType.CUJS],
+          },
+          {
+            name: 'Uncollected Trace',
+            types: [TraceType.TRANSITION],
+          },
+        ],
+        collected: inputFiles.concat([eventLogFile]),
+      }),
+    );
+    expect(
+      userNotifierChecker.expectNotified([
+        new ProxyTracingErrors([
+          'Failed to find valid files for Uncollected Trace',
+        ]),
+      ]),
+    );
+    expect(appComponent.onWinscopeEvent).toHaveBeenCalled();
   });
 
   it('handles request to refresh dumps', async () => {

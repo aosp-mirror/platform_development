@@ -16,6 +16,7 @@
 import {Component, EventEmitter, Input, Output} from '@angular/core';
 import {UrlUtils} from 'common/url_utils';
 import {ConnectionState} from 'trace_collection/connection_state';
+import {ProxyConnection} from 'trace_collection/proxy_connection';
 
 @Component({
   selector: 'adb-proxy',
@@ -61,7 +62,7 @@ import {ConnectionState} from 'trace_collection/connection_state';
             <span class="adb-info">Your local proxy version is incompatible with Winscope.</span>
           </p>
           <p class="mat-body-1">
-            Please update the proxy to version {{ clientVersion }}. Run this command:
+            Please update the proxy to version {{ proxyVersion }}. Run this command:
           </p>
           <mat-form-field class="proxy-command-container" appearance="outline">
             <input matInput readonly [value]="proxyCommand" />
@@ -152,7 +153,6 @@ import {ConnectionState} from 'trace_collection/connection_state';
   ],
 })
 export class AdbProxyComponent {
-  @Input() version: string | undefined;
   @Input() state: ConnectionState | undefined;
   @Output() readonly retryConnection = new EventEmitter<string>();
 
@@ -160,6 +160,7 @@ export class AdbProxyComponent {
     UrlUtils.getRootUrl() + 'winscope_proxy.py';
   readonly proxyCommand: string =
     'python3 $ANDROID_BUILD_TOP/development/tools/winscope/src/adb/winscope_proxy.py';
+  readonly proxyVersion = ProxyConnection.VERSION;
   proxyToken = '';
 
   onRetryButtonClick() {

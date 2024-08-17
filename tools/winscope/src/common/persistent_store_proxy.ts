@@ -39,6 +39,7 @@ function wrapWithPersistentStoreProxy(
     if (
       typeof value === 'string' ||
       typeof value === 'boolean' ||
+      typeof value === 'number' ||
       value === undefined
     ) {
       if (!Array.isArray(object)) {
@@ -53,7 +54,6 @@ function wrapWithPersistentStoreProxy(
       );
     }
   }
-
   const proxyObj = new Proxy(object, {
     set: (target, prop, newValue) => {
       if (typeof prop === 'symbol') {
