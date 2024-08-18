@@ -342,6 +342,22 @@ describe('RectsComponent', () => {
     await checkSelectedDisplay([1]);
   });
 
+  it('handles change from zero to one display', async () => {
+    component.displays = [];
+    component.rects = [];
+    await checkSelectedDisplay([]);
+    const placeholder = assertDefined(
+      htmlElement.querySelector('.placeholder-text'),
+    );
+    expect(placeholder.textContent?.trim()).toEqual('No rects found.');
+
+    component.rects = [rectGroup0];
+    component.displays = [
+      {displayId: 10, groupId: 0, name: 'Display 0', isActive: false},
+    ];
+    await checkSelectedDisplay([0]);
+  });
+
   it('draws mini rects with non-present group id', () => {
     component.displays = [
       {displayId: 10, groupId: 0, name: 'Display 0', isActive: false},
@@ -429,6 +445,7 @@ describe('RectsComponent', () => {
       expect(rect.id).toEqual(
         `test-id-${testIds ? testIds[index] : displayNumbers[index]}`,
       );
+      if (index > 0) expect(rect.transform.ty).toBeGreaterThan(0);
     });
   }
 

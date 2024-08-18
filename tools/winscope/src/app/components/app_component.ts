@@ -40,6 +40,7 @@ import {UrlUtils} from 'common/url_utils';
 import {UserNotifier} from 'common/user_notifier';
 import {CrossToolProtocol} from 'cross_tool/cross_tool_protocol';
 import {Analytics} from 'logging/analytics';
+import {ProgressListener} from 'messaging/progress_listener';
 import {
   AppFilesCollected,
   AppFilesUploaded,
@@ -53,6 +54,7 @@ import {
 } from 'messaging/winscope_event';
 import {WinscopeEventListener} from 'messaging/winscope_event_listener';
 import {AdbConnection} from 'trace_collection/adb_connection';
+import {AdbFiles} from 'trace_collection/adb_files';
 import {ProxyConnection} from 'trace_collection/proxy_connection';
 import {iconDividerStyle} from 'viewers/components/styles/icon_divider.styles';
 import {ViewerInputMethodComponent} from 'viewers/components/viewer_input_method_component';
@@ -83,55 +85,62 @@ import {UploadTracesComponent} from './upload_traces_component';
       </div>
 
       <div class="horizontal-align vertical-align">
-        <div *ngIf="showDataLoadedElements" class="file-descriptor vertical-align">
-          <button
-            mat-icon-button
-            *ngIf="showCrossToolSyncButton()"
-            [matTooltip]="getCrossToolSyncTooltip()"
-            class="cross-tool-sync-button"
-            (click)="onCrossToolSyncButtonClick()"
-            [color]="getCrossToolSyncButtonColor()">
-            <mat-icon class="material-symbols-outlined">cloud_sync</mat-icon>
-          </button>
-          <span *ngIf="!isEditingFilename" class="download-file-info mat-body-2">
-            {{ filenameFormControl.value }}
-          </span>
-          <span *ngIf="!isEditingFilename" class="download-file-ext mat-body-2">.zip</span>
-          <mat-form-field
-            class="file-name-input-field"
-            *ngIf="isEditingFilename"
-            floatLabel="always"
-            (keydown.enter)="onCheckIconClick()"
-            (focusout)="onCheckIconClick()"
-            matTooltip="Allowed: A-Z a-z 0-9 . _ - #">
-            <mat-label>Edit file name</mat-label>
-            <input matInput class="right-align" [formControl]="filenameFormControl" />
-            <span matSuffix>.zip</span>
-          </mat-form-field>
-          <button
-            *ngIf="isEditingFilename"
-            mat-icon-button
-            class="check-button"
-            matTooltip="Submit file name"
-            (click)="onCheckIconClick()">
-            <mat-icon>check</mat-icon>
-          </button>
-          <button
-            *ngIf="!isEditingFilename"
-            mat-icon-button
-            class="edit-button"
-            matTooltip="Edit file name"
-            (click)="onPencilIconClick()">
-            <mat-icon>edit</mat-icon>
-          </button>
-          <button
-            mat-icon-button
-            [disabled]="isEditingFilename"
-            matTooltip="Download all traces"
-            class="save-button"
-            (click)="onDownloadTracesButtonClick()">
-            <mat-icon class="material-symbols-outlined">download</mat-icon>
-          </button>
+        <div *ngIf="showDataLoadedElements" class="download-files-section">
+          <div class="file-descriptor vertical-align">
+            <button
+              mat-icon-button
+              *ngIf="showCrossToolSyncButton()"
+              [matTooltip]="getCrossToolSyncTooltip()"
+              class="cross-tool-sync-button"
+              (click)="onCrossToolSyncButtonClick()"
+              [color]="getCrossToolSyncButtonColor()">
+              <mat-icon class="material-symbols-outlined">cloud_sync</mat-icon>
+            </button>
+            <span *ngIf="!isEditingFilename" class="download-file-info mat-body-2">
+              {{ filenameFormControl.value }}
+            </span>
+            <span *ngIf="!isEditingFilename" class="download-file-ext mat-body-2">.zip</span>
+            <mat-form-field
+              class="file-name-input-field"
+              *ngIf="isEditingFilename"
+              floatLabel="always"
+              (keydown.enter)="onCheckIconClick()"
+              (focusout)="onCheckIconClick()"
+              matTooltip="Allowed: A-Z a-z 0-9 . _ - #">
+              <mat-label>Edit file name</mat-label>
+              <input matInput class="right-align" [formControl]="filenameFormControl" />
+              <span matSuffix>.zip</span>
+            </mat-form-field>
+            <button
+              *ngIf="isEditingFilename"
+              mat-icon-button
+              class="check-button"
+              matTooltip="Submit file name"
+              (click)="onCheckIconClick()">
+              <mat-icon>check</mat-icon>
+            </button>
+            <button
+              *ngIf="!isEditingFilename"
+              mat-icon-button
+              class="edit-button"
+              matTooltip="Edit file name"
+              (click)="onPencilIconClick()">
+              <mat-icon>edit</mat-icon>
+            </button>
+            <button
+              mat-icon-button
+              [disabled]="isEditingFilename"
+              matTooltip="Download all traces"
+              class="save-button"
+              (click)="onDownloadTracesButtonClick()">
+              <mat-icon class="material-symbols-outlined">download</mat-icon>
+            </button>
+          </div>
+          <mat-progress-bar
+            *ngIf="downloadProgress !== undefined"
+            mode="determinate"
+            [value]="downloadProgress">
+          </mat-progress-bar>
         </div>
 
         <div *ngIf="showDataLoadedElements" class="icon-divider toolbar-icon-divider"></div>
@@ -225,11 +234,12 @@ import {UploadTracesComponent} from './upload_traces_component';
               (filesCollected)="onFilesCollected($event)"></collect-traces>
 
             <upload-traces
+              #uploadTraces
               class="upload-traces-card homepage-card"
               [tracePipeline]="tracePipeline"
               (filesUploaded)="onFilesUploaded($event)"
               (viewTracesButtonClick)="onViewTracesButtonClick()"
-              (downloadTracesClick)="onDownloadTracesButtonClick()"></upload-traces>
+              (downloadTracesClick)="onDownloadTracesButtonClick(uploadTraces)"></upload-traces>
           </div>
         </div>
       </div>
@@ -267,6 +277,9 @@ import {UploadTracesComponent} from './upload_traces_component';
       }
       .fixed {
         min-width: fit-content;
+      }
+      .download-files-section {
+        overflow-x: hidden;
       }
       .file-descriptor {
         font-size: 14px;
@@ -348,6 +361,7 @@ export class AppComponent implements WinscopeEventListener {
   );
   adbConnection: AdbConnection = new ProxyConnection();
   traceConfigStorage: Storage;
+  downloadProgress: number | undefined;
 
   @ViewChild(UploadTracesComponent)
   uploadTracesComponent?: UploadTracesComponent;
@@ -498,14 +512,26 @@ export class AppComponent implements WinscopeEventListener {
     this.pageTitle.setTitle(`Winscope | ${this.filenameFormControl.value}`);
   }
 
-  async onDownloadTracesButtonClick() {
+  async onDownloadTracesButtonClick(progressListener: ProgressListener = this) {
     if (this.filenameFormControl.invalid) {
       return;
     }
-    await this.downloadTraces();
+    const archiveBlob =
+      await this.tracePipeline.makeZipArchiveWithLoadedTraceFiles(
+        (perc: number) => {
+          progressListener.onProgressUpdate('Downloading', 90 * perc);
+        },
+      );
+    const archiveFilename = `${
+      this.showDataLoadedElements
+        ? this.filenameFormControl.value
+        : this.tracePipeline.getDownloadArchiveFilename()
+    }.zip`;
+    await this.downloadTraces(archiveBlob, archiveFilename);
+    progressListener.onOperationFinished(true);
   }
 
-  async onFilesCollected(files: File[]) {
+  async onFilesCollected(files: AdbFiles) {
     await this.mediator.onWinscopeEvent(new AppFilesCollected(files));
   }
 
@@ -527,16 +553,24 @@ export class AppComponent implements WinscopeEventListener {
     await this.mediator.onWinscopeEvent(new AppTraceViewRequest());
   }
 
-  async downloadTraces() {
-    const archiveBlob =
-      await this.tracePipeline.makeZipArchiveWithLoadedTraceFiles();
-    const archiveFilename = `${this.filenameFormControl.value}.zip`;
+  onProgressUpdate(message: string, progressPercentage: number | undefined) {
+    this.ngZone.run(() => {
+      this.downloadProgress = progressPercentage;
+    });
+  }
 
+  onOperationFinished(success: boolean) {
+    this.ngZone.run(() => {
+      this.downloadProgress = undefined;
+    });
+  }
+
+  async downloadTraces(blob: Blob, filename: string) {
     const a = document.createElement('a');
     document.body.appendChild(a);
-    const url = window.URL.createObjectURL(archiveBlob);
+    const url = window.URL.createObjectURL(blob);
     a.href = url;
-    a.download = archiveFilename;
+    a.download = filename;
     a.click();
     window.URL.revokeObjectURL(url);
     document.body.removeChild(a);
