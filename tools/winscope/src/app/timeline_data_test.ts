@@ -16,11 +16,13 @@
 
 import {assertDefined} from 'common/assert_utils';
 import {TimeRange} from 'common/time';
+import {CannotParseAllTransitions} from 'messaging/user_warnings';
 import {ParserBuilder} from 'test/unit/parser_builder';
 import {PropertyTreeBuilder} from 'test/unit/property_tree_builder';
 import {TimestampConverterUtils} from 'test/unit/timestamp_converter_utils';
 import {TracesBuilder} from 'test/unit/traces_builder';
 import {TraceBuilder} from 'test/unit/trace_builder';
+import {UserNotifierChecker} from 'test/unit/user_notifier_checker';
 import {Traces} from 'trace/traces';
 import {TracePosition} from 'trace/trace_position';
 import {TraceType} from 'trace/trace_type';
@@ -374,7 +376,9 @@ describe('TimelineData', () => {
     expect(timelineData.getCurrentPosition()?.timestamp).toBe(timestamp11);
   });
 
-  it('updates corrupted state of transition trace', async () => {
+  it('handles partially corrupted transitions trace', async () => {
+    const userNotifierChecker = new UserNotifierChecker();
+
     const traces = new Traces();
     const trace = new TraceBuilder<PropertyTreeNode>()
       .setType(TraceType.TRANSITION)
@@ -393,25 +397,12 @@ describe('TimelineData', () => {
       .build();
     traces.addTrace(trace);
 
-    expectAsync(
-      timelineData.initialize(
-        traces,
-        undefined,
-        TimestampConverterUtils.TIMESTAMP_CONVERTER,
-      ),
-    ).toBeRejected();
-
-    try {
-      await timelineData.initialize(
-        traces,
-        undefined,
-        TimestampConverterUtils.TIMESTAMP_CONVERTER,
-      );
-    } catch {
-      expect(trace.isCorrupted()).toBeTrue();
-      expect(trace.getCorruptedReason()).toEqual(
-        'Cannot parse all transitions.',
-      );
-    }
+    await timelineData.initialize(
+      traces,
+      undefined,
+      TimestampConverterUtils.TIMESTAMP_CONVERTER,
+    );
+    userNotifierChecker.expectNotified([new CannotParseAllTransitions()]);
+    expect(timelineData.getTransitionEntries()).toEqual([undefined]);
   });
 });

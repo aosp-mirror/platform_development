@@ -132,7 +132,12 @@ export class Presenter extends AbstractLogViewerPresenter<UiData> {
       ++traceIndex
     ) {
       const entry = assertDefined(this.trace.getEntry(traceIndex));
-      const transitionNode = await entry.getValue();
+      let transitionNode: PropertyTreeNode;
+      try {
+        transitionNode = await entry.getValue();
+      } catch (e) {
+        continue;
+      }
       const wmDataNode = assertDefined(transitionNode.getChildByName('wmData'));
       const shellDataNode = assertDefined(
         transitionNode.getChildByName('shellData'),

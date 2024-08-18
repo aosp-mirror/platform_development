@@ -19,6 +19,7 @@ import {InMemoryStorage} from 'common/in_memory_storage';
 import {TracePositionUpdate} from 'messaging/winscope_event';
 import {TraceBuilder} from 'test/unit/trace_builder';
 import {TreeNodeUtils} from 'test/unit/tree_node_utils';
+import {UserNotifierChecker} from 'test/unit/user_notifier_checker';
 import {UnitTestUtils} from 'test/unit/utils';
 import {Traces} from 'trace/traces';
 import {ImeTraceType, TraceType} from 'trace/trace_type';
@@ -194,14 +195,21 @@ export abstract class AbstractPresenterInputMethodTest extends AbstractHierarchy
         | typeof PresenterInputMethodService
         | typeof PresenterInputMethodManagerService;
       let imeTraceType: ImeTraceType;
+      let userNotifierChecker: UserNotifierChecker;
 
       beforeAll(async () => {
         jasmine.addCustomEqualityTester(TreeNodeUtils.treeNodeEqualityTester);
+        userNotifierChecker = new UserNotifierChecker();
         Presenter = this.PresenterInputMethod;
         imeTraceType = this.imeTraceType;
         await this.setUpTestEnvironment();
         entries = assertDefined(this.entries);
         await loadTraces();
+      });
+
+      afterEach(() => {
+        userNotifierChecker.expectNone();
+        userNotifierChecker.reset();
       });
 
       it('is robust to traces without SF', async () => {
