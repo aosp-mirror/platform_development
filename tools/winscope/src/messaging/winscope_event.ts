@@ -18,6 +18,7 @@ import {assertTrue} from 'common/assert_utils';
 import {Timestamp} from 'common/time';
 import {Trace, TraceEntry} from 'trace/trace';
 import {TracePosition} from 'trace/trace_position';
+import {AdbFiles} from 'trace_collection/adb_files';
 import {View, Viewer, ViewType} from 'viewers/viewer';
 
 export enum WinscopeEventType {
@@ -83,7 +84,7 @@ export class AppInitialized extends WinscopeEvent {
 export class AppFilesCollected extends WinscopeEvent {
   override readonly type = WinscopeEventType.APP_FILES_COLLECTED;
 
-  constructor(readonly files: File[]) {
+  constructor(readonly files: AdbFiles) {
     super();
   }
 }

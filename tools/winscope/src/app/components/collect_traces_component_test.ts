@@ -38,6 +38,7 @@ import {ProxyTracingErrors} from 'messaging/user_warnings';
 import {NoTraceTargetsSelected, WinscopeEvent} from 'messaging/winscope_event';
 import {MockAdbConnection} from 'test/unit/mock_adb_connection';
 import {UserNotifierChecker} from 'test/unit/user_notifier_checker';
+import {TraceType} from 'trace/trace_type';
 import {AdbConnection} from 'trace_collection/adb_connection';
 import {AdbDevice} from 'trace_collection/adb_device';
 import {ConnectionState} from 'trace_collection/connection_state';
@@ -336,7 +337,14 @@ describe('CollectTracesComponent', () => {
     const filesSpy = spyOn(getCollectTracesComponent().filesCollected, 'emit');
     await clickDumpStateButton();
 
-    expect(filesSpy).toHaveBeenCalled();
+    expect(filesSpy).toHaveBeenCalledOnceWith({
+      requested: [
+        {name: 'Window Manager', types: [TraceType.WINDOW_MANAGER]},
+        {name: 'Surface Flinger', types: [TraceType.SURFACE_FLINGER]},
+        {name: 'Screenshot', types: [TraceType.SCREENSHOT]},
+      ],
+      collected: getConnection().files,
+    });
   });
 
   it('emits event if no dump targets selected', async () => {
@@ -400,7 +408,10 @@ describe('CollectTracesComponent', () => {
     fixture.detectChanges();
     await fixture.whenStable();
 
-    expect(emitSpy).toHaveBeenCalledTimes(1);
+    expect(emitSpy).toHaveBeenCalledOnceWith({
+      requested: [],
+      collected: [],
+    });
     expect(restartSpy).toHaveBeenCalledTimes(1);
   });
 
@@ -420,7 +431,10 @@ describe('CollectTracesComponent', () => {
     fixture.detectChanges();
     await fixture.whenStable();
 
-    expect(emitSpy).toHaveBeenCalledWith([testFile]);
+    expect(emitSpy).toHaveBeenCalledWith({
+      requested: [],
+      collected: [testFile],
+    });
     expect(restartSpy).not.toHaveBeenCalled();
   });
 
@@ -682,7 +696,10 @@ describe('CollectTracesComponent', () => {
     connection.setState(ConnectionState.TRACE_TIMEOUT);
 
     await fixture.whenStable();
-    expect(emitSpy).toHaveBeenCalled();
+    expect(emitSpy).toHaveBeenCalledOnceWith({
+      requested: [],
+      collected: connection.files,
+    });
     userNotifierChecker.expectNotified([
       new ProxyTracingErrors(['tracing timed out']),
     ]);

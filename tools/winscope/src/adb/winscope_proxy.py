@@ -25,6 +25,7 @@
 
 import argparse
 import base64
+import gzip
 import json
 import logging
 import os
@@ -62,7 +63,7 @@ def create_argument_parser() -> argparse.ArgumentParser:
     return parser
 
 # Keep in sync with ProxyConnection#VERSION in Winscope
-VERSION = '2.6.0'
+VERSION = '3.0.0'
 
 PERFETTO_TRACE_CONFIG_FILE = '/data/misc/perfetto-configs/winscope-proxy-trace.conf'
 PERFETTO_DUMP_CONFIG_FILE = '/data/misc/perfetto-configs/winscope-proxy-dump.conf'
@@ -341,7 +342,7 @@ echo 'Transition traces (legacy) stopped.'
         f"""
 cat << EOF >> {PERFETTO_TRACE_CONFIG_FILE}
 buffers: {{
-    size_kb: 80000
+    size_kb: 500000
     fill_policy: RING_BUFFER
 }}
 duration_ms: 0
@@ -768,7 +769,7 @@ fi
 if is_any_perfetto_data_source_available; then
     cat << EOF >> {PERFETTO_DUMP_CONFIG_FILE}
 buffers: {{
-    size_kb: 50000
+    size_kb: 500000
     fill_policy: RING_BUFFER
 }}
 duration_ms: 1
@@ -999,8 +1000,6 @@ class FetchFilesEndpoint(DeviceRequestEndpoint):
     def process_with_device(self, server, path, device_id):
         file_buffers = self.fetch_existing_files(device_id)
 
-        # server.send_header('X-Content-Type-Options', 'nosniff')
-        # add_standard_headers(server)
         j = json.dumps(file_buffers)
         server.respond(HTTPStatus.OK, j.encode("utf-8"), "text/json")
 
@@ -1011,7 +1010,7 @@ class FetchFilesEndpoint(DeviceRequestEndpoint):
             file_paths = file.get_filepaths(device_id)
             for file_path in file_paths:
                 with NamedTemporaryFile() as tmp:
-                    file_type = file_path.split('/')[-1]
+                    file_name = file_path.split('/')[-1] + ".gz"
                     log.debug(
                         f"Fetching file {file_path} from device to {tmp.name}")
                     try:
@@ -1021,10 +1020,10 @@ class FetchFilesEndpoint(DeviceRequestEndpoint):
                         log.warning(f"Unable to fetch file {file_path} - {repr(ex)}")
                         return
                     log.debug(f"Uploading file {tmp.name}")
-                    if file_type not in file_buffers:
-                        file_buffers[file_type] = []
-                    buf = base64.encodebytes(tmp.read()).decode("utf-8")
-                    file_buffers[file_type].append(buf)
+                    if file_name not in file_buffers:
+                        file_buffers[file_name] = []
+                    buf = base64.encodebytes(gzip.compress(tmp.read())).decode("utf-8")
+                    file_buffers[file_name].append(buf)
         except:
             self.log_no_files_warning()
         return file_buffers

@@ -125,7 +125,7 @@ describe('TransitionTimelineComponent', () => {
         TimestampConverterUtils.makeRealTimestamp(60n),
       ])
       .build();
-    component.traceEntries = transitions;
+    component.transitionEntries = transitions;
     component.selectionRange = new TimeRange(time10, time110);
 
     const drawRectSpy = spyOn(component.canvasDrawer, 'drawRect');
@@ -200,7 +200,7 @@ describe('TransitionTimelineComponent', () => {
       .setEntries(transitions)
       .setTimestamps([time10, time60])
       .build();
-    component.traceEntries = transitions;
+    component.transitionEntries = transitions;
     component.selectionRange = new TimeRange(time10, time110);
 
     const drawRectSpy = spyOn(component.canvasDrawer, 'drawRect');
@@ -351,7 +351,7 @@ describe('TransitionTimelineComponent', () => {
       .setEntries(transitions)
       .setTimestamps([time10, time60])
       .build();
-    component.traceEntries = transitions;
+    component.transitionEntries = transitions;
     component.selectionRange = new TimeRange(time10, time110);
 
     const drawRectSpy = spyOn(component.canvasDrawer, 'drawRect');
@@ -428,7 +428,7 @@ describe('TransitionTimelineComponent', () => {
       .setEntries(transitions)
       .setTimestamps([time10, time35])
       .build();
-    component.traceEntries = transitions;
+    component.transitionEntries = transitions;
     component.selectionRange = new TimeRange(time10, time110);
 
     const drawRectSpy = spyOn(component.canvasDrawer, 'drawRect');
@@ -492,7 +492,7 @@ describe('TransitionTimelineComponent', () => {
       .setEntries(transitions)
       .setTimestamps([time35])
       .build();
-    component.traceEntries = transitions;
+    component.transitionEntries = transitions;
     component.selectionRange = new TimeRange(time10, time110);
 
     const drawRectSpy = spyOn(component.canvasDrawer, 'drawRect');
@@ -544,7 +544,7 @@ describe('TransitionTimelineComponent', () => {
       .setEntries(transitions)
       .setTimestamps([time85])
       .build();
-    component.traceEntries = transitions;
+    component.transitionEntries = transitions;
     component.selectionRange = new TimeRange(time10, time110);
 
     const drawRectSpy = spyOn(component.canvasDrawer, 'drawRect');
@@ -591,7 +591,7 @@ describe('TransitionTimelineComponent', () => {
       .setEntries(transitions)
       .setTimestamps([time35])
       .build();
-    component.traceEntries = transitions;
+    component.transitionEntries = transitions;
     component.selectionRange = new TimeRange(time10, time110);
 
     const drawRectSpy = spyOn(component.canvasDrawer, 'drawRect');
@@ -642,7 +642,7 @@ describe('TransitionTimelineComponent', () => {
       .setEntries(transitions)
       .setTimestamps([time10])
       .build();
-    component.traceEntries = transitions;
+    component.transitionEntries = transitions;
     component.selectionRange = new TimeRange(time10, time110);
     const drawRectSpy = spyOn(component.canvasDrawer, 'drawRect');
 
@@ -650,6 +650,55 @@ describe('TransitionTimelineComponent', () => {
     await fixture.whenRenderingDone();
 
     expect(drawRectSpy).not.toHaveBeenCalled();
+  });
+
+  it('handles missing trace entries', async () => {
+    const transition0 = new PropertyTreeBuilder()
+      .setIsRoot(true)
+      .setRootId('TransitionsTraceEntry')
+      .setName('transition')
+      .setChildren([
+        {
+          name: 'wmData',
+          children: [{name: 'finishTimeNs', value: time30}],
+        },
+        {
+          name: 'shellData',
+          children: [{name: 'dispatchTimeNs', value: time10}],
+        },
+        {name: 'aborted', value: false},
+      ])
+      .build();
+    const transition1 = new PropertyTreeBuilder()
+      .setIsRoot(true)
+      .setRootId('TransitionsTraceEntry')
+      .setName('transition')
+      .setChildren([
+        {
+          name: 'wmData',
+          children: [{name: 'finishTimeNs', value: time110}],
+        },
+        {
+          name: 'shellData',
+          children: [{name: 'dispatchTimeNs', value: time60}],
+        },
+        {name: 'aborted', value: false},
+      ])
+      .build();
+
+    component.trace = new TraceBuilder<PropertyTreeNode>()
+      .setType(TraceType.TRANSITION)
+      .setEntries([transition0, transition1])
+      .setTimestamps([time10, time20])
+      .build();
+    component.transitionEntries = [transition0];
+    component.selectionRange = new TimeRange(time10, time110);
+    const drawRectSpy = spyOn(component.canvasDrawer, 'drawRect');
+
+    fixture.detectChanges();
+    await fixture.whenRenderingDone();
+
+    expect(drawRectSpy).toHaveBeenCalledTimes(1);
   });
 
   it('emits scroll event', async () => {
@@ -710,7 +759,7 @@ describe('TransitionTimelineComponent', () => {
       .setEntries(transitions)
       .setTimestamps([time35])
       .build();
-    component.traceEntries = transitions;
+    component.transitionEntries = transitions;
     component.selectionRange = new TimeRange(
       TimestampConverterUtils.makeRealTimestamp(10n),
       TimestampConverterUtils.makeRealTimestamp(110n),
