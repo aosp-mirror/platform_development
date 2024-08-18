@@ -275,8 +275,9 @@ export class TreeComponent {
 
   showFullOpacity(node: UiPropertyTreeNode | UiHierarchyTreeNode) {
     if (node instanceof UiPropertyTreeNode) return true;
-    const showState = this.rectIdToShowState?.get(node.id);
-    return node === undefined || showState === RectShowState.SHOW;
+    if (this.rectIdToShowState === undefined) return true;
+    const showState = this.rectIdToShowState.get(node.id);
+    return showState === RectShowState.SHOW;
   }
 
   toggleRectShowState() {
