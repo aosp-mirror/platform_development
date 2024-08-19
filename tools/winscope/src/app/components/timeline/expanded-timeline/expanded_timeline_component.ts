@@ -55,6 +55,7 @@ import {TransitionTimelineComponent} from './transition_timeline_component';
             [transitionEntries]="timelineData.getTransitionEntries()"
             [selectedEntry]="timelineData.findCurrentEntryFor(trace)"
             [selectionRange]="timelineData.getSelectionTimeRange()"
+            [fullRange]="timelineData.getFullTimeRange()"
             [timestampConverter]="timelineData.getTimestampConverter()"
             [isActive]="isActiveTrace(trace)"
             (onTracePositionUpdate)="onTracePositionUpdate.emit($event)"
