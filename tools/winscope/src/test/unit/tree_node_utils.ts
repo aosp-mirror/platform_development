@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import {TransformType} from 'parsers/surface_flinger/transform_utils';
+import {TransformTypeFlags} from 'parsers/surface_flinger/transform_utils';
 import {HierarchyTreeNode} from 'trace/tree_node/hierarchy_tree_node';
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
 import {DEFAULT_PROPERTY_TREE_NODE_FACTORY} from 'trace/tree_node/property_tree_node_factory';
@@ -81,8 +81,8 @@ export class TreeNodeUtils {
   static makeMatrixNode(
     dsdx: number,
     dtdx: number,
-    dsdy: number,
     dtdy: number,
+    dsdy: number,
   ): PropertyTreeNode {
     return new PropertyTreeBuilder()
       .setRootId('test node')
@@ -90,13 +90,13 @@ export class TreeNodeUtils {
       .setChildren([
         {name: 'dsdx', value: dsdx},
         {name: 'dtdx', value: dtdx},
-        {name: 'dsdy', value: dsdy},
         {name: 'dtdy', value: dtdy},
+        {name: 'dsdy', value: dsdy},
       ])
       .build();
   }
 
-  static makeTransformNode(type: TransformType): PropertyTreeNode {
+  static makeTransformNode(type: TransformTypeFlags): PropertyTreeNode {
     return new PropertyTreeBuilder()
       .setRootId('test node')
       .setName('transform')
@@ -199,6 +199,26 @@ export class TreeNodeUtils {
     if ((node as DiffNode).getDiff && (expectedNode as DiffNode).getDiff) {
       if (
         (node as DiffNode).getDiff() !== (expectedNode as DiffNode).getDiff()
+      ) {
+        return false;
+      }
+    }
+
+    if (
+      node instanceof UiHierarchyTreeNode &&
+      expectedNode instanceof UiHierarchyTreeNode
+    ) {
+      if (node.heading() !== expectedNode.heading()) {
+        return false;
+      }
+      if (node.getDisplayName() !== expectedNode.getDisplayName()) {
+        return false;
+      }
+      if (
+        !(
+          node.getChips().length === 0 && expectedNode.getChips().length === 0
+        ) &&
+        node.getChips() !== expectedNode.getChips()
       ) {
         return false;
       }

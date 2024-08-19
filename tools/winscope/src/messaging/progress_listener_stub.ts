@@ -21,7 +21,7 @@ export class ProgressListenerStub implements ProgressListener {
     // do nothing
   }
 
-  onOperationFinished() {
+  onOperationFinished(success = true) {
     // do nothing
   }
 }

@@ -12,10 +12,21 @@
         {
           "name": "proc_macro2",
           "lib_name": "proc_macro2",
+          "raw_name": "proc-macro2",
           "extern_type": "Rust"
         },
-        { "name": "quote", "lib_name": "quote", "extern_type": "Rust" },
-        { "name": "syn", "lib_name": "syn", "extern_type": "Rust" }
+        {
+          "name": "quote",
+          "lib_name": "quote",
+          "raw_name": "quote",
+          "extern_type": "Rust"
+        },
+        {
+          "name": "syn",
+          "lib_name": "syn",
+          "raw_name": "syn",
+          "extern_type": "Rust"
+        }
       ],
       "codegens": [],
       "cap_lints": "",
@@ -24,6 +35,8 @@
       "edition": "2021",
       "package_dir": "/usr/local/google/home/qwandor/aosp/external/rust/crates/async-trait",
       "main_src": "src/lib.rs",
+      "license": "MIT OR Apache-2.0",
+      "license_file": null,
       "empty_test": false
     }
   ]

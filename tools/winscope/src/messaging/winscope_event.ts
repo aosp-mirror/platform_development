@@ -18,6 +18,7 @@ import {assertTrue} from 'common/assert_utils';
 import {Timestamp} from 'common/time';
 import {Trace, TraceEntry} from 'trace/trace';
 import {TracePosition} from 'trace/trace_position';
+import {AdbFiles} from 'trace_collection/adb_files';
 import {View, Viewer, ViewType} from 'viewers/viewer';
 
 export enum WinscopeEventType {
@@ -38,6 +39,7 @@ export enum WinscopeEventType {
   EXPANDED_TIMELINE_TOGGLED,
   ACTIVE_TRACE_CHANGED,
   DARK_MODE_TOGGLED,
+  NO_TRACE_TARGETS_SELECTED,
 }
 
 interface TypeMap {
@@ -58,6 +60,7 @@ interface TypeMap {
   [WinscopeEventType.EXPANDED_TIMELINE_TOGGLED]: ExpandedTimelineToggled;
   [WinscopeEventType.ACTIVE_TRACE_CHANGED]: ActiveTraceChanged;
   [WinscopeEventType.DARK_MODE_TOGGLED]: DarkModeToggled;
+  [WinscopeEventType.NO_TRACE_TARGETS_SELECTED]: NoTraceTargetsSelected;
 }
 
 export abstract class WinscopeEvent {
@@ -81,7 +84,7 @@ export class AppInitialized extends WinscopeEvent {
 export class AppFilesCollected extends WinscopeEvent {
   override readonly type = WinscopeEventType.APP_FILES_COLLECTED;
 
-  constructor(readonly files: File[]) {
+  constructor(readonly files: AdbFiles) {
     super();
   }
 }
@@ -171,7 +174,7 @@ export class TracePositionUpdate extends WinscopeEvent {
   }
 
   static fromTraceEntry(
-    entry: TraceEntry<object>,
+    entry: TraceEntry<any>,
     updateTimeline = false,
   ): TracePositionUpdate {
     const position = TracePosition.fromTraceEntry(entry);
@@ -210,4 +213,8 @@ export class DarkModeToggled extends WinscopeEvent {
   constructor(readonly isDarkMode: boolean) {
     super();
   }
+}
+
+export class NoTraceTargetsSelected extends WinscopeEvent {
+  override readonly type = WinscopeEventType.NO_TRACE_TARGETS_SELECTED;
 }

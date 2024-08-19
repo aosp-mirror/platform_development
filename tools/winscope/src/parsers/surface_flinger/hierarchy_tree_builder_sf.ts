@@ -15,10 +15,15 @@
  */
 
 import {assertDefined} from 'common/assert_utils';
+import {UserNotifier} from 'common/user_notifier';
+import {DuplicateLayerId} from 'messaging/user_warnings';
 import {HierarchyTreeBuilder} from 'parsers/hierarchy_tree_builder';
 import {HierarchyTreeNode} from 'trace/tree_node/hierarchy_tree_node';
 import {PropertiesProvider} from 'trace/tree_node/properties_provider';
-import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
+import {
+  PropertySource,
+  PropertyTreeNode,
+} from 'trace/tree_node/property_tree_node';
 import {DEFAULT_PROPERTY_TREE_NODE_FACTORY} from 'trace/tree_node/property_tree_node_factory';
 
 export class HierarchyTreeBuilderSf extends HierarchyTreeBuilder {
@@ -39,9 +44,7 @@ export class HierarchyTreeBuilderSf extends HierarchyTreeBuilder {
       const curr = map.get(layerId);
       if (curr) {
         curr.push(layerNode);
-        console.warn(
-          `Duplicate layer id ${layerId} found. Adding it as duplicate to the hierarchy`,
-        );
+        UserNotifier.add(new DuplicateLayerId(layerId.toString()));
         layer.addEagerProperty(
           DEFAULT_PROPERTY_TREE_NODE_FACTORY.makeCalculatedProperty(
             layerProperties.id,
@@ -67,9 +70,10 @@ export class HierarchyTreeBuilderSf extends HierarchyTreeBuilder {
         const parentIdNode = assertDefined(
           child.getEagerPropertyByName('parent'),
         );
+        const isDefault = parentIdNode.source === PropertySource.DEFAULT;
         const parentId = this.getIdentifierValue(parentIdNode);
         const parent = identifierToChildren.get(parentId)?.at(0);
-        if (parent) {
+        if (!isDefault && parent) {
           this.setParentChildRelationship(parent, child);
         } else {
           this.setParentChildRelationship(root, child);

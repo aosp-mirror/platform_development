@@ -18,6 +18,7 @@ import {WinscopeEvent} from 'messaging/winscope_event';
 import {EmitEvent} from 'messaging/winscope_event_emitter';
 import {Trace} from 'trace/trace';
 import {Traces} from 'trace/traces';
+import {TRACE_INFO} from 'trace/trace_info';
 import {TraceType} from 'trace/trace_type';
 import {HierarchyTreeNode} from 'trace/tree_node/hierarchy_tree_node';
 import {ViewerEvents} from 'viewers/common/viewer_events';
@@ -29,7 +30,6 @@ export class ViewerSurfaceFlinger implements Viewer {
   static readonly DEPENDENCIES: TraceType[] = [TraceType.SURFACE_FLINGER];
 
   private readonly trace: Trace<HierarchyTreeNode>;
-  private readonly traces: Traces;
   private readonly htmlElement: HTMLElement;
   private readonly presenter: Presenter;
   private readonly view: View;
@@ -40,69 +40,14 @@ export class ViewerSurfaceFlinger implements Viewer {
     storage: Storage,
   ) {
     this.trace = trace;
-    this.traces = traces;
     this.htmlElement = document.createElement('viewer-surface-flinger');
 
-    this.presenter = new Presenter(trace, traces, storage, (uiData: UiData) => {
+    const notifyViewCallback = (uiData: UiData) => {
       (this.htmlElement as any).inputData = uiData;
-    });
+    };
+    this.presenter = new Presenter(trace, traces, storage, notifyViewCallback);
+    this.presenter.addEventListeners(this.htmlElement);
 
-    this.htmlElement.addEventListener(
-      ViewerEvents.HierarchyPinnedChange,
-      (event) =>
-        this.presenter.onPinnedItemChange(
-          (event as CustomEvent).detail.pinnedItem,
-        ),
-    );
-    this.htmlElement.addEventListener(
-      ViewerEvents.HighlightedIdChange,
-      async (event) =>
-        await this.presenter.onHighlightedIdChange(
-          (event as CustomEvent).detail.id,
-        ),
-    );
-    this.htmlElement.addEventListener(
-      ViewerEvents.HighlightedPropertyChange,
-      (event) =>
-        this.presenter.onHighlightedPropertyChange(
-          (event as CustomEvent).detail.id,
-        ),
-    );
-    this.htmlElement.addEventListener(
-      ViewerEvents.HierarchyUserOptionsChange,
-      async (event) =>
-        await this.presenter.onHierarchyUserOptionsChange(
-          (event as CustomEvent).detail.userOptions,
-        ),
-    );
-    this.htmlElement.addEventListener(
-      ViewerEvents.HierarchyFilterChange,
-      async (event) =>
-        await this.presenter.onHierarchyFilterChange(
-          (event as CustomEvent).detail.filterString,
-        ),
-    );
-    this.htmlElement.addEventListener(
-      ViewerEvents.PropertiesUserOptionsChange,
-      async (event) =>
-        await this.presenter.onPropertiesUserOptionsChange(
-          (event as CustomEvent).detail.userOptions,
-        ),
-    );
-    this.htmlElement.addEventListener(
-      ViewerEvents.PropertiesFilterChange,
-      async (event) =>
-        await this.presenter.onPropertiesFilterChange(
-          (event as CustomEvent).detail.filterString,
-        ),
-    );
-    this.htmlElement.addEventListener(
-      ViewerEvents.HighlightedNodeChange,
-      async (event) =>
-        await this.presenter.onHighlightedNodeChange(
-          (event as CustomEvent).detail.node,
-        ),
-    );
     this.htmlElement.addEventListener(
       ViewerEvents.RectsDblClick,
       async (event) => {
@@ -110,29 +55,12 @@ export class ViewerSurfaceFlinger implements Viewer {
         await this.presenter.onRectDoubleClick(rectId);
       },
     );
-    this.htmlElement.addEventListener(
-      ViewerEvents.RectShowStateChange,
-      async (event) => {
-        await this.presenter.onRectShowStateChange(
-          (event as CustomEvent).detail.rectId,
-          (event as CustomEvent).detail.state,
-        );
-      },
-    );
-    this.htmlElement.addEventListener(
-      ViewerEvents.RectsUserOptionsChange,
-      (event) => {
-        this.presenter.onRectsUserOptionsChange(
-          (event as CustomEvent).detail.userOptions,
-        );
-      },
-    );
 
     this.view = new View(
       ViewType.TAB,
       this.getTraces(),
       this.htmlElement,
-      'Surface Flinger',
+      TRACE_INFO[TraceType.SURFACE_FLINGER].name,
     );
   }
 

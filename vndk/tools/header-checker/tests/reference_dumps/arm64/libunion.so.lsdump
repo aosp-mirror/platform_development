@@ -65,6 +65,9 @@
     },
     {
      "referenced_type" : "_ZTI18ChangeTypeInStruct"
+    },
+    {
+     "referenced_type" : "_ZTI20ReorderAnonymousType"
     }
    ],
    "return_type" : "_ZTIv",
@@ -135,6 +138,24 @@
    [
     {
      "field_name" : "member_1",
+     "referenced_type" : "_ZTIN20ReorderAnonymousTypeUt_E"
+    },
+    {
+     "referenced_type" : "_ZTIN20ReorderAnonymousTypeUt0_E"
+    }
+   ],
+   "linker_set_key" : "_ZTI20ReorderAnonymousType",
+   "name" : "ReorderAnonymousType",
+   "record_kind" : "union",
+   "size" : 4,
+   "source_file" : "development/vndk/tools/header-checker/tests/integration/union/include/base.h"
+  },
+  {
+   "alignment" : 4,
+   "fields" :
+   [
+    {
+     "field_name" : "member_1",
      "referenced_type" : "_ZTIi"
     },
     {
@@ -164,6 +185,36 @@
    "linker_set_key" : "_ZTI6Rename",
    "name" : "Rename",
    "record_kind" : "union",
+   "size" : 4,
+   "source_file" : "development/vndk/tools/header-checker/tests/integration/union/include/base.h"
+  },
+  {
+   "alignment" : 4,
+   "fields" :
+   [
+    {
+     "field_name" : "member_2",
+     "referenced_type" : "_ZTIi"
+    }
+   ],
+   "is_anonymous" : true,
+   "linker_set_key" : "_ZTIN20ReorderAnonymousTypeUt0_E",
+   "name" : "ReorderAnonymousType::(anonymous)",
+   "size" : 4,
+   "source_file" : "development/vndk/tools/header-checker/tests/integration/union/include/base.h"
+  },
+  {
+   "alignment" : 4,
+   "fields" :
+   [
+    {
+     "field_name" : "member_1",
+     "referenced_type" : "_ZTIi"
+    }
+   ],
+   "is_anonymous" : true,
+   "linker_set_key" : "_ZTIN20ReorderAnonymousTypeUt_E",
+   "name" : "ReorderAnonymousType::(unnamed)",
    "size" : 4,
    "source_file" : "development/vndk/tools/header-checker/tests/integration/union/include/base.h"
   }

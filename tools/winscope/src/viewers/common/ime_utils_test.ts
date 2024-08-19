@@ -14,13 +14,25 @@
  * limitations under the License.
  */
 import {assertDefined} from 'common/assert_utils';
+import {UserNotifierChecker} from 'test/unit/user_notifier_checker';
 import {UnitTestUtils} from 'test/unit/utils';
 import {TraceType} from 'trace/trace_type';
 import {ImeUtils} from './ime_utils';
 
 describe('ImeUtils', () => {
+  let userNotifierChecker: UserNotifierChecker;
+
+  beforeAll(() => {
+    userNotifierChecker = new UserNotifierChecker();
+  });
+
+  afterEach(() => {
+    userNotifierChecker.expectNone();
+    userNotifierChecker.reset();
+  });
+
   it('processes WindowManager trace entry', async () => {
-    const entries = await UnitTestUtils.getImeTraceEntries();
+    const entries = (await UnitTestUtils.getImeTraceEntries())[0];
     const processed = ImeUtils.processWindowManagerTraceEntry(
       assertDefined(entries.get(TraceType.WINDOW_MANAGER)),
       undefined,
@@ -86,7 +98,7 @@ describe('ImeUtils', () => {
   });
 
   it('processes SurfaceFlinger trace entry', async () => {
-    const entries = await UnitTestUtils.getImeTraceEntries();
+    const entries = (await UnitTestUtils.getImeTraceEntries())[0];
     const processedWindowManagerState = ImeUtils.processWindowManagerTraceEntry(
       assertDefined(entries.get(TraceType.WINDOW_MANAGER)),
       undefined,
@@ -128,7 +140,7 @@ describe('ImeUtils', () => {
 
     expect(
       assertDefined(layers.properties.focusedWindowColor).formattedValue(),
-    ).toEqual('(0, 0, 0, 1)');
+    ).toEqual('(0, 0, 0), alpha: 1');
 
     const taskLayerOfImeContainer = assertDefined(
       layers.taskLayerOfImeContainer,

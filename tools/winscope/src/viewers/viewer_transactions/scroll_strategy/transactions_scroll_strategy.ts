@@ -14,20 +14,26 @@
  * limitations under the License.
  */
 
+import {assertDefined} from 'common/assert_utils';
+import {LogFieldType} from 'viewers/common/ui_data_log';
 import {VariableHeightScrollStrategy} from 'viewers/common/variable_height_scroll_strategy';
-import {UiDataEntry} from 'viewers/viewer_transactions/ui_data';
+import {TransactionsEntry} from 'viewers/viewer_transactions/ui_data';
 
 export class TransactionsScrollStrategy extends VariableHeightScrollStrategy {
   protected readonly defaultRowSize = 24;
-  private readonly whatCharsPerRow = 40;
+  private readonly flagCharsPerRow = 40;
   private readonly timestampCharsPerRow = 20;
 
-  protected override predictScrollItemHeight(entry: UiDataEntry): number {
-    const whatHeight = this.subItemHeight(entry.what, this.whatCharsPerRow);
+  protected override predictScrollItemHeight(entry: TransactionsEntry): number {
+    const flagsHeight = this.subItemHeight(
+      assertDefined(entry.fields.find((f) => f.type === LogFieldType.FLAGS))
+        .value as string,
+      this.flagCharsPerRow,
+    );
     const timestampHeight = this.subItemHeight(
-      entry.time.formattedValue(),
+      entry.traceEntry.getTimestamp().format(),
       this.timestampCharsPerRow,
     );
-    return Math.max(whatHeight, timestampHeight);
+    return Math.max(flagsHeight, timestampHeight);
   }
 }

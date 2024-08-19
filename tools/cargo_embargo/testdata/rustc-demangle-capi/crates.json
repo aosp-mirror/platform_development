@@ -12,6 +12,7 @@
         {
           "name": "rustc_demangle",
           "lib_name": "rustc_demangle",
+          "raw_name": "rustc-demangle",
           "extern_type": "Rust"
         }
       ],
@@ -22,6 +23,8 @@
       "edition": "2015",
       "package_dir": "/usr/local/google/home/qwandor/aosp/external/rust/crates/rustc-demangle-capi",
       "main_src": "src/lib.rs",
+      "license": "MIT/Apache-2.0",
+      "license_file": null,
       "empty_test": false
     },
     {
@@ -36,6 +39,7 @@
         {
           "name": "rustc_demangle",
           "lib_name": "rustc_demangle",
+          "raw_name": "rustc-demangle",
           "extern_type": "Rust"
         }
       ],
@@ -46,6 +50,8 @@
       "edition": "2015",
       "package_dir": "/usr/local/google/home/qwandor/aosp/external/rust/crates/rustc-demangle-capi",
       "main_src": "src/lib.rs",
+      "license": "MIT/Apache-2.0",
+      "license_file": null,
       "empty_test": false
     }
   ]

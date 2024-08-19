@@ -120,8 +120,12 @@ export class MiniTimelineDrawerInput {
     transformer: Transformer,
     entry: TraceEntry<PropertyTreeNode>,
   ): Segment | undefined {
-    const transition: PropertyTreeNode =
-      this.timelineData.getTransitions()[entry.getIndex()];
+    const transition: PropertyTreeNode | undefined = this.timelineData
+      .getTransitionEntries()
+      .at(entry.getIndex());
+    if (!transition) {
+      return undefined;
+    }
 
     const timeRange = TimelineUtils.getTimeRangeForTransition(
       transition,
@@ -136,6 +140,8 @@ export class MiniTimelineDrawerInput {
     return {
       from: transformer.transform(timeRange.from),
       to: transformer.transform(timeRange.to),
+      unknownStart: TimelineUtils.isTransitionWithUnknownStart(transition),
+      unknownEnd: TimelineUtils.isTransitionWithUnknownEnd(transition),
     };
   }
 
