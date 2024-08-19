@@ -39,6 +39,7 @@ import {Analytics} from 'logging/analytics';
 import {TRACE_INFO} from 'trace/trace_info';
 import {TraceType} from 'trace/trace_type';
 import {DisplayIdentifier} from 'viewers/common/display_identifier';
+import {UiHierarchyTreeNode} from 'viewers/common/ui_hierarchy_tree_node';
 import {UserOptions} from 'viewers/common/user_options';
 import {RectDblClickDetail, ViewerEvents} from 'viewers/common/viewer_events';
 import {UiRect} from 'viewers/components/rects/ui_rect';
@@ -336,6 +337,7 @@ export class RectsComponent implements OnInit, OnDestroy {
   @Input() shadingModes: ShadingMode[] = [ShadingMode.GRADIENT];
   @Input() userOptions: UserOptions = {};
   @Input() dependencies: TraceType[] = [];
+  @Input() pinnedItems: UiHierarchyTreeNode[] = [];
 
   @Output() collapseButtonClicked = new EventEmitter();
 
@@ -435,14 +437,14 @@ export class RectsComponent implements OnInit, OnDestroy {
   }
 
   ngOnChanges(simpleChanges: SimpleChanges) {
-    if (simpleChanges['highlightedItem']) {
-      this.internalHighlightedItem =
-        simpleChanges['highlightedItem'].currentValue;
-      this.mapper3d.setHighlightedRectId(this.internalHighlightedItem);
-      if (!(simpleChanges['rects'] || simpleChanges['displays'])) {
-        this.drawLargeRectsAndLabels();
-      }
+    this.handleLargeRectChanges(simpleChanges);
+    if (simpleChanges['miniRects']) {
+      this.internalMiniRects = simpleChanges['miniRects'].currentValue;
+      this.drawMiniRects();
     }
+  }
+
+  private handleLargeRectChanges(simpleChanges: SimpleChanges) {
     let displayChange = false;
     if (simpleChanges['displays']) {
       const curr: DisplayIdentifier[] = simpleChanges['displays'].currentValue;
@@ -452,18 +454,27 @@ export class RectsComponent implements OnInit, OnDestroy {
         curr.length > 0 &&
         !curr.every((d, index) => d.displayId === prev?.at(index)?.displayId);
     }
+
+    let redrawRects = false;
+    if (simpleChanges['pinnedItems']) {
+      this.mapper3d.setPinnedItems(this.pinnedItems);
+      redrawRects = true;
+    }
+    if (simpleChanges['highlightedItem']) {
+      this.internalHighlightedItem =
+        simpleChanges['highlightedItem'].currentValue;
+      this.mapper3d.setHighlightedRectId(this.internalHighlightedItem);
+      redrawRects = true;
+    }
     if (simpleChanges['rects']) {
       this.internalRects = simpleChanges['rects'].currentValue;
-      if (!displayChange) {
-        this.drawLargeRectsAndLabels();
-      }
+      redrawRects = true;
     }
+
     if (displayChange) {
       this.onDisplaysChange(simpleChanges['displays']);
-    }
-    if (simpleChanges['miniRects']) {
-      this.internalMiniRects = simpleChanges['miniRects'].currentValue;
-      this.drawMiniRects();
+    } else if (redrawRects) {
+      this.drawLargeRectsAndLabels();
     }
   }
 
