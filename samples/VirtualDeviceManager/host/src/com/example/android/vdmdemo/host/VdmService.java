@@ -21,7 +21,7 @@ import static android.companion.virtual.VirtualDeviceParams.DEVICE_POLICY_CUSTOM
 import static android.companion.virtual.VirtualDeviceParams.DEVICE_POLICY_DEFAULT;
 import static android.companion.virtual.VirtualDeviceParams.LOCK_STATE_ALWAYS_UNLOCKED;
 import static android.companion.virtual.VirtualDeviceParams.POLICY_TYPE_AUDIO;
-import static android.companion.virtual.VirtualDeviceParams.POLICY_TYPE_BLOCKED_ACTIVITY_BEHAVIOR;
+import static android.companion.virtual.VirtualDeviceParams.POLICY_TYPE_BLOCKED_ACTIVITY;
 import static android.companion.virtual.VirtualDeviceParams.POLICY_TYPE_CAMERA;
 import static android.companion.virtual.VirtualDeviceParams.POLICY_TYPE_CLIPBOARD;
 import static android.companion.virtual.VirtualDeviceParams.POLICY_TYPE_RECENTS;
@@ -58,6 +58,7 @@ import android.os.Build;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.Looper;
+import android.os.UserHandle;
 import android.util.Log;
 import android.view.Display;
 import android.widget.Toast;
@@ -173,7 +174,7 @@ public final class VdmService extends Hilt_VdmService {
     private final ActivityListener mActivityListener = new ActivityListener() {
         @Override
         public void onActivityLaunchBlocked(
-                int displayId, @NonNull ComponentName componentName, int userId,
+                int displayId, @NonNull ComponentName componentName, @NonNull UserHandle user,
                 @Nullable IntentSender intentSender) {
             Log.w(TAG, "onActivityLaunchBlocked " + displayId + ": " + componentName);
 
@@ -517,7 +518,7 @@ public final class VdmService extends Hilt_VdmService {
 
         if (mPreferenceController.getBoolean(R.string.pref_enable_custom_activity_policy)) {
             virtualDeviceBuilder.setDevicePolicy(
-                    POLICY_TYPE_BLOCKED_ACTIVITY_BEHAVIOR, DEVICE_POLICY_CUSTOM);
+                    POLICY_TYPE_BLOCKED_ACTIVITY, DEVICE_POLICY_CUSTOM);
         }
 
         if (mPreferenceController.getBoolean(R.string.pref_enable_client_native_ime)) {
@@ -683,7 +684,7 @@ public final class VdmService extends Hilt_VdmService {
         observers.put(R.string.pref_enable_cross_device_clipboard,
                 b -> updateDevicePolicy(POLICY_TYPE_CLIPBOARD, (Boolean) b));
         observers.put(R.string.pref_enable_custom_activity_policy,
-                b -> updateDevicePolicy(POLICY_TYPE_BLOCKED_ACTIVITY_BEHAVIOR, (Boolean) b));
+                b -> updateDevicePolicy(POLICY_TYPE_BLOCKED_ACTIVITY, (Boolean) b));
         observers.put(R.string.pref_show_pointer_icon,
                 b -> {
                     if (mVirtualDevice != null) mVirtualDevice.setShowPointerIcon((Boolean) b);
