@@ -16,6 +16,8 @@
       "edition": "2018",
       "package_dir": ".../external/rust/crates/either",
       "main_src": "src/lib.rs",
+      "license": "MIT OR Apache-2.0",
+      "license_file": null,
       "empty_test": false
     },
     {
@@ -41,6 +43,8 @@
       "edition": "2018",
       "package_dir": ".../external/rust/crates/either",
       "main_src": "src/lib.rs",
+      "license": "MIT OR Apache-2.0",
+      "license_file": null,
       "empty_test": false
     }
   ]
