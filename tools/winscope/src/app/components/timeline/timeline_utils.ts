@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import {assertDefined} from 'common/assert_utils';
 import {TimeRange, Timestamp} from 'common/time';
 import {ComponentTimestampConverter} from 'common/timestamp_converter';
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
@@ -30,7 +31,9 @@ export class TimelineUtils {
   static isTransitionWithUnknownEnd(transition: PropertyTreeNode): boolean {
     const shellData = transition.getChildByName('shellData');
     const wmData = transition.getChildByName('wmData');
-    const aborted = transition.getChildByName('aborted')?.getValue() ?? false;
+    const aborted: boolean = assertDefined(
+      transition.getChildByName('aborted'),
+    ).getValue();
     const finishOrAbortTimestamp: Timestamp | undefined = aborted
       ? shellData?.getChildByName('abortTimeNs')?.getValue()
       : wmData?.getChildByName('finishTimeNs')?.getValue();
@@ -45,7 +48,9 @@ export class TimelineUtils {
     const shellData = transition.getChildByName('shellData');
     const wmData = transition.getChildByName('wmData');
 
-    const aborted = transition.getChildByName('aborted')?.getValue() ?? false;
+    const aborted: boolean = assertDefined(
+      transition.getChildByName('aborted'),
+    ).getValue();
 
     const dispatchTimestamp: Timestamp | undefined = shellData
       ?.getChildByName('dispatchTimeNs')
@@ -78,12 +83,28 @@ export class TimelineUtils {
       return undefined;
     }
 
+    if (
+      !finishOrAbortTimestamp &&
+      assertDefined(dispatchTimestamp).getValueNs() < timeRangeMin
+    ) {
+      return undefined;
+    }
+
+    if (
+      dispatchTimestamp &&
+      finishOrAbortTimestamp &&
+      dispatchTimestamp.getValueNs() > timeRangeMax
+    ) {
+      return undefined;
+    }
+
     const dispatchTimeNs = dispatchTimestamp
       ? dispatchTimestamp.getValueNs()
-      : timeRangeMin;
+      : assertDefined(finishOrAbortTimestamp).getValueNs() - 1n;
+
     const finishTimeNs = finishOrAbortTimestamp
       ? finishOrAbortTimestamp.getValueNs()
-      : timeRangeMax;
+      : dispatchTimeNs + 1n;
 
     const startTime = converter.makeTimestampFromNs(
       dispatchTimeNs > timeRangeMin ? dispatchTimeNs : timeRangeMin,
