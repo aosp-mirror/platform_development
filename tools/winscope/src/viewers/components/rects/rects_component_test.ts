@@ -29,9 +29,11 @@ import {BrowserAnimationsModule} from '@angular/platform-browser/animations';
 import {assertDefined} from 'common/assert_utils';
 import {TransformMatrix} from 'common/geometry/transform_matrix';
 import {PersistentStore} from 'common/persistent_store';
+import {HierarchyTreeBuilder} from 'test/unit/hierarchy_tree_builder';
 import {TraceType} from 'trace/trace_type';
 import {VISIBLE_CHIP} from 'viewers/common/chip';
 import {DisplayIdentifier} from 'viewers/common/display_identifier';
+import {UiHierarchyTreeNode} from 'viewers/common/ui_hierarchy_tree_node';
 import {CollapsibleSectionTitleComponent} from 'viewers/components/collapsible_section_title_component';
 import {RectsComponent} from 'viewers/components/rects/rects_component';
 import {UiRect} from 'viewers/components/rects/ui_rect';
@@ -53,7 +55,7 @@ describe('RectsComponent', () => {
   let canvasSpy: jasmine.Spy<(scene: Scene) => Promise<void>>;
 
   beforeEach(async () => {
-    canvasSpy = spyOn(Canvas.prototype, 'draw').and.callThrough();
+    canvasSpy = spyOn(Canvas.prototype, 'draw');
     localStorage.clear();
 
     await TestBed.configureTestingModule({
@@ -424,6 +426,21 @@ describe('RectsComponent', () => {
     expect(spy).toHaveBeenCalled();
   });
 
+  it('updates scene on pinned items change', () => {
+    component.rects = [rectGroup0];
+    fixture.detectChanges();
+    canvasSpy.calls.reset();
+
+    component.pinnedItems = [
+      UiHierarchyTreeNode.from(
+        new HierarchyTreeBuilder().setId('test-id').setName('0').build(),
+      ),
+    ];
+    fixture.detectChanges();
+    expect(canvasSpy).toHaveBeenCalledTimes(1);
+    expect(canvasSpy.calls.mostRecent().args[0].rects[0].isPinned).toBeTrue();
+  });
+
   async function checkSelectedDisplay(
     displayNumbers: number[],
     testIds?: number[],
@@ -443,7 +460,7 @@ describe('RectsComponent', () => {
     expect(drawnRects.length).toEqual(displayNumbers.length);
     drawnRects.forEach((rect, index) => {
       expect(rect.id).toEqual(
-        `test-id-${testIds ? testIds[index] : displayNumbers[index]}`,
+        `test-id ${testIds ? testIds[index] : displayNumbers[index]}`,
       );
       if (index > 0) expect(rect.transform.ty).toBeGreaterThan(0);
     });
@@ -510,7 +527,7 @@ describe('RectsComponent', () => {
       .setIsVisible(isVisible)
       .setIsDisplay(false)
       .setIsActiveDisplay(false)
-      .setId('test-id-' + groupId)
+      .setId('test-id ' + groupId)
       .setGroupId(groupId)
       .setIsClickable(false)
       .setCornerRadius(0)
@@ -531,7 +548,8 @@ describe('RectsComponent', () => {
         [isStackBased]="isStackBased"
         [shadingModes]="shadingModes"
         [userOptions]="userOptions"
-        [dependencies]="dependencies"></rects-view>
+        [dependencies]="dependencies"
+        [pinnedItems]="pinnedItems"></rects-view>
     `,
   })
   class TestHostComponent {
@@ -553,6 +571,7 @@ describe('RectsComponent', () => {
       },
     };
     dependencies = [TraceType.SURFACE_FLINGER];
+    pinnedItems: UiHierarchyTreeNode[] = [];
 
     @ViewChild(RectsComponent)
     rectsComponent: RectsComponent | undefined;
