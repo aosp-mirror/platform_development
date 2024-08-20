@@ -120,7 +120,7 @@ impl PseudoCrate {
             .current_dir(self.path.abs())
             .run_quiet_and_expect_success()?;
         let mut deps = BTreeMap::new();
-        for line in from_utf8(&output.stderr)?.lines().skip(1) {
+        for line in from_utf8(&output.stdout)?.lines().skip(1) {
             let words = line.split(" ").collect::<Vec<_>>();
             if words.len() < 2 {
                 return Err(anyhow!(
