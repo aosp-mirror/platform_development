@@ -64,7 +64,7 @@ export class LoadedParsers {
 
     this.addLegacyParsers(legacyParsers);
 
-    this.enforceLimitOfSingleScreenshotOrScreenRecordingParser();
+    this.enforceLimitOfSingleScreenRecordingParser();
   }
 
   getParsers(): Array<Parser<object>> {
@@ -473,31 +473,40 @@ export class LoadedParsers {
     return newLegacyParsers;
   }
 
-  private enforceLimitOfSingleScreenshotOrScreenRecordingParser() {
-    let firstScreenshotOrScreenrecordingParser: Parser<object> | undefined;
+  private enforceLimitOfSingleScreenRecordingParser() {
+    let firstScreenRecordingParser: Parser<object> | undefined;
 
     this.legacyParsers = this.legacyParsers.filter((fileAndParser) => {
       const parser = fileAndParser.parser;
+      const type = parser.getTraceType();
       if (
-        parser.getTraceType() !== TraceType.SCREENSHOT &&
-        parser.getTraceType() !== TraceType.SCREEN_RECORDING
+        type !== TraceType.SCREENSHOT &&
+        type !== TraceType.SCREEN_RECORDING
       ) {
         return true;
       }
 
-      if (firstScreenshotOrScreenrecordingParser) {
+      if (firstScreenRecordingParser) {
         UserNotifier.add(
           new TraceOverridden(
             parser.getDescriptors().join(),
-            firstScreenshotOrScreenrecordingParser.getTraceType(),
+            firstScreenRecordingParser.getTraceType(),
           ),
         );
         return false;
       }
 
-      firstScreenshotOrScreenrecordingParser = parser;
+      if (type === TraceType.SCREEN_RECORDING) {
+        firstScreenRecordingParser = parser;
+      }
       return true;
     });
+    if (firstScreenRecordingParser) {
+      this.legacyParsers = this.legacyParsers.filter((fileAndParser) => {
+        const parser = fileAndParser.parser;
+        return parser.getTraceType() !== TraceType.SCREENSHOT;
+      });
+    }
   }
 
   private findLastTimeGapAboveThreshold(

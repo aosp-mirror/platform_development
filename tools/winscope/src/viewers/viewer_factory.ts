@@ -34,7 +34,7 @@ import {ViewerViewCapture} from './viewer_view_capture/viewer_view_capture';
 import {ViewerWindowManager} from './viewer_window_manager/viewer_window_manager';
 
 class ViewerFactory {
-  static readonly VIEWERS = [
+  static readonly SINGLE_TRACE_VIEWERS = [
     ViewerSurfaceFlinger,
     ViewerWindowManager,
     ViewerInputMethodClients,
@@ -43,17 +43,22 @@ class ViewerFactory {
     ViewerTransactions,
     ViewerProtoLog,
     ViewerScreenRecording,
-    ViewerScreenshot,
     ViewerTransitions,
     ViewerJankCujs,
+  ];
+
+  static readonly MULTI_TRACE_VIEWERS = [
+    ViewerViewCapture,
+    ViewerInput,
+    ViewerScreenshot,
   ];
 
   createViewers(traces: Traces, storage: Storage): Viewer[] {
     const viewers: Viewer[] = [];
 
-    // regular viewers
+    // instantiate one viewer for one trace
     traces.forEachTrace((trace) => {
-      ViewerFactory.VIEWERS.forEach((Viewer) => {
+      ViewerFactory.SINGLE_TRACE_VIEWERS.forEach((Viewer) => {
         assertTrue(Viewer.DEPENDENCIES.length === 1);
         const isViewerDepSatisfied = trace.type === Viewer.DEPENDENCIES[0];
         if (isViewerDepSatisfied) {
@@ -62,27 +67,17 @@ class ViewerFactory {
       });
     });
 
+    // instantiate one viewer for N traces
     const availableTraceTypes = new Set(traces.mapTrace((trace) => trace.type));
 
-    {
-      // ViewCapture viewer (instantiate one viewer for N ViewCapture traces)
-      const isViewerDepSatisfied = ViewerViewCapture.DEPENDENCIES.some(
+    ViewerFactory.MULTI_TRACE_VIEWERS.forEach((Viewer) => {
+      const isViewerDepSatisfied = Viewer.DEPENDENCIES.some(
         (traceType: TraceType) => availableTraceTypes.has(traceType),
       );
       if (isViewerDepSatisfied) {
-        viewers.push(new ViewerViewCapture(traces, storage));
+        viewers.push(new Viewer(traces, storage));
       }
-    }
-
-    {
-      // Input viewer
-      const isViewerDepSatisfied = ViewerInput.DEPENDENCIES.some(
-        (traceType: TraceType) => availableTraceTypes.has(traceType),
-      );
-      if (isViewerDepSatisfied) {
-        viewers.push(new ViewerInput(traces, storage));
-      }
-    }
+    });
 
     // Note:
     // the final order of tabs/views in the UI corresponds the order of the

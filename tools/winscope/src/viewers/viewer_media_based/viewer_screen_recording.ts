@@ -34,6 +34,10 @@ export class ViewerScreenRecording implements Viewer {
   constructor(trace: Trace<MediaBasedTraceEntry>, traces: Traces) {
     this.trace = trace;
     this.htmlElement = document.createElement('viewer-media-based');
+    (this.htmlElement as unknown as ViewerMediaBasedComponent).titles = [
+      trace.getDescriptors().join(', '),
+    ];
+
     this.view = new View(
       ViewType.OVERLAY,
       this.getTraces(),
@@ -52,7 +56,7 @@ export class ViewerScreenRecording implements Viewer {
         );
         (
           this.htmlElement as unknown as ViewerMediaBasedComponent
-        ).currentTraceEntry = await entry?.getValue();
+        ).currentTraceEntries = [await entry?.getValue()];
       },
     );
     await event.visit(

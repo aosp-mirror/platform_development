@@ -14,14 +14,19 @@
  * limitations under the License.
  */
 import {
+  ChangeDetectorRef,
   Component,
   ElementRef,
   HostListener,
   Inject,
   Input,
+  NgZone,
   SimpleChanges,
 } from '@angular/core';
+import {MatSelectChange} from '@angular/material/select';
 import {DomSanitizer, SafeUrl} from '@angular/platform-browser';
+import {assertDefined} from 'common/assert_utils';
+import {Size} from 'common/geometry/size';
 import {MediaBasedTraceEntry} from 'trace/media_based_trace_entry';
 
 @Component({
@@ -32,8 +37,30 @@ import {MediaBasedTraceEntry} from 'trace/media_based_trace_entry';
       <mat-card-title class="header">
         <button mat-button class="button-drag" cdkDragHandle>
           <mat-icon class="drag-icon">drag_indicator</mat-icon>
-          <span class="mat-body-2">{{ title }}</span>
         </button>
+        <span
+          #titleText
+          *ngIf="titles.length <= 1"
+          class="mat-body-2 overlay-title"
+          [matTooltip]="titles.at(index)"
+          matTooltipPosition="above"
+          [matTooltipShowDelay]="300"
+          >{{ titles.at(0)?.split(".")[0] ?? 'Screen recording'}}</span>
+
+        <mat-select
+          *ngIf="titles.length > 1"
+          class="overlay-title select-title"
+          [matTooltip]="titles.at(index)"
+          matTooltipPosition="above"
+          [matTooltipShowDelay]="300"
+          (selectionChange)="onSelectChange($event)"
+          [value]="index">
+          <mat-option
+            *ngFor="let title of titles; index as i"
+            [value]="i">
+            {{ titles[i].split(".")[0] }}
+          </mat-option>
+        </mat-select>
 
         <button mat-button class="button-minimize" [disabled]="forceMinimize" (click)="onMinimizeButtonClick()">
           <mat-icon>
@@ -49,8 +76,7 @@ import {MediaBasedTraceEntry} from 'trace/media_based_trace_entry';
     <ng-template #video>
       <video
         *ngIf="hasFrameToShow()"
-        [class.ready]="videoElement.readyState"
-        [currentTime]="currentTraceEntry.videoTimeSeconds"
+        [currentTime]="getCurrentTime()"
         [src]="safeUrl"
         #videoElement></video>
     </ng-template>
@@ -59,8 +85,7 @@ import {MediaBasedTraceEntry} from 'trace/media_based_trace_entry';
       <img *ngIf="hasImage()" [src]="safeUrl" />
 
       <div class="no-video" *ngIf="!hasImage()">
-        <p class="mat-body-2">No screen recording frame to show.</p>
-        <p class="mat-body-1">Current timestamp is still before first frame.</p>
+        <p class="mat-body-2">No frame to show.</p>
       </div>
     </ng-template>
     </div>
@@ -80,7 +105,7 @@ import {MediaBasedTraceEntry} from 'trace/media_based_trace_entry';
       .container {
         pointer-events: all;
         width: max(250px, 15vw);
-        min-width: 165px;
+        min-width: 200px;
         resize: horizontal;
         overflow: hidden;
         display: flex;
@@ -96,17 +121,26 @@ import {MediaBasedTraceEntry} from 'trace/media_based_trace_entry';
         margin: 0px;
         border: 1px solid var(--border-color);
         border-radius: 4px;
+        justify-content: space-between;
+        align-items: center;
       }
 
       .button-drag {
-        flex-grow: 1;
         cursor: grab;
         padding: 2px;
+        min-width: fit-content;
       }
 
-      .drag-icon {
-        float: left;
-        margin: 5px 0;
+      .overlay-title {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        font-size: 14px;
+        width: unset;
+      }
+
+      .select-title {
+        display: flex;
+        align-items: center;
       }
 
       .button-minimize {
@@ -133,96 +167,52 @@ import {MediaBasedTraceEntry} from 'trace/media_based_trace_entry';
 class ViewerMediaBasedComponent {
   safeUrl: undefined | SafeUrl = undefined;
   shouldMinimize = false;
+  index = 0;
 
   constructor(
     @Inject(DomSanitizer) private sanitizer: DomSanitizer,
-    @Inject(ElementRef) private elementRef: ElementRef,
+    @Inject(ElementRef) private elementRef: ElementRef<HTMLElement>,
+    @Inject(ChangeDetectorRef) private changeDetectorRef: ChangeDetectorRef,
+    @Inject(NgZone) private ngZone: NgZone,
   ) {}
 
-  @Input() currentTraceEntry: MediaBasedTraceEntry | undefined;
-  @Input() title = 'Screen recording';
+  @Input() currentTraceEntries: MediaBasedTraceEntry[] = [];
+  @Input() titles: string[] = [];
   @Input() forceMinimize = false;
 
-  private frameHeight = 1280; // default for Flicker/Winscope
-  private frameWidth = 720; // default for Flicker/Winscope
-
-  private videoObserver: MutationObserver | undefined;
+  private frameSize: Size = {width: 720, height: 1280}; // default for Flicker
+  private frameSizeWorker: number | undefined;
 
   ngOnChanges(changes: SimpleChanges) {
-    if (this.currentTraceEntry === undefined) {
+    this.changeDetectorRef.detectChanges();
+    if (this.currentTraceEntries.length === 0) {
       return;
     }
 
-    if (!changes['currentTraceEntry']) {
+    if (!changes['currentTraceEntries']) {
       return;
     }
 
     if (this.safeUrl === undefined) {
-      this.safeUrl = this.sanitizer.bypassSecurityTrustUrl(
-        URL.createObjectURL(this.currentTraceEntry.videoData),
-      );
+      if (this.index > this.currentTraceEntries.length - 1) {
+        this.index = 0;
+      }
+      this.updateSafeUrl();
     }
   }
 
-  async ngAfterViewInit() {
-    const video: HTMLVideoElement | null =
-      this.elementRef.nativeElement.querySelector('video');
-
-    if (video) {
-      const config = {
-        attributes: true,
-        CharacterData: true,
-      };
-
-      const videoCallback = (
-        mutations: MutationRecord[],
-        observer: MutationObserver,
-      ) => {
-        for (const mutation of mutations) {
-          if (
-            mutation.type === 'attributes' &&
-            mutation.attributeName === 'class'
-          ) {
-            if (video?.className.includes('ready')) {
-              this.frameHeight = video?.videoHeight;
-              this.frameWidth = video?.videoWidth;
-              observer.disconnect();
-            }
-          }
-        }
-      };
-
-      this.videoObserver = new MutationObserver(videoCallback);
-      this.videoObserver.observe(video, config);
-    } else {
-      const image: HTMLImageElement | null =
-        this.elementRef.nativeElement.querySelector('img');
-      if (image) {
-        this.frameHeight = image.naturalHeight;
-        this.frameWidth = image.naturalWidth;
-      }
-    }
-
+  ngAfterViewInit() {
+    this.resetFrameSizeWorker();
     this.updateMaxContainerSize();
   }
 
   ngOnDestroy() {
-    this.videoObserver?.disconnect();
+    this.clearFrameSizeWorker();
   }
 
   @HostListener('window:resize', ['$event'])
   onResize(event: Event) {
     this.updateMaxContainerSize();
-  }
-
-  updateMaxContainerSize() {
-    const container = this.elementRef.nativeElement.querySelector('.container');
-    const maxHeight = window.innerHeight - 140;
-    const headerHeight =
-      this.elementRef.nativeElement.querySelector('.header').clientHeight;
-    const maxWidth =
-      ((maxHeight - headerHeight) * this.frameWidth) / this.frameHeight;
-    container.style.maxWidth = `${maxWidth}px`;
   }
 
   onMinimizeButtonClick() {
@@ -234,14 +224,96 @@ class ViewerMediaBasedComponent {
   }
 
   hasFrameToShow() {
-    return (
-      !this.currentTraceEntry?.isImage &&
-      this.currentTraceEntry?.videoTimeSeconds !== undefined
-    );
+    const curr = this.currentTraceEntries.at(this.index);
+    return curr && !curr.isImage && curr.videoTimeSeconds !== undefined;
   }
 
   hasImage() {
-    return this.currentTraceEntry?.isImage ?? false;
+    return this.currentTraceEntries.at(this.index)?.isImage ?? false;
+  }
+
+  getCurrentTime(): number {
+    return this.currentTraceEntries.at(this.index)?.videoTimeSeconds ?? 0;
+  }
+
+  showNextEntry() {
+    this.index++;
+    this.updateSafeUrl();
+  }
+
+  showPrevEntry() {
+    this.index--;
+    this.updateSafeUrl();
+  }
+
+  onSelectChange(event: MatSelectChange) {
+    this.index = event.value;
+    this.updateSafeUrl();
+  }
+
+  private resetFrameSizeWorker() {
+    if (this.frameSizeWorker === undefined) {
+      this.frameSizeWorker = window.setInterval(
+        () => this.updateFrameSize(),
+        50,
+      );
+    }
+  }
+
+  private updateFrameSize() {
+    const video =
+      this.elementRef.nativeElement.querySelector<HTMLVideoElement>('video');
+    if (video && video.readyState) {
+      this.frameSize = {
+        width: video.videoWidth,
+        height: video.videoHeight,
+      };
+      this.clearFrameSizeWorker();
+      this.updateMaxContainerSize();
+      return;
+    }
+    const image =
+      this.elementRef.nativeElement.querySelector<HTMLImageElement>('img');
+    if (image) {
+      this.frameSize = {
+        width: image.naturalWidth,
+        height: image.naturalHeight,
+      };
+      this.clearFrameSizeWorker();
+      this.updateMaxContainerSize();
+    }
+  }
+
+  private updateSafeUrl() {
+    const curr = this.currentTraceEntries.at(this.index);
+    if (curr) {
+      this.safeUrl = this.sanitizer.bypassSecurityTrustUrl(
+        URL.createObjectURL(curr.videoData),
+      );
+      this.resetFrameSizeWorker();
+    }
+  }
+
+  private updateMaxContainerSize() {
+    this.ngZone.run(() => {
+      const container = assertDefined(
+        this.elementRef.nativeElement.querySelector<HTMLElement>('.container'),
+      );
+      const maxHeight = window.innerHeight - 140;
+      const headerHeight =
+        this.elementRef.nativeElement.querySelector('.header')?.clientHeight ??
+        0;
+      const maxWidth =
+        ((maxHeight - headerHeight) * this.frameSize.width) /
+        this.frameSize.height;
+      container.style.maxWidth = `${maxWidth}px`;
+      this.changeDetectorRef.detectChanges();
+    });
+  }
+
+  private clearFrameSizeWorker() {
+    window.clearInterval(this.frameSizeWorker);
+    this.frameSizeWorker = undefined;
   }
 }
 

@@ -16,7 +16,7 @@
 
 import {WinscopeEvent, WinscopeEventType} from 'messaging/winscope_event';
 import {MediaBasedTraceEntry} from 'trace/media_based_trace_entry';
-import {Trace} from 'trace/trace';
+import {Trace, TraceEntry} from 'trace/trace';
 import {Traces} from 'trace/traces';
 import {TraceEntryFinder} from 'trace/trace_entry_finder';
 import {TRACE_INFO} from 'trace/trace_info';
@@ -27,12 +27,12 @@ import {View, Viewer, ViewType} from 'viewers/viewer';
 class ViewerScreenshot implements Viewer {
   static readonly DEPENDENCIES: TraceType[] = [TraceType.SCREENSHOT];
 
-  private readonly trace: Trace<MediaBasedTraceEntry>;
+  private readonly traces: Array<Trace<MediaBasedTraceEntry>>;
   private readonly htmlElement: HTMLElement;
   private readonly view: View;
 
-  constructor(trace: Trace<MediaBasedTraceEntry>, traces: Traces) {
-    this.trace = trace;
+  constructor(traces: Traces) {
+    this.traces = traces.getTraces(TraceType.SCREENSHOT);
     this.htmlElement = document.createElement('viewer-media-based');
     this.view = new View(
       ViewType.OVERLAY,
@@ -46,15 +46,25 @@ class ViewerScreenshot implements Viewer {
     await event.visit(
       WinscopeEventType.TRACE_POSITION_UPDATE,
       async (event) => {
-        const entry = TraceEntryFinder.findCorrespondingEntry(
-          this.trace,
-          event.position,
+        const traceEntries = this.traces
+          .map((trace) =>
+            TraceEntryFinder.findCorrespondingEntry(trace, event.position),
+          )
+          .filter((entry) => entry !== undefined) as Array<
+          TraceEntry<MediaBasedTraceEntry>
+        >;
+        const entries: MediaBasedTraceEntry[] = await Promise.all(
+          traceEntries.map((entry) => {
+            return entry.getValue();
+          }),
         );
         (
           this.htmlElement as unknown as ViewerMediaBasedComponent
-        ).currentTraceEntry = await entry?.getValue();
-        (this.htmlElement as unknown as ViewerMediaBasedComponent).title =
-          'Screenshot';
+        ).currentTraceEntries = entries;
+        (this.htmlElement as unknown as ViewerMediaBasedComponent).titles =
+          traceEntries.map((traceEntry) =>
+            traceEntry.getFullTrace().getDescriptors().join(', '),
+          );
       },
     );
     await event.visit(
@@ -76,7 +86,7 @@ class ViewerScreenshot implements Viewer {
   }
 
   getTraces(): Array<Trace<MediaBasedTraceEntry>> {
-    return [this.trace];
+    return this.traces;
   }
 }
 
