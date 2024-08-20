@@ -21,6 +21,7 @@ import {
   Input,
   Output,
 } from '@angular/core';
+import {Color} from 'app/colors';
 import {PersistentStore} from 'common/persistent_store';
 import {Analytics} from 'logging/analytics';
 import {TraceType} from 'trace/trace_type';
@@ -131,7 +132,7 @@ import {viewerCardInnerStyle} from './styles/viewer_card.styles';
       .pinned-items {
         width: 100%;
         box-sizing: border-box;
-        border: 2px solid #ffd58b;
+        border: 2px solid ${Color.PINNED_ITEM_BORDER};
       }
 
       tree-view {

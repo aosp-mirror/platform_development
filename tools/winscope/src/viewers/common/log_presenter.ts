@@ -32,10 +32,7 @@ export class LogPresenter<Entry extends LogEntry> {
   private currentIndex: number | undefined;
   private originalIndicesOfAllEntries: number[] = [];
 
-  constructor(
-    private storeCurrentIndex: boolean,
-    private timeOrderedEntries = true,
-  ) {}
+  constructor(private timeOrderedEntries = true) {}
 
   setAllEntries(value: Entry[]) {
     this.allEntries = value;
@@ -120,11 +117,7 @@ export class LogPresenter<Entry extends LogEntry> {
       this.filterValues.delete(type);
     }
     this.updateFilteredEntries();
-    if (this.storeCurrentIndex) {
-      this.currentIndex = this.getCurrentTracePositionIndex();
-    } else {
-      this.selectedIndex = this.getCurrentTracePositionIndex();
-    }
+    this.currentIndex = this.getCurrentTracePositionIndex();
     this.scrollToIndex = this.selectedIndex ?? this.currentIndex;
   }
 
@@ -137,14 +130,9 @@ export class LogPresenter<Entry extends LogEntry> {
   }
 
   private resetIndices() {
-    if (this.storeCurrentIndex) {
-      this.currentIndex = this.getCurrentTracePositionIndex();
-      this.selectedIndex = undefined;
-      this.scrollToIndex = this.currentIndex;
-    } else {
-      this.selectedIndex = this.getCurrentTracePositionIndex();
-      this.scrollToIndex = this.selectedIndex;
-    }
+    this.currentIndex = this.getCurrentTracePositionIndex();
+    this.selectedIndex = undefined;
+    this.scrollToIndex = this.currentIndex;
   }
 
   private static shouldFilterBySubstring(type: LogFieldType) {
@@ -221,9 +209,12 @@ export class LogPresenter<Entry extends LogEntry> {
         ) ?? this.originalIndicesOfAllEntries.length - 1
       );
     }
-    return (
-      this.originalIndicesOfAllEntries.findIndex((i) => i === target) ??
-      this.originalIndicesOfAllEntries.length - 1
+
+    const currentIndex = this.originalIndicesOfAllEntries.findIndex(
+      (i) => i === target,
     );
+    return currentIndex !== -1
+      ? currentIndex
+      : this.originalIndicesOfAllEntries.length - 1;
   }
 }
