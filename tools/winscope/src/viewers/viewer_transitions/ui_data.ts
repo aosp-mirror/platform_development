@@ -28,13 +28,14 @@ export class UiData implements UiDataLog {
   constructor(
     public headers: LogFieldType[],
     public entries: LogEntry[],
+    public currentIndex: undefined | number,
     public selectedIndex: undefined | number,
     public scrollToIndex: undefined | number,
     public propertiesTree: undefined | UiPropertyTreeNode,
   ) {}
 
   static createEmpty(): UiData {
-    return new UiData([], [], undefined, undefined, undefined);
+    return new UiData([], [], undefined, undefined, undefined, undefined);
   }
 }
 

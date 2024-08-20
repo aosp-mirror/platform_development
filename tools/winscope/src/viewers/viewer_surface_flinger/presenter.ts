@@ -228,6 +228,9 @@ export class Presenter extends AbstractHierarchyViewerPresenter<UiData> {
         this.curatedProperties = this.getCuratedProperties(propertiesTree);
         this.displayPropertyGroups = true;
       }
+    } else {
+      this.curatedProperties = undefined;
+      this.displayPropertyGroups = false;
     }
   }
 
