@@ -16,6 +16,9 @@
 
 package com.android.commands.monkey;
 
+import static android.view.InputDevice.SOURCE_TOUCHSCREEN;
+import static android.view.MotionEvent.TOOL_TYPE_FINGER;
+
 import android.app.ActivityManager;
 import android.app.IActivityController;
 import android.app.IActivityManager;
@@ -23,15 +26,20 @@ import android.content.ComponentName;
 import android.content.Intent;
 import android.content.pm.IPackageManager;
 import android.content.pm.ResolveInfo;
+import android.hardware.display.DisplayManagerGlobal;
+import android.hardware.input.VirtualTouchEvent;
 import android.os.Build;
 import android.os.Debug;
 import android.os.Environment;
+import android.os.IBinder;
 import android.os.Process;
 import android.os.RemoteException;
 import android.os.ServiceManager;
 import android.os.StrictMode;
 import android.os.SystemClock;
+import android.view.Display;
 import android.view.IWindowManager;
+import android.view.MotionEvent;
 import android.view.Surface;
 
 import java.io.BufferedReader;
@@ -59,6 +67,11 @@ import java.util.Set;
  * Application that injects random key events and other actions into the system.
  */
 public class Monkey {
+    static {
+        System.loadLibrary("monkey_jni");
+    }
+
+    private static native IBinder createNativeService(int width, int height);
 
     /**
      * Monkey Debugging/Dev Support
@@ -211,6 +224,8 @@ public class Monkey {
     /** The random number generator **/
     Random mRandom = null;
 
+    private final IMonkey mMonkeyService = createMonkeyService();
+
     /** Dropped-event statistics **/
     long mDroppedKeyEvents = 0;
 
@@ -264,6 +279,15 @@ public class Monkey {
     public static Intent currentIntent;
 
     public static String currentPackage;
+
+    private static IMonkey createMonkeyService() {
+        // Get the width and height of the touchscreen on the default display
+        Display display = DisplayManagerGlobal.getInstance().getRealDisplay(
+                Display.DEFAULT_DISPLAY);
+        final int width = display.getWidth();
+        final int height = display.getHeight();
+        return IMonkey.Stub.asInterface(createNativeService(width, height));
+    }
 
     /**
      * Monitor operations happening in the system.
@@ -792,6 +816,80 @@ public class Monkey {
         }
     }
 
+    private int injectEvent(MonkeyEvent ev) {
+        if (ev instanceof MonkeyMotionEvent motion) {
+            final MotionEvent motionEvent = motion.getMotionEventForInjection();
+            if (motionEvent.isFromSource(SOURCE_TOUCHSCREEN)) {
+                return injectTouchEvent(motionEvent);
+            }
+        }
+        return ev.injectEvent(mWm, mAm, mVerbose);
+    }
+
+    private boolean writeTouchEvent(MotionEvent motion, int pointerIndex,
+                                    int action) throws RemoteException {
+        int pointerId = motion.getPointerId(pointerIndex);
+        return mMonkeyService.writeTouchEvent(
+            pointerId, TOOL_TYPE_FINGER, action, motion.getX(pointerIndex),
+            motion.getY(pointerIndex), motion.getPressure(pointerIndex),
+            motion.getTouchMajor(pointerIndex), motion.getEventTime());
+    }
+
+    private int injectTouchEvent(MotionEvent event) {
+        try {
+            boolean success = true;
+            switch (event.getActionMasked()) {
+                case MotionEvent.ACTION_DOWN:
+                case MotionEvent.ACTION_POINTER_DOWN: {
+                    // Send a single write
+                    int pointerIndex = event.getActionIndex();
+                    success &= writeTouchEvent(event, pointerIndex, VirtualTouchEvent.ACTION_DOWN);
+                    break;
+                }
+                case MotionEvent.ACTION_MOVE: {
+                    // Iterate through pointers and send them all!
+                    // This would currently result in multiple motion events to be sent, because
+                    // there's an EV_SYN being sent after each "writeTouchEvent". To avoid this,
+                    // we would ideally only send EV_SYN at the last call to "writeTouchEvent".
+                    // However, the current approach should be good enough, and batching
+                    // should help lump the events together, anyways.
+                    for (int pointerIndex = 0; pointerIndex < event.getPointerCount();
+                            pointerIndex++) {
+                        success &= writeTouchEvent(event, pointerIndex,
+                                VirtualTouchEvent.ACTION_MOVE);
+                    }
+                    break;
+                }
+                case MotionEvent.ACTION_UP:
+                case MotionEvent.ACTION_POINTER_UP: {
+                    // Send a single write
+                    int pointerIndex = event.getActionIndex();
+                    int resolvedAction = VirtualTouchEvent.ACTION_UP;
+                    if ((event.getFlags() & MotionEvent.FLAG_CANCELED) != 0) {
+                        resolvedAction = VirtualTouchEvent.ACTION_CANCEL;
+                    }
+                    success &= writeTouchEvent(event, pointerIndex, resolvedAction);
+                    break;
+                }
+                case MotionEvent.ACTION_CANCEL: {
+                    // Cancel all pointers!
+                    for (int pointerIndex = 0; pointerIndex < event.getPointerCount();
+                            pointerIndex++) {
+                        success &= writeTouchEvent(event, pointerIndex,
+                                                    VirtualTouchEvent.ACTION_CANCEL);
+                    }
+                    break;
+                }
+                default:
+                    throw new RuntimeException("Unhandled action " + event);
+            }
+            return success ? MonkeyEvent.INJECT_SUCCESS : MonkeyEvent.INJECT_FAIL;
+        } catch (RemoteException exc) {
+            exc.rethrowAsRuntimeException();
+        }
+        return MonkeyEvent.INJECT_FAIL;
+    }
+
     /**
      * Process the command-line options
      *
@@ -1214,7 +1312,7 @@ public class Monkey {
 
                 MonkeyEvent ev = mEventSource.getNextEvent();
                 if (ev != null) {
-                    int injectCode = ev.injectEvent(mWm, mAm, mVerbose);
+                    final int injectCode = injectEvent(ev);
                     if (injectCode == MonkeyEvent.INJECT_FAIL) {
                         Logger.out.println("    // Injection Failed");
                         if (ev instanceof MonkeyKeyEvent) {
