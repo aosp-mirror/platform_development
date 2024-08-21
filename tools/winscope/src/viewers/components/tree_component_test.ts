@@ -76,29 +76,33 @@ describe('TreeComponent', () => {
     expect(treeComponent.hasSelectedChild()).toBeTrue();
   });
 
-  it('highlights node upon click', () => {
+  it('highlights node and inner node upon click', () => {
     fixture.detectChanges();
-    const treeNode = assertDefined(htmlElement.querySelector('tree-node'));
+    const treeNodes = assertDefined(
+      htmlElement.querySelectorAll<HTMLElement>('tree-node'),
+    );
+
     const spy = spyOn(
       assertDefined(component.treeComponent).highlightedChange,
       'emit',
     );
-    (treeNode as HTMLButtonElement).dispatchEvent(
-      new MouseEvent('click', {detail: 1}),
-    );
+    treeNodes.item(0).dispatchEvent(new MouseEvent('click', {detail: 1}));
     fixture.detectChanges();
-    expect(spy).toHaveBeenCalled();
+    expect(spy).toHaveBeenCalledTimes(1);
+
+    treeNodes.item(1).click();
+    fixture.detectChanges();
+    expect(spy).toHaveBeenCalledTimes(2);
   });
 
   it('toggles tree upon node double click', () => {
     fixture.detectChanges();
     const treeComponent = assertDefined(component.treeComponent);
-    const treeNode = assertDefined(htmlElement.querySelector('tree-node'));
-
-    const currLocalExpandedState = treeComponent.localExpandedState;
-    (treeNode as HTMLButtonElement).dispatchEvent(
-      new MouseEvent('click', {detail: 2}),
+    const treeNode = assertDefined(
+      htmlElement.querySelector<HTMLElement>('tree-node'),
     );
+    const currLocalExpandedState = treeComponent.localExpandedState;
+    treeNode.dispatchEvent(new MouseEvent('click', {detail: 2}));
     fixture.detectChanges();
     expect(!currLocalExpandedState).toEqual(treeComponent.localExpandedState);
   });
@@ -108,14 +112,43 @@ describe('TreeComponent', () => {
     const treeComponent = assertDefined(component.treeComponent);
     component.isFlattened = true;
     fixture.detectChanges();
-    const treeNode = assertDefined(htmlElement.querySelector('tree-node'));
+    const treeNode = assertDefined(
+      htmlElement.querySelector<HTMLElement>('tree-node'),
+    );
 
     const currLocalExpandedState = treeComponent.localExpandedState;
-    (treeNode as HTMLButtonElement).dispatchEvent(
-      new MouseEvent('click', {detail: 2}),
-    );
+    treeNode.dispatchEvent(new MouseEvent('click', {detail: 2}));
     fixture.detectChanges();
     expect(currLocalExpandedState).toEqual(treeComponent.localExpandedState);
+  });
+
+  it('pins node on click', () => {
+    fixture.detectChanges();
+    const pinNodeButton = assertDefined(
+      htmlElement.querySelector<HTMLElement>('.pin-node-btn'),
+    );
+    const spy = spyOn(
+      assertDefined(component.treeComponent).pinnedItemChange,
+      'emit',
+    );
+    pinNodeButton.click();
+    fixture.detectChanges();
+    expect(spy).toHaveBeenCalled();
+  });
+
+  it('expands tree on expand tree button click', () => {
+    fixture.detectChanges();
+    const treeNode = assertDefined(
+      htmlElement.querySelector<HTMLElement>('tree-node'),
+    );
+    treeNode.dispatchEvent(new MouseEvent('click', {detail: 2}));
+    fixture.detectChanges();
+    expect(component.treeComponent?.localExpandedState).toEqual(false);
+    assertDefined(
+      htmlElement.querySelector<HTMLElement>('.expand-tree-btn'),
+    ).click();
+    fixture.detectChanges();
+    expect(component.treeComponent?.localExpandedState).toEqual(true);
   });
 
   it('scrolls selected node only if not in view', () => {
@@ -138,7 +171,13 @@ describe('TreeComponent', () => {
     expect(spy).toHaveBeenCalledTimes(1);
   });
 
-  it('sets initial expanded state to true by default', () => {
+  it('sets initial expanded state to true by default for leaf', () => {
+    fixture.detectChanges();
+    expect(assertDefined(component.treeComponent).isExpanded()).toBeTrue();
+  });
+
+  it('sets initial expanded state to true by default for non root', () => {
+    component.tree = component.tree.getAllChildren()[0];
     fixture.detectChanges();
     expect(assertDefined(component.treeComponent).isExpanded()).toBeTrue();
   });
@@ -190,20 +229,23 @@ describe('TreeComponent', () => {
     ]);
     fixture.detectChanges();
     const button = assertDefined(
-      htmlElement.querySelector('.toggle-rect-show-state-btn'),
-    ) as HTMLElement;
+      htmlElement.querySelector<HTMLElement>('.toggle-rect-show-state-btn'),
+    );
     expect(button.textContent).toContain('visibility_off');
 
-    let id: string | undefined;
-    let state: RectShowState | undefined;
+    let id = '';
     htmlElement.addEventListener(ViewerEvents.RectShowStateChange, (event) => {
-      id = (event as CustomEvent).detail.rectId;
-      state = (event as CustomEvent).detail.state;
+      const detail = (event as CustomEvent).detail;
+      id = detail.rectId;
+      component.rectIdToShowState?.set(detail.rectId, detail.state);
     });
     button.click();
     fixture.detectChanges();
-    expect(id).toEqual(component.tree.id);
-    expect(state).toEqual(RectShowState.SHOW);
+    expect(component.rectIdToShowState.get(id)).toEqual(RectShowState.SHOW);
+
+    button.click();
+    fixture.detectChanges();
+    expect(component.rectIdToShowState.get(id)).toEqual(RectShowState.HIDE);
   });
 
   it('shows node at full opacity when applicable', () => {

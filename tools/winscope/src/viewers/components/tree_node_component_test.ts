@@ -23,6 +23,7 @@ import {assertDefined} from 'common/assert_utils';
 import {HierarchyTreeBuilder} from 'test/unit/hierarchy_tree_builder';
 import {PropertyTreeBuilder} from 'test/unit/property_tree_builder';
 import {DEFAULT_PROPERTY_FORMATTER} from 'trace/tree_node/formatters';
+import {DiffType} from 'viewers/common/diff_type';
 import {UiHierarchyTreeNode} from 'viewers/common/ui_hierarchy_tree_node';
 import {UiPropertyTreeNode} from 'viewers/common/ui_property_tree_node';
 import {HierarchyTreeNodeDataViewComponent} from './hierarchy_tree_node_data_view_component';
@@ -69,15 +70,26 @@ describe('TreeNodeComponent', () => {
     expect(component).toBeTruthy();
   });
 
-  it('can generate data view component', () => {
-    assertDefined(component.treeNodeComponent).isPropertyTreeNode = jasmine
-      .createSpy()
-      .and.returnValue(false);
-    fixture.detectChanges();
+  it('can generate hierarchy data view component', () => {
     const treeNodeDataView = htmlElement.querySelector(
       'hierarchy-tree-node-data-view',
     );
     expect(treeNodeDataView).toBeTruthy();
+    expect(
+      htmlElement.querySelector('property-tree-node-data-view'),
+    ).toBeNull();
+  });
+
+  it('can generate property data view component', () => {
+    component.node = propertiesTree;
+    fixture.detectChanges();
+    const treeNodeDataView = htmlElement.querySelector(
+      'property-tree-node-data-view',
+    );
+    expect(treeNodeDataView).toBeTruthy();
+    expect(
+      htmlElement.querySelector('hierarchy-tree-node-data-view'),
+    ).toBeNull();
   });
 
   it('can trigger tree toggle on click of chevron', () => {
@@ -103,6 +115,42 @@ describe('TreeNodeComponent', () => {
     );
     expandButton.click();
     expect(spy).toHaveBeenCalled();
+  });
+
+  it('assigns diff css classes to expand tree button', () => {
+    const expandButton = assertDefined(
+      htmlElement.querySelector<HTMLElement>('.expand-tree-btn'),
+    );
+    expect(expandButton.className).toEqual('icon-button expand-tree-btn');
+    component.node = UiHierarchyTreeNode.from(
+      new HierarchyTreeBuilder()
+        .setId('LayerTraceEntry')
+        .setName('Added Diff')
+        .setChildren([
+          {id: 1, name: 'Child 1', children: [{id: 2, name: 'Child 2'}]},
+        ])
+        .build(),
+    );
+    component.node.getChildByName('Child 1')?.setDiff(DiffType.ADDED);
+    fixture.detectChanges();
+    expect(expandButton.className).toEqual('icon-button expand-tree-btn added');
+
+    component.node = UiHierarchyTreeNode.from(
+      new HierarchyTreeBuilder()
+        .setId('LayerTraceEntry')
+        .setName('Added Diff')
+        .setChildren([
+          {id: 1, name: 'Child 1', children: [{id: 2, name: 'Child 2'}]},
+        ])
+        .build(),
+    );
+    const child1 = assertDefined(component.node.getChildByName('Child 1'));
+    child1.setDiff(DiffType.ADDED);
+    child1.getChildByName('Child 2')?.setDiff(DiffType.DELETED);
+    fixture.detectChanges();
+    expect(expandButton.className).toEqual(
+      'icon-button expand-tree-btn modified',
+    );
   });
 
   it('pins node on click', () => {
