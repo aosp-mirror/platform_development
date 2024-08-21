@@ -56,6 +56,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.state.ToggleableState
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.android.compose.animation.scene.ProgressConverter
 import kotlin.math.roundToInt
 import kotlin.math.tanh
 
@@ -69,7 +70,7 @@ data class DemoConfiguration(
     val transitionInterceptionThreshold: Float = 0.05f,
     val springConfigurations: DemoSpringConfigurations = DemoSpringConfigurations.presets[1],
     val useOverscrollSpec: Boolean = true,
-    val overscrollProgress: DemoOverscrollProgress = DemoOverscrollProgress.Linear,
+    val overscrollProgressConverter: DemoOverscrollProgress = DemoOverscrollProgress.Linear,
     val enableInterruptions: Boolean = true,
     val lsToShadeRequiresFullSwipe: ToggleableState = ToggleableState.Indeterminate,
 ) {
@@ -100,7 +101,7 @@ data class DemoConfiguration(
                         transitionInterceptionThresholdKey to it.transitionInterceptionThreshold,
                         springConfigurationsKey to it.springConfigurations.save(),
                         useOverscrollSpec to it.useOverscrollSpec,
-                        overscrollProgress to it.overscrollProgress.save(),
+                        overscrollProgress to it.overscrollProgressConverter.save(),
                         enableInterruptions to it.enableInterruptions,
                         lsToShadeRequiresFullSwipe to it.lsToShadeRequiresFullSwipe,
                     )
@@ -118,7 +119,8 @@ data class DemoConfiguration(
                         springConfigurations =
                             it[springConfigurationsKey].restoreSpringConfigurations(),
                         useOverscrollSpec = it[useOverscrollSpec] as Boolean,
-                        overscrollProgress = it[overscrollProgress].restoreOverscrollProgress(),
+                        overscrollProgressConverter =
+                            it[overscrollProgress].restoreOverscrollProgress(),
                         enableInterruptions = it[enableInterruptions] as Boolean,
                         lsToShadeRequiresFullSwipe =
                             it[lsToShadeRequiresFullSwipe] as ToggleableState,
@@ -254,9 +256,10 @@ data class DemoSpringConfigurations(
     }
 }
 
-sealed class DemoOverscrollProgress(val name: String, val params: LinkedHashMap<String, Any>) {
-    abstract fun convert(value: Float): Float
-
+sealed class DemoOverscrollProgress(
+    val name: String,
+    val params: LinkedHashMap<String, Any>,
+) : ProgressConverter {
     // Note: the order is guaranteed because we are using an ordered map (LinkedHashMap).
     fun save(): String = "$name:${params.values.joinToString(",")}"
 
@@ -403,8 +406,10 @@ fun DemoConfigurationDialog(
                 )
 
                 OverscrollProgressPicker(
-                    value = configuration.overscrollProgress,
-                    onValue = { onConfigurationChange(configuration.copy(overscrollProgress = it)) }
+                    value = configuration.overscrollProgressConverter,
+                    onValue = {
+                        onConfigurationChange(configuration.copy(overscrollProgressConverter = it))
+                    }
                 )
 
                 Text(text = "Media", style = MaterialTheme.typography.titleMedium)
