@@ -117,21 +117,24 @@ describe('TracePipeline', () => {
     );
   });
 
-  it('can load valid gzipped file', async () => {
+  it('can load valid gzipped file and archive', async () => {
     expect(tracePipeline.getTraces().getSize()).toEqual(0);
 
     const gzippedFile = await UnitTestUtils.getFixtureFile(
       'traces/WindowManager.pb.gz',
     );
-
-    await loadFiles([gzippedFile], FilesSource.TEST);
-    await expectLoadResult(1, []);
-
-    expect(tracePipeline.getTraces().getSize()).toEqual(1);
-
-    const traceEntries = await TracesUtils.extractEntries(
-      tracePipeline.getTraces(),
+    const gzippedArchive = await UnitTestUtils.getFixtureFile(
+      'traces/WindowManager.zip.gz',
     );
+
+    await loadFiles([gzippedFile, gzippedArchive], FilesSource.TEST);
+    await expectLoadResult(2, []);
+
+    const traces = tracePipeline.getTraces();
+    expect(traces.getSize()).toEqual(2);
+    expect(traces.getTraces(TraceType.WINDOW_MANAGER).length).toEqual(2);
+
+    const traceEntries = await TracesUtils.extractEntries(traces);
     expect(traceEntries.get(TraceType.WINDOW_MANAGER)?.length).toBeGreaterThan(
       0,
     );
