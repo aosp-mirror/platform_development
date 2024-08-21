@@ -13,12 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+import {Clipboard, ClipboardModule} from '@angular/cdk/clipboard';
 import {Component, CUSTOM_ELEMENTS_SCHEMA, ViewChild} from '@angular/core';
-import {
-  ComponentFixture,
-  ComponentFixtureAutoDetect,
-  TestBed,
-} from '@angular/core/testing';
+import {ComponentFixture, TestBed} from '@angular/core/testing';
 import {MatIconModule} from '@angular/material/icon';
 import {MatTooltipModule} from '@angular/material/tooltip';
 import {assertDefined} from 'common/assert_utils';
@@ -37,10 +35,12 @@ describe('TreeComponent', () => {
   let fixture: ComponentFixture<TestHostComponent>;
   let component: TestHostComponent;
   let htmlElement: HTMLElement;
+  let mockCopyText: jasmine.Spy;
 
   beforeEach(async () => {
+    mockCopyText = jasmine.createSpy();
     await TestBed.configureTestingModule({
-      providers: [{provide: ComponentFixtureAutoDetect, useValue: true}],
+      providers: [{provide: Clipboard, useValue: {copy: mockCopyText}}],
       declarations: [
         TreeComponent,
         TestHostComponent,
@@ -48,25 +48,27 @@ describe('TreeComponent', () => {
         HierarchyTreeNodeDataViewComponent,
         PropertyTreeNodeDataViewComponent,
       ],
-      imports: [MatTooltipModule, MatIconModule],
+      imports: [MatTooltipModule, MatIconModule, ClipboardModule],
       schemas: [CUSTOM_ELEMENTS_SCHEMA],
     }).compileComponents();
     fixture = TestBed.createComponent(TestHostComponent);
     component = fixture.componentInstance;
     htmlElement = fixture.nativeElement;
-    fixture.detectChanges();
   });
 
   it('can be created', () => {
+    fixture.detectChanges();
     expect(component).toBeTruthy();
   });
 
   it('shows node', () => {
+    fixture.detectChanges();
     const treeNode = htmlElement.querySelector('tree-node');
     expect(treeNode).toBeTruthy();
   });
 
   it('can identify if a parent node has a selected child', () => {
+    fixture.detectChanges();
     const treeComponent = assertDefined(component.treeComponent);
     expect(treeComponent.hasSelectedChild()).toBeFalse();
     component.highlightedItem = '3 Child3';
@@ -75,8 +77,8 @@ describe('TreeComponent', () => {
   });
 
   it('highlights node upon click', () => {
+    fixture.detectChanges();
     const treeNode = assertDefined(htmlElement.querySelector('tree-node'));
-
     const spy = spyOn(
       assertDefined(component.treeComponent).highlightedChange,
       'emit',
@@ -89,6 +91,7 @@ describe('TreeComponent', () => {
   });
 
   it('toggles tree upon node double click', () => {
+    fixture.detectChanges();
     const treeComponent = assertDefined(component.treeComponent);
     const treeNode = assertDefined(htmlElement.querySelector('tree-node'));
 
@@ -101,6 +104,7 @@ describe('TreeComponent', () => {
   });
 
   it('does not toggle tree in flat mode on double click', () => {
+    fixture.detectChanges();
     const treeComponent = assertDefined(component.treeComponent);
     component.isFlattened = true;
     fixture.detectChanges();
@@ -115,6 +119,7 @@ describe('TreeComponent', () => {
   });
 
   it('scrolls selected node only if not in view', () => {
+    fixture.detectChanges();
     const treeComponent = assertDefined(component.treeComponent);
     const treeNode = assertDefined(
       treeComponent.elementRef.nativeElement.querySelector(`#nodeChild79`),
@@ -140,9 +145,9 @@ describe('TreeComponent', () => {
 
   it('sets initial expanded state to false if collapse state exists in store', () => {
     component.useStoredExpandedState = true;
+    fixture.detectChanges();
     const treeComponent = assertDefined(component.treeComponent);
     // tree expanded by default
-    fixture.detectChanges();
     expect(treeComponent.isExpanded()).toBeTrue();
 
     // tree collapsed
@@ -157,12 +162,15 @@ describe('TreeComponent', () => {
   });
 
   it('renders show state button if applicable', () => {
+    fixture.detectChanges();
     expect(htmlElement.querySelector('.toggle-rect-show-state-btn')).toBeNull();
+    expect(htmlElement.querySelector('.children.with-gutter')).toBeNull();
 
     component.rectIdToShowState = new Map([
       [component.tree.id, RectShowState.HIDE],
     ]);
     fixture.detectChanges();
+    expect(htmlElement.querySelector('.children.with-gutter')).toBeTruthy();
     expect(
       assertDefined(htmlElement.querySelector('.toggle-rect-show-state-btn'))
         .textContent,
@@ -199,6 +207,7 @@ describe('TreeComponent', () => {
   });
 
   it('shows node at full opacity when applicable', () => {
+    fixture.detectChanges();
     expect(htmlElement.querySelector('.node.full-opacity')).toBeTruthy();
 
     component.rectIdToShowState = new Map([
@@ -226,6 +235,26 @@ describe('TreeComponent', () => {
     ]);
     fixture.detectChanges();
     expect(htmlElement.querySelector('.node.full-opacity')).toBeNull();
+  });
+
+  it('copies text via copy button without selecting node', () => {
+    fixture.detectChanges();
+
+    component.tree = TreeNodeUtils.makeUiPropertyNode(
+      component.tree.id,
+      component.tree.name,
+      0,
+    );
+    fixture.detectChanges();
+
+    const spy = spyOn(assertDefined(component.treeComponent), 'onNodeClick');
+    const copyButton = assertDefined(
+      htmlElement.querySelector<HTMLElement>('.icon-wrapper-copy button'),
+    );
+    copyButton.click();
+    fixture.detectChanges();
+    expect(mockCopyText).toHaveBeenCalled();
+    expect(spy).not.toHaveBeenCalled();
   });
 
   function makeTree() {
