@@ -39,6 +39,7 @@ fun systemUiTransitions(
             dampingRatio = springConfiguration.dampingRatio,
             visibilityThreshold = 0.5f,
         )
+    defaultOverscrollProgressConverter = configuration.overscrollProgressConverter
 
     alwaysOnDisplayTransitions()
     shadeTransitions(qsPagerState, configuration)
