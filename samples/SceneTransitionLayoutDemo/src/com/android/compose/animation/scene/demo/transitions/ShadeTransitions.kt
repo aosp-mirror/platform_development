@@ -158,7 +158,6 @@ fun SceneTransitionsBuilder.shadeTransitions(
 
     if (configuration.useOverscrollSpec) {
         overscroll(Scenes.Shade, Orientation.Vertical) {
-            progressConverter = configuration.overscrollProgressConverter
             translate(Shade.Elements.Scrim, y = { absoluteDistance })
         }
     }
