@@ -47,12 +47,12 @@ fun SceneTransitionsBuilder.lockscreenTransitions(configuration: DemoConfigurati
         overscrollDisabled(Scenes.Lockscreen, Orientation.Vertical)
 
         overscroll(Scenes.StubStart, Orientation.Horizontal) {
-            progressConverter = configuration.overscrollProgress::convert
+            progressConverter = configuration.overscrollProgressConverter
             translate(Stub.Elements.TextStart, x = { absoluteDistance })
         }
 
         overscroll(Scenes.StubEnd, Orientation.Horizontal) {
-            progressConverter = configuration.overscrollProgress::convert
+            progressConverter = configuration.overscrollProgressConverter
             translate(Stub.Elements.TextEnd, x = { absoluteDistance })
         }
     }
