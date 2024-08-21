@@ -294,10 +294,10 @@ export class Presenter extends AbstractHierarchyViewerPresenter<UiData> {
         tree,
         'requestedCornerRadius',
       ),
-      inputTransform: hasInputChannel
-        ? inputWindowInfo.getChildByName('transform')
-        : undefined,
-      inputRegion: tree.getChildByName('inputRegion')?.formattedValue(),
+      inputTransform: inputWindowInfo?.getChildByName('transform'),
+      inputRegion: inputWindowInfo
+        ?.getChildByName('touchableRegion')
+        ?.formattedValue(),
       focusable: hasInputChannel
         ? assertDefined(
             inputWindowInfo.getChildByName('focusable'),
