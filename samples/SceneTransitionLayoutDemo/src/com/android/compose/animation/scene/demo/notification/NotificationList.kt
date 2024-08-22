@@ -120,7 +120,7 @@ private suspend fun expandFirstNotificationWhenSwipingFromLockscreenToShade(
     // Shade.
     layoutState
         .observableTransitionState()
-        .filterIsInstance<ObservableTransitionState.Transition>()
+        .filterIsInstance<ObservableTransitionState.Transition.ChangeCurrentScene>()
         .filter {
             it.isInitiatedByUserInput &&
                 it.isTransitioning(from = Scenes.Lockscreen, to = Scenes.Shade)
