@@ -95,4 +95,14 @@ impl GoogleMetadata {
         self.metadata.third_party.mut_or_insert_default().homepage = homepage.1.value;
         true
     }
+    pub fn migrate_archive(&mut self) -> bool {
+        let mut updated = false;
+        for identifier in self.metadata.third_party.mut_or_insert_default().identifier.iter_mut() {
+            if identifier.type_ == Some("ARCHIVE".to_string()) {
+                identifier.type_ = Some("Archive".to_string());
+                updated = true;
+            }
+        }
+        updated
+    }
 }

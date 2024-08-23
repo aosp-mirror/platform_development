@@ -203,6 +203,7 @@ impl VersionMatch<CrateCollection> {
             )?;
             let mut writeback = false;
             writeback |= metadata.migrate_homepage();
+            writeback |= metadata.migrate_archive();
             if pair.source.version() != pair.dest.version() {
                 metadata.set_date_to_today()?;
                 metadata.set_identifier(pair.dest)?;
