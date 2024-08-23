@@ -23,23 +23,23 @@ import {
 import {MatCardModule} from '@angular/material/card';
 import {assertDefined} from 'common/assert_utils';
 import {UnitTestUtils} from 'test/unit/utils';
-import {ScreenRecordingTraceEntry} from 'trace/screen_recording';
-import {ViewerScreenRecordingComponent} from './viewer_screen_recording_component';
+import {MediaBasedTraceEntry} from 'trace/media_based_trace_entry';
+import {ViewerMediaBasedComponent} from './viewer_media_based_component';
 
-describe('ViewerScreenRecordingComponent', () => {
-  let fixture: ComponentFixture<ViewerScreenRecordingComponent>;
-  let component: ViewerScreenRecordingComponent;
+describe('ViewerMediaBasedComponent', () => {
+  let fixture: ComponentFixture<ViewerMediaBasedComponent>;
+  let component: ViewerMediaBasedComponent;
   let htmlElement: HTMLElement;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       providers: [{provide: ComponentFixtureAutoDetect, useValue: true}],
       imports: [MatCardModule],
-      declarations: [ViewerScreenRecordingComponent],
+      declarations: [ViewerMediaBasedComponent],
       schemas: [CUSTOM_ELEMENTS_SCHEMA],
     }).compileComponents();
 
-    fixture = TestBed.createComponent(ViewerScreenRecordingComponent);
+    fixture = TestBed.createComponent(ViewerMediaBasedComponent);
     component = fixture.componentInstance;
     htmlElement = fixture.nativeElement;
     fixture.detectChanges();
@@ -101,7 +101,7 @@ describe('ViewerScreenRecordingComponent', () => {
     const videoFile = await UnitTestUtils.getFixtureFile(
       'traces/elapsed_and_real_timestamp/screen_recording_metadata_v2.mp4',
     );
-    component.currentTraceEntry = new ScreenRecordingTraceEntry(1, videoFile);
+    component.currentTraceEntry = new MediaBasedTraceEntry(1, videoFile);
     fixture.detectChanges();
     const videoContainer = assertDefined(
       htmlElement.querySelector('.video-container'),
@@ -111,11 +111,7 @@ describe('ViewerScreenRecordingComponent', () => {
   });
 
   it('shows screenshot image', () => {
-    component.currentTraceEntry = new ScreenRecordingTraceEntry(
-      0,
-      new Blob(),
-      true,
-    );
+    component.currentTraceEntry = new MediaBasedTraceEntry(0, new Blob(), true);
     fixture.detectChanges();
     const videoContainer = assertDefined(
       htmlElement.querySelector('.video-container'),

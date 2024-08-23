@@ -24,9 +24,9 @@ import {ViewerInputMethodClients} from './viewer_input_method_clients/viewer_inp
 import {ViewerInputMethodManagerService} from './viewer_input_method_manager_service/viewer_input_method_manager_service';
 import {ViewerInputMethodService} from './viewer_input_method_service/viewer_input_method_service';
 import {ViewerJankCujs} from './viewer_jank_cujs/viewer_jank_cujs';
+import {ViewerScreenshot} from './viewer_media_based/viewer_screenshot';
+import {ViewerScreenRecording} from './viewer_media_based/viewer_screen_recording';
 import {ViewerProtoLog} from './viewer_protolog/viewer_protolog';
-import {ViewerScreenshot} from './viewer_screen_recording/viewer_screenshot';
-import {ViewerScreenRecording} from './viewer_screen_recording/viewer_screen_recording';
 import {ViewerSurfaceFlinger} from './viewer_surface_flinger/viewer_surface_flinger';
 import {ViewerTransactions} from './viewer_transactions/viewer_transactions';
 import {ViewerTransitions} from './viewer_transitions/viewer_transitions';

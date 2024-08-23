@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 The Android Open Source Project
+ * Copyright (C) 2024 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,30 +15,30 @@
  */
 
 import {WinscopeEvent, WinscopeEventType} from 'messaging/winscope_event';
-import {ScreenRecordingTraceEntry} from 'trace/screen_recording';
+import {MediaBasedTraceEntry} from 'trace/media_based_trace_entry';
 import {Trace} from 'trace/trace';
 import {Traces} from 'trace/traces';
 import {TraceEntryFinder} from 'trace/trace_entry_finder';
 import {TRACE_INFO} from 'trace/trace_info';
 import {TraceType} from 'trace/trace_type';
+import {ViewerMediaBasedComponent} from 'viewers/components/viewer_media_based_component';
 import {View, Viewer, ViewType} from 'viewers/viewer';
-import {ViewerScreenRecordingComponent} from './viewer_screen_recording_component';
 
-export class ViewerScreenRecording implements Viewer {
-  static readonly DEPENDENCIES: TraceType[] = [TraceType.SCREEN_RECORDING];
+class ViewerScreenshot implements Viewer {
+  static readonly DEPENDENCIES: TraceType[] = [TraceType.SCREENSHOT];
 
-  private readonly trace: Trace<ScreenRecordingTraceEntry>;
+  private readonly trace: Trace<MediaBasedTraceEntry>;
   private readonly htmlElement: HTMLElement;
   private readonly view: View;
 
-  constructor(trace: Trace<ScreenRecordingTraceEntry>, traces: Traces) {
+  constructor(trace: Trace<MediaBasedTraceEntry>, traces: Traces) {
     this.trace = trace;
-    this.htmlElement = document.createElement('viewer-screen-recording');
+    this.htmlElement = document.createElement('viewer-media-based');
     this.view = new View(
       ViewType.OVERLAY,
       this.getTraces(),
       this.htmlElement,
-      TRACE_INFO[TraceType.SCREEN_RECORDING].name,
+      TRACE_INFO[TraceType.SCREENSHOT].name,
     );
   }
 
@@ -51,15 +51,17 @@ export class ViewerScreenRecording implements Viewer {
           event.position,
         );
         (
-          this.htmlElement as unknown as ViewerScreenRecordingComponent
+          this.htmlElement as unknown as ViewerMediaBasedComponent
         ).currentTraceEntry = await entry?.getValue();
+        (this.htmlElement as unknown as ViewerMediaBasedComponent).title =
+          'Screenshot';
       },
     );
     await event.visit(
       WinscopeEventType.EXPANDED_TIMELINE_TOGGLED,
       async (event) => {
         (
-          this.htmlElement as unknown as ViewerScreenRecordingComponent
+          this.htmlElement as unknown as ViewerMediaBasedComponent
         ).forceMinimize = event.isTimelineExpanded;
       },
     );
@@ -73,7 +75,9 @@ export class ViewerScreenRecording implements Viewer {
     return [this.view];
   }
 
-  getTraces(): Array<Trace<ScreenRecordingTraceEntry>> {
+  getTraces(): Array<Trace<MediaBasedTraceEntry>> {
     return [this.trace];
   }
 }
+
+export {ViewerScreenshot};

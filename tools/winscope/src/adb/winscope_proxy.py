@@ -474,7 +474,7 @@ EOF
             self.execute_perfetto_config_command(server, shell, InputConfig.COMMAND, "Input trace")
 
 
-class ScreenConfig(TraceConfig):
+class MediaBasedConfig(TraceConfig):
     """Creates trace identifiers for Screen Recording traces and Screenshots."""
     trace_identifiers = ["active"]
 
@@ -496,14 +496,14 @@ class ScreenConfig(TraceConfig):
     def execute_command(self, server, device_id):
         pass
 
-class ScreenRecordingConfig(ScreenConfig):
+class ScreenRecordingConfig(MediaBasedConfig):
     """Creates display args for Screen Recording traces."""
     def get_optional_start_args(self, identifier):
         if identifier == "active":
             return ""
         return f"--display-id {identifier}"
 
-class ScreenshotConfig(ScreenConfig):
+class ScreenshotConfig(MediaBasedConfig):
     """Creates display args for Screenshots."""
     def get_optional_start_args(self, identifier):
         if identifier == "active":

@@ -22,10 +22,10 @@ import {
   SimpleChanges,
 } from '@angular/core';
 import {DomSanitizer, SafeUrl} from '@angular/platform-browser';
-import {ScreenRecordingTraceEntry} from 'trace/screen_recording';
+import {MediaBasedTraceEntry} from 'trace/media_based_trace_entry';
 
 @Component({
-  selector: 'viewer-screen-recording',
+  selector: 'viewer-media-based',
   template: `
   <div class="overlay">
     <mat-card class="container" cdkDrag cdkDragBoundary=".overlay">
@@ -130,7 +130,7 @@ import {ScreenRecordingTraceEntry} from 'trace/screen_recording';
     `,
   ],
 })
-class ViewerScreenRecordingComponent {
+class ViewerMediaBasedComponent {
   safeUrl: undefined | SafeUrl = undefined;
   shouldMinimize = false;
 
@@ -139,7 +139,7 @@ class ViewerScreenRecordingComponent {
     @Inject(ElementRef) private elementRef: ElementRef,
   ) {}
 
-  @Input() currentTraceEntry: ScreenRecordingTraceEntry | undefined;
+  @Input() currentTraceEntry: MediaBasedTraceEntry | undefined;
   @Input() title = 'Screen recording';
   @Input() forceMinimize = false;
 
@@ -245,4 +245,4 @@ class ViewerScreenRecordingComponent {
   }
 }
 
-export {ViewerScreenRecordingComponent};
+export {ViewerMediaBasedComponent};

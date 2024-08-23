@@ -78,9 +78,12 @@ class E2eTestUtils {
 
   static async clickCloseIcon() {
     const button = element.all(by.css('.uploaded-files button')).first();
-    await browser.executeScript(`
+    await browser.executeScript(
+      `
       arguments[0].click();
-    `, button);
+    `,
+      button,
+    );
   }
 
   static async clickDownloadTracesButton() {
