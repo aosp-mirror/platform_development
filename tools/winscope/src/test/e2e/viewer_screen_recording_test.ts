@@ -17,9 +17,8 @@ import {browser, by, element} from 'protractor';
 import {E2eTestUtils} from './utils';
 
 describe('Viewer ScreenRecording', () => {
-  beforeAll(async () => {
-    browser.manage().timeouts().implicitlyWait(1000);
-    await E2eTestUtils.checkServerIsUp('Winscope', E2eTestUtils.WINSCOPE_URL);
+  beforeEach(async () => {
+    await E2eTestUtils.beforeEach(1000);
     await browser.get(E2eTestUtils.WINSCOPE_URL);
   });
 
