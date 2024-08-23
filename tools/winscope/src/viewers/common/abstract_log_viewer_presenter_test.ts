@@ -159,13 +159,21 @@ export abstract class AbstractLogViewerPresenterTest<UiData extends UiDataLog> {
           }
         });
 
-        it('updates current index when filters change', async () => {
+        it('updates indices when filters change', async () => {
           await presenter.onAppEvent(this.getSecondPositionUpdate());
           const filterName = assertDefined(this.filterNameForCurrentIndexTest);
           await presenter.onFilterChange(filterName, []);
           expect(uiData.currentIndex).toEqual(
             this.expectedIndexOfSecondPositionUpdate,
           );
+          expect(uiData.scrollToIndex).toEqual(
+            this.expectedIndexOfSecondPositionUpdate,
+          );
+          expect(uiData.selectedIndex).toEqual(undefined);
+
+          const finalEntryIndex = uiData.entries.length - 1;
+          await presenter.onLogEntryClick(finalEntryIndex);
+          expect(uiData.selectedIndex).toEqual(finalEntryIndex);
 
           await presenter.onFilterChange(
             filterName,
@@ -174,6 +182,15 @@ export abstract class AbstractLogViewerPresenterTest<UiData extends UiDataLog> {
           expect(uiData.currentIndex).toEqual(
             this.expectedCurrentIndexAfterFilterChange,
           );
+          expect(uiData.scrollToIndex).toEqual(
+            this.expectedCurrentIndexAfterFilterChange,
+          );
+
+          let expectedSelectedIndex =
+            finalEntryIndex <= uiData.entries.length - 1
+              ? finalEntryIndex
+              : this.expectedCurrentIndexAfterFilterChange;
+          expect(uiData.selectedIndex).toEqual(expectedSelectedIndex);
 
           await presenter.onFilterChange(
             filterName,
@@ -182,6 +199,17 @@ export abstract class AbstractLogViewerPresenterTest<UiData extends UiDataLog> {
           expect(uiData.currentIndex).toEqual(
             this.expectedCurrentIndexAfterSecondFilterChange,
           );
+          expect(uiData.scrollToIndex).toEqual(
+            this.expectedCurrentIndexAfterSecondFilterChange,
+          );
+
+          const prevStillValid =
+            expectedSelectedIndex !== undefined &&
+            expectedSelectedIndex <= uiData.entries.length - 1;
+          expectedSelectedIndex = prevStillValid
+            ? expectedSelectedIndex
+            : this.expectedCurrentIndexAfterSecondFilterChange;
+          expect(uiData.selectedIndex).toEqual(expectedSelectedIndex);
         });
       }
 
