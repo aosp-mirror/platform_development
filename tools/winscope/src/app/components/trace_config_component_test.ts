@@ -21,6 +21,7 @@ import {MatDividerModule} from '@angular/material/divider';
 import {MatFormFieldModule} from '@angular/material/form-field';
 import {MatInputModule} from '@angular/material/input';
 import {MatSelectModule} from '@angular/material/select';
+import {MatTooltipModule} from '@angular/material/tooltip';
 import {BrowserAnimationsModule} from '@angular/platform-browser/animations';
 import {assertDefined} from 'common/assert_utils';
 import {InMemoryStorage} from 'common/in_memory_storage';
@@ -45,6 +46,7 @@ describe('TraceConfigComponent', () => {
         BrowserAnimationsModule,
         FormsModule,
         ReactiveFormsModule,
+        MatTooltipModule,
       ],
       declarations: [TraceConfigComponent],
     }).compileComponents();

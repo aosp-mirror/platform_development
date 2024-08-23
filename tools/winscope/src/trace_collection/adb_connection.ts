@@ -15,7 +15,6 @@
  */
 
 import {assertUnreachable} from 'common/assert_utils';
-import {OnProgressUpdateType} from 'common/function_utils';
 import {HttpRequestStatus, HttpResponse} from 'common/http_request';
 import {AdbDevice} from './adb_device';
 import {ConnectionState} from './connection_state';
@@ -24,8 +23,8 @@ import {TraceRequest} from './trace_request';
 export abstract class AdbConnection {
   abstract initialize(
     detectStateChangeInUi: () => Promise<void>,
-    progressCallback: OnProgressUpdateType,
     availableTracesChangeCallback: (traces: string[]) => void,
+    devicesChangeCallback: (devices: AdbDevice[]) => void,
   ): Promise<void>;
   abstract restartConnection(): Promise<void>;
   abstract setSecurityToken(token: string): void;

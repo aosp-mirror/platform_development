@@ -58,6 +58,7 @@ describe('CollectTracesComponent', () => {
     id: '35562',
     model: 'Pixel 6',
     authorized: true,
+    displays: [],
   };
 
   beforeEach(async () => {
@@ -145,7 +146,9 @@ describe('CollectTracesComponent', () => {
   it('displays connected unauthorized devices', () => {
     const connection = getConnection();
     connection.state = ConnectionState.IDLE;
-    connection.devices = [{id: '35562', model: 'Pixel 6', authorized: false}];
+    connection.devices = [
+      {id: '35562', model: 'Pixel 6', authorized: false, displays: []},
+    ];
     fixture.detectChanges();
 
     const el = assertDefined(htmlElement.querySelector('.devices-connecting'));
@@ -187,6 +190,7 @@ describe('CollectTracesComponent', () => {
         id: '75432',
         model: 'Pixel Watch',
         authorized: true,
+        displays: [],
       },
     ];
     fixture.detectChanges();
@@ -218,6 +222,7 @@ describe('CollectTracesComponent', () => {
         id: '75432',
         model: 'Pixel Watch',
         authorized: true,
+        displays: [],
       },
     ];
     fixture.detectChanges();
@@ -631,7 +636,7 @@ describe('CollectTracesComponent', () => {
     expect(spy).toHaveBeenCalledOnceWith(mockDevice, [
       {name: 'window_dump', config: []},
       {name: 'layers_dump', config: []},
-      {name: 'screenshot', config: []},
+      {name: 'screenshot', config: [{key: 'displays', value: []}]},
       {name: 'perfetto_dump', config: []},
     ]);
   });
@@ -675,7 +680,7 @@ describe('CollectTracesComponent', () => {
     await fixture.whenStable();
     expect(spy).toHaveBeenCalledOnceWith(mockDevice, [
       {name: 'layers_dump', config: []},
-      {name: 'screenshot', config: []},
+      {name: 'screenshot', config: [{key: 'displays', value: []}]},
       {name: 'perfetto_dump', config: []},
     ]);
   });

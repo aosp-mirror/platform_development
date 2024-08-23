@@ -27,6 +27,7 @@ import {
 import {MatDialog} from '@angular/material/dialog';
 import {assertDefined} from 'common/assert_utils';
 import {FunctionUtils} from 'common/function_utils';
+import {PersistentStoreProxy} from 'common/persistent_store_proxy';
 import {UserNotifier} from 'common/user_notifier';
 import {Analytics} from 'logging/analytics';
 import {ProgressListener} from 'messaging/progress_listener';
@@ -453,8 +454,8 @@ export class CollectTracesComponent
     }
     this.adbConnection.initialize(
       () => this.onConnectionStateChange(),
-      (progress) => this.onLoadProgressUpdate(progress),
       this.toggleAvailabilityOfTraces,
+      this.handleDevicesChange,
     );
   }
 
@@ -477,6 +478,13 @@ export class CollectTracesComponent
       WinscopeEventType.APP_REFRESH_DUMPS_REQUEST,
       async (event) => {
         this.selectedTabIndex = 1;
+        this.dumpConfig = PersistentStoreProxy.new<TraceConfigurationMap>(
+          assertDefined('DumpSettings'),
+          assertDefined(
+            JSON.parse(JSON.stringify(assertDefined(this.dumpConfig))),
+          ),
+          assertDefined(this.storage),
+        );
         this.refreshDumps = true;
       },
     );
@@ -643,9 +651,22 @@ export class CollectTracesComponent
     }
     requestedDumps.push('perfetto_dump'); // always dump/fetch perfetto dump
 
-    const requestedDumpsWithConfig = requestedDumps.map((dumpName) => {
-      return {name: dumpName, config: []};
-    });
+    const requestedDumpsWithConfig: TraceRequest[] = requestedDumps.map(
+      (dumpName) => {
+        const enabledConfig = this.requestedEnabledConfig(
+          dumpName,
+          this.dumpConfig,
+        );
+        const selectedConfig = this.requestedSelectedConfig(
+          dumpName,
+          this.dumpConfig,
+        );
+        return {
+          name: dumpName,
+          config: enabledConfig.concat(selectedConfig),
+        };
+      },
+    );
 
     this.progressMessage = 'Dumping state...';
 
@@ -749,8 +770,14 @@ export class CollectTracesComponent
 
     const requestedTracesWithConfig: TraceRequest[] = requestedTraces.map(
       (traceName) => {
-        const enabledConfig = this.requestedEnabledConfig(traceName);
-        const selectedConfig = this.requestedSelectedConfig(traceName);
+        const enabledConfig = this.requestedEnabledConfig(
+          traceName,
+          this.traceConfig,
+        );
+        const selectedConfig = this.requestedSelectedConfig(
+          traceName,
+          this.traceConfig,
+        );
         return {
           name: traceName,
           config: enabledConfig.concat(selectedConfig),
@@ -815,9 +842,12 @@ export class CollectTracesComponent
     });
   }
 
-  private requestedEnabledConfig(traceName: string): TraceRequestConfig[] {
+  private requestedEnabledConfig(
+    traceName: string,
+    configMap: TraceConfigurationMap,
+  ): TraceRequestConfig[] {
     const req: TraceRequestConfig[] = [];
-    const trace = assertDefined(this.traceConfig)[traceName];
+    const trace = configMap[traceName];
     if (trace?.enabled) {
       trace.config?.enableConfigs?.forEach((con: EnableConfiguration) => {
         if (con.enabled) {
@@ -828,9 +858,11 @@ export class CollectTracesComponent
     return req;
   }
 
-  private requestedSelectedConfig(traceName: string): TraceRequestConfig[] {
-    const tracingConfig = assertDefined(this.traceConfig);
-    const trace = tracingConfig[traceName];
+  private requestedSelectedConfig(
+    traceName: string,
+    configMap: TraceConfigurationMap,
+  ): TraceRequestConfig[] {
+    const trace = configMap[traceName];
     if (!trace?.enabled) {
       return [];
     }
@@ -841,14 +873,35 @@ export class CollectTracesComponent
     );
   }
 
-  private onLoadProgressUpdate(progressPercentage: number) {
-    this.progressPercentage = progressPercentage;
-    this.changeDetectorRef.detectChanges();
-  }
-
   private toggleAvailabilityOfTraces = (traces: string[]) =>
     traces.forEach((trace) => {
       const config = assertDefined(this.traceConfig)[trace];
       config.available = !config.available;
     });
+
+  private handleDevicesChange = (devices: AdbDevice[]) => {
+    if (!this.selectedDevice) {
+      return;
+    }
+    const selectedDevice = devices.find(
+      (d) => d.id === assertDefined(this.selectedDevice).id,
+    );
+    if (!selectedDevice) {
+      return;
+    }
+    const screenRecordingConfig = assertDefined(this.traceConfig)[
+      'screen_recording'
+    ].config;
+    assertDefined(
+      screenRecordingConfig?.selectionConfigs.find((c) => c.key === 'displays'),
+    ).options = selectedDevice.displays;
+
+    const screenshotConfig = assertDefined(this.dumpConfig)['screenshot']
+      .config;
+    assertDefined(
+      screenshotConfig?.selectionConfigs.find((c) => c.key === 'displays'),
+    ).options = selectedDevice.displays;
+
+    this.changeDetectorRef.detectChanges();
+  };
 }

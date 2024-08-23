@@ -19,6 +19,7 @@ import {
   EventEmitter,
   Inject,
   Input,
+  NgZone,
   Output,
 } from '@angular/core';
 import {MatSelect, MatSelectChange} from '@angular/material/select';
@@ -31,6 +32,7 @@ import {
   TraceConfiguration,
   TraceConfigurationMap,
 } from 'trace_collection/trace_configuration';
+import {userOptionStyle} from 'viewers/components/styles/user_option.styles';
 
 @Component({
   selector: 'trace-config',
@@ -72,6 +74,7 @@ import {
         *ngIf="this.traceConfig[traceKey].config?.selectionConfigs.length > 0"
         class="selection-config-opt">
         <ng-container *ngFor="let selectionConfig of traceSelectionConfigs(this.traceConfig[traceKey])">
+          <div>
           <mat-form-field
             class="config-selection"
             appearance="fill">
@@ -79,17 +82,42 @@ import {
 
             <mat-select
               #matSelect
+              [multiple]="isMultipleSelect(selectionConfig)"
               disableOptionCentering
               class="selected-value"
               [attr.label]="traceKey + selectionConfig.name"
               [value]="selectionConfig.value"
-              [disabled]="!this.traceConfig[traceKey].enabled"
+              [disabled]="!this.traceConfig[traceKey].enabled || selectionConfig.options.length === 0"
               (selectionChange)="onSelectChange($event, selectionConfig)">
-              <mat-option *ngFor="let option of selectionConfig.options" (click)="onOptionClick(matSelect, option, traceKey + selectionConfig.name)" [value]="option">{{
-                option
-              }}</mat-option>
+              <span class="mat-option" *ngIf="matSelect.multiple || selectionConfig.optional">
+                <button
+                  *ngIf="matSelect.multiple"
+                  mat-flat-button
+                  class="user-option"
+                  [color]="matSelect.value.length === selectionConfig.options.length ? 'primary' : undefined"
+                  [class.not-enabled]="matSelect.value.length !== selectionConfig.options.length"
+                  (click)="onAllButtonClick(matSelect, selectionConfig)"> All </button>
+                <button
+                  *ngIf="selectionConfig.optional"
+                  mat-flat-button
+                  class="user-option"
+                  [color]="matSelect.value.length === 0 ? 'primary' : undefined"
+                  [class.not-enabled]="matSelect.value.length > 0"
+                  (click)="onNoneButtonClick(matSelect, selectionConfig)"> None </button>
+              </span>
+              <mat-option
+                *ngFor="let option of selectionConfig.options"
+                (click)="onOptionClick(matSelect, option, traceKey + selectionConfig.name)"
+                [value]="option"
+                (mouseenter)="onSelectOptionHover($event, option)"
+                [matTooltip]="option"
+                [matTooltipDisabled]="disableOptionTooltip(option)"
+                matTooltipPosition="right">
+                  {{ option }}</mat-option>
             </mat-select>
           </mat-form-field>
+          <span class="config-desc" *ngIf="selectionConfig.desc"> {{selectionConfig.desc}} </span>
+          </div>
         </ng-container>
       </div>
     </ng-container>
@@ -113,7 +141,11 @@ import {
         left: 0px;
         top: 100px;
       }
+      .config-desc {
+        margin-inline-start: 10px;
+      }
     `,
+    userOptionStyle,
   ],
 })
 export class TraceConfigComponent {
@@ -128,8 +160,11 @@ export class TraceConfigComponent {
   @Output() readonly traceConfigChange =
     new EventEmitter<TraceConfigurationMap>();
 
+  private tooltipsWithStablePosition = new Set<string>();
+
   constructor(
     @Inject(ChangeDetectorRef) private changeDetectorRef: ChangeDetectorRef,
+    @Inject(NgZone) private ngZone: NgZone,
   ) {}
 
   ngOnInit() {
@@ -187,10 +222,45 @@ export class TraceConfigComponent {
     );
   }
 
+  onSelectOptionHover(event: MouseEvent, option: string) {
+    if (this.tooltipsWithStablePosition.has(option)) {
+      return;
+    }
+    this.ngZone.run(() => {
+      (event.target as HTMLElement).dispatchEvent(new Event('mouseleave'));
+      this.tooltipsWithStablePosition.add(option);
+      this.changeDetectorRef.detectChanges();
+      (event.target as HTMLElement).dispatchEvent(new Event('mouseenter'));
+    });
+  }
+
+  disableOptionTooltip(option: string): boolean {
+    return !this.tooltipsWithStablePosition.has(option) || option.length <= 36;
+  }
+
   onSelectChange(event: MatSelectChange, config: SelectionConfiguration) {
     config.value = event.value;
-    event.source.close();
+    if (!event.source.multiple) {
+      event.source.close();
+    }
     this.onTraceConfigChange();
+  }
+
+  onNoneButtonClick(select: MatSelect, config: SelectionConfiguration) {
+    if (config.value.length > 0) {
+      select.value = Array.isArray(config.value) ? [] : '';
+      config.value = Array.isArray(config.value) ? [] : '';
+    }
+  }
+
+  onAllButtonClick(select: MatSelect, config: SelectionConfiguration) {
+    if (config.value.length !== config.options.length) {
+      config.value = config.options;
+      select.value = config.options;
+    } else {
+      config.value = [];
+      select.value = [];
+    }
   }
 
   onOptionClick(select: MatSelect, option: string, configName: string) {
@@ -204,5 +274,9 @@ export class TraceConfigComponent {
 
   onTraceConfigChange() {
     this.traceConfigChange.emit(this.traceConfig);
+  }
+
+  isMultipleSelect(config: SelectionConfiguration): boolean {
+    return Array.isArray(config.value);
   }
 }

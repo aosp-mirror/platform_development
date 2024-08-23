@@ -59,8 +59,21 @@ function wrapWithPersistentStoreProxy(
       if (typeof prop === 'symbol') {
         throw new Error("Can't use symbol keys only strings");
       }
-      if (Array.isArray(target) && typeof prop === 'number') {
-        target[prop] = newValue;
+      if (
+        Array.isArray(target) &&
+        (typeof prop === 'number' || !Number.isNaN(Number(prop)))
+      ) {
+        target[Number(prop)] = newValue;
+        storage.setItem(storeKey, JSON.stringify(baseObject));
+        return true;
+      }
+      if (!Array.isArray(target) && Array.isArray(newValue)) {
+        (target as any)[prop] = wrapWithPersistentStoreProxy(
+          storeKey,
+          newValue,
+          storage,
+          baseObject,
+        );
         storage.setItem(storeKey, JSON.stringify(baseObject));
         return true;
       }
