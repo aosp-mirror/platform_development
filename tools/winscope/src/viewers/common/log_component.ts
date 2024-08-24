@@ -250,7 +250,7 @@ export class LogComponent {
     if (
       this.scrollToIndex !== undefined &&
       this.lastClickedTimestamp !==
-        this.entries[this.scrollToIndex].traceEntry.getTimestamp()
+        this.entries.at(this.scrollToIndex)?.traceEntry.getTimestamp()
     ) {
       this.scrollComponent?.scrollToIndex(Math.max(0, this.scrollToIndex - 1));
     }
