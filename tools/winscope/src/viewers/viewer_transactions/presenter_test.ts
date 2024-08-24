@@ -39,7 +39,6 @@ class PresenterTransactionsTest extends AbstractLogViewerPresenterTest<UiData> {
 
   override readonly shouldExecuteHeaderTests = false;
   override readonly shouldExecuteFilterTests = true;
-  override readonly shouldExecuteCurrentIndexTests = true;
   override readonly shouldExecutePropertiesTests = true;
 
   override readonly totalOutputEntries = 1647;

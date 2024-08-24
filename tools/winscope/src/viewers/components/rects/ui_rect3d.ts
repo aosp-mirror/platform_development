@@ -30,4 +30,5 @@ export interface UiRect3D extends Rect3D {
   transform: TransformMatrix;
   isOversized: boolean;
   fillRegion: Rect3D[] | undefined;
+  isPinned: boolean;
 }

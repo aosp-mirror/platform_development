@@ -19,6 +19,7 @@ import {Rect} from 'common/geometry/rect';
 import {TracePositionUpdate} from 'messaging/winscope_event';
 import {TimestampConverterUtils} from 'test/unit/timestamp_converter_utils';
 import {TreeNodeUtils} from 'test/unit/tree_node_utils';
+import {UserNotifierChecker} from 'test/unit/user_notifier_checker';
 import {
   AbstractHierarchyViewerPresenter,
   NotifyHierarchyViewCallbackType,
@@ -38,8 +39,11 @@ export abstract class AbstractHierarchyViewerPresenterTest<
     describe('AbstractHierarchyViewerPresenter', () => {
       let uiData: UiDataHierarchy;
       let presenter: AbstractHierarchyViewerPresenter<UiData>;
+      let userNotifierChecker: UserNotifierChecker;
+
       beforeAll(async () => {
         jasmine.addCustomEqualityTester(TreeNodeUtils.treeNodeEqualityTester);
+        userNotifierChecker = new UserNotifierChecker();
         await this.setUpTestEnvironment();
       });
 
@@ -47,6 +51,11 @@ export abstract class AbstractHierarchyViewerPresenterTest<
         presenter = this.createPresenter((newData) => {
           uiData = newData;
         });
+      });
+
+      afterEach(() => {
+        userNotifierChecker.expectNone();
+        userNotifierChecker.reset();
       });
 
       it('is robust to empty trace', async () => {
