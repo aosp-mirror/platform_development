@@ -80,4 +80,29 @@ impl GoogleMetadata {
         self.metadata.third_party.mut_or_insert_default().identifier.push(identifier);
         Ok(())
     }
+    pub fn migrate_homepage(&mut self) -> bool {
+        let mut homepage = None;
+        for (idx, identifier) in self.metadata.third_party.identifier.iter().enumerate() {
+            if identifier.type_.as_ref().unwrap_or(&String::new()).to_lowercase() == "homepage" {
+                match homepage {
+                    Some(info) => panic!("Homepage set twice? {info:?} {identifier:?}"),
+                    None => homepage = Some((idx, identifier.clone())),
+                }
+            }
+        }
+        let Some(homepage) = homepage else { return false };
+        self.metadata.third_party.mut_or_insert_default().identifier.remove(homepage.0);
+        self.metadata.third_party.mut_or_insert_default().homepage = homepage.1.value;
+        true
+    }
+    pub fn migrate_archive(&mut self) -> bool {
+        let mut updated = false;
+        for identifier in self.metadata.third_party.mut_or_insert_default().identifier.iter_mut() {
+            if identifier.type_ == Some("ARCHIVE".to_string()) {
+                identifier.type_ = Some("Archive".to_string());
+                updated = true;
+            }
+        }
+        updated
+    }
 }

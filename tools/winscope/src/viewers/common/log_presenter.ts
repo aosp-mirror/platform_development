@@ -118,6 +118,12 @@ export class LogPresenter<Entry extends LogEntry> {
     }
     this.updateFilteredEntries();
     this.currentIndex = this.getCurrentTracePositionIndex();
+    if (
+      this.selectedIndex !== undefined &&
+      this.selectedIndex > this.filteredEntries.length - 1
+    ) {
+      this.selectedIndex = this.currentIndex;
+    }
     this.scrollToIndex = this.selectedIndex ?? this.currentIndex;
   }
 
