@@ -38,7 +38,6 @@ class PresenterProtologTest extends AbstractLogViewerPresenterTest<UiData> {
 
   override readonly shouldExecuteHeaderTests = false;
   override readonly shouldExecuteFilterTests = true;
-  override readonly shouldExecuteCurrentIndexTests = true;
   override readonly shouldExecutePropertiesTests = false;
 
   override readonly totalOutputEntries = 3;

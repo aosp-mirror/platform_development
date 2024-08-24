@@ -45,6 +45,7 @@ import {UiData} from './ui_data';
         [shadingModes]="shadingModes"
         [dependencies]="inputData?.dependencies ?? []"
         [userOptions]="inputData?.rectsUserOptions ?? {}"
+        [pinnedItems]="inputData?.pinnedItems ?? []"
         (collapseButtonClicked)="sections.onCollapseStateChange(CollapsibleSectionType.RECTS, true)"></rects-view>
 
       <hierarchy-view

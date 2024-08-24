@@ -21,8 +21,7 @@ describe('Viewer Surface Flinger', () => {
   const viewerSelector = 'viewer-surface-flinger';
 
   beforeEach(async () => {
-    browser.manage().timeouts().implicitlyWait(1000);
-    await E2eTestUtils.checkServerIsUp('Winscope', E2eTestUtils.WINSCOPE_URL);
+    await E2eTestUtils.beforeEach(1000);
     await browser.get(E2eTestUtils.WINSCOPE_URL);
   });
 

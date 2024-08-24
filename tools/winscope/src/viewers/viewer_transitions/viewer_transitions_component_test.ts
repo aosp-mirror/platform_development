@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import {ClipboardModule} from '@angular/cdk/clipboard';
 import {ScrollingModule} from '@angular/cdk/scrolling';
 import {
   ComponentFixture,
@@ -66,7 +67,12 @@ describe('ViewerTransitionsComponent', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       providers: [{provide: ComponentFixtureAutoDetect, useValue: true}],
-      imports: [MatDividerModule, ScrollingModule, MatIconModule],
+      imports: [
+        MatDividerModule,
+        ScrollingModule,
+        MatIconModule,
+        ClipboardModule,
+      ],
       declarations: [
         ViewerTransitionsComponent,
         TreeComponent,

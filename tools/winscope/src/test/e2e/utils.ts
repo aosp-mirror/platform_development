@@ -20,6 +20,12 @@ class E2eTestUtils {
   static readonly WINSCOPE_URL = 'http://localhost:8080';
   static readonly REMOTE_TOOL_MOCK_URL = 'http://localhost:8081';
 
+  static async beforeEach(defaultTimeoutMs: number) {
+    await browser.manage().timeouts().implicitlyWait(defaultTimeoutMs);
+    await E2eTestUtils.checkServerIsUp('Winscope', E2eTestUtils.WINSCOPE_URL);
+    await browser.driver.manage().window().maximize();
+  }
+
   static async checkServerIsUp(name: string, url: string) {
     try {
       await browser.get(url);
@@ -72,7 +78,9 @@ class E2eTestUtils {
 
   static async clickCloseIcon() {
     const button = element.all(by.css('.uploaded-files button')).first();
-    await button.click();
+    await browser.executeScript(`
+      arguments[0].click();
+    `, button);
   }
 
   static async clickDownloadTracesButton() {
@@ -191,7 +199,8 @@ class E2eTestUtils {
     for (const node of nodes) {
       const id = await node.getAttribute('id');
       if (id.includes(itemName)) {
-        await node.click();
+        const desc = node.element(by.css('.description'));
+        await desc.click();
         return;
       }
     }
