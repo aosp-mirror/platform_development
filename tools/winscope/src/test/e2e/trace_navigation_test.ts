@@ -20,12 +20,8 @@ import {E2eTestUtils} from './utils';
 describe('Trace navigation', () => {
   const DEFAULT_TIMEOUT_MS = 1000;
 
-  beforeAll(async () => {
-    await browser.manage().timeouts().implicitlyWait(DEFAULT_TIMEOUT_MS);
-    await E2eTestUtils.checkServerIsUp('Winscope', E2eTestUtils.WINSCOPE_URL);
-  });
-
   beforeEach(async () => {
+    await E2eTestUtils.beforeEach(DEFAULT_TIMEOUT_MS);
     await browser.get(E2eTestUtils.WINSCOPE_URL);
   });
 
