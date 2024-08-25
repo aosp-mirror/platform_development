@@ -285,13 +285,17 @@ export class TracePipeline {
     progressListener?.onProgressUpdate(progressMessage, 0);
 
     for (let i = 0; i < files.length; i++) {
-      const file = files[i];
+      let file = files[i];
 
       const onSubProgressUpdate = (subPercentage: number) => {
         const totalPercentage =
           (100 * i) / files.length + subPercentage / files.length;
         progressListener?.onProgressUpdate(progressMessage, totalPercentage);
       };
+
+      if (await FileUtils.isGZipFile(file)) {
+        file = await FileUtils.decompressGZipFile(file);
+      }
 
       if (await FileUtils.isZipFile(file)) {
         try {
@@ -304,10 +308,6 @@ export class TracePipeline {
         } catch (e) {
           UserNotifier.add(new CorruptedArchive(file));
         }
-      } else if (await FileUtils.isGZipFile(file)) {
-        const unzippedFile = await FileUtils.decompressGZipFile(file);
-        unzippedArchives.push([new TraceFile(unzippedFile, file)]);
-        onSubProgressUpdate(100);
       } else {
         unzippedArchives.push([new TraceFile(file, undefined)]);
         onSubProgressUpdate(100);

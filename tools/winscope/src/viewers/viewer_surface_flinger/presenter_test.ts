@@ -79,6 +79,14 @@ class PresenterSurfaceFlingerTest extends AbstractHierarchyViewerPresenterTest<U
         await UnitTestUtils.getLayerTraceEntry(0),
         await UnitTestUtils.getMultiDisplayLayerTraceEntry(),
         await UnitTestUtils.getLayerTraceEntry(1),
+        await UnitTestUtils.getTraceEntry<HierarchyTreeNode>(
+          'traces/elapsed_and_real_timestamp/SurfaceFlinger.pb',
+          5,
+        ),
+        await UnitTestUtils.getTraceEntry<HierarchyTreeNode>(
+          'traces/elapsed_and_real_timestamp/SurfaceFlinger.pb',
+          6,
+        ),
       ])
       .build();
 
@@ -264,8 +272,10 @@ class PresenterSurfaceFlingerTest extends AbstractHierarchyViewerPresenterTest<U
     describe('Specialized tests', () => {
       let presenter: Presenter;
       let uiData: UiData;
+      let userNotifierChecker: UserNotifierChecker;
 
       beforeAll(async () => {
+        userNotifierChecker = new UserNotifierChecker();
         await this.setUpTestEnvironment();
       });
 
@@ -276,6 +286,11 @@ class PresenterSurfaceFlingerTest extends AbstractHierarchyViewerPresenterTest<U
         presenter = this.createPresenter(
           notifyViewCallback as NotifyHierarchyViewCallbackType<UiData>,
         );
+      });
+
+      afterEach(() => {
+        userNotifierChecker.expectNone();
+        userNotifierChecker.reset();
       });
 
       it('handles displays with no visible layers', async () => {
@@ -417,6 +432,26 @@ class PresenterSurfaceFlingerTest extends AbstractHierarchyViewerPresenterTest<U
         );
       });
 
+      it('clears curated properties on position update if no properties tree found', async () => {
+        const trace = assertDefined(this.traceSf);
+        await presenter.onAppEvent(
+          TracePositionUpdate.fromTraceEntry(trace.getEntry(3)),
+        );
+
+        const nodeName =
+          '101 Surface(name=Task=1)/@0x47f46c9 - animation-leash of app_transition#101';
+
+        await presenter.onHighlightedIdChange(nodeName);
+        expect(uiData.propertiesTree).toBeDefined();
+        expect(uiData.curatedProperties).toBeDefined();
+
+        await presenter.onAppEvent(
+          TracePositionUpdate.fromTraceEntry(trace.getEntry(4)),
+        );
+        expect(uiData.propertiesTree).toBeUndefined();
+        expect(uiData.curatedProperties).toBeUndefined();
+      });
+
       async function checkColorAndTransformProperties(
         treeForAlphaCheck: UiHierarchyTreeNode,
         treeForTransformCheck: UiHierarchyTreeNode,
@@ -438,16 +473,5 @@ class PresenterSurfaceFlingerTest extends AbstractHierarchyViewerPresenterTest<U
 }
 
 describe('PresenterSurfaceFlinger', () => {
-  let userNotifierChecker: UserNotifierChecker;
-
-  beforeAll(() => {
-    userNotifierChecker = new UserNotifierChecker();
-  });
-
-  afterEach(() => {
-    userNotifierChecker.expectNone();
-    userNotifierChecker.reset();
-  });
-
   new PresenterSurfaceFlingerTest().execute();
 });

@@ -375,7 +375,7 @@ class AndroidDevice(object):
         cmd.append(filename)
         return self._simple_call(cmd)
 
-    def push(self, local: str | list[str], remote: str, sync: bool = False) -> str:
+    def push(self, local: str | list[str], remote: str, sync: bool = False, parameters= []) -> str:
         """Transfer a local file or directory to the device.
 
         Args:
@@ -388,6 +388,8 @@ class AndroidDevice(object):
             Output of the command.
         """
         cmd = ['push']
+        cmd = cmd + parameters
+
         if sync:
             cmd.append('--sync')
 

@@ -217,10 +217,10 @@ export abstract class AbstractLogViewerPresenter<UiData extends UiDataLog>
     const selectedIndex = this.logPresenter.getSelectedIndex();
     const currentIndex = this.logPresenter.getCurrentIndex();
     if (selectedIndex !== undefined) {
-      return entries[selectedIndex].propertiesTree;
+      return entries.at(selectedIndex)?.propertiesTree;
     }
     if (currentIndex !== undefined) {
-      return entries[currentIndex].propertiesTree;
+      return entries.at(currentIndex)?.propertiesTree;
     }
     return undefined;
   }
