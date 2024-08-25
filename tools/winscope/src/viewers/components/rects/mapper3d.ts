@@ -21,6 +21,7 @@ import {Point3D} from 'common/geometry/point3d';
 import {Rect3D} from 'common/geometry/rect3d';
 import {Size} from 'common/geometry/size';
 import {IDENTITY_MATRIX} from 'common/geometry/transform_matrix';
+import {UiHierarchyTreeNode} from 'viewers/common/ui_hierarchy_tree_node';
 import {UiRect} from 'viewers/components/rects/ui_rect';
 import {ColorType} from './color_type';
 import {RectLabel} from './rect_label';
@@ -56,9 +57,14 @@ class Mapper3D {
   private currentGroupIds = [0]; // default stack id is usually 0
   private shadingModeIndex = 0;
   private allowedShadingModes: ShadingMode[] = [ShadingMode.GRADIENT];
+  private pinnedItems: UiHierarchyTreeNode[] = [];
 
   setRects(rects: UiRect[]) {
     this.rects = rects;
+  }
+
+  setPinnedItems(value: UiHierarchyTreeNode[]) {
+    this.pinnedItems = value;
   }
 
   setHighlightedRectId(id: string) {
@@ -270,7 +276,7 @@ class Mapper3D {
       }
       const transform = rect2d.transform ?? IDENTITY_MATRIX;
 
-      const rect = {
+      const rect: UiRect3D = {
         id: rect2d.id,
         topLeft: {
           x: rect2d.x,
@@ -289,6 +295,7 @@ class Mapper3D {
         isClickable: rect2d.isClickable,
         transform: clusterYOffset ? transform.addTy(clusterYOffset) : transform,
         fillRegion,
+        isPinned: this.pinnedItems.some((node) => node.id === rect2d.id),
       };
       return this.cropOversizedRect(rect, maxDisplaySize);
     });

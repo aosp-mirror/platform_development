@@ -43,7 +43,7 @@ export class Presenter extends AbstractLogViewerPresenter<UiData> {
   private isInitialized = false;
 
   protected override keepCalculated = true;
-  protected override logPresenter = new LogPresenter<TransactionsEntry>(true);
+  protected override logPresenter = new LogPresenter<TransactionsEntry>();
   protected override propertiesPresenter = new PropertiesPresenter(
     PersistentStoreProxy.new<UserOptions>(
       'TransactionsPropertyOptions',
