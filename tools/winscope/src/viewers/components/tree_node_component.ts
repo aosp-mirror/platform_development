@@ -51,7 +51,7 @@ import {nodeInnerItemStyles} from 'viewers/components/styles/node.styles';
       </button>
     </div>
 
-    <div *ngIf="showLeafNodeIcon()" class="icon-wrapper leaf-node-icon-wrapper">
+    <div *ngIf="!showChevron()" class="icon-wrapper leaf-node-icon-wrapper">
       <mat-icon class="leaf-node-icon"></mat-icon>
     </div>
 
@@ -80,6 +80,15 @@ import {nodeInnerItemStyles} from 'viewers/components/styles/node.styles';
         [class]="collapseDiffClass"
         (click)="expandTree($event)">
         <mat-icon aria-hidden="true"> more_horiz </mat-icon>
+      </button>
+    </div>
+    <div *ngIf="showCopyButton()" class="icon-wrapper-copy">
+      <button
+        mat-icon-button
+        class="icon-button copy-btn"
+        [cdkCopyToClipboard]="getCopyText()"
+        (click)="$event.stopPropagation()">
+        <mat-icon class="material-symbols-outlined">content_copy</mat-icon>
       </button>
     </div>
   `,
@@ -120,7 +129,7 @@ export class TreeNodeComponent {
     }
   }
 
-  isNodeInView() {
+  isNodeInView(): boolean {
     if (!this.treeWrapper) {
       return false;
     }
@@ -143,14 +152,12 @@ export class TreeNodeComponent {
     return parent;
   }
 
-  isPropertyTreeNode() {
+  isPropertyTreeNode(): boolean {
     return this.node instanceof UiPropertyTreeNode;
   }
 
-  showPinNodeIcon() {
-    return (
-      (this.node instanceof UiHierarchyTreeNode && !this.node.isRoot()) ?? false
-    );
+  showPinNodeIcon(): boolean {
+    return this.node instanceof UiHierarchyTreeNode && !this.node.isRoot();
   }
 
   toggleTree(event: MouseEvent) {
@@ -163,12 +170,8 @@ export class TreeNodeComponent {
     this.rectShowStateChange.emit();
   }
 
-  showChevron() {
+  showChevron(): boolean {
     return !this.isLeaf && !this.flattened && !this.isInPinnedSection;
-  }
-
-  showLeafNodeIcon() {
-    return !this.showChevron() && !this.isInPinnedSection;
   }
 
   expandTree(event: MouseEvent) {
@@ -191,7 +194,6 @@ export class TreeNodeComponent {
     );
 
     childrenDiffClasses.delete(DiffType.NONE);
-    childrenDiffClasses.delete(undefined);
 
     if (childrenDiffClasses.size === 0) {
       return '';
@@ -212,11 +214,26 @@ export class TreeNodeComponent {
     };
   }
 
+  showCopyButton(): boolean {
+    return (
+      this.node instanceof UiPropertyTreeNode &&
+      (this.node.isRoot() || !this.showChevron())
+    );
+  }
+
+  getCopyText(): string {
+    const node = assertDefined(this.node) as UiPropertyTreeNode;
+    if (this.showChevron()) {
+      return node.name;
+    }
+    return `${node.name}: ${node.formattedValue()}`;
+  }
+
   private getAllDiffTypesOfChildren(
     node: UiHierarchyTreeNode | UiPropertyTreeNode,
-  ) {
-    const classes = new Set();
-    for (const child of node.getAllChildren().values()) {
+  ): Set<DiffType> {
+    const classes = new Set<DiffType>();
+    for (const child of node.getAllChildren()) {
       classes.add(child.getDiff());
       for (const diffClass of this.getAllDiffTypesOfChildren(child)) {
         classes.add(diffClass);

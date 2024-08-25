@@ -25,7 +25,7 @@ import com.android.compose.animation.scene.MutableSceneTransitionLayoutState
 import com.android.compose.animation.scene.SceneScope
 import com.android.compose.animation.scene.SceneTransitions
 import com.android.compose.animation.scene.StaticElementContentPicker
-import com.android.compose.animation.scene.content.state.ContentState
+import com.android.compose.animation.scene.content.state.TransitionState
 import com.android.compose.animation.scene.demo.Scenes
 import com.android.compose.animation.scene.demo.SpringConfiguration
 import com.android.compose.animation.scene.demo.transitions.ToShadeScrimFadeEndFraction
@@ -75,7 +75,7 @@ private object NotificationContentPicker : StaticElementContentPicker {
 
     override fun contentDuringTransition(
         element: ElementKey,
-        transition: ContentState.Transition<*>,
+        transition: TransitionState.Transition,
         fromContentZIndex: Float,
         toContentZIndex: Float
     ): ContentKey {
