@@ -54,7 +54,7 @@ import com.android.compose.animation.scene.ElementKey
 import com.android.compose.animation.scene.MovableElementKey
 import com.android.compose.animation.scene.SceneScope
 import com.android.compose.animation.scene.StaticElementContentPicker
-import com.android.compose.animation.scene.content.state.ContentState
+import com.android.compose.animation.scene.content.state.TransitionState
 import kotlin.math.ceil
 import kotlin.math.roundToInt
 
@@ -83,7 +83,7 @@ object MediaPlayer {
 
         override fun contentDuringTransition(
             element: ElementKey,
-            transition: ContentState.Transition<*>,
+            transition: TransitionState.Transition,
             fromContentZIndex: Float,
             toContentZIndex: Float
         ): ContentKey {

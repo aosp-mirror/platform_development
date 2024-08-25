@@ -84,6 +84,15 @@ describe('FileUtils', () => {
     expect(unzippedFile.size).toEqual(377137);
   });
 
+  it('decompresses gzipped archive', async () => {
+    const gzippedFile = await UnitTestUtils.getFixtureFile(
+      'traces/WindowManager.zip.gz',
+    );
+    const unzippedFile = await FileUtils.decompressGZipFile(gzippedFile);
+    expect(unzippedFile.name).toEqual('traces/WindowManager.zip');
+    expect(unzippedFile.size).toEqual(10158);
+  });
+
   it('has download filename regex that accepts all expected inputs', () => {
     expect(FileUtils.DOWNLOAD_FILENAME_REGEX.test('Winscope2')).toBeTrue();
     expect(FileUtils.DOWNLOAD_FILENAME_REGEX.test('win_scope')).toBeTrue();

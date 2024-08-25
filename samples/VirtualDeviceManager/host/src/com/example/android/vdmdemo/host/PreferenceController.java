@@ -79,8 +79,7 @@ final class PreferenceController {
 
             new BoolRule(R.string.pref_enable_client_audio, UPSIDE_DOWN_CAKE),
 
-            new BoolRule(R.string.pref_enable_display_rotation,
-                    VANILLA_ICE_CREAM, Flags::consistentDisplayFlags)
+            new BoolRule(R.string.pref_enable_display_rotation, VANILLA_ICE_CREAM)
                     .withDefaultValue(true),
 
             new BoolRule(R.string.pref_enable_display_category, UPSIDE_DOWN_CAKE),
@@ -106,8 +105,7 @@ final class PreferenceController {
             new InternalBoolRule(R.string.internal_pref_home_displays_supported, TIRAMISU),
 
             new InternalBoolRule(R.string.internal_pref_mirror_displays_supported,
-                    VANILLA_ICE_CREAM,
-                    Flags::consistentDisplayFlags, Flags::interactiveScreenMirror),
+                    VANILLA_ICE_CREAM),
 
             new InternalBoolRule(R.string.internal_pref_virtual_stylus_supported,
                     VANILLA_ICE_CREAM, Flags::virtualStylus),

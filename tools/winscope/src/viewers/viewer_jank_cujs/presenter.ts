@@ -40,7 +40,7 @@ export class Presenter extends AbstractLogViewerPresenter<UiData> {
   private isInitialized = false;
   private transitionTrace: Trace<PropertyTreeNode>;
 
-  protected override logPresenter = new LogPresenter<CujEntry>(false);
+  protected override logPresenter = new LogPresenter<CujEntry>();
   protected override propertiesPresenter = new PropertiesPresenter({}, [], []);
 
   constructor(

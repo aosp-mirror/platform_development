@@ -336,7 +336,8 @@ export class HierarchyPresenter {
         (pinned) => pinned.id !== pinnedId,
       );
     } else {
-      this.pinnedItems.push(pinnedItem);
+      // Angular change detection requires new array as input
+      this.pinnedItems = this.pinnedItems.concat([pinnedItem]);
     }
     this.updatePinnedIds(pinnedId);
   }

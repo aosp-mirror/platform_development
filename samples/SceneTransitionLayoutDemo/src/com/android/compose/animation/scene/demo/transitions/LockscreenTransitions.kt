@@ -16,6 +16,7 @@
 
 package com.android.compose.animation.scene.demo.transitions
 
+import androidx.compose.animation.core.CubicBezierEasing
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.gestures.Orientation
 import androidx.compose.ui.unit.dp
@@ -46,12 +47,10 @@ fun SceneTransitionsBuilder.lockscreenTransitions(configuration: DemoConfigurati
         overscrollDisabled(Scenes.Lockscreen, Orientation.Vertical)
 
         overscroll(Scenes.StubStart, Orientation.Horizontal) {
-            progressConverter = configuration.overscrollProgress::convert
             translate(Stub.Elements.TextStart, x = { absoluteDistance })
         }
 
         overscroll(Scenes.StubEnd, Orientation.Horizontal) {
-            progressConverter = configuration.overscrollProgress::convert
             translate(Stub.Elements.TextEnd, x = { absoluteDistance })
         }
     }
@@ -60,12 +59,20 @@ fun SceneTransitionsBuilder.lockscreenTransitions(configuration: DemoConfigurati
 val BouncerBackgroundEndProgress = 0.5f
 
 fun SceneTransitionsBuilder.commonLockscreenTransitions(lockscreenScene: SceneKey) {
-    from(lockscreenScene, to = Scenes.Bouncer) {
+    from(
+        Scenes.Bouncer,
+        to = lockscreenScene,
+        preview = {
+            fractionRange(easing = CubicBezierEasing(0.1f, 0.1f, 0f, 1f)) {
+                scaleDraw(Bouncer.Elements.Content, scaleY = 0.8f, scaleX = 0.8f)
+            }
+        }
+    ) {
         spec = tween(durationMillis = 500)
 
         translate(Bouncer.Elements.Content, y = 300.dp)
-        fractionRange(end = BouncerBackgroundEndProgress) { fade(Bouncer.Elements.Background) }
-        fractionRange(start = BouncerBackgroundEndProgress) { fade(Bouncer.Elements.Content) }
+        fractionRange(start = BouncerBackgroundEndProgress) { fade(Bouncer.Elements.Background) }
+        fractionRange(end = BouncerBackgroundEndProgress) { fade(Bouncer.Elements.Content) }
     }
 
     from(lockscreenScene, to = Scenes.Launcher) {

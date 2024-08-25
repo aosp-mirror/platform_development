@@ -156,14 +156,7 @@ show a launcher-like list of installed apps on the host device.
 
 -   The Host app has a **CREATE MIRROR DISPLAY** button, clicking it will create
     a new virtual display, mirror the default host display there and start
-    streaming the display contents to the client. Run the commands below to
-    enable this functionality.
-
-    ```shell
-    adb shell device_config put virtual_devices android.companion.virtual.flags.consistent_display_flags true
-    adb shell device_config put virtual_devices android.companion.virtual.flags.interactive_screen_mirror true
-    adb shell am force-stop com.example.android.vdmdemo.host
-    ```
+    streaming the display contents to the client.
 
 ### Settings
 
@@ -270,15 +263,9 @@ Each input screen has a "Back", "Home" and "Forward" buttons.
     automatically rotate the relevant display upon such request. Disabling this
     simulates a fixed orientation display that cannot physically rotate. Then
     any streamed apps on that display will be letterboxed/pillarboxed if they
-    request orientation change. Run the commands below to enable this
-    functionality. \
+    request orientation change. \
     *This can be changed dynamically but only applies to newly created
     displays.*
-
-    ```shell
-    adb shell device_config put virtual_devices android.companion.virtual.flags.consistent_display_flags true
-    adb shell am force-stop com.example.android.vdmdemo.host
-    ```
 
 -   **Display category**: Whether to specify a custom display category for the
     virtual displays. This means that only activities that have explicitly set
