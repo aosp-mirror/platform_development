@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use std::path::PathBuf;
+use std::{collections::BTreeSet, path::PathBuf};
 
 use anyhow::Result;
 use clap::{Parser, Subcommand};
@@ -42,11 +42,19 @@ enum Cmd {
     MigrationHealth {
         /// The crate name. Also the directory name in external/rust/crates.
         crate_name: String,
+
+        /// Don't pin the crate version when checking health.
+        #[arg(long, default_value_t = false)]
+        unpinned: bool,
     },
-    /// Migrate a crate from external/rust/crates to the monorepo.
+    /// Migrate crates from external/rust/crates to the monorepo.
     Migrate {
         /// The crate names. Also the directory names in external/rust/crates.
         crates: Vec<String>,
+
+        /// Add the specified crates with unpinned versions.
+        #[arg(long, value_parser = parse_crate_list)]
+        unpinned: BTreeSet<String>,
     },
     /// Regenerate a crate directory.
     Regenerate {
@@ -62,6 +70,10 @@ enum Cmd {
     },
 }
 
+fn parse_crate_list(arg: &str) -> Result<BTreeSet<String>> {
+    Ok(arg.split(",").map(|k| k.to_string()).collect())
+}
+
 fn main() -> Result<()> {
     let args = Cli::parse();
 
@@ -71,11 +83,11 @@ fn main() -> Result<()> {
         ManagedRepo::new(RepoPath::new(args.repo_root, "external/rust/android-crates-io"));
 
     match args.command {
-        Cmd::MigrationHealth { crate_name } => {
-            managed_repo.migration_health(&crate_name, args.verbose)?;
+        Cmd::MigrationHealth { crate_name, unpinned } => {
+            managed_repo.migration_health(&crate_name, args.verbose, unpinned)?;
             Ok(())
         }
-        Cmd::Migrate { crates } => managed_repo.migrate(crates, args.verbose),
+        Cmd::Migrate { crates, unpinned } => managed_repo.migrate(crates, args.verbose, &unpinned),
         Cmd::Regenerate { crates } => managed_repo.regenerate(crates.iter(), true),
         Cmd::RegenerateAll {} => managed_repo.regenerate_all(true),
         Cmd::PreuploadCheck { files: _ } => managed_repo.preupload_check(),
