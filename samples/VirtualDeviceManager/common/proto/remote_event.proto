@@ -70,6 +70,8 @@ message SensorCapabilities {
   float power = 6;
   int32 min_delay_us = 7;
   int32 max_delay_us = 8;
+  bool is_wake_up_sensor = 9;
+  int32 reporting_mode = 10;
 }
 
 message CameraCapabilities {
