@@ -14,7 +14,7 @@
 
 use std::{
     collections::BTreeSet,
-    fs::{create_dir, remove_dir_all, remove_file, rename, write},
+    fs::{create_dir, read_dir, remove_dir_all, remove_file, rename, write},
     path::Path,
     process::Command,
     str::from_utf8,
@@ -22,6 +22,7 @@ use std::{
 
 use anyhow::{anyhow, Result};
 use glob::glob;
+use itertools::Itertools;
 use semver::Version;
 
 use crate::{
@@ -394,9 +395,29 @@ impl ManagedRepo {
         Ok(version_match)
     }
     pub fn preupload_check(&self) -> Result<()> {
-        let version_match = self.stage(self.pseudo_crate.deps()?.keys().map(|k| k.as_str()))?;
+        let deps = self.pseudo_crate.deps()?.keys().map(|k| k.clone()).collect::<BTreeSet<_>>();
+
+        let mut managed_dirs = BTreeSet::new();
+        for entry in read_dir(self.managed_dir().abs())? {
+            let entry = entry?;
+            if entry.path().is_dir() {
+                managed_dirs.insert(
+                    entry.file_name().into_string().map_err(|e| {
+                        anyhow!("Failed to convert {} to string", e.to_string_lossy())
+                    })?,
+                );
+            }
+        }
+
+        if deps != managed_dirs {
+            return Err(anyhow!("Deps in pseudo_crate/Cargo.toml don't match directories in {}\nDirectories not in Cargo.toml: {}\nCargo.toml deps with no directory: {}",
+                self.managed_dir(), managed_dirs.difference(&deps).join(", "), deps.difference(&managed_dirs).join(", ")));
+        }
+
+        let version_match = self.stage(deps.iter())?;
 
         for pair in version_match.pairs() {
+            println!("Checking {}", pair.source.name());
             let source_version = NameAndVersion::from(&pair.source.key());
             let pair = pair.to_compatible().ok_or(anyhow!(
                 "No compatible vendored crate found for {} v{}",
