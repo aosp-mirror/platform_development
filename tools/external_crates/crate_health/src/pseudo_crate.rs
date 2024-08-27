@@ -81,8 +81,7 @@ impl PseudoCrate {
 
         let mut tt = TinyTemplate::new();
         tt.add_template("cargo_toml", CARGO_TOML_TEMPLATE)?;
-        let cargo_toml = self.path.join(&"Cargo.toml").abs();
-        write(&cargo_toml, tt.render("cargo_toml", &CargoToml { deps })?)?;
+        write(self.path.join(&"Cargo.toml").abs(), tt.render("cargo_toml", &CargoToml { deps })?)?;
 
         create_dir(self.path.join(&"src").abs()).context("Failed to create src dir")?;
         write(self.path.join(&"src/lib.rs").abs(), "// Nothing")
@@ -93,12 +92,21 @@ impl PseudoCrate {
     pub fn get_path(&self) -> &RepoPath {
         &self.path
     }
-    pub fn add(&self, krate: &impl NamedAndVersioned) -> Result<()> {
+    fn add_internal(&self, crate_and_version_str: &str) -> Result<()> {
         Command::new("cargo")
-            .args(["add", format!("{}@={}", krate.name(), krate.version()).as_str()])
+            .args(["add", crate_and_version_str])
             .current_dir(self.path.abs())
             .run_quiet_and_expect_success()?;
         Ok(())
+    }
+    pub fn add(&self, krate: &impl NamedAndVersioned) -> Result<()> {
+        self.add_internal(format!("{}@={}", krate.name(), krate.version()).as_str())
+    }
+    pub fn add_unpinned(&self, krate: &impl NamedAndVersioned) -> Result<()> {
+        self.add_internal(format!("{}@{}", krate.name(), krate.version()).as_str())
+    }
+    pub fn add_unversioned(&self, crate_name: &str) -> Result<()> {
+        self.add_internal(crate_name)
     }
     pub fn remove(&self, krate: &impl NamedAndVersioned) -> Result<()> {
         Command::new("cargo")
