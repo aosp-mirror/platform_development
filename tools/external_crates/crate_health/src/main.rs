@@ -40,12 +40,12 @@ struct Cli {
 enum Cmd {
     /// Check the health of a crate, and whether it is safe to migrate.
     MigrationHealth {
-        /// The crate name. Also the directory name in external/rust/crates.
-        crate_name: String,
+        /// The crate names. Also the directory names in external/rust/crates.
+        crates: Vec<String>,
 
-        /// Don't pin the crate version when checking health.
-        #[arg(long, default_value_t = false)]
-        unpinned: bool,
+        /// Don't pin the crate version for the specified crates when checking health.
+        #[arg(long, value_parser = parse_crate_list)]
+        unpinned: BTreeSet<String>,
     },
     /// Migrate crates from external/rust/crates to the monorepo.
     Migrate {
@@ -83,8 +83,14 @@ fn main() -> Result<()> {
         ManagedRepo::new(RepoPath::new(args.repo_root, "external/rust/android-crates-io"));
 
     match args.command {
-        Cmd::MigrationHealth { crate_name, unpinned } => {
-            managed_repo.migration_health(&crate_name, args.verbose, unpinned)?;
+        Cmd::MigrationHealth { crates, unpinned } => {
+            for crate_name in &crates {
+                managed_repo.migration_health(
+                    &crate_name,
+                    args.verbose,
+                    unpinned.contains(crate_name),
+                )?;
+            }
             Ok(())
         }
         Cmd::Migrate { crates, unpinned } => managed_repo.migrate(crates, args.verbose, &unpinned),
