@@ -194,9 +194,6 @@ class ViewerMediaBasedComponent {
     }
 
     if (this.safeUrl === undefined) {
-      if (this.index > this.currentTraceEntries.length - 1) {
-        this.index = 0;
-      }
       this.updateSafeUrl();
     }
   }
@@ -234,16 +231,6 @@ class ViewerMediaBasedComponent {
 
   getCurrentTime(): number {
     return this.currentTraceEntries.at(this.index)?.videoTimeSeconds ?? 0;
-  }
-
-  showNextEntry() {
-    this.index++;
-    this.updateSafeUrl();
-  }
-
-  showPrevEntry() {
-    this.index--;
-    this.updateSafeUrl();
   }
 
   onSelectChange(event: MatSelectChange) {

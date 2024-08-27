@@ -102,28 +102,38 @@ describe('ViewerMediaBasedComponent', () => {
   });
 
   it('shows video', async () => {
+    const initialMaxWidth = getContainerMaxWidth();
     const videoFile = await UnitTestUtils.getFixtureFile(
       'traces/elapsed_and_real_timestamp/screen_recording_metadata_v2.mp4',
     );
     component.currentTraceEntries = [new MediaBasedTraceEntry(1, videoFile)];
     fixture.detectChanges();
+    await fixture.whenStable();
     const videoContainer = assertDefined(
       htmlElement.querySelector<HTMLElement>('.video-container'),
     );
     expect(videoContainer.querySelector('video')).toBeTruthy();
     expect(videoContainer.querySelector('img')).toBeNull();
+    expect(getContainerMaxWidth()).not.toEqual(initialMaxWidth);
   });
 
-  it('shows screenshot image', () => {
+  it('shows screenshot image', async () => {
+    const initialMaxWidth = getContainerMaxWidth();
+    const screenshotFile = await UnitTestUtils.getFixtureFile(
+      'traces/screenshot_2.png',
+    );
     component.currentTraceEntries = [
-      new MediaBasedTraceEntry(0, new Blob(), true),
+      new MediaBasedTraceEntry(0, screenshotFile, true),
     ];
     fixture.detectChanges();
+    await fixture.whenStable();
+
     const videoContainer = assertDefined(
       htmlElement.querySelector<HTMLElement>('.video-container'),
     );
     expect(videoContainer.querySelector('img')).toBeTruthy();
     expect(videoContainer.querySelector('video')).toBeNull();
+    expect(getContainerMaxWidth()).not.toEqual(initialMaxWidth);
   });
 
   it('shows no frame message', () => {
@@ -142,11 +152,9 @@ describe('ViewerMediaBasedComponent', () => {
     fixture.detectChanges();
 
     const screenComponent = assertDefined(component.screenComponent);
-
     let url = screenComponent.safeUrl;
 
     await openSelect();
-
     const options = document.querySelectorAll<HTMLElement>('mat-option');
 
     options.item(1).click();
@@ -168,6 +176,47 @@ describe('ViewerMediaBasedComponent', () => {
     fixture.detectChanges();
     expect(screenComponent.safeUrl).toEqual(url);
   });
+
+  it('does not update frame if trace entries do not change', () => {
+    component.currentTraceEntries = [
+      new MediaBasedTraceEntry(0, new Blob(), true),
+    ];
+    component.titles = ['Screenshot 1'];
+    fixture.detectChanges();
+
+    const screenComponent = assertDefined(component.screenComponent);
+    const url = screenComponent.safeUrl;
+
+    component.titles = ['Screenshot 1', 'Screenshot 2'];
+    fixture.detectChanges();
+    expect(screenComponent.safeUrl).toEqual(url);
+  });
+
+  it('updates max container size on window resize', async () => {
+    const screenshotFile = await UnitTestUtils.getFixtureFile(
+      'traces/screenshot.png',
+    );
+    component.currentTraceEntries = [
+      new MediaBasedTraceEntry(0, screenshotFile, true),
+    ];
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    const initialMaxWidth = getContainerMaxWidth();
+    const newWindowHeight = window.innerHeight / 2;
+    spyOnProperty(window, 'innerHeight').and.returnValue(newWindowHeight);
+    window.dispatchEvent(new Event('resize'));
+    fixture.detectChanges();
+    await fixture.whenStable();
+    expect(getContainerMaxWidth()).not.toEqual(initialMaxWidth);
+  });
+
+  function getContainerMaxWidth() {
+    const container = assertDefined(
+      htmlElement.querySelector<HTMLElement>('.container'),
+    );
+    return container.style.maxWidth;
+  }
 
   async function openSelect() {
     const selectTrigger = assertDefined(

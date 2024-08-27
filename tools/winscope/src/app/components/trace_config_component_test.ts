@@ -16,6 +16,7 @@
 import {CommonModule} from '@angular/common';
 import {ComponentFixture, TestBed} from '@angular/core/testing';
 import {FormsModule, ReactiveFormsModule} from '@angular/forms';
+import {MatButtonModule} from '@angular/material/button';
 import {MatCheckboxModule} from '@angular/material/checkbox';
 import {MatDividerModule} from '@angular/material/divider';
 import {MatFormFieldModule} from '@angular/material/form-field';
@@ -47,6 +48,7 @@ describe('TraceConfigComponent', () => {
         FormsModule,
         ReactiveFormsModule,
         MatTooltipModule,
+        MatButtonModule,
       ],
       declarations: [TraceConfigComponent],
     }).compileComponents();
@@ -203,20 +205,123 @@ describe('TraceConfigComponent', () => {
     expect(configChangeSpy).toHaveBeenCalledTimes(1);
   });
 
-  it('check that changing selected config causes select to change', async () => {
+  it('changing selected config causes select to change', async () => {
     configChangeSpy.calls.reset();
-    const selectTrigger = assertDefined(
-      htmlElement.querySelector('.mat-select-trigger'),
+    await openSelect(0);
+
+    const panel = assertDefined(
+      document.querySelector<HTMLElement>('.mat-select-panel'),
     );
-    (selectTrigger as HTMLElement).click();
+    expect(panel.querySelector('.user-option')).toBeNull();
+
+    clickFirstOption(panel);
+    expect(configChangeSpy).toHaveBeenCalledTimes(1);
+  });
+
+  it('clicking None button clears optional single selection config value', async () => {
+    configChangeSpy.calls.reset();
+    await openSelect(1);
+
+    const panel = assertDefined(
+      document.querySelector<HTMLElement>('.mat-select-panel'),
+    );
+    clickFirstOption(panel);
+    expect(configChangeSpy).toHaveBeenCalledTimes(1);
+    expect(
+      configChangeSpy.calls.mostRecent().args[0]['optional_selection_trace']
+        .config.selectionConfigs[0].value,
+    ).toEqual('12345');
+
+    const noneButton = assertDefined(
+      panel.querySelectorAll<HTMLElement>('.user-option').item(0),
+    );
+    noneButton.click();
     fixture.detectChanges();
-    await fixture.whenStable();
-    const newOption = assertDefined(
-      document.querySelector<HTMLElement>('mat-option'),
+    expect(configChangeSpy).toHaveBeenCalledTimes(2);
+    expect(
+      configChangeSpy.calls.mostRecent().args[0]['optional_selection_trace']
+        .config.selectionConfigs[0].value,
+    ).toEqual('');
+  });
+
+  it('clicking None button clears optional multiple selection config value', async () => {
+    configChangeSpy.calls.reset();
+    await openSelect(3);
+
+    const panel = assertDefined(
+      document.querySelector<HTMLElement>('.mat-select-panel'),
     );
-    newOption.click();
+    clickFirstOption(panel);
+    expect(configChangeSpy).toHaveBeenCalledTimes(1);
+    expect(
+      configChangeSpy.calls.mostRecent().args[0][
+        'optional_multiple_selection_trace'
+      ].config.selectionConfigs[0].value,
+    ).toEqual(['12345']);
+
+    const noneButton = assertDefined(
+      panel.querySelectorAll<HTMLElement>('.user-option').item(1),
+    );
+    noneButton.click();
+    fixture.detectChanges();
+    expect(configChangeSpy).toHaveBeenCalledTimes(2);
+    expect(
+      configChangeSpy.calls.mostRecent().args[0][
+        'optional_multiple_selection_trace'
+      ].config.selectionConfigs[0].value,
+    ).toEqual([]);
+  });
+
+  it('clicking All button selects or clears all options for multiple selection config', async () => {
+    configChangeSpy.calls.reset();
+    await openSelect(2);
+
+    const panel = assertDefined(
+      document.querySelector<HTMLElement>('.mat-select-panel'),
+    );
+    const allButton = assertDefined(
+      panel.querySelector<HTMLElement>('.user-option'),
+    );
+    allButton.click();
     fixture.detectChanges();
     expect(configChangeSpy).toHaveBeenCalledTimes(1);
+    expect(
+      configChangeSpy.calls.mostRecent().args[0]['multiple_selection_trace']
+        .config.selectionConfigs[0].value,
+    ).toEqual(['12345', '67890']);
+
+    allButton.click();
+    fixture.detectChanges();
+    expect(configChangeSpy).toHaveBeenCalledTimes(2);
+    expect(
+      configChangeSpy.calls.mostRecent().args[0]['multiple_selection_trace']
+        .config.selectionConfigs[0].value,
+    ).toEqual([]);
+  });
+
+  it('stabilizes tooltip position', async () => {
+    await openSelect(1);
+
+    const panel = assertDefined(
+      document.querySelector<HTMLElement>('.mat-select-panel'),
+    );
+    const options = panel.querySelectorAll<HTMLElement>('mat-option');
+
+    const shortOption = options.item(0);
+    shortOption.dispatchEvent(new Event('mouseenter'));
+    fixture.detectChanges();
+    expect(
+      document.querySelector<HTMLElement>('.mat-tooltip-panel'),
+    ).toBeNull();
+
+    const longOption = options.item(1);
+    longOption.dispatchEvent(new Event('mouseenter'));
+    fixture.detectChanges();
+    const tooltipPanel = assertDefined(
+      document.querySelector<HTMLElement>('.mat-tooltip-panel'),
+    );
+    expect(tooltipPanel?.style.top.length).toBeGreaterThan(0);
+    expect(tooltipPanel?.style.left.length).toBeGreaterThan(0);
   });
 
   async function setComponentInputs(
@@ -263,6 +368,62 @@ describe('TraceConfigComponent', () => {
         types: [TraceType.TEST_TRACE_STRING],
         config: undefined,
       },
+      optional_selection_trace: {
+        name: 'optional_selection_trace',
+        enabled: true,
+        available: true,
+        types: [TraceType.TEST_TRACE_STRING],
+        config: {
+          enableConfigs: [],
+          selectionConfigs: [
+            {
+              key: 'displays',
+              name: 'displays',
+              options: [
+                '12345',
+                'long_option_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx',
+              ],
+              value: '',
+              optional: true,
+            },
+          ],
+        },
+      },
+      multiple_selection_trace: {
+        name: 'multiple_selection_trace',
+        enabled: true,
+        available: true,
+        types: [TraceType.TEST_TRACE_STRING],
+        config: {
+          enableConfigs: [],
+          selectionConfigs: [
+            {
+              key: 'displays',
+              name: 'displays',
+              options: ['12345', '67890'],
+              value: [],
+            },
+          ],
+        },
+      },
+      optional_multiple_selection_trace: {
+        name: 'multiple_selection_trace',
+        enabled: true,
+        available: true,
+        types: [TraceType.TEST_TRACE_STRING],
+        config: {
+          enableConfigs: [],
+          selectionConfigs: [
+            {
+              key: 'displays',
+              name: 'displays',
+              options: ['12345', '67890'],
+              value: [],
+              optional: true,
+            },
+          ],
+        },
+      },
     };
     c.traceConfigStoreKey = 'TestConfigSettings';
     c.storage = storage;
@@ -276,5 +437,24 @@ describe('TraceConfigComponent', () => {
     f.detectChanges();
     await f.whenStable();
     f.detectChanges();
+  }
+
+  async function openSelect(index: number) {
+    const selectTrigger = assertDefined(
+      htmlElement
+        .querySelectorAll<HTMLElement>('.mat-select-trigger')
+        .item(index),
+    );
+    selectTrigger.click();
+    fixture.detectChanges();
+    await fixture.whenStable();
+  }
+
+  function clickFirstOption(panel: HTMLElement) {
+    const newOption = assertDefined(
+      panel.querySelector<HTMLElement>('mat-option'),
+    );
+    newOption.click();
+    fixture.detectChanges();
   }
 });

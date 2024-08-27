@@ -480,7 +480,7 @@ describe('CollectTracesComponent', () => {
     expect(endButton.disabled).toBeTrue();
   });
 
-  it('displays tracing elements', () => {
+  it('displays tracing elements and ends trace correctly', async () => {
     goToConfigSection();
     const connection = getConnection();
     connection.state = ConnectionState.TRACING;
@@ -491,13 +491,16 @@ describe('CollectTracesComponent', () => {
     expect(progress.innerHTML).toContain('Tracing...');
     expect(progress.innerHTML).toContain('cable');
 
-    const spy = spyOn(connection, 'endTrace');
+    const endSpy = spyOn(connection, 'endTrace').and.callThrough();
+    const fetchSpy = spyOn(connection, 'fetchLastTracingSessionData');
     const endButton = assertDefined(
       el.querySelector('.end-btn button'),
     ) as HTMLButtonElement;
-    expect(endButton.disabled).toBeFalse();
     endButton.click();
-    expect(spy).toHaveBeenCalled();
+    fixture.detectChanges();
+    await fixture.whenStable();
+    expect(endSpy).toHaveBeenCalled();
+    expect(fetchSpy).toHaveBeenCalled();
   });
 
   it('displays ending trace elements', () => {
@@ -710,6 +713,40 @@ describe('CollectTracesComponent', () => {
     ]);
   });
 
+  it('updates devices in media based config from connection', () => {
+    checkMediaBasedConfig([]);
+
+    const validDeviceWithDisplays = {
+      id: '35562',
+      model: 'Pixel 6',
+      authorized: true,
+      displays: ['12345 Extra Info'],
+    };
+
+    // does not update if no selected device
+    getConnection().devicesChangeCallback([validDeviceWithDisplays]);
+    fixture.detectChanges();
+    checkMediaBasedConfig([]);
+
+    goToConfigSection();
+
+    // does not update if selected device not in new devices
+    getConnection().devicesChangeCallback([
+      {
+        id: '99',
+        model: 'Pixel 6',
+        authorized: true,
+        displays: ['12345 Extra Info'],
+      },
+    ]);
+    fixture.detectChanges();
+    checkMediaBasedConfig([]);
+
+    getConnection().devicesChangeCallback([validDeviceWithDisplays]);
+    fixture.detectChanges();
+    checkMediaBasedConfig(['12345 Extra Info']);
+  });
+
   describe('ProxyConnection', () => {
     beforeEach(async () => {
       await startProxyConnection();
@@ -813,6 +850,17 @@ describe('CollectTracesComponent', () => {
     const connection = assertDefined(component.adbConnection);
     expect(connection).toBeInstanceOf(MockAdbConnection);
     return connection as MockAdbConnection;
+  }
+
+  function checkMediaBasedConfig(displays: string[]) {
+    const screenRecordingConfig = assertDefined(
+      getCollectTracesComponent().traceConfig['screen_recording'].config,
+    );
+    const screenshotConfig = assertDefined(
+      getCollectTracesComponent().dumpConfig['screenshot'].config,
+    );
+    expect(screenRecordingConfig.selectionConfigs[0].options).toEqual(displays);
+    expect(screenshotConfig.selectionConfigs[0].options).toEqual(displays);
   }
 
   @Component({

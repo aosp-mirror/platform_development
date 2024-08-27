@@ -479,10 +479,7 @@ export class LoadedParsers {
     this.legacyParsers = this.legacyParsers.filter((fileAndParser) => {
       const parser = fileAndParser.parser;
       const type = parser.getTraceType();
-      if (
-        type !== TraceType.SCREENSHOT &&
-        type !== TraceType.SCREEN_RECORDING
-      ) {
+      if (type !== TraceType.SCREEN_RECORDING) {
         return true;
       }
 
@@ -501,12 +498,6 @@ export class LoadedParsers {
       }
       return true;
     });
-    if (firstScreenRecordingParser) {
-      this.legacyParsers = this.legacyParsers.filter((fileAndParser) => {
-        const parser = fileAndParser.parser;
-        return parser.getTraceType() !== TraceType.SCREENSHOT;
-      });
-    }
   }
 
   private findLastTimeGapAboveThreshold(

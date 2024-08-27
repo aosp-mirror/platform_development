@@ -27,9 +27,7 @@ import {assertDefined} from 'common/assert_utils';
 import {globalConfig} from 'common/global_config';
 import {PersistentStoreProxy} from 'common/persistent_store_proxy';
 import {
-  EnableConfiguration,
   SelectionConfiguration,
-  TraceConfiguration,
   TraceConfigurationMap,
 } from 'trace_collection/trace_configuration';
 import {userOptionStyle} from 'viewers/components/styles/user_option.styles';
@@ -57,10 +55,10 @@ import {userOptionStyle} from 'viewers/components/styles/user_option.styles';
       <h3 class="mat-subheading-2">{{ this.traceConfig[traceKey].name }} configuration</h3>
 
       <div
-        *ngIf="this.traceConfig[traceKey].config?.enableConfigs.length > 0"
+        *ngIf="this.traceConfig[traceKey].config && this.traceConfig[traceKey].config.enableConfigs.length > 0"
         class="enable-config-opt">
         <mat-checkbox
-          *ngFor="let enableConfig of traceEnableConfigs(this.traceConfig[traceKey])"
+          *ngFor="let enableConfig of this.traceConfig[traceKey].config.enableConfigs"
           color="primary"
           class="enable-config"
           [disabled]="!this.traceConfig[traceKey].enabled"
@@ -71,9 +69,9 @@ import {userOptionStyle} from 'viewers/components/styles/user_option.styles';
       </div>
 
       <div
-        *ngIf="this.traceConfig[traceKey].config?.selectionConfigs.length > 0"
+        *ngIf="this.traceConfig[traceKey].config && this.traceConfig[traceKey].config.selectionConfigs.length > 0"
         class="selection-config-opt">
-        <ng-container *ngFor="let selectionConfig of traceSelectionConfigs(this.traceConfig[traceKey])">
+        <ng-container *ngFor="let selectionConfig of this.traceConfig[traceKey].config.selectionConfigs">
           <div>
           <mat-form-field
             class="config-selection"
@@ -199,29 +197,6 @@ export class TraceConfigComponent {
     return advancedConfigs;
   }
 
-  traceEnableConfigs(trace: TraceConfiguration): EnableConfiguration[] {
-    if (trace.config) {
-      return trace.config.enableConfigs;
-    } else {
-      return [];
-    }
-  }
-
-  traceSelectionConfigs(trace: TraceConfiguration): SelectionConfiguration[] {
-    if (trace.config) {
-      return trace.config.selectionConfigs;
-    } else {
-      return [];
-    }
-  }
-
-  someTraces(trace: TraceConfiguration): boolean {
-    return (
-      !trace.enabled &&
-      this.traceEnableConfigs(trace).filter((trace) => trace.enabled).length > 0
-    );
-  }
-
   onSelectOptionHover(event: MouseEvent, option: string) {
     if (this.tooltipsWithStablePosition.has(option)) {
       return;
@@ -250,6 +225,7 @@ export class TraceConfigComponent {
     if (config.value.length > 0) {
       select.value = Array.isArray(config.value) ? [] : '';
       config.value = Array.isArray(config.value) ? [] : '';
+      this.onTraceConfigChange();
     }
   }
 
@@ -261,6 +237,7 @@ export class TraceConfigComponent {
       config.value = [];
       select.value = [];
     }
+    this.onTraceConfigChange();
   }
 
   onOptionClick(select: MatSelect, option: string, configName: string) {
