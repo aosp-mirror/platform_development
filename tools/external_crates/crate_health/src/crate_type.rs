@@ -57,11 +57,7 @@ impl NamedAndVersioned for Crate {
 impl IsUpgradableTo for Crate {}
 
 impl Crate {
-    pub fn new<P: Into<PathBuf>, Q: Into<PathBuf>>(
-        manifest: Manifest,
-        root: P,
-        relpath: Q,
-    ) -> Crate {
+    pub fn new<P: Into<PathBuf>, Q: AsRef<Path>>(manifest: Manifest, root: P, relpath: Q) -> Crate {
         let root: PathBuf = root.into();
         Crate {
             manifest,
@@ -160,17 +156,17 @@ impl Crate {
 
     // Make a clean copy of the crate in out/
     pub fn stage_crate(&self) -> Result<()> {
-        let staging_path_absolute = self.staging_path().abs();
-        ensure_exists_and_empty(&staging_path_absolute)?;
-        remove_dir_all(&staging_path_absolute)
-            .context(format!("Failed to remove {}", staging_path_absolute.display()))?;
-        copy_dir(&self.path().abs(), &staging_path_absolute).context(format!(
+        let staging_path = self.staging_path();
+        ensure_exists_and_empty(&staging_path.abs())?;
+        remove_dir_all(&staging_path.abs())
+            .context(format!("Failed to remove {}", staging_path))?;
+        copy_dir(&self.path().abs(), &staging_path.abs()).context(format!(
             "Failed to copy {} to {}",
             self.path(),
             self.staging_path()
         ))?;
-        if staging_path_absolute.join(".git").is_dir() {
-            remove_dir_all(staging_path_absolute.join(".git"))
+        if staging_path.join(&".git").abs().is_dir() {
+            remove_dir_all(staging_path.join(&".git").abs())
                 .with_context(|| "Failed to remove .git".to_string())?;
         }
         Ok(())
@@ -189,10 +185,10 @@ impl Crate {
     }
 
     pub fn apply_patches(&mut self) -> Result<()> {
-        let patch_dir_absolute = self.patch_dir().abs();
-        if patch_dir_absolute.exists() {
-            for entry in read_dir(&patch_dir_absolute)
-                .context(format!("Failed to read_dir {}", patch_dir_absolute.display()))?
+        let patch_dir = self.patch_dir();
+        if patch_dir.abs().exists() {
+            for entry in
+                read_dir(&patch_dir.abs()).context(format!("Failed to read_dir {}", patch_dir))?
             {
                 let entry = entry?;
                 if entry.file_name() == "Android.bp.patch"

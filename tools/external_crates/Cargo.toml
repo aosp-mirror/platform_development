@@ -2,5 +2,6 @@
 members = [
     "crate_health",
     "crate_health_proc_macros",
+    "license_checker",
 ]
 resolver = "2"
