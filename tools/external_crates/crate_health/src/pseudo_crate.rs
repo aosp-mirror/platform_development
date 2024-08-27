@@ -81,8 +81,7 @@ impl PseudoCrate {
 
         let mut tt = TinyTemplate::new();
         tt.add_template("cargo_toml", CARGO_TOML_TEMPLATE)?;
-        let cargo_toml = self.path.join(&"Cargo.toml").abs();
-        write(&cargo_toml, tt.render("cargo_toml", &CargoToml { deps })?)?;
+        write(self.path.join(&"Cargo.toml").abs(), tt.render("cargo_toml", &CargoToml { deps })?)?;
 
         create_dir(self.path.join(&"src").abs()).context("Failed to create src dir")?;
         write(self.path.join(&"src/lib.rs").abs(), "// Nothing")
