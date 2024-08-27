@@ -428,6 +428,7 @@ dependencies = [
  "crate_health_proc_macros",
  "glob",
  "itertools 0.11.0",
+ "license_checker",
  "num_cpus",
  "protobuf",
  "protobuf-codegen",
@@ -767,6 +768,15 @@ dependencies = [
  "typenum",
  "version_check",
  "zeroize",
+]
+
+[[package]]
+name = "gestalt_ratio"
+version = "0.2.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d6b3c399c9a90b4de1792c277efc74b451ddeb4c2cfc11ac0b2f0503918f48ed"
+dependencies = [
+ "unicode-segmentation",
 ]
 
 [[package]]
@@ -1728,6 +1738,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "lazy_static"
+version = "1.5.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "bbd2bcb4c963f2ddae06a2efc7e9f3591312473c50c6685e1f298068316e66fe"
+
+[[package]]
 name = "lazycell"
 version = "1.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1787,6 +1803,18 @@ dependencies = [
  "libc",
  "pkg-config",
  "vcpkg",
+]
+
+[[package]]
+name = "license_checker"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "gestalt_ratio",
+ "glob",
+ "itertools 0.11.0",
+ "lazy_static",
+ "spdx",
 ]
 
 [[package]]
@@ -2493,6 +2521,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "spdx"
+version = "0.10.6"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "47317bbaf63785b53861e1ae2d11b80d6b624211d42cb20efcd210ee6f8a14bc"
+dependencies = [
+ "smallvec",
+]
+
+[[package]]
 name = "spki"
 version = "0.7.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2774,6 +2811,12 @@ checksum = "a56d1686db2308d901306f92a263857ef59ea39678a5458e7cb17f01415101f5"
 dependencies = [
  "tinyvec",
 ]
+
+[[package]]
+name = "unicode-segmentation"
+version = "1.11.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d4c87d22b6e3f4a18d4d40ef354e97c90fcb14dd91d7dc0aa9d8a1172ebf7202"
 
 [[package]]
 name = "unicode-width"

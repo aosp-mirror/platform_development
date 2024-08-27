@@ -57,6 +57,7 @@ import androidx.compose.ui.state.ToggleableState
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.android.compose.animation.scene.ProgressConverter
+import com.android.compose.animation.scene.demo.DemoOverscrollProgress.Tanh
 import kotlin.math.roundToInt
 import kotlin.math.tanh
 
@@ -70,7 +71,7 @@ data class DemoConfiguration(
     val transitionInterceptionThreshold: Float = 0.05f,
     val springConfigurations: DemoSpringConfigurations = DemoSpringConfigurations.presets[1],
     val useOverscrollSpec: Boolean = true,
-    val overscrollProgressConverter: DemoOverscrollProgress = DemoOverscrollProgress.Linear,
+    val overscrollProgressConverter: DemoOverscrollProgress = Tanh(maxProgress = 0.2f, tilt = 3f),
     val enableInterruptions: Boolean = true,
     val lsToShadeRequiresFullSwipe: ToggleableState = ToggleableState.Indeterminate,
 ) {
