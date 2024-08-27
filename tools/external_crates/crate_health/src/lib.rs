@@ -52,6 +52,9 @@ mod repo_path;
 pub use self::google_metadata::GoogleMetadata;
 mod google_metadata;
 
+pub use self::managed_repo::ManagedRepo;
+mod managed_repo;
+
 #[cfg(test)]
 pub use self::name_and_version_map::try_name_version_map_from_iter;
 pub use self::name_and_version_map::{
