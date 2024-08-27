@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 The Android Open Source Project
+ * Copyright (C) 2024 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,14 +14,14 @@
  * limitations under the License.
  */
 
-import {Traces} from 'trace/traces';
-import {TraceType} from 'trace/trace_type';
-import {ViewerMediaBased} from './viewer_media_based';
+import {MediaBasedTraceEntry} from 'trace/media_based_trace_entry';
 
-export class ViewerScreenRecording extends ViewerMediaBased {
-  static readonly DEPENDENCIES: TraceType[] = [TraceType.SCREEN_RECORDING];
+export class UiData {
+  readonly titles: string[];
+  currentTraceEntries: MediaBasedTraceEntry[] = [];
+  forceMinimize = false;
 
-  constructor(traces: Traces) {
-    super(traces, TraceType.SCREEN_RECORDING);
+  constructor(titles: string[]) {
+    this.titles = titles;
   }
 }

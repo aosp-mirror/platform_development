@@ -47,6 +47,7 @@ export interface SelectionConfiguration {
   value: string | string[];
   desc?: string;
   optional?: boolean;
+  wideField?: boolean;
 }
 
 export interface ConfigMap {
@@ -122,6 +123,7 @@ const screenshotConfigs: SelectionConfiguration[] = [
     options: [],
     value: [],
     desc: 'Leave empty to capture active display',
+    wideField: true,
   },
 ];
 
@@ -137,6 +139,7 @@ export function makeScreenRecordingConfigs(
       value: initialValue,
       optional: true,
       desc: 'Leave empty to capture active display',
+      wideField: true,
     },
   ];
 }

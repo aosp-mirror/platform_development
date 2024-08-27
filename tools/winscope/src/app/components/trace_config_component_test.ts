@@ -351,10 +351,7 @@ describe('TraceConfigComponent', () => {
             {
               key: 'displays',
               name: 'displays',
-              options: [
-                '12345',
-                'long_option_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx',
-              ],
+              options: ['12345', 'long_option'.repeat(20)],
               value: '',
               optional: true,
             },

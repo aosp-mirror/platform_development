@@ -63,8 +63,6 @@ export class LoadedParsers {
     legacyParsers = this.filterScreenshotParsersIfRequired(legacyParsers);
 
     this.addLegacyParsers(legacyParsers);
-
-    this.enforceLimitOfSingleScreenRecordingParser();
   }
 
   getParsers(): Array<Parser<object>> {
@@ -471,33 +469,6 @@ export class LoadedParsers {
     }
 
     return newLegacyParsers;
-  }
-
-  private enforceLimitOfSingleScreenRecordingParser() {
-    let firstScreenRecordingParser: Parser<object> | undefined;
-
-    this.legacyParsers = this.legacyParsers.filter((fileAndParser) => {
-      const parser = fileAndParser.parser;
-      const type = parser.getTraceType();
-      if (type !== TraceType.SCREEN_RECORDING) {
-        return true;
-      }
-
-      if (firstScreenRecordingParser) {
-        UserNotifier.add(
-          new TraceOverridden(
-            parser.getDescriptors().join(),
-            firstScreenRecordingParser.getTraceType(),
-          ),
-        );
-        return false;
-      }
-
-      if (type === TraceType.SCREEN_RECORDING) {
-        firstScreenRecordingParser = parser;
-      }
-      return true;
-    });
   }
 
   private findLastTimeGapAboveThreshold(
