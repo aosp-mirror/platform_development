@@ -44,7 +44,7 @@ enum Cmd {
         crates: Vec<String>,
 
         /// Don't pin the crate version for the specified crates when checking health.
-        #[arg(long, value_parser = parse_crate_list)]
+        #[arg(long, value_parser = parse_crate_list, required=false, default_value="")]
         unpinned: BTreeSet<String>,
     },
     /// Migrate crates from external/rust/crates to the monorepo.
@@ -53,7 +53,7 @@ enum Cmd {
         crates: Vec<String>,
 
         /// Add the specified crates with unpinned versions.
-        #[arg(long, value_parser = parse_crate_list)]
+        #[arg(long, value_parser = parse_crate_list, required=false, default_value="")]
         unpinned: BTreeSet<String>,
     },
     /// Regenerate a crate directory.
