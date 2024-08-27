@@ -43,6 +43,7 @@ import android.companion.virtual.VirtualDeviceManager;
 import android.companion.virtual.VirtualDeviceManager.ActivityListener;
 import android.companion.virtual.VirtualDeviceParams;
 import android.companion.virtual.sensor.VirtualSensorConfig;
+import android.companion.virtualdevice.flags.Flags;
 import android.content.ComponentName;
 import android.content.Intent;
 import android.content.IntentSender;
@@ -528,15 +529,18 @@ public final class VdmService extends Hilt_VdmService {
 
         if (mPreferenceController.getBoolean(R.string.pref_enable_client_sensors)) {
             for (SensorCapabilities sensor : mDeviceCapabilities.getSensorCapabilitiesList()) {
-                virtualDeviceBuilder.addVirtualSensorConfig(
-                        new VirtualSensorConfig.Builder(
-                                sensor.getType(), "Remote-" + sensor.getName())
-                                .setMinDelay(sensor.getMinDelayUs())
-                                .setMaxDelay(sensor.getMaxDelayUs())
-                                .setPower(sensor.getPower())
-                                .setResolution(sensor.getResolution())
-                                .setMaximumRange(sensor.getMaxRange())
-                                .build());
+                var builder = new VirtualSensorConfig.Builder(
+                        sensor.getType(), "Remote-" + sensor.getName())
+                        .setMinDelay(sensor.getMinDelayUs())
+                        .setMaxDelay(sensor.getMaxDelayUs())
+                        .setPower(sensor.getPower())
+                        .setResolution(sensor.getResolution())
+                        .setMaximumRange(sensor.getMaxRange());
+                if (Flags.deviceAwareDisplayPower()) {
+                    builder.setWakeUpSensor(sensor.getIsWakeUpSensor())
+                            .setReportingMode(sensor.getReportingMode());
+                }
+                virtualDeviceBuilder.addVirtualSensorConfig(builder.build());
             }
 
             if (mDeviceCapabilities.getSensorCapabilitiesCount() > 0) {
