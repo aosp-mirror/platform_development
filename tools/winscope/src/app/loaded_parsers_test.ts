@@ -394,13 +394,8 @@ describe('LoadedParsers', () => {
       expectLoadResult([parserScreenRecording0], []);
     });
 
-    it('discards screenshot parser in favour of screen recording parser', () => {
-      loadParsers([parserScreenshot0, parserScreenRecording0], []);
-      expectLoadResult([parserScreenRecording0], [overrideError]);
-    });
-
     it('does not load screenshot parser after loading screen recording parser in same call', () => {
-      loadParsers([parserScreenRecording0, parserScreenshot0], []);
+      loadParsers([parserScreenshot0, parserScreenRecording0], []);
       expectLoadResult([parserScreenRecording0], [overrideError]);
     });
 
@@ -420,15 +415,12 @@ describe('LoadedParsers', () => {
       expectLoadResult([parserScreenRecording0], [overrideError]);
     });
 
-    it('enforces limit of single screenshot or screenrecord parser', () => {
+    it('enforces limit of single screen recording parser', () => {
       loadParsers([parserScreenshot0], []);
       expectLoadResult([parserScreenshot0], []);
 
       loadParsers([parserScreenshot1], []);
-      expectLoadResult(
-        [parserScreenshot0],
-        [new TraceOverridden('screenshot.png', TraceType.SCREENSHOT)],
-      );
+      expectLoadResult([parserScreenshot0, parserScreenshot1], []);
 
       loadParsers([parserScreenRecording0], []);
       expectLoadResult(
