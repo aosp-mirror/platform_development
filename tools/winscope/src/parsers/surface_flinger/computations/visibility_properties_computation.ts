@@ -27,6 +27,7 @@ import {Computation} from 'trace/tree_node/computation';
 import {HierarchyTreeNode} from 'trace/tree_node/hierarchy_tree_node';
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
 import {DEFAULT_PROPERTY_TREE_NODE_FACTORY} from 'trace/tree_node/property_tree_node_factory';
+import {compareByZOrderPath} from './compare_by_z_order_path';
 
 export class VisibilityPropertiesComputation implements Computation {
   private root: HierarchyTreeNode | undefined;
@@ -49,18 +50,16 @@ export class VisibilityPropertiesComputation implements Computation {
       this.root.getEagerPropertyByName('displays')?.getAllChildren().slice() ??
       [];
 
-    const sortedLayers = this.rootLayers.sort(this.sortLayerZ);
+    const sortedLayers = this.rootLayers.sort(compareByZOrderPath);
 
-    const rootLayersOrderedByZ = sortedLayers
-      .flatMap((layer) => {
-        return this.layerTopDownTraversal(layer);
-      })
-      .reverse();
+    const layersOrderedByZ = sortedLayers.flatMap((layer) => {
+      return this.layerTopDownTraversal(layer);
+    });
 
     const opaqueLayers: HierarchyTreeNode[] = [];
     const translucentLayers: HierarchyTreeNode[] = [];
 
-    for (const layer of rootLayersOrderedByZ) {
+    for (const layer of layersOrderedByZ) {
       let isVisible = this.getIsVisible(layer);
       if (!isVisible) {
         layer.addEagerProperty(
@@ -312,7 +311,7 @@ export class VisibilityPropertiesComputation implements Computation {
     const children: HierarchyTreeNode[] = [
       ...layer.getAllChildren().values(),
     ].slice();
-    children.sort(this.sortLayerZ).forEach((child) => {
+    children.sort(compareByZOrderPath).forEach((child) => {
       traverseList.push(...this.layerTopDownTraversal(child));
     });
     return traverseList;
@@ -453,13 +452,6 @@ export class VisibilityPropertiesComputation implements Computation {
       (layer.getEagerPropertyByName('backgroundBlurRadius')?.getValue() ?? 0) >
       0
     );
-  }
-
-  private sortLayerZ(a: HierarchyTreeNode, b: HierarchyTreeNode): number {
-    return a.getEagerPropertyByName('z')?.getValue() <
-      b.getEagerPropertyByName('z')?.getValue()
-      ? -1
-      : 1;
   }
 
   private getDefinedValue(

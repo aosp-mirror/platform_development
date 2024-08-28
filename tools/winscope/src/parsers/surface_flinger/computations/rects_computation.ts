@@ -29,6 +29,7 @@ import {TraceRectBuilder} from 'trace/trace_rect_builder';
 import {Computation} from 'trace/tree_node/computation';
 import {HierarchyTreeNode} from 'trace/tree_node/hierarchy_tree_node';
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
+import {compareByZOrderPath} from './compare_by_z_order_path';
 
 function getDisplaySize(display: PropertyTreeNode): Size {
   const displaySize = assertDefined(display.getChildByName('size'));
@@ -401,7 +402,7 @@ export class RectsComputation implements Computation {
     const layersWithRects = assertDefined(this.root).filterDfs((node) =>
       shouldIncludeLayer(node, assertDefined(this.invalidBoundsFromDisplays)),
     );
-    layersWithRects.sort(RectsComputation.compareLayerZ);
+    layersWithRects.sort(compareByZOrderPath);
 
     for (let i = layersWithRects.length - 1; i > -1; i--) {
       const layer = layersWithRects[i];
@@ -466,31 +467,5 @@ export class RectsComputation implements Computation {
       inputWindowInfo !== undefined &&
       inputWindowInfo.getChildByName('inputConfig') !== undefined
     );
-  }
-
-  private static compareLayerZ(
-    a: HierarchyTreeNode,
-    b: HierarchyTreeNode,
-  ): number {
-    const aZOrderPath: number[] = assertDefined(
-      a.getEagerPropertyByName('zOrderPath'),
-    )
-      .getAllChildren()
-      .map((child) => child.getValue());
-    const bZOrderPath: number[] = assertDefined(
-      b.getEagerPropertyByName('zOrderPath'),
-    )
-      .getAllChildren()
-      .map((child) => child.getValue());
-
-    const zipLength = Math.min(aZOrderPath.length, bZOrderPath.length);
-    for (let i = 0; i < zipLength; ++i) {
-      const zOrderA = aZOrderPath[i];
-      const zOrderB = bZOrderPath[i];
-      if (zOrderA > zOrderB) return -1;
-      if (zOrderA < zOrderB) return 1;
-    }
-    // When z-order is the same, the layer with larger ID is on top
-    return a.id > b.id ? -1 : 1;
   }
 }
