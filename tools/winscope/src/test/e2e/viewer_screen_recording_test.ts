@@ -29,10 +29,10 @@ describe('Viewer ScreenRecording', () => {
     await E2eTestUtils.closeSnackBar();
     await E2eTestUtils.clickViewTracesButton();
 
-    const viewer = element(by.css('viewer-screen-recording'));
+    const viewer = element(by.css('viewer-media-based'));
     expect(await viewer.isPresent()).toBeTruthy();
 
-    const video = element(by.css('viewer-screen-recording video'));
+    const video = element(by.css('viewer-media-based video'));
     expect(await video.isPresent()).toBeTruthy();
     expect(await video.getAttribute('src')).toContain('blob:');
     expect(await video.getAttribute('currentTime')).toBeCloseTo(0, 0.001);
