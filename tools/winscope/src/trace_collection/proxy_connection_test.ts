@@ -43,12 +43,13 @@ type HttpRequestPostType = (
 
 describe('ProxyConnection', () => {
   const detectStateChangesInUi = jasmine.createSpy();
-  const progressCallback = jasmine.createSpy();
+  const configOptionsChangeCallback = jasmine.createSpy();
   const availableTracesChangeCallback = jasmine.createSpy();
   const mockDevice: AdbDevice = {
     id: '35562',
     model: 'Pixel 6',
     authorized: true,
+    displays: ['12345 Extra Info'],
   };
   const mockTraceRequest: TraceRequest = {
     name: 'layers_trace',
@@ -370,7 +371,7 @@ describe('ProxyConnection', () => {
           ProxyEndpoint.DUMP +
           `${mockDevice.id}/`,
         [['Winscope-Token', '']],
-        requestObj.map((t) => t.name),
+        requestObj,
       );
       expect(connection.getState()).toEqual(ConnectionState.DUMPING_STATE);
     });
@@ -424,6 +425,19 @@ describe('ProxyConnection', () => {
   });
 
   describe('finding devices', () => {
+    const successfulResponse: HttpResponse = {
+      status: HttpRequestStatus.SUCCESS,
+      type: 'text',
+      text: JSON.stringify({
+        '35562': {
+          authorized: mockDevice.authorized,
+          model: mockDevice.model,
+          displays: ['Display 12345 Extra Info'],
+        },
+      }),
+      body: undefined,
+      getHeader: getVersionHeader,
+    };
     afterEach(() => {
       localStorage.clear();
     });
@@ -445,32 +459,14 @@ describe('ProxyConnection', () => {
     });
 
     it('fetches devices', async () => {
-      const devicesResponse: HttpResponse = {
-        status: HttpRequestStatus.SUCCESS,
-        type: 'text',
-        text: JSON.stringify({
-          '35562': {authorized: mockDevice.authorized, model: mockDevice.model},
-        }),
-        body: undefined,
-        getHeader: getVersionHeader,
-      };
-      await setUpTestEnvironment(devicesResponse);
+      await setUpTestEnvironment(successfulResponse);
       checkGetDevicesRequest();
       expect(connection.getState()).toEqual(ConnectionState.IDLE);
       expect(connection.getDevices()).toEqual([mockDevice]);
     });
 
     it('sets up worker to fetch devices', async () => {
-      const devicesResponse: HttpResponse = {
-        status: HttpRequestStatus.SUCCESS,
-        type: 'text',
-        text: JSON.stringify({
-          '35562': {authorized: mockDevice.authorized, model: mockDevice.model},
-        }),
-        body: undefined,
-        getHeader: getVersionHeader,
-      };
-      await setUpTestEnvironment(devicesResponse);
+      await setUpTestEnvironment(successfulResponse);
       checkGetDevicesRequest();
       expect(connection.getState()).toEqual(ConnectionState.IDLE);
       expect(connection.getDevices()).toEqual([mockDevice]);
@@ -605,8 +601,8 @@ describe('ProxyConnection', () => {
     const connection = new ProxyConnection();
     await connection.initialize(
       detectStateChangesInUi,
-      progressCallback,
       availableTracesChangeCallback,
+      configOptionsChangeCallback,
     );
     return connection;
   }

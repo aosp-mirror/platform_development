@@ -15,7 +15,7 @@
  */
 
 import {assertDefined} from 'common/assert_utils';
-import {FunctionUtils, OnProgressUpdateType} from 'common/function_utils';
+import {FunctionUtils} from 'common/function_utils';
 import {
   HttpRequest,
   HttpRequestHeaderType,
@@ -34,7 +34,7 @@ import {ProxyEndpoint} from './proxy_endpoint';
 import {TraceRequest} from './trace_request';
 
 export class ProxyConnection extends AdbConnection {
-  static readonly VERSION = '3.0.0';
+  static readonly VERSION = '3.1.0';
   static readonly WINSCOPE_PROXY_URL = 'http://localhost:5544';
 
   private readonly store = new PersistentStore();
@@ -51,18 +51,19 @@ export class ProxyConnection extends AdbConnection {
   private refreshDevicesWorker: number | undefined;
   private detectStateChangeInUi: () => Promise<void> =
     FunctionUtils.DO_NOTHING_ASYNC;
-  private progressCallback: OnProgressUpdateType = FunctionUtils.DO_NOTHING;
   private availableTracesChangeCallback: (traces: string[]) => void =
+    FunctionUtils.DO_NOTHING;
+  private devicesChangeCallback: (devices: AdbDevice[]) => void =
     FunctionUtils.DO_NOTHING;
 
   async initialize(
     detectStateChangeInUi: () => Promise<void>,
-    progressCallback: OnProgressUpdateType,
     availableTracesChangeCallback: (traces: string[]) => void,
+    devicesChangeCallback: (devices: AdbDevice[]) => void,
   ): Promise<void> {
     this.detectStateChangeInUi = detectStateChangeInUi;
-    this.progressCallback = progressCallback;
     this.availableTracesChangeCallback = availableTracesChangeCallback;
+    this.devicesChangeCallback = devicesChangeCallback;
 
     const urlParams = new URLSearchParams(window.location.search);
     if (urlParams.has('token')) {
@@ -218,7 +219,7 @@ export class ProxyConnection extends AdbConnection {
         await this.postToProxy(
           `${ProxyEndpoint.DUMP}${assertDefined(this.selectedDevice).id}/`,
           FunctionUtils.DO_NOTHING,
-          this.requestedTraces.map((t) => t.name),
+          this.requestedTraces,
         );
         return;
 
@@ -310,8 +311,12 @@ export class ProxyConnection extends AdbConnection {
           id: deviceId,
           authorized: devices[deviceId].authorized,
           model: devices[deviceId].model,
+          displays: devices[deviceId].displays.map((display: string) => {
+            return display.split(' ').slice(1).join(' ');
+          }),
         };
       });
+      this.devicesChangeCallback(this.devices);
       if (this.refreshDevicesWorker === undefined) {
         this.refreshDevicesWorker = window.setInterval(
           () => this.requestDevices(),

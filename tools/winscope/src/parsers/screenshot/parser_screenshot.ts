@@ -17,10 +17,10 @@
 import {Timestamp} from 'common/time';
 import {AbstractParser} from 'parsers/legacy/abstract_parser';
 import {CoarseVersion} from 'trace/coarse_version';
-import {ScreenRecordingTraceEntry} from 'trace/screen_recording';
+import {MediaBasedTraceEntry} from 'trace/media_based_trace_entry';
 import {TraceType} from 'trace/trace_type';
 
-class ParserScreenshot extends AbstractParser<ScreenRecordingTraceEntry> {
+class ParserScreenshot extends AbstractParser<MediaBasedTraceEntry> {
   private static readonly MAGIC_NUMBER = [
     0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a,
   ]; // currently only support png files
@@ -56,9 +56,9 @@ class ParserScreenshot extends AbstractParser<ScreenRecordingTraceEntry> {
   override processDecodedEntry(
     index: number,
     entry: number,
-  ): ScreenRecordingTraceEntry {
+  ): MediaBasedTraceEntry {
     const screenshotData = this.traceFile.file;
-    return new ScreenRecordingTraceEntry(0, screenshotData, true);
+    return new MediaBasedTraceEntry(0, screenshotData, true);
   }
 }
 
