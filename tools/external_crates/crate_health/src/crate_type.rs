@@ -94,6 +94,9 @@ impl Crate {
     pub fn license_file(&self) -> Option<&str> {
         self.manifest.metadata().license_file.as_ref().map(|x| x.as_str())
     }
+    pub fn repository(&self) -> Option<&str> {
+        self.manifest.metadata().repository.as_ref().map(|x| x.as_str())
+    }
     pub fn path(&self) -> &RepoPath {
         &self.path
     }
