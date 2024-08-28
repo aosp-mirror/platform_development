@@ -15,25 +15,29 @@
  */
 
 import {WinscopeEvent, WinscopeEventType} from 'messaging/winscope_event';
-import {ScreenRecordingTraceEntry} from 'trace/screen_recording';
+import {MediaBasedTraceEntry} from 'trace/media_based_trace_entry';
 import {Trace} from 'trace/trace';
 import {Traces} from 'trace/traces';
 import {TraceEntryFinder} from 'trace/trace_entry_finder';
 import {TRACE_INFO} from 'trace/trace_info';
 import {TraceType} from 'trace/trace_type';
+import {ViewerMediaBasedComponent} from 'viewers/components/viewer_media_based_component';
 import {View, Viewer, ViewType} from 'viewers/viewer';
-import {ViewerScreenRecordingComponent} from './viewer_screen_recording_component';
 
 export class ViewerScreenRecording implements Viewer {
   static readonly DEPENDENCIES: TraceType[] = [TraceType.SCREEN_RECORDING];
 
-  private readonly trace: Trace<ScreenRecordingTraceEntry>;
+  private readonly trace: Trace<MediaBasedTraceEntry>;
   private readonly htmlElement: HTMLElement;
   private readonly view: View;
 
-  constructor(trace: Trace<ScreenRecordingTraceEntry>, traces: Traces) {
+  constructor(trace: Trace<MediaBasedTraceEntry>, traces: Traces) {
     this.trace = trace;
-    this.htmlElement = document.createElement('viewer-screen-recording');
+    this.htmlElement = document.createElement('viewer-media-based');
+    (this.htmlElement as unknown as ViewerMediaBasedComponent).titles = [
+      trace.getDescriptors().join(', '),
+    ];
+
     this.view = new View(
       ViewType.OVERLAY,
       this.getTraces(),
@@ -51,15 +55,15 @@ export class ViewerScreenRecording implements Viewer {
           event.position,
         );
         (
-          this.htmlElement as unknown as ViewerScreenRecordingComponent
-        ).currentTraceEntry = await entry?.getValue();
+          this.htmlElement as unknown as ViewerMediaBasedComponent
+        ).currentTraceEntries = [await entry?.getValue()];
       },
     );
     await event.visit(
       WinscopeEventType.EXPANDED_TIMELINE_TOGGLED,
       async (event) => {
         (
-          this.htmlElement as unknown as ViewerScreenRecordingComponent
+          this.htmlElement as unknown as ViewerMediaBasedComponent
         ).forceMinimize = event.isTimelineExpanded;
       },
     );
@@ -73,7 +77,7 @@ export class ViewerScreenRecording implements Viewer {
     return [this.view];
   }
 
-  getTraces(): Array<Trace<ScreenRecordingTraceEntry>> {
+  getTraces(): Array<Trace<MediaBasedTraceEntry>> {
     return [this.trace];
   }
 }

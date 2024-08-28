@@ -17,18 +17,18 @@ import {assertDefined} from 'common/assert_utils';
 import {TimestampConverterUtils} from 'test/unit/timestamp_converter_utils';
 import {UnitTestUtils} from 'test/unit/utils';
 import {CoarseVersion} from 'trace/coarse_version';
+import {MediaBasedTraceEntry} from 'trace/media_based_trace_entry';
 import {Parser} from 'trace/parser';
-import {ScreenRecordingTraceEntry} from 'trace/screen_recording';
 import {TraceType} from 'trace/trace_type';
 
 describe('ParserScreenRecording', () => {
-  let parser: Parser<ScreenRecordingTraceEntry>;
+  let parser: Parser<MediaBasedTraceEntry>;
 
   beforeAll(async () => {
     jasmine.addCustomEqualityTester(UnitTestUtils.timestampEqualityTester);
     parser = (await UnitTestUtils.getParser(
       'traces/elapsed_and_real_timestamp/screen_recording_metadata_v2.mp4',
-    )) as Parser<ScreenRecordingTraceEntry>;
+    )) as Parser<MediaBasedTraceEntry>;
   });
 
   it('has expected trace type', () => {
@@ -55,12 +55,12 @@ describe('ParserScreenRecording', () => {
   it('retrieves trace entry', async () => {
     {
       const entry = await parser.getEntry(0);
-      expect(entry).toBeInstanceOf(ScreenRecordingTraceEntry);
+      expect(entry).toBeInstanceOf(MediaBasedTraceEntry);
       expect(Number(entry.videoTimeSeconds)).toBeCloseTo(0);
     }
     {
       const entry = await parser.getEntry(parser.getLengthEntries() - 1);
-      expect(entry).toBeInstanceOf(ScreenRecordingTraceEntry);
+      expect(entry).toBeInstanceOf(MediaBasedTraceEntry);
       expect(Number(entry.videoTimeSeconds)).toBeCloseTo(1.371077, 0.001);
     }
   });
