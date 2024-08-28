@@ -59,6 +59,14 @@ describe('CollectTracesComponent', () => {
     model: 'Pixel 6',
     authorized: true,
     displays: [],
+    multiDisplayScreenRecordingAvailable: false,
+  };
+  const mockDeviceWatch: AdbDevice = {
+    id: '75432',
+    model: 'Pixel Watch',
+    authorized: true,
+    displays: [],
+    multiDisplayScreenRecordingAvailable: false,
   };
 
   beforeEach(async () => {
@@ -147,7 +155,13 @@ describe('CollectTracesComponent', () => {
     const connection = getConnection();
     connection.state = ConnectionState.IDLE;
     connection.devices = [
-      {id: '35562', model: 'Pixel 6', authorized: false, displays: []},
+      {
+        id: '35562',
+        model: 'Pixel 6',
+        authorized: false,
+        displays: [],
+        multiDisplayScreenRecordingAvailable: false,
+      },
     ];
     fixture.detectChanges();
 
@@ -180,19 +194,12 @@ describe('CollectTracesComponent', () => {
     fixture.detectChanges();
 
     const device = assertDefined(
-      htmlElement.querySelector('.available-device'),
-    ) as HTMLElement;
+      htmlElement.querySelector<HTMLElement>('.available-device'),
+    );
     device.click();
     fixture.detectChanges();
 
-    connection.devices = [
-      {
-        id: '75432',
-        model: 'Pixel Watch',
-        authorized: true,
-        displays: [],
-      },
-    ];
+    connection.devices = [mockDeviceWatch];
     fixture.detectChanges();
 
     const el = assertDefined(htmlElement.querySelector('.devices-connecting'));
@@ -208,8 +215,8 @@ describe('CollectTracesComponent', () => {
     fixture.detectChanges();
 
     const device = assertDefined(
-      htmlElement.querySelector('.available-device'),
-    ) as HTMLElement;
+      htmlElement.querySelector<HTMLElement>('.available-device'),
+    );
     device.click();
     fixture.detectChanges();
     let configSection = assertDefined(
@@ -217,14 +224,7 @@ describe('CollectTracesComponent', () => {
     );
     expect(configSection.textContent).toContain('Pixel 6');
 
-    connection.devices = [
-      {
-        id: '75432',
-        model: 'Pixel Watch',
-        authorized: true,
-        displays: [],
-      },
-    ];
+    connection.devices = [mockDeviceWatch];
     fixture.detectChanges();
 
     const el = assertDefined(htmlElement.querySelector('.devices-connecting'));
@@ -391,8 +391,8 @@ describe('CollectTracesComponent', () => {
     const spy = spyOn(getConnection(), 'restartConnection');
 
     const change = assertDefined(
-      htmlElement.querySelector('.change-btn'),
-    ) as HTMLButtonElement;
+      htmlElement.querySelector<HTMLElement>('.change-btn'),
+    );
     change.click();
 
     expect(spy).toHaveBeenCalled();
@@ -406,8 +406,8 @@ describe('CollectTracesComponent', () => {
     goToConfigSection();
 
     const fetchButton = assertDefined(
-      htmlElement.querySelector('.fetch-btn'),
-    ) as HTMLButtonElement;
+      htmlElement.querySelector<HTMLElement>('.fetch-btn'),
+    );
 
     fetchButton.click();
     fixture.detectChanges();
@@ -429,8 +429,8 @@ describe('CollectTracesComponent', () => {
     goToConfigSection();
 
     const fetchButton = assertDefined(
-      htmlElement.querySelector('.fetch-btn'),
-    ) as HTMLButtonElement;
+      htmlElement.querySelector<HTMLElement>('.fetch-btn'),
+    );
 
     fetchButton.click();
     fixture.detectChanges();
@@ -458,8 +458,8 @@ describe('CollectTracesComponent', () => {
 
     const spy = spyOn(connection, 'restartConnection').and.callThrough();
     const retryButton = assertDefined(
-      htmlElement.querySelector('.retry-btn'),
-    ) as HTMLButtonElement;
+      htmlElement.querySelector<HTMLElement>('.retry-btn'),
+    );
     retryButton.click();
     expect(spy).toHaveBeenCalled();
   });
@@ -475,8 +475,8 @@ describe('CollectTracesComponent', () => {
     expect(progress.innerHTML).toContain('Starting trace...');
 
     const endButton = assertDefined(
-      el.querySelector('.end-btn button'),
-    ) as HTMLButtonElement;
+      el.querySelector<HTMLButtonElement>('.end-btn button'),
+    );
     expect(endButton.disabled).toBeTrue();
   });
 
@@ -494,8 +494,8 @@ describe('CollectTracesComponent', () => {
     const endSpy = spyOn(connection, 'endTrace').and.callThrough();
     const fetchSpy = spyOn(connection, 'fetchLastTracingSessionData');
     const endButton = assertDefined(
-      el.querySelector('.end-btn button'),
-    ) as HTMLButtonElement;
+      el.querySelector<HTMLElement>('.end-btn button'),
+    );
     endButton.click();
     fixture.detectChanges();
     await fixture.whenStable();
@@ -515,8 +515,8 @@ describe('CollectTracesComponent', () => {
     expect(progress.innerHTML).toContain('cable');
 
     const endButton = assertDefined(
-      el.querySelector('.end-btn button'),
-    ) as HTMLButtonElement;
+      el.querySelector<HTMLButtonElement>('.end-btn button'),
+    );
     expect(endButton.disabled).toBeTrue();
   });
 
@@ -541,8 +541,8 @@ describe('CollectTracesComponent', () => {
     expect(progress.innerHTML).toContain('Fetching...');
 
     const endButton = assertDefined(
-      el.querySelector('.end-btn button'),
-    ) as HTMLButtonElement;
+      el.querySelector<HTMLButtonElement>('.end-btn button'),
+    );
     expect(endButton.disabled).toBeTrue();
   });
 
@@ -551,8 +551,10 @@ describe('CollectTracesComponent', () => {
     goToConfigSection();
     const dialog = await openAndReturnDialog();
 
-    const buttons = dialog.querySelectorAll('.warning-action-buttons button');
-    (buttons.item(buttons.length - 1) as HTMLElement).click();
+    const buttons = dialog.querySelectorAll<HTMLElement>(
+      '.warning-action-buttons button',
+    );
+    buttons.item(buttons.length - 1).click();
     fixture.detectChanges();
     await fixture.whenStable();
     expect(spy).toHaveBeenCalled();
@@ -564,8 +566,8 @@ describe('CollectTracesComponent', () => {
     const dialog = await openAndReturnDialog();
 
     const button = assertDefined(
-      dialog.querySelector('.warning-action-buttons button'),
-    ) as HTMLElement;
+      dialog.querySelector<HTMLElement>('.warning-action-buttons button'),
+    );
     button.click();
     fixture.detectChanges();
     await fixture.whenStable();
@@ -579,15 +581,17 @@ describe('CollectTracesComponent', () => {
     const dialog = await openAndReturnDialog();
 
     const option = assertDefined(
-      dialog.querySelector('.warning-action-boxes mat-checkbox input'),
-    ) as HTMLInputElement;
+      dialog.querySelector<HTMLInputElement>(
+        '.warning-action-boxes mat-checkbox input',
+      ),
+    );
     option.checked = true;
     option.click();
     fixture.detectChanges();
 
     const button = assertDefined(
-      dialog.querySelector('.warning-action-buttons button'),
-    ) as HTMLElement;
+      dialog.querySelector<HTMLElement>('.warning-action-buttons button'),
+    );
     button.click();
     fixture.detectChanges();
     await fixture.whenStable();
@@ -713,38 +717,12 @@ describe('CollectTracesComponent', () => {
     ]);
   });
 
-  it('updates devices in media based config from connection', () => {
-    checkMediaBasedConfig([]);
+  it('updates options in media based config on devices change from connection', () => {
+    checkMediaBasedConfigUpdates(false);
+  });
 
-    const validDeviceWithDisplays = {
-      id: '35562',
-      model: 'Pixel 6',
-      authorized: true,
-      displays: ['12345 Extra Info'],
-    };
-
-    // does not update if no selected device
-    getConnection().devicesChangeCallback([validDeviceWithDisplays]);
-    fixture.detectChanges();
-    checkMediaBasedConfig([]);
-
-    goToConfigSection();
-
-    // does not update if selected device not in new devices
-    getConnection().devicesChangeCallback([
-      {
-        id: '99',
-        model: 'Pixel 6',
-        authorized: true,
-        displays: ['12345 Extra Info'],
-      },
-    ]);
-    fixture.detectChanges();
-    checkMediaBasedConfig([]);
-
-    getConnection().devicesChangeCallback([validDeviceWithDisplays]);
-    fixture.detectChanges();
-    checkMediaBasedConfig(['12345 Extra Info']);
+  it('updates multiple selection in screen recording config on devices change from connection', () => {
+    checkMediaBasedConfigUpdates(true);
   });
 
   describe('ProxyConnection', () => {
@@ -767,15 +745,15 @@ describe('CollectTracesComponent', () => {
       const restartSpy = spyOn(connection, 'restartConnection');
 
       const proxyTokenInput = assertDefined(
-        htmlElement.querySelector('.proxy-token-input-field input'),
-      ) as HTMLInputElement;
+        htmlElement.querySelector<HTMLInputElement>(
+          '.proxy-token-input-field input',
+        ),
+      );
       proxyTokenInput.value = '12345';
       proxyTokenInput.dispatchEvent(new Event('input'));
       fixture.detectChanges();
 
-      (
-        assertDefined(htmlElement.querySelector('.retry')) as HTMLElement
-      ).click();
+      assertDefined(htmlElement.querySelector<HTMLElement>('.retry')).click();
       fixture.detectChanges();
       await fixture.whenStable();
 
@@ -790,8 +768,8 @@ describe('CollectTracesComponent', () => {
     connection.devices = [mockDevice];
     fixture.detectChanges();
     const device = assertDefined(
-      htmlElement.querySelector('.available-device'),
-    ) as HTMLElement;
+      htmlElement.querySelector<HTMLElement>('.available-device'),
+    );
     device.click();
     fixture.detectChanges();
   }
@@ -814,8 +792,8 @@ describe('CollectTracesComponent', () => {
 
   async function clickStartTraceButton() {
     const start = assertDefined(
-      htmlElement.querySelector('.start-btn button'),
-    ) as HTMLButtonElement;
+      htmlElement.querySelector<HTMLElement>('.start-btn button'),
+    );
     start.click();
     fixture.detectChanges();
     await fixture.whenStable();
@@ -823,8 +801,8 @@ describe('CollectTracesComponent', () => {
 
   async function clickDumpStateButton() {
     const dump = assertDefined(
-      htmlElement.querySelector('.dump-btn button'),
-    ) as HTMLButtonElement;
+      htmlElement.querySelector<HTMLElement>('.dump-btn button'),
+    );
     dump.click();
     fixture.detectChanges();
     await fixture.whenStable();
@@ -834,8 +812,8 @@ describe('CollectTracesComponent', () => {
     updateTraceConfigToInvalidIMEFrameMapping();
     await clickStartTraceButton();
     const dialog = assertDefined(
-      document.querySelector('warning-dialog'),
-    ) as HTMLElement;
+      document.querySelector<HTMLElement>('warning-dialog'),
+    );
     expect(dialog.textContent).toContain(
       'Cannot build frame mapping for IME with selected traces',
     );
@@ -852,15 +830,69 @@ describe('CollectTracesComponent', () => {
     return connection as MockAdbConnection;
   }
 
-  function checkMediaBasedConfig(displays: string[]) {
+  function checkMediaBasedConfigUpdates(
+    multiDisplayScreenRecordingAvailable: boolean,
+  ) {
+    checkMediaBasedConfig([], false);
+
+    const validDeviceWithDisplays: AdbDevice = {
+      id: '35562',
+      model: 'Pixel 6',
+      authorized: true,
+      displays: ['12345 Extra Info'],
+      multiDisplayScreenRecordingAvailable,
+    };
+
+    // does not update if no selected device
+    getConnection().devicesChangeCallback([validDeviceWithDisplays]);
+    fixture.detectChanges();
+    checkMediaBasedConfig([], false);
+
+    goToConfigSection();
+
+    // does not update if selected device not in new devices
+    getConnection().devicesChangeCallback([
+      {
+        id: '99',
+        model: 'Pixel 6',
+        authorized: true,
+        displays: ['12345 Extra Info'],
+        multiDisplayScreenRecordingAvailable,
+      },
+    ]);
+    fixture.detectChanges();
+    checkMediaBasedConfig([], false);
+
+    getConnection().devicesChangeCallback([validDeviceWithDisplays]);
+    fixture.detectChanges();
+    checkMediaBasedConfig(
+      ['12345 Extra Info'],
+      multiDisplayScreenRecordingAvailable,
+    );
+
+    if (multiDisplayScreenRecordingAvailable) {
+      validDeviceWithDisplays.multiDisplayScreenRecordingAvailable = false;
+      getConnection().devicesChangeCallback([validDeviceWithDisplays]);
+      fixture.detectChanges();
+      checkMediaBasedConfig(['12345 Extra Info'], false);
+    }
+  }
+
+  function checkMediaBasedConfig(
+    displays: string[],
+    multiDisplayScreenRecordingAvailable: boolean,
+  ) {
     const screenRecordingConfig = assertDefined(
       getCollectTracesComponent().traceConfig['screen_recording'].config,
-    );
+    ).selectionConfigs[0];
     const screenshotConfig = assertDefined(
       getCollectTracesComponent().dumpConfig['screenshot'].config,
+    ).selectionConfigs[0];
+    expect(screenRecordingConfig.options).toEqual(displays);
+    expect(screenshotConfig.options).toEqual(displays);
+    expect(screenRecordingConfig.value).toEqual(
+      multiDisplayScreenRecordingAvailable ? [] : '',
     );
-    expect(screenRecordingConfig.selectionConfigs[0].options).toEqual(displays);
-    expect(screenshotConfig.selectionConfigs[0].options).toEqual(displays);
   }
 
   @Component({

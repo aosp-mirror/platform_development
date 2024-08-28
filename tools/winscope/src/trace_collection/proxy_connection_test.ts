@@ -50,6 +50,7 @@ describe('ProxyConnection', () => {
     model: 'Pixel 6',
     authorized: true,
     displays: ['12345 Extra Info'],
+    multiDisplayScreenRecordingAvailable: false,
   };
   const mockTraceRequest: TraceRequest = {
     name: 'layers_trace',
@@ -438,6 +439,7 @@ describe('ProxyConnection', () => {
       body: undefined,
       getHeader: getVersionHeader,
     };
+
     afterEach(() => {
       localStorage.clear();
     });
@@ -488,6 +490,58 @@ describe('ProxyConnection', () => {
         [['Winscope-Token', '']],
         undefined,
       );
+    });
+
+    it('updates multi display screen recording availability for incompatible version', async () => {
+      const oldVersionResponse: HttpResponse = {
+        status: HttpRequestStatus.SUCCESS,
+        type: 'text',
+        text: JSON.stringify({
+          '35562': {
+            authorized: mockDevice.authorized,
+            model: mockDevice.model,
+            displays: ['Display 12345 Extra Info'],
+            screenrecord_version: '1.3',
+          },
+        }),
+        body: undefined,
+        getHeader: getVersionHeader,
+      };
+      await setUpTestEnvironment(oldVersionResponse);
+      checkGetDevicesRequest();
+      expect(connection.getState()).toEqual(ConnectionState.IDLE);
+      expect(connection.getDevices()).toEqual([mockDevice]);
+    });
+
+    it('updates multi display screen recording availability for compatible version', async () => {
+      const compatibleVersionResponse: HttpResponse = {
+        status: HttpRequestStatus.SUCCESS,
+        type: 'text',
+        text: JSON.stringify({
+          '35562': {
+            authorized: mockDevice.authorized,
+            model: mockDevice.model,
+            displays: ['Display 12345 Extra Info'],
+            screenrecord_version: '1.4',
+          },
+        }),
+        body: undefined,
+        getHeader: getVersionHeader,
+      };
+      const mockDeviceWithMultiDisplayScreenRecording: AdbDevice = {
+        id: '35562',
+        model: 'Pixel 6',
+        authorized: true,
+        displays: ['12345 Extra Info'],
+        multiDisplayScreenRecordingAvailable: true,
+      };
+
+      await setUpTestEnvironment(compatibleVersionResponse);
+      checkGetDevicesRequest();
+      expect(connection.getState()).toEqual(ConnectionState.IDLE);
+      expect(connection.getDevices()).toEqual([
+        mockDeviceWithMultiDisplayScreenRecording,
+      ]);
     });
   });
 

@@ -34,8 +34,10 @@ import {ProxyEndpoint} from './proxy_endpoint';
 import {TraceRequest} from './trace_request';
 
 export class ProxyConnection extends AdbConnection {
-  static readonly VERSION = '3.1.0';
+  static readonly VERSION = '3.2.0';
   static readonly WINSCOPE_PROXY_URL = 'http://localhost:5544';
+
+  private static readonly MULTI_DISPLAY_SCREENRECORD_VERSION = '1.4';
 
   private readonly store = new PersistentStore();
   private readonly storeKeySecurityToken = 'adb.proxyKey';
@@ -314,6 +316,9 @@ export class ProxyConnection extends AdbConnection {
           displays: devices[deviceId].displays.map((display: string) => {
             return display.split(' ').slice(1).join(' ');
           }),
+          multiDisplayScreenRecordingAvailable:
+            devices[deviceId].screenrecord_version >=
+            ProxyConnection.MULTI_DISPLAY_SCREENRECORD_VERSION,
         };
       });
       this.devicesChangeCallback(this.devices);
@@ -376,7 +381,7 @@ export class ProxyConnection extends AdbConnection {
 
   private async getFromProxy(
     path: string,
-    onSuccess: OnRequestSuccessCallback = FunctionUtils.DO_NOTHING,
+    onSuccess: OnRequestSuccessCallback,
     type?: XMLHttpRequest['responseType'],
   ) {
     const response = await HttpRequest.get(
@@ -389,7 +394,7 @@ export class ProxyConnection extends AdbConnection {
 
   private async postToProxy(
     path: string,
-    onSuccess: OnRequestSuccessCallback = FunctionUtils.DO_NOTHING,
+    onSuccess: OnRequestSuccessCallback,
     jsonRequest?: object,
   ) {
     const response = await HttpRequest.post(
@@ -402,7 +407,7 @@ export class ProxyConnection extends AdbConnection {
 
   private async processProxyResponse(
     response: HttpResponse,
-    onSuccess: OnRequestSuccessCallback = FunctionUtils.DO_NOTHING,
+    onSuccess: OnRequestSuccessCallback,
   ) {
     if (
       response.status === HttpRequestStatus.SUCCESS &&

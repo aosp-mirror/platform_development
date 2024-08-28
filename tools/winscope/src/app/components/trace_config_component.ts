@@ -96,7 +96,7 @@ import {userOptionStyle} from 'viewers/components/styles/user_option.styles';
                   [class.not-enabled]="matSelect.value.length !== selectionConfig.options.length"
                   (click)="onAllButtonClick(matSelect, selectionConfig)"> All </button>
                 <button
-                  *ngIf="selectionConfig.optional"
+                  *ngIf="selectionConfig.optional && !matSelect.multiple"
                   mat-flat-button
                   class="user-option"
                   [color]="matSelect.value.length === 0 ? 'primary' : undefined"
@@ -223,8 +223,8 @@ export class TraceConfigComponent {
 
   onNoneButtonClick(select: MatSelect, config: SelectionConfiguration) {
     if (config.value.length > 0) {
-      select.value = Array.isArray(config.value) ? [] : '';
-      config.value = Array.isArray(config.value) ? [] : '';
+      select.value = '';
+      config.value = '';
       this.onTraceConfigChange();
     }
   }

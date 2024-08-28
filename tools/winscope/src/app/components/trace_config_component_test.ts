@@ -244,34 +244,6 @@ describe('TraceConfigComponent', () => {
     ).toEqual('');
   });
 
-  it('clicking None button clears optional multiple selection config value', async () => {
-    configChangeSpy.calls.reset();
-    await openSelect(3);
-
-    const panel = assertDefined(
-      document.querySelector<HTMLElement>('.mat-select-panel'),
-    );
-    clickFirstOption(panel);
-    expect(configChangeSpy).toHaveBeenCalledTimes(1);
-    expect(
-      configChangeSpy.calls.mostRecent().args[0][
-        'optional_multiple_selection_trace'
-      ].config.selectionConfigs[0].value,
-    ).toEqual(['12345']);
-
-    const noneButton = assertDefined(
-      panel.querySelectorAll<HTMLElement>('.user-option').item(1),
-    );
-    noneButton.click();
-    fixture.detectChanges();
-    expect(configChangeSpy).toHaveBeenCalledTimes(2);
-    expect(
-      configChangeSpy.calls.mostRecent().args[0][
-        'optional_multiple_selection_trace'
-      ].config.selectionConfigs[0].value,
-    ).toEqual([]);
-  });
-
   it('clicking All button selects or clears all options for multiple selection config', async () => {
     configChangeSpy.calls.reset();
     await openSelect(2);

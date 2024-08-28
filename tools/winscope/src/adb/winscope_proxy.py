@@ -63,7 +63,7 @@ def create_argument_parser() -> argparse.ArgumentParser:
     return parser
 
 # Keep in sync with ProxyConnection#VERSION in Winscope
-VERSION = '3.1.0'
+VERSION = '3.2.0'
 
 PERFETTO_TRACE_CONFIG_FILE = '/data/misc/perfetto-configs/winscope-proxy-trace.conf'
 PERFETTO_DUMP_CONFIG_FILE = '/data/misc/perfetto-configs/winscope-proxy-dump.conf'
@@ -1000,11 +1000,32 @@ class ListDevicesEndpoint(RequestEndpoint):
 
     def process(self, server, path):
         lines = list(filter(None, call_adb('devices -l').split('\n')))
-        devices = {m.group(1): {
-            'authorized': str(m.group(2)) != 'unauthorized',
-            'model': m.group(4).replace('_', ' ') if m.group(4) else '',
-            'displays': list(filter(None, call_adb('shell su root dumpsys SurfaceFlinger --display-id', m.group(1)).split('\n')))
-        } for m in [ListDevicesEndpoint.ADB_INFO_RE.match(d) for d in lines[1:]] if m}
+        devices = {}
+        for m in [ListDevicesEndpoint.ADB_INFO_RE.match(d) for d in lines[1:]]:
+            if m:
+                authorized = str(m.group(2)) != 'unauthorized'
+                try:
+                    screen_record_version = call_adb('shell screenrecord --version', m.group(1)) if authorized else '0'
+                except AdbError:
+                    try:
+                        help_text = call_adb('shell screenrecord --help', m.group(1))
+                        version_start_index = help_text.find('v') + 1
+                        screen_record_version = help_text[version_start_index:version_start_index + 3]
+                    except AdbError:
+                        screen_record_version = '0'
+
+                try:
+                    displays = list(filter(None, call_adb('shell su root dumpsys SurfaceFlinger --display-id',
+                                                          m.group(1)).split('\n'))) if authorized else []
+                except AdbError:
+                    displays = []
+
+                devices[m.group(1)] = {
+                    'authorized': authorized,
+                    'model': m.group(4).replace('_', ' ') if m.group(4) else '',
+                    'displays': displays,
+                    'screenrecord_version': screen_record_version,
+                }
         self.foundDevices = devices
         j = json.dumps(devices)
         log.debug("Detected devices: " + j)
