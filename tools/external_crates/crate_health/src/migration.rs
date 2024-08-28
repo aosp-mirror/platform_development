@@ -30,7 +30,7 @@ static SYMLINKS: &'static [&'static str] = &["LICENSE", "NOTICE"];
 
 impl<'a> CompatibleVersionPair<'a, Crate> {
     pub fn copy_customizations(&self) -> Result<()> {
-        let dest_dir_absolute = self.dest.staging_path().abs();
+        let dest_dir = self.dest.staging_path();
         for pattern in CUSTOMIZATIONS {
             let full_pattern = self.source.path().join(pattern);
             for entry in glob(
@@ -45,20 +45,20 @@ impl<'a> CompatibleVersionPair<'a, Crate> {
                     .context(format!("Failed to get file name for {}", entry.display()))?
                     .to_os_string();
                 if entry.is_dir() {
-                    copy_dir(&entry, &dest_dir_absolute.join(filename)).context(format!(
+                    copy_dir(&entry, &dest_dir.join(&filename).abs()).context(format!(
                         "Failed to copy {} to {}",
                         entry.display(),
-                        self.dest.staging_path()
+                        dest_dir
                     ))?;
                 } else {
-                    let dest_file = dest_dir_absolute.join(&filename);
-                    if dest_file.exists() {
-                        return Err(anyhow!("Destination file {} exists", dest_file.display()));
+                    let dest_file = dest_dir.join(&filename);
+                    if dest_file.abs().exists() {
+                        return Err(anyhow!("Destination file {} exists", dest_file));
                     }
-                    copy(&entry, dest_dir_absolute.join(filename)).context(format!(
+                    copy(&entry, dest_dir.join(&filename).abs()).context(format!(
                         "Failed to copy {} to {}",
                         entry.display(),
-                        dest_dir_absolute.display()
+                        dest_dir
                     ))?;
                 }
             }
@@ -74,7 +74,7 @@ impl<'a> CompatibleVersionPair<'a, Crate> {
                         dest.display(),
                     ));
                 }
-                symlink(dest, dest_dir_absolute.join(link))?;
+                symlink(dest, dest_dir.join(link).abs())?;
             }
         }
         Ok(())
