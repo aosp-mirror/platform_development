@@ -23,31 +23,32 @@ pub struct RepoPath {
 
 impl Display for RepoPath {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}", self.path.display())
+        write!(f, "{}", self.rel().display())
     }
 }
 
 impl RepoPath {
-    pub fn new<P: Into<PathBuf>, Q: Into<PathBuf>>(root: P, path: Q) -> RepoPath {
+    pub fn new<P: Into<PathBuf>, Q: AsRef<Path>>(root: P, path: Q) -> RepoPath {
         let root: PathBuf = root.into();
-        let path: PathBuf = path.into();
+        let path = path.as_ref();
         assert!(root.is_absolute());
         assert!(path.is_relative());
+        let path = root.join(path);
         RepoPath { root, path }
     }
     pub fn root(&self) -> &Path {
         self.root.as_path()
     }
     pub fn rel(&self) -> &Path {
+        self.path.strip_prefix(&self.root).unwrap()
+    }
+    pub fn abs(&self) -> &Path {
         self.path.as_path()
     }
-    pub fn abs(&self) -> PathBuf {
-        self.root.join(&self.path)
-    }
     pub fn join(&self, path: &impl AsRef<Path>) -> RepoPath {
-        RepoPath::new(self.root.clone(), self.path.join(path))
+        RepoPath { root: self.root.clone(), path: self.path.join(path) }
     }
-    pub fn with_same_root<P: Into<PathBuf>>(&self, path: P) -> RepoPath {
+    pub fn with_same_root<P: AsRef<Path>>(&self, path: P) -> RepoPath {
         RepoPath::new(self.root.clone(), path)
     }
 }
