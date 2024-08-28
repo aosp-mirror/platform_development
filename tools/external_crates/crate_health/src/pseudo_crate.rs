@@ -13,7 +13,7 @@
 // limitations under the License.
 
 use std::{
-    collections::BTreeMap,
+    collections::{BTreeMap, BTreeSet},
     fs::{create_dir, write},
     process::Command,
     str::from_utf8,
@@ -140,6 +140,17 @@ impl PseudoCrate {
                 .strip_prefix("v")
                 .ok_or(anyhow!("Failed to parse version: {}", words[1]))?;
             deps.insert(words[0].to_string(), version.to_string());
+        }
+        Ok(deps)
+    }
+    pub fn deps_of(&self, crate_name: &str) -> Result<BTreeSet<String>> {
+        let mut deps = BTreeSet::new();
+        let output = Command::new("cargo")
+            .args(["tree", "--prefix", "none"])
+            .current_dir(self.get_path().abs().join("vendor").join(crate_name))
+            .run_quiet_and_expect_success()?;
+        for line in from_utf8(&output.stdout)?.lines() {
+            deps.insert(line.split_once(' ').unwrap().0.to_string());
         }
         Ok(deps)
     }
