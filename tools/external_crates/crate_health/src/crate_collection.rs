@@ -45,7 +45,10 @@ impl CrateCollection {
         for entry_or_err in WalkDir::new(self.repo_root.join(path)) {
             let entry = entry_or_err?;
             if entry.file_name() == "Cargo.toml" {
-                match Crate::from(RootedPath::new(self.repo_root.clone(), entry.path())?) {
+                match Crate::from(RootedPath::new(
+                    self.repo_root.clone(),
+                    entry.path().strip_prefix(self.repo_root())?,
+                )?) {
                     Ok(krate) => self.crates.insert_or_error(
                         NameAndVersion::new(krate.name().to_string(), krate.version().clone()),
                         krate,
