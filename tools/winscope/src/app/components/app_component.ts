@@ -58,11 +58,11 @@ import {AdbFiles} from 'trace_collection/adb_files';
 import {ProxyConnection} from 'trace_collection/proxy_connection';
 import {iconDividerStyle} from 'viewers/components/styles/icon_divider.styles';
 import {ViewerInputMethodComponent} from 'viewers/components/viewer_input_method_component';
+import {ViewerMediaBasedComponent} from 'viewers/components/viewer_media_based_component';
 import {Viewer} from 'viewers/viewer';
 import {ViewerInputComponent} from 'viewers/viewer_input/viewer_input_component';
 import {ViewerJankCujsComponent} from 'viewers/viewer_jank_cujs/viewer_jank_cujs_component';
 import {ViewerProtologComponent} from 'viewers/viewer_protolog/viewer_protolog_component';
-import {ViewerScreenRecordingComponent} from 'viewers/viewer_screen_recording/viewer_screen_recording_component';
 import {ViewerSurfaceFlingerComponent} from 'viewers/viewer_surface_flinger/viewer_surface_flinger_component';
 import {ViewerTransactionsComponent} from 'viewers/viewer_transactions/viewer_transactions_component';
 import {ViewerTransitionsComponent} from 'viewers/viewer_transitions/viewer_transitions_component';
@@ -413,10 +413,10 @@ export class AppComponent implements WinscopeEventListener {
         createCustomElement(ViewerProtologComponent, {injector}),
       );
     }
-    if (!customElements.get('viewer-screen-recording')) {
+    if (!customElements.get('viewer-media-based')) {
       customElements.define(
-        'viewer-screen-recording',
-        createCustomElement(ViewerScreenRecordingComponent, {injector}),
+        'viewer-media-based',
+        createCustomElement(ViewerMediaBasedComponent, {injector}),
       );
     }
     if (!customElements.get('viewer-surface-flinger')) {

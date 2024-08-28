@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import {ScreenRecordingTraceEntry} from './screen_recording';
+import {MediaBasedTraceEntry} from './media_based_trace_entry';
 import {HierarchyTreeNode} from './tree_node/hierarchy_tree_node';
 import {PropertyTreeNode} from './tree_node/property_tree_node';
 
@@ -53,8 +53,8 @@ export type ImeTraceType =
 export interface TraceEntryTypeMap {
   [TraceType.PROTO_LOG]: PropertyTreeNode;
   [TraceType.SURFACE_FLINGER]: HierarchyTreeNode;
-  [TraceType.SCREEN_RECORDING]: ScreenRecordingTraceEntry;
-  [TraceType.SCREENSHOT]: ScreenRecordingTraceEntry;
+  [TraceType.SCREEN_RECORDING]: MediaBasedTraceEntry;
+  [TraceType.SCREENSHOT]: MediaBasedTraceEntry;
   [TraceType.SYSTEM_UI]: object;
   [TraceType.TRANSACTIONS]: PropertyTreeNode;
   [TraceType.TRANSACTIONS_LEGACY]: object;

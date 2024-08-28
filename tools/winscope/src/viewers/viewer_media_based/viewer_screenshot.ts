@@ -15,25 +15,25 @@
  */
 
 import {WinscopeEvent, WinscopeEventType} from 'messaging/winscope_event';
-import {ScreenRecordingTraceEntry} from 'trace/screen_recording';
-import {Trace} from 'trace/trace';
+import {MediaBasedTraceEntry} from 'trace/media_based_trace_entry';
+import {Trace, TraceEntry} from 'trace/trace';
 import {Traces} from 'trace/traces';
 import {TraceEntryFinder} from 'trace/trace_entry_finder';
 import {TRACE_INFO} from 'trace/trace_info';
 import {TraceType} from 'trace/trace_type';
+import {ViewerMediaBasedComponent} from 'viewers/components/viewer_media_based_component';
 import {View, Viewer, ViewType} from 'viewers/viewer';
-import {ViewerScreenRecordingComponent} from './viewer_screen_recording_component';
 
 class ViewerScreenshot implements Viewer {
   static readonly DEPENDENCIES: TraceType[] = [TraceType.SCREENSHOT];
 
-  private readonly trace: Trace<ScreenRecordingTraceEntry>;
+  private readonly traces: Array<Trace<MediaBasedTraceEntry>>;
   private readonly htmlElement: HTMLElement;
   private readonly view: View;
 
-  constructor(trace: Trace<ScreenRecordingTraceEntry>, traces: Traces) {
-    this.trace = trace;
-    this.htmlElement = document.createElement('viewer-screen-recording');
+  constructor(traces: Traces) {
+    this.traces = traces.getTraces(TraceType.SCREENSHOT);
+    this.htmlElement = document.createElement('viewer-media-based');
     this.view = new View(
       ViewType.OVERLAY,
       this.getTraces(),
@@ -46,22 +46,32 @@ class ViewerScreenshot implements Viewer {
     await event.visit(
       WinscopeEventType.TRACE_POSITION_UPDATE,
       async (event) => {
-        const entry = TraceEntryFinder.findCorrespondingEntry(
-          this.trace,
-          event.position,
+        const traceEntries = this.traces
+          .map((trace) =>
+            TraceEntryFinder.findCorrespondingEntry(trace, event.position),
+          )
+          .filter((entry) => entry !== undefined) as Array<
+          TraceEntry<MediaBasedTraceEntry>
+        >;
+        const entries: MediaBasedTraceEntry[] = await Promise.all(
+          traceEntries.map((entry) => {
+            return entry.getValue();
+          }),
         );
         (
-          this.htmlElement as unknown as ViewerScreenRecordingComponent
-        ).currentTraceEntry = await entry?.getValue();
-        (this.htmlElement as unknown as ViewerScreenRecordingComponent).title =
-          'Screenshot';
+          this.htmlElement as unknown as ViewerMediaBasedComponent
+        ).currentTraceEntries = entries;
+        (this.htmlElement as unknown as ViewerMediaBasedComponent).titles =
+          traceEntries.map((traceEntry) =>
+            traceEntry.getFullTrace().getDescriptors().join(', '),
+          );
       },
     );
     await event.visit(
       WinscopeEventType.EXPANDED_TIMELINE_TOGGLED,
       async (event) => {
         (
-          this.htmlElement as unknown as ViewerScreenRecordingComponent
+          this.htmlElement as unknown as ViewerMediaBasedComponent
         ).forceMinimize = event.isTimelineExpanded;
       },
     );
@@ -75,8 +85,8 @@ class ViewerScreenshot implements Viewer {
     return [this.view];
   }
 
-  getTraces(): Array<Trace<ScreenRecordingTraceEntry>> {
-    return [this.trace];
+  getTraces(): Array<Trace<MediaBasedTraceEntry>> {
+    return this.traces;
   }
 }
 
