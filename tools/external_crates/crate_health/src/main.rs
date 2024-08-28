@@ -16,7 +16,8 @@ use std::{collections::BTreeSet, path::PathBuf};
 
 use anyhow::Result;
 use clap::{Parser, Subcommand};
-use crate_health::{default_repo_root, maybe_build_cargo_embargo, ManagedRepo, RepoPath};
+use crate_health::{default_repo_root, maybe_build_cargo_embargo, ManagedRepo};
+use rooted_path::RootedPath;
 
 #[derive(Parser)]
 struct Cli {
@@ -85,7 +86,7 @@ fn main() -> Result<()> {
     maybe_build_cargo_embargo(&args.repo_root, args.rebuild_cargo_embargo)?;
 
     let managed_repo =
-        ManagedRepo::new(RepoPath::new(args.repo_root, "external/rust/android-crates-io"));
+        ManagedRepo::new(RootedPath::new(args.repo_root, "external/rust/android-crates-io")?);
 
     match args.command {
         Cmd::MigrationHealth { crates, unpinned } => {

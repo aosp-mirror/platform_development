@@ -20,10 +20,11 @@ use std::{
 };
 
 use anyhow::{anyhow, Context, Result};
+use rooted_path::RootedPath;
 use serde::Serialize;
 use tinytemplate::TinyTemplate;
 
-use crate::{ensure_exists_and_empty, NamedAndVersioned, RepoPath, RunQuiet};
+use crate::{ensure_exists_and_empty, NamedAndVersioned, RunQuiet};
 
 static CARGO_TOML_TEMPLATE: &'static str = include_str!("templates/Cargo.toml.template");
 
@@ -39,11 +40,11 @@ struct CargoToml {
 }
 
 pub struct PseudoCrate {
-    path: RepoPath,
+    path: RootedPath,
 }
 
 impl PseudoCrate {
-    pub fn new(path: RepoPath) -> PseudoCrate {
+    pub fn new(path: RootedPath) -> PseudoCrate {
         PseudoCrate { path }
     }
     pub fn init<'a>(
@@ -54,7 +55,7 @@ impl PseudoCrate {
         if self.path.abs().exists() {
             return Err(anyhow!("Can't init pseudo-crate because {} already exists", self.path));
         }
-        ensure_exists_and_empty(&self.path.abs())?;
+        ensure_exists_and_empty(&self.path)?;
 
         let mut deps = Vec::new();
         for krate in crates {
@@ -81,21 +82,21 @@ impl PseudoCrate {
 
         let mut tt = TinyTemplate::new();
         tt.add_template("cargo_toml", CARGO_TOML_TEMPLATE)?;
-        write(self.path.join(&"Cargo.toml").abs(), tt.render("cargo_toml", &CargoToml { deps })?)?;
+        write(self.path.join("Cargo.toml")?, tt.render("cargo_toml", &CargoToml { deps })?)?;
 
-        create_dir(self.path.join(&"src").abs()).context("Failed to create src dir")?;
-        write(self.path.join(&"src/lib.rs").abs(), "// Nothing")
+        create_dir(self.path.join("src")?).context("Failed to create src dir")?;
+        write(self.path.join("src/lib.rs")?, "// Nothing")
             .context("Failed to create src/lib.rs")?;
 
         self.vendor()
     }
-    pub fn get_path(&self) -> &RepoPath {
+    pub fn get_path(&self) -> &RootedPath {
         &self.path
     }
     fn add_internal(&self, crate_and_version_str: &str) -> Result<()> {
         Command::new("cargo")
             .args(["add", crate_and_version_str])
-            .current_dir(self.path.abs())
+            .current_dir(&self.path)
             .run_quiet_and_expect_success()?;
         Ok(())
     }
@@ -111,21 +112,21 @@ impl PseudoCrate {
     pub fn remove(&self, krate: &impl NamedAndVersioned) -> Result<()> {
         Command::new("cargo")
             .args(["remove", krate.name()])
-            .current_dir(self.path.abs())
+            .current_dir(&self.path)
             .run_quiet_and_expect_success()?;
         Ok(())
     }
     pub fn vendor(&self) -> Result<()> {
         Command::new("cargo")
             .args(["vendor"])
-            .current_dir(self.path.abs())
+            .current_dir(&self.path)
             .run_quiet_and_expect_success()?;
         Ok(())
     }
     pub fn deps(&self) -> Result<BTreeMap<String, String>> {
         let output = Command::new("cargo")
             .args(["tree", "--depth=1", "--prefix=none"])
-            .current_dir(self.path.abs())
+            .current_dir(&self.path)
             .run_quiet_and_expect_success()?;
         let mut deps = BTreeMap::new();
         for line in from_utf8(&output.stdout)?.lines().skip(1) {

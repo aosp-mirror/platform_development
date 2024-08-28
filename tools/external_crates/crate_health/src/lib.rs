@@ -46,9 +46,6 @@ pub use self::name_and_version::{
 };
 mod name_and_version;
 
-pub use self::repo_path::RepoPath;
-mod repo_path;
-
 pub use self::google_metadata::GoogleMetadata;
 mod google_metadata;
 
@@ -87,7 +84,7 @@ pub fn default_repo_root() -> Result<PathBuf> {
     Err(anyhow!(".repo directory not found in any ancestor of {}", cwd.display()))
 }
 
-pub fn ensure_exists_and_empty(dir: &impl AsRef<Path>) -> Result<()> {
+pub fn ensure_exists_and_empty(dir: impl AsRef<Path>) -> Result<()> {
     let dir = dir.as_ref();
     if dir.exists() {
         remove_dir_all(&dir).context(format!("Failed to remove {}", dir.display()))?;
@@ -119,7 +116,7 @@ impl RunQuiet for Command {
 }
 
 // The copy_dir crate doesn't handle symlinks.
-pub fn copy_dir(src: &impl AsRef<Path>, dst: &impl AsRef<Path>) -> Result<()> {
+pub fn copy_dir(src: impl AsRef<Path>, dst: impl AsRef<Path>) -> Result<()> {
     Command::new("cp")
         .arg("--archive")
         .arg(src.as_ref())

@@ -16,7 +16,6 @@ use std::{
     collections::BTreeSet,
     fs::{create_dir, read_dir, remove_dir_all, remove_file, rename, write},
     os::unix::fs::symlink,
-    path::{Path, PathBuf},
     process::Command,
     str::from_utf8,
 };
@@ -25,46 +24,47 @@ use anyhow::{anyhow, Result};
 use glob::glob;
 use itertools::Itertools;
 use license_checker::find_licenses;
+use rooted_path::RootedPath;
 use semver::Version;
 use spdx::Licensee;
 
 use crate::{
     cargo_embargo_autoconfig, copy_dir, update_module_license_files, Crate, CrateCollection,
     GoogleMetadata, Migratable, NameAndVersion, NameAndVersionMap, NameAndVersionRef,
-    NamedAndVersioned, PseudoCrate, RepoPath, VersionMatch,
+    NamedAndVersioned, PseudoCrate, VersionMatch,
 };
 
 pub struct ManagedRepo {
-    path: RepoPath,
+    path: RootedPath,
     pseudo_crate: PseudoCrate,
 }
 
 impl ManagedRepo {
-    pub fn new(path: RepoPath) -> ManagedRepo {
-        let pseudo_crate = PseudoCrate::new(path.join(&"pseudo_crate"));
+    pub fn new(path: RootedPath) -> ManagedRepo {
+        let pseudo_crate = PseudoCrate::new(path.join("pseudo_crate").unwrap());
         ManagedRepo { path, pseudo_crate }
     }
     pub fn contains(&self, crate_name: &str) -> bool {
         self.managed_dir_for(crate_name).abs().exists()
     }
-    pub fn managed_dir(&self) -> RepoPath {
-        self.path.join(&Path::new("crates"))
+    pub fn managed_dir(&self) -> RootedPath {
+        self.path.join("crates").unwrap()
     }
-    pub fn managed_dir_for(&self, crate_name: &str) -> RepoPath {
-        self.managed_dir().join(&crate_name)
+    pub fn managed_dir_for(&self, crate_name: &str) -> RootedPath {
+        self.managed_dir().join(crate_name).unwrap()
     }
-    pub fn vendored_dir_for(&self, crate_name: &str) -> RepoPath {
-        self.pseudo_crate.get_path().join(&Path::new("vendor").join(crate_name))
+    pub fn vendored_dir_for(&self, crate_name: &str) -> RootedPath {
+        self.pseudo_crate.get_path().join("vendor").unwrap().join(crate_name).unwrap()
     }
-    pub fn legacy_dir_for(&self, crate_name: &str) -> RepoPath {
-        self.path.with_same_root("external/rust/crates").join(&crate_name)
+    pub fn legacy_dir_for(&self, crate_name: &str) -> RootedPath {
+        self.path.with_same_root("external/rust/crates").unwrap().join(&crate_name).unwrap()
     }
     pub fn new_cc(&self) -> CrateCollection {
         CrateCollection::new(self.path.root())
     }
     pub fn vendored_crates(&self) -> Result<CrateCollection> {
         let mut cc = self.new_cc();
-        cc.add_from(&self.pseudo_crate.get_path().join(&"vendor").rel())?;
+        cc.add_from(&self.pseudo_crate.get_path().join("vendor")?.rel())?;
         Ok(cc)
     }
     pub fn migration_health(
@@ -287,9 +287,9 @@ impl ManagedRepo {
 
             let monorepo_crate_dir = self.managed_dir();
             if !monorepo_crate_dir.abs().exists() {
-                create_dir(&monorepo_crate_dir.abs())?;
+                create_dir(monorepo_crate_dir)?;
             }
-            copy_dir(&src_dir.abs(), &self.managed_dir_for(crate_name).abs())?;
+            copy_dir(src_dir, self.managed_dir_for(crate_name))?;
             if unpinned.contains(crate_name) {
                 self.pseudo_crate.add_unpinned(&NameAndVersionRef::new(&crate_name, &version))?;
             } else {
@@ -311,13 +311,13 @@ impl ManagedRepo {
             )? {
                 remove_file(entry?)?;
             }
-            remove_file(src_dir.abs().join("cargo_embargo.json"))?;
-            let test_mapping = src_dir.abs().join("TEST_MAPPING");
-            if test_mapping.exists() {
+            remove_file(src_dir.join("cargo_embargo.json")?)?;
+            let test_mapping = src_dir.join("TEST_MAPPING")?;
+            if test_mapping.abs().exists() {
                 remove_file(test_mapping)?;
             }
             write(
-                src_dir.abs().join("Android.bp"),
+                src_dir.join("Android.bp")?,
                 format!("// This crate has been migrated to {}.\n", self.path),
             )?;
         }
@@ -364,7 +364,7 @@ impl ManagedRepo {
                 ));
             }
 
-            let krate = Crate::from(&managed_dir.abs().join("Cargo.toml"), self.path.root())?;
+            let krate = Crate::from(managed_dir.join("Cargo.toml")?)?;
 
             let licenses = find_licenses(krate.path().abs(), krate.name(), krate.license())?;
 
@@ -408,8 +408,8 @@ impl ManagedRepo {
 
             // If there's a single applicable license file, symlink it to LICENSE.
             if licenses.satisfied.len() == 1 && licenses.unsatisfied.is_empty() {
-                let license_file = krate.path().abs().join("LICENSE");
-                if !license_file.exists() {
+                let license_file = krate.path().join("LICENSE")?;
+                if !license_file.abs().exists() {
                     symlink(
                         licenses.satisfied.iter().next().unwrap().1.file_name().unwrap(),
                         license_file,
@@ -460,8 +460,8 @@ impl ManagedRepo {
                 return Err(anyhow!("Staged crate not found at {}", pair.dest.staging_path()));
             }
             let android_crate_dir = self.managed_dir_for(pair.source.name());
-            remove_dir_all(&android_crate_dir.abs())?;
-            rename(pair.dest.staging_path().abs(), &android_crate_dir.abs())?;
+            remove_dir_all(&android_crate_dir)?;
+            rename(pair.dest.staging_path(), &android_crate_dir)?;
         }
 
         Ok(())
@@ -482,7 +482,7 @@ impl ManagedRepo {
             }
 
             // Source
-            cc.add_from(&android_crate_dir.abs())?;
+            cc.add_from(&android_crate_dir.rel())?;
             cc.map_field_mut().retain(|_nv, krate| krate.is_crates_io());
             let num_versions = cc.get_versions(crate_name).count();
             if num_versions != 1 {
@@ -513,7 +513,7 @@ impl ManagedRepo {
         let deps = self.pseudo_crate.deps()?.keys().map(|k| k.clone()).collect::<BTreeSet<_>>();
 
         let mut managed_dirs = BTreeSet::new();
-        for entry in read_dir(self.managed_dir().abs())? {
+        for entry in read_dir(self.managed_dir())? {
             let entry = entry?;
             if entry.path().is_dir() {
                 managed_dirs.insert(
@@ -562,7 +562,7 @@ impl ManagedRepo {
     // it runs it for the host target.
     fn add_crate_and_dependencies(&self, crate_name: &str) -> Result<BTreeSet<String>> {
         let mut cc = self.new_cc();
-        cc.add_from(&PathBuf::from("external/rust/crates"))?;
+        cc.add_from("external/rust/crates")?;
         cc.map_field_mut().retain(|_nv, krate| krate.is_crates_io());
         let unmigrated_crates =
             cc.map_field().keys().map(|nv| nv.name().to_string()).collect::<BTreeSet<_>>();
