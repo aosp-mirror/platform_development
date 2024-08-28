@@ -198,9 +198,8 @@ impl VersionMatch<CrateCollection> {
 
     pub fn update_metadata(&self) -> Result<()> {
         for pair in self.compatible_and_eligible() {
-            let mut metadata = GoogleMetadata::try_from(
-                pair.dest.staging_path().join(&Path::new("METADATA")).abs(),
-            )?;
+            let mut metadata =
+                GoogleMetadata::try_from(pair.dest.staging_path().join(&Path::new("METADATA"))?)?;
             let mut writeback = false;
             writeback |= metadata.migrate_homepage();
             writeback |= metadata.migrate_archive();
