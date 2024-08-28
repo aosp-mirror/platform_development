@@ -56,6 +56,11 @@ enum Cmd {
         #[arg(long, value_parser = parse_crate_list, required=false, default_value="")]
         unpinned: BTreeSet<String>,
     },
+    /// Import a crate and its dependencies into the monorepo.
+    Import {
+        /// The crate name.
+        crate_name: String,
+    },
     /// Regenerate a crate directory.
     Regenerate {
         /// The crate names.
@@ -97,5 +102,6 @@ fn main() -> Result<()> {
         Cmd::Regenerate { crates } => managed_repo.regenerate(crates.iter(), true),
         Cmd::RegenerateAll {} => managed_repo.regenerate_all(true),
         Cmd::PreuploadCheck { files: _ } => managed_repo.preupload_check(),
+        Cmd::Import { crate_name } => managed_repo.import(&crate_name),
     }
 }

@@ -52,6 +52,9 @@ mod repo_path;
 pub use self::google_metadata::GoogleMetadata;
 mod google_metadata;
 
+pub use self::license::{most_restrictive_type, update_module_license_files};
+mod license;
+
 pub use self::managed_repo::ManagedRepo;
 mod managed_repo;
 
