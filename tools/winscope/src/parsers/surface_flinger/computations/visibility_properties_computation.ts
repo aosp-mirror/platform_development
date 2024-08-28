@@ -27,7 +27,7 @@ import {Computation} from 'trace/tree_node/computation';
 import {HierarchyTreeNode} from 'trace/tree_node/hierarchy_tree_node';
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
 import {DEFAULT_PROPERTY_TREE_NODE_FACTORY} from 'trace/tree_node/property_tree_node_factory';
-import {compareByZOrderPath} from './compare_by_z_order_path';
+import {LayerExtractor} from './layer_extractor';
 
 export class VisibilityPropertiesComputation implements Computation {
   private root: HierarchyTreeNode | undefined;
@@ -50,11 +50,9 @@ export class VisibilityPropertiesComputation implements Computation {
       this.root.getEagerPropertyByName('displays')?.getAllChildren().slice() ??
       [];
 
-    const sortedLayers = this.rootLayers.sort(compareByZOrderPath);
-
-    const layersOrderedByZ = sortedLayers.flatMap((layer) => {
-      return this.layerTopDownTraversal(layer);
-    });
+    const layersOrderedByZ = LayerExtractor.extractLayersSortedByZ(
+      assertDefined(this.root),
+    );
 
     const opaqueLayers: HierarchyTreeNode[] = [];
     const translucentLayers: HierarchyTreeNode[] = [];
@@ -90,14 +88,14 @@ export class VisibilityPropertiesComputation implements Computation {
             if (!this.layerContains(other, layer, displaySize)) {
               return false;
             }
-            const cornerRadiusOther =
-              other.getEagerPropertyByName('cornerRadius')?.getValue() ?? 0;
+            const cornerRadiusOther = this.getDefinedValue(
+              other,
+              'cornerRadius',
+            );
 
             return (
               cornerRadiusOther <= 0 ||
-              (cornerRadiusOther ===
-                layer.getEagerPropertyByName('cornerRadius')?.getValue() ??
-                0)
+              cornerRadiusOther === this.getDefinedValue(layer, 'cornerRadius')
             );
           })
           .map((other) => other.id);
@@ -306,17 +304,6 @@ export class VisibilityPropertiesComputation implements Computation {
     return reasons;
   }
 
-  private layerTopDownTraversal(layer: HierarchyTreeNode): HierarchyTreeNode[] {
-    const traverseList: HierarchyTreeNode[] = [layer];
-    const children: HierarchyTreeNode[] = [
-      ...layer.getAllChildren().values(),
-    ].slice();
-    children.sort(compareByZOrderPath).forEach((child) => {
-      traverseList.push(...this.layerTopDownTraversal(child));
-    });
-    return traverseList;
-  }
-
   private getRect(rectNode: PropertyTreeNode): Rect | undefined {
     if (rectNode.getAllChildren().length === 0) return undefined;
     return GeometryFactory.makeRect(rectNode);
@@ -347,7 +334,7 @@ export class VisibilityPropertiesComputation implements Computation {
   private layerContains(
     layer: HierarchyTreeNode,
     other: HierarchyTreeNode,
-    crop = new Rect(0, 0, 0, 0),
+    crop: Rect,
   ): boolean {
     if (
       !TransformType.isSimpleRotation(
@@ -374,7 +361,7 @@ export class VisibilityPropertiesComputation implements Computation {
   private layerOverlaps(
     layer: HierarchyTreeNode,
     other: HierarchyTreeNode,
-    crop = new Rect(0, 0, 0, 0),
+    crop: Rect,
   ): boolean {
     const layerBounds = this.getCroppedScreenBounds(layer, crop);
     const otherBounds = this.getCroppedScreenBounds(other, crop);

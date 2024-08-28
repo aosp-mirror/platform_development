@@ -369,11 +369,11 @@ export class Presenter extends AbstractHierarchyViewerPresenter<UiData> {
 
   private getLayerSummary(layer: PropertyTreeNode): SfLayerSummary {
     const nodeId = layer.formattedValue();
-    const [layerId, name] = nodeId.split(' ');
+    const parts = nodeId.split(' ');
     return {
-      layerId,
+      layerId: parts[0],
       nodeId,
-      name,
+      name: parts.slice(1).join(' '),
     };
   }
 

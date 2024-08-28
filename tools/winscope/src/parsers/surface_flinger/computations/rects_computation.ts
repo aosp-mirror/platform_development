@@ -29,7 +29,7 @@ import {TraceRectBuilder} from 'trace/trace_rect_builder';
 import {Computation} from 'trace/tree_node/computation';
 import {HierarchyTreeNode} from 'trace/tree_node/hierarchy_tree_node';
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
-import {compareByZOrderPath} from './compare_by_z_order_path';
+import {LayerExtractor} from './layer_extractor';
 
 function getDisplaySize(display: PropertyTreeNode): Size {
   const displaySize = assertDefined(display.getChildByName('size'));
@@ -201,6 +201,7 @@ class RectSfFactory {
     const isTouchable = (inputConfig & InputConfig.NOT_TOUCHABLE) === 0;
     const touchableRegionNode =
       inputWindowInfo.getChildByName('touchableRegion');
+
     if (!isTouchable) {
       touchableRegion = Region.createEmpty();
     } else if (touchableRegionNode !== undefined) {
@@ -399,10 +400,11 @@ export class RectsComputation implements Computation {
       curAbsoluteZByLayerStack.set(layerStack, 1);
     }
 
-    const layersWithRects = assertDefined(this.root).filterDfs((node) =>
+    const layersWithRects = LayerExtractor.extractLayersSortedByZ(
+      assertDefined(this.root),
+    ).filter((node) =>
       shouldIncludeLayer(node, assertDefined(this.invalidBoundsFromDisplays)),
     );
-    layersWithRects.sort(compareByZOrderPath);
 
     for (let i = layersWithRects.length - 1; i > -1; i--) {
       const layer = layersWithRects[i];
@@ -427,8 +429,6 @@ export class RectsComputation implements Computation {
     node: HierarchyTreeNode,
     invalidBoundsFromDisplays: Rect[],
   ): boolean {
-    if (node.isRoot()) return false;
-
     const isVisible = node
       .getEagerPropertyByName('isComputedVisible')
       ?.getValue();
@@ -461,7 +461,6 @@ export class RectsComputation implements Computation {
   }
 
   private static hasInputWindowRect(node: HierarchyTreeNode): boolean {
-    if (node.isRoot()) return false;
     const inputWindowInfo = node.getEagerPropertyByName('inputWindowInfo');
     return (
       inputWindowInfo !== undefined &&
