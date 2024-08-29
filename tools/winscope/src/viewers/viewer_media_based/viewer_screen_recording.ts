@@ -14,70 +14,14 @@
  * limitations under the License.
  */
 
-import {WinscopeEvent, WinscopeEventType} from 'messaging/winscope_event';
-import {MediaBasedTraceEntry} from 'trace/media_based_trace_entry';
-import {Trace} from 'trace/trace';
 import {Traces} from 'trace/traces';
-import {TraceEntryFinder} from 'trace/trace_entry_finder';
-import {TRACE_INFO} from 'trace/trace_info';
 import {TraceType} from 'trace/trace_type';
-import {ViewerMediaBasedComponent} from 'viewers/components/viewer_media_based_component';
-import {View, Viewer, ViewType} from 'viewers/viewer';
+import {ViewerMediaBased} from './viewer_media_based';
 
-export class ViewerScreenRecording implements Viewer {
+export class ViewerScreenRecording extends ViewerMediaBased {
   static readonly DEPENDENCIES: TraceType[] = [TraceType.SCREEN_RECORDING];
 
-  private readonly trace: Trace<MediaBasedTraceEntry>;
-  private readonly htmlElement: HTMLElement;
-  private readonly view: View;
-
-  constructor(trace: Trace<MediaBasedTraceEntry>, traces: Traces) {
-    this.trace = trace;
-    this.htmlElement = document.createElement('viewer-media-based');
-    (this.htmlElement as unknown as ViewerMediaBasedComponent).titles = [
-      trace.getDescriptors().join(', '),
-    ];
-
-    this.view = new View(
-      ViewType.OVERLAY,
-      this.getTraces(),
-      this.htmlElement,
-      TRACE_INFO[TraceType.SCREEN_RECORDING].name,
-    );
-  }
-
-  async onWinscopeEvent(event: WinscopeEvent) {
-    await event.visit(
-      WinscopeEventType.TRACE_POSITION_UPDATE,
-      async (event) => {
-        const entry = TraceEntryFinder.findCorrespondingEntry(
-          this.trace,
-          event.position,
-        );
-        (
-          this.htmlElement as unknown as ViewerMediaBasedComponent
-        ).currentTraceEntries = [await entry?.getValue()];
-      },
-    );
-    await event.visit(
-      WinscopeEventType.EXPANDED_TIMELINE_TOGGLED,
-      async (event) => {
-        (
-          this.htmlElement as unknown as ViewerMediaBasedComponent
-        ).forceMinimize = event.isTimelineExpanded;
-      },
-    );
-  }
-
-  setEmitEvent() {
-    // do nothing
-  }
-
-  getViews(): View[] {
-    return [this.view];
-  }
-
-  getTraces(): Array<Trace<MediaBasedTraceEntry>> {
-    return [this.trace];
+  constructor(traces: Traces) {
+    super(traces, TraceType.SCREEN_RECORDING);
   }
 }

@@ -49,7 +49,8 @@ describe('ProxyConnection', () => {
     id: '35562',
     model: 'Pixel 6',
     authorized: true,
-    displays: ['12345 Extra Info'],
+    displays: ['"Test Display" 12345 Extra Info'],
+    multiDisplayScreenRecordingAvailable: false,
   };
   const mockTraceRequest: TraceRequest = {
     name: 'layers_trace',
@@ -266,17 +267,71 @@ describe('ProxyConnection', () => {
     });
 
     it('posts start trace request to proxy and updates state to tracing', async () => {
-      const requestObj = [mockTraceRequest];
-      await connection.startTrace(mockDevice, requestObj);
+      await checkSuccessfulTraceRequest([mockTraceRequest]);
+    });
 
-      expect(postSpy).toHaveBeenCalledOnceWith(
-        ProxyConnection.WINSCOPE_PROXY_URL +
-          ProxyEndpoint.START_TRACE +
-          `${mockDevice.id}/`,
-        [['Winscope-Token', '']],
-        requestObj,
-      );
-      expect(connection.getState()).toEqual(ConnectionState.TRACING);
+    it('posts start trace requests without updating screen recording config', async () => {
+      const requestEmptyStrDisplays: TraceRequest[] = [
+        {
+          name: 'screen_recording',
+          config: [{key: 'displays', value: ''}],
+        },
+      ];
+      await checkSuccessfulTraceRequest(requestEmptyStrDisplays);
+
+      const requestEmptyArrDisplays: TraceRequest[] = [
+        {
+          name: 'screen_recording',
+          config: [{key: 'displays', value: []}],
+        },
+      ];
+      await checkSuccessfulTraceRequest(requestEmptyArrDisplays);
+
+      const requestDisplayStrWithoutName: TraceRequest[] = [
+        {
+          name: 'screen_recording',
+          config: [{key: 'displays', value: '12345 Other Info'}],
+        },
+      ];
+      await checkSuccessfulTraceRequest(requestDisplayStrWithoutName);
+
+      const requestDisplayArrWithoutName: TraceRequest[] = [
+        {
+          name: 'screen_recording',
+          config: [{key: 'displays', value: ['12345 Other Info']}],
+        },
+      ];
+      await checkSuccessfulTraceRequest(requestDisplayArrWithoutName);
+    });
+
+    it('posts start trace requests with updated screen recording config', async () => {
+      const requestDisplayStrWithName: TraceRequest[] = [
+        {
+          name: 'screen_recording',
+          config: [{key: 'displays', value: '"Test Display" 12345 Other Info'}],
+        },
+      ];
+      await checkSuccessfulTraceRequest(requestDisplayStrWithName, [
+        {
+          name: 'screen_recording',
+          config: [{key: 'displays', value: '12345 Other Info'}],
+        },
+      ]);
+
+      const requestDisplayArrWithName: TraceRequest[] = [
+        {
+          name: 'screen_recording',
+          config: [
+            {key: 'displays', value: ['"Test Display" 12345 Other Info']},
+          ],
+        },
+      ];
+      await checkSuccessfulTraceRequest(requestDisplayArrWithName, [
+        {
+          name: 'screen_recording',
+          config: [{key: 'displays', value: ['12345 Other Info']}],
+        },
+      ]);
     });
 
     it('handles trace timeout', async () => {
@@ -363,17 +418,42 @@ describe('ProxyConnection', () => {
     });
 
     it('posts dump state request to proxy', async () => {
-      const requestObj = [mockTraceRequest];
-      await connection.dumpState(mockDevice, requestObj);
+      await checkSuccessfulDumpRequest([mockTraceRequest]);
+    });
 
-      expect(postSpy).toHaveBeenCalledOnceWith(
-        ProxyConnection.WINSCOPE_PROXY_URL +
-          ProxyEndpoint.DUMP +
-          `${mockDevice.id}/`,
-        [['Winscope-Token', '']],
-        requestObj,
-      );
-      expect(connection.getState()).toEqual(ConnectionState.DUMPING_STATE);
+    it('posts dump requests without updating screenshot config', async () => {
+      const requestEmptyArrDisplays: TraceRequest[] = [
+        {
+          name: 'screenshot',
+          config: [{key: 'displays', value: []}],
+        },
+      ];
+      await checkSuccessfulDumpRequest(requestEmptyArrDisplays);
+
+      const requestDisplayArrWithoutName: TraceRequest[] = [
+        {
+          name: 'screenshot',
+          config: [{key: 'displays', value: ['12345 Other Info']}],
+        },
+      ];
+      await checkSuccessfulDumpRequest(requestDisplayArrWithoutName);
+    });
+
+    it('posts dump requests with updated screenshot config', async () => {
+      const requestDisplayArrWithName: TraceRequest[] = [
+        {
+          name: 'screenshot',
+          config: [
+            {key: 'displays', value: ['"Test Display" 12345 Other Info']},
+          ],
+        },
+      ];
+      await checkSuccessfulDumpRequest(requestDisplayArrWithName, [
+        {
+          name: 'screenshot',
+          config: [{key: 'displays', value: ['12345 Other Info']}],
+        },
+      ]);
     });
 
     function checkTraceEndedSuccessfully() {
@@ -385,6 +465,40 @@ describe('ProxyConnection', () => {
         undefined,
       );
       expect(connection.getState()).toEqual(ConnectionState.ENDING_TRACE);
+    }
+
+    async function checkSuccessfulTraceRequest(
+      requests: TraceRequest[],
+      updatedRequests = requests,
+    ) {
+      postSpy.calls.reset();
+      await connection.startTrace(mockDevice, requests);
+
+      expect(postSpy).toHaveBeenCalledOnceWith(
+        ProxyConnection.WINSCOPE_PROXY_URL +
+          ProxyEndpoint.START_TRACE +
+          `${mockDevice.id}/`,
+        [['Winscope-Token', '']],
+        updatedRequests,
+      );
+      expect(connection.getState()).toEqual(ConnectionState.TRACING);
+    }
+
+    async function checkSuccessfulDumpRequest(
+      requests: TraceRequest[],
+      updatedRequests = requests,
+    ) {
+      postSpy.calls.reset();
+      await connection.dumpState(mockDevice, requests);
+
+      expect(postSpy).toHaveBeenCalledOnceWith(
+        ProxyConnection.WINSCOPE_PROXY_URL +
+          ProxyEndpoint.DUMP +
+          `${mockDevice.id}/`,
+        [['Winscope-Token', '']],
+        updatedRequests,
+      );
+      expect(connection.getState()).toEqual(ConnectionState.DUMPING_STATE);
     }
   });
 
@@ -432,12 +546,13 @@ describe('ProxyConnection', () => {
         '35562': {
           authorized: mockDevice.authorized,
           model: mockDevice.model,
-          displays: ['Display 12345 Extra Info'],
+          displays: ['Display 12345 Extra Info displayName="Test Display"'],
         },
       }),
       body: undefined,
       getHeader: getVersionHeader,
     };
+
     afterEach(() => {
       localStorage.clear();
     });
@@ -480,6 +595,7 @@ describe('ProxyConnection', () => {
       detectStateChangesInUi.calls.reset();
 
       await waitToBeCalled(detectStateChangesInUi, 1);
+      await waitToBeCalled(getSpy, 1);
       checkGetDevicesRequest();
       expect(connection.getState()).toEqual(ConnectionState.IDLE);
       expect(connection.getDevices()).toEqual([mockDevice]);
@@ -488,6 +604,87 @@ describe('ProxyConnection', () => {
         [['Winscope-Token', '']],
         undefined,
       );
+    });
+
+    it('handles missing displayName', async () => {
+      const response: HttpResponse = {
+        status: HttpRequestStatus.SUCCESS,
+        type: 'text',
+        text: JSON.stringify({
+          '35562': {
+            authorized: mockDevice.authorized,
+            model: mockDevice.model,
+            displays: ['Display 12345 Extra Info'],
+          },
+        }),
+        body: undefined,
+        getHeader: getVersionHeader,
+      };
+
+      await setUpTestEnvironment(response);
+      checkGetDevicesRequest();
+      expect(connection.getState()).toEqual(ConnectionState.IDLE);
+      expect(connection.getDevices()).toEqual([
+        {
+          id: '35562',
+          model: 'Pixel 6',
+          authorized: true,
+          displays: ['12345 Extra Info'],
+          multiDisplayScreenRecordingAvailable: false,
+        },
+      ]);
+    });
+
+    it('updates multi display screen recording availability for incompatible version', async () => {
+      const oldVersionResponse: HttpResponse = {
+        status: HttpRequestStatus.SUCCESS,
+        type: 'text',
+        text: JSON.stringify({
+          '35562': {
+            authorized: mockDevice.authorized,
+            model: mockDevice.model,
+            displays: ['Display 12345 Extra Info displayName="Test Display"'],
+            screenrecord_version: '1.3',
+          },
+        }),
+        body: undefined,
+        getHeader: getVersionHeader,
+      };
+      await setUpTestEnvironment(oldVersionResponse);
+      checkGetDevicesRequest();
+      expect(connection.getState()).toEqual(ConnectionState.IDLE);
+      expect(connection.getDevices()).toEqual([mockDevice]);
+    });
+
+    it('updates multi display screen recording availability for compatible version', async () => {
+      const compatibleVersionResponse: HttpResponse = {
+        status: HttpRequestStatus.SUCCESS,
+        type: 'text',
+        text: JSON.stringify({
+          '35562': {
+            authorized: mockDevice.authorized,
+            model: mockDevice.model,
+            displays: ['Display 12345 Extra Info displayName="Test Display"'],
+            screenrecord_version: '1.4',
+          },
+        }),
+        body: undefined,
+        getHeader: getVersionHeader,
+      };
+      const mockDeviceWithMultiDisplayScreenRecording: AdbDevice = {
+        id: '35562',
+        model: 'Pixel 6',
+        authorized: true,
+        displays: ['"Test Display" 12345 Extra Info'],
+        multiDisplayScreenRecordingAvailable: true,
+      };
+
+      await setUpTestEnvironment(compatibleVersionResponse);
+      checkGetDevicesRequest();
+      expect(connection.getState()).toEqual(ConnectionState.IDLE);
+      expect(connection.getDevices()).toEqual([
+        mockDeviceWithMultiDisplayScreenRecording,
+      ]);
     });
   });
 

@@ -72,49 +72,51 @@ import {userOptionStyle} from 'viewers/components/styles/user_option.styles';
         *ngIf="this.traceConfig[traceKey].config && this.traceConfig[traceKey].config.selectionConfigs.length > 0"
         class="selection-config-opt">
         <ng-container *ngFor="let selectionConfig of this.traceConfig[traceKey].config.selectionConfigs">
-          <div>
-          <mat-form-field
-            class="config-selection"
-            appearance="fill">
-            <mat-label>{{ selectionConfig.name }}</mat-label>
+          <div class="config-selection-with-desc" [class.wide-field]="selectionConfig.wideField">
+            <mat-form-field
+              class="config-selection"
+              [class.wide-field]="selectionConfig.wideField"
+              appearance="fill">
+              <mat-label>{{ selectionConfig.name }}</mat-label>
 
-            <mat-select
-              #matSelect
-              [multiple]="isMultipleSelect(selectionConfig)"
-              disableOptionCentering
-              class="selected-value"
-              [attr.label]="traceKey + selectionConfig.name"
-              [value]="selectionConfig.value"
-              [disabled]="!this.traceConfig[traceKey].enabled || selectionConfig.options.length === 0"
-              (selectionChange)="onSelectChange($event, selectionConfig)">
-              <span class="mat-option" *ngIf="matSelect.multiple || selectionConfig.optional">
-                <button
-                  *ngIf="matSelect.multiple"
-                  mat-flat-button
-                  class="user-option"
-                  [color]="matSelect.value.length === selectionConfig.options.length ? 'primary' : undefined"
-                  [class.not-enabled]="matSelect.value.length !== selectionConfig.options.length"
-                  (click)="onAllButtonClick(matSelect, selectionConfig)"> All </button>
-                <button
-                  *ngIf="selectionConfig.optional"
-                  mat-flat-button
-                  class="user-option"
-                  [color]="matSelect.value.length === 0 ? 'primary' : undefined"
-                  [class.not-enabled]="matSelect.value.length > 0"
-                  (click)="onNoneButtonClick(matSelect, selectionConfig)"> None </button>
-              </span>
-              <mat-option
-                *ngFor="let option of selectionConfig.options"
-                (click)="onOptionClick(matSelect, option, traceKey + selectionConfig.name)"
-                [value]="option"
-                (mouseenter)="onSelectOptionHover($event, option)"
-                [matTooltip]="option"
-                [matTooltipDisabled]="disableOptionTooltip(option)"
-                matTooltipPosition="right">
-                  {{ option }}</mat-option>
-            </mat-select>
-          </mat-form-field>
-          <span class="config-desc" *ngIf="selectionConfig.desc"> {{selectionConfig.desc}} </span>
+              <mat-select
+                #matSelect
+                [multiple]="isMultipleSelect(selectionConfig)"
+                disableOptionCentering
+                class="selected-value"
+                [attr.label]="traceKey + selectionConfig.name"
+                [value]="selectionConfig.value"
+                [disabled]="!this.traceConfig[traceKey].enabled || selectionConfig.options.length === 0"
+                (selectionChange)="onSelectChange($event, selectionConfig)">
+                <span class="mat-option" *ngIf="matSelect.multiple || selectionConfig.optional">
+                  <button
+                    *ngIf="matSelect.multiple"
+                    mat-flat-button
+                    class="user-option"
+                    [color]="matSelect.value.length === selectionConfig.options.length ? 'primary' : undefined"
+                    [class.not-enabled]="matSelect.value.length !== selectionConfig.options.length"
+                    (click)="onAllButtonClick(matSelect, selectionConfig)"> All </button>
+                  <button
+                    *ngIf="selectionConfig.optional && !matSelect.multiple"
+                    mat-flat-button
+                    class="user-option"
+                    [color]="matSelect.value.length === 0 ? 'primary' : undefined"
+                    [class.not-enabled]="matSelect.value.length > 0"
+                    (click)="onNoneButtonClick(matSelect, selectionConfig)"> None </button>
+                </span>
+                <mat-option
+                  *ngFor="let option of selectionConfig.options"
+                  (click)="onOptionClick(matSelect, option, traceKey + selectionConfig.name)"
+                  [value]="option"
+                  (mouseenter)="onSelectOptionHover($event, option)"
+                  [matTooltip]="option"
+                  [matTooltipDisabled]="disableOptionTooltip(option, optionEl)"
+                  matTooltipPosition="right">
+                    <span #optionEl> {{ option }} </span>
+                </mat-option>
+              </mat-select>
+            </mat-form-field>
+            <span class="config-desc" *ngIf="selectionConfig.desc"> {{selectionConfig.desc}} </span>
           </div>
         </ng-container>
       </div>
@@ -134,13 +136,17 @@ import {userOptionStyle} from 'viewers/components/styles/user_option.styles';
         flex-wrap: wrap;
         gap: 10px;
       }
+      .config-selection-with-desc {
+        display: flex;
+        flex-direction: column;
+      }
+      .wide-field {
+        width: 100%;
+      }
       .config-panel {
         position: absolute;
         left: 0px;
         top: 100px;
-      }
-      .config-desc {
-        margin-inline-start: 10px;
       }
     `,
     userOptionStyle,
@@ -209,8 +215,12 @@ export class TraceConfigComponent {
     });
   }
 
-  disableOptionTooltip(option: string): boolean {
-    return !this.tooltipsWithStablePosition.has(option) || option.length <= 36;
+  disableOptionTooltip(option: string, optionText: HTMLElement): boolean {
+    const optionEl = assertDefined(optionText.parentElement);
+    return (
+      !this.tooltipsWithStablePosition.has(option) ||
+      optionEl.offsetWidth >= optionText.offsetWidth
+    );
   }
 
   onSelectChange(event: MatSelectChange, config: SelectionConfiguration) {
@@ -223,8 +233,8 @@ export class TraceConfigComponent {
 
   onNoneButtonClick(select: MatSelect, config: SelectionConfiguration) {
     if (config.value.length > 0) {
-      select.value = Array.isArray(config.value) ? [] : '';
-      config.value = Array.isArray(config.value) ? [] : '';
+      select.value = '';
+      config.value = '';
       this.onTraceConfigChange();
     }
   }
