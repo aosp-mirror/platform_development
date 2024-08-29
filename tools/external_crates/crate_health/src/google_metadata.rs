@@ -19,8 +19,10 @@ use std::{
 
 use anyhow::{anyhow, Result};
 use chrono::{DateTime, Datelike, Local};
+use license_checker::LicenseState;
 
 use crate::{
+    license::most_restrictive_type,
     metadata::{self, Identifier, MetaData},
     NamedAndVersioned,
 };
@@ -37,7 +39,12 @@ impl GoogleMetadata {
         let metadata: metadata::MetaData = protobuf::text_format::parse_from_str(&metadata)?;
         Ok(GoogleMetadata { path, metadata })
     }
-    pub fn init<P: Into<PathBuf>>(path: P, nv: &dyn NamedAndVersioned, desc: &str) -> Result<Self> {
+    pub fn init<P: Into<PathBuf>>(
+        path: P,
+        nv: &dyn NamedAndVersioned,
+        desc: &str,
+        licenses: &LicenseState,
+    ) -> Result<Self> {
         let path = path.into();
         if path.exists() {
             return Err(anyhow!("{} already exists", path.display()));
@@ -49,7 +56,7 @@ impl GoogleMetadata {
         metadata.set_identifier(nv)?;
         let third_party = metadata.metadata.third_party.mut_or_insert_default();
         third_party.set_homepage(nv.crates_io_homepage());
-        // TODO: handle license.
+        third_party.set_license_type(most_restrictive_type(licenses));
         Ok(metadata)
     }
     pub fn write(&self) -> Result<()> {

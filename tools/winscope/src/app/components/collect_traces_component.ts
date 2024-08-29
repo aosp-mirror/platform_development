@@ -51,6 +51,7 @@ import {
   EnableConfiguration,
   makeDefaultDumpConfigMap,
   makeDefaultTraceConfigMap,
+  makeScreenRecordingConfigs,
   SelectionConfiguration,
   TraceConfigurationMap,
 } from 'trace_collection/trace_configuration';
@@ -889,12 +890,32 @@ export class CollectTracesComponent
     if (!selectedDevice) {
       return;
     }
-    const screenRecordingConfig = assertDefined(this.traceConfig)[
-      'screen_recording'
-    ].config;
-    assertDefined(
+    const screenRecordingConfig = assertDefined(
+      this.traceConfig['screen_recording'].config,
+    );
+    const displays = assertDefined(
       screenRecordingConfig?.selectionConfigs.find((c) => c.key === 'displays'),
-    ).options = selectedDevice.displays;
+    );
+    if (
+      selectedDevice.multiDisplayScreenRecordingAvailable &&
+      !Array.isArray(displays.value)
+    ) {
+      screenRecordingConfig.selectionConfigs = makeScreenRecordingConfigs(
+        selectedDevice.displays,
+        [],
+      );
+    } else if (
+      !selectedDevice.multiDisplayScreenRecordingAvailable &&
+      Array.isArray(displays.value)
+    ) {
+      screenRecordingConfig.selectionConfigs = makeScreenRecordingConfigs(
+        selectedDevice.displays,
+        '',
+      );
+    } else {
+      screenRecordingConfig.selectionConfigs[0].options =
+        selectedDevice.displays;
+    }
 
     const screenshotConfig = assertDefined(this.dumpConfig)['screenshot']
       .config;
