@@ -16,7 +16,8 @@ use std::{collections::BTreeSet, path::PathBuf};
 
 use anyhow::Result;
 use clap::{Parser, Subcommand};
-use crate_health::{default_repo_root, maybe_build_cargo_embargo, ManagedRepo, RepoPath};
+use crate_health::{default_repo_root, maybe_build_cargo_embargo, ManagedRepo};
+use rooted_path::RootedPath;
 
 #[derive(Parser)]
 struct Cli {
@@ -56,6 +57,11 @@ enum Cmd {
         #[arg(long, value_parser = parse_crate_list, required=false, default_value="")]
         unpinned: BTreeSet<String>,
     },
+    /// Import a crate and its dependencies into the monorepo.
+    Import {
+        /// The crate name.
+        crate_name: String,
+    },
     /// Regenerate a crate directory.
     Regenerate {
         /// The crate names.
@@ -80,7 +86,7 @@ fn main() -> Result<()> {
     maybe_build_cargo_embargo(&args.repo_root, args.rebuild_cargo_embargo)?;
 
     let managed_repo =
-        ManagedRepo::new(RepoPath::new(args.repo_root, "external/rust/android-crates-io"));
+        ManagedRepo::new(RootedPath::new(args.repo_root, "external/rust/android-crates-io")?);
 
     match args.command {
         Cmd::MigrationHealth { crates, unpinned } => {
@@ -97,5 +103,6 @@ fn main() -> Result<()> {
         Cmd::Regenerate { crates } => managed_repo.regenerate(crates.iter(), true),
         Cmd::RegenerateAll {} => managed_repo.regenerate_all(true),
         Cmd::PreuploadCheck { files: _ } => managed_repo.preupload_check(),
+        Cmd::Import { crate_name } => managed_repo.import(&crate_name),
     }
 }
