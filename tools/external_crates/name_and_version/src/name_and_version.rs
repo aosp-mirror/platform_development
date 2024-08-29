@@ -62,7 +62,7 @@ impl NameAndVersion {
     pub fn min_version(name: String) -> Self {
         NameAndVersion { name, version: MIN_VERSION.clone() }
     }
-    #[cfg(test)]
+    /// Intended for testing.
     pub fn try_from_str(name: &str, version: &str) -> Result<Self, semver::Error> {
         Ok(NameAndVersion::new(name.to_string(), Version::parse(version)?))
     }

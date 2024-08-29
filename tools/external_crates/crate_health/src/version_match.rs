@@ -15,11 +15,9 @@
 use std::{collections::BTreeMap, path::Path};
 
 use anyhow::{anyhow, Result};
+use name_and_version::{NameAndVersion, NameAndVersionMap, NamedAndVersioned};
 
-use crate::{
-    generate_android_bps, CrateCollection, GoogleMetadata, Migratable, NameAndVersion,
-    NameAndVersionMap, NamedAndVersioned,
-};
+use crate::{generate_android_bps, CrateCollection, GoogleMetadata, Migratable};
 
 #[derive(Debug)]
 pub struct VersionPair<'a, T> {
@@ -218,12 +216,20 @@ impl VersionMatch<CrateCollection> {
 
 #[cfg(test)]
 mod tests {
-    use crate::try_name_version_map_from_iter;
-
     use super::*;
     use anyhow::Result;
     use itertools::assert_equal;
     use std::collections::BTreeMap;
+
+    fn try_name_version_map_from_iter<'a, ValueType>(
+        nvs: impl IntoIterator<Item = (&'a str, &'a str, ValueType)>,
+    ) -> Result<BTreeMap<NameAndVersion, ValueType>, name_and_version::Error> {
+        let mut test_map = BTreeMap::new();
+        for (name, version, val) in nvs {
+            test_map.insert_or_error(NameAndVersion::try_from_str(name, version)?, val)?;
+        }
+        Ok(test_map)
+    }
 
     #[test]
     fn test_version_map() -> Result<()> {

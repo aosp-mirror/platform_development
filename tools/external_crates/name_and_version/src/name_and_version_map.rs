@@ -167,29 +167,27 @@ pub fn most_recent_version<'a, ValueType>(
 }
 
 #[cfg(test)]
-pub fn try_name_version_map_from_iter<'a, ValueType>(
-    nvs: impl IntoIterator<Item = (&'a str, &'a str, ValueType)>,
-) -> Result<BTreeMap<NameAndVersion, ValueType>, Error> {
-    let mut test_map = BTreeMap::new();
-    for (name, version, val) in nvs {
-        test_map.insert_or_error(NameAndVersion::try_from_str(name, version)?, val)?;
-    }
-    Ok(test_map)
-}
-
-#[cfg(test)]
 mod tests {
     use crate::{NameAndVersion, NameAndVersionRef};
 
     use super::*;
     use itertools::assert_equal;
 
+    fn try_name_version_map_from_iter<'a, ValueType>(
+        nvs: impl IntoIterator<Item = (&'a str, &'a str, ValueType)>,
+    ) -> Result<BTreeMap<NameAndVersion, ValueType>, Error> {
+        let mut test_map = BTreeMap::new();
+        for (name, version, val) in nvs {
+            test_map.insert_or_error(NameAndVersion::try_from_str(name, version)?, val)?;
+        }
+        Ok(test_map)
+    }
+
     #[test]
     fn test_name_and_version_map_empty() -> Result<(), Error> {
         let mut test_map: BTreeMap<NameAndVersion, String> = BTreeMap::new();
         let v = Version::parse("1.2.3")?;
         let nvp = NameAndVersionRef::new("foo", &v);
-        // let nvp = NameAndVersion::try_from_str("foo", "1.2.3")?;
         assert_eq!(test_map.num_crates(), 0);
         assert!(!test_map.contains_key(&nvp as &dyn NamedAndVersioned));
         assert!(!test_map.contains_name("foo"));

@@ -12,16 +12,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use thiserror::Error;
 use semver::Version;
+use thiserror::Error;
 
 pub use self::name_and_version::{
     IsUpgradableTo, NameAndVersion, NameAndVersionRef, NamedAndVersioned,
 };
 mod name_and_version;
 
-#[cfg(test)]
-pub use self::name_and_version_map::try_name_version_map_from_iter;
 pub use self::name_and_version_map::{
     crates_with_multiple_versions, crates_with_single_version, most_recent_version,
     NameAndVersionMap,

@@ -51,7 +51,7 @@ mod name_and_version_map {
                     self.#mapfield_name.map_field_mut()
                 }
 
-                fn insert_or_error(&mut self, key: NameAndVersion, val: Self::Value) -> Result<(), CrateError> {
+                fn insert_or_error(&mut self, key: NameAndVersion, val: Self::Value) -> Result<(), name_and_version::Error> {
                     self.#mapfield_name.insert_or_error(key, val)
                 }
 
