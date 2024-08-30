@@ -17,11 +17,19 @@
 import {InMemoryStorage} from './in_memory_storage';
 
 describe('InMemoryStorage', () => {
-  it('can store values', () => {
+  it('can store and retrieve values', () => {
     const mockStorage = new InMemoryStorage();
+    expect(mockStorage.get('key')).toBeUndefined();
+    mockStorage.add('key', 'value');
+    expect(mockStorage.get('key')).toEqual('value');
+  });
 
-    mockStorage.setItem('key', 'value');
-
-    expect(mockStorage.getItem('key')).toBe('value');
+  it('can clear values', () => {
+    const mockStorage = new InMemoryStorage();
+    // robust to value not found in store
+    mockStorage.clear('key');
+    mockStorage.add('key', 'value');
+    mockStorage.clear('key');
+    expect(mockStorage.get('key')).toBeUndefined();
   });
 });

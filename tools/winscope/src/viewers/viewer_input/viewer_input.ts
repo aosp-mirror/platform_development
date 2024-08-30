@@ -15,6 +15,7 @@
  */
 
 import {assertDefined} from 'common/assert_utils';
+import {Store} from 'common/store';
 import {WinscopeEvent} from 'messaging/winscope_event';
 import {EmitEvent} from 'messaging/winscope_event_emitter';
 import {Trace} from 'trace/trace';
@@ -24,6 +25,7 @@ import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
 import {View, Viewer, ViewType} from 'viewers/viewer';
 import {Presenter} from './presenter';
 import {UiData} from './ui_data';
+import {ViewerInputComponent} from './viewer_input_component';
 
 export class ViewerInput implements Viewer {
   static readonly DEPENDENCIES: TraceType[] = [TraceType.INPUT_EVENT_MERGED];
@@ -34,7 +36,7 @@ export class ViewerInput implements Viewer {
   private readonly presenter: Presenter;
   private readonly view: View;
 
-  constructor(traces: Traces, storage: Storage) {
+  constructor(traces: Traces, storage: Store) {
     this.traces = traces;
     this.mergedInputEventTrace = assertDefined(
       traces.getTrace(TraceType.INPUT_EVENT_MERGED),
@@ -46,7 +48,8 @@ export class ViewerInput implements Viewer {
       this.mergedInputEventTrace,
       storage,
       (uiData: UiData) => {
-        (this.htmlElement as any).inputData = uiData;
+        (this.htmlElement as unknown as ViewerInputComponent).inputData =
+          uiData;
       },
     );
 

@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import {Store} from 'common/store';
 import {WinscopeEvent} from 'messaging/winscope_event';
 import {Trace} from 'trace/trace';
 import {Traces} from 'trace/traces';
@@ -33,11 +34,7 @@ export abstract class AbstractViewerInputMethod implements Viewer {
     (this.htmlElement as any).inputData = uiData;
   };
 
-  constructor(
-    trace: Trace<HierarchyTreeNode>,
-    traces: Traces,
-    storage: Storage,
-  ) {
+  constructor(trace: Trace<HierarchyTreeNode>, traces: Traces, storage: Store) {
     this.trace = trace;
     this.htmlElement = document.createElement('viewer-input-method');
     this.presenter = this.initializePresenter(trace, traces, storage);
@@ -74,6 +71,6 @@ export abstract class AbstractViewerInputMethod implements Viewer {
   protected abstract initializePresenter(
     trace: Trace<HierarchyTreeNode>,
     traces: Traces,
-    storage: Storage,
+    storage: Store,
   ): AbstractPresenterInputMethod;
 }

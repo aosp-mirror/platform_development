@@ -14,13 +14,15 @@
  * limitations under the License.
  */
 
+import {Store} from './store';
+
 export class PersistentStoreProxy {
   static new<T extends object>(
     key: string,
     defaultState: T,
-    storage: Storage,
+    storage: Store,
   ): T {
-    const storedState = JSON.parse(storage.getItem(key) ?? '{}');
+    const storedState = JSON.parse(storage.get(key) ?? '{}');
     const currentState = mergeDeep({}, structuredClone(defaultState));
     mergeDeepKeepingStructure(currentState, storedState);
     return wrapWithPersistentStoreProxy(key, currentState, storage) as T;
@@ -30,7 +32,7 @@ export class PersistentStoreProxy {
 function wrapWithPersistentStoreProxy(
   storeKey: string,
   object: object,
-  storage: Storage,
+  storage: Store,
   baseObject: object = object,
 ): object {
   const updatableProps: string[] = [];
@@ -64,7 +66,7 @@ function wrapWithPersistentStoreProxy(
         (typeof prop === 'number' || !Number.isNaN(Number(prop)))
       ) {
         target[Number(prop)] = newValue;
-        storage.setItem(storeKey, JSON.stringify(baseObject));
+        storage.add(storeKey, JSON.stringify(baseObject));
         return true;
       }
       if (!Array.isArray(target) && Array.isArray(newValue)) {
@@ -74,12 +76,12 @@ function wrapWithPersistentStoreProxy(
           storage,
           baseObject,
         );
-        storage.setItem(storeKey, JSON.stringify(baseObject));
+        storage.add(storeKey, JSON.stringify(baseObject));
         return true;
       }
       if (!Array.isArray(target) && updatableProps.includes(prop)) {
         (target as any)[prop] = newValue;
-        storage.setItem(storeKey, JSON.stringify(baseObject));
+        storage.add(storeKey, JSON.stringify(baseObject));
         return true;
       }
       throw new Error(

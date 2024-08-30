@@ -16,6 +16,7 @@
 
 import {assertDefined} from 'common/assert_utils';
 import {PersistentStoreProxy} from 'common/persistent_store_proxy';
+import {Store} from 'common/store';
 import {Timestamp} from 'common/time';
 import {WinscopeEvent, WinscopeEventType} from 'messaging/winscope_event';
 import {Trace, TraceEntry} from 'trace/trace';
@@ -108,7 +109,7 @@ export abstract class AbstractPresenterInputMethod extends AbstractHierarchyView
   constructor(
     trace: Trace<HierarchyTreeNode>,
     traces: Traces,
-    storage: Storage,
+    storage: Store,
     notifyViewCallback: NotifyHierarchyViewCallbackType<ImeUiData>,
   ) {
     super(

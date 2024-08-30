@@ -35,6 +35,7 @@ import {FileUtils} from 'common/file_utils';
 import {globalConfig} from 'common/global_config';
 import {InMemoryStorage} from 'common/in_memory_storage';
 import {PersistentStore} from 'common/persistent_store';
+import {Store} from 'common/store';
 import {Timestamp} from 'common/time';
 import {UrlUtils} from 'common/url_utils';
 import {UserNotifier} from 'common/user_notifier';
@@ -360,7 +361,7 @@ export class AppComponent implements WinscopeEventListener {
     ]),
   );
   adbConnection: AdbConnection = new ProxyConnection();
-  traceConfigStorage: Storage;
+  traceConfigStorage: Store;
   downloadProgress: number | undefined;
 
   @ViewChild(UploadTracesComponent)
@@ -390,7 +391,7 @@ export class AppComponent implements WinscopeEventListener {
       this.abtChromeExtensionProtocol,
       this.crossToolProtocol,
       this,
-      localStorage,
+      new PersistentStore(),
     );
 
     const storeDarkMode = this.store.get('dark-mode');
@@ -463,7 +464,9 @@ export class AppComponent implements WinscopeEventListener {
     }
 
     this.traceConfigStorage =
-      globalConfig.MODE === 'PROD' ? localStorage : new InMemoryStorage();
+      globalConfig.MODE === 'PROD'
+        ? new PersistentStore()
+        : new InMemoryStorage();
 
     window.onunhandledrejection = (evt) => {
       Analytics.Error.logGlobalException(evt.reason);
