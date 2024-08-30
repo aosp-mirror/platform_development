@@ -52,7 +52,7 @@ fun systemUiTransitions(
 
 object DemoInterruptionHandler : InterruptionHandler {
     override fun onInterruption(
-        interrupted: TransitionState.Transition.ChangeCurrentScene,
+        interrupted: TransitionState.Transition.ChangeScene,
         newTargetScene: SceneKey,
     ): InterruptionResult? {
         return handleLauncherDuringLockscreenToBouncer(interrupted, newTargetScene)
@@ -96,7 +96,7 @@ object DemoInterruptionHandler : InterruptionHandler {
 
     private fun handleAod(transition: TransitionState.Transition): InterruptionResult? {
         if (
-            transition !is TransitionState.Transition.ChangeCurrentScene ||
+            transition !is TransitionState.Transition.ChangeScene ||
                 (!transition.isTransitioning(from = Scenes.AlwaysOnDisplay) &&
                     !transition.isTransitioning(to = Scenes.AlwaysOnDisplay))
         ) {

@@ -452,6 +452,41 @@ class PresenterSurfaceFlingerTest extends AbstractHierarchyViewerPresenterTest<U
         expect(uiData.curatedProperties).toBeUndefined();
       });
 
+      it('updates zOrderRelativeOf formatter and rel-z curated properties correctly', async () => {
+        await presenter.onAppEvent(this.getPositionUpdate());
+
+        const nodeWithRelZChild = assertDefined(
+          assertDefined(uiData.hierarchyTrees)[0].findDfs(
+            UiTreeUtils.makeIdFilter(
+              '98 2c99222 com.google.android.apps.nexuslauncher/com.google.android.apps.nexuslauncher.NexusLauncherActivity#98',
+            ),
+          ),
+        );
+        const nodeWithRelZParent = assertDefined(
+          assertDefined(uiData.hierarchyTrees)[0].findDfs(
+            UiTreeUtils.makeIdFilter('13 ImeContainer#13'),
+          ),
+        );
+
+        await presenter.onHighlightedNodeChange(nodeWithRelZChild);
+        expect(uiData.curatedProperties?.relativeParent).toEqual('none');
+        expect(uiData.curatedProperties?.relativeChildren).toEqual([
+          {
+            layerId: '13',
+            nodeId: nodeWithRelZParent.id,
+            name: nodeWithRelZParent.name,
+          },
+        ]);
+
+        await presenter.onHighlightedNodeChange(nodeWithRelZParent);
+        expect(uiData.curatedProperties?.relativeParent).toEqual({
+          layerId: '98',
+          nodeId: nodeWithRelZChild.id,
+          name: nodeWithRelZChild.name,
+        });
+        expect(uiData.curatedProperties?.relativeChildren).toEqual([]);
+      });
+
       async function checkColorAndTransformProperties(
         treeForAlphaCheck: UiHierarchyTreeNode,
         treeForTransformCheck: UiHierarchyTreeNode,
