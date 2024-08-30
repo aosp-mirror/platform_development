@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 import {Component, Input, ViewChild} from '@angular/core';
+import {PersistentStore} from 'common/persistent_store';
 import {TraceType} from 'trace/trace_type';
 import {LogComponent} from 'viewers/common/log_component';
 import {viewerCardStyle} from 'viewers/components/styles/viewer_card.styles';
@@ -30,7 +31,8 @@ import {UiData} from './ui_data';
         [currentIndex]="inputData?.currentIndex"
         [entries]="inputData?.entries"
         [filters]="inputData?.filters"
-        [traceType]="${TraceType.PROTO_LOG}">
+        [traceType]="${TraceType.PROTO_LOG}"
+        [store]="store">
       </log-view>
     </div>
   `,
@@ -38,6 +40,7 @@ import {UiData} from './ui_data';
 })
 export class ViewerProtologComponent {
   @Input() inputData: UiData | undefined;
+  @Input() store: PersistentStore | undefined;
 
   @ViewChild(LogComponent)
   logComponent?: LogComponent;

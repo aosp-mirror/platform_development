@@ -22,8 +22,10 @@ import {
   TestBed,
 } from '@angular/core/testing';
 import {FormsModule} from '@angular/forms';
+import {MatButtonModule} from '@angular/material/button';
 import {MatDividerModule} from '@angular/material/divider';
 import {MatFormFieldModule} from '@angular/material/form-field';
+import {MatIconModule} from '@angular/material/icon';
 import {MatInputModule} from '@angular/material/input';
 import {MatSelectModule} from '@angular/material/select';
 import {BrowserAnimationsModule} from '@angular/platform-browser/animations';
@@ -32,6 +34,7 @@ import {Timestamp} from 'common/time';
 import {TimestampConverterUtils} from 'test/unit/timestamp_converter_utils';
 import {TraceBuilder} from 'test/unit/trace_builder';
 import {TraceEntry} from 'trace/trace';
+import {TraceType} from 'trace/trace_type';
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
 import {
   LogFilterChangeDetail,
@@ -41,6 +44,7 @@ import {
 import {CollapsedSectionsComponent} from 'viewers/components/collapsed_sections_component';
 import {CollapsibleSectionTitleComponent} from 'viewers/components/collapsible_section_title_component';
 import {PropertiesComponent} from 'viewers/components/properties_component';
+import {SearchBoxComponent} from 'viewers/components/search_box_component';
 import {SelectWithFilterComponent} from 'viewers/components/select_with_filter_component';
 import {LogComponent} from './log_component';
 import {LogEntry, LogFieldType} from './ui_data_log';
@@ -62,6 +66,8 @@ describe('LogComponent', () => {
           BrowserAnimationsModule,
           MatSelectModule,
           MatDividerModule,
+          MatButtonModule,
+          MatIconModule,
         ],
         declarations: [
           LogComponent,
@@ -69,6 +75,7 @@ describe('LogComponent', () => {
           CollapsedSectionsComponent,
           CollapsibleSectionTitleComponent,
           PropertiesComponent,
+          SearchBoxComponent,
         ],
         schemas: [CUSTOM_ELEMENTS_SCHEMA],
       }).compileComponents();
@@ -282,6 +289,7 @@ describe('LogComponent', () => {
       component.entries = entries;
       component.filters = filters;
       component.selectedIndex = 0;
+      component.traceType = TraceType.CUJS;
     }
 
     function addFilterChangeEventListener() {
