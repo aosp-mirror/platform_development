@@ -415,29 +415,12 @@ describe('LoadedParsers', () => {
       expectLoadResult([parserScreenRecording0], [overrideError]);
     });
 
-    it('enforces limit of single screen recording parser', () => {
-      loadParsers([parserScreenshot0], []);
-      expectLoadResult([parserScreenshot0], []);
-
-      loadParsers([parserScreenshot1], []);
-      expectLoadResult([parserScreenshot0, parserScreenshot1], []);
-
+    it('loads multiple screen recordings', () => {
       loadParsers([parserScreenRecording0], []);
-      expectLoadResult(
-        [parserScreenRecording0],
-        [new TraceOverridden('screenshot.png', TraceType.SCREEN_RECORDING)],
-      );
+      expectLoadResult([parserScreenRecording0], []);
 
       loadParsers([parserScreenRecording1], []);
-      expectLoadResult(
-        [parserScreenRecording0],
-        [
-          new TraceOverridden(
-            'screen_recording.mp4',
-            TraceType.SCREEN_RECORDING,
-          ),
-        ],
-      );
+      expectLoadResult([parserScreenRecording0, parserScreenRecording1], []);
     });
   });
 

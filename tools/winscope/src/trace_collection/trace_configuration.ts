@@ -47,6 +47,7 @@ export interface SelectionConfiguration {
   value: string | string[];
   desc?: string;
   optional?: boolean;
+  wideField?: boolean;
 }
 
 export interface ConfigMap {
@@ -115,18 +116,6 @@ const sfTraceSelectionConfigs: SelectionConfiguration[] = [
     value: '32000',
   },
 ];
-
-const screenRecordingConfigs: SelectionConfiguration[] = [
-  {
-    key: 'displays',
-    name: 'displays',
-    options: [],
-    value: '',
-    optional: true,
-    desc: 'Leave empty to capture active display',
-  },
-];
-
 const screenshotConfigs: SelectionConfiguration[] = [
   {
     key: 'displays',
@@ -134,8 +123,26 @@ const screenshotConfigs: SelectionConfiguration[] = [
     options: [],
     value: [],
     desc: 'Leave empty to capture active display',
+    wideField: true,
   },
 ];
+
+export function makeScreenRecordingConfigs(
+  options: string[],
+  initialValue: string | string[],
+): SelectionConfiguration[] {
+  return [
+    {
+      key: 'displays',
+      name: 'displays',
+      options,
+      value: initialValue,
+      optional: true,
+      desc: 'Leave empty to capture active display',
+      wideField: true,
+    },
+  ];
+}
 
 const traceDefaultConfig: TraceConfigurationMap = {
   layers_trace: {
@@ -163,7 +170,7 @@ const traceDefaultConfig: TraceConfigurationMap = {
     enabled: true,
     config: {
       enableConfigs: [],
-      selectionConfigs: screenRecordingConfigs,
+      selectionConfigs: makeScreenRecordingConfigs([], ''),
     },
     available: true,
     types: [TraceType.SCREEN_RECORDING],
