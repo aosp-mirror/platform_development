@@ -102,7 +102,7 @@ fn main() -> Result<()> {
         Cmd::Migrate { crates, unpinned } => managed_repo.migrate(crates, args.verbose, &unpinned),
         Cmd::Regenerate { crates } => managed_repo.regenerate(crates.iter(), true),
         Cmd::RegenerateAll {} => managed_repo.regenerate_all(true),
-        Cmd::PreuploadCheck { files: _ } => managed_repo.preupload_check(),
+        Cmd::PreuploadCheck { files } => managed_repo.preupload_check(&files),
         Cmd::Import { crate_name } => managed_repo.import(&crate_name),
     }
 }
