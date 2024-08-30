@@ -507,6 +507,39 @@ impl ManagedRepo {
         version_match.generate_android_bps()?;
         version_match.diff_android_bps()?;
 
+        for pair in version_match.pairs() {
+            let source_version = NameAndVersion::from(&pair.source.key());
+            let pair = pair.to_compatible().ok_or(anyhow!(
+                "No compatible vendored crate found for {} v{}",
+                source_version.name(),
+                source_version.version(),
+            ))?;
+
+            if !pair.dest.patch_success() {
+                for (patch, output) in pair.dest.patch_output() {
+                    if !output.status.success() {
+                        return Err(anyhow!(
+                            "Failed to patch {} with {}\nstdout:\n{}\nstderr:\n{}",
+                            pair.dest.name(),
+                            patch,
+                            from_utf8(&output.stdout)?,
+                            from_utf8(&output.stderr)?
+                        ));
+                    }
+                }
+            }
+            if !pair.dest.generate_android_bp_success() {
+                if let Some(output) = pair.dest.generate_android_bp_output() {
+                    return Err(anyhow!(
+                        "cargo_embargo execution failed for {}:\nstdout:\n{}\nstderr:\n:{}",
+                        pair.dest.name(),
+                        from_utf8(&output.stdout)?,
+                        from_utf8(&output.stderr)?
+                    ));
+                }
+            }
+        }
+
         Ok(version_match)
     }
     pub fn preupload_check(&self) -> Result<()> {
