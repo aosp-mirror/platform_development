@@ -1,11 +1,11 @@
 /*
- * Copyright 2024, The Android Open Source Project
+ * Copyright (C) 2024 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *      http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,10 +14,14 @@
  * limitations under the License.
  */
 
-export interface AdbDevice {
-  id: string;
-  authorized: boolean;
-  model: string;
-  displays: string[];
-  multiDisplayScreenRecordingAvailable: boolean;
+import {MediaBasedTraceEntry} from 'trace/media_based_trace_entry';
+
+export class UiData {
+  readonly titles: string[];
+  currentTraceEntries: MediaBasedTraceEntry[] = [];
+  forceMinimize = false;
+
+  constructor(titles: string[]) {
+    this.titles = titles;
+  }
 }

@@ -85,6 +85,11 @@ export class TraceBuilder<T> {
     return this;
   }
 
+  setDescriptors(descriptors: string[]): TraceBuilder<T> {
+    this.descriptors = descriptors;
+    return this;
+  }
+
   build(): Trace<T> {
     if (!this.parser) {
       this.parser = this.createParser();
@@ -119,6 +124,10 @@ export class TraceBuilder<T> {
 
     if (this.entries) {
       builder.setEntries(this.entries);
+    }
+
+    if (this.descriptors.length > 0) {
+      builder.setDescriptors(this.descriptors);
     }
 
     this.parserCustomQueryResult?.forEach((result, queryType) => {

@@ -42,7 +42,6 @@ class ViewerFactory {
     ViewerInputMethodService,
     ViewerTransactions,
     ViewerProtoLog,
-    ViewerScreenRecording,
     ViewerTransitions,
     ViewerJankCujs,
   ];
@@ -50,6 +49,7 @@ class ViewerFactory {
   static readonly MULTI_TRACE_VIEWERS = [
     ViewerViewCapture,
     ViewerInput,
+    ViewerScreenRecording,
     ViewerScreenshot,
   ];
 

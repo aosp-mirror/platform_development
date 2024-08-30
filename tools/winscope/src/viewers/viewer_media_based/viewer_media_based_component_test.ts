@@ -159,7 +159,6 @@ describe('ViewerMediaBasedComponent', () => {
 
     options.item(1).click();
     fixture.detectChanges();
-    await fixture.whenStable();
     expect(screenComponent.safeUrl).not.toEqual(url);
     url = screenComponent.safeUrl;
 
@@ -175,6 +174,28 @@ describe('ViewerMediaBasedComponent', () => {
     options.item(0).click();
     fixture.detectChanges();
     expect(screenComponent.safeUrl).toEqual(url);
+  });
+
+  it('video current time updated correctly on entry change', async () => {
+    component.currentTraceEntries = [
+      new MediaBasedTraceEntry(10, new Blob(), false),
+      new MediaBasedTraceEntry(15, new Blob(), false),
+    ];
+    component.titles = ['Recording 1', 'Recording 2'];
+    fixture.detectChanges();
+
+    expect(
+      htmlElement.querySelector<HTMLVideoElement>('video')?.currentTime,
+    ).toEqual(10);
+
+    await openSelect();
+    const options = document.querySelectorAll<HTMLElement>('mat-option');
+
+    options.item(1).click();
+    fixture.detectChanges();
+    expect(
+      htmlElement.querySelector<HTMLVideoElement>('video')?.currentTime,
+    ).toEqual(15);
   });
 
   it('does not update frame if trace entries do not change', () => {

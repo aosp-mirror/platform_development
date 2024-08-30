@@ -236,6 +236,7 @@ class ViewerMediaBasedComponent {
   onSelectChange(event: MatSelectChange) {
     this.index = event.value;
     this.updateSafeUrl();
+    event.source.close();
   }
 
   private resetFrameSizeWorker() {
@@ -277,6 +278,10 @@ class ViewerMediaBasedComponent {
       this.safeUrl = this.sanitizer.bypassSecurityTrustUrl(
         URL.createObjectURL(curr.videoData),
       );
+      this.changeDetectorRef.detectChanges();
+      const video =
+        this.elementRef.nativeElement.querySelector<HTMLVideoElement>('video');
+      if (video) video.currentTime = this.getCurrentTime();
       this.resetFrameSizeWorker();
     }
   }

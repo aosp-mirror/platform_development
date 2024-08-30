@@ -73,22 +73,15 @@ describe('SurfaceFlingerPropertyGroupsComponent', () => {
   it('renders interactive summary property', () => {
     const summary = htmlElement.querySelectorAll('.summary').item(1);
     expect(summary.textContent).toContain('Covered by:');
-    const button = assertDefined(
-      summary.querySelector('button'),
-    ) as HTMLButtonElement;
+    const button = assertDefined(summary.querySelector<HTMLElement>('button'));
     expect(button.textContent).toMatch('1');
   });
 
-  it('emits highlighted id event', () => {
-    let id = '';
-    htmlElement.addEventListener(ViewerEvents.HighlightedIdChange, (event) => {
-      id = (event as CustomEvent).detail.id;
-    });
-    const button = assertDefined(
-      htmlElement.querySelector('.summary button'),
-    ) as HTMLButtonElement;
-    button.click();
-    expect(id).toEqual('1 coveringLayer');
+  it('emits highlighted id event from layer id in summary', () => {
+    checkHighlightedIdEventEmittedFromButtonClick(
+      '.summary button',
+      '1 coveringLayer',
+    );
   });
 
   it('displays calculated geometry', () => {
@@ -136,6 +129,38 @@ describe('SurfaceFlingerPropertyGroupsComponent', () => {
       '.hierarchy-info .rel-parent',
     );
     expect(assertDefined(relParentDiv).innerHTML).toContain('none');
+    const relChildrenDiv = assertDefined(
+      htmlElement.querySelector('.hierarchy-info .rel-children'),
+    );
+    expect(relChildrenDiv.innerHTML).toContain('none');
+  });
+
+  it('emits highlighted id event from layer id in rel z parent', () => {
+    component.properties.relativeParent = {
+      layerId: '1',
+      nodeId: '1 relZParent',
+      name: 'relZParent',
+    };
+    fixture.detectChanges();
+    checkHighlightedIdEventEmittedFromButtonClick(
+      '.hierarchy-info .rel-parent button',
+      '1 relZParent',
+    );
+  });
+
+  it('emits highlighted id event from layer id in rel z children', () => {
+    component.properties.relativeChildren = [
+      {
+        layerId: '2',
+        nodeId: '2 relZChild',
+        name: 'relZChild',
+      },
+    ];
+    fixture.detectChanges();
+    checkHighlightedIdEventEmittedFromButtonClick(
+      '.hierarchy-info .rel-children button',
+      '2 relZChild',
+    );
   });
 
   it('displays simple calculated effects', () => {
@@ -202,12 +227,29 @@ describe('SurfaceFlingerPropertyGroupsComponent', () => {
   it('handles collapse button click', () => {
     expect(component.collapseButtonClicked).toBeFalse();
     const collapseButton = assertDefined(
-      htmlElement.querySelector('collapsible-section-title button'),
-    ) as HTMLButtonElement;
+      htmlElement.querySelector<HTMLElement>(
+        'collapsible-section-title button',
+      ),
+    );
     collapseButton.click();
     fixture.detectChanges();
     expect(component.collapseButtonClicked).toBeTrue();
   });
+
+  function checkHighlightedIdEventEmittedFromButtonClick(
+    selector: string,
+    expectedId: string,
+  ) {
+    let id = '';
+    htmlElement.addEventListener(ViewerEvents.HighlightedIdChange, (event) => {
+      id = (event as CustomEvent).detail.id;
+    });
+    const button = assertDefined(
+      htmlElement.querySelector<HTMLElement>(selector),
+    );
+    button.click();
+    expect(id).toEqual(expectedId);
+  }
 
   @Component({
     selector: 'host-component',
@@ -256,6 +298,7 @@ describe('SurfaceFlingerPropertyGroupsComponent', () => {
       destinationFrame: EMPTY_OBJ_STRING,
       z: '0',
       relativeParent: 'none',
+      relativeChildren: [],
       calcColor: `${EMPTY_OBJ_STRING}, alpha: 1`,
       calcShadowRadius: '1 px',
       calcCornerRadius: '1 px',

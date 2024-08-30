@@ -34,8 +34,10 @@ import {ProxyEndpoint} from './proxy_endpoint';
 import {TraceRequest} from './trace_request';
 
 export class ProxyConnection extends AdbConnection {
-  static readonly VERSION = '3.1.0';
+  static readonly VERSION = '3.2.0';
   static readonly WINSCOPE_PROXY_URL = 'http://localhost:5544';
+
+  private static readonly MULTI_DISPLAY_SCREENRECORD_VERSION = '1.4';
 
   private readonly store = new PersistentStore();
   private readonly storeKeySecurityToken = 'adb.proxyKey';
@@ -111,6 +113,7 @@ export class ProxyConnection extends AdbConnection {
     if (requestedTraces.length === 0) {
       throw new Error('No traces requested');
     }
+    this.updateMediaBasedConfig(requestedTraces);
     this.selectedDevice = device;
     this.requestedTraces = requestedTraces;
     await this.setState(ConnectionState.STARTING_TRACE);
@@ -132,8 +135,29 @@ export class ProxyConnection extends AdbConnection {
       throw new Error('No dumps requested');
     }
     this.selectedDevice = device;
+    this.updateMediaBasedConfig(requestedDumps);
     this.requestedTraces = requestedDumps;
     await this.setState(ConnectionState.DUMPING_STATE);
+  }
+
+  private updateMediaBasedConfig(requestedConfig: TraceRequest[]) {
+    requestedConfig.forEach((req) => {
+      const displayConfig = req.config.find((c) => c.key === 'displays');
+      if (displayConfig?.value) {
+        if (Array.isArray(displayConfig.value)) {
+          displayConfig.value = displayConfig.value.map((display) => {
+            if (display[0] === '"') {
+              return display.split('"')[2].trim();
+            }
+            return display;
+          });
+        } else {
+          if (displayConfig.value[0] === '"') {
+            displayConfig.value = displayConfig.value.split('"')[2].trim();
+          }
+        }
+      }
+    });
   }
 
   async fetchLastTracingSessionData(device: AdbDevice): Promise<File[]> {
@@ -312,8 +336,26 @@ export class ProxyConnection extends AdbConnection {
           authorized: devices[deviceId].authorized,
           model: devices[deviceId].model,
           displays: devices[deviceId].displays.map((display: string) => {
-            return display.split(' ').slice(1).join(' ');
+            const parts = display.split(' ').slice(1);
+            const displayNameStartIndex = parts.findIndex((part) =>
+              part.includes('displayName'),
+            );
+            if (displayNameStartIndex !== -1) {
+              const displayName = parts
+                .slice(displayNameStartIndex)
+                .join(' ')
+                .slice(12);
+              if (displayName.length > 2) {
+                return [displayName]
+                  .concat(parts.slice(0, displayNameStartIndex))
+                  .join(' ');
+              }
+            }
+            return parts.join(' ');
           }),
+          multiDisplayScreenRecordingAvailable:
+            devices[deviceId].screenrecord_version >=
+            ProxyConnection.MULTI_DISPLAY_SCREENRECORD_VERSION,
         };
       });
       this.devicesChangeCallback(this.devices);
@@ -376,7 +418,7 @@ export class ProxyConnection extends AdbConnection {
 
   private async getFromProxy(
     path: string,
-    onSuccess: OnRequestSuccessCallback = FunctionUtils.DO_NOTHING,
+    onSuccess: OnRequestSuccessCallback,
     type?: XMLHttpRequest['responseType'],
   ) {
     const response = await HttpRequest.get(
@@ -389,7 +431,7 @@ export class ProxyConnection extends AdbConnection {
 
   private async postToProxy(
     path: string,
-    onSuccess: OnRequestSuccessCallback = FunctionUtils.DO_NOTHING,
+    onSuccess: OnRequestSuccessCallback,
     jsonRequest?: object,
   ) {
     const response = await HttpRequest.post(
@@ -402,7 +444,7 @@ export class ProxyConnection extends AdbConnection {
 
   private async processProxyResponse(
     response: HttpResponse,
-    onSuccess: OnRequestSuccessCallback = FunctionUtils.DO_NOTHING,
+    onSuccess: OnRequestSuccessCallback,
   ) {
     if (
       response.status === HttpRequestStatus.SUCCESS &&
