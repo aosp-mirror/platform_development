@@ -104,6 +104,7 @@ class RemoteDisplay implements AutoCloseable {
     private final VirtualDevice mVirtualDevice;
     private final @DisplayType int mDisplayType;
     private final AtomicBoolean mClosed = new AtomicBoolean(false);
+    private StatusBar mStatusBar;
     private int mRotation;
     private int mWidth;
     private int mHeight;
@@ -205,6 +206,20 @@ class RemoteDisplay implements AutoCloseable {
         mVirtualDisplay.setSurface(surface);
 
         mRotation = mVirtualDisplay.getDisplay().getRotation();
+
+        if (mPreferenceController.getBoolean(R.string.pref_enable_custom_status_bar)
+                && mDisplayType != DISPLAY_TYPE_MIRROR) {
+            // Custom status bar cannot be shown on mirror displays. Also, it needs to be recreated
+            // whenever the dimensions of the display change.
+            final Context displayContext =
+                    mContext.createDisplayContext(mVirtualDisplay.getDisplay());
+            mContext.getMainExecutor().execute(() -> {
+                if (mStatusBar != null) {
+                    mStatusBar.destroy(displayContext);
+                }
+                mStatusBar = StatusBar.create(displayContext);
+            });
+        }
 
         if (mTouchscreen != null) {
             mTouchscreen.close();
