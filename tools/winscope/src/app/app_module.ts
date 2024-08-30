@@ -55,6 +55,7 @@ import {PropertiesComponent} from 'viewers/components/properties_component';
 import {PropertiesTableComponent} from 'viewers/components/properties_table_component';
 import {PropertyTreeNodeDataViewComponent} from 'viewers/components/property_tree_node_data_view_component';
 import {RectsComponent} from 'viewers/components/rects/rects_component';
+import {SearchBoxComponent} from 'viewers/components/search_box_component';
 import {SelectWithFilterComponent} from 'viewers/components/select_with_filter_component';
 import {SurfaceFlingerPropertyGroupsComponent} from 'viewers/components/surface_flinger_property_groups_component';
 import {TransformMatrixComponent} from 'viewers/components/transform_matrix_component';
@@ -150,6 +151,7 @@ import {GlobalErrorHandler} from './global_error_handler';
     UserOptionsComponent,
     LogComponent,
     WarningDialogComponent,
+    SearchBoxComponent,
   ],
   imports: [
     BrowserModule,

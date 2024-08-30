@@ -457,14 +457,14 @@ class PresenterSurfaceFlingerTest extends AbstractHierarchyViewerPresenterTest<U
 
         const nodeWithRelZChild = assertDefined(
           assertDefined(uiData.hierarchyTrees)[0].findDfs(
-            UiTreeUtils.makeIdFilter(
+            UiTreeUtils.makeNodeFilter(
               '98 2c99222 com.google.android.apps.nexuslauncher/com.google.android.apps.nexuslauncher.NexusLauncherActivity#98',
             ),
           ),
         );
         const nodeWithRelZParent = assertDefined(
           assertDefined(uiData.hierarchyTrees)[0].findDfs(
-            UiTreeUtils.makeIdFilter('13 ImeContainer#13'),
+            UiTreeUtils.makeNodeFilter('13 ImeContainer#13'),
           ),
         );
 
