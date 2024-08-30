@@ -16,6 +16,7 @@ use std::{
     collections::BTreeSet,
     fs::{create_dir, read_dir, remove_dir_all, remove_file, rename, write},
     os::unix::fs::symlink,
+    path::Path,
     process::Command,
     str::from_utf8,
 };
@@ -542,7 +543,7 @@ impl ManagedRepo {
 
         Ok(version_match)
     }
-    pub fn preupload_check(&self) -> Result<()> {
+    pub fn preupload_check(&self, files: &Vec<String>) -> Result<()> {
         let deps = self.pseudo_crate.deps()?.keys().map(|k| k.clone()).collect::<BTreeSet<_>>();
 
         let mut managed_dirs = BTreeSet::new();
@@ -562,7 +563,20 @@ impl ManagedRepo {
                 self.managed_dir(), managed_dirs.difference(&deps).join(", "), deps.difference(&managed_dirs).join(", ")));
         }
 
-        let version_match = self.stage(deps.iter())?;
+        let changed_android_crates = files
+            .iter()
+            .filter_map(|file| {
+                let path = Path::new(file);
+                let components = path.components().collect::<Vec<_>>();
+                if path.starts_with("crates/") && components.len() > 2 {
+                    Some(components[1].as_os_str().to_string_lossy().to_string())
+                } else {
+                    None
+                }
+            })
+            .collect::<BTreeSet<_>>();
+
+        let version_match = self.stage(changed_android_crates.iter())?;
 
         for pair in version_match.pairs() {
             println!("Checking {}", pair.source.name());
