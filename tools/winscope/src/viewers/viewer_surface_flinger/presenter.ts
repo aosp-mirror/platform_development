@@ -16,6 +16,7 @@
 
 import {assertDefined} from 'common/assert_utils';
 import {PersistentStoreProxy} from 'common/persistent_store_proxy';
+import {Store} from 'common/store';
 import {
   TabbedViewSwitchRequest,
   TracePositionUpdate,
@@ -150,7 +151,7 @@ export class Presenter extends AbstractHierarchyViewerPresenter<UiData> {
   constructor(
     trace: Trace<HierarchyTreeNode>,
     traces: Traces,
-    storage: Readonly<Storage>,
+    storage: Readonly<Store>,
     notifyViewCallback: NotifyHierarchyViewCallbackType<UiData>,
   ) {
     super(trace, traces, storage, notifyViewCallback, new UiData());
