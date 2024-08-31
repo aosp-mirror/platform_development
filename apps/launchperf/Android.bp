@@ -5,6 +5,6 @@ package {
 android_test {
     name: "launchperf",
     srcs: ["**/*.java"],
-    libs: ["android.test.runner"],
+    libs: ["android.test.runner.stubs.system"],
     platform_apis: true,
 }

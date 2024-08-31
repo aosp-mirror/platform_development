@@ -378,6 +378,9 @@ display, if the mouse pointer is currently positioned on a streamed display.
     accelerometer events, which allows for selecting which device's sensor to
     use. By default, will use the sensors of the device it's shown on.
 
+-   **Display Power**: A simple activity showcasing the behavior of proximity
+    locks, screen brightness override and requesting the screen to be kept on.
+
 -   **Rotation**: A simple activity that is in landscape by default and can send
     orientation change requests on demand. Showcases the display rotation on the
     client, which will rotate the user-visible surface.
