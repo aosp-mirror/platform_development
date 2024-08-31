@@ -19,7 +19,7 @@ import {TimestampConverter} from 'common/timestamp_converter';
 import {TimestampConverterUtils} from 'test/unit/timestamp_converter_utils';
 import {UnitTestUtils} from 'test/unit/utils';
 import {CoarseVersion} from 'trace/coarse_version';
-import {ScreenRecordingTraceEntry} from 'trace/screen_recording';
+import {MediaBasedTraceEntry} from 'trace/media_based_trace_entry';
 import {TraceFile} from 'trace/trace_file';
 import {TraceType} from 'trace/trace_type';
 import {ParserScreenshot} from './parser_screenshot';
@@ -69,7 +69,7 @@ describe('ParserScreenshot', () => {
 
   it('retrieves entry', async () => {
     const entry = await parser.getEntry(0);
-    expect(entry).toBeInstanceOf(ScreenRecordingTraceEntry);
+    expect(entry).toBeInstanceOf(MediaBasedTraceEntry);
     expect(entry.isImage).toBeTrue();
   });
 });

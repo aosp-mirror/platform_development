@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-class ScreenRecordingTraceEntry {
+class MediaBasedTraceEntry {
   constructor(
     public videoTimeSeconds: number,
     public videoData: Blob,
@@ -22,4 +22,4 @@ class ScreenRecordingTraceEntry {
   ) {}
 }
 
-export {ScreenRecordingTraceEntry};
+export {MediaBasedTraceEntry};

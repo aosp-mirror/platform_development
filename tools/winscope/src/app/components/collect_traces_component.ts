@@ -27,6 +27,8 @@ import {
 import {MatDialog} from '@angular/material/dialog';
 import {assertDefined} from 'common/assert_utils';
 import {FunctionUtils} from 'common/function_utils';
+import {PersistentStoreProxy} from 'common/persistent_store_proxy';
+import {Store} from 'common/store';
 import {UserNotifier} from 'common/user_notifier';
 import {Analytics} from 'logging/analytics';
 import {ProgressListener} from 'messaging/progress_listener';
@@ -50,6 +52,7 @@ import {
   EnableConfiguration,
   makeDefaultDumpConfigMap,
   makeDefaultTraceConfigMap,
+  makeScreenRecordingConfigs,
   SelectionConfiguration,
   TraceConfigurationMap,
 } from 'trace_collection/trace_configuration';
@@ -434,7 +437,7 @@ export class CollectTracesComponent
   ];
 
   @Input() adbConnection: AdbConnection | undefined;
-  @Input() storage: Storage | undefined;
+  @Input() storage: Store | undefined;
 
   @Output() readonly filesCollected = new EventEmitter<AdbFiles>();
 
@@ -453,8 +456,8 @@ export class CollectTracesComponent
     }
     this.adbConnection.initialize(
       () => this.onConnectionStateChange(),
-      (progress) => this.onLoadProgressUpdate(progress),
       this.toggleAvailabilityOfTraces,
+      this.handleDevicesChange,
     );
   }
 
@@ -468,7 +471,7 @@ export class CollectTracesComponent
 
   onDeviceClick(device: AdbDevice) {
     this.selectedDevice = device;
-    this.storage?.setItem(this.storeKeyLastDevice, device.id);
+    this.storage?.add(this.storeKeyLastDevice, device.id);
     this.changeDetectorRef.detectChanges();
   }
 
@@ -477,6 +480,13 @@ export class CollectTracesComponent
       WinscopeEventType.APP_REFRESH_DUMPS_REQUEST,
       async (event) => {
         this.selectedTabIndex = 1;
+        this.dumpConfig = PersistentStoreProxy.new<TraceConfigurationMap>(
+          assertDefined('DumpSettings'),
+          assertDefined(
+            JSON.parse(JSON.stringify(assertDefined(this.dumpConfig))),
+          ),
+          assertDefined(this.storage),
+        );
         this.refreshDumps = true;
       },
     );
@@ -525,7 +535,7 @@ export class CollectTracesComponent
     }
 
     const devices = connection.getDevices();
-    const lastId = this.storage?.getItem(this.storeKeyLastDevice) ?? undefined;
+    const lastId = this.storage?.get(this.storeKeyLastDevice) ?? undefined;
     if (
       this.selectedDevice &&
       !devices.find((d) => d.id === this.selectedDevice?.id)
@@ -537,7 +547,7 @@ export class CollectTracesComponent
       const device = devices.find((d) => d.id === lastId);
       if (device && device.authorized) {
         this.selectedDevice = device;
-        this.storage?.setItem(this.storeKeyLastDevice, device.id);
+        this.storage?.add(this.storeKeyLastDevice, device.id);
         return false;
       }
     }
@@ -564,7 +574,7 @@ export class CollectTracesComponent
   }
 
   async onChangeDeviceButton() {
-    this.storage?.setItem(this.storeKeyLastDevice, '');
+    this.storage?.add(this.storeKeyLastDevice, '');
     this.selectedDevice = undefined;
     await this.adbConnection?.restartConnection();
   }
@@ -582,7 +592,7 @@ export class CollectTracesComponent
     const requestedTraces = this.getRequestedTraces();
 
     const imeReq = requestedTraces.includes('ime');
-    const doNotShowDialog = !!this.storage?.getItem(this.storeKeyImeWarning);
+    const doNotShowDialog = !!this.storage?.get(this.storeKeyImeWarning);
 
     if (!imeReq || doNotShowDialog) {
       await this.requestTraces(requestedTraces);
@@ -618,7 +628,7 @@ export class CollectTracesComponent
         .beforeClosed()
         .subscribe((result: WarningDialogResult | undefined) => {
           if (this.storage && result?.selectedOptions.includes(optionText)) {
-            this.storage.setItem(this.storeKeyImeWarning, 'true');
+            this.storage.add(this.storeKeyImeWarning, 'true');
           }
           if (result?.closeActionText === closeText) {
             this.requestTraces(requestedTraces);
@@ -643,9 +653,22 @@ export class CollectTracesComponent
     }
     requestedDumps.push('perfetto_dump'); // always dump/fetch perfetto dump
 
-    const requestedDumpsWithConfig = requestedDumps.map((dumpName) => {
-      return {name: dumpName, config: []};
-    });
+    const requestedDumpsWithConfig: TraceRequest[] = requestedDumps.map(
+      (dumpName) => {
+        const enabledConfig = this.requestedEnabledConfig(
+          dumpName,
+          this.dumpConfig,
+        );
+        const selectedConfig = this.requestedSelectedConfig(
+          dumpName,
+          this.dumpConfig,
+        );
+        return {
+          name: dumpName,
+          config: enabledConfig.concat(selectedConfig),
+        };
+      },
+    );
 
     this.progressMessage = 'Dumping state...';
 
@@ -749,8 +772,14 @@ export class CollectTracesComponent
 
     const requestedTracesWithConfig: TraceRequest[] = requestedTraces.map(
       (traceName) => {
-        const enabledConfig = this.requestedEnabledConfig(traceName);
-        const selectedConfig = this.requestedSelectedConfig(traceName);
+        const enabledConfig = this.requestedEnabledConfig(
+          traceName,
+          this.traceConfig,
+        );
+        const selectedConfig = this.requestedSelectedConfig(
+          traceName,
+          this.traceConfig,
+        );
         return {
           name: traceName,
           config: enabledConfig.concat(selectedConfig),
@@ -805,7 +834,7 @@ export class CollectTracesComponent
   private getRequestedDumps(): string[] {
     let dumpConfig = assertDefined(this.dumpConfig);
     if (this.refreshDumps && this.storage) {
-      const storedConfig = this.storage.getItem(this.storeKeyDumpConfig);
+      const storedConfig = this.storage.get(this.storeKeyDumpConfig);
       if (storedConfig) {
         dumpConfig = JSON.parse(storedConfig);
       }
@@ -815,9 +844,12 @@ export class CollectTracesComponent
     });
   }
 
-  private requestedEnabledConfig(traceName: string): TraceRequestConfig[] {
+  private requestedEnabledConfig(
+    traceName: string,
+    configMap: TraceConfigurationMap,
+  ): TraceRequestConfig[] {
     const req: TraceRequestConfig[] = [];
-    const trace = assertDefined(this.traceConfig)[traceName];
+    const trace = configMap[traceName];
     if (trace?.enabled) {
       trace.config?.enableConfigs?.forEach((con: EnableConfiguration) => {
         if (con.enabled) {
@@ -828,9 +860,11 @@ export class CollectTracesComponent
     return req;
   }
 
-  private requestedSelectedConfig(traceName: string): TraceRequestConfig[] {
-    const tracingConfig = assertDefined(this.traceConfig);
-    const trace = tracingConfig[traceName];
+  private requestedSelectedConfig(
+    traceName: string,
+    configMap: TraceConfigurationMap,
+  ): TraceRequestConfig[] {
+    const trace = configMap[traceName];
     if (!trace?.enabled) {
       return [];
     }
@@ -841,14 +875,55 @@ export class CollectTracesComponent
     );
   }
 
-  private onLoadProgressUpdate(progressPercentage: number) {
-    this.progressPercentage = progressPercentage;
-    this.changeDetectorRef.detectChanges();
-  }
-
   private toggleAvailabilityOfTraces = (traces: string[]) =>
     traces.forEach((trace) => {
       const config = assertDefined(this.traceConfig)[trace];
       config.available = !config.available;
     });
+
+  private handleDevicesChange = (devices: AdbDevice[]) => {
+    if (!this.selectedDevice) {
+      return;
+    }
+    const selectedDevice = devices.find(
+      (d) => d.id === assertDefined(this.selectedDevice).id,
+    );
+    if (!selectedDevice) {
+      return;
+    }
+    const screenRecordingConfig = assertDefined(
+      this.traceConfig['screen_recording'].config,
+    );
+    const displays = assertDefined(
+      screenRecordingConfig?.selectionConfigs.find((c) => c.key === 'displays'),
+    );
+    if (
+      selectedDevice.multiDisplayScreenRecordingAvailable &&
+      !Array.isArray(displays.value)
+    ) {
+      screenRecordingConfig.selectionConfigs = makeScreenRecordingConfigs(
+        selectedDevice.displays,
+        [],
+      );
+    } else if (
+      !selectedDevice.multiDisplayScreenRecordingAvailable &&
+      Array.isArray(displays.value)
+    ) {
+      screenRecordingConfig.selectionConfigs = makeScreenRecordingConfigs(
+        selectedDevice.displays,
+        '',
+      );
+    } else {
+      screenRecordingConfig.selectionConfigs[0].options =
+        selectedDevice.displays;
+    }
+
+    const screenshotConfig = assertDefined(this.dumpConfig)['screenshot']
+      .config;
+    assertDefined(
+      screenshotConfig?.selectionConfigs.find((c) => c.key === 'displays'),
+    ).options = selectedDevice.displays;
+
+    this.changeDetectorRef.detectChanges();
+  };
 }
