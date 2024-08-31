@@ -15,6 +15,7 @@
  */
 
 import {assertTrue} from 'common/assert_utils';
+import {Store} from 'common/store';
 import {Trace} from 'trace/trace';
 import {Traces} from 'trace/traces';
 import {TraceType, TraceTypeUtils} from 'trace/trace_type';
@@ -53,7 +54,7 @@ class ViewerFactory {
     ViewerScreenshot,
   ];
 
-  createViewers(traces: Traces, storage: Storage): Viewer[] {
+  createViewers(traces: Traces, storage: Store): Viewer[] {
     const viewers: Viewer[] = [];
 
     // instantiate one viewer for one trace

@@ -26,6 +26,7 @@ import {MatTooltipModule} from '@angular/material/tooltip';
 import {BrowserAnimationsModule} from '@angular/platform-browser/animations';
 import {assertDefined} from 'common/assert_utils';
 import {InMemoryStorage} from 'common/in_memory_storage';
+import {Store} from 'common/store';
 import {TraceType} from 'trace/trace_type';
 import {TraceConfigComponent} from './trace_config_component';
 
@@ -299,7 +300,7 @@ describe('TraceConfigComponent', () => {
   async function setComponentInputs(
     c: TraceConfigComponent,
     f: ComponentFixture<TraceConfigComponent> = fixture,
-    storage: Storage = new InMemoryStorage(),
+    storage: Store = new InMemoryStorage(),
   ) {
     c.title = 'Targets';
     c.initialTraceConfig = {

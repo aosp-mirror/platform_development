@@ -308,9 +308,9 @@ export class TreeComponent {
   ) {
     if (this.store && this.useStoredExpandedState && shouldUpdateStoredState) {
       if (isExpanded) {
-        this.store.removeItem(this.storeKeyCollapsedState);
+        this.store.clear(this.storeKeyCollapsedState);
       } else {
-        this.store.setItem(this.storeKeyCollapsedState, 'true');
+        this.store.add(this.storeKeyCollapsedState, 'true');
       }
     } else {
       this.localExpandedState = isExpanded;
@@ -335,7 +335,7 @@ export class TreeComponent {
 
   private isCollapsedInStore(): boolean {
     return (
-      assertDefined(this.store).getItem(this.storeKeyCollapsedState) === 'true'
+      assertDefined(this.store).get(this.storeKeyCollapsedState) === 'true'
     );
   }
 }
