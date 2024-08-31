@@ -18,7 +18,7 @@
     "flush-promises": "^1.0.2",
     "jest": "^27.0.6",
     "material-design-icons": "^3.0.1",
-    "protobufjs": "^6.11.2",
+    "protobufjs": "^6.11.4",
     "roboto-fontface": "*",
     "vue": "^3.0.0-0",
     "vue-echarts": "^6.0.0-rc.6",
