@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import {Store} from 'common/store';
 import {WinscopeEvent} from 'messaging/winscope_event';
 import {EmitEvent} from 'messaging/winscope_event_emitter';
 import {Trace} from 'trace/trace';
@@ -34,11 +35,7 @@ export class ViewerSurfaceFlinger implements Viewer {
   private readonly presenter: Presenter;
   private readonly view: View;
 
-  constructor(
-    trace: Trace<HierarchyTreeNode>,
-    traces: Traces,
-    storage: Storage,
-  ) {
+  constructor(trace: Trace<HierarchyTreeNode>, traces: Traces, storage: Store) {
     this.trace = trace;
     this.htmlElement = document.createElement('viewer-surface-flinger');
 

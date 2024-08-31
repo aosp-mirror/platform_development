@@ -16,6 +16,7 @@
 
 import {assertDefined} from 'common/assert_utils';
 import {PersistentStoreProxy} from 'common/persistent_store_proxy';
+import {Store} from 'common/store';
 import {TabbedViewSwitchRequest} from 'messaging/winscope_event';
 import {CustomQueryType} from 'trace/custom_query';
 import {Trace, TraceEntry} from 'trace/trace';
@@ -100,7 +101,7 @@ export class Presenter extends AbstractLogViewerPresenter<UiData> {
   constructor(
     traces: Traces,
     mergedInputEventTrace: Trace<PropertyTreeNode>,
-    private readonly storage: Storage,
+    private readonly storage: Store,
     private readonly notifyInputViewCallback: NotifyLogViewCallbackType<UiData>,
   ) {
     super(

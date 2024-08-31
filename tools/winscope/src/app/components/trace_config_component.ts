@@ -26,6 +26,7 @@ import {MatSelect, MatSelectChange} from '@angular/material/select';
 import {assertDefined} from 'common/assert_utils';
 import {globalConfig} from 'common/global_config';
 import {PersistentStoreProxy} from 'common/persistent_store_proxy';
+import {Store} from 'common/store';
 import {
   SelectionConfiguration,
   TraceConfigurationMap,
@@ -160,7 +161,7 @@ export class TraceConfigComponent {
   @Input() title: string | undefined;
   @Input() traceConfigStoreKey: string | undefined;
   @Input() initialTraceConfig: TraceConfigurationMap | undefined;
-  @Input() storage: Storage | undefined;
+  @Input() storage: Store | undefined;
   @Output() readonly traceConfigChange =
     new EventEmitter<TraceConfigurationMap>();
 
@@ -253,9 +254,11 @@ export class TraceConfigComponent {
   onOptionClick(select: MatSelect, option: string, configName: string) {
     if (select.value === option) {
       const selectElement = assertDefined(
-        document.querySelector(`mat-select[label="${configName}"]`),
+        document.querySelector<HTMLElement>(
+          `mat-select[label="${configName}"]`,
+        ),
       );
-      (selectElement as HTMLElement).blur();
+      selectElement.blur();
     }
   }
 
