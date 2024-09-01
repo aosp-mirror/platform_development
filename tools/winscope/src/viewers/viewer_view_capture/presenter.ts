@@ -16,6 +16,7 @@
 
 import {assertDefined, assertTrue} from 'common/assert_utils';
 import {PersistentStoreProxy} from 'common/persistent_store_proxy';
+import {Store} from 'common/store';
 import {
   TabbedViewSwitchRequest,
   WinscopeEvent,
@@ -130,7 +131,7 @@ export class Presenter extends AbstractHierarchyViewerPresenter<UiData> {
 
   constructor(
     traces: Traces,
-    storage: Readonly<Storage>,
+    storage: Readonly<Store>,
     notifyViewCallback: NotifyHierarchyViewCallbackType<UiData>,
   ) {
     super(undefined, traces, storage, notifyViewCallback, new UiData());

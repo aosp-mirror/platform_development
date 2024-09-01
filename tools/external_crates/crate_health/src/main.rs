@@ -12,11 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use std::path::PathBuf;
+use std::{collections::BTreeSet, path::PathBuf};
 
 use anyhow::Result;
 use clap::{Parser, Subcommand};
-use crate_health::{default_repo_root, maybe_build_cargo_embargo, ManagedRepo, RepoPath};
+use crate_health::{default_repo_root, maybe_build_cargo_embargo, ManagedRepo};
+use rooted_path::RootedPath;
 
 #[derive(Parser)]
 struct Cli {
@@ -40,13 +41,26 @@ struct Cli {
 enum Cmd {
     /// Check the health of a crate, and whether it is safe to migrate.
     MigrationHealth {
-        /// The crate name. Also the directory name in external/rust/crates.
-        crate_name: String,
+        /// The crate names. Also the directory names in external/rust/crates.
+        crates: Vec<String>,
+
+        /// Don't pin the crate version for the specified crates when checking health.
+        #[arg(long, value_parser = parse_crate_list, required=false, default_value="")]
+        unpinned: BTreeSet<String>,
     },
-    /// Migrate a crate from external/rust/crates to the monorepo.
+    /// Migrate crates from external/rust/crates to the monorepo.
     Migrate {
         /// The crate names. Also the directory names in external/rust/crates.
         crates: Vec<String>,
+
+        /// Add the specified crates with unpinned versions.
+        #[arg(long, value_parser = parse_crate_list, required=false, default_value="")]
+        unpinned: BTreeSet<String>,
+    },
+    /// Import a crate and its dependencies into the monorepo.
+    Import {
+        /// The crate name.
+        crate_name: String,
     },
     /// Regenerate a crate directory.
     Regenerate {
@@ -62,22 +76,33 @@ enum Cmd {
     },
 }
 
+fn parse_crate_list(arg: &str) -> Result<BTreeSet<String>> {
+    Ok(arg.split(",").map(|k| k.to_string()).collect())
+}
+
 fn main() -> Result<()> {
     let args = Cli::parse();
 
     maybe_build_cargo_embargo(&args.repo_root, args.rebuild_cargo_embargo)?;
 
     let managed_repo =
-        ManagedRepo::new(RepoPath::new(args.repo_root, "external/rust/android-crates-io"));
+        ManagedRepo::new(RootedPath::new(args.repo_root, "external/rust/android-crates-io")?);
 
     match args.command {
-        Cmd::MigrationHealth { crate_name } => {
-            managed_repo.migration_health(&crate_name, args.verbose)?;
+        Cmd::MigrationHealth { crates, unpinned } => {
+            for crate_name in &crates {
+                managed_repo.migration_health(
+                    &crate_name,
+                    args.verbose,
+                    unpinned.contains(crate_name),
+                )?;
+            }
             Ok(())
         }
-        Cmd::Migrate { crates } => managed_repo.migrate(crates, args.verbose),
+        Cmd::Migrate { crates, unpinned } => managed_repo.migrate(crates, args.verbose, &unpinned),
         Cmd::Regenerate { crates } => managed_repo.regenerate(crates.iter(), true),
         Cmd::RegenerateAll {} => managed_repo.regenerate_all(true),
-        Cmd::PreuploadCheck { files: _ } => managed_repo.preupload_check(),
+        Cmd::PreuploadCheck { files } => managed_repo.preupload_check(&files),
+        Cmd::Import { crate_name } => managed_repo.import(&crate_name),
     }
 }
