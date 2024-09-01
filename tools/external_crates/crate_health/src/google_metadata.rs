@@ -19,8 +19,10 @@ use std::{
 
 use anyhow::{anyhow, Result};
 use chrono::{DateTime, Datelike, Local};
+use license_checker::LicenseState;
 
 use crate::{
+    license::most_restrictive_type,
     metadata::{self, Identifier, MetaData},
     NamedAndVersioned,
 };
@@ -37,7 +39,12 @@ impl GoogleMetadata {
         let metadata: metadata::MetaData = protobuf::text_format::parse_from_str(&metadata)?;
         Ok(GoogleMetadata { path, metadata })
     }
-    pub fn init<P: Into<PathBuf>>(path: P, nv: &dyn NamedAndVersioned, desc: &str) -> Result<Self> {
+    pub fn init<P: Into<PathBuf>>(
+        path: P,
+        nv: &dyn NamedAndVersioned,
+        desc: &str,
+        licenses: &LicenseState,
+    ) -> Result<Self> {
         let path = path.into();
         if path.exists() {
             return Err(anyhow!("{} already exists", path.display()));
@@ -49,7 +56,7 @@ impl GoogleMetadata {
         metadata.set_identifier(nv)?;
         let third_party = metadata.metadata.third_party.mut_or_insert_default();
         third_party.set_homepage(nv.crates_io_homepage());
-        // TODO: handle license.
+        third_party.set_license_type(most_restrictive_type(licenses));
         Ok(metadata)
     }
     pub fn write(&self) -> Result<()> {
@@ -79,5 +86,30 @@ impl GoogleMetadata {
         self.metadata.third_party.mut_or_insert_default().identifier.clear();
         self.metadata.third_party.mut_or_insert_default().identifier.push(identifier);
         Ok(())
+    }
+    pub fn migrate_homepage(&mut self) -> bool {
+        let mut homepage = None;
+        for (idx, identifier) in self.metadata.third_party.identifier.iter().enumerate() {
+            if identifier.type_.as_ref().unwrap_or(&String::new()).to_lowercase() == "homepage" {
+                match homepage {
+                    Some(info) => panic!("Homepage set twice? {info:?} {identifier:?}"),
+                    None => homepage = Some((idx, identifier.clone())),
+                }
+            }
+        }
+        let Some(homepage) = homepage else { return false };
+        self.metadata.third_party.mut_or_insert_default().identifier.remove(homepage.0);
+        self.metadata.third_party.mut_or_insert_default().homepage = homepage.1.value;
+        true
+    }
+    pub fn migrate_archive(&mut self) -> bool {
+        let mut updated = false;
+        for identifier in self.metadata.third_party.mut_or_insert_default().identifier.iter_mut() {
+            if identifier.type_ == Some("ARCHIVE".to_string()) {
+                identifier.type_ = Some("Archive".to_string());
+                updated = true;
+            }
+        }
+        updated
     }
 }
