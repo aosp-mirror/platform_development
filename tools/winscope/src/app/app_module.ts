@@ -65,9 +65,9 @@ import {ViewerInputMethodComponent} from 'viewers/components/viewer_input_method
 import {ViewCapturePropertyGroupsComponent} from 'viewers/components/view_capture_property_groups_component';
 import {ViewerInputComponent} from 'viewers/viewer_input/viewer_input_component';
 import {ViewerJankCujsComponent} from 'viewers/viewer_jank_cujs/viewer_jank_cujs_component';
+import {ViewerMediaBasedComponent} from 'viewers/viewer_media_based/viewer_media_based_component';
 import {ProtologScrollDirective} from 'viewers/viewer_protolog/scroll_strategy/protolog_scroll_directive';
 import {ViewerProtologComponent} from 'viewers/viewer_protolog/viewer_protolog_component';
-import {ViewerScreenRecordingComponent} from 'viewers/viewer_screen_recording/viewer_screen_recording_component';
 import {ViewerSurfaceFlingerComponent} from 'viewers/viewer_surface_flinger/viewer_surface_flinger_component';
 import {TransactionsScrollDirective} from 'viewers/viewer_transactions/scroll_strategy/transactions_scroll_directive';
 import {ViewerTransactionsComponent} from 'viewers/viewer_transactions/viewer_transactions_component';
@@ -108,7 +108,7 @@ import {GlobalErrorHandler} from './global_error_handler';
     ViewerProtologComponent,
     ViewerJankCujsComponent,
     ViewerTransactionsComponent,
-    ViewerScreenRecordingComponent,
+    ViewerMediaBasedComponent,
     ViewerTransitionsComponent,
     ViewerViewCaptureComponent,
     CollectTracesComponent,

@@ -16,7 +16,6 @@
 
 package com.example.android.vdmdemo.host;
 
-import static android.Manifest.permission.SUBSCRIBE_TO_KEYGUARD_LOCKED_STATE;
 import static android.companion.virtual.VirtualDeviceParams.DEVICE_POLICY_CUSTOM;
 import static android.companion.virtual.VirtualDeviceParams.DEVICE_POLICY_DEFAULT;
 import static android.companion.virtual.VirtualDeviceParams.LOCK_STATE_ALWAYS_UNLOCKED;
@@ -43,12 +42,12 @@ import android.companion.virtual.VirtualDeviceManager;
 import android.companion.virtual.VirtualDeviceManager.ActivityListener;
 import android.companion.virtual.VirtualDeviceParams;
 import android.companion.virtual.sensor.VirtualSensorConfig;
+import android.companion.virtualdevice.flags.Flags;
 import android.content.ComponentName;
 import android.content.Intent;
 import android.content.IntentSender;
 import android.content.IntentSender.SendIntentException;
 import android.content.pm.ActivityInfo;
-import android.content.pm.PackageManager;
 import android.content.pm.PackageManager.NameNotFoundException;
 import android.graphics.drawable.Icon;
 import android.hardware.display.DisplayManager;
@@ -191,16 +190,9 @@ public final class VdmService extends Hilt_VdmService {
 
             // When the keyguard is locked, show a dialog prompting the user to unlock it.
             if (mKeyguardManager.isKeyguardLocked()) {
-                // TODO(b/333443509): remove this check once the permission is in to the VDM roles
-                if (checkCallingOrSelfPermission(SUBSCRIBE_TO_KEYGUARD_LOCKED_STATE)
-                        != PackageManager.PERMISSION_GRANTED) {
-                    showToast(displayId, componentName,
-                            R.string.custom_activity_launch_blocked_message);
-                } else {
-                    startActivity(
-                            UnlockKeyguardDialog.createIntent(VdmService.this, intentSender),
-                            ActivityOptions.makeBasic().setLaunchDisplayId(displayId).toBundle());
-                }
+                startActivity(
+                        UnlockKeyguardDialog.createIntent(VdmService.this, intentSender),
+                        ActivityOptions.makeBasic().setLaunchDisplayId(displayId).toBundle());
                 return;
             }
 
@@ -528,15 +520,18 @@ public final class VdmService extends Hilt_VdmService {
 
         if (mPreferenceController.getBoolean(R.string.pref_enable_client_sensors)) {
             for (SensorCapabilities sensor : mDeviceCapabilities.getSensorCapabilitiesList()) {
-                virtualDeviceBuilder.addVirtualSensorConfig(
-                        new VirtualSensorConfig.Builder(
-                                sensor.getType(), "Remote-" + sensor.getName())
-                                .setMinDelay(sensor.getMinDelayUs())
-                                .setMaxDelay(sensor.getMaxDelayUs())
-                                .setPower(sensor.getPower())
-                                .setResolution(sensor.getResolution())
-                                .setMaximumRange(sensor.getMaxRange())
-                                .build());
+                var builder = new VirtualSensorConfig.Builder(
+                        sensor.getType(), "Remote-" + sensor.getName())
+                        .setMinDelay(sensor.getMinDelayUs())
+                        .setMaxDelay(sensor.getMaxDelayUs())
+                        .setPower(sensor.getPower())
+                        .setResolution(sensor.getResolution())
+                        .setMaximumRange(sensor.getMaxRange());
+                if (Flags.deviceAwareDisplayPower()) {
+                    builder.setWakeUpSensor(sensor.getIsWakeUpSensor())
+                            .setReportingMode(sensor.getReportingMode());
+                }
+                virtualDeviceBuilder.addVirtualSensorConfig(builder.build());
             }
 
             if (mDeviceCapabilities.getSensorCapabilitiesCount() > 0) {
