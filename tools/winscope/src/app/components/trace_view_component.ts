@@ -56,6 +56,7 @@ interface Tab {
                   [active]="isCurrentActiveTab(tab)"
                   [class.active]="isCurrentActiveTab(tab)"
                   [matTooltip]="getTabTooltip(tab.view)"
+                  matTooltipPosition="above"
                   [matTooltipShowDelay]="300"
                   (click)="onTabClick(tab)"
                   (focus)="$event.target.blur()"
