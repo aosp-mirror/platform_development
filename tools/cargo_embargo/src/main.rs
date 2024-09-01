@@ -752,6 +752,7 @@ fn choose_license(license: &str) -> &str {
         "MIT OR LGPL-3.0-or-later" => "MIT",
         "Apache-2.0 / MIT" => "Apache-2.0",
         "Unlicense OR MIT" => "MIT",
+        "BSD-3-Clause OR MIT OR Apache-2.0" => "Apache-2.0",
         _ => license,
     }
 }

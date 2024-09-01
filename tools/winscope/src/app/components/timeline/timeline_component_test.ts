@@ -219,11 +219,11 @@ describe('TimelineComponent', () => {
 
     const timelineComponent = assertDefined(component.timeline);
     const nextEntryButton = assertDefined(
-      htmlElement.querySelector('#next_entry_button'),
-    ) as HTMLElement;
+      htmlElement.querySelector<HTMLElement>('#next_entry_button'),
+    );
     const prevEntryButton = assertDefined(
-      htmlElement.querySelector('#prev_entry_button'),
-    ) as HTMLElement;
+      htmlElement.querySelector<HTMLElement>('#prev_entry_button'),
+    );
 
     timelineComponent.selectedTraces = [
       getLoadedTrace(TraceType.SURFACE_FLINGER),
@@ -287,11 +287,11 @@ describe('TimelineComponent', () => {
     timelineData.setPosition(position100);
     fixture.detectChanges();
     const nextEntryButton = assertDefined(
-      htmlElement.querySelector('#next_entry_button'),
-    ) as HTMLElement;
+      htmlElement.querySelector<HTMLElement>('#next_entry_button'),
+    );
     const prevEntryButton = assertDefined(
-      htmlElement.querySelector('#prev_entry_button'),
-    ) as HTMLElement;
+      htmlElement.querySelector<HTMLElement>('#prev_entry_button'),
+    );
     expect(timelineData.getActiveTrace()).toBeUndefined();
     expect(timelineData.getCurrentPosition()?.timestamp.getValueNs()).toEqual(
       100n,
@@ -307,11 +307,11 @@ describe('TimelineComponent', () => {
 
     const timelineComponent = assertDefined(component.timeline);
     const nextEntryButton = assertDefined(
-      htmlElement.querySelector('#next_entry_button'),
-    ) as HTMLElement;
+      htmlElement.querySelector<HTMLElement>('#next_entry_button'),
+    );
     const prevEntryButton = assertDefined(
-      htmlElement.querySelector('#prev_entry_button'),
-    ) as HTMLElement;
+      htmlElement.querySelector<HTMLElement>('#prev_entry_button'),
+    );
     const spy = spyOn(
       assertDefined(timelineComponent.miniTimeline?.drawer),
       'draw',
@@ -335,39 +335,48 @@ describe('TimelineComponent', () => {
 
     await openSelectPanel();
 
-    const matOptions = assertDefined(
-      document.documentElement.querySelectorAll('mat-option'),
-    );
-    const sfOption = assertDefined(matOptions.item(1)) as HTMLInputElement;
+    const matOptions =
+      document.documentElement.querySelectorAll<HTMLInputElement>('mat-option');
+    const sfOption = matOptions.item(1);
     expect(sfOption.textContent).toContain('Surface Flinger');
     expect(sfOption.ariaDisabled).toEqual('true');
     for (const i of [0, 2, 3]) {
-      expect((matOptions.item(i) as HTMLInputElement).ariaDisabled).toEqual(
-        'false',
-      );
+      expect(matOptions.item(i).ariaDisabled).toEqual('false');
     }
 
-    (matOptions.item(2) as HTMLElement).click();
+    matOptions.item(2).click();
     fixture.detectChanges();
-    expectSelectedTraceTypes([
+    const expectedTypes = [
       TraceType.SCREEN_RECORDING,
       TraceType.SURFACE_FLINGER,
       TraceType.PROTO_LOG,
-    ]);
+    ];
+    expectSelectedTraceTypes(expectedTypes);
     const icons = htmlElement.querySelectorAll(
       '#trace-selector .shown-selection .mat-icon',
     );
-    expect(
-      Array.from(icons)
-        .map((icon) => icon.textContent?.trim())
-        .slice(1),
-    ).toEqual([
-      TRACE_INFO[TraceType.SCREEN_RECORDING].icon,
-      TRACE_INFO[TraceType.SURFACE_FLINGER].icon,
-      TRACE_INFO[TraceType.PROTO_LOG].icon,
-    ]);
+    Array.from(icons)
+      .slice(1)
+      .forEach((icon, index) => {
+        const iconText = icon.textContent?.trim();
+        const expectedType = expectedTypes[index];
+        expect(iconText).toEqual(TRACE_INFO[expectedType].icon);
 
-    (matOptions.item(2) as HTMLElement).click();
+        icon.dispatchEvent(new Event('mouseenter'));
+        fixture.detectChanges();
+        expect(
+          document.querySelector<HTMLElement>('.mat-tooltip-panel')
+            ?.textContent,
+        ).toEqual(
+          expectedType === TraceType.SCREEN_RECORDING
+            ? 'mock_screen_recording'
+            : TRACE_INFO[expectedType].name,
+        );
+        icon.dispatchEvent(new Event('mouseleave'));
+        fixture.detectChanges();
+      });
+
+    matOptions.item(2).click();
     fixture.detectChanges();
     expectSelectedTraceTypes(allTraceTypes);
     const newIcons = htmlElement.querySelectorAll(
@@ -377,31 +386,21 @@ describe('TimelineComponent', () => {
       Array.from(newIcons)
         .map((icon) => icon.textContent?.trim())
         .slice(1),
-    ).toEqual([
-      TRACE_INFO[TraceType.SCREEN_RECORDING].icon,
-      TRACE_INFO[TraceType.SURFACE_FLINGER].icon,
-      TRACE_INFO[TraceType.WINDOW_MANAGER].icon,
-      TRACE_INFO[TraceType.PROTO_LOG].icon,
-    ]);
+    ).toEqual(allTraceTypes.map((type) => TRACE_INFO[type].icon));
   });
 
   it('update name and disables option for dumps', async () => {
     loadAllTraces(component, fixture, false);
     await openSelectPanel();
 
-    const matOptions = assertDefined(
-      document.documentElement.querySelectorAll('mat-option'),
-    ); // [WM, SF, SR, ProtoLog]
+    const matOptions =
+      document.documentElement.querySelectorAll<HTMLInputElement>('mat-option'); // [WM, SF, SR, ProtoLog]
 
     for (const i of [0, 2]) {
-      expect((matOptions.item(i) as HTMLInputElement).ariaDisabled).toEqual(
-        'false',
-      );
+      expect(matOptions.item(i).ariaDisabled).toEqual('false');
     }
     for (const i of [1, 3]) {
-      expect((matOptions.item(i) as HTMLInputElement).ariaDisabled).toEqual(
-        'true',
-      );
+      expect(matOptions.item(i).ariaDisabled).toEqual('true');
     }
     expect(matOptions.item(3).textContent).toContain('ProtoLog Dump');
   });
@@ -480,8 +479,8 @@ describe('TimelineComponent', () => {
         ?.timestamp.getValueNs(),
     ).toEqual(100n);
     const nextEntryButton = assertDefined(
-      htmlElement.querySelector('#next_entry_button'),
-    ) as HTMLElement;
+      htmlElement.querySelector<HTMLElement>('#next_entry_button'),
+    );
 
     testCurrentTimestampOnButtonClick(nextEntryButton, position105, 110n);
 
@@ -505,8 +504,8 @@ describe('TimelineComponent', () => {
         ?.timestamp.getValueNs(),
     ).toEqual(100n);
     const prevEntryButton = assertDefined(
-      htmlElement.querySelector('#prev_entry_button'),
-    ) as HTMLElement;
+      htmlElement.querySelector<HTMLElement>('#prev_entry_button'),
+    );
 
     // In this state we are already on the first entry at timestamp 100, so
     // there is no entry to move to before and we just don't update the timestamp
@@ -565,8 +564,8 @@ describe('TimelineComponent', () => {
     ).toEqual(100n);
 
     const timeInputField = assertDefined(
-      document.querySelector('.time-input.nano'),
-    ) as HTMLInputElement;
+      document.querySelector<HTMLInputElement>('.time-input.nano'),
+    );
 
     testCurrentTimestampOnTimeInput(
       timeInputField,
@@ -611,8 +610,8 @@ describe('TimelineComponent', () => {
     ).toEqual(100n);
 
     const timeInputField = assertDefined(
-      document.querySelector('.time-input.human'),
-    ) as HTMLInputElement;
+      document.querySelector<HTMLInputElement>('.time-input.human'),
+    );
 
     testCurrentTimestampOnTimeInput(
       timeInputField,
@@ -662,8 +661,8 @@ describe('TimelineComponent', () => {
     ).toEqual(100n);
 
     const timeInputField = assertDefined(
-      document.querySelector('.time-input.human'),
-    ) as HTMLInputElement;
+      document.querySelector<HTMLInputElement>('.time-input.human'),
+    );
 
     testCurrentTimestampOnTimeInput(
       timeInputField,
@@ -683,8 +682,8 @@ describe('TimelineComponent', () => {
     ).toEqual(100n);
 
     const timeInputField = assertDefined(
-      document.querySelector('.time-input.human'),
-    ) as HTMLInputElement;
+      document.querySelector<HTMLInputElement>('.time-input.human'),
+    );
 
     testCurrentTimestampOnTimeInput(
       timeInputField,
@@ -931,8 +930,8 @@ describe('TimelineComponent', () => {
     expect(timelineComponent.currentPositionBookmarked()).toBeFalse();
 
     const bookmarkIcon = assertDefined(
-      htmlElement.querySelector('.bookmark-icon'),
-    ) as HTMLElement;
+      htmlElement.querySelector<HTMLElement>('.bookmark-icon'),
+    );
     bookmarkIcon.click();
     fixture.detectChanges();
 
@@ -1061,7 +1060,11 @@ describe('TimelineComponent', () => {
         time110,
         time112,
       ])
-      .setTimestamps(TraceType.SCREEN_RECORDING, [time110])
+      .setTimestamps(
+        TraceType.SCREEN_RECORDING,
+        [time110],
+        ['mock_screen_recording'],
+      )
       .setTimestamps(TraceType.PROTO_LOG, [time100])
       .build();
 
@@ -1194,18 +1197,18 @@ describe('TimelineComponent', () => {
 
   async function openSelectPanel() {
     const selectTrigger = assertDefined(
-      htmlElement.querySelector('.mat-select-trigger'),
+      htmlElement.querySelector<HTMLElement>('.mat-select-trigger'),
     );
-    (selectTrigger as HTMLElement).click();
+    selectTrigger.click();
     fixture.detectChanges();
     await fixture.whenStable();
   }
 
   function clickTraceFromSelectPanel(index: number) {
     const matOptions = assertDefined(
-      document.documentElement.querySelectorAll('mat-option'),
+      document.documentElement.querySelectorAll<HTMLElement>('mat-option'),
     );
-    (matOptions.item(index) as HTMLElement).click();
+    matOptions.item(index).click();
     fixture.detectChanges();
   }
 
@@ -1272,8 +1275,8 @@ describe('TimelineComponent', () => {
 
   function openContextMenu(xOffset = 0, clickBelowMarker = false) {
     const miniTimelineCanvas = assertDefined(
-      htmlElement.querySelector('#mini-timeline-canvas'),
-    ) as HTMLElement;
+      htmlElement.querySelector<HTMLElement>('#mini-timeline-canvas'),
+    );
     const yOffset = clickBelowMarker
       ? assertDefined(component.timeline?.miniTimeline?.drawer?.getHeight()) /
           6 +
@@ -1296,16 +1299,18 @@ describe('TimelineComponent', () => {
   function clickToggleBookmarkOption() {
     const menu = assertDefined(document.querySelector('.context-menu'));
     const toggleOption = assertDefined(
-      menu.querySelector('.context-menu-item'),
-    ) as HTMLElement;
+      menu.querySelector<HTMLElement>('.context-menu-item'),
+    );
     toggleOption.click();
     fixture.detectChanges();
   }
 
   function clickRemoveAllBookmarksOption() {
     const menu = assertDefined(document.querySelector('.context-menu'));
-    const options = assertDefined(menu.querySelectorAll('.context-menu-item'));
-    (options.item(1) as HTMLElement).click();
+    const options = assertDefined(
+      menu.querySelectorAll<HTMLElement>('.context-menu-item'),
+    );
+    options.item(1).click();
     fixture.detectChanges();
   }
 

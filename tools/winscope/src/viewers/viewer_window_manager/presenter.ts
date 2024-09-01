@@ -15,6 +15,7 @@
  */
 
 import {PersistentStoreProxy} from 'common/persistent_store_proxy';
+import {Store} from 'common/store';
 import {WinscopeEvent, WinscopeEventType} from 'messaging/winscope_event';
 import {Trace} from 'trace/trace';
 import {Traces} from 'trace/traces';
@@ -123,7 +124,7 @@ export class Presenter extends AbstractHierarchyViewerPresenter<UiData> {
   constructor(
     trace: Trace<HierarchyTreeNode>,
     traces: Traces,
-    storage: Readonly<Storage>,
+    storage: Readonly<Store>,
     notifyViewCallback: NotifyHierarchyViewCallbackType<UiData>,
   ) {
     super(trace, traces, storage, notifyViewCallback, new UiData());

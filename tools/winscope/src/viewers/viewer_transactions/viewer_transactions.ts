@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import {Store} from 'common/store';
 import {WinscopeEvent} from 'messaging/winscope_event';
 import {EmitEvent} from 'messaging/winscope_event_emitter';
 import {Trace} from 'trace/trace';
@@ -33,11 +34,7 @@ class ViewerTransactions implements Viewer {
   private readonly presenter: Presenter;
   private readonly view: View;
 
-  constructor(
-    trace: Trace<PropertyTreeNode>,
-    traces: Traces,
-    storage: Storage,
-  ) {
+  constructor(trace: Trace<PropertyTreeNode>, traces: Traces, storage: Store) {
     this.trace = trace;
     this.htmlElement = document.createElement('viewer-transactions');
     const notifyViewCallback = (data: UiData) => {

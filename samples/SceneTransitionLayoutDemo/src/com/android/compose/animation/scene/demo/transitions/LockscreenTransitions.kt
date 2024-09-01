@@ -23,6 +23,8 @@ import androidx.compose.ui.unit.dp
 import com.android.compose.animation.scene.Edge
 import com.android.compose.animation.scene.SceneKey
 import com.android.compose.animation.scene.SceneTransitionsBuilder
+import com.android.compose.animation.scene.TransitionBuilder
+import com.android.compose.animation.scene.TransitionKey
 import com.android.compose.animation.scene.demo.Bouncer
 import com.android.compose.animation.scene.demo.Camera
 import com.android.compose.animation.scene.demo.Clock
@@ -66,14 +68,13 @@ fun SceneTransitionsBuilder.commonLockscreenTransitions(lockscreenScene: SceneKe
             fractionRange(easing = CubicBezierEasing(0.1f, 0.1f, 0f, 1f)) {
                 scaleDraw(Bouncer.Elements.Content, scaleY = 0.8f, scaleX = 0.8f)
             }
-        }
+        },
+        key = TransitionKey.PredictiveBack
     ) {
-        spec = tween(durationMillis = 500)
-
-        translate(Bouncer.Elements.Content, y = 300.dp)
-        fractionRange(start = BouncerBackgroundEndProgress) { fade(Bouncer.Elements.Background) }
-        fractionRange(end = BouncerBackgroundEndProgress) { fade(Bouncer.Elements.Content) }
+        bouncerToLockscreenTransition()
     }
+
+    from(Scenes.Bouncer, to = lockscreenScene) { bouncerToLockscreenTransition() }
 
     from(lockscreenScene, to = Scenes.Launcher) {
         spec = tween(durationMillis = 500)
@@ -114,4 +115,12 @@ fun SceneTransitionsBuilder.commonLockscreenTransitions(lockscreenScene: SceneKe
 
         fade(Camera.Elements.Background)
     }
+}
+
+private fun TransitionBuilder.bouncerToLockscreenTransition() {
+    spec = tween(durationMillis = 500)
+
+    translate(Bouncer.Elements.Content, y = 300.dp)
+    fractionRange(start = BouncerBackgroundEndProgress) { fade(Bouncer.Elements.Background) }
+    fractionRange(end = BouncerBackgroundEndProgress) { fade(Bouncer.Elements.Content) }
 }
