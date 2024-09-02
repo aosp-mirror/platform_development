@@ -15,6 +15,7 @@
  */
 
 import {assertDefined} from 'common/assert_utils';
+import {FilterFlag} from 'common/filter_flag';
 import {FunctionUtils} from 'common/function_utils';
 import {Store} from 'common/store';
 import {TracePositionUpdate, WinscopeEvent} from 'messaging/winscope_event';
@@ -35,7 +36,7 @@ import {UserOptions} from 'viewers/common/user_options';
 import {HierarchyPresenter} from './hierarchy_presenter';
 import {RectShowState} from './rect_show_state';
 import {UiDataHierarchy} from './ui_data_hierarchy';
-import {ViewerEvents} from './viewer_events';
+import {TextFilterDetail, ViewerEvents} from './viewer_events';
 
 export type NotifyHierarchyViewCallbackType<UiData> = (uiData: UiData) => void;
 
@@ -89,10 +90,10 @@ export abstract class AbstractHierarchyViewerPresenter<
     );
     htmlElement.addEventListener(
       ViewerEvents.HierarchyFilterChange,
-      async (event) =>
-        await this.onHierarchyFilterChange(
-          (event as CustomEvent).detail.filterString,
-        ),
+      async (event) => {
+        const detail: TextFilterDetail = (event as CustomEvent).detail;
+        await this.onHierarchyFilterChange(detail.filterString, detail.flags);
+      },
     );
     htmlElement.addEventListener(
       ViewerEvents.PropertiesUserOptionsChange,
@@ -103,10 +104,10 @@ export abstract class AbstractHierarchyViewerPresenter<
     );
     htmlElement.addEventListener(
       ViewerEvents.PropertiesFilterChange,
-      async (event) =>
-        await this.onPropertiesFilterChange(
-          (event as CustomEvent).detail.filterString,
-        ),
+      async (event) => {
+        const detail: TextFilterDetail = (event as CustomEvent).detail;
+        await this.onPropertiesFilterChange(detail.filterString, detail.flags);
+      },
     );
     htmlElement.addEventListener(
       ViewerEvents.HighlightedNodeChange,
@@ -166,8 +167,11 @@ export abstract class AbstractHierarchyViewerPresenter<
     this.copyUiDataAndNotifyView();
   }
 
-  async onHierarchyFilterChange(filterString: string) {
-    await this.hierarchyPresenter.applyHierarchyFilterChange(filterString);
+  async onHierarchyFilterChange(filterString: string, flags: FilterFlag[]) {
+    await this.hierarchyPresenter.applyHierarchyFilterChange(
+      filterString,
+      flags,
+    );
     this.uiData.hierarchyTrees = this.hierarchyPresenter.getAllFormattedTrees();
     this.uiData.pinnedItems = this.hierarchyPresenter.getPinnedItems();
     this.copyUiDataAndNotifyView();
@@ -185,11 +189,11 @@ export abstract class AbstractHierarchyViewerPresenter<
     this.copyUiDataAndNotifyView();
   }
 
-  async onPropertiesFilterChange(filterString: string) {
+  async onPropertiesFilterChange(filterString: string, flags: FilterFlag[]) {
     if (!this.propertiesPresenter) {
       return;
     }
-    this.propertiesPresenter.applyPropertiesFilterChange(filterString);
+    this.propertiesPresenter.applyPropertiesFilterChange(filterString, flags);
     await this.updatePropertiesTree();
     this.uiData.propertiesTree = this.propertiesPresenter.getFormattedTree();
     this.copyUiDataAndNotifyView();
