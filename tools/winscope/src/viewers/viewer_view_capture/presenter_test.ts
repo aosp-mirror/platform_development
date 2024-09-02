@@ -17,6 +17,7 @@
 import {assertDefined} from 'common/assert_utils';
 import {Rect} from 'common/geometry/rect';
 import {InMemoryStorage} from 'common/in_memory_storage';
+import {Store} from 'common/store';
 import {TracePositionUpdate} from 'messaging/winscope_event';
 import {TraceBuilder} from 'test/unit/trace_builder';
 import {UnitTestUtils} from 'test/unit/utils';
@@ -122,12 +123,9 @@ class PresenterViewCaptureTest extends AbstractHierarchyViewerPresenterTest<UiDa
 
   override createPresenter(
     callback: NotifyHierarchyViewCallbackType<UiData>,
+    storage: Store,
   ): Presenter {
-    return new Presenter(
-      assertDefined(this.traces),
-      new InMemoryStorage(),
-      callback,
-    );
+    return new Presenter(assertDefined(this.traces), storage, callback);
   }
 
   override getPositionUpdate(): TracePositionUpdate {

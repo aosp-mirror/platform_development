@@ -169,6 +169,7 @@ export class Presenter extends AbstractHierarchyViewerPresenter<UiData> {
   }
 
   override async onAppEvent(event: WinscopeEvent) {
+    await this.handleCommonWinscopeEvents(event);
     await event.visit(
       WinscopeEventType.TRACE_POSITION_UPDATE,
       async (event) => {
@@ -188,6 +189,15 @@ export class Presenter extends AbstractHierarchyViewerPresenter<UiData> {
             );
           }
         }
+        this.updateCuratedProperties();
+        this.refreshUIData();
+      },
+    );
+    await event.visit(
+      WinscopeEventType.FILTER_PRESET_APPLY_REQUEST,
+      async (event) => {
+        const filterPresetName = event.name;
+        await this.applyPresetConfig(filterPresetName);
         this.updateCuratedProperties();
         this.refreshUIData();
       },

@@ -16,8 +16,13 @@
 
 import {assertDefined} from 'common/assert_utils';
 import {FunctionUtils} from 'common/function_utils';
+import {parseMap, stringifyMap} from 'common/persistent_store_proxy';
 import {Store} from 'common/store';
-import {TracePositionUpdate, WinscopeEvent} from 'messaging/winscope_event';
+import {
+  TracePositionUpdate,
+  WinscopeEvent,
+  WinscopeEventType,
+} from 'messaging/winscope_event';
 import {
   EmitEvent,
   WinscopeEventEmitter,
@@ -33,6 +38,7 @@ import {RectsPresenter} from 'viewers/common/rects_presenter';
 import {UiHierarchyTreeNode} from 'viewers/common/ui_hierarchy_tree_node';
 import {UserOptions} from 'viewers/common/user_options';
 import {HierarchyPresenter} from './hierarchy_presenter';
+import {PresetHierarchy} from './preset_hierarchy';
 import {RectShowState} from './rect_show_state';
 import {TextFilter} from './text_filter';
 import {UiDataHierarchy} from './ui_data_hierarchy';
@@ -205,6 +211,58 @@ export abstract class AbstractHierarchyViewerPresenter<
     this.uiData.rectsToDraw = this.rectsPresenter.getRectsToDraw();
     this.uiData.rectIdToShowState = this.rectsPresenter.getRectIdToShowState();
     this.copyUiDataAndNotifyView();
+  }
+
+  protected async handleCommonWinscopeEvents(event: WinscopeEvent) {
+    await event.visit(
+      WinscopeEventType.FILTER_PRESET_SAVE_REQUEST,
+      async (event) => {
+        this.saveConfigAsPreset(event.name);
+      },
+    );
+  }
+
+  protected saveConfigAsPreset(storeKey: string) {
+    const preset: PresetHierarchy = {
+      hierarchyUserOptions: this.uiData.hierarchyUserOptions,
+      hierarchyFilter: this.uiData.hierarchyFilter,
+      propertiesUserOptions: this.uiData.propertiesUserOptions,
+      propertiesFilter: this.uiData.propertiesFilter,
+      rectsUserOptions: this.uiData.rectsUserOptions,
+      rectIdToShowState: this.uiData.rectIdToShowState,
+    };
+    this.storage.add(storeKey, JSON.stringify(preset, stringifyMap));
+  }
+
+  protected async applyPresetConfig(storeKey: string) {
+    const preset = this.storage.get(storeKey);
+    if (preset) {
+      const parsedPreset: PresetHierarchy = JSON.parse(preset, parseMap);
+      await this.hierarchyPresenter.applyHierarchyUserOptionsChange(
+        parsedPreset.hierarchyUserOptions,
+      );
+      await this.hierarchyPresenter.applyHierarchyFilterChange(
+        parsedPreset.hierarchyFilter,
+      );
+
+      this.propertiesPresenter.applyPropertiesUserOptionsChange(
+        parsedPreset.propertiesUserOptions,
+      );
+      this.propertiesPresenter.applyPropertiesFilterChange(
+        parsedPreset.propertiesFilter,
+      );
+      await this.updatePropertiesTree();
+
+      if (this.rectsPresenter) {
+        this.rectsPresenter?.applyRectsUserOptionsChange(
+          assertDefined(parsedPreset.rectsUserOptions),
+        );
+        this.rectsPresenter?.updateRectShowStates(
+          parsedPreset.rectIdToShowState,
+        );
+      }
+      this.refreshHierarchyViewerUiData();
+    }
   }
 
   protected async applyTracePositionUpdate(event: TracePositionUpdate) {

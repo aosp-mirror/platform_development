@@ -136,6 +136,7 @@ export abstract class AbstractPresenterInputMethod extends AbstractHierarchyView
   }
 
   async onAppEvent(event: WinscopeEvent) {
+    await this.handleCommonWinscopeEvents(event);
     await event.visit(
       WinscopeEventType.TRACE_POSITION_UPDATE,
       async (event) => {
@@ -184,6 +185,14 @@ export abstract class AbstractPresenterInputMethod extends AbstractHierarchyView
             }
           }
         }
+        this.refreshUIData();
+      },
+    );
+    await event.visit(
+      WinscopeEventType.FILTER_PRESET_APPLY_REQUEST,
+      async (event) => {
+        const filterPresetName = event.name;
+        await this.applyPresetConfig(filterPresetName);
         this.refreshUIData();
       },
     );

@@ -17,6 +17,7 @@
 import {assertDefined} from 'common/assert_utils';
 import {Rect} from 'common/geometry/rect';
 import {InMemoryStorage} from 'common/in_memory_storage';
+import {Store} from 'common/store';
 import {TracePositionUpdate} from 'messaging/winscope_event';
 import {HierarchyTreeBuilder} from 'test/unit/hierarchy_tree_builder';
 import {TraceBuilder} from 'test/unit/trace_builder';
@@ -143,11 +144,12 @@ class PresenterSurfaceFlingerTest extends AbstractHierarchyViewerPresenterTest<U
 
   override createPresenter(
     callback: NotifyHierarchyViewCallbackType<UiData>,
+    storage: Store,
   ): Presenter {
     const traces = new Traces();
     const traceSf = assertDefined(this.traceSf);
     traces.addTrace(traceSf);
-    return new Presenter(traceSf, traces, new InMemoryStorage(), callback);
+    return new Presenter(traceSf, traces, storage, callback);
   }
 
   override getPositionUpdate(): TracePositionUpdate {
@@ -286,6 +288,7 @@ class PresenterSurfaceFlingerTest extends AbstractHierarchyViewerPresenterTest<U
         };
         presenter = this.createPresenter(
           notifyViewCallback as NotifyHierarchyViewCallbackType<UiData>,
+          new InMemoryStorage(),
         );
       });
 

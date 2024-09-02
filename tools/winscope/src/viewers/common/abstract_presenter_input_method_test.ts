@@ -16,6 +16,7 @@
 
 import {assertDefined} from 'common/assert_utils';
 import {InMemoryStorage} from 'common/in_memory_storage';
+import {Store} from 'common/store';
 import {TracePositionUpdate} from 'messaging/winscope_event';
 import {TraceBuilder} from 'test/unit/trace_builder';
 import {TreeNodeUtils} from 'test/unit/tree_node_utils';
@@ -120,15 +121,11 @@ export abstract class AbstractPresenterInputMethodTest extends AbstractHierarchy
 
   override createPresenter(
     callback: NotifyHierarchyViewCallbackType<ImeUiData>,
+    storage: Store,
   ): AbstractPresenterInputMethod {
     const traces = assertDefined(this.traces);
     const trace = assertDefined(traces.getTrace(this.imeTraceType));
-    return new this.PresenterInputMethod(
-      trace,
-      traces,
-      new InMemoryStorage(),
-      callback,
-    );
+    return new this.PresenterInputMethod(trace, traces, storage, callback);
   }
 
   override getPositionUpdate(): TracePositionUpdate {
