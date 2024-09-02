@@ -16,6 +16,7 @@
 
 import {assertDefined} from 'common/assert_utils';
 import {FunctionUtils} from 'common/function_utils';
+import {Store} from 'common/store';
 import {TracePositionUpdate, WinscopeEvent} from 'messaging/winscope_event';
 import {
   EmitEvent,
@@ -54,7 +55,7 @@ export abstract class AbstractHierarchyViewerPresenter<
   constructor(
     private readonly trace: Trace<HierarchyTreeNode> | undefined,
     protected readonly traces: Traces,
-    protected readonly storage: Readonly<Storage>,
+    protected readonly storage: Readonly<Store>,
     private readonly notifyViewCallback: NotifyHierarchyViewCallbackType<UiData>,
     protected readonly uiData: UiData,
   ) {

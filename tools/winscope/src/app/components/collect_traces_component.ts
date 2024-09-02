@@ -28,6 +28,7 @@ import {MatDialog} from '@angular/material/dialog';
 import {assertDefined} from 'common/assert_utils';
 import {FunctionUtils} from 'common/function_utils';
 import {PersistentStoreProxy} from 'common/persistent_store_proxy';
+import {Store} from 'common/store';
 import {UserNotifier} from 'common/user_notifier';
 import {Analytics} from 'logging/analytics';
 import {ProgressListener} from 'messaging/progress_listener';
@@ -436,7 +437,7 @@ export class CollectTracesComponent
   ];
 
   @Input() adbConnection: AdbConnection | undefined;
-  @Input() storage: Storage | undefined;
+  @Input() storage: Store | undefined;
 
   @Output() readonly filesCollected = new EventEmitter<AdbFiles>();
 
@@ -470,7 +471,7 @@ export class CollectTracesComponent
 
   onDeviceClick(device: AdbDevice) {
     this.selectedDevice = device;
-    this.storage?.setItem(this.storeKeyLastDevice, device.id);
+    this.storage?.add(this.storeKeyLastDevice, device.id);
     this.changeDetectorRef.detectChanges();
   }
 
@@ -534,7 +535,7 @@ export class CollectTracesComponent
     }
 
     const devices = connection.getDevices();
-    const lastId = this.storage?.getItem(this.storeKeyLastDevice) ?? undefined;
+    const lastId = this.storage?.get(this.storeKeyLastDevice) ?? undefined;
     if (
       this.selectedDevice &&
       !devices.find((d) => d.id === this.selectedDevice?.id)
@@ -546,7 +547,7 @@ export class CollectTracesComponent
       const device = devices.find((d) => d.id === lastId);
       if (device && device.authorized) {
         this.selectedDevice = device;
-        this.storage?.setItem(this.storeKeyLastDevice, device.id);
+        this.storage?.add(this.storeKeyLastDevice, device.id);
         return false;
       }
     }
@@ -573,7 +574,7 @@ export class CollectTracesComponent
   }
 
   async onChangeDeviceButton() {
-    this.storage?.setItem(this.storeKeyLastDevice, '');
+    this.storage?.add(this.storeKeyLastDevice, '');
     this.selectedDevice = undefined;
     await this.adbConnection?.restartConnection();
   }
@@ -591,7 +592,7 @@ export class CollectTracesComponent
     const requestedTraces = this.getRequestedTraces();
 
     const imeReq = requestedTraces.includes('ime');
-    const doNotShowDialog = !!this.storage?.getItem(this.storeKeyImeWarning);
+    const doNotShowDialog = !!this.storage?.get(this.storeKeyImeWarning);
 
     if (!imeReq || doNotShowDialog) {
       await this.requestTraces(requestedTraces);
@@ -627,7 +628,7 @@ export class CollectTracesComponent
         .beforeClosed()
         .subscribe((result: WarningDialogResult | undefined) => {
           if (this.storage && result?.selectedOptions.includes(optionText)) {
-            this.storage.setItem(this.storeKeyImeWarning, 'true');
+            this.storage.add(this.storeKeyImeWarning, 'true');
           }
           if (result?.closeActionText === closeText) {
             this.requestTraces(requestedTraces);
@@ -833,7 +834,7 @@ export class CollectTracesComponent
   private getRequestedDumps(): string[] {
     let dumpConfig = assertDefined(this.dumpConfig);
     if (this.refreshDumps && this.storage) {
-      const storedConfig = this.storage.getItem(this.storeKeyDumpConfig);
+      const storedConfig = this.storage.get(this.storeKeyDumpConfig);
       if (storedConfig) {
         dumpConfig = JSON.parse(storedConfig);
       }

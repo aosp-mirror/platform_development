@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 import {PersistentStoreProxy} from 'common/persistent_store_proxy';
+import {Store} from 'common/store';
 import {Trace} from 'trace/trace';
 import {Traces} from 'trace/traces';
 import {TraceType} from 'trace/trace_type';
@@ -61,7 +62,7 @@ export class PresenterInputMethodClients extends AbstractPresenterInputMethod {
   constructor(
     trace: Trace<HierarchyTreeNode>,
     traces: Traces,
-    storage: Storage,
+    storage: Store,
     notifyViewCallback: NotifyHierarchyViewCallbackType<ImeUiData>,
   ) {
     super(trace, traces, storage, notifyViewCallback);
