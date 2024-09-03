@@ -285,7 +285,7 @@ export abstract class AbstractHierarchyViewerPresenterTest<
           await presenter.onAppEvent(this.getPositionUpdate());
           let nodeWithLongName = assertDefined(
             assertDefined(uiData.hierarchyTrees)[0].findDfs(
-              UiTreeUtils.makeIdFilter(longName),
+              UiTreeUtils.makeNodeFilter(longName),
             ),
           );
           expect(nodeWithLongName.getDisplayName()).toEqual(shortName);
@@ -296,7 +296,7 @@ export abstract class AbstractHierarchyViewerPresenterTest<
           expect(uiData.hierarchyUserOptions).toEqual(userOptions);
           nodeWithLongName = assertDefined(
             assertDefined(uiData.hierarchyTrees)[0].findDfs(
-              UiTreeUtils.makeIdFilter(longName),
+              UiTreeUtils.makeNodeFilter(longName),
             ),
           );
           expect(longName).toContain(nodeWithLongName.getDisplayName());
@@ -341,7 +341,7 @@ export abstract class AbstractHierarchyViewerPresenterTest<
         pinNode(nonMatchNode);
         expect(uiData.pinnedItems).toEqual([nonMatchNode]);
 
-        await presenter.onHierarchyFilterChange(this.hierarchyFilterString);
+        await presenter.onHierarchyFilterChange(this.hierarchyFilterString, []);
         expect(this.getTotalHierarchyChildren(uiData)).toEqual(
           this.expectedHierarchyChildrenAfterStringFilter,
         );
@@ -441,7 +441,10 @@ export abstract class AbstractHierarchyViewerPresenterTest<
           assertDefined(uiData.propertiesTree).getAllChildren().length,
         ).toEqual(this.numberOfNonDefaultProperties);
 
-        await presenter.onPropertiesFilterChange(this.propertiesFilterString);
+        await presenter.onPropertiesFilterChange(
+          this.propertiesFilterString,
+          [],
+        );
         expect(
           assertDefined(uiData.propertiesTree).getAllChildren().length,
         ).toEqual(this.numberOfFilteredProperties);

@@ -15,6 +15,7 @@
  */
 
 import {assertDefined} from 'common/assert_utils';
+import {FilterFlag} from 'common/filter_flag';
 import {Trace, TraceEntry} from 'trace/trace';
 import {TraceType} from 'trace/trace_type';
 import {HierarchyTreeNode} from 'trace/tree_node/hierarchy_tree_node';
@@ -43,7 +44,7 @@ export type GetHierarchyTreeNameType = (
 ) => string;
 
 export class HierarchyPresenter {
-  private hierarchyFilter: TreeNodeFilter = UiTreeUtils.makeIdFilter('');
+  private hierarchyFilter: TreeNodeFilter = UiTreeUtils.makeNodeFilter('');
   private pinnedItems: UiHierarchyTreeNode[] = [];
   private pinnedIds: string[] = [];
 
@@ -321,8 +322,8 @@ export class HierarchyPresenter {
       );
   }
 
-  async applyHierarchyFilterChange(filterString: string) {
-    this.hierarchyFilter = UiTreeUtils.makeIdFilter(filterString);
+  async applyHierarchyFilterChange(filterString: string, flags: FilterFlag[]) {
+    this.hierarchyFilter = UiTreeUtils.makeNodeFilter(filterString, flags);
     this.currentFormattedTrees =
       await this.formatHierarchyTreesAndUpdatePinnedItems(
         this.currentHierarchyTrees,

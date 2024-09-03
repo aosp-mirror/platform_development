@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import {FilterFlag} from 'common/filter_flag';
 import {FunctionUtils} from 'common/function_utils';
 import {Timestamp} from 'common/time';
 import {
@@ -65,7 +66,7 @@ export abstract class AbstractLogViewerPresenter<UiData extends UiDataLog>
       ViewerEvents.LogFilterChange,
       async (event) => {
         const detail: LogFilterChangeDetail = (event as CustomEvent).detail;
-        await this.onFilterChange(detail.type, detail.value);
+        await this.onFilterChange(detail.type, detail.value, detail.flags);
       },
     );
     htmlElement.addEventListener(ViewerEvents.LogEntryClick, async (event) => {
@@ -105,8 +106,12 @@ export abstract class AbstractLogViewerPresenter<UiData extends UiDataLog>
     );
   }
 
-  async onFilterChange(type: LogFieldType, value: string[] | string) {
-    this.logPresenter.applyFilterChange(type, value);
+  async onFilterChange(
+    type: LogFieldType,
+    value: string[] | string,
+    flags: FilterFlag[],
+  ) {
+    this.logPresenter.applyFilterChange(type, value, flags);
     await this.updatePropertiesTree();
     this.uiData.currentIndex = this.logPresenter.getCurrentIndex();
     this.uiData.selectedIndex = this.logPresenter.getSelectedIndex();
