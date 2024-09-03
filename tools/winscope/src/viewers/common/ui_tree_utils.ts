@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import {FilterFlag, makeFilterPredicate} from 'common/filter_flag';
 import {
   PropertySource,
   PropertyTreeNode,
@@ -54,24 +55,17 @@ export class UiTreeUtils {
     );
   };
 
-  static makeIdFilter(filterString: string): TreeNodeFilter {
-    const filter = (node: TreeNode) => {
-      const regex = new RegExp(filterString, 'i');
-      return filterString.length === 0 || regex.test(node.id);
-    };
-    return filter;
-  }
-
-  static makePropertyFilter(filterString: string): TreeNodeFilter {
-    const filter = (node: TreeNode) => {
-      const regex = new RegExp(filterString, 'i');
+  static makeNodeFilter(
+    filterString: string,
+    flags: FilterFlag[] = [],
+  ): TreeNodeFilter {
+    const predicate = makeFilterPredicate(filterString, flags);
+    return (node: TreeNode) => {
       return (
-        filterString.length === 0 ||
-        regex.test(node.name) ||
-        (node instanceof PropertyTreeNode && regex.test(node.formattedValue()))
+        predicate(node.id) ||
+        (node instanceof PropertyTreeNode && predicate(node.formattedValue()))
       );
     };
-    return filter;
   }
 
   static makeIdMatchFilter(targetId: string): TreeNodeFilter {
