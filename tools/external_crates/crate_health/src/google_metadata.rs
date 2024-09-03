@@ -20,11 +20,11 @@ use std::{
 use anyhow::{anyhow, Result};
 use chrono::{DateTime, Datelike, Local};
 use license_checker::LicenseState;
+use name_and_version::NamedAndVersioned;
 
 use crate::{
     license::most_restrictive_type,
     metadata::{self, Identifier, MetaData},
-    NamedAndVersioned,
 };
 
 pub struct GoogleMetadata {
