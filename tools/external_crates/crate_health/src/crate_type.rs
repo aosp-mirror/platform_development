@@ -24,13 +24,11 @@ use cargo::{
     util::toml::read_manifest,
     Config,
 };
+use name_and_version::{IsUpgradableTo, NameAndVersionRef, NamedAndVersioned};
 use rooted_path::RootedPath;
 use semver::Version;
 
-use crate::{
-    copy_dir, ensure_exists_and_empty, name_and_version::IsUpgradableTo, CrateError,
-    NameAndVersionRef, NamedAndVersioned,
-};
+use crate::{copy_dir, ensure_exists_and_empty, CrateError};
 
 #[derive(Debug)]
 pub struct Crate {

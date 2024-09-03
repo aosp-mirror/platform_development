@@ -14,11 +14,10 @@
 
 use std::collections::{BTreeMap, HashSet};
 
-use anyhow::Result;
 use itertools::Itertools;
 use semver::Version;
 
-use crate::{CrateError, IsUpgradableTo, NameAndVersion, NamedAndVersioned};
+use crate::{Error, IsUpgradableTo, NameAndVersion, NamedAndVersioned};
 
 pub trait NameAndVersionMap {
     type Value;
@@ -26,7 +25,7 @@ pub trait NameAndVersionMap {
     fn map_field(&self) -> &BTreeMap<NameAndVersion, Self::Value>;
     fn map_field_mut(&mut self) -> &mut BTreeMap<NameAndVersion, Self::Value>;
 
-    fn insert_or_error(&mut self, key: NameAndVersion, val: Self::Value) -> Result<(), CrateError>;
+    fn insert_or_error(&mut self, key: NameAndVersion, val: Self::Value) -> Result<(), Error>;
     fn num_crates(&self) -> usize;
     fn contains_name(&self, name: &str) -> bool {
         self.get_versions(name).next().is_some()
@@ -73,9 +72,9 @@ impl<ValueType> NameAndVersionMap for BTreeMap<NameAndVersion, ValueType> {
         self
     }
 
-    fn insert_or_error(&mut self, key: NameAndVersion, val: Self::Value) -> Result<(), CrateError> {
+    fn insert_or_error(&mut self, key: NameAndVersion, val: Self::Value) -> Result<(), Error> {
         if self.contains_key(&key) {
-            Err(CrateError::DuplicateCrateVersion(key.name().to_string(), key.version().clone()))
+            Err(Error::DuplicateVersion(key.name().to_string(), key.version().clone()))
         } else {
             self.insert(key, val);
             Ok(())
@@ -126,7 +125,7 @@ impl<ValueType> NameAndVersionMap for BTreeMap<NameAndVersion, ValueType> {
         f: F,
     ) -> Box<dyn Iterator<Item = (&'a NameAndVersion, &'a Self::Value)> + 'a> {
         let mut kept_keys: HashSet<NameAndVersion> = HashSet::new();
-        for (key, mut group) in self.iter().group_by(|item| item.0.name()).into_iter() {
+        for (key, mut group) in self.iter().chunk_by(|item| item.0.name()).into_iter() {
             kept_keys.extend(
                 f(&mut group).into_iter().map(move |v| NameAndVersion::new(key.to_string(), v)),
             );
@@ -168,30 +167,27 @@ pub fn most_recent_version<'a, ValueType>(
 }
 
 #[cfg(test)]
-pub fn try_name_version_map_from_iter<'a, ValueType>(
-    nvs: impl IntoIterator<Item = (&'a str, &'a str, ValueType)>,
-) -> Result<BTreeMap<NameAndVersion, ValueType>> {
-    let mut test_map = BTreeMap::new();
-    for (name, version, val) in nvs {
-        test_map.insert_or_error(NameAndVersion::try_from_str(name, version)?, val)?;
-    }
-    Ok(test_map)
-}
-
-#[cfg(test)]
 mod tests {
     use crate::{NameAndVersion, NameAndVersionRef};
 
     use super::*;
-    use anyhow::Result;
     use itertools::assert_equal;
 
+    fn try_name_version_map_from_iter<'a, ValueType>(
+        nvs: impl IntoIterator<Item = (&'a str, &'a str, ValueType)>,
+    ) -> Result<BTreeMap<NameAndVersion, ValueType>, Error> {
+        let mut test_map = BTreeMap::new();
+        for (name, version, val) in nvs {
+            test_map.insert_or_error(NameAndVersion::try_from_str(name, version)?, val)?;
+        }
+        Ok(test_map)
+    }
+
     #[test]
-    fn test_name_and_version_map_empty() -> Result<()> {
+    fn test_name_and_version_map_empty() -> Result<(), Error> {
         let mut test_map: BTreeMap<NameAndVersion, String> = BTreeMap::new();
         let v = Version::parse("1.2.3")?;
         let nvp = NameAndVersionRef::new("foo", &v);
-        // let nvp = NameAndVersion::try_from_str("foo", "1.2.3")?;
         assert_eq!(test_map.num_crates(), 0);
         assert!(!test_map.contains_key(&nvp as &dyn NamedAndVersioned));
         assert!(!test_map.contains_name("foo"));
@@ -201,7 +197,7 @@ mod tests {
     }
 
     #[test]
-    fn test_name_and_version_map_nonempty() -> Result<()> {
+    fn test_name_and_version_map_nonempty() -> Result<(), Error> {
         let mut test_map = try_name_version_map_from_iter([
             ("foo", "1.2.3", "foo v1".to_string()),
             ("foo", "2.3.4", "foo v2".to_string()),
@@ -261,7 +257,7 @@ mod tests {
     }
 
     #[test]
-    fn test_filter_versions() -> Result<()> {
+    fn test_filter_versions() -> Result<(), Error> {
         let test_map = try_name_version_map_from_iter([
             ("foo", "1.2.3", ()),
             ("foo", "2.3.4", ()),

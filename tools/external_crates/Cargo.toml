@@ -1,8 +1,9 @@
 [workspace]
 members = [
     "crate_health",
-    "crate_health_proc_macros",
     "license_checker",
+    "name_and_version",
+    "name_and_version_proc_macros",
     "rooted_path",
 ]
 resolver = "2"
