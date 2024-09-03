@@ -30,6 +30,7 @@ import {DisplayIdentifier} from 'viewers/common/display_identifier';
 import {HierarchyPresenter} from 'viewers/common/hierarchy_presenter';
 import {PropertiesPresenter} from 'viewers/common/properties_presenter';
 import {RectsPresenter} from 'viewers/common/rects_presenter';
+import {TextFilter} from 'viewers/common/text_filter';
 import {UiHierarchyTreeNode} from 'viewers/common/ui_hierarchy_tree_node';
 import {UI_RECT_FACTORY} from 'viewers/common/ui_rect_factory';
 import {UserOptions} from 'viewers/common/user_options';
@@ -68,6 +69,11 @@ export class Presenter extends AbstractHierarchyViewerPresenter<UiData> {
           enabled: false,
         },
       },
+      this.storage,
+    ),
+    PersistentStoreProxy.new<TextFilter>(
+      'WmHierarchyFilter',
+      new TextFilter('', []),
       this.storage,
     ),
     Presenter.DENYLIST_PROPERTY_NAMES,
@@ -115,6 +121,11 @@ export class Presenter extends AbstractHierarchyViewerPresenter<UiData> {
               `,
         },
       },
+      this.storage,
+    ),
+    PersistentStoreProxy.new<TextFilter>(
+      'WmPropertiesFilter',
+      new TextFilter('', []),
       this.storage,
     ),
     Presenter.DENYLIST_PROPERTY_NAMES,

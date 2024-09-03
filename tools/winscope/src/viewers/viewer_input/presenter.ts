@@ -66,9 +66,14 @@ export class Presenter extends AbstractLogViewerPresenter<UiData> {
   private readonly allInputLayerIds = new Set<number>();
 
   protected override logPresenter = new LogPresenter<InputEntry>();
-  protected override propertiesPresenter = new PropertiesPresenter({}, []);
+  protected override propertiesPresenter = new PropertiesPresenter(
+    {},
+    undefined,
+    [],
+  );
   protected dispatchPropertiesPresenter = new PropertiesPresenter(
     {},
+    undefined,
     Presenter.DENYLIST_DISPATCH_PROPERTIES,
     [new DispatchEntryFormatter(this.layerIdToName)],
   );

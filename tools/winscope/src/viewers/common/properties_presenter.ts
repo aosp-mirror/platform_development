@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-import {FilterFlag} from 'common/filter_flag';
 import {HierarchyTreeNode} from 'trace/tree_node/hierarchy_tree_node';
 import {Operation} from 'trace/tree_node/operations/operation';
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
@@ -22,23 +21,34 @@ import {TreeNode} from 'trace/tree_node/tree_node';
 import {IsModifiedCallbackType} from './add_diffs';
 import {AddDiffsPropertiesTree} from './add_diffs_properties_tree';
 import {Filter} from './operations/filter';
+import {TextFilter} from './text_filter';
 import {UiPropertyTreeNode} from './ui_property_tree_node';
 import {UiTreeFormatter} from './ui_tree_formatter';
 import {TreeNodeFilter, UiTreeUtils} from './ui_tree_utils';
 import {UserOptions} from './user_options';
 
 export class PropertiesPresenter {
-  private propertiesFilter: TreeNodeFilter = UiTreeUtils.makeNodeFilter('');
+  private propertiesFilter: TreeNodeFilter;
   private highlightedProperty = '';
   private propertiesTree: PropertyTreeNode | undefined;
   private formattedTree: UiPropertyTreeNode | undefined;
 
   constructor(
     private userOptions: UserOptions,
+    private textFilter: TextFilter | undefined,
     private propertiesDenylist: string[],
     private customOperations?: Array<Operation<UiPropertyTreeNode>>,
     private defaultAllowlist: string[] = [],
-  ) {}
+  ) {
+    if (this.textFilter) {
+      this.propertiesFilter = UiTreeUtils.makeNodeFilter(
+        this.textFilter.filterString,
+        this.textFilter.flags,
+      );
+    } else {
+      this.propertiesFilter = UiTreeUtils.makeNodeFilter('');
+    }
+  }
 
   getUserOptions() {
     return this.userOptions;
@@ -68,8 +78,16 @@ export class PropertiesPresenter {
     }
   }
 
-  applyPropertiesFilterChange(filterString: string, flags: FilterFlag[]) {
-    this.propertiesFilter = UiTreeUtils.makeNodeFilter(filterString, flags);
+  getTextFilter(): TextFilter | undefined {
+    return this.textFilter;
+  }
+
+  applyPropertiesFilterChange(textFilter: TextFilter) {
+    this.textFilter = textFilter;
+    this.propertiesFilter = UiTreeUtils.makeNodeFilter(
+      textFilter.filterString,
+      textFilter.flags,
+    );
   }
 
   applyPropertiesUserOptionsChange(userOptions: UserOptions) {

@@ -27,6 +27,7 @@ import {HierarchyTreeNode} from 'trace/tree_node/hierarchy_tree_node';
 import {NotifyHierarchyViewCallbackType} from 'viewers/common/abstract_hierarchy_viewer_presenter';
 import {AbstractHierarchyViewerPresenterTest} from 'viewers/common/abstract_hierarchy_viewer_presenter_test';
 import {DiffType} from 'viewers/common/diff_type';
+import {TextFilter} from 'viewers/common/text_filter';
 import {UiHierarchyTreeNode} from 'viewers/common/ui_hierarchy_tree_node';
 import {UiTreeUtils} from 'viewers/common/ui_tree_utils';
 import {Presenter} from './presenter';
@@ -48,7 +49,7 @@ class PresenterWindowManagerTest extends AbstractHierarchyViewerPresenterTest<Ui
   override readonly numberOfDefaultProperties = 29;
   override readonly numberOfNonDefaultProperties = 21;
   override readonly expectedFirstRect = new Rect(0, 0, 1080, 2400);
-  override readonly propertiesFilterString = 'requested';
+  override readonly propertiesFilter = new TextFilter('requested', []);
   override readonly expectedTotalRects = 12;
   override readonly expectedVisibleRects = 7;
   override readonly treeNodeLongName =
@@ -56,7 +57,7 @@ class PresenterWindowManagerTest extends AbstractHierarchyViewerPresenterTest<Ui
   override readonly treeNodeShortName =
     'com.google.(...).NexusLauncherActivity';
   override readonly numberOfFilteredProperties = 2;
-  override readonly hierarchyFilterString = 'ScreenDecor';
+  override readonly hierarchyFilter = new TextFilter('ScreenDecor', []);
   override readonly expectedHierarchyChildrenAfterStringFilter = 2;
   override readonly propertyWithDiff = 'animator';
   override readonly expectedPropertyDiffType = DiffType.ADDED;

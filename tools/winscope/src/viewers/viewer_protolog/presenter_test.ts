@@ -15,6 +15,7 @@
  */
 
 import {assertDefined} from 'common/assert_utils';
+import {InMemoryStorage} from 'common/in_memory_storage';
 import {TracePositionUpdate} from 'messaging/winscope_event';
 import {PropertyTreeBuilder} from 'test/unit/property_tree_builder';
 import {TimestampConverterUtils} from 'test/unit/timestamp_converter_utils';
@@ -200,13 +201,17 @@ class PresenterProtologTest extends AbstractLogViewerPresenterTest<UiData> {
     const emptyTrace = new TraceBuilder<PropertyTreeNode>()
       .setEntries([])
       .build();
-    return new Presenter(emptyTrace, callback);
+    return new Presenter(emptyTrace, callback, new InMemoryStorage());
   }
 
   override async createPresenter(
     callback: NotifyLogViewCallbackType<UiData>,
   ): Promise<Presenter> {
-    const presenter = new Presenter(assertDefined(this.trace), callback);
+    const presenter = new Presenter(
+      assertDefined(this.trace),
+      callback,
+      new InMemoryStorage(),
+    );
     await presenter.onAppEvent(this.getPositionUpdate()); // trigger initialization
     return presenter;
   }

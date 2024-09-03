@@ -83,11 +83,24 @@ export class RectsPresenter {
     this.updateRectsToDrawAndRectIdToShowState();
   }
 
+  updateRectShowStates(
+    rectIdToShowState: Map<string, RectShowState> | undefined,
+  ) {
+    this.rectFilter.clear();
+    if (rectIdToShowState) {
+      for (const [id, state] of rectIdToShowState.entries()) {
+        this.rectFilter.updateRectShowState(id, state);
+      }
+    }
+    this.updateRectsToDrawAndRectIdToShowState();
+  }
+
   clear() {
     this.allCurrentRects = [];
     this.rectsToDraw = [];
     this.displays = [];
     this.rectIdToShowState = undefined;
+    this.rectFilter.clear();
   }
 
   private updateRectsToDrawAndRectIdToShowState() {

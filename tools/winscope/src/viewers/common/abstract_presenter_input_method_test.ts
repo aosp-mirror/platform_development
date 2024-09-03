@@ -32,6 +32,7 @@ import {PresenterInputMethodService} from 'viewers/viewer_input_method_service/p
 import {NotifyHierarchyViewCallbackType} from './abstract_hierarchy_viewer_presenter';
 import {AbstractHierarchyViewerPresenterTest} from './abstract_hierarchy_viewer_presenter_test';
 import {AbstractPresenterInputMethod} from './abstract_presenter_input_method';
+import {TextFilter} from './text_filter';
 import {UiDataHierarchy} from './ui_data_hierarchy';
 import {UiHierarchyTreeNode} from './ui_hierarchy_tree_node';
 import {UiPropertyTreeNode} from './ui_property_tree_node';
@@ -49,7 +50,7 @@ export abstract class AbstractPresenterInputMethodTest extends AbstractHierarchy
   override readonly shouldExecuteDumpTests = true;
   override readonly shouldExecuteSimplifyNamesTest = false;
 
-  override readonly hierarchyFilterString = 'Reject all';
+  override readonly hierarchyFilter = new TextFilter('Reject all', []);
   override readonly expectedHierarchyChildrenAfterStringFilter = 0;
 
   override async setUpTestEnvironment(): Promise<void> {

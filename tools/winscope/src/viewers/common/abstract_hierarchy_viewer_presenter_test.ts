@@ -30,6 +30,7 @@ import {RectShowState} from 'viewers/common/rect_show_state';
 import {UiHierarchyTreeNode} from 'viewers/common/ui_hierarchy_tree_node';
 import {UiTreeUtils} from 'viewers/common/ui_tree_utils';
 import {UserOptions} from 'viewers/common/user_options';
+import {TextFilter} from './text_filter';
 import {UiDataHierarchy} from './ui_data_hierarchy';
 
 export abstract class AbstractHierarchyViewerPresenterTest<
@@ -335,13 +336,14 @@ export abstract class AbstractHierarchyViewerPresenterTest<
             ?.at(0)
             ?.findDfs(
               (node) =>
-                !node.isRoot() && !node.id.includes(this.hierarchyFilterString),
+                !node.isRoot() &&
+                !node.id.includes(this.hierarchyFilter.filterString),
             ),
         );
         pinNode(nonMatchNode);
         expect(uiData.pinnedItems).toEqual([nonMatchNode]);
 
-        await presenter.onHierarchyFilterChange(this.hierarchyFilterString, []);
+        await presenter.onHierarchyFilterChange(this.hierarchyFilter);
         expect(this.getTotalHierarchyChildren(uiData)).toEqual(
           this.expectedHierarchyChildrenAfterStringFilter,
         );
@@ -441,10 +443,7 @@ export abstract class AbstractHierarchyViewerPresenterTest<
           assertDefined(uiData.propertiesTree).getAllChildren().length,
         ).toEqual(this.numberOfNonDefaultProperties);
 
-        await presenter.onPropertiesFilterChange(
-          this.propertiesFilterString,
-          [],
-        );
+        await presenter.onPropertiesFilterChange(this.propertiesFilter);
         expect(
           assertDefined(uiData.propertiesTree).getAllChildren().length,
         ).toEqual(this.numberOfFilteredProperties);
@@ -636,9 +635,9 @@ export abstract class AbstractHierarchyViewerPresenterTest<
   abstract readonly shouldExecuteSimplifyNamesTest: boolean;
   abstract readonly numberOfDefaultProperties: number;
   abstract readonly numberOfNonDefaultProperties: number;
-  abstract readonly propertiesFilterString: string;
+  abstract readonly propertiesFilter: TextFilter;
   abstract readonly numberOfFilteredProperties: number;
-  abstract readonly hierarchyFilterString: string;
+  abstract readonly hierarchyFilter: TextFilter;
   abstract readonly expectedHierarchyChildrenAfterStringFilter: number;
 
   readonly expectedFirstRect?: Rect;
