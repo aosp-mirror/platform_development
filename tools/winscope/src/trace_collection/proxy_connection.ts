@@ -15,7 +15,7 @@
  */
 
 import {assertDefined} from 'common/assert_utils';
-import {FunctionUtils, OnProgressUpdateType} from 'common/function_utils';
+import {FunctionUtils} from 'common/function_utils';
 import {
   HttpRequest,
   HttpRequestHeaderType,
@@ -24,17 +24,20 @@ import {
 } from 'common/http_request';
 import {PersistentStore} from 'common/persistent_store';
 import {TimeUtils} from 'common/time_utils';
+import {UserNotifier} from 'common/user_notifier';
 import {Analytics} from 'logging/analytics';
+import {ProxyTracingErrors} from 'messaging/user_warnings';
 import {AdbConnection, OnRequestSuccessCallback} from './adb_connection';
 import {AdbDevice} from './adb_device';
 import {ConnectionState} from './connection_state';
 import {ProxyEndpoint} from './proxy_endpoint';
-import {TraceConfigurationMap, TRACES} from './trace_collection_utils';
 import {TraceRequest} from './trace_request';
 
 export class ProxyConnection extends AdbConnection {
-  static readonly VERSION = '2.3.0';
+  static readonly VERSION = '3.2.0';
   static readonly WINSCOPE_PROXY_URL = 'http://localhost:5544';
+
+  private static readonly MULTI_DISPLAY_SCREENRECORD_VERSION = '1.4';
 
   private readonly store = new PersistentStore();
   private readonly storeKeySecurityToken = 'adb.proxyKey';
@@ -43,34 +46,32 @@ export class ProxyConnection extends AdbConnection {
   private errorText = '';
   private securityToken = '';
   private devices: AdbDevice[] = [];
-  private selectedDevice: AdbDevice | undefined;
+  selectedDevice: AdbDevice | undefined;
   private requestedTraces: TraceRequest[] = [];
   private adbData: File[] = [];
-  private keepTraceAliveWorker: NodeJS.Timer | undefined;
-  private refreshDevicesWorker: NodeJS.Timer | undefined;
+  private keepTraceAliveWorker: number | undefined;
+  private refreshDevicesWorker: number | undefined;
   private detectStateChangeInUi: () => Promise<void> =
     FunctionUtils.DO_NOTHING_ASYNC;
-  private progressCallback: OnProgressUpdateType = FunctionUtils.DO_NOTHING;
-  private availableTracesChangeCallback: (
-    availableTracesConfig: TraceConfigurationMap,
-  ) => void = FunctionUtils.DO_NOTHING;
+  private availableTracesChangeCallback: (traces: string[]) => void =
+    FunctionUtils.DO_NOTHING;
+  private devicesChangeCallback: (devices: AdbDevice[]) => void =
+    FunctionUtils.DO_NOTHING;
 
   async initialize(
     detectStateChangeInUi: () => Promise<void>,
-    progressCallback: OnProgressUpdateType,
-    availableTracesChangeCallback: (
-      availableTracesConfig: TraceConfigurationMap,
-    ) => void,
+    availableTracesChangeCallback: (traces: string[]) => void,
+    devicesChangeCallback: (devices: AdbDevice[]) => void,
   ): Promise<void> {
     this.detectStateChangeInUi = detectStateChangeInUi;
-    this.progressCallback = progressCallback;
     this.availableTracesChangeCallback = availableTracesChangeCallback;
+    this.devicesChangeCallback = devicesChangeCallback;
 
     const urlParams = new URLSearchParams(window.location.search);
     if (urlParams.has('token')) {
       this.securityToken = assertDefined(urlParams.get('token'));
     } else {
-      this.securityToken = this.store?.get(this.storeKeySecurityToken) ?? '';
+      this.securityToken = this.store.get(this.storeKeySecurityToken) ?? '';
     }
     await this.setState(ConnectionState.CONNECTING);
   }
@@ -82,7 +83,7 @@ export class ProxyConnection extends AdbConnection {
   setSecurityToken(token: string) {
     if (token.length > 0) {
       this.securityToken = token;
-      this.store?.add(this.storeKeySecurityToken, token);
+      this.store.add(this.storeKeySecurityToken, token);
     }
   }
 
@@ -99,9 +100,9 @@ export class ProxyConnection extends AdbConnection {
   }
 
   onDestroy() {
-    clearInterval(this.refreshDevicesWorker);
+    window.clearInterval(this.refreshDevicesWorker);
     this.refreshDevicesWorker = undefined;
-    clearInterval(this.keepTraceAliveWorker);
+    window.clearInterval(this.keepTraceAliveWorker);
     this.keepTraceAliveWorker = undefined;
   }
 
@@ -112,6 +113,7 @@ export class ProxyConnection extends AdbConnection {
     if (requestedTraces.length === 0) {
       throw new Error('No traces requested');
     }
+    this.updateMediaBasedConfig(requestedTraces);
     this.selectedDevice = device;
     this.requestedTraces = requestedTraces;
     await this.setState(ConnectionState.STARTING_TRACE);
@@ -122,6 +124,7 @@ export class ProxyConnection extends AdbConnection {
       throw new Error('Trace not started before stopping');
     }
     await this.setState(ConnectionState.ENDING_TRACE);
+    this.requestedTraces = [];
   }
 
   async dumpState(
@@ -131,10 +134,30 @@ export class ProxyConnection extends AdbConnection {
     if (requestedDumps.length === 0) {
       throw new Error('No dumps requested');
     }
-    this.progressCallback(0);
     this.selectedDevice = device;
+    this.updateMediaBasedConfig(requestedDumps);
     this.requestedTraces = requestedDumps;
     await this.setState(ConnectionState.DUMPING_STATE);
+  }
+
+  private updateMediaBasedConfig(requestedConfig: TraceRequest[]) {
+    requestedConfig.forEach((req) => {
+      const displayConfig = req.config.find((c) => c.key === 'displays');
+      if (displayConfig?.value) {
+        if (Array.isArray(displayConfig.value)) {
+          displayConfig.value = displayConfig.value.map((display) => {
+            if (display[0] === '"') {
+              return display.split('"')[2].trim();
+            }
+            return display;
+          });
+        } else {
+          if (displayConfig.value[0] === '"') {
+            displayConfig.value = displayConfig.value.split('"')[2].trim();
+          }
+        }
+      }
+    });
   }
 
   async fetchLastTracingSessionData(device: AdbDevice): Promise<File[]> {
@@ -146,33 +169,20 @@ export class ProxyConnection extends AdbConnection {
   }
 
   private async updateAdbData(device: AdbDevice) {
-    if (this.requestedTraces.length === 0) {
-      await this.getFromProxy(
-        `${ProxyEndpoint.FETCH}${device.id}/`,
-        this.onSuccessFetchFiles,
-        'arraybuffer',
-      );
-    } else {
-      const fileNames = this.requestedTraces.map((t) => t.name);
-      for (let idx = 0; idx < fileNames.length; idx++) {
-        await this.getFromProxy(
-          `${ProxyEndpoint.FETCH}${device.id}/${fileNames[idx]}/`,
-          this.onSuccessFetchFiles,
-          'arraybuffer',
-        );
-        this.progressCallback((100 * (idx + 1)) / fileNames.length);
-      }
-      if (this.adbData.length === 0) {
-        Analytics.Proxy.logNoFilesFound();
-      }
-      this.requestedTraces = [];
+    await this.getFromProxy(
+      `${ProxyEndpoint.FETCH}${device.id}/`,
+      this.onSuccessFetchFiles,
+      'arraybuffer',
+    );
+    if (this.adbData.length === 0) {
+      Analytics.Proxy.logNoFilesFound();
     }
   }
 
-  private async onConnectionStateChange() {
+  private async onConnectionStateChange(newState: ConnectionState) {
     await this.detectStateChangeInUi();
 
-    switch (this.state) {
+    switch (newState) {
       case ConnectionState.ERROR:
         Analytics.Error.logProxyError(this.errorText);
         return;
@@ -182,12 +192,10 @@ export class ProxyConnection extends AdbConnection {
         return;
 
       case ConnectionState.IDLE:
-        if (this.selectedDevice) {
+        {
           const isWaylandAvailable = await this.isWaylandAvailable();
           if (isWaylandAvailable) {
-            const availableTracesConfig = TRACES['default'];
-            Object.assign(availableTracesConfig, TRACES['arc']);
-            this.availableTracesChangeCallback(availableTracesConfig);
+            this.availableTracesChangeCallback(['wayland_trace']);
           }
         }
         return;
@@ -210,6 +218,24 @@ export class ProxyConnection extends AdbConnection {
       case ConnectionState.ENDING_TRACE:
         await this.postToProxy(
           `${ProxyEndpoint.END_TRACE}${assertDefined(this.selectedDevice).id}/`,
+          (response: HttpResponse) => {
+            const errors = JSON.parse(response.body);
+            if (Array.isArray(errors) && errors.length > 0) {
+              const processedErrors: string[] = errors.map((error: string) => {
+                const processed = error
+                  .replace("b'", "'")
+                  .replace('\\n', '')
+                  .replace(
+                    'please check your display state',
+                    'please check your display state (must be on at start of trace)',
+                  );
+                return processed;
+              });
+              UserNotifier.add(
+                new ProxyTracingErrors(processedErrors),
+              ).notify();
+            }
+          },
         );
         return;
 
@@ -217,13 +243,13 @@ export class ProxyConnection extends AdbConnection {
         await this.postToProxy(
           `${ProxyEndpoint.DUMP}${assertDefined(this.selectedDevice).id}/`,
           FunctionUtils.DO_NOTHING,
-          this.requestedTraces.map((t) => t.name),
+          this.requestedTraces,
         );
         return;
 
       case ConnectionState.LOADING_DATA:
         if (this.selectedDevice === undefined) {
-          throw new Error('No device found');
+          throw new Error('No device selected');
         }
         await this.updateAdbData(assertDefined(this.selectedDevice));
         return;
@@ -239,7 +265,7 @@ export class ProxyConnection extends AdbConnection {
       state !== ConnectionState.STARTING_TRACE &&
       state !== ConnectionState.TRACING
     ) {
-      clearInterval(this.keepTraceAliveWorker);
+      window.clearInterval(this.keepTraceAliveWorker);
       this.keepTraceAliveWorker = undefined;
       return;
     }
@@ -248,9 +274,14 @@ export class ProxyConnection extends AdbConnection {
       `${ProxyEndpoint.STATUS}${assertDefined(this.selectedDevice).id}/`,
       async (request: HttpResponse) => {
         if (request.text !== 'True') {
-          this.endTrace();
+          window.clearInterval(this.keepTraceAliveWorker);
+          this.keepTraceAliveWorker = undefined;
+          await this.endTrace();
+          if (this.state === ConnectionState.ENDING_TRACE) {
+            await this.setState(ConnectionState.TRACE_TIMEOUT);
+          }
         } else if (this.keepTraceAliveWorker === undefined) {
-          this.keepTraceAliveWorker = setInterval(
+          this.keepTraceAliveWorker = window.setInterval(
             () => this.keepTraceAlive(),
             1000,
           );
@@ -276,7 +307,7 @@ export class ProxyConnection extends AdbConnection {
     }
     this.state = state;
     this.errorText = errorText;
-    await this.onConnectionStateChange();
+    await this.onConnectionStateChange(state);
   }
 
   private async requestDevices() {
@@ -285,7 +316,7 @@ export class ProxyConnection extends AdbConnection {
       this.state !== ConnectionState.CONNECTING
     ) {
       if (this.refreshDevicesWorker !== undefined) {
-        clearInterval(this.refreshDevicesWorker);
+        window.clearInterval(this.refreshDevicesWorker);
         this.refreshDevicesWorker = undefined;
       }
       return;
@@ -304,15 +335,41 @@ export class ProxyConnection extends AdbConnection {
           id: deviceId,
           authorized: devices[deviceId].authorized,
           model: devices[deviceId].model,
+          displays: devices[deviceId].displays.map((display: string) => {
+            const parts = display.split(' ').slice(1);
+            const displayNameStartIndex = parts.findIndex((part) =>
+              part.includes('displayName'),
+            );
+            if (displayNameStartIndex !== -1) {
+              const displayName = parts
+                .slice(displayNameStartIndex)
+                .join(' ')
+                .slice(12);
+              if (displayName.length > 2) {
+                return [displayName]
+                  .concat(parts.slice(0, displayNameStartIndex))
+                  .join(' ');
+              }
+            }
+            return parts.join(' ');
+          }),
+          multiDisplayScreenRecordingAvailable:
+            devices[deviceId].screenrecord_version >=
+            ProxyConnection.MULTI_DISPLAY_SCREENRECORD_VERSION,
         };
       });
+      this.devicesChangeCallback(this.devices);
       if (this.refreshDevicesWorker === undefined) {
-        this.refreshDevicesWorker = setInterval(
+        this.refreshDevicesWorker = window.setInterval(
           () => this.requestDevices(),
           1000,
         );
       }
-      this.setState(ConnectionState.IDLE);
+      if (this.state === ConnectionState.CONNECTING) {
+        this.setState(ConnectionState.IDLE);
+      } else if (this.state === ConnectionState.IDLE) {
+        this.detectStateChangeInUi();
+      }
     } catch (err) {
       this.setState(
         ConnectionState.ERROR,
@@ -361,7 +418,7 @@ export class ProxyConnection extends AdbConnection {
 
   private async getFromProxy(
     path: string,
-    onSuccess: OnRequestSuccessCallback = FunctionUtils.DO_NOTHING,
+    onSuccess: OnRequestSuccessCallback,
     type?: XMLHttpRequest['responseType'],
   ) {
     const response = await HttpRequest.get(
@@ -374,7 +431,7 @@ export class ProxyConnection extends AdbConnection {
 
   private async postToProxy(
     path: string,
-    onSuccess: OnRequestSuccessCallback = FunctionUtils.DO_NOTHING,
+    onSuccess: OnRequestSuccessCallback,
     jsonRequest?: object,
   ) {
     const response = await HttpRequest.post(
@@ -387,7 +444,7 @@ export class ProxyConnection extends AdbConnection {
 
   private async processProxyResponse(
     response: HttpResponse,
-    onSuccess: OnRequestSuccessCallback = FunctionUtils.DO_NOTHING,
+    onSuccess: OnRequestSuccessCallback,
   ) {
     if (
       response.status === HttpRequestStatus.SUCCESS &&
@@ -424,7 +481,7 @@ export class ProxyConnection extends AdbConnection {
   }
 
   private getSecurityTokenHeader(): HttpRequestHeaderType {
-    const lastKey = this.store?.get(this.storeKeySecurityToken);
+    const lastKey = this.store.get(this.storeKeySecurityToken);
     if (lastKey !== undefined) {
       this.securityToken = lastKey;
     }

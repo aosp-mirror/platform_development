@@ -1,0 +1,104 @@
+// Copyright (C) 2024 The Android Open Source Project
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//      http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+// A proto definition used to parse METADATA file in third party projects.
+
+// This proto will only contain fields and values the updater cares about.
+// It is not intended to be the formal definition of METADATA file.
+
+// See google3/third_party/metadata.proto if you need to add more stuff to match
+// upstream.
+
+syntax = "proto2"; // As long as upstream is proto2...
+
+package external_updater;
+
+message MetaData {
+  optional string name = 1;
+  optional string description = 3;
+  optional ThirdPartyMetaData third_party = 13;
+}
+
+enum LicenseType {
+  UNKNOWN = 0;
+  BY_EXCEPTION_ONLY = 1;
+  NOTICE = 2;
+  PERMISSIVE = 3;
+  RECIPROCAL = 4;
+  RESTRICTED_IF_STATICALLY_LINKED = 5;
+  RESTRICTED = 6;
+  UNENCUMBERED = 7;
+}
+
+enum DirectoryType {
+  PACKAGE = 1;
+  GOOGLE_INTERNAL = 4;
+}
+
+message ThirdPartyMetaData {
+  repeated URL url = 1;
+  optional string version = 2;
+  optional LicenseType license_type = 4;
+  optional string license_note = 5;
+  optional string local_modifications = 6;
+  optional Security security = 7;
+  optional Date last_upgrade_date = 10;
+  optional DirectoryType type = 11 [default = PACKAGE];
+  optional string homepage = 14;
+  repeated Identifier identifier = 15;
+}
+
+message URL {
+  enum Type {
+    UNKNOWN = 0;
+    HOMEPAGE = 1;
+    ARCHIVE = 2;
+    GIT = 3;
+    PIPER = 4;
+    SVN = 7;
+    HG = 8;
+    DARCS = 9;
+    OTHER = 11;
+  }
+
+  optional Type type = 1;
+
+  optional string value = 2;
+}
+
+message Identifier {
+  optional string type = 1;
+  optional string value = 3;
+  optional string version = 4;
+  optional bool primary_source = 6;
+}
+
+message Date {
+  optional int32 year = 1;
+  optional int32 month = 2;
+  optional int32 day = 3;
+}
+
+message Security {
+  enum Category {
+    SANDBOXED_ONLY = 1;
+    TRUSTED_DATA_ONLY = 2;
+    REVIEWED_AND_SECURE = 3;
+  }
+
+  optional Category category = 1;
+  optional string note = 2;
+  repeated string tag = 3;
+  repeated string mitigated_security_patch = 5;
+}

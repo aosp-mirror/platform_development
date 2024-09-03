@@ -18,18 +18,25 @@ import {browser, by, element, ElementFinder} from 'protractor';
 import {E2eTestUtils} from './utils';
 
 describe('Cross-Tool Protocol', () => {
+  const DEFAULT_TIMEOUT_MS = 20000;
+
   beforeEach(async () => {
     await browser.restart();
-
-    jasmine.DEFAULT_TIMEOUT_INTERVAL = 20000;
-    await browser.manage().timeouts().implicitlyWait(20000);
+    jasmine.DEFAULT_TIMEOUT_INTERVAL = DEFAULT_TIMEOUT_MS;
+    await E2eTestUtils.beforeEach(DEFAULT_TIMEOUT_MS);
     await E2eTestUtils.checkServerIsUp(
       'Remote tool mock',
       E2eTestUtils.REMOTE_TOOL_MOCK_URL,
     );
-    await E2eTestUtils.checkServerIsUp('Winscope', E2eTestUtils.WINSCOPE_URL);
-
     await browser.get(E2eTestUtils.REMOTE_TOOL_MOCK_URL);
+    await browser.wait(
+      async () => {
+        const handles = await browser.getAllWindowHandles();
+        return handles.length === 1;
+      },
+      20000,
+      'Remote tool mock tab is not open',
+    );
   });
 
   it('allows communication with ABT', async () => {
@@ -150,7 +157,10 @@ describe('Cross-Tool Protocol', () => {
     await browser.wait(
       async () => {
         const handles = await browser.getAllWindowHandles();
-        return handles.length >= 2;
+        if (handles.length < 2) return false;
+        await browser.switchTo().window(await getWindowHandleWinscope());
+        const opened = element(by.css('upload-traces'));
+        return await opened.isPresent();
       },
       20000,
       'The Winscope tab did not open',

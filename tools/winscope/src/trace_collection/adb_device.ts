@@ -18,4 +18,6 @@ export interface AdbDevice {
   id: string;
   authorized: boolean;
   model: string;
+  displays: string[];
+  multiDisplayScreenRecordingAvailable: boolean;
 }

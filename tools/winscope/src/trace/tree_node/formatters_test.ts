@@ -15,8 +15,8 @@
  */
 
 import {assertDefined} from 'common/assert_utils';
-import {IDENTITY_MATRIX} from 'common/geometry_types';
-import {TransformType} from 'parsers/surface_flinger/transform_utils';
+import {IDENTITY_MATRIX} from 'common/geometry/transform_matrix';
+import {TransformTypeFlags} from 'parsers/surface_flinger/transform_utils';
 import {PropertyTreeBuilder} from 'test/unit/property_tree_builder';
 import {TreeNodeUtils} from 'test/unit/tree_node_utils';
 import {
@@ -183,16 +183,16 @@ describe('Formatters', () => {
           TreeNodeUtils.makeMatrixNode(
             IDENTITY_MATRIX.dsdx,
             IDENTITY_MATRIX.dtdx,
-            IDENTITY_MATRIX.dsdy,
             IDENTITY_MATRIX.dtdy,
+            IDENTITY_MATRIX.dsdy,
           ),
         ),
-      ).toEqual('dsdx: 1, dtdx: 0, dsdy: 0, dtdy: 1');
+      ).toEqual('dsdx: 1, dtdx: 0, dtdy: 0, dsdy: 1');
       expect(
         MATRIX_FORMATTER.format(
           TreeNodeUtils.makeMatrixNode(0.4, 100, 1, 0.1232),
         ),
-      ).toEqual('dsdx: 0.400, dtdx: 100, dsdy: 1, dtdy: 0.123');
+      ).toEqual('dsdx: 0.400, dtdx: 100, dtdy: 1, dsdy: 0.123');
       expect(
         MATRIX_FORMATTER.format(TreeNodeUtils.makeMatrixNode(0, 0, 0, 0)),
       ).toEqual('null');
@@ -201,13 +201,13 @@ describe('Formatters', () => {
           TreeNodeUtils.makePropertyNode('test node', 'transform', {
             dsdx: 1,
             dtdx: 0,
-            dsdy: 0,
-            dtdy: 1,
             tx: 5,
+            dtdy: 0,
+            dsdy: 1,
             ty: 10,
           }),
         ),
-      ).toEqual('dsdx: 1, dtdx: 0, dsdy: 0, dtdy: 1, tx: 5, ty: 10');
+      ).toEqual('dsdx: 1, dtdx: 0, dtdy: 0, dsdy: 1, tx: 5, ty: 10');
     });
   });
 
@@ -215,37 +215,37 @@ describe('Formatters', () => {
     it('translates type correctly', () => {
       expect(
         TRANSFORM_FORMATTER.format(
-          TreeNodeUtils.makeTransformNode(TransformType.EMPTY),
+          TreeNodeUtils.makeTransformNode(TransformTypeFlags.EMPTY),
         ),
       ).toEqual('IDENTITY');
       expect(
         TRANSFORM_FORMATTER.format(
-          TreeNodeUtils.makeTransformNode(TransformType.TRANSLATE_VAL),
+          TreeNodeUtils.makeTransformNode(TransformTypeFlags.TRANSLATE_VAL),
         ),
       ).toEqual('TRANSLATE');
       expect(
         TRANSFORM_FORMATTER.format(
-          TreeNodeUtils.makeTransformNode(TransformType.SCALE_VAL),
+          TreeNodeUtils.makeTransformNode(TransformTypeFlags.SCALE_VAL),
         ),
       ).toEqual('SCALE');
       expect(
         TRANSFORM_FORMATTER.format(
-          TreeNodeUtils.makeTransformNode(TransformType.FLIP_H_VAL),
+          TreeNodeUtils.makeTransformNode(TransformTypeFlags.FLIP_H_VAL),
         ),
       ).toEqual('IDENTITY|FLIP_H');
       expect(
         TRANSFORM_FORMATTER.format(
-          TreeNodeUtils.makeTransformNode(TransformType.FLIP_V_VAL),
+          TreeNodeUtils.makeTransformNode(TransformTypeFlags.FLIP_V_VAL),
         ),
       ).toEqual('IDENTITY|FLIP_V');
       expect(
         TRANSFORM_FORMATTER.format(
-          TreeNodeUtils.makeTransformNode(TransformType.ROT_90_VAL),
+          TreeNodeUtils.makeTransformNode(TransformTypeFlags.ROT_90_VAL),
         ),
       ).toEqual('IDENTITY|ROT_90');
       expect(
         TRANSFORM_FORMATTER.format(
-          TreeNodeUtils.makeTransformNode(TransformType.ROT_INVALID_VAL),
+          TreeNodeUtils.makeTransformNode(TransformTypeFlags.ROT_INVALID_VAL),
         ),
       ).toEqual('IDENTITY|ROT_INVALID');
     });

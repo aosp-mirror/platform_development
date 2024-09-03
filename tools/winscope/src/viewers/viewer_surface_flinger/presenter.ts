@@ -16,8 +16,10 @@
 
 import {assertDefined} from 'common/assert_utils';
 import {PersistentStoreProxy} from 'common/persistent_store_proxy';
+import {Store} from 'common/store';
 import {
   TabbedViewSwitchRequest,
+  TracePositionUpdate,
   WinscopeEvent,
   WinscopeEventType,
 } from 'messaging/winscope_event';
@@ -25,8 +27,12 @@ import {LayerFlag} from 'parsers/surface_flinger/layer_flag';
 import {CustomQueryType} from 'trace/custom_query';
 import {Trace} from 'trace/trace';
 import {Traces} from 'trace/traces';
+import {TraceEntryFinder} from 'trace/trace_entry_finder';
 import {TraceType} from 'trace/trace_type';
-import {EMPTY_OBJ_STRING} from 'trace/tree_node/formatters';
+import {
+  EMPTY_OBJ_STRING,
+  FixedStringFormatter,
+} from 'trace/tree_node/formatters';
 import {HierarchyTreeNode} from 'trace/tree_node/hierarchy_tree_node';
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
 import {
@@ -46,7 +52,7 @@ import {RectsPresenter} from 'viewers/common/rects_presenter';
 import {UiHierarchyTreeNode} from 'viewers/common/ui_hierarchy_tree_node';
 import {UI_RECT_FACTORY} from 'viewers/common/ui_rect_factory';
 import {UserOptions} from 'viewers/common/user_options';
-import {UiRect} from 'viewers/components/rects/types2d';
+import {UiRect} from 'viewers/components/rects/ui_rect';
 import {UiData} from './ui_data';
 
 export class Presenter extends AbstractHierarchyViewerPresenter<UiData> {
@@ -106,7 +112,8 @@ export class Presenter extends AbstractHierarchyViewerPresenter<UiData> {
     ),
     (tree: HierarchyTreeNode) =>
       UI_RECT_FACTORY.makeUiRects(tree, this.viewCapturePackageNames),
-    makeDisplayIdentifiers,
+    (displays: UiRect[]) =>
+      makeDisplayIdentifiers(displays, this.wmFocusedDisplayId),
   );
   protected override propertiesPresenter = new PropertiesPresenter(
     PersistentStoreProxy.new<UserOptions>(
@@ -138,14 +145,17 @@ export class Presenter extends AbstractHierarchyViewerPresenter<UiData> {
   private viewCapturePackageNames: string[] = [];
   private curatedProperties: SfCuratedProperties | undefined;
   private displayPropertyGroups = false;
+  private wmTrace: Trace<HierarchyTreeNode> | undefined;
+  private wmFocusedDisplayId: number | undefined;
 
   constructor(
     trace: Trace<HierarchyTreeNode>,
     traces: Traces,
-    storage: Readonly<Storage>,
+    storage: Readonly<Store>,
     notifyViewCallback: NotifyHierarchyViewCallbackType<UiData>,
   ) {
     super(trace, traces, storage, notifyViewCallback, new UiData());
+    this.wmTrace = traces.getTrace(TraceType.WINDOW_MANAGER);
   }
 
   async onRectDoubleClick(rectId: string) {
@@ -167,6 +177,7 @@ export class Presenter extends AbstractHierarchyViewerPresenter<UiData> {
       WinscopeEventType.TRACE_POSITION_UPDATE,
       async (event) => {
         await this.initializeIfNeeded();
+        await this.setInitialWmActiveDisplay(event);
         await this.applyTracePositionUpdate(event);
         this.updateCuratedProperties();
         this.refreshUIData();
@@ -218,14 +229,23 @@ export class Presenter extends AbstractHierarchyViewerPresenter<UiData> {
         this.curatedProperties = undefined;
         this.displayPropertyGroups = false;
       } else {
-        this.curatedProperties = this.getCuratedProperties(propertiesTree);
+        this.curatedProperties = this.getCuratedProperties(
+          selectedHierarchyTree[1],
+          propertiesTree,
+        );
         this.displayPropertyGroups = true;
       }
+    } else {
+      this.curatedProperties = undefined;
+      this.displayPropertyGroups = false;
     }
   }
 
-  private getCuratedProperties(tree: PropertyTreeNode): SfCuratedProperties {
-    const inputWindowInfo = tree.getChildByName('inputWindowInfo');
+  private getCuratedProperties(
+    hTree: HierarchyTreeNode,
+    pTree: PropertyTreeNode,
+  ): SfCuratedProperties {
+    const inputWindowInfo = pTree.getChildByName('inputWindowInfo');
     const hasInputChannel =
       inputWindowInfo !== undefined &&
       inputWindowInfo.getAllChildren().length > 0;
@@ -236,58 +256,77 @@ export class Presenter extends AbstractHierarchyViewerPresenter<UiData> {
         ).formattedValue()
       : '-1';
 
-    const verboseFlags = tree.getChildByName('verboseFlags')?.formattedValue();
-    const flags = assertDefined(tree.getChildByName('flags'));
+    const verboseFlags = pTree.getChildByName('verboseFlags')?.formattedValue();
+    const flags = assertDefined(pTree.getChildByName('flags'));
     const curatedFlags =
       verboseFlags !== '' && verboseFlags !== undefined
         ? verboseFlags
         : flags.formattedValue();
 
-    const bufferTransform = tree.getChildByName('bufferTransform');
+    const bufferTransform = pTree.getChildByName('bufferTransform');
     const bufferTransformTypeFlags =
       bufferTransform?.getChildByName('type')?.formattedValue() ?? 'null';
 
+    const zOrderRelativeOfNode = assertDefined(
+      pTree.getChildByName('zOrderRelativeOf'),
+    );
+    let relativeParent: string | SfLayerSummary =
+      zOrderRelativeOfNode.formattedValue();
+    if (relativeParent !== 'none') {
+      // update zOrderRelativeOf property formatter to zParent node id
+      zOrderRelativeOfNode.setFormatter(
+        new FixedStringFormatter(assertDefined(hTree.getZParent()).id),
+      );
+      relativeParent = this.getLayerSummary(zOrderRelativeOfNode);
+    }
+
     const curated: SfCuratedProperties = {
-      summary: this.getSummaryOfVisibility(tree),
+      summary: this.getSummaryOfVisibility(pTree),
       flags: curatedFlags,
-      calcTransform: tree.getChildByName('transform'),
-      calcCrop: assertDefined(tree.getChildByName('bounds')).formattedValue(),
+      calcTransform: pTree.getChildByName('transform'),
+      calcCrop: assertDefined(pTree.getChildByName('bounds')).formattedValue(),
       finalBounds: assertDefined(
-        tree.getChildByName('screenBounds'),
+        pTree.getChildByName('screenBounds'),
       ).formattedValue(),
-      reqTransform: tree.getChildByName('requestedTransform'),
-      reqCrop: this.getCropPropertyValue(tree, 'bounds'),
+      reqTransform: pTree.getChildByName('requestedTransform'),
+      reqCrop: this.getCropPropertyValue(pTree, 'bounds'),
       bufferSize: assertDefined(
-        tree.getChildByName('activeBuffer'),
+        pTree.getChildByName('activeBuffer'),
       ).formattedValue(),
       frameNumber: assertDefined(
-        tree.getChildByName('currFrame'),
+        pTree.getChildByName('currFrame'),
       ).formattedValue(),
       bufferTransformType: bufferTransformTypeFlags,
       destinationFrame: assertDefined(
-        tree.getChildByName('destinationFrame'),
+        pTree.getChildByName('destinationFrame'),
       ).formattedValue(),
-      z: assertDefined(tree.getChildByName('z')).formattedValue(),
-      relativeParent: assertDefined(
-        tree.getChildByName('zOrderRelativeOf'),
-      ).formattedValue(),
-      calcColor: this.getColorPropertyValue(tree, 'color'),
-      calcShadowRadius: this.getPixelPropertyValue(tree, 'shadowRadius'),
-      calcCornerRadius: this.getPixelPropertyValue(tree, 'cornerRadius'),
-      calcCornerRadiusCrop: this.getCropPropertyValue(tree, 'cornerRadiusCrop'),
+      z: assertDefined(pTree.getChildByName('z')).formattedValue(),
+      relativeParent,
+      relativeChildren:
+        pTree
+          .getChildByName('relZChildren')
+          ?.getAllChildren()
+          .map((c) => this.getLayerSummary(c)) ?? [],
+      calcColor: this.getColorPropertyValue(pTree, 'color'),
+      calcShadowRadius: this.getPixelPropertyValue(pTree, 'shadowRadius'),
+      calcCornerRadius: this.getPixelPropertyValue(pTree, 'cornerRadius'),
+      calcCornerRadiusCrop: this.getCropPropertyValue(
+        pTree,
+        'cornerRadiusCrop',
+      ),
       backgroundBlurRadius: this.getPixelPropertyValue(
-        tree,
+        pTree,
         'backgroundBlurRadius',
       ),
-      reqColor: this.getColorPropertyValue(tree, 'requestedColor'),
+      reqColor: this.getColorPropertyValue(pTree, 'requestedColor'),
       reqCornerRadius: this.getPixelPropertyValue(
-        tree,
+        pTree,
         'requestedCornerRadius',
       ),
-      inputTransform: hasInputChannel
-        ? inputWindowInfo.getChildByName('transform')
-        : undefined,
-      inputRegion: tree.getChildByName('inputRegion')?.formattedValue(),
+      inputTransform: inputWindowInfo?.getChildByName('transform'),
+      inputRegion: inputWindowInfo
+        ?.getChildByName('touchableRegion')
+        ?.formattedValue(),
       focusable: hasInputChannel
         ? assertDefined(
             inputWindowInfo.getChildByName('focusable'),
@@ -325,6 +364,7 @@ export class Presenter extends AbstractHierarchyViewerPresenter<UiData> {
       summary.push({
         key: 'Occluded by',
         layerValues: occludedBy.map((layer) => this.getLayerSummary(layer)),
+        desc: 'Fully occluded by these opaque layers',
       });
     }
 
@@ -337,6 +377,7 @@ export class Presenter extends AbstractHierarchyViewerPresenter<UiData> {
         layerValues: partiallyOccludedBy.map((layer) =>
           this.getLayerSummary(layer),
         ),
+        desc: 'Partially occluded by these opaque layers',
       });
     }
 
@@ -345,6 +386,7 @@ export class Presenter extends AbstractHierarchyViewerPresenter<UiData> {
       summary.push({
         key: 'Covered by',
         layerValues: coveredBy.map((layer) => this.getLayerSummary(layer)),
+        desc: 'Partially or fully covered by these likely translucent layers',
       });
     }
     return summary;
@@ -356,11 +398,11 @@ export class Presenter extends AbstractHierarchyViewerPresenter<UiData> {
 
   private getLayerSummary(layer: PropertyTreeNode): SfLayerSummary {
     const nodeId = layer.formattedValue();
-    const [layerId, name] = nodeId.split(' ');
+    const parts = nodeId.split(' ');
     return {
-      layerId,
+      layerId: parts[0],
       nodeId,
-      name,
+      name: parts.slice(1).join(' '),
     };
   }
 
@@ -379,6 +421,22 @@ export class Presenter extends AbstractHierarchyViewerPresenter<UiData> {
     return propVal !== 'null' ? propVal : 'no color found';
   }
 
+  private async setInitialWmActiveDisplay(event: TracePositionUpdate) {
+    if (!this.wmTrace || this.wmFocusedDisplayId !== undefined) {
+      return;
+    }
+    const wmEntry: HierarchyTreeNode | undefined =
+      await TraceEntryFinder.findCorrespondingEntry<HierarchyTreeNode>(
+        this.wmTrace,
+        event.position,
+      )?.getValue();
+    if (wmEntry) {
+      this.wmFocusedDisplayId = wmEntry
+        .getEagerPropertyByName('focusedDisplayId')
+        ?.getValue();
+    }
+  }
+
   private refreshUIData() {
     this.uiData.curatedProperties = this.curatedProperties;
     this.uiData.displayPropertyGroups = this.displayPropertyGroups;
@@ -387,18 +445,32 @@ export class Presenter extends AbstractHierarchyViewerPresenter<UiData> {
 }
 
 export function makeDisplayIdentifiers(
-  displayRects: UiRect[],
+  rects: UiRect[],
+  focusedDisplayId?: number,
 ): DisplayIdentifier[] {
   const ids: DisplayIdentifier[] = [];
 
-  displayRects.forEach((rect: UiRect) => {
+  const isActive = (display: UiRect) => {
+    if (focusedDisplayId !== undefined) {
+      return display.groupId === focusedDisplayId;
+    }
+    return display.isActiveDisplay;
+  };
+
+  rects.forEach((rect: UiRect) => {
     if (!rect.isDisplay) return;
+
     const displayId = rect.id.slice(10, rect.id.length);
-    ids.push({displayId, groupId: rect.groupId, name: rect.label});
+    ids.push({
+      displayId,
+      groupId: rect.groupId,
+      name: rect.label,
+      isActive: isActive(rect),
+    });
   });
 
   let offscreenDisplayCount = 0;
-  displayRects.forEach((rect: UiRect) => {
+  rects.forEach((rect: UiRect) => {
     if (rect.isDisplay) return;
 
     if (!ids.find((identifier) => identifier.groupId === rect.groupId)) {
@@ -406,17 +478,9 @@ export function makeDisplayIdentifiers(
       const name =
         'Offscreen Display' +
         (offscreenDisplayCount > 1 ? ` ${offscreenDisplayCount}` : '');
-      ids.push({displayId: -1, groupId: rect.groupId, name});
+      ids.push({displayId: -1, groupId: rect.groupId, name, isActive: false});
     }
   });
 
-  return ids.sort((a, b) => {
-    if (a.name < b.name) {
-      return -1;
-    }
-    if (a.name > b.name) {
-      return 1;
-    }
-    return 0;
-  });
+  return ids;
 }

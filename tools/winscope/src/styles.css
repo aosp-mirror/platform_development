@@ -99,3 +99,7 @@ body.dark-mode button.mat-flat-button.mat-primary {
 .mat-dialog-container {
     border-radius: 20px !important;
 }
+
+.mat-tooltip {
+    word-break: break-word;
+}

@@ -25,17 +25,17 @@ import {UiPropertyTreeNode} from 'viewers/common/ui_property_tree_node';
         {{ getVal('dsdx') }}
       </p>
       <p class="mat-body-1">
-        {{ getVal('dsdy') }}
+        {{ getVal('dtdx') }}
       </p>
       <p class="mat-body-1" matTooltip="Translate x">
         {{ getVal('tx') }}
       </p>
 
       <p class="mat-body-1">
-        {{ getVal('dtdx') }}
+        {{ getVal('dtdy') }}
       </p>
       <p class="mat-body-1">
-        {{ getVal('dtdy') }}
+        {{ getVal('dsdy') }}
       </p>
       <p class="mat-body-1" matTooltip="Translate y">
         {{ getVal('ty') }}

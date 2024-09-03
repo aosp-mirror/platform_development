@@ -15,6 +15,8 @@
  */
 
 import {assertDefined, assertTrue} from 'common/assert_utils';
+import {UserNotifier} from 'common/user_notifier';
+import {MissingVsyncId} from 'messaging/user_warnings';
 import {AbsoluteEntryIndex, EntriesRange} from 'trace/trace';
 import {WasmEngineProxy} from 'trace_processor/wasm_engine_proxy';
 import {FakeProto, FakeProtoBuilder} from './fake_proto_builder';
@@ -109,10 +111,9 @@ export class Utils {
       curRowId++;
     }
 
-    assertTrue(
-      vsyncIdOrderedByRow.length === numEntries,
-      () => 'missing vsync_id value for one or more entries',
-    );
+    if (vsyncIdOrderedByRow.length !== numEntries) {
+      UserNotifier.add(new MissingVsyncId(tableName)).notify();
+    }
 
     const vsyncIdOrderedByEntry: Array<bigint> = [];
     for (

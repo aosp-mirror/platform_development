@@ -14,7 +14,8 @@
  * limitations under the License.
  */
 
-import {TransformMatrix} from 'common/geometry_types';
+import {Region} from 'common/geometry/region';
+import {TransformMatrix} from 'common/geometry/transform_matrix';
 import {Transform} from 'parsers/surface_flinger/transform_utils';
 import {TraceRect} from './trace_rect';
 
@@ -30,9 +31,11 @@ export class TraceRectBuilder {
   groupId: number | undefined;
   isVisible: boolean | undefined;
   isDisplay: boolean | undefined;
+  isActiveDisplay = false;
   depth: number | undefined;
   opacity: number | undefined;
   isSpy: boolean | undefined;
+  fillRegion: Region | undefined;
 
   setX(value: number) {
     this.x = value;
@@ -89,6 +92,11 @@ export class TraceRectBuilder {
     return this;
   }
 
+  setIsActiveDisplay(value: boolean) {
+    this.isActiveDisplay = value;
+    return this;
+  }
+
   setDepth(value: number) {
     this.depth = value;
     return this;
@@ -101,6 +109,11 @@ export class TraceRectBuilder {
 
   setIsSpy(value: boolean) {
     this.isSpy = value;
+    return this;
+  }
+
+  setFillRegion(region: Region | undefined) {
+    this.fillRegion = region;
     return this;
   }
 
@@ -165,9 +178,11 @@ export class TraceRectBuilder {
       this.groupId,
       this.isVisible,
       this.isDisplay,
+      this.isActiveDisplay,
       this.depth,
       this.opacity,
       this.isSpy,
+      this.fillRegion,
     );
   }
 }

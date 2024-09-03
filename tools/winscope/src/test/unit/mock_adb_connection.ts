@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import {FunctionUtils, OnProgressUpdateType} from 'common/function_utils';
+import {FunctionUtils} from 'common/function_utils';
 import {AdbConnection} from 'trace_collection/adb_connection';
 import {AdbDevice} from 'trace_collection/adb_device';
 import {ConnectionState} from 'trace_collection/connection_state';
@@ -25,16 +25,21 @@ export class MockAdbConnection extends AdbConnection {
   errorText = '';
   files = [new File([], 'test_file')];
   devices: AdbDevice[] = [];
+  availableTracesChangeCallback: (traces: string[]) => void =
+    FunctionUtils.DO_NOTHING;
+  devicesChangeCallback: (devices: AdbDevice[]) => void =
+    FunctionUtils.DO_NOTHING;
   private detectStateChangeInUi: () => Promise<void> =
     FunctionUtils.DO_NOTHING_ASYNC;
-  private progressCallback: OnProgressUpdateType = FunctionUtils.DO_NOTHING;
 
   async initialize(
     detectStateChangeInUi: () => Promise<void>,
-    progressCallback: OnProgressUpdateType,
+    availableTracesChangeCallback: (traces: string[]) => void,
+    devicesChangeCallback: (devices: AdbDevice[]) => void,
   ) {
     this.detectStateChangeInUi = detectStateChangeInUi;
-    this.progressCallback = progressCallback;
+    this.availableTracesChangeCallback = availableTracesChangeCallback;
+    this.devicesChangeCallback = devicesChangeCallback;
     this.setState(ConnectionState.CONNECTING);
   }
 
@@ -82,7 +87,6 @@ export class MockAdbConnection extends AdbConnection {
     device: AdbDevice,
     requestedDumps: TraceRequest[],
   ): Promise<void> {
-    this.progressCallback(20);
     this.setState(ConnectionState.DUMPING_STATE);
   }
 

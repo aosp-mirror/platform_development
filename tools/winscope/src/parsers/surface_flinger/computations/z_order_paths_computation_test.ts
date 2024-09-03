@@ -115,7 +115,7 @@ describe('ZOrderPathsComputation', () => {
     ).toEqual([0, 2]);
   });
 
-  it('calculates zOrderPath for tree with rel z parent', () => {
+  it('calculates zOrderPath and adds rel z children properties for tree with rel z parent', () => {
     const hierarchyRoot = new HierarchyTreeBuilder()
       .setId('LayerTraceEntry')
       .setName('root')
@@ -156,6 +156,18 @@ describe('ZOrderPathsComputation', () => {
                 zOrderRelativeOf: 2,
               } as android.surfaceflinger.ILayerProto,
             },
+            {
+              id: 5,
+              name: 'layer5',
+              properties: {
+                id: 5,
+                name: 'layer5',
+                parent: 1,
+                children: [],
+                z: 2,
+                zOrderRelativeOf: 2,
+              } as android.surfaceflinger.ILayerProto,
+            },
           ],
         },
       ])
@@ -171,6 +183,9 @@ describe('ZOrderPathsComputation', () => {
     const layer4WithPath = assertDefined(
       layer1WithPath.getChildByName('layer4'),
     );
+    const layer5WithPath = assertDefined(
+      layer1WithPath.getChildByName('layer5'),
+    );
 
     expect(
       getZOrderPathArray(layer1WithPath.getEagerPropertyByName('zOrderPath')),
@@ -181,6 +196,25 @@ describe('ZOrderPathsComputation', () => {
     expect(
       getZOrderPathArray(layer4WithPath.getEagerPropertyByName('zOrderPath')),
     ).toEqual([0, 1, 2]);
+    expect(
+      getZOrderPathArray(layer5WithPath.getEagerPropertyByName('zOrderPath')),
+    ).toEqual([0, 1, 2]);
+
+    expect(
+      layer1WithPath.getEagerPropertyByName('relZChildren'),
+    ).toBeUndefined();
+    expect(
+      layer2WithPath
+        .getEagerPropertyByName('relZChildren')
+        ?.getAllChildren()
+        .map((c) => c.getValue()),
+    ).toEqual([layer4WithPath.id, layer5WithPath.id]);
+    expect(
+      layer4WithPath.getEagerPropertyByName('relZChildren'),
+    ).toBeUndefined();
+    expect(
+      layer5WithPath.getEagerPropertyByName('relZChildren'),
+    ).toBeUndefined();
   });
 
   it('adds isMissingZParent chip', () => {
