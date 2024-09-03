@@ -37,6 +37,7 @@ import {ViewerEvents} from 'viewers/common/viewer_events';
 import {CollapsibleSectionTitleComponent} from './collapsible_section_title_component';
 import {PropertiesComponent} from './properties_component';
 import {PropertyTreeNodeDataViewComponent} from './property_tree_node_data_view_component';
+import {SearchBoxComponent} from './search_box_component';
 import {SurfaceFlingerPropertyGroupsComponent} from './surface_flinger_property_groups_component';
 import {TreeComponent} from './tree_component';
 import {TreeNodeComponent} from './tree_node_component';
@@ -58,6 +59,7 @@ describe('PropertiesComponent', () => {
         PropertyTreeNodeDataViewComponent,
         CollapsibleSectionTitleComponent,
         UserOptionsComponent,
+        SearchBoxComponent,
       ],
       imports: [
         CommonModule,

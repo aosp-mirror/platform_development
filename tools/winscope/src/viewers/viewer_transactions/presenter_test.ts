@@ -156,9 +156,11 @@ class PresenterTransactionsTest extends AbstractLogViewerPresenterTest<UiData> {
       });
 
       it('includes no op transitions', async () => {
-        await presenter.onFilterChange(LogFieldType.TRANSACTION_TYPE, [
-          TransactionsEntryType.NO_OP,
-        ]);
+        await presenter.onFilterChange(
+          LogFieldType.TRANSACTION_TYPE,
+          [TransactionsEntryType.NO_OP],
+          [],
+        );
         const fieldValues = assertDefined(uiData).entries.map((entry) =>
           getFieldValue(entry, LogFieldType.TRANSACTION_TYPE),
         );

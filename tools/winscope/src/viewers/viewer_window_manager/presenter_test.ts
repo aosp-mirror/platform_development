@@ -83,12 +83,12 @@ class PresenterWindowManagerTest extends AbstractHierarchyViewerPresenterTest<Ui
     const firstEntryDataTree = await firstEntry.getValue();
     this.selectedTree = UiHierarchyTreeNode.from(
       assertDefined(
-        firstEntryDataTree.findDfs(UiTreeUtils.makeIdFilter('93d3f3c')),
+        firstEntryDataTree.findDfs(UiTreeUtils.makeNodeFilter('93d3f3c')),
       ),
     );
     this.selectedTreeAfterPositionUpdate = UiHierarchyTreeNode.from(
       assertDefined(
-        firstEntryDataTree.findDfs(UiTreeUtils.makeIdFilter('f7092ed')),
+        firstEntryDataTree.findDfs(UiTreeUtils.makeNodeFilter('f7092ed')),
       ),
     );
   }
