@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import {FilterFlag} from 'common/filter_flag';
 import {Timestamp} from 'common/time';
 import {TraceEntry} from 'trace/trace';
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
@@ -57,5 +58,13 @@ export class TimestampClickDetail {
 }
 
 export class LogFilterChangeDetail {
-  constructor(public type: LogFieldType, public value: string[] | string) {}
+  constructor(
+    public type: LogFieldType,
+    public value: string[] | string,
+    public flags: FilterFlag[] = [],
+  ) {}
+}
+
+export class TextFilterDetail {
+  constructor(public filterString: string, public flags: FilterFlag[]) {}
 }
