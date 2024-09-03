@@ -22,10 +22,11 @@ use std::{
 };
 
 use anyhow::{anyhow, Context, Result};
+use name_and_version::{NameAndVersion, NameAndVersionMap, NamedAndVersioned};
 use rooted_path::RootedPath;
 use threadpool::ThreadPool;
 
-use crate::{Crate, NameAndVersion, NameAndVersionMap, NamedAndVersioned};
+use crate::Crate;
 
 pub fn generate_android_bps<'a, T: Iterator<Item = &'a Crate>>(
     crates: T,

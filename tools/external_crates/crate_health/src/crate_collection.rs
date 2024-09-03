@@ -12,7 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use crate_health_proc_macros::NameAndVersionMap;
+use name_and_version::{NameAndVersion, NameAndVersionMap, NamedAndVersioned};
+use name_and_version_proc_macros::NameAndVersionMap;
 use rooted_path::RootedPath;
 
 use std::{
@@ -24,10 +25,7 @@ use anyhow::{anyhow, Result};
 use semver::Version;
 use walkdir::WalkDir;
 
-use crate::{
-    android_bp::generate_android_bps, Crate, CrateError, NameAndVersion, NameAndVersionMap,
-    NamedAndVersioned,
-};
+use crate::{android_bp::generate_android_bps, Crate, CrateError};
 
 use std::collections::BTreeMap;
 
