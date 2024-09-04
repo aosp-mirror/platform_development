@@ -121,6 +121,23 @@ class PresenterViewCaptureTest extends AbstractHierarchyViewerPresenterTest<UiDa
     return new Presenter(traces, new InMemoryStorage(), callback);
   }
 
+  override createPresenterWithCorruptedTrace(
+    callback: NotifyHierarchyViewCallbackType<UiData>,
+  ): Presenter {
+    const trace = new TraceBuilder<HierarchyTreeNode>()
+      .setType(TraceType.VIEW_CAPTURE)
+      .setEntries([assertDefined(this.selectedTree)])
+      .setParserCustomQueryResult(CustomQueryType.VIEW_CAPTURE_METADATA, {
+        packageName: 'the_package_name',
+        windowName: 'the_window_name',
+      })
+      .setIsCorrupted(true)
+      .build();
+    const traces = new Traces();
+    traces.addTrace(trace);
+    return new Presenter(traces, new InMemoryStorage(), callback);
+  }
+
   override createPresenter(
     callback: NotifyHierarchyViewCallbackType<UiData>,
     storage: Store,

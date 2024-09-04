@@ -107,6 +107,19 @@ class PresenterWindowManagerTest extends AbstractHierarchyViewerPresenterTest<Ui
     return new Presenter(trace, traces, new InMemoryStorage(), callback);
   }
 
+  override createPresenterWithCorruptedTrace(
+    callback: NotifyHierarchyViewCallbackType<UiData>,
+  ): Presenter {
+    const trace = new TraceBuilder<HierarchyTreeNode>()
+      .setType(TraceType.WINDOW_MANAGER)
+      .setEntries([assertDefined(this.selectedTree)])
+      .setIsCorrupted(true)
+      .build();
+    const traces = new Traces();
+    traces.addTrace(trace);
+    return new Presenter(trace, traces, new InMemoryStorage(), callback);
+  }
+
   override createPresenter(
     callback: NotifyHierarchyViewCallbackType<UiData>,
     storage: Store,

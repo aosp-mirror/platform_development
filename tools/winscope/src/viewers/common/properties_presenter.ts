@@ -50,7 +50,7 @@ export class PropertiesPresenter {
     }
   }
 
-  getUserOptions() {
+  getUserOptions(): UserOptions {
     return this.userOptions;
   }
 
@@ -58,15 +58,15 @@ export class PropertiesPresenter {
     this.propertiesTree = tree;
   }
 
-  getPropertiesTree() {
+  getPropertiesTree(): PropertyTreeNode | undefined {
     return this.propertiesTree;
   }
 
-  getFormattedTree() {
+  getFormattedTree(): UiPropertyTreeNode | undefined {
     return this.formattedTree;
   }
 
-  getHighlightedProperty() {
+  getHighlightedProperty(): string {
     return this.highlightedProperty;
   }
 

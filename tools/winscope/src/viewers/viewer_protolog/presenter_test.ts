@@ -28,6 +28,7 @@ import {
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
 import {NotifyLogViewCallbackType} from 'viewers/common/abstract_log_viewer_presenter';
 import {AbstractLogViewerPresenterTest} from 'viewers/common/abstract_log_viewer_presenter_test';
+import {TextFilter} from 'viewers/common/text_filter';
 import {LogFieldType, LogFieldValue} from 'viewers/common/ui_data_log';
 import {Presenter} from './presenter';
 import {UiData} from './ui_data';
@@ -103,6 +104,41 @@ class PresenterProtologTest extends AbstractLogViewerPresenterTest<UiData> {
     'level1',
   ];
   override readonly expectedCurrentIndexAfterSecondFilterChange = 1;
+
+  override executeSpecializedTests() {
+    describe('Specialized tests', () => {
+      let presenter: Presenter;
+      let uiData: UiData;
+
+      beforeAll(async () => {
+        await this.setUpTestEnvironment();
+      });
+
+      beforeEach(async () => {
+        const notifyViewCallback = (newData: UiData) => {
+          uiData = newData;
+        };
+        presenter = await this.createPresenter(notifyViewCallback);
+      });
+
+      it('handles text filter change', async () => {
+        await presenter.onAppEvent(this.getSecondPositionUpdate());
+        expect(uiData.entries.length).toEqual(3);
+        expect(uiData.currentIndex).toEqual(1);
+        expect(uiData.scrollToIndex).toEqual(1);
+        expect(uiData.selectedIndex).toEqual(undefined);
+
+        await presenter.onTextFilterChange(
+          LogFieldType.TEXT,
+          new TextFilter('text0', []),
+        );
+        expect(uiData.entries.length).toEqual(1);
+        expect(uiData.currentIndex).toEqual(0);
+        expect(uiData.scrollToIndex).toEqual(0);
+        expect(uiData.selectedIndex).toEqual(undefined);
+      });
+    });
+  }
 
   override async setUpTestEnvironment(): Promise<void> {
     const time10 = TimestampConverterUtils.makeRealTimestamp(10n);
