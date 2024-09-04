@@ -30,9 +30,9 @@ static SYMLINKS: &'static [&'static str] = &["LICENSE", "NOTICE"];
 
 impl<'a> CompatibleVersionPair<'a, Crate> {
     pub fn copy_customizations(&self) -> Result<()> {
-        let dest_dir_absolute = self.dest.staging_path().abs();
+        let dest_dir = self.dest.staging_path();
         for pattern in CUSTOMIZATIONS {
-            let full_pattern = self.source.path().join(pattern);
+            let full_pattern = self.source.path().join(pattern)?;
             for entry in glob(
                 full_pattern
                     .abs()
@@ -45,28 +45,28 @@ impl<'a> CompatibleVersionPair<'a, Crate> {
                     .context(format!("Failed to get file name for {}", entry.display()))?
                     .to_os_string();
                 if entry.is_dir() {
-                    copy_dir(&entry, &dest_dir_absolute.join(filename)).context(format!(
+                    copy_dir(&entry, &dest_dir.join(filename)?).context(format!(
                         "Failed to copy {} to {}",
                         entry.display(),
-                        self.dest.staging_path()
+                        dest_dir
                     ))?;
                 } else {
-                    let dest_file = dest_dir_absolute.join(&filename);
-                    if dest_file.exists() {
-                        return Err(anyhow!("Destination file {} exists", dest_file.display()));
+                    let dest_file = dest_dir.join(&filename)?;
+                    if dest_file.abs().exists() {
+                        return Err(anyhow!("Destination file {} exists", dest_file));
                     }
-                    copy(&entry, dest_dir_absolute.join(filename)).context(format!(
+                    copy(&entry, dest_dir.join(filename)?).context(format!(
                         "Failed to copy {} to {}",
                         entry.display(),
-                        dest_dir_absolute.display()
+                        dest_dir
                     ))?;
                 }
             }
         }
         for link in SYMLINKS {
-            let src_path = self.source.path().join(link);
+            let src_path = self.source.path().join(link)?;
             if src_path.abs().is_symlink() {
-                let dest = read_link(src_path.abs())?;
+                let dest = read_link(src_path)?;
                 if dest.exists() {
                     return Err(anyhow!(
                         "Can't symlink {} -> {} because destination exists",
@@ -74,7 +74,7 @@ impl<'a> CompatibleVersionPair<'a, Crate> {
                         dest.display(),
                     ));
                 }
-                symlink(dest, dest_dir_absolute.join(link))?;
+                symlink(dest, dest_dir.join(link)?)?;
             }
         }
         Ok(())
@@ -82,7 +82,7 @@ impl<'a> CompatibleVersionPair<'a, Crate> {
     pub fn diff_android_bps(&self) -> Result<Output> {
         diff_android_bp(
             &self.source.android_bp().rel(),
-            &self.dest.staging_path().join(&"Android.bp").rel(),
+            &self.dest.staging_path().join(&"Android.bp")?.rel(),
             &self.source.path().root(),
         )
         .context("Failed to diff Android.bp".to_string())

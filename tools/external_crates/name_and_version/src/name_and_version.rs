@@ -18,9 +18,6 @@ use std::{
     hash::{Hash, Hasher},
 };
 
-#[cfg(test)]
-use anyhow::Result;
-
 use semver::{BuildMetadata, Prerelease, Version, VersionReq};
 
 static MIN_VERSION: Version =
@@ -30,6 +27,17 @@ pub trait NamedAndVersioned {
     fn name(&self) -> &str;
     fn version(&self) -> &Version;
     fn key<'a>(&'a self) -> NameAndVersionRef<'a>;
+    fn crate_archive_url(&self) -> String {
+        format!(
+            "https://static.crates.io/crates/{}/{}-{}.crate",
+            self.name(),
+            self.name(),
+            self.version()
+        )
+    }
+    fn crates_io_homepage(&self) -> String {
+        format!("https://crates.io/crates/{}", self.name())
+    }
 }
 
 #[derive(Debug, PartialOrd, Ord, PartialEq, Eq, Hash, Clone)]
@@ -54,8 +62,8 @@ impl NameAndVersion {
     pub fn min_version(name: String) -> Self {
         NameAndVersion { name, version: MIN_VERSION.clone() }
     }
-    #[cfg(test)]
-    pub fn try_from_str(name: &str, version: &str) -> Result<Self> {
+    /// Intended for testing.
+    pub fn try_from_str(name: &str, version: &str) -> Result<Self, semver::Error> {
         Ok(NameAndVersion::new(name.to_string(), Version::parse(version)?))
     }
 }
@@ -137,10 +145,9 @@ impl<'a> IsUpgradableTo for NameAndVersionRef<'a> {}
 #[cfg(test)]
 mod tests {
     use super::*;
-    use anyhow::Result;
 
     #[test]
-    fn test_name_version_ref() -> Result<()> {
+    fn test_name_version_ref() -> Result<(), semver::Error> {
         let version = Version::parse("2.3.4")?;
         let compat1 = Version::parse("2.3.5")?;
         let compat2 = Version::parse("2.4.0")?;
@@ -164,7 +171,7 @@ mod tests {
     }
 
     #[test]
-    fn test_name_and_version() -> Result<()> {
+    fn test_name_and_version() -> Result<(), semver::Error> {
         let version = Version::parse("2.3.4")?;
         let compat1 = Version::parse("2.3.5")?;
         let compat2 = Version::parse("2.4.0")?;
