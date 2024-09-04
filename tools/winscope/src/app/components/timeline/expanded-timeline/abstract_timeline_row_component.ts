@@ -158,6 +158,7 @@ export abstract class AbstractTimelineRowComponent<T extends {}> {
 
   @HostListener('wheel', ['$event'])
   updateScroll(event: WheelEvent) {
+    event.preventDefault();
     this.onScrollEvent.emit(event);
   }
 
