@@ -39,19 +39,19 @@ export class RectsPresenter {
     private convertToKey: (rectId: string) => string = (id: string) => id,
   ) {}
 
-  getUserOptions() {
+  getUserOptions(): UserOptions {
     return this.userOptions;
   }
 
-  getRectsToDraw() {
+  getRectsToDraw(): UiRect[] {
     return this.rectsToDraw;
   }
 
-  getRectIdToShowState() {
+  getRectIdToShowState(): Map<string, RectShowState> | undefined {
     return this.rectIdToShowState;
   }
 
-  getDisplays() {
+  getDisplays(): DisplayIdentifier[] {
     return this.displays;
   }
 

@@ -340,7 +340,7 @@ export class HierarchyPresenter {
       );
   }
 
-  getTextFilter() {
+  getTextFilter(): TextFilter {
     return this.textFilter;
   }
 

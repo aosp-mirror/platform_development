@@ -118,6 +118,23 @@ export abstract class AbstractPresenterInputMethodTest extends AbstractHierarchy
       callback,
     );
   }
+  override createPresenterWithCorruptedTrace(
+    callback: NotifyHierarchyViewCallbackType<ImeUiData>,
+  ): AbstractPresenterInputMethod {
+    const trace = new TraceBuilder<HierarchyTreeNode>()
+      .setType(this.imeTraceType)
+      .setEntries([assertDefined(this.selectedTree)])
+      .setIsCorrupted(true)
+      .build();
+    const traces = new Traces();
+    traces.addTrace(trace);
+    return new this.PresenterInputMethod(
+      trace,
+      traces,
+      new InMemoryStorage(),
+      callback,
+    );
+  }
 
   override createPresenter(
     callback: NotifyHierarchyViewCallbackType<ImeUiData>,
@@ -242,9 +259,26 @@ export abstract class AbstractPresenterInputMethodTest extends AbstractHierarchy
           name: 'Test Tree',
           treeNode: this.getSelectedTree(),
         });
-        const propertiesTree = assertDefined(uiData.propertiesTree);
-        expect(propertiesTree.getDisplayName()).toEqual('Test Tree');
+        expect(assertDefined(uiData.propertiesTree).getDisplayName()).toEqual(
+          'Test Tree',
+        );
         expect(uiData.highlightedItem).toEqual(this.getSelectedTree().id);
+      });
+
+      it('can set new properties tree and associated ui data from id', async () => {
+        setUpPresenter([imeTraceType, TraceType.WINDOW_MANAGER]);
+        expect(uiData.propertiesTree).toBeUndefined();
+        await presenter.onAppEvent(this.getPositionUpdate());
+
+        const selectedTree = this.getSelectedTree();
+        await presenter.onHighlightedIdChange(selectedTree.id);
+        const propertiesTree = assertDefined(uiData.propertiesTree);
+        expect(propertiesTree.getDisplayName()).toEqual(selectedTree.name);
+        expect(uiData.highlightedItem).toEqual(this.getSelectedTree().id);
+
+        await presenter.onHighlightedIdChange(selectedTree.id);
+        expect(uiData.propertiesTree).toEqual(propertiesTree);
+        expect(uiData.highlightedItem).toEqual('');
       });
 
       if (this.getPropertiesTree) {
@@ -268,6 +302,13 @@ export abstract class AbstractPresenterInputMethodTest extends AbstractHierarchy
             UiPropertyTreeNode.from(selectedPropertyTree),
           );
           expect(uiData.highlightedItem).toEqual(selectedPropertyTree.id);
+
+          // clears additional property tree selection
+          const selectedTree = this.getSelectedTree();
+          await presenter.onHighlightedIdChange(selectedTree.id);
+          expect(uiData.propertiesTree?.getDisplayName()).toEqual(
+            selectedTree.name,
+          );
         });
       }
 

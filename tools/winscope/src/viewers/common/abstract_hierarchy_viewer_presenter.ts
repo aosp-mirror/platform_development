@@ -181,9 +181,6 @@ export abstract class AbstractHierarchyViewerPresenter<
   }
 
   async onPropertiesUserOptionsChange(userOptions: UserOptions) {
-    if (!this.propertiesPresenter) {
-      return;
-    }
     this.propertiesPresenter.applyPropertiesUserOptionsChange(userOptions);
     await this.updatePropertiesTree();
     this.uiData.propertiesUserOptions =
@@ -193,9 +190,6 @@ export abstract class AbstractHierarchyViewerPresenter<
   }
 
   async onPropertiesFilterChange(textFilter: TextFilter) {
-    if (!this.propertiesPresenter) {
-      return;
-    }
     this.propertiesPresenter.applyPropertiesFilterChange(textFilter);
     await this.updatePropertiesTree();
     this.uiData.propertiesTree = this.propertiesPresenter.getFormattedTree();
