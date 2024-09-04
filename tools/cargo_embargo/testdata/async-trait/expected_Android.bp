@@ -3,6 +3,7 @@
 
 package {
 default_applicable_licenses: ["external_rust_crates_async-trait_license"],
+default_team: "trendy_team_android_rust",
 }
 
 license {

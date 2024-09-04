@@ -15,15 +15,18 @@
 use std::{
     collections::BTreeMap,
     env,
+    ffi::OsString,
     path::Path,
     process::{Command, Output},
     sync::mpsc::channel,
 };
 
 use anyhow::{anyhow, Context, Result};
+use name_and_version::{NameAndVersion, NameAndVersionMap, NamedAndVersioned};
+use rooted_path::RootedPath;
 use threadpool::ThreadPool;
 
-use crate::{Crate, NameAndVersion, NameAndVersionMap, NamedAndVersioned, RepoPath};
+use crate::Crate;
 
 pub fn generate_android_bps<'a, T: Iterator<Item = &'a Crate>>(
     crates: T,
@@ -50,10 +53,8 @@ pub fn generate_android_bps<'a, T: Iterator<Item = &'a Crate>>(
     Ok(results)
 }
 
-fn run_cargo_embargo(staging_path: &RepoPath) -> Result<Output> {
-    maybe_build_cargo_embargo(&staging_path.root(), false)?;
-    // Make sure we can find bpfmt.
-    let host_bin = staging_path.with_same_root(&"prebuilts/build-tools/linux-x86/bin").abs();
+fn add_bpfmt_to_path(repo_root: impl AsRef<Path>) -> Result<OsString> {
+    let host_bin = repo_root.as_ref().join("prebuilts/build-tools/linux-x86/bin");
     let new_path = match env::var_os("PATH") {
         Some(p) => {
             let mut paths = vec![host_bin];
@@ -62,13 +63,34 @@ fn run_cargo_embargo(staging_path: &RepoPath) -> Result<Output> {
         }
         None => host_bin.as_os_str().into(),
     };
+    Ok(new_path)
+}
+
+fn run_cargo_embargo(staging_path: &RootedPath) -> Result<Output> {
+    maybe_build_cargo_embargo(&staging_path.root(), false)?;
+    let new_path = add_bpfmt_to_path(staging_path.root())?;
 
     let mut cmd =
-        Command::new(staging_path.with_same_root(&"out/host/linux-x86/bin/cargo_embargo").abs());
+        Command::new(staging_path.with_same_root(&"out/host/linux-x86/bin/cargo_embargo")?.abs());
     cmd.args(["generate", "cargo_embargo.json"])
         .env("PATH", new_path)
         .env("ANDROID_BUILD_TOP", staging_path.root())
-        .current_dir(staging_path.abs())
+        .env_remove("OUT_DIR")
+        .current_dir(&staging_path)
+        .output()
+        .context(format!("Failed to execute {:?}", cmd.get_program()))
+}
+
+pub fn cargo_embargo_autoconfig(path: &RootedPath) -> Result<Output> {
+    maybe_build_cargo_embargo(&path.root(), false)?;
+    let new_path = add_bpfmt_to_path(path.root())?;
+
+    let mut cmd = Command::new(path.with_same_root(&"out/host/linux-x86/bin/cargo_embargo")?.abs());
+    cmd.args(["autoconfig", "cargo_embargo.json"])
+        .env("PATH", new_path)
+        .env("ANDROID_BUILD_TOP", path.root())
+        .env_remove("OUT_DIR")
+        .current_dir(&path)
         .output()
         .context(format!("Failed to execute {:?}", cmd.get_program()))
 }
@@ -85,7 +107,7 @@ pub fn maybe_build_cargo_embargo(repo_root: &impl AsRef<Path>, force_rebuild: bo
 pub fn build_cargo_embargo(repo_root: &impl AsRef<Path>) -> Result<()> {
     let status = Command::new("/usr/bin/bash")
         .args(["-c", "source build/envsetup.sh && lunch aosp_cf_x86_64_phone-trunk_staging-eng && m cargo_embargo"])
-        .current_dir(repo_root).spawn().context("Failed to spawn build of cargo embargo")?.wait().context("Failed to wait on child process building cargo embargo")?;
+        .env_remove("OUT_DIR").current_dir(repo_root).spawn().context("Failed to spawn build of cargo embargo")?.wait().context("Failed to wait on child process building cargo embargo")?;
     match status.success() {
         true => Ok(()),
         false => Err(anyhow!(
