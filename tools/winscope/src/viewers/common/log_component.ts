@@ -23,18 +23,15 @@ import {
   Inject,
   Input,
   Output,
-  SimpleChanges,
   ViewChild,
 } from '@angular/core';
 import {MatSelectChange} from '@angular/material/select';
-import {assertDefined} from 'common/assert_utils';
-import {PersistentStore} from 'common/persistent_store';
+
 import {Timestamp} from 'common/time';
-import {TRACE_INFO} from 'trace/trace_info';
 import {TraceType} from 'trace/trace_type';
 import {
   LogFilterChangeDetail,
-  TextFilterDetail,
+  LogTextFilterChangeDetail,
   TimestampClickDetail,
   ViewerEvents,
 } from 'viewers/common/viewer_events';
@@ -49,6 +46,7 @@ import {
   viewerCardInnerStyle,
   viewerCardStyle,
 } from 'viewers/components/styles/viewer_card.styles';
+import {TextFilter} from './text_filter';
 import {
   LogEntry,
   LogField,
@@ -103,12 +101,11 @@ import {
           </select-with-filter>
 
           <search-box
-            *ngIf="filter.options === undefined"
+            *ngIf="filter.textFilter"
             appearance="fill"
+            [textFilter]="filter.textFilter"
             [fontSize]="12"
             [wideField]="true"
-            [store]="store"
-            [storeKey]="storeKeyFilterFlags"
             [label]="getLogFieldName(filter.type)"
             [filterName]="getLogFieldName(filter.type)"
             (filterChange)="onSearchBoxChange($event, filter.type)"></search-box>
@@ -212,7 +209,6 @@ import {
 })
 export class LogComponent {
   emptyFilterValue = '';
-  storeKeyFilterFlags: string | undefined;
   private lastClickedTimestamp: Timestamp | undefined;
 
   @Input() title: string | undefined;
@@ -226,7 +222,6 @@ export class LogComponent {
   @Input() traceType: TraceType | undefined;
   @Input() showTraceEntryTimes = true;
   @Input() showFiltersInTitle = false;
-  @Input() store: PersistentStore | undefined;
 
   @Output() collapseButtonClicked = new EventEmitter();
 
@@ -234,8 +229,6 @@ export class LogComponent {
   scrollComponent?: CdkVirtualScrollViewport;
 
   constructor(@Inject(ElementRef) private elementRef: ElementRef) {}
-
-  ngOnInit() {}
 
   showFieldButton(field: LogField) {
     return (
@@ -257,11 +250,7 @@ export class LogComponent {
     return LogFieldNames.get(fieldType);
   }
 
-  ngOnChanges(changes: SimpleChanges) {
-    if (changes['traceType']?.firstChange) {
-      this.storeKeyFilterFlags =
-        TRACE_INFO[assertDefined(this.traceType)].name + 'logView.filterFlags';
-    }
+  ngOnChanges() {
     if (
       this.scrollToIndex !== undefined &&
       this.lastClickedTimestamp !==
@@ -278,10 +267,10 @@ export class LogComponent {
     );
   }
 
-  onSearchBoxChange(detail: TextFilterDetail, filterType: LogFieldType) {
+  onSearchBoxChange(detail: TextFilter, filterType: LogFieldType) {
     this.emitEvent(
-      ViewerEvents.LogFilterChange,
-      new LogFilterChangeDetail(filterType, detail.filterString, detail.flags),
+      ViewerEvents.LogTextFilterChange,
+      new LogTextFilterChangeDetail(filterType, detail),
     );
   }
 

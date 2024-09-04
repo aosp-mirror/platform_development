@@ -91,6 +91,7 @@ body:not(.dark-mode) {
   --drawer-color: var(--background-color);
   --green-text-color: #1f912c;
   --hover-element-color: #E8F0FE;
+  --overlay-panel-background-color: white;
   --primary: #{mat.get-color-from-palette(mat.$blue-palette, 700)};
   --purple-text-color: #a357e9;
   --red-text-color: #d3251b;
@@ -119,6 +120,7 @@ body.dark-mode {
   @include drawer-color($dark-theme);
   --green-text-color: #89e593;
   --hover-element-color: #4e5767;
+  --overlay-panel-background-color: #424242;
   --primary: #{mat.get-color-from-palette(mat.$blue-palette, 400)};
   --purple-text-color: #dbb4ff;
   --red-text-color: #f19993;

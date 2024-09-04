@@ -42,6 +42,7 @@ import {VISIBLE_CHIP} from './chip';
 import {HierarchyPresenter} from './hierarchy_presenter';
 import {UpdateSfSubtreeDisplayNames} from './operations/update_sf_subtree_display_names';
 import {PropertiesPresenter} from './properties_presenter';
+import {TextFilter} from './text_filter';
 import {UiHierarchyTreeNode} from './ui_hierarchy_tree_node';
 import {UiTreeUtils} from './ui_tree_utils';
 
@@ -73,6 +74,11 @@ export abstract class AbstractPresenterInputMethod extends AbstractHierarchyView
       },
       this.storage,
     ),
+    PersistentStoreProxy.new<TextFilter>(
+      'ImeHierarchyFilter',
+      new TextFilter('', []),
+      this.storage,
+    ),
     [],
     true,
     false,
@@ -93,6 +99,11 @@ export abstract class AbstractPresenterInputMethod extends AbstractHierarchyView
               `,
         },
       },
+      this.storage,
+    ),
+    PersistentStoreProxy.new<TextFilter>(
+      'ImePropertiesFilter',
+      new TextFilter('', []),
       this.storage,
     ),
     [],
@@ -125,6 +136,7 @@ export abstract class AbstractPresenterInputMethod extends AbstractHierarchyView
   }
 
   async onAppEvent(event: WinscopeEvent) {
+    await this.handleCommonWinscopeEvents(event);
     await event.visit(
       WinscopeEventType.TRACE_POSITION_UPDATE,
       async (event) => {
@@ -173,6 +185,14 @@ export abstract class AbstractPresenterInputMethod extends AbstractHierarchyView
             }
           }
         }
+        this.refreshUIData();
+      },
+    );
+    await event.visit(
+      WinscopeEventType.FILTER_PRESET_APPLY_REQUEST,
+      async (event) => {
+        const filterPresetName = event.name;
+        await this.applyPresetConfig(filterPresetName);
         this.refreshUIData();
       },
     );
