@@ -175,7 +175,7 @@ class MutableSceneTransitionLayoutSaver(
         return MutableSceneTransitionLayoutState(
             currentScene,
             transitions,
-            canChangeScene,
+            canChangeScene = canChangeScene,
             enableInterruptions = enableInterruptions,
         )
     }

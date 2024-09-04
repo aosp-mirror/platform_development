@@ -101,12 +101,12 @@ export abstract class AbstractTimelineRowComponent<T extends {}> {
 
     canvas.width = HiPPIwidth;
     canvas.height = HiPPIheight;
-    canvas.style.width = width + 'px';
-    canvas.style.height = height + 'px';
+    canvas.style.width = '100%';
+    canvas.style.height = '100%';
 
     // ensure all drawing operations are scaled
     if (window.devicePixelRatio !== 1) {
-      const context = canvas.getContext('2d')!;
+      const context = assertDefined(canvas.getContext('2d'));
       context.scale(window.devicePixelRatio, window.devicePixelRatio);
     }
 
@@ -158,6 +158,7 @@ export abstract class AbstractTimelineRowComponent<T extends {}> {
 
   @HostListener('wheel', ['$event'])
   updateScroll(event: WheelEvent) {
+    event.preventDefault();
     this.onScrollEvent.emit(event);
   }
 

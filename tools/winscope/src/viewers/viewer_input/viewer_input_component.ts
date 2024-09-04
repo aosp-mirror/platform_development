@@ -68,29 +68,29 @@ import {UiData} from './ui_data';
 
       <div class="properties" *ngIf="!arePropertiesCollapsed()">
         <properties-view
-            class="properties-view event-properties"
-            [class.collapsed]="sections.isSectionCollapsed(CollapsibleSectionType.PROPERTIES)"
-            [title]="eventPropertiesTitle"
-            [propertiesTree]="inputData?.propertiesTree"
-            [highlightedProperty]="inputData?.highlightedProperty"
-            [traceType]="inputData?.traceType"
-            [store]="store"
-            [isProtoDump]="true"
-            [showFilter]="false"
-            placeholderText="No selected entry."
-            (collapseButtonClicked)="sections.onCollapseStateChange(CollapsibleSectionType.PROPERTIES, true)"></properties-view>
+          class="properties-view event-properties"
+          [class.collapsed]="sections.isSectionCollapsed(CollapsibleSectionType.PROPERTIES)"
+          [title]="eventPropertiesTitle"
+          [propertiesTree]="inputData?.propertiesTree"
+          [highlightedProperty]="inputData?.highlightedProperty"
+          [traceType]="${TraceType.INPUT_EVENT_MERGED}"
+          [store]="store"
+          [isProtoDump]="true"
+          [showFilter]="false"
+          placeholderText="No selected entry."
+          (collapseButtonClicked)="sections.onCollapseStateChange(CollapsibleSectionType.PROPERTIES, true)"></properties-view>
         <properties-view
-            class="properties-view dispatch-properties"
-            [class.collapsed]="sections.isSectionCollapsed(CollapsibleSectionType.INPUT_DISPATCH_PROPERTIES)"
-            [title]="dispatchPropertiesTitle"
-            [propertiesTree]="inputData?.dispatchPropertiesTree"
-            [highlightedProperty]="inputData?.highlightedProperty"
-            [traceType]="inputData?.traceType"
-            [store]="store"
-            [isProtoDump]="true"
-            [showFilter]="false"
-            placeholderText="No selected entry."
-            (collapseButtonClicked)="sections.onCollapseStateChange(CollapsibleSectionType.INPUT_DISPATCH_PROPERTIES, true)"></properties-view>
+          class="properties-view dispatch-properties"
+          [class.collapsed]="sections.isSectionCollapsed(CollapsibleSectionType.INPUT_DISPATCH_PROPERTIES)"
+          [title]="dispatchPropertiesTitle"
+          [propertiesTree]="inputData?.dispatchPropertiesTree"
+          [highlightedProperty]="inputData?.highlightedProperty"
+          [traceType]="${TraceType.INPUT_EVENT_MERGED}"
+          [store]="store"
+          [isProtoDump]="true"
+          [showFilter]="false"
+          placeholderText="No selected entry."
+          (collapseButtonClicked)="sections.onCollapseStateChange(CollapsibleSectionType.INPUT_DISPATCH_PROPERTIES, true)"></properties-view>
       </div>
     </div>
   `,
