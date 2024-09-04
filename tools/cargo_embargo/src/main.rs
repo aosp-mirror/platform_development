@@ -1254,9 +1254,10 @@ fn crate_to_rulesmk(
             )
         })
         .map(|dep| {
-            // Rewrite dependency name to module path for Trusty build system
+            // Rewrite dependency name so it is passed to the FIND_CRATE macro
+            // which will expand to the module path when building Trusty.
             if let Some(dep) = dep.strip_prefix("lib") {
-                format!("external/rust/crates/{dep}")
+                format!("$(call FIND_CRATE,{dep})")
             } else {
                 dep
             }
