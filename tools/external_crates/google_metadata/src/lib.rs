@@ -12,17 +12,34 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+//! Crate for handling Google METADATA files.
+
 use std::{
     fs::{read_to_string, write},
     path::PathBuf,
 };
 
-use chrono::{DateTime, Datelike, Local};
+use chrono::Datelike;
 use protobuf::text_format::ParseError;
 
-include!(concat!(env!("OUT_DIR"), "/protos/mod.rs"));
-use crate::metadata::{Identifier, LicenseType, MetaData};
+#[cfg(soong)]
+mod metadata_proto {
+    pub use google_metadata_proto::metadata::Identifier;
+    pub use google_metadata_proto::metadata::LicenseType;
+    pub use google_metadata_proto::metadata::MetaData;
+}
 
+#[cfg(not(soong))]
+mod metadata_proto {
+    include!(concat!(env!("OUT_DIR"), "/protos/mod.rs"));
+    pub use crate::metadata::Identifier;
+    pub use crate::metadata::LicenseType;
+    pub use crate::metadata::MetaData;
+}
+
+pub use metadata_proto::*;
+
+#[allow(missing_docs)]
 #[derive(thiserror::Error, Debug)]
 pub enum Error {
     #[error("File exists: {}", .0.display())]
@@ -37,6 +54,7 @@ pub enum Error {
     WriteError(#[from] std::io::Error),
 }
 
+/// Wrapper around a Google METADATA file.
 pub struct GoogleMetadata {
     path: PathBuf,
     metadata: MetaData,
@@ -47,7 +65,7 @@ impl GoogleMetadata {
     pub fn try_from<P: Into<PathBuf>>(path: P) -> Result<Self, Error> {
         let path = path.into();
         let metadata = read_to_string(&path)?;
-        let metadata: metadata::MetaData = protobuf::text_format::parse_from_str(&metadata)?;
+        let metadata: MetaData = protobuf::text_format::parse_from_str(&metadata)?;
         Ok(GoogleMetadata { path, metadata })
     }
     /// Initializes a new METADATA file.
@@ -81,7 +99,7 @@ impl GoogleMetadata {
     }
     /// Sets the date fields to today's date.
     pub fn set_date_to_today(&mut self) -> Result<(), Error> {
-        let now: DateTime<Local> = Local::now();
+        let now = chrono::Utc::now();
         let date = self
             .metadata
             .third_party
