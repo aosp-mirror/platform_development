@@ -20,17 +20,20 @@ import {
   Inject,
   Input,
   Output,
+  ViewChild,
 } from '@angular/core';
+import {assertDefined} from 'common/assert_utils';
 import {PersistentStore} from 'common/persistent_store';
 import {Analytics} from 'logging/analytics';
+import {TRACE_INFO} from 'trace/trace_info';
 import {TraceType} from 'trace/trace_type';
 import {CollapsibleSectionType} from 'viewers/common/collapsible_section_type';
 import {CuratedProperties} from 'viewers/common/curated_properties';
 import {UiPropertyTreeNode} from 'viewers/common/ui_property_tree_node';
 import {UserOptions} from 'viewers/common/user_options';
-import {ViewerEvents} from 'viewers/common/viewer_events';
+import {TextFilterDetail, ViewerEvents} from 'viewers/common/viewer_events';
 import {nodeStyles} from 'viewers/components/styles/node.styles';
-import {searchBoxStyle} from './styles/search_box.styles';
+import {SearchBoxComponent} from './search_box_component';
 import {viewerCardInnerStyle} from './styles/viewer_card.styles';
 
 @Component({
@@ -43,12 +46,11 @@ import {viewerCardInnerStyle} from './styles/viewer_card.styles';
           [class.padded-title]="!hasUserOptions()"
           [title]="title"
           (collapseButtonClicked)="collapseButtonClicked.emit()"></collapsible-section-title>
-
-        <mat-form-field *ngIf="showFilter" class="search-box" (keydown.enter)="$event.target.blur()">
-          <mat-label>Search</mat-label>
-
-          <input matInput [(ngModel)]="filterString" (ngModelChange)="filterTree()" name="filter" />
-        </mat-form-field>
+        <search-box
+          *ngIf="showFilter"
+          [store]="store"
+          [storeKey]="storeKeyFilterFlags"
+          (filterChange)="onFilterChange($event)"></search-box>
       </div>
 
       <user-options
@@ -82,7 +84,7 @@ import {viewerCardInnerStyle} from './styles/viewer_card.styles';
       </div>
     </div>
 
-    <span class="mat-body-1 placeholder-text" *ngIf="!showPropertiesTree() && placeholderText"> {{ placeholderText }} </span>
+    <span class="mat-body-1 placeholder-text" *ngIf="showPlaceholderText()"> {{ placeholderText }} </span>
   `,
   styles: [
     `
@@ -108,15 +110,14 @@ import {viewerCardInnerStyle} from './styles/viewer_card.styles';
       }
     `,
     nodeStyles,
-    searchBoxStyle,
     viewerCardInnerStyle,
   ],
 })
 export class PropertiesComponent {
   Analytics = Analytics;
   CollapsibleSectionType = CollapsibleSectionType;
-  filterString = '';
   ViewerEvents = ViewerEvents;
+  storeKeyFilterFlags: string | undefined;
 
   @Input() title = 'PROPERTIES';
   @Input() showFilter = true;
@@ -132,12 +133,20 @@ export class PropertiesComponent {
 
   @Output() collapseButtonClicked = new EventEmitter();
 
+  @ViewChild(SearchBoxComponent) searchBox: SearchBoxComponent | undefined;
+
   constructor(@Inject(ElementRef) private elementRef: ElementRef) {}
 
-  filterTree() {
+  ngOnInit() {
+    this.storeKeyFilterFlags =
+      TRACE_INFO[assertDefined(this.traceType)].name +
+      'propertiesView.filterFlags';
+  }
+
+  onFilterChange(detail: TextFilterDetail) {
     const event = new CustomEvent(ViewerEvents.PropertiesFilterChange, {
       bubbles: true,
-      detail: {filterString: this.filterString},
+      detail,
     });
     this.elementRef.nativeElement.dispatchEvent(event);
   }
@@ -157,7 +166,7 @@ export class PropertiesComponent {
   showViewCaptureFormat(): boolean {
     return (
       this.traceType === TraceType.VIEW_CAPTURE &&
-      this.filterString === '' &&
+      (this.searchBox?.filterString ?? '') === '' &&
       // Todo: Highlight Inline in formatted ViewCapture Properties Component.
       !this.userOptions['showDiff']?.enabled &&
       this.curatedProperties !== undefined
@@ -166,5 +175,11 @@ export class PropertiesComponent {
 
   showPropertiesTree(): boolean {
     return !!this.propertiesTree && !this.showViewCaptureFormat();
+  }
+
+  showPlaceholderText(): boolean {
+    return (
+      !this.propertiesTree && !this.curatedProperties && !!this.placeholderText
+    );
   }
 }

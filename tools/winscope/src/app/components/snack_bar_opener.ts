@@ -24,6 +24,7 @@ type Messages = string[];
 
 @Injectable({providedIn: 'root'})
 export class SnackBarOpener {
+  private static CROP_THRESHOLD = 5;
   private isOpen = false;
   private queue: Messages[] = [];
 
@@ -58,8 +59,10 @@ export class SnackBarOpener {
     const groups = this.groupNotificationsByDescriptor(warnings);
 
     for (const groupedWarnings of groups) {
-      const CROP_THRESHOLD = 5;
-      const countUsed = Math.min(groupedWarnings.length, CROP_THRESHOLD);
+      const countUsed = Math.min(
+        groupedWarnings.length,
+        SnackBarOpener.CROP_THRESHOLD,
+      );
       const countCropped = groupedWarnings.length - countUsed;
 
       groupedWarnings.slice(0, countUsed).forEach((warning) => {

@@ -19,7 +19,7 @@ import {Transform} from 'parsers/surface_flinger/transform_utils';
 import {HierarchyTreeBuilder} from 'test/unit/hierarchy_tree_builder';
 import {TraceRectBuilder} from 'trace/trace_rect_builder';
 import {HierarchyTreeNode} from 'trace/tree_node/hierarchy_tree_node';
-import {UiRect} from 'viewers/components/rects/types2d';
+import {UiRect} from 'viewers/components/rects/ui_rect';
 import {UiRectBuilder} from 'viewers/components/rects/ui_rect_builder';
 import {UI_RECT_FACTORY} from './ui_rect_factory';
 
@@ -57,6 +57,7 @@ describe('UI_RECT_FACTORY', () => {
       .setTransform(Transform.EMPTY.matrix)
       .setIsVisible(true)
       .setIsDisplay(false)
+      .setIsActiveDisplay(false)
       .setIsClickable(true)
       .setHasContent(false)
       .setDepth(0)
@@ -75,6 +76,7 @@ describe('UI_RECT_FACTORY', () => {
       .setTransform(Transform.EMPTY.matrix)
       .setIsVisible(true)
       .setIsDisplay(false)
+      .setIsActiveDisplay(false)
       .setIsClickable(true)
       .setHasContent(false)
       .setDepth(1)
@@ -82,6 +84,33 @@ describe('UI_RECT_FACTORY', () => {
       .build();
 
     const expectedRects: UiRect[] = [expectedUiRect1, expectedUiRect2];
+
+    expect(UI_RECT_FACTORY.makeUiRects(hierarchyRoot)).toEqual(expectedRects);
+  });
+
+  it('makes rects with data from trace rect', () => {
+    buildRectAndSetToNode(node2, 1, 5, 10, true, true, false, true);
+
+    const expectedUiRect2 = new UiRectBuilder()
+      .setX(0)
+      .setY(0)
+      .setWidth(5)
+      .setHeight(10)
+      .setId('2 node2')
+      .setLabel('node2')
+      .setCornerRadius(0)
+      .setGroupId(0)
+      .setTransform(Transform.EMPTY.matrix)
+      .setIsVisible(true)
+      .setIsDisplay(true)
+      .setIsActiveDisplay(true)
+      .setIsClickable(false)
+      .setHasContent(false)
+      .setDepth(1)
+      .setOpacity(0.5)
+      .build();
+
+    const expectedRects: UiRect[] = [expectedUiRect2];
 
     expect(UI_RECT_FACTORY.makeUiRects(hierarchyRoot)).toEqual(expectedRects);
   });
@@ -102,6 +131,7 @@ describe('UI_RECT_FACTORY', () => {
       .setTransform(Transform.EMPTY.matrix)
       .setIsVisible(true)
       .setIsDisplay(false)
+      .setIsActiveDisplay(false)
       .setIsClickable(true)
       .setHasContent(false)
       .setDepth(1)
@@ -120,6 +150,7 @@ describe('UI_RECT_FACTORY', () => {
       .setTransform(Transform.EMPTY.matrix)
       .setIsVisible(true)
       .setIsDisplay(false)
+      .setIsActiveDisplay(false)
       .setIsClickable(true)
       .setHasContent(false)
       .setDepth(0)
@@ -148,6 +179,7 @@ describe('UI_RECT_FACTORY', () => {
       .setTransform(Transform.EMPTY.matrix)
       .setIsVisible(true)
       .setIsDisplay(false)
+      .setIsActiveDisplay(false)
       .setIsClickable(true)
       .setHasContent(true)
       .setDepth(1)
@@ -166,6 +198,7 @@ describe('UI_RECT_FACTORY', () => {
       .setTransform(Transform.EMPTY.matrix)
       .setIsVisible(true)
       .setIsDisplay(false)
+      .setIsActiveDisplay(false)
       .setIsClickable(true)
       .setHasContent(true)
       .setDepth(0)
@@ -211,6 +244,7 @@ describe('UI_RECT_FACTORY', () => {
       .setTransform(Transform.EMPTY.matrix)
       .setIsVisible(true)
       .setIsDisplay(true)
+      .setIsActiveDisplay(false)
       .setIsClickable(true)
       .setHasContent(false)
       .setDepth(0)
@@ -229,6 +263,7 @@ describe('UI_RECT_FACTORY', () => {
       .setTransform(Transform.EMPTY.matrix)
       .setIsVisible(true)
       .setIsDisplay(false)
+      .setIsActiveDisplay(false)
       .setIsClickable(true)
       .setHasContent(true)
       .setDepth(1)
@@ -247,6 +282,7 @@ describe('UI_RECT_FACTORY', () => {
       .setTransform(Transform.EMPTY.matrix)
       .setIsVisible(true)
       .setIsDisplay(false)
+      .setIsActiveDisplay(false)
       .setIsClickable(true)
       .setHasContent(false)
       .setDepth(2)
@@ -271,6 +307,7 @@ describe('UI_RECT_FACTORY', () => {
     isPrimary = true,
     isDisplay = false,
     isSpy = false,
+    isActiveDisplay = false,
   ) {
     const rect = new TraceRectBuilder()
       .setX(0)
@@ -284,8 +321,8 @@ describe('UI_RECT_FACTORY', () => {
       .setDepth(depth)
       .setGroupId(0)
       .setIsVisible(true)
-      .setIsDisplay(false)
       .setIsDisplay(isDisplay)
+      .setIsActiveDisplay(isActiveDisplay)
       .setOpacity(0.5)
       .setIsSpy(isSpy)
       .build();

@@ -57,7 +57,6 @@ fun SceneTransitionsBuilder.quickSettingsTransitions(configuration: DemoConfigur
 
     if (configuration.useOverscrollSpec) {
         overscroll(Scenes.QuickSettings, Orientation.Vertical) {
-            progressConverter = configuration.overscrollProgress::convert
             translate(QuickSettings.Elements.BrightnessSlider, y = { absoluteDistance })
             translate(QuickSettings.Elements.ExpandedGrid, y = { absoluteDistance })
             translate(MediaPlayer.Elements.MediaPlayer, y = { absoluteDistance })

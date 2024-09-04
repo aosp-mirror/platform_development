@@ -117,21 +117,24 @@ describe('TracePipeline', () => {
     );
   });
 
-  it('can load valid gzipped file', async () => {
+  it('can load valid gzipped file and archive', async () => {
     expect(tracePipeline.getTraces().getSize()).toEqual(0);
 
     const gzippedFile = await UnitTestUtils.getFixtureFile(
       'traces/WindowManager.pb.gz',
     );
-
-    await loadFiles([gzippedFile], FilesSource.TEST);
-    await expectLoadResult(1, []);
-
-    expect(tracePipeline.getTraces().getSize()).toEqual(1);
-
-    const traceEntries = await TracesUtils.extractEntries(
-      tracePipeline.getTraces(),
+    const gzippedArchive = await UnitTestUtils.getFixtureFile(
+      'traces/WindowManager.zip.gz',
     );
+
+    await loadFiles([gzippedFile, gzippedArchive], FilesSource.TEST);
+    await expectLoadResult(2, []);
+
+    const traces = tracePipeline.getTraces();
+    expect(traces.getSize()).toEqual(2);
+    expect(traces.getTraces(TraceType.WINDOW_MANAGER).length).toEqual(2);
+
+    const traceEntries = await TracesUtils.extractEntries(traces);
     expect(traceEntries.get(TraceType.WINDOW_MANAGER)?.length).toBeGreaterThan(
       0,
     );
@@ -304,8 +307,9 @@ describe('TracePipeline', () => {
     await expectLoadResult(0, []);
   });
 
-  it('removes constituent traces of transitions trace', async () => {
-    await loadFiles([wmTransitionFile, wmTransitionFile, shellTransitionFile]);
+  it('removes constituent traces of transitions trace but keeps for download', async () => {
+    const files = [wmTransitionFile, wmTransitionFile, shellTransitionFile];
+    await loadFiles(files);
     await expectLoadResult(1, []);
 
     const transitionTrace = assertDefined(
@@ -320,13 +324,17 @@ describe('TracePipeline', () => {
     expect(
       tracePipeline.getTraces().getTrace(TraceType.WM_TRANSITION),
     ).toBeDefined();
+    await expectDownloadResult([
+      'transition/shell_transition_trace.pb',
+      'transition/wm_transition_trace.pb',
+    ]);
   });
 
-  it('removes constituent traces of CUJs trace', async () => {
-    const eventlogFile = await UnitTestUtils.getFixtureFile(
-      'traces/eventlog.winscope',
-    );
-    await loadFiles([eventlogFile]);
+  it('removes constituent traces of CUJs trace but keeps for download', async () => {
+    const files = [
+      await UnitTestUtils.getFixtureFile('traces/eventlog.winscope'),
+    ];
+    await loadFiles(files);
     await expectLoadResult(1, []);
 
     const cujTrace = assertDefined(
@@ -335,13 +343,16 @@ describe('TracePipeline', () => {
 
     tracePipeline.removeTrace(cujTrace);
     await expectLoadResult(0, []);
+    await expectDownloadResult(['eventlog/eventlog.winscope']);
   });
 
-  it('removes constituent traces of input trace', async () => {
-    const inputFile = await UnitTestUtils.getFixtureFile(
-      'traces/perfetto/input-events.perfetto-trace',
-    );
-    await loadFiles([inputFile]);
+  it('removes constituent traces of input trace but keeps for download', async () => {
+    const files = [
+      await UnitTestUtils.getFixtureFile(
+        'traces/perfetto/input-events.perfetto-trace',
+      ),
+    ];
+    await loadFiles(files);
     await expectLoadResult(1, []);
 
     const inputTrace = assertDefined(
@@ -350,6 +361,7 @@ describe('TracePipeline', () => {
 
     tracePipeline.removeTrace(inputTrace);
     await expectLoadResult(0, []);
+    await expectDownloadResult(['input-events.perfetto-trace']);
   });
 
   it('gets loaded traces', async () => {
@@ -389,7 +401,7 @@ describe('TracePipeline', () => {
     expect(video?.size).toBeGreaterThan(0);
   });
 
-  it('prioritises screenrecording over screenshot data', async () => {
+  it('prioritizes screenrecording over screenshot data', async () => {
     const files = [screenshotFile, screenRecordingFile];
     await loadFiles(files);
     await expectLoadResult(1, [
@@ -421,21 +433,10 @@ describe('TracePipeline', () => {
     await loadFiles(files);
     await expectLoadResult(2, []);
 
-    const archiveBlob =
-      await tracePipeline.makeZipArchiveWithLoadedTraceFiles();
-    const actualFiles = await FileUtils.unzipFile(archiveBlob);
-    const actualFilenames = actualFiles
-      .map((file) => {
-        return file.name;
-      })
-      .sort();
-
-    const expectedFilenames = [
+    await expectDownloadResult([
       'screen_recording_metadata_v2.mp4',
       'transactions_trace.perfetto-trace',
-    ];
-
-    expect(actualFilenames).toEqual(expectedFilenames);
+    ]);
   });
 
   it('can be cleared', async () => {
@@ -472,5 +473,13 @@ describe('TracePipeline', () => {
   ) {
     userNotifierChecker.expectAdded(expectedWarnings);
     expect(tracePipeline.getTraces().getSize()).toEqual(numberOfTraces);
+  }
+
+  async function expectDownloadResult(expectedArchiveContents: string[]) {
+    const zipArchive = await tracePipeline.makeZipArchiveWithLoadedTraceFiles();
+    const actualArchiveContents = (await FileUtils.unzipFile(zipArchive))
+      .map((file) => file.name)
+      .sort();
+    expect(actualArchiveContents).toEqual(expectedArchiveContents);
   }
 });

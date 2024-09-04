@@ -21,8 +21,7 @@ describe('Viewer Input Method Clients', () => {
   const viewerSelector = 'viewer-input-method';
 
   beforeEach(async () => {
-    browser.manage().timeouts().implicitlyWait(1000);
-    await E2eTestUtils.checkServerIsUp('Winscope', E2eTestUtils.WINSCOPE_URL);
+    await E2eTestUtils.beforeEach(1000);
     await browser.get(E2eTestUtils.WINSCOPE_URL);
   });
 
@@ -52,17 +51,18 @@ describe('Viewer Input Method Clients', () => {
     await clickInputMethodSurface();
     await checkInputMethodSurfaceProperties();
 
-    await E2eTestUtils.applyStateToHierarchyOptions(viewerSelector, true);
-    await checkHierarchy();
     await E2eTestUtils.selectItemInHierarchy(viewerSelector, 'InputMethod#765');
     await checkInputMethodLayerProperties();
+
+    await E2eTestUtils.applyStateToHierarchyOptions(viewerSelector, true);
+    await checkHierarchy();
   });
 
   async function checkHierarchy() {
     const nodes = await element.all(
       by.css(`${viewerSelector} hierarchy-view .node`),
     );
-    expect(nodes.length).toEqual(5);
+    expect(nodes.length).toEqual(4);
     expect(await nodes[0].getText()).toContain(
       'InputMethodClients - 2022-11-21, 18:05:14.969 - InsetsSourceConsumer#notifyAnimationFinished',
     );
@@ -73,7 +73,6 @@ describe('Viewer Input Method Clients', () => {
     expect(await nodes[3].getText()).toContain(
       '786 - com.google.(...).ZeroStateSearchActivity#786 HWC V',
     );
-    expect(await nodes[4].getText()).toContain('765 - InputMethod#765 HWC V');
   }
 
   async function checkInputMethodLayerProperties() {
