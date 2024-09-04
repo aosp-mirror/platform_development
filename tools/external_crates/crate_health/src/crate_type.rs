@@ -48,7 +48,7 @@ impl NamedAndVersioned for Crate {
     fn version(&self) -> &Version {
         self.manifest.version()
     }
-    fn key<'k>(&'k self) -> NameAndVersionRef<'k> {
+    fn key(&self) -> NameAndVersionRef {
         NameAndVersionRef::new(self.name(), self.version())
     }
 }
@@ -83,16 +83,16 @@ impl Crate {
     }
 
     pub fn description(&self) -> &str {
-        self.manifest.metadata().description.as_ref().map(|x| x.as_str()).unwrap_or("")
+        self.manifest.metadata().description.as_deref().unwrap_or("")
     }
     pub fn license(&self) -> Option<&str> {
-        self.manifest.metadata().license.as_ref().map(|x| x.as_str())
+        self.manifest.metadata().license.as_deref()
     }
     pub fn license_file(&self) -> Option<&str> {
-        self.manifest.metadata().license_file.as_ref().map(|x| x.as_str())
+        self.manifest.metadata().license_file.as_deref()
     }
     pub fn repository(&self) -> Option<&str> {
-        self.manifest.metadata().repository.as_ref().map(|x| x.as_str())
+        self.manifest.metadata().repository.as_deref()
     }
     pub fn path(&self) -> &RootedPath {
         &self.path
@@ -119,11 +119,11 @@ impl Crate {
                 return dirname.to_string();
             }
         }
-        format!("{}-{}", self.name(), self.version().to_string())
+        format!("{}-{}", self.name(), self.version())
     }
 
     pub fn is_crates_io(&self) -> bool {
-        const NOT_CRATES_IO: &'static [&'static str] = &[
+        const NOT_CRATES_IO: &[&str] = &[
             "external/rust/beto-rust/",                 // Google crates
             "external/rust/pica/",                      // Google crate
             "external/rust/crates/webpki/third-party/", // Internal/example code
@@ -133,7 +133,7 @@ impl Crate {
         !NOT_CRATES_IO.iter().any(|prefix| self.path().rel().starts_with(prefix))
     }
     pub fn is_migration_denied(&self) -> bool {
-        const MIGRATION_DENYLIST: &'static [&'static str] = &[
+        const MIGRATION_DENYLIST: &[&str] = &[
             "external/rust/crates/openssl/", // It's complicated.
             "external/rust/cxx/",            // It's REALLY complicated.
         ];
