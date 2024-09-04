@@ -640,6 +640,38 @@ impl ManagedRepo {
         self.pseudo_crate.vendor()?;
         Ok(added_deps)
     }
+    pub fn fix_licenses(&self) -> Result<()> {
+        let mut cc = self.new_cc();
+        cc.add_from(&self.managed_dir().rel())?;
+
+        for (_, krate) in cc.map_field() {
+            println!("{} = \"={}\"", krate.name(), krate.version());
+            let state = find_licenses(krate.path().abs(), krate.name(), krate.license())?;
+            if !state.unsatisfied.is_empty() {
+                println!("{:?}", state);
+            } else {
+                // For now, just update MODULE_LICENSE_*
+                update_module_license_files(&krate.path().abs(), &state)?;
+            }
+        }
+
+        Ok(())
+    }
+    pub fn fix_metadata(&self) -> Result<()> {
+        let mut cc = self.new_cc();
+        cc.add_from(&self.managed_dir().rel())?;
+
+        for (_, krate) in cc.map_field() {
+            println!("{} = \"={}\"", krate.name(), krate.version());
+            let mut metadata = GoogleMetadata::try_from(krate.path().join(&"METADATA")?)?;
+            metadata.set_identifier(krate)?;
+            metadata.migrate_archive();
+            metadata.migrate_homepage();
+            metadata.write()?;
+        }
+
+        Ok(())
+    }
 }
 
 // Files that are ignored when migrating a crate to the monorepo.
