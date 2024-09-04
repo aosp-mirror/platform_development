@@ -84,7 +84,6 @@ fn args_from_rustc_invocation(rustc: &str) -> Vec<&str> {
     let mut chars = rustc.char_indices();
     while let Some((start, c)) = chars.next() {
         match c {
-            ' ' => {}
             '\'' => {
                 let (end, _) =
                     chars.find(|(_, c)| *c == '\'').expect("Missing closing single quote");
@@ -96,7 +95,9 @@ fn args_from_rustc_invocation(rustc: &str) -> Vec<&str> {
                 args.push(&rustc[start + 1..end]);
             }
             _ => {
-                if let Some((end, _)) = chars.find(|(_, c)| *c == ' ') {
+                if c.is_ascii_whitespace() {
+                    // Ignore, continue on to the next character.
+                } else if let Some((end, _)) = chars.find(|(_, c)| c.is_ascii_whitespace()) {
                     args.push(&rustc[start..end]);
                 } else {
                     args.push(&rustc[start..]);
