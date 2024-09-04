@@ -143,7 +143,7 @@ export abstract class AbstractLogViewerPresenterTest<UiData extends UiDataLog> {
               const filterValues = valuesToSet[i];
               const expectedFieldValues = expected[i];
 
-              await presenter.onFilterChange(type, filterValues, []);
+              await presenter.onFilterChange(type, filterValues);
               const fieldValues = uiData.entries.map((entry) =>
                 assertDefined(this.getFieldValue(entry, type)),
               );
@@ -154,7 +154,7 @@ export abstract class AbstractLogViewerPresenterTest<UiData extends UiDataLog> {
               } else {
                 expect(fieldValues.length).toEqual(expectedFieldValues);
               }
-              await presenter.onFilterChange(type, [], []);
+              await presenter.onFilterChange(type, []);
             }
           }
         });
@@ -162,7 +162,7 @@ export abstract class AbstractLogViewerPresenterTest<UiData extends UiDataLog> {
         it('updates indices when filters change', async () => {
           await presenter.onAppEvent(this.getSecondPositionUpdate());
           const filterName = assertDefined(this.filterNameForCurrentIndexTest);
-          await presenter.onFilterChange(filterName, [], []);
+          await presenter.onFilterChange(filterName, []);
           expect(uiData.currentIndex).toEqual(
             this.expectedIndexOfSecondPositionUpdate,
           );
@@ -178,7 +178,6 @@ export abstract class AbstractLogViewerPresenterTest<UiData extends UiDataLog> {
           await presenter.onFilterChange(
             filterName,
             assertDefined(this.filterChangeForCurrentIndexTest),
-            [],
           );
           expect(uiData.currentIndex).toEqual(
             this.expectedCurrentIndexAfterFilterChange,
@@ -196,7 +195,6 @@ export abstract class AbstractLogViewerPresenterTest<UiData extends UiDataLog> {
           await presenter.onFilterChange(
             filterName,
             assertDefined(this.secondFilterChangeForCurrentIndexTest),
-            [],
           );
           expect(uiData.currentIndex).toEqual(
             this.expectedCurrentIndexAfterSecondFilterChange,

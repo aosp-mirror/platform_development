@@ -42,7 +42,7 @@ class ViewerProtoLog implements Viewer {
     const notifyViewCallback = (data: UiData) => {
       (this.htmlElement as unknown as ViewerProtologComponent).inputData = data;
     };
-    this.presenter = new Presenter(trace, notifyViewCallback);
+    this.presenter = new Presenter(trace, notifyViewCallback, storage);
     this.presenter.addEventListeners(this.htmlElement);
 
     this.view = new View(

@@ -16,6 +16,7 @@
 
 import {assertDefined} from 'common/assert_utils';
 import {InMemoryStorage} from 'common/in_memory_storage';
+import {Store} from 'common/store';
 import {TracePositionUpdate} from 'messaging/winscope_event';
 import {TraceBuilder} from 'test/unit/trace_builder';
 import {TreeNodeUtils} from 'test/unit/tree_node_utils';
@@ -32,6 +33,7 @@ import {PresenterInputMethodService} from 'viewers/viewer_input_method_service/p
 import {NotifyHierarchyViewCallbackType} from './abstract_hierarchy_viewer_presenter';
 import {AbstractHierarchyViewerPresenterTest} from './abstract_hierarchy_viewer_presenter_test';
 import {AbstractPresenterInputMethod} from './abstract_presenter_input_method';
+import {TextFilter} from './text_filter';
 import {UiDataHierarchy} from './ui_data_hierarchy';
 import {UiHierarchyTreeNode} from './ui_hierarchy_tree_node';
 import {UiPropertyTreeNode} from './ui_property_tree_node';
@@ -49,7 +51,7 @@ export abstract class AbstractPresenterInputMethodTest extends AbstractHierarchy
   override readonly shouldExecuteDumpTests = true;
   override readonly shouldExecuteSimplifyNamesTest = false;
 
-  override readonly hierarchyFilterString = 'Reject all';
+  override readonly hierarchyFilter = new TextFilter('Reject all', []);
   override readonly expectedHierarchyChildrenAfterStringFilter = 0;
 
   override async setUpTestEnvironment(): Promise<void> {
@@ -119,15 +121,11 @@ export abstract class AbstractPresenterInputMethodTest extends AbstractHierarchy
 
   override createPresenter(
     callback: NotifyHierarchyViewCallbackType<ImeUiData>,
+    storage: Store,
   ): AbstractPresenterInputMethod {
     const traces = assertDefined(this.traces);
     const trace = assertDefined(traces.getTrace(this.imeTraceType));
-    return new this.PresenterInputMethod(
-      trace,
-      traces,
-      new InMemoryStorage(),
-      callback,
-    );
+    return new this.PresenterInputMethod(trace, traces, storage, callback);
   }
 
   override getPositionUpdate(): TracePositionUpdate {
