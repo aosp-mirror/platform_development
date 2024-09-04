@@ -34,9 +34,10 @@ import com.google.common.primitives.Floats;
 import dagger.hilt.android.qualifiers.ApplicationContext;
 import dagger.hilt.android.scopes.ActivityScoped;
 
-import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 import java.util.function.Consumer;
+import java.util.stream.Stream;
 
 import javax.inject.Inject;
 
@@ -86,11 +87,13 @@ final class VirtualSensorController implements AutoCloseable {
     }
 
     public List<SensorCapabilities> getSensorCapabilities() {
-        // For demo purposes we only need a single accelerometer.
-        Sensor sensor = mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
-        return sensor == null
-                ? Collections.emptyList()
-                : List.of(createSensorCapabilitiesFromSensor(sensor));
+        // For demo purposes we only need a single accelerometer and proximity sensor.
+        return Stream.of(
+                        mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER),
+                        mSensorManager.getDefaultSensor(Sensor.TYPE_PROXIMITY))
+                .filter(Objects::nonNull)
+                .map(VirtualSensorController::createSensorCapabilitiesFromSensor)
+                .toList();
     }
 
     private static SensorCapabilities createSensorCapabilitiesFromSensor(Sensor sensor) {
@@ -103,6 +106,8 @@ final class VirtualSensorController implements AutoCloseable {
                 .setPower(sensor.getPower())
                 .setMinDelayUs(sensor.getMinDelay())
                 .setMaxDelayUs(sensor.getMaxDelay())
+                .setIsWakeUpSensor(sensor.isWakeUpSensor())
+                .setReportingMode(sensor.getReportingMode())
                 .build();
     }
 

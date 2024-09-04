@@ -48,6 +48,25 @@ describe('FileUtils', () => {
     expect(zip).toBeInstanceOf(Blob);
   });
 
+  it('creates zip archive with progress listener', async () => {
+    const progressSpy = jasmine.createSpy();
+    const zip = await FileUtils.createZipArchive(
+      [
+        new File([], 'test_file.txt'),
+        new File([], 'test_file_2.txt'),
+        new File([], 'test_file_3.txt'),
+        new File([], 'test_file_4.txt'),
+      ],
+      progressSpy,
+    );
+    expect(zip).toBeInstanceOf(Blob);
+    expect(progressSpy).toHaveBeenCalledTimes(4);
+    expect(progressSpy).toHaveBeenCalledWith(0.25);
+    expect(progressSpy).toHaveBeenCalledWith(0.5);
+    expect(progressSpy).toHaveBeenCalledWith(0.75);
+    expect(progressSpy).toHaveBeenCalledWith(1);
+  });
+
   it('unzips archive', async () => {
     const validZipFile = await UnitTestUtils.getFixtureFile(
       'traces/winscope.zip',
@@ -63,6 +82,15 @@ describe('FileUtils', () => {
     const unzippedFile = await FileUtils.decompressGZipFile(gzippedFile);
     expect(unzippedFile.name).toEqual('traces/WindowManager.pb');
     expect(unzippedFile.size).toEqual(377137);
+  });
+
+  it('decompresses gzipped archive', async () => {
+    const gzippedFile = await UnitTestUtils.getFixtureFile(
+      'traces/WindowManager.zip.gz',
+    );
+    const unzippedFile = await FileUtils.decompressGZipFile(gzippedFile);
+    expect(unzippedFile.name).toEqual('traces/WindowManager.zip');
+    expect(unzippedFile.size).toEqual(10158);
   });
 
   it('has download filename regex that accepts all expected inputs', () => {

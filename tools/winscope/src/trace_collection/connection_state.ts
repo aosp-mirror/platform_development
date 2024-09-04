@@ -26,4 +26,5 @@ export enum ConnectionState {
   ENDING_TRACE,
   DUMPING_STATE,
   LOADING_DATA,
+  TRACE_TIMEOUT,
 }

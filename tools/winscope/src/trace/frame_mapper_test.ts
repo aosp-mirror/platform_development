@@ -20,7 +20,7 @@ import {TraceBuilder} from 'test/unit/trace_builder';
 import {CustomQueryType} from './custom_query';
 import {FrameMapper} from './frame_mapper';
 import {AbsoluteFrameIndex} from './index_types';
-import {ScreenRecordingTraceEntry} from './screen_recording';
+import {MediaBasedTraceEntry} from './media_based_trace_entry';
 import {Trace} from './trace';
 import {Traces} from './traces';
 import {TraceType} from './trace_type';
@@ -476,7 +476,7 @@ describe('FrameMapper', () => {
 
   describe('SurfaceFlinger <-> ScreenRecording', () => {
     let surfaceFlinger: Trace<HierarchyTreeNode>;
-    let screenRecording: Trace<ScreenRecordingTraceEntry>;
+    let screenRecording: Trace<MediaBasedTraceEntry>;
     let traces: Traces;
 
     beforeAll(async () => {
@@ -499,15 +499,15 @@ describe('FrameMapper', () => {
         .setTimestamps([time0, time1, time2, time4, time6, time7, time8])
         .build();
 
-      screenRecording = new TraceBuilder<ScreenRecordingTraceEntry>()
+      screenRecording = new TraceBuilder<MediaBasedTraceEntry>()
         .setType(TraceType.SCREEN_RECORDING)
         .setEntries([
-          'entry-0' as unknown as ScreenRecordingTraceEntry,
-          'entry-1' as unknown as ScreenRecordingTraceEntry,
-          'entry-2' as unknown as ScreenRecordingTraceEntry,
-          'entry-3' as unknown as ScreenRecordingTraceEntry,
-          'entry-4' as unknown as ScreenRecordingTraceEntry,
-          'entry-5' as unknown as ScreenRecordingTraceEntry,
+          'entry-0' as unknown as MediaBasedTraceEntry,
+          'entry-1' as unknown as MediaBasedTraceEntry,
+          'entry-2' as unknown as MediaBasedTraceEntry,
+          'entry-3' as unknown as MediaBasedTraceEntry,
+          'entry-4' as unknown as MediaBasedTraceEntry,
+          'entry-5' as unknown as MediaBasedTraceEntry,
         ])
         .setTimestamps([time0, time3, time4, time5, time8, time10seconds])
         .build();
@@ -591,9 +591,9 @@ describe('FrameMapper', () => {
       .setTimestamps([time0])
       .build();
 
-    const screenRecording = new TraceBuilder<ScreenRecordingTraceEntry>()
+    const screenRecording = new TraceBuilder<MediaBasedTraceEntry>()
       .setType(TraceType.SCREEN_RECORDING)
-      .setEntries(['entry-0' as unknown as ScreenRecordingTraceEntry])
+      .setEntries(['entry-0' as unknown as MediaBasedTraceEntry])
       .setTimestamps([time1])
       .build();
 

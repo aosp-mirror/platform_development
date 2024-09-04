@@ -15,6 +15,11 @@
  */
 
 import {ArrayUtils} from 'common/array_utils';
+import {
+  FilterFlag,
+  makeFilterPredicate,
+  StringFilterPredicate,
+} from 'common/filter_flag';
 import {Timestamp} from 'common/time';
 import {TraceEntry} from 'trace/trace';
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
@@ -25,17 +30,14 @@ export class LogPresenter<Entry extends LogEntry> {
   private filteredEntries: Entry[] = [];
   private filters: LogFilter[] = [];
   private headers: LogFieldType[] = [];
-  private filterValues = new Map<LogFieldType, string | string[]>();
+  private filterPredicates = new Map<LogFieldType, StringFilterPredicate>();
   private currentEntry: TraceEntry<PropertyTreeNode> | undefined;
   private selectedIndex: number | undefined;
   private scrollToIndex: number | undefined;
   private currentIndex: number | undefined;
   private originalIndicesOfAllEntries: number[] = [];
 
-  constructor(
-    private storeCurrentIndex: boolean,
-    private timeOrderedEntries = true,
-  ) {}
+  constructor(private timeOrderedEntries = true) {}
 
   setAllEntries(value: Entry[]) {
     this.allEntries = value;
@@ -52,7 +54,7 @@ export class LogPresenter<Entry extends LogEntry> {
 
   setFilters(filters: LogFilter[]) {
     this.filters = filters;
-    this.filterValues = new Map<LogFieldType, string | string[]>();
+    this.filterPredicates = new Map<LogFieldType, StringFilterPredicate>();
     this.updateFilteredEntries();
     this.resetIndices();
   }
@@ -113,17 +115,26 @@ export class LogPresenter<Entry extends LogEntry> {
     this.resetIndices();
   }
 
-  applyFilterChange(type: LogFieldType, value: string[] | string) {
+  applyFilterChange(
+    type: LogFieldType,
+    value: string[] | string,
+    flags: FilterFlag[],
+  ) {
     if (value.length > 0) {
-      this.filterValues.set(type, value);
+      this.filterPredicates.set(
+        type,
+        this.makeLogFilterPredicate(type, value, flags),
+      );
     } else {
-      this.filterValues.delete(type);
+      this.filterPredicates.delete(type);
     }
     this.updateFilteredEntries();
-    if (this.storeCurrentIndex) {
-      this.currentIndex = this.getCurrentTracePositionIndex();
-    } else {
-      this.selectedIndex = this.getCurrentTracePositionIndex();
+    this.currentIndex = this.getCurrentTracePositionIndex();
+    if (
+      this.selectedIndex !== undefined &&
+      this.selectedIndex > this.filteredEntries.length - 1
+    ) {
+      this.selectedIndex = this.currentIndex;
     }
     this.scrollToIndex = this.selectedIndex ?? this.currentIndex;
   }
@@ -137,17 +148,12 @@ export class LogPresenter<Entry extends LogEntry> {
   }
 
   private resetIndices() {
-    if (this.storeCurrentIndex) {
-      this.currentIndex = this.getCurrentTracePositionIndex();
-      this.selectedIndex = undefined;
-      this.scrollToIndex = this.currentIndex;
-    } else {
-      this.selectedIndex = this.getCurrentTracePositionIndex();
-      this.scrollToIndex = this.selectedIndex;
-    }
+    this.currentIndex = this.getCurrentTracePositionIndex();
+    this.selectedIndex = undefined;
+    this.scrollToIndex = this.currentIndex;
   }
 
-  private static shouldFilterBySubstring(type: LogFieldType) {
+  private static shouldFilterBySubstring(type: LogFieldType): boolean {
     switch (type) {
       case LogFieldType.FLAGS:
       case LogFieldType.INPUT_DISPATCH_WINDOWS:
@@ -157,9 +163,27 @@ export class LogPresenter<Entry extends LogEntry> {
     }
   }
 
+  private makeLogFilterPredicate(
+    type: LogFieldType,
+    filterValue: string | string[],
+    flags: FilterFlag[],
+  ): StringFilterPredicate {
+    if (
+      Array.isArray(filterValue) &&
+      LogPresenter.shouldFilterBySubstring(type)
+    ) {
+      return (entryString) =>
+        filterValue.some((val) => entryString.includes(val));
+    } else if (Array.isArray(filterValue)) {
+      return (entryString) => filterValue.includes(entryString);
+    } else {
+      return makeFilterPredicate(filterValue, flags);
+    }
+  }
+
   private updateFilteredEntries() {
     this.filteredEntries = this.allEntries.filter((entry) => {
-      for (const [filterType, filterValue] of this.filterValues) {
+      for (const [filterType, predicate] of this.filterPredicates) {
         const entryValue = entry.fields.find(
           (f) => f.type === filterType,
         )?.value;
@@ -170,26 +194,7 @@ export class LogPresenter<Entry extends LogEntry> {
 
         const entryValueStr = entryValue.toString();
 
-        if (
-          Array.isArray(filterValue) &&
-          LogPresenter.shouldFilterBySubstring(filterType)
-        ) {
-          if (!filterValue.some((flag) => entryValueStr.includes(flag))) {
-            return false;
-          }
-        } else if (
-          Array.isArray(filterValue) &&
-          !filterValue.includes(entryValueStr)
-        ) {
-          return false;
-        }
-
-        if (
-          typeof filterValue === 'string' &&
-          !entryValueStr.toLowerCase().includes(filterValue.toLowerCase())
-        ) {
-          return false;
-        }
+        if (!predicate(entryValueStr)) return false;
       }
       return true;
     });
@@ -221,9 +226,12 @@ export class LogPresenter<Entry extends LogEntry> {
         ) ?? this.originalIndicesOfAllEntries.length - 1
       );
     }
-    return (
-      this.originalIndicesOfAllEntries.findIndex((i) => i === target) ??
-      this.originalIndicesOfAllEntries.length - 1
+
+    const currentIndex = this.originalIndicesOfAllEntries.findIndex(
+      (i) => i === target,
     );
+    return currentIndex !== -1
+      ? currentIndex
+      : this.originalIndicesOfAllEntries.length - 1;
   }
 }

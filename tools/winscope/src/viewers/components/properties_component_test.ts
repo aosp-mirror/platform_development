@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+import {ClipboardModule} from '@angular/cdk/clipboard';
 import {CommonModule} from '@angular/common';
 import {
   ComponentFixture,
@@ -36,6 +37,7 @@ import {ViewerEvents} from 'viewers/common/viewer_events';
 import {CollapsibleSectionTitleComponent} from './collapsible_section_title_component';
 import {PropertiesComponent} from './properties_component';
 import {PropertyTreeNodeDataViewComponent} from './property_tree_node_data_view_component';
+import {SearchBoxComponent} from './search_box_component';
 import {SurfaceFlingerPropertyGroupsComponent} from './surface_flinger_property_groups_component';
 import {TreeComponent} from './tree_component';
 import {TreeNodeComponent} from './tree_node_component';
@@ -57,6 +59,7 @@ describe('PropertiesComponent', () => {
         PropertyTreeNodeDataViewComponent,
         CollapsibleSectionTitleComponent,
         UserOptionsComponent,
+        SearchBoxComponent,
       ],
       imports: [
         CommonModule,
@@ -69,6 +72,7 @@ describe('PropertiesComponent', () => {
         ReactiveFormsModule,
         MatIconModule,
         MatTooltipModule,
+        ClipboardModule,
       ],
     }).compileComponents();
 

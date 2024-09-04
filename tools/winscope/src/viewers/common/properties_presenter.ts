@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import {FilterFlag} from 'common/filter_flag';
 import {HierarchyTreeNode} from 'trace/tree_node/hierarchy_tree_node';
 import {Operation} from 'trace/tree_node/operations/operation';
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
@@ -27,7 +28,7 @@ import {TreeNodeFilter, UiTreeUtils} from './ui_tree_utils';
 import {UserOptions} from './user_options';
 
 export class PropertiesPresenter {
-  private propertiesFilter: TreeNodeFilter = UiTreeUtils.makePropertyFilter('');
+  private propertiesFilter: TreeNodeFilter = UiTreeUtils.makeNodeFilter('');
   private highlightedProperty = '';
   private propertiesTree: PropertyTreeNode | undefined;
   private formattedTree: UiPropertyTreeNode | undefined;
@@ -67,8 +68,8 @@ export class PropertiesPresenter {
     }
   }
 
-  applyPropertiesFilterChange(filterString: string) {
-    this.propertiesFilter = UiTreeUtils.makePropertyFilter(filterString);
+  applyPropertiesFilterChange(filterString: string, flags: FilterFlag[]) {
+    this.propertiesFilter = UiTreeUtils.makeNodeFilter(filterString, flags);
   }
 
   applyPropertiesUserOptionsChange(userOptions: UserOptions) {

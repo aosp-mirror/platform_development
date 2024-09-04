@@ -49,7 +49,7 @@ import {viewerCardInnerStyle} from './styles/viewer_card.styles';
             {{ properties.flags }}
           </p>
           <span *ngFor="let summaryProperty of properties.summary" class="mat-body-1 summary inline">
-            <span class="mat-body-2">{{ summaryProperty.key }}:</span>
+            <span class="mat-body-2" [matTooltip]="summaryProperty.desc" [matTooltipShowDelay]="400">{{ summaryProperty.key }}:</span>
             <ng-container *ngIf="summaryProperty.simpleValue">
               {{ summaryProperty.simpleValue }}
             </ng-container>
@@ -172,16 +172,43 @@ import {viewerCardInnerStyle} from './styles/viewer_card.styles';
             &ngsp;
             {{ properties.z }}
           </p>
-          <p class="mat-body-1 rel-parent">
+          <p class="mat-body-1 rel-parent inline">
             <span
               class="mat-body-2"
               matTooltip="item is z-ordered relative to its relative parents but its bounds
                   and other properties are inherited from its parents."
-              >relative parent:</span
-            >
+              >relative parent:</span>
             &ngsp;
-            {{ properties.relativeParent }}
+            <ng-container *ngIf="!properties.relativeParent.nodeId">
+              {{ properties.relativeParent }}
+            </ng-container>
+            <ng-container *ngIf="properties.relativeParent.nodeId">
+              <button
+                mat-button
+                color="primary"
+                [matTooltip]="properties.relativeParent.name"
+                (click)="onIdClicked(properties.relativeParent.nodeId)">
+                {{ properties.relativeParent.layerId }}
+              </button>
+            </ng-container>
           </p>
+          <span class="mat-body-1 rel-children inline">
+            <span class="mat-body-2">relative children:</span>
+            &ngsp;
+            <ng-container *ngIf="properties.relativeChildren.length === 0">
+              none
+            </ng-container>
+            <ng-container *ngFor="let layer of properties.relativeChildren; index as i">
+              <button
+                mat-button
+                color="primary"
+                [matTooltip]="layer.name"
+                (click)="onIdClicked(layer.nodeId)">
+                {{ layer.layerId }}
+              </button>
+              {{(i === properties.relativeChildren.length - 1) ? '' : ', '}}
+            </ng-container>
+          </span>
         </div>
       </div>
 
