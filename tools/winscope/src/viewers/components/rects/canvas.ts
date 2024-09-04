@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 import {assertDefined} from 'common/assert_utils';
+import {Circle3D} from 'common/geometry/circle3d';
+import {Point3D} from 'common/geometry/point3d';
 import {TransformMatrix} from 'common/geometry/transform_matrix';
 import * as THREE from 'three';
 import {
@@ -21,14 +23,10 @@ import {
   CSS2DRenderer,
 } from 'three/examples/jsm/renderers/CSS2DRenderer';
 import {ViewerEvents} from 'viewers/common/viewer_events';
-import {
-  Circle3D,
-  ColorType,
-  Label3D,
-  Point3D,
-  Scene3D,
-  UiRect3D,
-} from './types3d';
+import {ColorType} from './color_type';
+import {RectLabel} from './rect_label';
+import {Scene} from './scene';
+import {UiRect3D} from './ui_rect3d';
 
 export class Canvas {
   static readonly TARGET_SCENE_DIAGONAL = 4;
@@ -40,9 +38,12 @@ export class Canvas {
   );
   private static readonly RECT_COLOR_HAS_CONTENT = new THREE.Color(0xad42f5);
 
+  private static readonly RECT_EDGE_BOLD_WIDTH = 10;
   private static readonly RECT_EDGE_COLOR_LIGHT_MODE = 0x000000;
   private static readonly RECT_EDGE_COLOR_DARK_MODE = 0xffffff;
   private static readonly RECT_EDGE_COLOR_ROUNDED = 0x848884;
+  private static readonly RECT_EDGE_COLOR_PINNED = 0xffc24b; // Keep in sync with Color#PINNED_ITEM_BORDER
+  private static readonly RECT_EDGE_COLOR_PINNED_ALT = 0xb34a24;
 
   private static readonly LABEL_LINE_COLOR = 0x808080;
 
@@ -59,6 +60,8 @@ export class Canvas {
   private renderer?: THREE.WebGLRenderer;
   private labelRenderer?: CSS2DRenderer;
   private clickableObjects: THREE.Object3D[] = [];
+  private pinnedIdToColorMap = new Map<string, number>();
+  private lastAssignedDefaultPinnedColor = false;
 
   constructor(
     private canvasRects: HTMLCanvasElement,
@@ -66,7 +69,7 @@ export class Canvas {
     private isDarkMode = () => false,
   ) {}
 
-  draw(scene: Scene3D) {
+  draw(scene: Scene) {
     // Must set 100% width and height so the HTML element expands to the parent's
     // boundaries and the correct clientWidth and clientHeight values can be read
     this.canvasRects.style.width = '100%';
@@ -100,12 +103,20 @@ export class Canvas {
       scene.camera.zoomFactor;
     this.scene.scale.set(scaleFactor, -scaleFactor, scaleFactor);
     this.scene.translateX(
-      scaleFactor * -scene.boundingBox.center.x + cameraWidth * panFactorX,
+      scaleFactor *
+        -(
+          scene.boundingBox.depth * scene.camera.rotationAngleX +
+          scene.boundingBox.center.x
+        ) +
+        cameraWidth * panFactorX,
     );
     this.scene.translateY(
-      scaleFactor * scene.boundingBox.center.y - cameraHeight * panFactorY,
+      scaleFactor *
+        ((-scene.boundingBox.depth * scene.camera.rotationAngleY ** 2) / 2 +
+          scene.boundingBox.center.y) -
+        cameraHeight * panFactorY,
     );
-    this.scene.translateZ(scaleFactor * -scene.boundingBox.center.z);
+    this.scene.translateZ(scaleFactor * -scene.boundingBox.depth);
 
     this.camera = new THREE.OrthographicCamera(
       -cameraWidth / 2,
@@ -177,8 +188,8 @@ export class Canvas {
   private drawRects(rects: UiRect3D[]) {
     this.clickableObjects = [];
     rects.forEach((rect) => {
-      const rectMesh = Canvas.makeRectMesh(rect, this.isDarkMode());
-      const transform = Canvas.toMatrix4(rect.transform);
+      const rectMesh = this.makeRectMesh(rect, this.isDarkMode());
+      const transform = this.toMatrix4(rect.transform);
       rectMesh.applyMatrix4(transform);
 
       this.scene?.add(rectMesh);
@@ -189,7 +200,7 @@ export class Canvas {
     });
   }
 
-  private drawLabels(labels: Label3D[], isDarkMode: boolean) {
+  private drawLabels(labels: RectLabel[], isDarkMode: boolean) {
     this.clearLabels();
     labels.forEach((label) => {
       const circleMesh = this.makeLabelCircleMesh(label.circle, isDarkMode);
@@ -213,7 +224,7 @@ export class Canvas {
     });
   }
 
-  private drawLabelTextHtml(label: Label3D) {
+  private drawLabelTextHtml(label: RectLabel) {
     // Add rectangle label
     const spanText: HTMLElement = document.createElement('span');
     spanText.innerText = label.text;
@@ -254,7 +265,7 @@ export class Canvas {
     this.scene?.add(labelCss);
   }
 
-  private static toMatrix4(transform: TransformMatrix): THREE.Matrix4 {
+  private toMatrix4(transform: TransformMatrix): THREE.Matrix4 {
     return new THREE.Matrix4().set(
       transform.dsdx,
       transform.dtdx,
@@ -275,16 +286,18 @@ export class Canvas {
     );
   }
 
-  private static makeRectMesh(rect: UiRect3D, isDarkMode: boolean): THREE.Mesh {
-    const rectShape = Canvas.createRoundedRectShape(rect);
+  private makeRectMesh(rect: UiRect3D, isDarkMode: boolean): THREE.Mesh {
+    const rectShape = this.createRoundedRectShape(rect);
     const rectGeometry = new THREE.ShapeGeometry(rectShape);
-    const rectBorders = Canvas.createRectBorders(
-      rect,
-      rectGeometry,
-      isDarkMode,
-    );
+    let pinnedBorders: THREE.Shape[] | undefined;
+    let rectBorders: THREE.LineSegments | undefined;
+    if (rect.isPinned) {
+      pinnedBorders = this.createPinnedRectBorders(rect);
+    } else {
+      rectBorders = this.createRectBorders(rect, rectGeometry, isDarkMode);
+    }
 
-    const color = Canvas.getColor(rect, isDarkMode);
+    const color = this.getColor(rect, isDarkMode);
     let fillMaterial: THREE.MeshBasicMaterial = Canvas.TRANSPARENT_MATERIAL;
     if (color !== undefined) {
       let opacity: number | undefined;
@@ -311,7 +324,7 @@ export class Canvas {
     );
     if (rect.fillRegion) {
       const fillShapes = rect.fillRegion.map((fillRect) =>
-        Canvas.createRectShape(fillRect.topLeft, fillRect.bottomRight),
+        this.createRectShape(fillRect.topLeft, fillRect.bottomRight),
       );
       const fillMesh = new THREE.Mesh(
         new THREE.ShapeGeometry(fillShapes),
@@ -322,7 +335,31 @@ export class Canvas {
       fillMesh.name = rect.id;
       mesh.add(fillMesh);
     }
-    mesh.add(rectBorders);
+
+    if (pinnedBorders) {
+      let color = this.pinnedIdToColorMap.get(rect.id);
+      if (color === undefined) {
+        color = this.lastAssignedDefaultPinnedColor
+          ? Canvas.RECT_EDGE_COLOR_PINNED_ALT
+          : Canvas.RECT_EDGE_COLOR_PINNED;
+        this.pinnedIdToColorMap.set(rect.id, color);
+        this.lastAssignedDefaultPinnedColor =
+          !this.lastAssignedDefaultPinnedColor;
+      }
+      const pinnedBorderMesh = new THREE.Mesh(
+        new THREE.ShapeGeometry(pinnedBorders),
+        new THREE.MeshBasicMaterial({color}),
+      );
+      // Prevent z-fighting with the parent mesh
+      pinnedBorderMesh.position.z = 2;
+      pinnedBorderMesh.name = rect.id;
+      mesh.add(pinnedBorderMesh);
+    }
+
+    if (rectBorders) {
+      mesh.add(rectBorders);
+    }
+
     mesh.position.x = 0;
     mesh.position.y = 0;
     mesh.position.z = rect.topLeft.z;
@@ -331,7 +368,7 @@ export class Canvas {
     return mesh;
   }
 
-  private static createRoundedRectShape(rect: UiRect3D): THREE.Shape {
+  private createRoundedRectShape(rect: UiRect3D): THREE.Shape {
     const bottomLeft: Point3D = {
       x: rect.topLeft.x,
       y: rect.bottomRight.y,
@@ -343,16 +380,7 @@ export class Canvas {
       z: rect.bottomRight.z,
     };
 
-    // Limit corner radius if larger than height/2 (or width/2)
-    const height = rect.bottomRight.y - rect.topLeft.y;
-    const width = rect.bottomRight.x - rect.topLeft.x;
-    const minEdge = Math.min(height, width);
-    let cornerRadius = Math.min(rect.cornerRadius, minEdge / 2);
-
-    // Force radius > 0, because radius === 0 could result in weird triangular shapes
-    // being drawn instead of rectangles. Seems like quadraticCurveTo() doesn't
-    // always handle properly the case with radius === 0.
-    cornerRadius = Math.max(cornerRadius, 0.01);
+    const cornerRadius = this.getAdjustedCornerRadius(rect);
 
     // Create (rounded) rect shape
     return new THREE.Shape()
@@ -387,10 +415,7 @@ export class Canvas {
       );
   }
 
-  private static createRectShape(
-    topLeft: Point3D,
-    bottomRight: Point3D,
-  ): THREE.Shape {
+  private createRectShape(topLeft: Point3D, bottomRight: Point3D): THREE.Shape {
     const bottomLeft: Point3D = {
       x: topLeft.x,
       y: bottomRight.y,
@@ -411,25 +436,25 @@ export class Canvas {
       .lineTo(topLeft.x, topLeft.y);
   }
 
-  private static getVisibleRectColor(darkFactor: number) {
+  private getVisibleRectColor(darkFactor: number) {
     const red = ((200 - 45) * darkFactor + 45) / 255;
     const green = ((232 - 182) * darkFactor + 182) / 255;
     const blue = ((183 - 44) * darkFactor + 44) / 255;
     return new THREE.Color(red, green, blue);
   }
 
-  private static getColor(
+  private getColor(
     rect: UiRect3D,
     isDarkMode: boolean,
   ): THREE.Color | undefined {
     switch (rect.colorType) {
       case ColorType.VISIBLE: {
         // green (darkness depends on z order)
-        return Canvas.getVisibleRectColor(rect.darkFactor);
+        return this.getVisibleRectColor(rect.darkFactor);
       }
       case ColorType.VISIBLE_WITH_OPACITY: {
         // same green for all rects - rect.darkFactor determines opacity
-        return Canvas.getVisibleRectColor(0.7);
+        return this.getVisibleRectColor(0.7);
       }
       case ColorType.NOT_VISIBLE: {
         // gray (darkness depends on z order)
@@ -458,30 +483,126 @@ export class Canvas {
     }
   }
 
-  private static createRectBorders(
+  private createRectBorders(
     rect: UiRect3D,
     rectGeometry: THREE.ShapeGeometry,
     isDarkMode: boolean,
   ): THREE.LineSegments {
     // create line edges for rect
     const edgeGeo = new THREE.EdgesGeometry(rectGeometry);
-    let edgeMaterial: THREE.Material;
+    let color: number;
     if (rect.cornerRadius) {
-      edgeMaterial = new THREE.LineBasicMaterial({
-        color: Canvas.RECT_EDGE_COLOR_ROUNDED,
-        linewidth: 1,
-      });
+      color = Canvas.RECT_EDGE_COLOR_ROUNDED;
     } else {
-      edgeMaterial = new THREE.LineBasicMaterial({
-        color: isDarkMode
-          ? Canvas.RECT_EDGE_COLOR_DARK_MODE
-          : Canvas.RECT_EDGE_COLOR_LIGHT_MODE,
-        linewidth: 1,
-      });
+      color = isDarkMode
+        ? Canvas.RECT_EDGE_COLOR_DARK_MODE
+        : Canvas.RECT_EDGE_COLOR_LIGHT_MODE;
     }
+    const edgeMaterial = new THREE.LineBasicMaterial({color});
     const lineSegments = new THREE.LineSegments(edgeGeo, edgeMaterial);
     lineSegments.computeLineDistances();
     return lineSegments;
+  }
+
+  private getAdjustedCornerRadius(rect: UiRect3D): number {
+    // Limit corner radius if larger than height/2 (or width/2)
+    const height = rect.bottomRight.y - rect.topLeft.y;
+    const width = rect.bottomRight.x - rect.topLeft.x;
+    const minEdge = Math.min(height, width);
+    const cornerRadius = Math.min(rect.cornerRadius, minEdge / 2);
+
+    // Force radius > 0, because radius === 0 could result in weird triangular shapes
+    // being drawn instead of rectangles. Seems like quadraticCurveTo() doesn't
+    // always handle properly the case with radius === 0.
+    return Math.max(cornerRadius, 0.01);
+  }
+
+  private createPinnedRectBorders(rect: UiRect3D): THREE.Shape[] {
+    const cornerRadius = this.getAdjustedCornerRadius(rect);
+    const xBoldWidth = Canvas.RECT_EDGE_BOLD_WIDTH / rect.transform.dsdx;
+    const yBorderWidth = Canvas.RECT_EDGE_BOLD_WIDTH / rect.transform.dsdy;
+    const borderRects = [
+      // left and bottom borders
+      new THREE.Shape()
+        .moveTo(rect.topLeft.x, rect.topLeft.y + cornerRadius)
+        .lineTo(rect.topLeft.x, rect.bottomRight.y - cornerRadius)
+        .quadraticCurveTo(
+          rect.topLeft.x,
+          rect.bottomRight.y,
+          rect.topLeft.x + cornerRadius,
+          rect.bottomRight.y,
+        )
+        .lineTo(rect.bottomRight.x - cornerRadius, rect.bottomRight.y)
+        .quadraticCurveTo(
+          rect.bottomRight.x,
+          rect.bottomRight.y,
+          rect.bottomRight.x,
+          rect.bottomRight.y - cornerRadius,
+        )
+        .lineTo(
+          rect.bottomRight.x - xBoldWidth,
+          rect.bottomRight.y - cornerRadius,
+        )
+        .quadraticCurveTo(
+          rect.bottomRight.x - xBoldWidth,
+          rect.bottomRight.y - yBorderWidth,
+          rect.bottomRight.x - cornerRadius,
+          rect.bottomRight.y - yBorderWidth,
+        )
+        .lineTo(
+          rect.topLeft.x + cornerRadius,
+          rect.bottomRight.y - yBorderWidth,
+        )
+        .quadraticCurveTo(
+          rect.topLeft.x + xBoldWidth,
+          rect.bottomRight.y - yBorderWidth,
+          rect.topLeft.x + xBoldWidth,
+          rect.bottomRight.y - cornerRadius,
+        )
+        .lineTo(rect.topLeft.x + xBoldWidth, rect.topLeft.y + cornerRadius)
+        .lineTo(rect.topLeft.x, rect.topLeft.y + cornerRadius),
+
+      // right and top borders
+      new THREE.Shape()
+        .moveTo(rect.bottomRight.x, rect.bottomRight.y - cornerRadius)
+        .lineTo(rect.bottomRight.x, rect.topLeft.y + cornerRadius)
+        .quadraticCurveTo(
+          rect.bottomRight.x,
+          rect.topLeft.y,
+          rect.bottomRight.x - cornerRadius,
+          rect.topLeft.y,
+        )
+        .lineTo(rect.topLeft.x + cornerRadius, rect.topLeft.y)
+        .quadraticCurveTo(
+          rect.topLeft.x,
+          rect.topLeft.y,
+          rect.topLeft.x,
+          rect.topLeft.y + cornerRadius,
+        )
+        .lineTo(rect.topLeft.x + xBoldWidth, rect.topLeft.y + cornerRadius)
+        .quadraticCurveTo(
+          rect.topLeft.x + xBoldWidth,
+          rect.topLeft.y + yBorderWidth,
+          rect.topLeft.x + cornerRadius,
+          rect.topLeft.y + yBorderWidth,
+        )
+        .lineTo(
+          rect.bottomRight.x - cornerRadius,
+          rect.topLeft.y + yBorderWidth,
+        )
+        .quadraticCurveTo(
+          rect.bottomRight.x - xBoldWidth,
+          rect.topLeft.y + yBorderWidth,
+          rect.bottomRight.x - xBoldWidth,
+          rect.topLeft.y + cornerRadius,
+        )
+        .lineTo(
+          rect.bottomRight.x - xBoldWidth,
+          rect.bottomRight.y - cornerRadius,
+        )
+        .lineTo(rect.bottomRight.x, rect.bottomRight.y - cornerRadius),
+    ];
+    return borderRects;
   }
 
   private makeLabelCircleMesh(

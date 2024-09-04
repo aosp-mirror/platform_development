@@ -26,6 +26,8 @@ import {MatDividerModule} from '@angular/material/divider';
 import {MatIconModule} from '@angular/material/icon';
 import {MatTooltipModule} from '@angular/material/tooltip';
 import {UnitTestUtils} from 'test/unit/utils';
+import {TraceType} from 'trace/trace_type';
+import {ImeUiData} from 'viewers/common/ime_ui_data';
 import {CollapsedSectionsComponent} from './collapsed_sections_component';
 import {CollapsibleSectionTitleComponent} from './collapsible_section_title_component';
 import {HierarchyComponent} from './hierarchy_component';
@@ -61,6 +63,7 @@ describe('ViewerInputMethodComponent', () => {
     fixture = TestBed.createComponent(ViewerInputMethodComponent);
     component = fixture.componentInstance;
     htmlElement = fixture.nativeElement;
+    component.inputData = new ImeUiData(TraceType.INPUT_METHOD_CLIENTS);
     fixture.detectChanges();
   });
 

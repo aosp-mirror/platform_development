@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import {HttpClientModule} from '@angular/common/http';
 import {CUSTOM_ELEMENTS_SCHEMA} from '@angular/core';
 import {
   ComponentFixture,
@@ -55,6 +56,7 @@ describe('ViewerViewCaptureComponent', () => {
         FormsModule,
         BrowserAnimationsModule,
         MatSelectModule,
+        HttpClientModule,
       ],
       declarations: [
         ViewerViewCaptureComponent,

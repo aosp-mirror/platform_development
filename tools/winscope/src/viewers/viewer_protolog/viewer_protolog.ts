@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import {Store} from 'common/store';
 import {WinscopeEvent} from 'messaging/winscope_event';
 import {EmitEvent} from 'messaging/winscope_event_emitter';
 import {Trace} from 'trace/trace';
@@ -24,6 +25,7 @@ import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
 import {View, Viewer, ViewType} from 'viewers/viewer';
 import {Presenter} from './presenter';
 import {UiData} from './ui_data';
+import {ViewerProtologComponent} from './viewer_protolog_component';
 
 class ViewerProtoLog implements Viewer {
   static readonly DEPENDENCIES: TraceType[] = [TraceType.PROTO_LOG];
@@ -33,11 +35,12 @@ class ViewerProtoLog implements Viewer {
   private readonly presenter: Presenter;
   private readonly view: View;
 
-  constructor(trace: Trace<PropertyTreeNode>, traces: Traces) {
+  constructor(trace: Trace<PropertyTreeNode>, traces: Traces, storage: Store) {
     this.trace = trace;
     this.htmlElement = document.createElement('viewer-protolog');
+    (this.htmlElement as unknown as ViewerProtologComponent).store = storage;
     const notifyViewCallback = (data: UiData) => {
-      (this.htmlElement as any).inputData = data;
+      (this.htmlElement as unknown as ViewerProtologComponent).inputData = data;
     };
     this.presenter = new Presenter(trace, notifyViewCallback);
     this.presenter.addEventListeners(this.htmlElement);

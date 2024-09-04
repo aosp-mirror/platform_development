@@ -21,17 +21,18 @@ import {
   Input,
   Output,
 } from '@angular/core';
+import {Color} from 'app/colors';
 import {PersistentStore} from 'common/persistent_store';
 import {Analytics} from 'logging/analytics';
+import {TRACE_INFO} from 'trace/trace_info';
 import {TraceType} from 'trace/trace_type';
 import {RectShowState} from 'viewers/common/rect_show_state';
 import {TableProperties} from 'viewers/common/table_properties';
 import {UiHierarchyTreeNode} from 'viewers/common/ui_hierarchy_tree_node';
 import {UiTreeUtils} from 'viewers/common/ui_tree_utils';
 import {UserOptions} from 'viewers/common/user_options';
-import {ViewerEvents} from 'viewers/common/viewer_events';
+import {TextFilterDetail, ViewerEvents} from 'viewers/common/viewer_events';
 import {nodeStyles} from 'viewers/components/styles/node.styles';
-import {searchBoxStyle} from './styles/search_box.styles';
 import {viewerCardInnerStyle} from './styles/viewer_card.styles';
 
 @Component({
@@ -43,14 +44,10 @@ import {viewerCardInnerStyle} from './styles/viewer_card.styles';
           class="hierarchy-title"
           title="HIERARCHY"
           (collapseButtonClicked)="collapseButtonClicked.emit()"></collapsible-section-title>
-        <mat-form-field class="search-box" (keydown.enter)="$event.target.blur()">
-          <mat-label>Search</mat-label>
-          <input
-            matInput
-            [(ngModel)]="filterString"
-            (ngModelChange)="onFilterChange()"
-            name="filter" />
-        </mat-form-field>
+        <search-box
+          [store]="store"
+          [storeKey]="storeKeyFilterFlags"
+          (filterChange)="onFilterChange($event)"></search-box>
       </div>
       <user-options
         class="view-controls"
@@ -131,7 +128,7 @@ import {viewerCardInnerStyle} from './styles/viewer_card.styles';
       .pinned-items {
         width: 100%;
         box-sizing: border-box;
-        border: 2px solid #ffd58b;
+        border: 2px solid ${Color.PINNED_ITEM_BORDER};
       }
 
       tree-view {
@@ -139,15 +136,14 @@ import {viewerCardInnerStyle} from './styles/viewer_card.styles';
       }
     `,
     nodeStyles,
-    searchBoxStyle,
     viewerCardInnerStyle,
   ],
 })
 export class HierarchyComponent {
-  filterString = '';
   isHighlighted = UiTreeUtils.isHighlighted;
   ViewerEvents = ViewerEvents;
   Analytics = Analytics;
+  storeKeyFilterFlags: string | undefined;
 
   @Input() tree: UiHierarchyTreeNode | undefined;
   @Input() subtrees: UiHierarchyTreeNode[] = [];
@@ -163,6 +159,11 @@ export class HierarchyComponent {
   @Output() collapseButtonClicked = new EventEmitter();
 
   constructor(@Inject(ElementRef) private elementRef: ElementRef) {}
+
+  ngOnInit() {
+    this.storeKeyFilterFlags =
+      TRACE_INFO[this.dependencies[0]].name + 'hierarchyView.filterFlags';
+  }
 
   trackById(index: number, child: UiHierarchyTreeNode): string {
     return child.id;
@@ -184,10 +185,10 @@ export class HierarchyComponent {
     this.onHighlightedItemChange(pinnedItem);
   }
 
-  onFilterChange() {
+  onFilterChange(detail: TextFilterDetail) {
     const event = new CustomEvent(ViewerEvents.HierarchyFilterChange, {
       bubbles: true,
-      detail: {filterString: this.filterString},
+      detail,
     });
     this.elementRef.nativeElement.dispatchEvent(event);
   }

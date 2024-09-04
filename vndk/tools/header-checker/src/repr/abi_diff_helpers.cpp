@@ -357,6 +357,23 @@ DiffStatus AbiDiffHelper::CompareAccess(AccessSpecifierIR old_access,
   return DiffStatus::kDirectDiff;
 }
 
+// This function returns a map from field names to RecordFieldIR.
+// It appends anonymous fields to anonymous_fields.
+static AbiElementMap<const RecordFieldIR *> BuildRecordFieldNameMap(
+    const std::vector<RecordFieldIR> &fields,
+    std::vector<const RecordFieldIR *> &anonymous_fields) {
+  AbiElementMap<const RecordFieldIR *> field_map;
+  for (const RecordFieldIR &field : fields) {
+    const std::string &name = field.GetName();
+    if (name.empty()) {
+      anonymous_fields.emplace_back(&field);
+    } else {
+      field_map.emplace(name, &field);
+    }
+  }
+  return field_map;
+}
+
 DiffStatus AbiDiffHelper::CompareCommonRecordFields(
     const RecordFieldIR *old_field, const RecordFieldIR *new_field,
     DiffMessageIR::DiffKind diff_kind) {
@@ -376,6 +393,27 @@ DiffStatus AbiDiffHelper::CompareCommonRecordFields(
   return field_diff_status;
 }
 
+// FilterOutRenamedRecordFields calls this function to compare record fields in
+// two dumps.
+// If this function returns 0, the fields may be compatible.
+// If it returns -1 or 1, the fields must be incompatible.
+static int CompareRenamedRecordFields(const RecordFieldIR *old_field,
+                                      const RecordFieldIR *new_field) {
+  if (old_field->GetOffset() != new_field->GetOffset()) {
+    return old_field->GetOffset() < new_field->GetOffset() ? -1 : 1;
+  }
+  if (old_field->IsBitField() != new_field->IsBitField()) {
+    return old_field->IsBitField() < new_field->IsBitField() ? -1 : 1;
+  }
+  if (old_field->GetBitWidth() != new_field->GetBitWidth()) {
+    return old_field->GetBitWidth() < new_field->GetBitWidth() ? -1 : 1;
+  }
+  // Skip GetReferencedType because the same type in old and new dumps may have
+  // different IDs, especially in the cases of anonymous types and multiple
+  // definitions.
+  return 0;
+}
+
 // This function filters out the pairs of old and new fields that meet the
 // following conditions:
 //   The old field's (offset, bit width, type) is unique in old_fields.
@@ -391,17 +429,12 @@ DiffStatus AbiDiffHelper::FilterOutRenamedRecordFields(
   DiffStatus diff_status = DiffStatus::kNoDiff;
   const auto old_end = old_fields.end();
   const auto new_end = new_fields.end();
+  // Sort fields by (offset, bit width, type).
   auto is_less = [](const RecordFieldIR *first, const RecordFieldIR *second) {
-    if (first->GetOffset() != second->GetOffset()) {
-      return first->GetOffset() < second->GetOffset();
-    }
-    if (first->IsBitField() != second->IsBitField()) {
-      return first->IsBitField() < second->IsBitField();
-    }
-    if (first->GetBitWidth() != second->GetBitWidth()) {
-      return first->GetBitWidth() < second->GetBitWidth();
-    }
-    return first->GetReferencedType() < second->GetReferencedType();
+    int result = CompareRenamedRecordFields(first, second);
+    return result != 0
+               ? result < 0
+               : first->GetReferencedType() < second->GetReferencedType();
   };
   std::sort(old_fields.begin(), old_end, is_less);
   std::sort(new_fields.begin(), new_end, is_less);
@@ -411,11 +444,12 @@ DiffStatus AbiDiffHelper::FilterOutRenamedRecordFields(
   auto old_it = old_fields.begin();
   auto new_it = new_fields.begin();
   while (old_it != old_end && new_it != new_end) {
+    int old_new_cmp = CompareRenamedRecordFields(*old_it, *new_it);
     auto next_old_it = std::next(old_it);
     while (next_old_it != old_end && !is_less(*old_it, *next_old_it)) {
       next_old_it++;
     }
-    if (is_less(*old_it, *new_it) || next_old_it - old_it > 1) {
+    if (old_new_cmp < 0 || next_old_it - old_it > 1) {
       out_old_fields.insert(out_old_fields.end(), old_it, next_old_it);
       old_it = next_old_it;
       continue;
@@ -425,7 +459,7 @@ DiffStatus AbiDiffHelper::FilterOutRenamedRecordFields(
     while (next_new_it != new_end && !is_less(*new_it, *next_new_it)) {
       next_new_it++;
     }
-    if (is_less(*new_it, *old_it) || next_new_it - new_it > 1) {
+    if (old_new_cmp > 0 || next_new_it - new_it > 1) {
       out_new_fields.insert(out_new_fields.end(), new_it, next_new_it);
       new_it = next_new_it;
       continue;
@@ -457,25 +491,17 @@ RecordFieldDiffResult AbiDiffHelper::CompareRecordFields(
   RecordFieldDiffResult result;
   DiffStatus &diff_status = result.status;
   diff_status = DiffStatus::kNoDiff;
-  // Map names to RecordFieldIR.
-  AbiElementMap<const RecordFieldIR *> old_fields_map;
-  AbiElementMap<const RecordFieldIR *> new_fields_map;
+  AbiElementMap<const RecordFieldIR *> old_fields_map =
+      BuildRecordFieldNameMap(old_fields, result.removed_fields);
+  AbiElementMap<const RecordFieldIR *> new_fields_map =
+      BuildRecordFieldNameMap(new_fields, result.added_fields);
 
-  auto get_field_name = [](const RecordFieldIR *f) -> std::string {
-    return !f->GetName().empty()
-               ? f->GetName()
-               : std::to_string(f->GetOffset()) + "#" + f->GetReferencedType();
-  };
-
-  utils::AddToMap(&old_fields_map, old_fields, get_field_name,
-                  [](const RecordFieldIR *f) { return f; });
-  utils::AddToMap(&new_fields_map, new_fields, get_field_name,
-                  [](const RecordFieldIR *f) { return f; });
-  // Compare the fields whose names are not present in both records.
-  result.removed_fields =
-      utils::FindRemovedElements(old_fields_map, new_fields_map);
-  result.added_fields =
-      utils::FindRemovedElements(new_fields_map, old_fields_map);
+  // Compare the anonymous fields and the fields whose names are not present in
+  // both records.
+  utils::InsertAll(result.removed_fields,
+                   utils::FindRemovedElements(old_fields_map, new_fields_map));
+  utils::InsertAll(result.added_fields,
+                   utils::FindRemovedElements(new_fields_map, old_fields_map));
   diff_status.CombineWith(FilterOutRenamedRecordFields(
       diff_kind, result.removed_fields, result.added_fields));
   if (result.removed_fields.size() != 0) {

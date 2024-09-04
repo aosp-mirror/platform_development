@@ -376,11 +376,16 @@ pub struct PackageConfig {
     /// Patch file to apply after rules.mk is generated.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub rulesmk_patch: Option<PathBuf>,
+    /// `license_text` to use for `license` module, overriding the `license_file` given by the
+    /// package or the default "LICENSE".
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub license_text: Option<String>,
 }
 
 impl PackageConfig {
     /// Names of all the fields on `PackageConfig`.
-    const FIELD_NAMES: [&'static str; 3] = ["add_toplevel_block", "patch", "rulesmk_patch"];
+    const FIELD_NAMES: [&'static str; 4] =
+        ["add_toplevel_block", "license_text", "patch", "rulesmk_patch"];
 }
 
 /// Options that apply to everything in a package (i.e. everything associated with a particular

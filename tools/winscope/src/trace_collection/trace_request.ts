@@ -21,5 +21,5 @@ export interface TraceRequest {
 
 export interface TraceRequestConfig {
   key: string;
-  value?: string;
+  value?: string | string[];
 }
