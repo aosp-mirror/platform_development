@@ -58,7 +58,7 @@ export abstract class AbstractTimelineRowComponent<T extends {}> {
   }
 
   getBackgroundColor() {
-    return this.isActive ? 'var(--drawer-block-secondary)' : undefined;
+    return this.isActive ? 'var(--selected-element-color)' : undefined;
   }
 
   ngAfterViewInit() {
