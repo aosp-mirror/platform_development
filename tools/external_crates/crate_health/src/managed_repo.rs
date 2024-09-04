@@ -23,6 +23,7 @@ use std::{
 
 use anyhow::{anyhow, Result};
 use glob::glob;
+use google_metadata::GoogleMetadata;
 use itertools::Itertools;
 use license_checker::find_licenses;
 use name_and_version::{NameAndVersion, NameAndVersionMap, NameAndVersionRef, NamedAndVersioned};
@@ -31,8 +32,8 @@ use semver::Version;
 use spdx::Licensee;
 
 use crate::{
-    cargo_embargo_autoconfig, copy_dir, update_module_license_files, Crate, CrateCollection,
-    GoogleMetadata, Migratable, PseudoCrate, VersionMatch,
+    cargo_embargo_autoconfig, copy_dir, most_restrictive_type, update_module_license_files, Crate,
+    CrateCollection, Migratable, PseudoCrate, VersionMatch,
 };
 
 pub struct ManagedRepo {
@@ -421,10 +422,11 @@ impl ManagedRepo {
             update_module_license_files(&krate.path().abs(), &licenses)?;
 
             let metadata = GoogleMetadata::init(
-                krate.path().abs().join("METADATA"),
-                &krate,
+                krate.path().join("METADATA")?,
+                krate.name(),
+                krate.version().to_string(),
                 krate.description(),
-                &licenses,
+                most_restrictive_type(&licenses),
             )?;
             metadata.write()?;
 

@@ -41,9 +41,6 @@ pub use self::android_bp::{
 };
 mod android_bp;
 
-pub use self::google_metadata::GoogleMetadata;
-mod google_metadata;
-
 pub use self::license::{most_restrictive_type, update_module_license_files};
 mod license;
 
@@ -111,5 +108,3 @@ pub fn copy_dir(src: impl AsRef<Path>, dst: impl AsRef<Path>) -> Result<()> {
         .run_quiet_and_expect_success()?;
     Ok(())
 }
-
-include!(concat!(env!("OUT_DIR"), "/protos/mod.rs"));
