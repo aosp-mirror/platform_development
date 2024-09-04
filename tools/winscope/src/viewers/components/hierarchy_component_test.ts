@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+import {ClipboardModule} from '@angular/cdk/clipboard';
 import {CommonModule} from '@angular/common';
 import {
   ComponentFixture,
@@ -38,6 +39,7 @@ import {TreeComponent} from 'viewers/components/tree_component';
 import {TreeNodeComponent} from 'viewers/components/tree_node_component';
 import {CollapsibleSectionTitleComponent} from './collapsible_section_title_component';
 import {HierarchyComponent} from './hierarchy_component';
+import {SearchBoxComponent} from './search_box_component';
 import {UserOptionsComponent} from './user_options_component';
 
 describe('HierarchyComponent', () => {
@@ -55,6 +57,7 @@ describe('HierarchyComponent', () => {
         HierarchyTreeNodeDataViewComponent,
         CollapsibleSectionTitleComponent,
         UserOptionsComponent,
+        SearchBoxComponent,
       ],
       imports: [
         CommonModule,
@@ -66,6 +69,7 @@ describe('HierarchyComponent', () => {
         FormsModule,
         MatIconModule,
         MatTooltipModule,
+        ClipboardModule,
       ],
     }).compileComponents();
 

@@ -29,7 +29,7 @@ import {
 } from 'viewers/common/ui_data_log';
 import {UiPropertyTreeNode} from 'viewers/common/ui_property_tree_node';
 import {UserOptions} from 'viewers/common/user_options';
-import {UiRect} from 'viewers/components/rects/types2d';
+import {UiRect} from 'viewers/components/rects/ui_rect';
 
 export class UiData implements UiDataLog {
   constructor(
@@ -38,10 +38,10 @@ export class UiData implements UiDataLog {
     public filters: LogFilter[],
     public selectedIndex: undefined | number,
     public scrollToIndex: undefined | number,
+    public currentIndex: undefined | number,
     public propertiesTree: undefined | UiPropertyTreeNode,
   ) {}
 
-  selectedTraceType: TraceType | undefined;
   highlightedProperty: string = '';
   dispatchPropertiesTree: UiPropertyTreeNode | undefined;
 
@@ -54,7 +54,7 @@ export class UiData implements UiDataLog {
   readonly dependencies: TraceType[] = [TraceType.INPUT_EVENT_MERGED];
 
   static createEmpty(): UiData {
-    return new UiData([], [], [], undefined, undefined, undefined);
+    return new UiData([], [], [], undefined, undefined, undefined, undefined);
   }
 }
 

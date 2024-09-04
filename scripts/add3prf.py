@@ -203,7 +203,7 @@ def decide_license_type(cargo_license):
   # Some crate like time-macros-impl uses lower case names like LICENSE-Apache.
   licenses = []
   license_file = None
-  for license_file in glob.glob("LICENSE*") + glob.glob("COPYING*") + glob.glob("UNLICENSE*"):
+  for license_file in glob.glob("license*") + glob.glob("LICENSE*") + glob.glob("COPYING*") + glob.glob("UNLICENSE*"):
     lowered_name = os.path.splitext(license_file.lower())[0]
     if lowered_name == "license-apache":
       licenses.append(License(LicenseType.APACHE2, LicenseGroup.NOTICE, license_file))

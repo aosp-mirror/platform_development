@@ -39,7 +39,6 @@ class PresenterTransactionsTest extends AbstractLogViewerPresenterTest<UiData> {
 
   override readonly shouldExecuteHeaderTests = false;
   override readonly shouldExecuteFilterTests = true;
-  override readonly shouldExecuteCurrentIndexTests = true;
   override readonly shouldExecutePropertiesTests = true;
 
   override readonly totalOutputEntries = 1647;
@@ -157,9 +156,11 @@ class PresenterTransactionsTest extends AbstractLogViewerPresenterTest<UiData> {
       });
 
       it('includes no op transitions', async () => {
-        await presenter.onFilterChange(LogFieldType.TRANSACTION_TYPE, [
-          TransactionsEntryType.NO_OP,
-        ]);
+        await presenter.onFilterChange(
+          LogFieldType.TRANSACTION_TYPE,
+          [TransactionsEntryType.NO_OP],
+          [],
+        );
         const fieldValues = assertDefined(uiData).entries.map((entry) =>
           getFieldValue(entry, LogFieldType.TRANSACTION_TYPE),
         );

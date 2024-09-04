@@ -15,7 +15,7 @@
  */
 
 import {assertDefined} from 'common/assert_utils';
-import {Point} from 'common/geometry_types';
+import {Point} from 'common/geometry/point';
 import {Trace} from 'trace/trace';
 import {
   CanvasMouseHandler,

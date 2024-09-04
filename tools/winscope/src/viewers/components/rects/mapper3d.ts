@@ -15,21 +15,23 @@
  */
 
 import {assertDefined} from 'common/assert_utils';
-import {IDENTITY_MATRIX, TransformMatrix} from 'common/geometry_types';
-import {Size, UiRect} from 'viewers/components/rects/types2d';
-import {
-  Box3D,
-  ColorType,
-  Distance2D,
-  Label3D,
-  Point3D,
-  Rect3D,
-  Scene3D,
-  ShadingMode,
-} from './types3d';
+import {Box3D} from 'common/geometry/box3d';
+import {Distance} from 'common/geometry/distance';
+import {Point3D} from 'common/geometry/point3d';
+import {Rect3D} from 'common/geometry/rect3d';
+import {Size} from 'common/geometry/size';
+import {IDENTITY_MATRIX} from 'common/geometry/transform_matrix';
+import {UiHierarchyTreeNode} from 'viewers/common/ui_hierarchy_tree_node';
+import {UiRect} from 'viewers/components/rects/ui_rect';
+import {ColorType} from './color_type';
+import {RectLabel} from './rect_label';
+import {Scene} from './scene';
+import {ShadingMode} from './shading_mode';
+import {UiRect3D} from './ui_rect3d';
 
 class Mapper3D {
   private static readonly CAMERA_ROTATION_FACTOR_INIT = 1;
+  private static readonly DISPLAY_CLUSTER_SPACING = 750;
   private static readonly LABEL_FIRST_Y_OFFSET = 100;
   private static readonly LABEL_CIRCLE_RADIUS = 15;
   private static readonly LABEL_SPACING_INIT_FACTOR = 12.5;
@@ -51,13 +53,18 @@ class Mapper3D {
   private cameraRotationFactor = Mapper3D.CAMERA_ROTATION_FACTOR_INIT;
   private zSpacingFactor = Mapper3D.Z_SPACING_FACTOR_INIT;
   private zoomFactor = Mapper3D.ZOOM_FACTOR_INIT;
-  private panScreenDistance = new Distance2D(0, 0);
-  private currentGroupId = 0; // default stack id is usually 0
+  private panScreenDistance = new Distance(0, 0);
+  private currentGroupIds = [0]; // default stack id is usually 0
   private shadingModeIndex = 0;
   private allowedShadingModes: ShadingMode[] = [ShadingMode.GRADIENT];
+  private pinnedItems: UiHierarchyTreeNode[] = [];
 
   setRects(rects: UiRect[]) {
     this.rects = rects;
+  }
+
+  setPinnedItems(value: UiHierarchyTreeNode[]) {
+    this.pinnedItems = value;
   }
 
   setHighlightedRectId(id: string) {
@@ -90,7 +97,7 @@ class Mapper3D {
     this.zoomFactor = Math.max(this.zoomFactor, Mapper3D.ZOOM_FACTOR_MIN);
   }
 
-  addPanScreenDistance(distance: Distance2D) {
+  addPanScreenDistance(distance: Distance) {
     this.panScreenDistance.dx += distance.dx;
     this.panScreenDistance.dy += distance.dy;
   }
@@ -107,12 +114,12 @@ class Mapper3D {
     this.panScreenDistance.dy = 0;
   }
 
-  getCurrentGroupId(): number {
-    return this.currentGroupId;
+  getCurrentGroupIds(): number[] {
+    return this.currentGroupIds;
   }
 
-  setCurrentGroupId(id: number) {
-    this.currentGroupId = id;
+  setCurrentGroupIds(ids: number[]) {
+    this.currentGroupIds = ids;
   }
 
   setAllowedShadingModes(modes: ShadingMode[]) {
@@ -159,16 +166,33 @@ class Mapper3D {
     );
   }
 
-  computeScene(): Scene3D {
-    const rects2d = this.selectRectsToDraw(this.rects);
-    rects2d.sort(this.compareDepth); // decreasing order of depth
-    const rects3d = this.computeRects(rects2d);
-    const labels3d = this.computeLabels(rects2d, rects3d);
-    const boundingBox = this.computeBoundingBox(rects3d, labels3d);
+  computeScene(): Scene {
+    const rects3d: UiRect3D[] = [];
+    const labels3d: RectLabel[] = [];
+    let clusterYOffset = 0;
+    let boundingBox: Box3D | undefined;
+
+    for (const groupId of this.currentGroupIds) {
+      const rects2dForGroupId = this.selectRectsToDraw(this.rects, groupId);
+      rects2dForGroupId.sort(this.compareDepth); // decreasing order of depth
+      const rects3dForGroupId = this.computeRects(
+        rects2dForGroupId,
+        clusterYOffset,
+      );
+      const labels3dForGroupId = this.computeLabels(
+        rects2dForGroupId,
+        rects3dForGroupId,
+      );
+      rects3d.push(...rects3dForGroupId);
+      labels3d.push(...labels3dForGroupId);
+
+      boundingBox = this.computeBoundingBox(rects3d, labels3d);
+      clusterYOffset += boundingBox.height + Mapper3D.DISPLAY_CLUSTER_SPACING;
+    }
 
     const angleX = this.getCameraXAxisAngle();
-    const scene: Scene3D = {
-      boundingBox,
+    const scene: Scene = {
+      boundingBox: boundingBox ?? this.computeBoundingBox(rects3d, labels3d),
       camera: {
         rotationAngleX: angleX,
         rotationAngleY: angleX * Mapper3D.Y_AXIS_ROTATION_FACTOR,
@@ -187,14 +211,16 @@ class Mapper3D {
   }
 
   private compareDepth(a: UiRect, b: UiRect): number {
+    if (a.isDisplay && !b.isDisplay) return 1;
+    if (!a.isDisplay && b.isDisplay) return -1;
     return b.depth - a.depth;
   }
 
-  private selectRectsToDraw(rects: UiRect[]): UiRect[] {
-    return rects.filter((rect) => rect.groupId === this.currentGroupId);
+  private selectRectsToDraw(rects: UiRect[], groupId: number): UiRect[] {
+    return rects.filter((rect) => rect.groupId === groupId);
   }
 
-  private computeRects(rects2d: UiRect[]): Rect3D[] {
+  private computeRects(rects2d: UiRect[], clusterYOffset: number): UiRect3D[] {
     let visibleRectsSoFar = 0;
     let visibleRectsTotal = 0;
     let nonVisibleRectsSoFar = 0;
@@ -223,7 +249,7 @@ class Mapper3D {
     };
 
     let z = 0;
-    const rects3d = rects2d.map((rect2d, i): Rect3D => {
+    const rects3d = rects2d.map((rect2d, i): UiRect3D => {
       const j = rects2d.length - 1 - i; // rects sorted in decreasing order of depth; increment z by L - 1 - i
       z =
         this.zSpacingFactor *
@@ -239,8 +265,18 @@ class Mapper3D {
           (nonVisibleRectsTotal - nonVisibleRectsSoFar++) /
           nonVisibleRectsTotal;
       }
+      let fillRegion: Rect3D[] | undefined;
+      if (rect2d.fillRegion) {
+        fillRegion = rect2d.fillRegion.rects.map((r) => {
+          return {
+            topLeft: {x: r.x, y: r.y, z},
+            bottomRight: {x: r.x + r.w, y: r.y + r.h, z},
+          };
+        });
+      }
+      const transform = rect2d.transform ?? IDENTITY_MATRIX;
 
-      const rect = {
+      const rect: UiRect3D = {
         id: rect2d.id,
         topLeft: {
           x: rect2d.x,
@@ -257,7 +293,9 @@ class Mapper3D {
         darkFactor,
         colorType: this.getColorType(rect2d),
         isClickable: rect2d.isClickable,
-        transform: rect2d.transform ?? IDENTITY_MATRIX,
+        transform: clusterYOffset ? transform.addTy(clusterYOffset) : transform,
+        fillRegion,
+        isPinned: this.pinnedItems.some((node) => node.id === rect2d.id),
       };
       return this.cropOversizedRect(rect, maxDisplaySize);
     });
@@ -307,7 +345,7 @@ class Mapper3D {
     };
   }
 
-  private cropOversizedRect(rect3d: Rect3D, maxDisplaySize: Size): Rect3D {
+  private cropOversizedRect(rect3d: UiRect3D, maxDisplaySize: Size): UiRect3D {
     // Arbitrary max size for a rect (2x the maximum display)
     let maxDimension = Number.MAX_VALUE;
     if (maxDisplaySize.height > 0) {
@@ -331,11 +369,11 @@ class Mapper3D {
     return rect3d;
   }
 
-  private computeLabels(rects2d: UiRect[], rects3d: Rect3D[]): Label3D[] {
-    const labels3d: Label3D[] = [];
+  private computeLabels(rects2d: UiRect[], rects3d: UiRect3D[]): RectLabel[] {
+    const labels3d: RectLabel[] = [];
 
     const bottomRightCorners = rects3d.map((rect) =>
-      this.matMultiply(rect.transform, rect.bottomRight),
+      rect.transform.transformPoint3D(rect.bottomRight),
     );
     const lowestYPoint = Math.max(...bottomRightCorners.map((p) => p.y));
     const rightmostXPoint = Math.max(...bottomRightCorners.map((p) => p.x));
@@ -359,7 +397,7 @@ class Mapper3D {
         return;
       }
       const j = rects2d.length - 1 - index; // rects sorted in decreasing order of depth; increment labelY by depth at L - 1 - i
-      if (rects2d.length > Mapper3D.MAX_RENDERED_LABELS) {
+      if (this.onlyRenderSelectedLabel(rects2d)) {
         // only render the selected rect label
         if (!this.isHighlighted(rect2d)) {
           return;
@@ -390,10 +428,10 @@ class Mapper3D {
         z: rect3d.bottomRight.z,
       };
       const lineStarts = [
-        this.matMultiply(rect3d.transform, rect3d.topLeft),
-        this.matMultiply(rect3d.transform, rect3d.bottomRight),
-        this.matMultiply(rect3d.transform, bottomLeft),
-        this.matMultiply(rect3d.transform, topRight),
+        rect3d.transform.transformPoint3D(rect3d.topLeft),
+        rect3d.transform.transformPoint3D(rect3d.bottomRight),
+        rect3d.transform.transformPoint3D(bottomLeft),
+        rect3d.transform.transformPoint3D(topRight),
       ];
       let maxIndex = 0;
       for (let i = 1; i < lineStarts.length; i++) {
@@ -415,7 +453,7 @@ class Mapper3D {
 
       const isHighlighted = this.isHighlighted(rect2d);
 
-      const label3d: Label3D = {
+      const RectLabel: RectLabel = {
         circle: {
           radius: Mapper3D.LABEL_CIRCLE_RADIUS,
           center: {
@@ -430,21 +468,13 @@ class Mapper3D {
         isHighlighted,
         rectId: rect2d.id,
       };
-      labels3d.push(label3d);
+      labels3d.push(RectLabel);
     });
 
     return labels3d;
   }
 
-  private matMultiply(mat: TransformMatrix, point: Point3D): Point3D {
-    return {
-      x: mat.dsdx * point.x + mat.dtdx * point.y + mat.tx,
-      y: mat.dtdy * point.x + mat.dsdy * point.y + mat.ty,
-      z: point.z,
-    };
-  }
-
-  private computeBoundingBox(rects: Rect3D[], labels: Label3D[]): Box3D {
+  private computeBoundingBox(rects: UiRect3D[], labels: RectLabel[]): Box3D {
     if (rects.length === 0) {
       return {
         width: 1,
@@ -487,7 +517,7 @@ class Mapper3D {
     });
 
     // if only selected rect label rendered, do not include in bounding box
-    if (rects.length <= Mapper3D.MAX_RENDERED_LABELS) {
+    if (!this.onlyRenderSelectedLabel(rects)) {
       labels.forEach((label) => {
         label.linePoints.forEach((point) => {
           updateMinMaxCoordinates(point);
@@ -516,6 +546,13 @@ class Mapper3D {
 
   isHighlighted(rect: UiRect): boolean {
     return rect.isClickable && this.highlightedRectId === rect.id;
+  }
+
+  private onlyRenderSelectedLabel(rects: Array<UiRect | UiRect3D>): boolean {
+    return (
+      rects.length > Mapper3D.MAX_RENDERED_LABELS ||
+      this.currentGroupIds.length > 1
+    );
   }
 }
 

@@ -49,8 +49,8 @@ import {
       [class.selected]="isHighlighted(node, highlightedItem)"
       [class.clickable]="isClickable()"
       [class.child-selected]="hasSelectedChild()"
-      [class.hover]="nodeHover"
-      [class.childHover]="childHover"
+      [class.child-hover]="childHover"
+      [class.full-opacity]="showFullOpacity(node)"
       [class]="node.getDiff()"
       [style]="nodeOffsetStyle()"
       [node]="node"
@@ -118,7 +118,6 @@ export class TreeComponent {
   @Output() readonly hoverEnd = new EventEmitter<void>();
 
   localExpandedState = true;
-  nodeHover = false;
   childHover = false;
   readonly levelOffset = 24;
   nodeElement: HTMLElement;
@@ -274,6 +273,13 @@ export class TreeComponent {
     return showState === RectShowState.SHOW ? 'visibility' : 'visibility_off';
   }
 
+  showFullOpacity(node: UiPropertyTreeNode | UiHierarchyTreeNode) {
+    if (node instanceof UiPropertyTreeNode) return true;
+    if (this.rectIdToShowState === undefined) return true;
+    const showState = this.rectIdToShowState.get(node.id);
+    return showState === RectShowState.SHOW;
+  }
+
   toggleRectShowState() {
     const nodeId = assertDefined(this.node).id;
     const currentShowState = assertDefined(this.rectIdToShowState?.get(nodeId));
@@ -302,9 +308,9 @@ export class TreeComponent {
   ) {
     if (this.store && this.useStoredExpandedState && shouldUpdateStoredState) {
       if (isExpanded) {
-        this.store.removeItem(this.storeKeyCollapsedState);
+        this.store.clear(this.storeKeyCollapsedState);
       } else {
-        this.store.setItem(this.storeKeyCollapsedState, 'true');
+        this.store.add(this.storeKeyCollapsedState, 'true');
       }
     } else {
       this.localExpandedState = isExpanded;
@@ -320,18 +326,16 @@ export class TreeComponent {
   };
 
   private nodeMouseEnterEventListener = () => {
-    this.nodeHover = true;
     this.hoverStart.emit();
   };
 
   private nodeMouseLeaveEventListener = () => {
-    this.nodeHover = false;
     this.hoverEnd.emit();
   };
 
   private isCollapsedInStore(): boolean {
     return (
-      assertDefined(this.store).getItem(this.storeKeyCollapsedState) === 'true'
+      assertDefined(this.store).get(this.storeKeyCollapsedState) === 'true'
     );
   }
 }

@@ -14,10 +14,10 @@
  * limitations under the License.
  */
 
-import {IDENTITY_MATRIX} from 'common/geometry_types';
+import {IDENTITY_MATRIX} from 'common/geometry/transform_matrix';
 import {
   Transform,
-  TransformType,
+  TransformTypeFlags,
 } from 'parsers/surface_flinger/transform_utils';
 import {android} from 'protos/surfaceflinger/udc/static';
 import {HierarchyTreeBuilder} from 'test/unit/hierarchy_tree_builder';
@@ -26,9 +26,9 @@ import {TraceRectBuilder} from 'trace/trace_rect_builder';
 import {HierarchyTreeNode} from 'trace/tree_node/hierarchy_tree_node';
 import {InputConfig, RectsComputation} from './rects_computation';
 
-describe('RectsComputation', () => {
+describe('SurfaceFlinger RectsComputation', () => {
   const rotationTransform = new Transform(
-    TransformType.ROT_90_VAL,
+    TransformTypeFlags.ROT_90_VAL,
     IDENTITY_MATRIX,
   );
   let computation: RectsComputation;
@@ -37,7 +37,7 @@ describe('RectsComputation', () => {
     computation = new RectsComputation();
   });
 
-  it('makes layer rects', () => {
+  it('makes layer rects according to z order paths', () => {
     const hierarchyRoot = new HierarchyTreeBuilder()
       .setId('LayerTraceEntry')
       .setName('root')
@@ -106,6 +106,22 @@ describe('RectsComputation', () => {
             transform: Transform.EMPTY,
           } as android.surfaceflinger.ILayerProto,
         },
+        {
+          id: 5,
+          name: 'layerNegativeZ',
+          properties: {
+            id: 5,
+            name: 'layerNegativeZ',
+            cornerRadius: 0,
+            layerStack: 0,
+            bounds: {left: 0, top: 0, right: 5, bottom: 5},
+            screenBounds: {left: 0, top: 0, right: 5, bottom: 5},
+            zOrderPath: [-5],
+            isComputedVisible: true,
+            color: {r: 0, g: 0, b: 0, a: 1},
+            transform: Transform.EMPTY,
+          } as android.surfaceflinger.ILayerProto,
+        },
       ])
       .build();
 
@@ -119,7 +135,7 @@ describe('RectsComputation', () => {
         .setName('layer1')
         .setCornerRadius(0)
         .setTransform(Transform.EMPTY.matrix)
-        .setDepth(0)
+        .setDepth(1)
         .setGroupId(0)
         .setIsVisible(true)
         .setOpacity(0)
@@ -136,7 +152,7 @@ describe('RectsComputation', () => {
         .setName('layer2')
         .setCornerRadius(2)
         .setTransform(Transform.EMPTY.matrix)
-        .setDepth(1)
+        .setDepth(2)
         .setGroupId(0)
         .setIsVisible(false)
         .setIsDisplay(false)
@@ -152,7 +168,7 @@ describe('RectsComputation', () => {
         .setName('layer3')
         .setCornerRadius(2)
         .setTransform(Transform.EMPTY.matrix)
-        .setDepth(2)
+        .setDepth(3)
         .setGroupId(0)
         .setIsVisible(false)
         .setIsDisplay(false)
@@ -168,7 +184,24 @@ describe('RectsComputation', () => {
         .setName('layerRelativeZ')
         .setCornerRadius(0)
         .setTransform(Transform.EMPTY.matrix)
-        .setDepth(3)
+        .setDepth(4)
+        .setGroupId(0)
+        .setIsVisible(true)
+        .setOpacity(1)
+        .setIsDisplay(false)
+        .setIsSpy(false)
+        .build(),
+
+      new TraceRectBuilder()
+        .setX(0)
+        .setY(0)
+        .setWidth(5)
+        .setHeight(5)
+        .setId('5 layerNegativeZ')
+        .setName('layerNegativeZ')
+        .setCornerRadius(0)
+        .setTransform(Transform.EMPTY.matrix)
+        .setDepth(0)
         .setGroupId(0)
         .setIsVisible(true)
         .setOpacity(1)
@@ -274,6 +307,7 @@ describe('RectsComputation', () => {
             transform: Transform.EMPTY,
             name: 'Test Display',
             size: {w: 5, h: 5},
+            isOn: true,
           },
           {
             id: 2,
@@ -282,6 +316,8 @@ describe('RectsComputation', () => {
             size: {w: 5, h: 10},
             transform: Transform.EMPTY,
             name: 'Test Display 2',
+            isOn: true,
+            isVirtual: true,
           },
           {
             id: 3,
@@ -290,6 +326,8 @@ describe('RectsComputation', () => {
             size: {w: 5, h: 10},
             transform: rotationTransform,
             name: 'Test Display 3',
+            isOn: false,
+            isVirtual: true,
           },
         ],
       })
@@ -309,6 +347,7 @@ describe('RectsComputation', () => {
         .setGroupId(0)
         .setIsVisible(false)
         .setIsDisplay(true)
+        .setIsActiveDisplay(true)
         .setIsSpy(false)
         .build(),
       new TraceRectBuilder()
@@ -324,6 +363,7 @@ describe('RectsComputation', () => {
         .setGroupId(0)
         .setIsVisible(false)
         .setIsDisplay(true)
+        .setIsActiveDisplay(false)
         .setIsSpy(false)
         .build(),
       new TraceRectBuilder()
@@ -339,6 +379,7 @@ describe('RectsComputation', () => {
         .setGroupId(0)
         .setIsVisible(false)
         .setIsDisplay(true)
+        .setIsActiveDisplay(false)
         .setIsSpy(false)
         .build(),
     ];

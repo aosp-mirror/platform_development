@@ -21,7 +21,7 @@ import {TraceRectBuilder} from 'trace/trace_rect_builder';
 import {HierarchyTreeNode} from 'trace/tree_node/hierarchy_tree_node';
 import {RectsComputation} from './rects_computation';
 
-describe('RectsComputation', () => {
+describe('ViewCapture RectsComputation', () => {
   let hierarchyRoot: HierarchyTreeNode;
   let computation: RectsComputation;
 

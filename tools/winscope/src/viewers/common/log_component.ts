@@ -23,17 +23,25 @@ import {
   Inject,
   Input,
   Output,
+  SimpleChanges,
   ViewChild,
 } from '@angular/core';
 import {MatSelectChange} from '@angular/material/select';
+import {assertDefined} from 'common/assert_utils';
+import {PersistentStore} from 'common/persistent_store';
 import {Timestamp} from 'common/time';
+import {TRACE_INFO} from 'trace/trace_info';
 import {TraceType} from 'trace/trace_type';
 import {
   LogFilterChangeDetail,
+  TextFilterDetail,
   TimestampClickDetail,
   ViewerEvents,
 } from 'viewers/common/viewer_events';
-import {timeButtonStyle} from 'viewers/components/styles/clickable_property.styles';
+import {
+  inlineButtonStyle,
+  timeButtonStyle,
+} from 'viewers/components/styles/clickable_property.styles';
 import {currentElementStyle} from 'viewers/components/styles/current_element.styles';
 import {logComponentStyles} from 'viewers/components/styles/log_component.styles';
 import {selectedElementStyle} from 'viewers/components/styles/selected_element.styles';
@@ -47,7 +55,6 @@ import {
   LogFieldClassNames,
   LogFieldNames,
   LogFieldType,
-  LogFieldValue,
   LogFilter,
 } from './ui_data_log';
 
@@ -95,14 +102,16 @@ import {
               (selectChange)="onFilterChange($event, filter.type)">
           </select-with-filter>
 
-          <mat-form-field *ngIf="filter.options === undefined" appearance="fill" (keydown.enter)="$event.target.blur()">
-            <mat-label>{{filter.type}}</mat-label>
-            <input
-                matInput
-                [name]="getLogFieldName(filter.type)"
-                [ngModel]="emptyFilterValue"
-                (ngModelChange)="onFilterChange($event, filter.type)" />
-          </mat-form-field>
+          <search-box
+            *ngIf="filter.options === undefined"
+            appearance="fill"
+            [fontSize]="12"
+            [wideField]="true"
+            [store]="store"
+            [storeKey]="storeKeyFilterFlags"
+            [label]="getLogFieldName(filter.type)"
+            [filterName]="getLogFieldName(filter.type)"
+            (filterChange)="onSearchBoxChange($event, filter.type)"></search-box>
         </div>
 
         <button
@@ -167,13 +176,13 @@ import {
           </div>
 
           <div [class]="getLogFieldClass(field.type)" *ngFor="let field of entry.fields; index as i">
-            <span class="mat-body-1" *ngIf="!showTimestampButton(field.value)">{{ field.value }}</span>
+            <span class="mat-body-1" *ngIf="!showFieldButton(field)">{{ field.value }}</span>
             <button
-                *ngIf="showTimestampButton(field.value)"
+                *ngIf="showFieldButton(field)"
                 mat-button
                 color="primary"
-                (click)="onTimestampClick($event, entry, field)">
-              {{ field.value.format() }}
+                (click)="onFieldButtonClick($event, entry, field)">
+              {{ formatFieldButton(field) }}
             </button>
             <mat-icon
                 *ngIf="field.icon"
@@ -186,15 +195,16 @@ import {
   `,
   styles: [
     `
-        .view-header {
-          display: flex;
-          flex-direction: column;
-          flex: 0 0 auto
-        }
-      `,
+      .view-header {
+        display: flex;
+        flex-direction: column;
+        flex: 0 0 auto
+      }
+    `,
     selectedElementStyle,
     currentElementStyle,
     timeButtonStyle,
+    inlineButtonStyle,
     viewerCardStyle,
     viewerCardInnerStyle,
     logComponentStyles,
@@ -202,6 +212,7 @@ import {
 })
 export class LogComponent {
   emptyFilterValue = '';
+  storeKeyFilterFlags: string | undefined;
   private lastClickedTimestamp: Timestamp | undefined;
 
   @Input() title: string | undefined;
@@ -215,6 +226,7 @@ export class LogComponent {
   @Input() traceType: TraceType | undefined;
   @Input() showTraceEntryTimes = true;
   @Input() showFiltersInTitle = false;
+  @Input() store: PersistentStore | undefined;
 
   @Output() collapseButtonClicked = new EventEmitter();
 
@@ -223,8 +235,18 @@ export class LogComponent {
 
   constructor(@Inject(ElementRef) private elementRef: ElementRef) {}
 
-  showTimestampButton(value: LogFieldValue) {
-    return value instanceof Timestamp;
+  ngOnInit() {}
+
+  showFieldButton(field: LogField) {
+    return (
+      field.value instanceof Timestamp || field.type === LogFieldType.INPUT_TYPE
+    );
+  }
+
+  formatFieldButton(field: LogField): string | number {
+    return field.value instanceof Timestamp
+      ? field.value.format()
+      : field.value;
   }
 
   getLogFieldClass(fieldType: LogFieldType) {
@@ -235,21 +257,31 @@ export class LogComponent {
     return LogFieldNames.get(fieldType);
   }
 
-  ngOnChanges() {
+  ngOnChanges(changes: SimpleChanges) {
+    if (changes['traceType']?.firstChange) {
+      this.storeKeyFilterFlags =
+        TRACE_INFO[assertDefined(this.traceType)].name + 'logView.filterFlags';
+    }
     if (
       this.scrollToIndex !== undefined &&
       this.lastClickedTimestamp !==
-        this.entries[this.scrollToIndex].traceEntry.getTimestamp()
+        this.entries.at(this.scrollToIndex)?.traceEntry.getTimestamp()
     ) {
       this.scrollComponent?.scrollToIndex(Math.max(0, this.scrollToIndex - 1));
     }
   }
 
-  onFilterChange(event: MatSelectChange | string, filterType: LogFieldType) {
-    const value = event instanceof MatSelectChange ? event.value : event;
+  onFilterChange(event: MatSelectChange, filterType: LogFieldType) {
     this.emitEvent(
       ViewerEvents.LogFilterChange,
-      new LogFilterChangeDetail(filterType, value),
+      new LogFilterChangeDetail(filterType, event.value),
+    );
+  }
+
+  onSearchBoxChange(detail: TextFilterDetail, filterType: LogFieldType) {
+    this.emitEvent(
+      ViewerEvents.LogFilterChange,
+      new LogFilterChangeDetail(filterType, detail.filterString, detail.flags),
     );
   }
 
@@ -272,11 +304,14 @@ export class LogComponent {
     );
   }
 
-  onTimestampClick(event: MouseEvent, entry: LogEntry, field: LogField) {
+  onFieldButtonClick(event: MouseEvent, entry: LogEntry, field: LogField) {
     event.stopPropagation();
-    if (field.type === LogFieldType.DISPATCH_TIME) {
+    if (
+      field.type === LogFieldType.DISPATCH_TIME ||
+      field.type === LogFieldType.INPUT_TYPE
+    ) {
       this.onTraceEntryTimestampClick(event, entry);
-    } else {
+    } else if (field.value instanceof Timestamp) {
       this.onRawTimestampClick(field.value as Timestamp);
     }
   }

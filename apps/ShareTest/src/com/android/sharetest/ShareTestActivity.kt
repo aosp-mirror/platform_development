@@ -20,6 +20,7 @@ import android.app.Activity
 import android.app.PendingIntent
 import android.content.BroadcastReceiver
 import android.content.ClipData
+import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
@@ -74,6 +75,7 @@ class ShareTestActivity : Activity() {
     private lateinit var shareouselCheck: CheckBox
     private lateinit var altIntentCheck: CheckBox
     private lateinit var callerTargetCheck: CheckBox
+    private lateinit var excludeSelfCheck: CheckBox
     private lateinit var selectionLatencyGroup: RadioGroup
     private lateinit var imageSizeMetadataCheck: CheckBox
     private val customActionFactory = CustomActionFactory(this)
@@ -95,26 +97,29 @@ class ShareTestActivity : Activity() {
             WindowInsetsCompat.CONSUMED
         }
 
-        customActionReceiver = object : BroadcastReceiver() {
-            override fun onReceive(context: Context?, intent: Intent) {
-                Toast.makeText(
-                    this@ShareTestActivity,
-                    "Custom action invoked, isModified: ${!intent.isInitial}",
-                    Toast.LENGTH_LONG
-                )
-                    .show()
+        customActionReceiver =
+            object : BroadcastReceiver() {
+                override fun onReceive(context: Context?, intent: Intent) {
+                    Toast.makeText(
+                            this@ShareTestActivity,
+                            "Custom action invoked, isModified: ${!intent.isInitial}",
+                            Toast.LENGTH_LONG
+                        )
+                        .show()
+                }
             }
-        }
 
-        refinementReceiver = object : BroadcastReceiver() {
-            override fun onReceive(context: Context?, intent: Intent) {
-                // Need to show refinement in another activity because this one is beneath the
-                // sharesheet.
-                val activityIntent = Intent(this@ShareTestActivity, RefinementActivity::class.java)
-                activityIntent.putExtras(intent)
-                startActivity(activityIntent)
+        refinementReceiver =
+            object : BroadcastReceiver() {
+                override fun onReceive(context: Context?, intent: Intent) {
+                    // Need to show refinement in another activity because this one is beneath the
+                    // sharesheet.
+                    val activityIntent =
+                        Intent(this@ShareTestActivity, RefinementActivity::class.java)
+                    activityIntent.putExtras(intent)
+                    startActivity(activityIntent)
+                }
             }
-        }
 
         registerReceiver(
             customActionReceiver,
@@ -133,19 +138,20 @@ class ShareTestActivity : Activity() {
         shareouselCheck = requireViewById(R.id.shareousel)
         altIntentCheck = requireViewById(R.id.alt_intent)
         callerTargetCheck = requireViewById(R.id.caller_direct_target)
+        excludeSelfCheck = requireViewById(R.id.exclude_self)
         mediaTypeSelection = requireViewById(R.id.media_type_selection)
         mediaTypeHeader = requireViewById(R.id.media_type_header)
         selectionLatencyGroup = requireViewById(R.id.selection_latency)
         imageSizeMetadataCheck = requireViewById(R.id.image_size_metadata)
-        mediaSelection = requireViewById<RadioGroup>(R.id.media_selection).apply {
-            setOnCheckedChangeListener { _, id -> updateMediaTypesList(id) }
-            check(R.id.no_media)
-        }
+        mediaSelection =
+            requireViewById<RadioGroup>(R.id.media_selection).apply {
+                setOnCheckedChangeListener { _, id -> updateMediaTypesList(id) }
+                check(R.id.no_media)
+            }
         metadata = requireViewById(R.id.metadata)
 
-        textSelection = requireViewById<RadioGroup>(R.id.text_selection).apply {
-            check(R.id.short_text)
-        }
+        textSelection =
+            requireViewById<RadioGroup>(R.id.text_selection).apply { check(R.id.short_text) }
         requireViewById<RadioGroup>(R.id.action_selection).check(R.id.no_actions)
 
         requireViewById<Button>(R.id.share).setOnClickListener(this::share)
@@ -157,58 +163,58 @@ class ShareTestActivity : Activity() {
         }
 
         requireViewById<RadioGroup>(R.id.image_latency).setOnCheckedChangeListener { _, checkedId ->
-            ImageContentProvider.openLatency = when (checkedId) {
-                R.id.image_latency_50 -> 50
-                R.id.image_latency_200 -> 200
-                R.id.image_latency_800 -> 800
-                else -> 0
-            }
+            ImageContentProvider.openLatency =
+                when (checkedId) {
+                    R.id.image_latency_50 -> 50
+                    R.id.image_latency_200 -> 200
+                    R.id.image_latency_800 -> 800
+                    else -> 0
+                }
         }
         requireViewById<RadioGroup>(R.id.image_latency).check(R.id.image_latency_none)
 
         requireViewById<RadioGroup>(R.id.image_get_type_latency).setOnCheckedChangeListener {
-                _,
-                checkedId,
+            _,
+            checkedId,
             ->
-            ImageContentProvider.getTypeLatency = when (checkedId) {
-                R.id.image_get_type_latency_50 -> 50
-                R.id.image_get_type_latency_200 -> 200
-                R.id.image_get_type_latency_800 -> 800
-                else -> 0
-            }
-        }
-        requireViewById<RadioGroup>(R.id.image_get_type_latency).check(
-            R.id.image_get_type_latency_none
-        )
-
-        requireViewById<RadioGroup>(R.id.image_query_latency).let { radioGroup ->
-            radioGroup.setOnCheckedChangeListener {
-                    _,
-                    checkedId,
-                ->
-                ImageContentProvider.queryLatency = when (checkedId) {
-                    R.id.image_query_latency_50 -> 50
-                    R.id.image_query_latency_200 -> 200
-                    R.id.image_query_latency_800 -> 800
+            ImageContentProvider.getTypeLatency =
+                when (checkedId) {
+                    R.id.image_get_type_latency_50 -> 50
+                    R.id.image_get_type_latency_200 -> 200
+                    R.id.image_get_type_latency_800 -> 800
                     else -> 0
                 }
+        }
+        requireViewById<RadioGroup>(R.id.image_get_type_latency)
+            .check(R.id.image_get_type_latency_none)
+
+        requireViewById<RadioGroup>(R.id.image_query_latency).let { radioGroup ->
+            radioGroup.setOnCheckedChangeListener { _, checkedId,
+                ->
+                ImageContentProvider.queryLatency =
+                    when (checkedId) {
+                        R.id.image_query_latency_50 -> 50
+                        R.id.image_query_latency_200 -> 200
+                        R.id.image_query_latency_800 -> 800
+                        else -> 0
+                    }
             }
             radioGroup.check(R.id.image_query_latency_none)
         }
 
         requireViewById<RadioGroup>(R.id.image_load_failure_rate).setOnCheckedChangeListener {
-                _,
-                checkedId,
+            _,
+            checkedId,
             ->
-            ImageContentProvider.openFailureRate = when (checkedId) {
-                R.id.image_load_failure_rate_50 -> .5f
-                R.id.image_load_failure_rate_100 -> 1f
-                else -> 0f
-            }
+            ImageContentProvider.openFailureRate =
+                when (checkedId) {
+                    R.id.image_load_failure_rate_50 -> .5f
+                    R.id.image_load_failure_rate_100 -> 1f
+                    else -> 0f
+                }
         }
-        requireViewById<RadioGroup>(R.id.image_load_failure_rate).check(
-            R.id.image_load_failure_rate_none
-        )
+        requireViewById<RadioGroup>(R.id.image_load_failure_rate)
+            .check(R.id.image_load_failure_rate_none)
     }
 
     private fun updateMediaTypesList(id: Int) {
@@ -220,41 +226,40 @@ class ShareTestActivity : Activity() {
     }
 
     private fun removeMediaTypeOptions() {
-        mediaTypeSelection.adapter = ArrayAdapter(
-            this, android.R.layout.simple_spinner_item, emptyArray<String>()
-        ).apply {
-            setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
-        }
+        mediaTypeSelection.adapter =
+            ArrayAdapter(this, android.R.layout.simple_spinner_item, emptyArray<String>()).apply {
+                setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+            }
         setMediaTypeVisibility(false)
     }
 
     private fun setSingleMediaTypeOptions() {
-        mediaTypeSelection.adapter = ArrayAdapter(
-            this,
-            android.R.layout.simple_spinner_item,
-            arrayOf(TYPE_IMAGE, TYPE_VIDEO, TYPE_PDF)
-        ).apply {
-            setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
-        }
+        mediaTypeSelection.adapter =
+            ArrayAdapter(
+                    this,
+                    android.R.layout.simple_spinner_item,
+                    arrayOf(TYPE_IMAGE, TYPE_VIDEO, TYPE_PDF)
+                )
+                .apply { setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item) }
         setMediaTypeVisibility(true)
     }
 
     private fun setAllMediaTypeOptions() {
-        mediaTypeSelection.adapter = ArrayAdapter(
-            this,
-            android.R.layout.simple_spinner_item,
-            arrayOf(
-                TYPE_IMAGE,
-                TYPE_VIDEO,
-                TYPE_PDF,
-                TYPE_IMG_VIDEO,
-                TYPE_IMG_PDF,
-                TYPE_VIDEO_PDF,
-                TYPE_ALL
-            )
-        ).apply {
-            setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
-        }
+        mediaTypeSelection.adapter =
+            ArrayAdapter(
+                    this,
+                    android.R.layout.simple_spinner_item,
+                    arrayOf(
+                        TYPE_IMAGE,
+                        TYPE_VIDEO,
+                        TYPE_PDF,
+                        TYPE_IMG_VIDEO,
+                        TYPE_IMG_PDF,
+                        TYPE_VIDEO_PDF,
+                        TYPE_ALL
+                    )
+                )
+                .apply { setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item) }
         setMediaTypeVisibility(true)
     }
 
@@ -275,38 +280,40 @@ class ShareTestActivity : Activity() {
         val imageIndex = Random.nextInt(ADDITIONAL_ITEM_COUNT)
 
         when (mediaSelection.checkedRadioButtonId) {
-            R.id.one_image -> share.apply {
-                val sharedUri = makeItemUri(
-                    imageIndex,
-                    mimeTypes[imageIndex % mimeTypes.size],
-                    imageSizeMetadataCheck.isChecked
-                )
-                putExtra(Intent.EXTRA_STREAM, sharedUri)
-                clipData = ClipData("", arrayOf("image/jpg"), ClipData.Item(sharedUri))
-                type = if (mimeTypes.size == 1) mimeTypes[0] else "*/*"
-            }
-
-            R.id.many_images -> share.apply {
-                val imageUris = ArrayList(
-                    (0 until IMAGE_COUNT).map { idx ->
+            R.id.one_image ->
+                share.apply {
+                    val sharedUri =
                         makeItemUri(
-                            idx,
-                            mimeTypes[idx % mimeTypes.size],
+                            imageIndex,
+                            mimeTypes[imageIndex % mimeTypes.size],
                             imageSizeMetadataCheck.isChecked
                         )
-                    })
-                action = Intent.ACTION_SEND_MULTIPLE
-                clipData = ClipData("", arrayOf("image/jpg"), ClipData.Item(imageUris[0])).apply {
-                    for (i in 1 until IMAGE_COUNT) {
-                        addItem(ClipData.Item(imageUris[i]))
-                    }
+                    putExtra(Intent.EXTRA_STREAM, sharedUri)
+                    clipData = ClipData("", arrayOf("image/jpg"), ClipData.Item(sharedUri))
+                    type = if (mimeTypes.size == 1) mimeTypes[0] else "*/*"
                 }
-                type = if (mimeTypes.size == 1) mimeTypes[0] else "*/*"
-                putParcelableArrayListExtra(
-                    Intent.EXTRA_STREAM,
-                    imageUris
-                )
-            }
+            R.id.many_images ->
+                share.apply {
+                    val imageUris =
+                        ArrayList(
+                            (0 until IMAGE_COUNT).map { idx ->
+                                makeItemUri(
+                                    idx,
+                                    mimeTypes[idx % mimeTypes.size],
+                                    imageSizeMetadataCheck.isChecked
+                                )
+                            }
+                        )
+                    action = Intent.ACTION_SEND_MULTIPLE
+                    clipData =
+                        ClipData("", arrayOf("image/jpg"), ClipData.Item(imageUris[0])).apply {
+                            for (i in 1 until IMAGE_COUNT) {
+                                addItem(ClipData.Item(imageUris[i]))
+                            }
+                        }
+                    type = if (mimeTypes.size == 1) mimeTypes[0] else "*/*"
+                    putParcelableArrayListExtra(Intent.EXTRA_STREAM, imageUris)
+                }
         }
 
         val url = "https://developer.android.com/training/sharing/send#adding-rich-content-previews"
@@ -322,24 +329,26 @@ class ShareTestActivity : Activity() {
         }
 
         if (requireViewById<CheckBox>(R.id.include_icon).isChecked) {
-            share.clipData = ClipData(
-                "", arrayOf("image/png"), ClipData.Item(ImageContentProvider.ICON_URI)
-            )
+            share.clipData =
+                ClipData("", arrayOf("image/png"), ClipData.Item(ImageContentProvider.ICON_URI))
             share.data = ImageContentProvider.ICON_URI
         }
 
-        val chosenComponentPendingIntent = PendingIntent.getBroadcast(
-            this, 0,
-            Intent(this, ChosenComponentBroadcastReceiver::class.java),
-            PendingIntent.FLAG_MUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
-        )
+        val chosenComponentPendingIntent =
+            PendingIntent.getBroadcast(
+                this,
+                0,
+                Intent(this, ChosenComponentBroadcastReceiver::class.java),
+                PendingIntent.FLAG_MUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
+            )
 
         val chooserIntent =
             Intent.createChooser(share, null, chosenComponentPendingIntent.intentSender)
 
-        val sendingImage = mediaSelection.checkedRadioButtonId.let {
-            it == R.id.one_image || it == R.id.many_images
-        }
+        val sendingImage =
+            mediaSelection.checkedRadioButtonId.let {
+                it == R.id.one_image || it == R.id.many_images
+            }
         if (sendingImage && altIntentCheck.isChecked) {
             chooserIntent.putExtra(
                 Intent.EXTRA_ALTERNATE_INTENTS,
@@ -350,6 +359,13 @@ class ShareTestActivity : Activity() {
             chooserIntent.putExtra(
                 Intent.EXTRA_CHOOSER_TARGETS,
                 arrayOf(createCallerTarget(this, "Initial Direct Target"))
+            )
+        }
+
+        if (excludeSelfCheck.isChecked) {
+            chooserIntent.putExtra(
+                Intent.EXTRA_EXCLUDE_COMPONENTS,
+                arrayOf(ComponentName(packageName, CallerDirectTargetActivity::class.java.name))
             )
         }
 
@@ -372,13 +388,16 @@ class ShareTestActivity : Activity() {
         }
 
         when (requireViewById<RadioGroup>(R.id.action_selection).checkedRadioButtonId) {
-            R.id.one_action -> chooserIntent.putExtra(
-                Intent.EXTRA_CHOOSER_CUSTOM_ACTIONS, customActionFactory.getCustomActions(1)
-            )
-
-            R.id.five_actions -> chooserIntent.putExtra(
-                Intent.EXTRA_CHOOSER_CUSTOM_ACTIONS, customActionFactory.getCustomActions(5)
-            )
+            R.id.one_action ->
+                chooserIntent.putExtra(
+                    Intent.EXTRA_CHOOSER_CUSTOM_ACTIONS,
+                    customActionFactory.getCustomActions(1)
+                )
+            R.id.five_actions ->
+                chooserIntent.putExtra(
+                    Intent.EXTRA_CHOOSER_CUSTOM_ACTIONS,
+                    customActionFactory.getCustomActions(5)
+                )
         }
 
         if (metadata.text.isNotEmpty()) {
@@ -387,21 +406,23 @@ class ShareTestActivity : Activity() {
         if (shareouselCheck.isChecked) {
             val additionalContentUri =
                 AdditionalContentProvider.ADDITIONAL_CONTENT_URI.buildUpon()
-                        .appendQueryParameter(
-                            AdditionalContentProvider.PARAM_COUNT,
-                            ADDITIONAL_ITEM_COUNT.toString(),
-                        )
-                        .appendQueryParameter(
-                            AdditionalContentProvider.PARAM_SIZE_META,
-                            imageSizeMetadataCheck.isChecked.toString(),
-                        )
-                        .also { builder ->
-                            mimeTypes.forEach {
-                                builder.appendQueryParameter(
-                                    AdditionalContentProvider.PARAM_MIME_TYPE, it)
-                            }
+                    .appendQueryParameter(
+                        AdditionalContentProvider.PARAM_COUNT,
+                        ADDITIONAL_ITEM_COUNT.toString(),
+                    )
+                    .appendQueryParameter(
+                        AdditionalContentProvider.PARAM_SIZE_META,
+                        imageSizeMetadataCheck.isChecked.toString(),
+                    )
+                    .also { builder ->
+                        mimeTypes.forEach {
+                            builder.appendQueryParameter(
+                                AdditionalContentProvider.PARAM_MIME_TYPE,
+                                it
+                            )
                         }
-                        .build()
+                    }
+                    .build()
             chooserIntent.putExtra(
                 Intent.EXTRA_CHOOSER_ADDITIONAL_CONTENT_URI,
                 additionalContentUri,
@@ -414,12 +435,13 @@ class ShareTestActivity : Activity() {
                     imageIndex,
                 )
             }
-            val latency = when (selectionLatencyGroup.checkedRadioButtonId) {
-                R.id.selection_latency_50 -> 50
-                R.id.selection_latency_200 -> 200
-                R.id.selection_latency_800 -> 800
-                else -> 0
-            }
+            val latency =
+                when (selectionLatencyGroup.checkedRadioButtonId) {
+                    R.id.selection_latency_50 -> 50
+                    R.id.selection_latency_200 -> 200
+                    R.id.selection_latency_800 -> 800
+                    else -> 0
+                }
             if (latency > 0) {
                 chooserIntent.putExtra(AdditionalContentProvider.EXTRA_SELECTION_LATENCY, latency)
             }
@@ -450,9 +472,7 @@ class ShareTestActivity : Activity() {
             .append(" to ")
             .append("share", ForegroundColorSpan(Color.GREEN), Spannable.SPAN_INCLUSIVE_EXCLUSIVE)
             .append(".")
-            .let {
-                if (richText.isChecked) it else it.toString()
-            }
+            .let { if (richText.isChecked) it else it.toString() }
 
     private fun createLongText(): CharSequence =
         SpannableStringBuilder("Here is a lot more text to share:")
@@ -472,14 +492,13 @@ class ShareTestActivity : Activity() {
                 for (color in colors) {
                     append("\n")
                     append(
-                        createShortText(), BulletSpan(40, color, 20),
+                        createShortText(),
+                        BulletSpan(40, color, 20),
                         Spannable.SPAN_INCLUSIVE_EXCLUSIVE
                     )
                 }
             }
-            .let {
-                if (richText.isChecked) it else it.toString()
-            }
+            .let { if (richText.isChecked) it else it.toString() }
 
     private fun createTextTitle(): CharSequence =
         SpannableStringBuilder()
@@ -487,9 +506,7 @@ class ShareTestActivity : Activity() {
             .append(" the ", StyleSpan(Typeface.ITALIC), Spannable.SPAN_INCLUSIVE_EXCLUSIVE)
             .append("Title", ForegroundColorSpan(Color.RED), Spannable.SPAN_INCLUSIVE_EXCLUSIVE)
             .append("!")
-            .let {
-                if (richText.isChecked) it else it.toString()
-            }
+            .let { if (richText.isChecked) it else it.toString() }
 
     override fun onDestroy() {
         super.onDestroy()
@@ -497,5 +514,3 @@ class ShareTestActivity : Activity() {
         unregisterReceiver(refinementReceiver)
     }
 }
-
-
