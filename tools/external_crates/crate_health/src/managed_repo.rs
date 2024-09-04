@@ -25,14 +25,14 @@ use anyhow::{anyhow, Result};
 use glob::glob;
 use itertools::Itertools;
 use license_checker::find_licenses;
+use name_and_version::{NameAndVersion, NameAndVersionMap, NameAndVersionRef, NamedAndVersioned};
 use rooted_path::RootedPath;
 use semver::Version;
 use spdx::Licensee;
 
 use crate::{
     cargo_embargo_autoconfig, copy_dir, update_module_license_files, Crate, CrateCollection,
-    GoogleMetadata, Migratable, NameAndVersion, NameAndVersionMap, NameAndVersionRef,
-    NamedAndVersioned, PseudoCrate, VersionMatch,
+    GoogleMetadata, Migratable, PseudoCrate, VersionMatch,
 };
 
 pub struct ManagedRepo {
