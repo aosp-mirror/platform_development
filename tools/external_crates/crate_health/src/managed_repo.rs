@@ -741,10 +741,8 @@ static IGNORED_FILES: &[&str] = &[
     "Cargo.lock.saved",
     "Cargo.toml.orig",
     "OWNERS",
-    // rules.mk related files that we won't migrate.
+    // Deprecated config file for rules.mk.
     "cargo2rulesmk.json",
-    "CleanSpec.mk",
-    "rules.mk",
     // cargo_embargo intermediates.
     "Android.bp.orig",
     "cargo.metadata",

@@ -23,8 +23,15 @@ use glob::glob;
 
 use crate::{copy_dir, crate_type::diff_android_bp, CompatibleVersionPair, Crate};
 
-static CUSTOMIZATIONS: &[&str] =
-    &["*.bp", "cargo_embargo.json", "patches", "METADATA", "TEST_MAPPING", "MODULE_LICENSE_*"];
+static CUSTOMIZATIONS: &[&str] = &[
+    "*.bp",
+    "*.mk",
+    "cargo_embargo.json",
+    "patches",
+    "METADATA",
+    "TEST_MAPPING",
+    "MODULE_LICENSE_*",
+];
 
 static SYMLINKS: &[&str] = &["LICENSE", "NOTICE"];
 
