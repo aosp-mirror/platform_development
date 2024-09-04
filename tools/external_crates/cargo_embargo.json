@@ -1,0 +1,20 @@
+{
+  "package": {
+    "rooted_path": {
+      "device_supported": false
+    },
+    "google_metadata": {
+      "device_supported": false,
+      "add_toplevel_block": "google_metadata/cargo_embargo_protobuf.bp",
+      "patch": "google_metadata/patches/Android.bp.patch"
+    }
+  },
+  "tests": true,
+  "workspace": true,
+  "workspace_excludes": [
+    "crate_health",
+    "license_checker",
+    "name_and_version",
+    "name_and_version_proc_macros"
+  ]
+}
