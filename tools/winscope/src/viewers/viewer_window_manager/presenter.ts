@@ -101,6 +101,7 @@ export class Presenter extends AbstractHierarchyViewerPresenter<UiData> {
     ),
     (tree: HierarchyTreeNode) => UI_RECT_FACTORY.makeUiRects(tree),
     this.getDisplays,
+    this.convertRectIdtoContainerName,
   );
   protected override propertiesPresenter = new PropertiesPresenter(
     PersistentStoreProxy.new<UserOptions>(
@@ -189,6 +190,11 @@ export class Presenter extends AbstractHierarchyViewerPresenter<UiData> {
       });
     });
     return ids.sort();
+  }
+
+  private convertRectIdtoContainerName(id: string) {
+    const parts = id.split(' ');
+    return parts.slice(2).join(' ');
   }
 
   private refreshUIData() {

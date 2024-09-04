@@ -36,7 +36,10 @@ import {LogField, LogFieldType} from 'viewers/common/ui_data_log';
 import {UI_RECT_FACTORY} from 'viewers/common/ui_rect_factory';
 import {UserOptions} from 'viewers/common/user_options';
 import {ViewerEvents} from 'viewers/common/viewer_events';
-import {makeDisplayIdentifiers} from 'viewers/viewer_surface_flinger/presenter';
+import {
+  convertRectIdToLayerorDisplayName,
+  makeDisplayIdentifiers,
+} from 'viewers/viewer_surface_flinger/presenter';
 import {DispatchEntryFormatter} from './operations/dispatch_entry_formatter';
 import {InputEntry, UiData} from './ui_data';
 
@@ -101,6 +104,7 @@ export class Presenter extends AbstractLogViewerPresenter<UiData> {
         this.currentTargetWindowIds.has(id),
       ),
     makeDisplayIdentifiers,
+    convertRectIdToLayerorDisplayName,
   );
 
   constructor(

@@ -102,6 +102,7 @@ export class Presenter extends AbstractHierarchyViewerPresenter<UiData> {
         tree,
         this.getIdFromViewCaptureTrace(trace),
       ),
+    undefined,
   );
   protected override propertiesPresenter = new PropertiesPresenter(
     PersistentStoreProxy.new<UserOptions>(

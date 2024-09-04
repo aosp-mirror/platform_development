@@ -120,6 +120,7 @@ export class Presenter extends AbstractHierarchyViewerPresenter<UiData> {
       UI_RECT_FACTORY.makeUiRects(tree, this.viewCapturePackageNames),
     (displays: UiRect[]) =>
       makeDisplayIdentifiers(displays, this.wmFocusedDisplayId),
+    convertRectIdToLayerorDisplayName,
   );
   protected override propertiesPresenter = new PropertiesPresenter(
     PersistentStoreProxy.new<UserOptions>(
@@ -494,4 +495,13 @@ export function makeDisplayIdentifiers(
   });
 
   return ids;
+}
+
+export function convertRectIdToLayerorDisplayName(id: string) {
+  if (id.startsWith('Display')) return id.split('-').slice(1).join('-').trim();
+  const idMinusStartLayerId = id.split(' ').slice(1).join(' ');
+  const idSplittingEndLayerId = idMinusStartLayerId.split('#');
+  return idSplittingEndLayerId
+    .slice(0, idSplittingEndLayerId.length - 1)
+    .join('#');
 }
