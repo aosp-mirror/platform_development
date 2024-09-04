@@ -15,6 +15,7 @@
  */
 
 import {assertDefined} from 'common/assert_utils';
+import {Store} from 'common/store';
 import {Timestamp} from 'common/time';
 import {TimeUtils} from 'common/time_utils';
 import {UserNotifier} from 'common/user_notifier';
@@ -28,6 +29,7 @@ import {
   IncompleteFrameMapping,
   NoTraceTargetsSelected,
   NoValidFiles,
+  ProxyTracingErrors,
 } from 'messaging/user_warnings';
 import {
   ActiveTraceChanged,
@@ -43,6 +45,7 @@ import {WinscopeEventListener} from 'messaging/winscope_event_listener';
 import {TraceEntry} from 'trace/trace';
 import {TRACE_INFO} from 'trace/trace_info';
 import {TracePosition} from 'trace/trace_position';
+import {RequestedTraceTypes} from 'trace_collection/adb_files';
 import {View, Viewer, ViewType} from 'viewers/viewer';
 import {ViewerFactory} from 'viewers/viewer_factory';
 import {FilesSource} from './files_source';
@@ -60,7 +63,7 @@ export class Mediator {
   private traceViewComponent?: WinscopeEventEmitter & WinscopeEventListener;
   private timelineComponent?: WinscopeEventEmitter & WinscopeEventListener;
   private appComponent: WinscopeEventListener;
-  private storage: Storage;
+  private storage: Store;
 
   private tracePipeline: TracePipeline;
   private timelineData: TimelineData;
@@ -76,7 +79,7 @@ export class Mediator {
     abtChromeExtensionProtocol: WinscopeEventEmitter & WinscopeEventListener,
     crossToolProtocol: CrossToolProtocol,
     appComponent: WinscopeEventListener,
-    storage: Storage,
+    storage: Store,
   ) {
     this.tracePipeline = tracePipeline;
     this.timelineData = timelineData;
@@ -139,9 +142,29 @@ export class Mediator {
 
     await event.visit(WinscopeEventType.APP_FILES_COLLECTED, async (event) => {
       this.currentProgressListener = this.collectTracesComponent;
-      if (event.files.length > 0) {
-        await this.loadFiles(event.files, FilesSource.COLLECTED);
-        await this.loadViewers();
+      if (event.files.collected.length > 0) {
+        await this.loadFiles(event.files.collected, FilesSource.COLLECTED);
+        const traces = this.tracePipeline.getTraces();
+        if (traces.getSize() > 0) {
+          const failedTraces: string[] = [];
+          event.files.requested.forEach((requested: RequestedTraceTypes) => {
+            if (
+              !requested.types.some((type) => traces.getTraces(type).length > 0)
+            ) {
+              failedTraces.push(requested.name);
+            }
+          });
+          if (failedTraces.length > 0) {
+            UserNotifier.add(
+              new ProxyTracingErrors([
+                `Failed to find valid files for ${failedTraces.join(', ')}`,
+              ]),
+            ).notify();
+          }
+          await this.loadViewers();
+        } else {
+          this.currentProgressListener?.onOperationFinished(false);
+        }
       } else {
         UserNotifier.add(new NoValidFiles()).notify();
       }
@@ -363,6 +386,11 @@ export class Mediator {
     await TimeUtils.sleepMs(10);
 
     this.tracePipeline.filterTracesWithoutVisualization();
+    if (this.tracePipeline.getTraces().getSize() === 0) {
+      this.currentProgressListener?.onOperationFinished(false);
+      return;
+    }
+
     try {
       await this.tracePipeline.buildTraces();
       this.currentProgressListener?.onOperationFinished(true);

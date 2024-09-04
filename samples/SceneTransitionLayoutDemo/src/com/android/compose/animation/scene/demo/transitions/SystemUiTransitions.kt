@@ -21,7 +21,7 @@ import androidx.compose.foundation.pager.PagerState
 import com.android.compose.animation.scene.InterruptionHandler
 import com.android.compose.animation.scene.InterruptionResult
 import com.android.compose.animation.scene.SceneKey
-import com.android.compose.animation.scene.TransitionState
+import com.android.compose.animation.scene.content.state.TransitionState
 import com.android.compose.animation.scene.demo.DemoConfiguration
 import com.android.compose.animation.scene.demo.Scenes
 import com.android.compose.animation.scene.demo.SpringConfiguration
@@ -39,6 +39,7 @@ fun systemUiTransitions(
             dampingRatio = springConfiguration.dampingRatio,
             visibilityThreshold = 0.5f,
         )
+    defaultOverscrollProgressConverter = configuration.overscrollProgressConverter
 
     alwaysOnDisplayTransitions()
     shadeTransitions(qsPagerState, configuration)
@@ -51,7 +52,7 @@ fun systemUiTransitions(
 
 object DemoInterruptionHandler : InterruptionHandler {
     override fun onInterruption(
-        interrupted: TransitionState.Transition,
+        interrupted: TransitionState.Transition.ChangeScene,
         newTargetScene: SceneKey,
     ): InterruptionResult? {
         return handleLauncherDuringLockscreenToBouncer(interrupted, newTargetScene)
@@ -95,8 +96,9 @@ object DemoInterruptionHandler : InterruptionHandler {
 
     private fun handleAod(transition: TransitionState.Transition): InterruptionResult? {
         if (
-            !transition.isTransitioning(from = Scenes.AlwaysOnDisplay) &&
-                !transition.isTransitioning(to = Scenes.AlwaysOnDisplay)
+            transition !is TransitionState.Transition.ChangeScene ||
+                (!transition.isTransitioning(from = Scenes.AlwaysOnDisplay) &&
+                    !transition.isTransitioning(to = Scenes.AlwaysOnDisplay))
         ) {
             return null
         }

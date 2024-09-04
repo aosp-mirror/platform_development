@@ -16,8 +16,8 @@
 
 import {Component, Input} from '@angular/core';
 import {assertDefined} from 'common/assert_utils';
-import {Point} from 'common/geometry_types';
-import {Rect} from 'common/rect';
+import {Point} from 'common/geometry/point';
+import {Rect} from 'common/geometry/rect';
 import {Timestamp} from 'common/time';
 import {Trace, TraceEntry} from 'trace/trace';
 import {AbstractTimelineRowComponent} from './abstract_timeline_row_component';

@@ -49,6 +49,10 @@ describe('TracesParserInput', () => {
     expect(parser.getCoarseVersion()).toEqual(CoarseVersion.LATEST);
   });
 
+  it('has expected descriptors', () => {
+    expect(parser.getDescriptors()).toEqual(['input-events.perfetto-trace']);
+  });
+
   it('provides timestamps', () => {
     const timestamps = assertDefined(parser.getTimestamps());
     const expected = [

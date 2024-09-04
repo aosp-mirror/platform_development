@@ -26,6 +26,10 @@ export const nodeStyles =
         width: 100%;
     }
 
+    .node:not(.selected):not(.full-opacity) {
+        opacity: 0.5;
+    }
+
     .node.clickable {
         cursor: pointer;
     }
@@ -114,11 +118,15 @@ export const nodeInnerItemStyles = `
       position: absolute;
     }
 
-    .toggle-tree-btn, .expand-tree-btn, .pin-node-btn, .toggle-rect-show-state-btn {
+    .icon-wrapper-copy {
+        right: 0;
+    }
+
+    .toggle-tree-btn, .expand-tree-btn, .pin-node-btn, .toggle-rect-show-state-btn, .copy-btn {
         padding: 0;
     }
 
-    .toggle-rect-show-state-btn {
+    .toggle-rect-show-state-btn, .copy-btn {
         transform: scale(0.75);
     }
 
@@ -168,5 +176,14 @@ export const nodeInnerItemStyles = `
     .expand-tree-btn.added,
     .expand-tree-btn.addedMove {
         background: ${Color.ADDED_ELEMENT_BACKGROUND};
+    }
+
+    .icon-wrapper-show-state {
+        opacity: 1;
+    }
+
+    :host:not(:hover):not(.selected) .icon-wrapper-show-state,
+    :host:not(:hover) .icon-wrapper-copy {
+        visibility: hidden;
     }
 `;

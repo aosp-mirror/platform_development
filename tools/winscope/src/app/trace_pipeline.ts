@@ -15,6 +15,7 @@
  */
 
 import {FileUtils} from 'common/file_utils';
+import {OnProgressUpdateType} from 'common/function_utils';
 import {
   TimestampConverter,
   UTC_TIMEZONE_INFO,
@@ -31,7 +32,7 @@ import {FrameMapper} from 'trace/frame_mapper';
 import {Trace} from 'trace/trace';
 import {Traces} from 'trace/traces';
 import {TraceFile} from 'trace/trace_file';
-import {TraceType, TraceTypeUtils} from 'trace/trace_type';
+import {TraceEntryTypeMap, TraceType, TraceTypeUtils} from 'trace/trace_type';
 import {FilesSource} from './files_source';
 import {LoadedParsers} from './loaded_parsers';
 import {TraceFileFilter} from './trace_file_filter';
@@ -89,39 +90,44 @@ export class TracePipeline {
       const hasTransitionTrace =
         this.traces.getTrace(TraceType.TRANSITION) !== undefined;
       if (hasTransitionTrace) {
-        this.traces.deleteTracesByType(TraceType.WM_TRANSITION);
-        this.traces.deleteTracesByType(TraceType.SHELL_TRANSITION);
+        this.removeTracesAndParsersByType(TraceType.WM_TRANSITION);
+        this.removeTracesAndParsersByType(TraceType.SHELL_TRANSITION);
       }
 
       const hasCujTrace = this.traces.getTrace(TraceType.CUJS) !== undefined;
       if (hasCujTrace) {
-        this.traces.deleteTracesByType(TraceType.EVENT_LOG);
+        this.removeTracesAndParsersByType(TraceType.EVENT_LOG);
       }
 
       const hasMergedInputTrace =
         this.traces.getTrace(TraceType.INPUT_EVENT_MERGED) !== undefined;
       if (hasMergedInputTrace) {
-        this.traces.deleteTracesByType(TraceType.INPUT_KEY_EVENT);
-        this.traces.deleteTracesByType(TraceType.INPUT_MOTION_EVENT);
+        this.removeTracesAndParsersByType(TraceType.INPUT_KEY_EVENT);
+        this.removeTracesAndParsersByType(TraceType.INPUT_MOTION_EVENT);
       }
     } finally {
       progressListener?.onOperationFinished(true);
     }
   }
 
-  removeTrace(trace: Trace<object>) {
-    this.loadedParsers.remove(trace.getParser());
+  removeTrace<T extends TraceType>(
+    trace: Trace<TraceEntryTypeMap[T]>,
+    keepFileForDownload = false,
+  ) {
+    this.loadedParsers.remove(trace.getParser(), keepFileForDownload);
     this.traces.deleteTrace(trace);
   }
 
-  async makeZipArchiveWithLoadedTraceFiles(): Promise<Blob> {
-    return this.loadedParsers.makeZipArchive();
+  async makeZipArchiveWithLoadedTraceFiles(
+    onProgressUpdate?: OnProgressUpdateType,
+  ): Promise<Blob> {
+    return this.loadedParsers.makeZipArchive(onProgressUpdate);
   }
 
   filterTracesWithoutVisualization() {
     const tracesWithoutVisualization = this.traces
       .mapTrace((trace) => {
-        if (!TraceTypeUtils.canVisualizeTrace(trace.type)) {
+        if (!TraceTypeUtils.isTraceTypeWithViewer(trace.type)) {
           return trace;
         }
         return undefined;
@@ -279,13 +285,17 @@ export class TracePipeline {
     progressListener?.onProgressUpdate(progressMessage, 0);
 
     for (let i = 0; i < files.length; i++) {
-      const file = files[i];
+      let file = files[i];
 
       const onSubProgressUpdate = (subPercentage: number) => {
         const totalPercentage =
           (100 * i) / files.length + subPercentage / files.length;
         progressListener?.onProgressUpdate(progressMessage, totalPercentage);
       };
+
+      if (await FileUtils.isGZipFile(file)) {
+        file = await FileUtils.decompressGZipFile(file);
+      }
 
       if (await FileUtils.isZipFile(file)) {
         try {
@@ -298,10 +308,6 @@ export class TracePipeline {
         } catch (e) {
           UserNotifier.add(new CorruptedArchive(file));
         }
-      } else if (await FileUtils.isGZipFile(file)) {
-        const unzippedFile = await FileUtils.decompressGZipFile(file);
-        unzippedArchives.push([new TraceFile(unzippedFile, file)]);
-        onSubProgressUpdate(100);
       } else {
         unzippedArchives.push([new TraceFile(file, undefined)]);
         onSubProgressUpdate(100);
@@ -311,5 +317,12 @@ export class TracePipeline {
     progressListener?.onProgressUpdate(progressMessage, 100);
 
     return unzippedArchives;
+  }
+
+  private removeTracesAndParsersByType(type: TraceType) {
+    const traces = this.traces.getTraces(type);
+    traces.forEach((trace) => {
+      this.removeTrace(trace, true);
+    });
   }
 }

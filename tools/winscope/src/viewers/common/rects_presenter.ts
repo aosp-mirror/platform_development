@@ -16,7 +16,7 @@
 
 import {Trace} from 'trace/trace';
 import {HierarchyTreeNode} from 'trace/tree_node/hierarchy_tree_node';
-import {UiRect} from 'viewers/components/rects/types2d';
+import {UiRect} from 'viewers/components/rects/ui_rect';
 import {DisplayIdentifier} from './display_identifier';
 import {RectFilter} from './rect_filter';
 import {RectShowState} from './rect_show_state';

@@ -1,0 +1,6 @@
+EventLog
+
+--------- beginning of events
+         1722505528.473000000 shell 19243 19243 I auditd  : type=1400 audit(0.0:178): avc:  denied  { append } for  comm="perfetto" path="/data/local/tmp/winscope_signal_handler.log" dev="dm-53" ino=10860 scontext=u:r:perfetto:s0 tcontext=u:object_r:shell_data_file:s0 tclass=file permissive=0
+         1722505529.729000000 shell 19846 19846 I auditd  : type=1400 audit(0.0:179): avc:  denied  { append } for  comm="perfetto" path="/data/local/tmp/winscope_signal_handler.log" dev="dm-53" ino=10860 scontext=u:r:perfetto:s0 tcontext=u:object_r:shell_data_file:s0 tclass=file permissive=0
+         1722505530.733000000 shell 20350 20350 I auditd  : type=1400 audit(0.0:180): avc:  denied  { append } for  comm="perfetto" path="/data/local/tmp/winscope_signal_handler.log" dev="dm-53" ino=10860 scontext=u:r:perfetto:s0 tcontext=u:object_r:shell_data_file:s0 tclass=file permissive=0
