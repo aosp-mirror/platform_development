@@ -20,11 +20,12 @@ use std::{
 };
 
 use anyhow::{anyhow, Context, Result};
+use name_and_version::NamedAndVersioned;
 use rooted_path::RootedPath;
 use serde::Serialize;
 use tinytemplate::TinyTemplate;
 
-use crate::{ensure_exists_and_empty, NamedAndVersioned, RunQuiet};
+use crate::{ensure_exists_and_empty, RunQuiet};
 
 static CARGO_TOML_TEMPLATE: &'static str = include_str!("templates/Cargo.toml.template");
 
