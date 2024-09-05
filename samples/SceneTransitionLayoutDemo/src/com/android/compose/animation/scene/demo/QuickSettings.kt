@@ -29,7 +29,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -116,10 +115,7 @@ object QuickSettings {
 @Composable
 @OptIn(ExperimentalFoundationApi::class)
 fun SceneScope.QuickSettings(
-    pagerState: PagerState,
-    tiles: List<QuickSettingsTileViewModel>,
-    nGridRows: Int,
-    nGridColumns: Int,
+    qsPager: @Composable SceneScope.() -> Unit,
     mediaPlayer: (@Composable SceneScope.() -> Unit)?,
     onSettingsButtonClicked: () -> Unit,
     onPowerButtonClicked: () -> Unit,
@@ -144,14 +140,12 @@ fun SceneScope.QuickSettings(
                     horizontalPaddingModifier.padding(top = QuickSettings.Dimensions.Padding)
                 )
 
-                QuickSettingsPager(
-                    pagerState = pagerState,
-                    tiles = tiles,
-                    nRows = nGridRows,
-                    nColumns = nGridColumns,
+                Box(
                     Modifier.padding(top = QuickSettings.Dimensions.Padding)
-                        .element(QuickSettings.Elements.ExpandedGrid),
-                )
+                        .element(QuickSettings.Elements.ExpandedGrid)
+                ) {
+                    qsPager()
+                }
 
                 if (mediaPlayer != null) {
                     Box(horizontalPaddingModifier) { mediaPlayer() }

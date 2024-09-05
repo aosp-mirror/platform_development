@@ -246,18 +246,21 @@ fun SystemUi(
     var showConfigurationDialog by remember { mutableStateOf(false) }
 
     val nQuickSettingsColumns =
-        when (windowSizeClass.widthSizeClass) {
-            WindowWidthSizeClass.Compact -> 2
-            WindowWidthSizeClass.Medium,
-            WindowWidthSizeClass.Expanded ->
-                when (windowSizeClass.heightSizeClass) {
-                    // Phone landscape.
-                    WindowHeightSizeClass.Compact -> 2
-                    else -> 3
-                }
-            else -> error("Unknown size class: ${windowSizeClass.widthSizeClass}")
+        if (configuration.enableOverlays) {
+            2
+        } else {
+            when (windowSizeClass.widthSizeClass) {
+                WindowWidthSizeClass.Compact -> 2
+                WindowWidthSizeClass.Medium,
+                WindowWidthSizeClass.Expanded ->
+                    when (windowSizeClass.heightSizeClass) {
+                        // Phone landscape.
+                        WindowHeightSizeClass.Compact -> 2
+                        else -> 3
+                    }
+                else -> error("Unknown size class: ${windowSizeClass.widthSizeClass}")
+            }
         }
-
     val nQuickSettingsRow = 4
     val nQuickSettingsSplitShadeRows = nQuickSettingsColumns
 
@@ -436,6 +439,15 @@ fun SystemUi(
                         null
                     }
 
+                val qsPager: (@Composable SceneScope.() -> Unit) = {
+                    QuickSettingsPager(
+                        pagerState = quickSettingsPagerState,
+                        tiles = quickSettingsTiles,
+                        nRows = nQuickSettingsRow,
+                        nColumns = nQuickSettingsColumns,
+                    )
+                }
+
                 // SceneTransitionLayout can only be bound to one SceneTransitionLayoutState, so
                 // make sure we recompose it fully when we create a new state object.
                 key(layoutState) {
@@ -537,10 +549,7 @@ fun SystemUi(
                             ),
                         ) {
                             QuickSettings(
-                                quickSettingsPagerState,
-                                quickSettingsTiles,
-                                nQuickSettingsRow,
-                                nQuickSettingsColumns,
+                                qsPager,
                                 mediaPlayer,
                                 ::onSettingsButtonClicked,
                                 ::onPowerButtonClicked,
@@ -602,7 +611,7 @@ fun SystemUi(
                             userActions = QuickSettingsShade.UserActions,
                             alignment = Alignment.TopStart,
                         ) {
-                            QuickSettingsShade(mediaPlayer)
+                            QuickSettingsShade(qsPager, mediaPlayer)
                         }
                     }
                 }
