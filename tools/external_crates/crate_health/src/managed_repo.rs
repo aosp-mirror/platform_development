@@ -23,6 +23,7 @@ use std::{
 
 use anyhow::{anyhow, Result};
 use glob::glob;
+use google_metadata::GoogleMetadata;
 use itertools::Itertools;
 use license_checker::find_licenses;
 use name_and_version::{NameAndVersion, NameAndVersionMap, NameAndVersionRef, NamedAndVersioned};
@@ -31,8 +32,8 @@ use semver::Version;
 use spdx::Licensee;
 
 use crate::{
-    cargo_embargo_autoconfig, copy_dir, update_module_license_files, Crate, CrateCollection,
-    GoogleMetadata, Migratable, PseudoCrate, VersionMatch,
+    cargo_embargo_autoconfig, copy_dir, most_restrictive_type, update_module_license_files, Crate,
+    CrateCollection, Migratable, PseudoCrate, VersionMatch,
 };
 
 pub struct ManagedRepo {
@@ -421,10 +422,11 @@ impl ManagedRepo {
             update_module_license_files(&krate.path().abs(), &licenses)?;
 
             let metadata = GoogleMetadata::init(
-                krate.path().abs().join("METADATA"),
-                &krate,
+                krate.path().join("METADATA")?,
+                krate.name(),
+                krate.version().to_string(),
                 krate.description(),
-                &licenses,
+                most_restrictive_type(&licenses),
             )?;
             metadata.write()?;
 
@@ -464,6 +466,8 @@ impl ManagedRepo {
             remove_dir_all(&android_crate_dir)?;
             rename(pair.dest.staging_path(), &android_crate_dir)?;
         }
+
+        self.pseudo_crate.regenerate_crate_list()?;
 
         Ok(())
     }
@@ -563,6 +567,12 @@ impl ManagedRepo {
                 self.managed_dir(), managed_dirs.difference(&deps).join(", "), deps.difference(&managed_dirs).join(", ")));
         }
 
+        let crate_list = self.pseudo_crate.read_crate_list()?;
+        if deps.iter().ne(crate_list.iter()) {
+            return Err(anyhow!("Deps in pseudo_crate/Cargo.toml don't match deps in crate-list.txt\nCargo.toml: {}\ncrate-list.txt: {}",
+                deps.iter().join(", "), crate_list.iter().join(", ")));
+        }
+
         let changed_android_crates = files
             .iter()
             .filter_map(|file| {
@@ -637,6 +647,38 @@ impl ManagedRepo {
         }
         self.pseudo_crate.vendor()?;
         Ok(added_deps)
+    }
+    pub fn fix_licenses(&self) -> Result<()> {
+        let mut cc = self.new_cc();
+        cc.add_from(&self.managed_dir().rel())?;
+
+        for (_, krate) in cc.map_field() {
+            println!("{} = \"={}\"", krate.name(), krate.version());
+            let state = find_licenses(krate.path().abs(), krate.name(), krate.license())?;
+            if !state.unsatisfied.is_empty() {
+                println!("{:?}", state);
+            } else {
+                // For now, just update MODULE_LICENSE_*
+                update_module_license_files(&krate.path().abs(), &state)?;
+            }
+        }
+
+        Ok(())
+    }
+    pub fn fix_metadata(&self) -> Result<()> {
+        let mut cc = self.new_cc();
+        cc.add_from(&self.managed_dir().rel())?;
+
+        for (_, krate) in cc.map_field() {
+            println!("{} = \"={}\"", krate.name(), krate.version());
+            let mut metadata = GoogleMetadata::try_from(krate.path().join(&"METADATA")?)?;
+            metadata.set_identifier(krate.name(), krate.version().to_string())?;
+            metadata.migrate_archive();
+            metadata.migrate_homepage();
+            metadata.write()?;
+        }
+
+        Ok(())
     }
 }
 

@@ -1,6 +1,7 @@
 [workspace]
 members = [
     "crate_health",
+    "google_metadata",
     "license_checker",
     "name_and_version",
     "name_and_version_proc_macros",
