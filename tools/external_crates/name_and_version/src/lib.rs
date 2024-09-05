@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+//! A name and version data structure that can be used as map key.
+
 use semver::Version;
 use thiserror::Error;
 
@@ -26,6 +28,7 @@ pub use self::name_and_version_map::{
 };
 mod name_and_version_map;
 
+#[allow(missing_docs)]
 #[derive(Error, Debug)]
 pub enum Error {
     #[error("Duplicate crate version: {0} {1}")]
