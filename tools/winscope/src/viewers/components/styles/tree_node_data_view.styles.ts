@@ -34,6 +34,7 @@ export const propertyTreeNodeDataViewStyles = `
     .node-property {
         display: flex;
         flex-direction: row;
+        align-items: center;
     }
     .property-key {
         position: relative;
@@ -47,20 +48,14 @@ export const propertyTreeNodeDataViewStyles = `
         vertical-align: top;
     }
     .old-value {
-        color: ${Color.TEXT_GRAY};
+        color: var(--gray-text-color);
         display: flex;
-    }
-    .value {
-        color: var(--purple-text-color);
     }
     .new {
         display: flex;
     }
     .value.null {
-        color: ${Color.TEXT_GRAY};
-    }
-    .value.number {
-        color: var(--blue-text-color);
+        color: var(--gray-text-color);
     }
     .value.true {
         color: var(--green-text-color);
