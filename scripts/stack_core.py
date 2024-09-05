@@ -61,6 +61,8 @@ class TraceConverter:
   spacing = ""
   apk_info = dict()
   lib_to_path = dict()
+  mte_fault_address = None
+  mte_stack_records = []
 
   # We use the "file" command line tool to extract BuildId from ELF files.
   ElfInfo = collections.namedtuple("ElfInfo", ["bitness", "build_id"])
@@ -133,6 +135,11 @@ class TraceConverter:
                                 r"[ \t]*[a-f0-9]" + self.width +
                                 r"[ \t]*[a-f0-9]" + self.width +
                                 r"[ \t]*[ \r\n]")  # pylint: disable-msg=C6310
+    self.mte_sync_line = re.compile(r".*signal 11 \(SIGSEGV\), code 9 \(SEGV_MTESERR\), fault addr 0x(?P<address>[0-9a-f]+)")
+    self.mte_stack_record_line = re.compile(r".*stack_record fp:0x(?P<fp>[0-9a-f]+) "
+                                            r"tag:0x(?P<tag>[0-9a-f]+) "
+                                            r"pc:(?P<object>[^+]+)\+0x(?P<offset>[0-9a-f]+)"
+                                            r"(?: \(BuildId: (?P<buildid>[A-Za-z0-9]+)\))?")
 
   def CleanLine(self, ln):
     # AndroidFeedback adds zero width spaces into its crash reports. These
@@ -157,11 +164,45 @@ class TraceConverter:
       (addr, value, symbol_with_offset, location) = vl
       print("  %8s  %8s  %s  %s" % (addr, value, symbol_with_offset.ljust(maxlen), location))
 
+  def MatchStackRecords(self):
+    if self.mte_fault_address is None:
+      return
+    fault_tag = (self.mte_fault_address >> 56) & 0xF
+    untagged_fault_address = self.mte_fault_address & ~(0xF << 56)
+    build_id_to_lib = {}
+    record_for_lib = collections.defaultdict(lambda: collections.defaultdict(set))
+    for lib, buildid, offset, fp, tag in self.mte_stack_records:
+      if buildid is not None:
+        if buildid not in build_id_to_lib:
+          basename = os.path.basename(lib).split("!")[-1]
+          newlib = self.GetLibraryByBuildId(symbol.SYMBOLS_DIR, basename, buildid)
+          if newlib is not None:
+            build_id_to_lib[buildid] = newlib
+            lib = newlib
+        else:
+          lib = build_id_to_lib[buildid]
+      record_for_lib[lib][offset].add((fp, tag))
+
+    for lib, values in record_for_lib.items():
+      records = symbol.GetStackRecordsForSet(lib, values.keys()) or []
+      for addr, function_name, local_name, file_line, frame_offset, size, tag_offset in records:
+        if frame_offset is None or size is None or tag_offset is None:
+          continue
+        for fp, tag in values[addr]:
+          obj_offset = untagged_fault_address - fp - frame_offset
+          if tag + tag_offset == fault_tag and obj_offset < size:
+            print('')
+            print('Potentially referenced stack object:')
+            print('  %d bytes inside a variable "%s" in stack frame of function "%s"'% (obj_offset, local_name, function_name))
+            print('  at %s' % file_line)
+
   def PrintOutput(self, trace_lines, value_lines):
     if self.trace_lines:
       self.PrintTraceLines(self.trace_lines)
     if self.value_lines:
       self.PrintValueLines(self.value_lines)
+    if self.mte_stack_records:
+      self.MatchStackRecords()
 
   def PrintDivider(self):
     print("\n-----------------------------------------------------\n")
@@ -415,12 +456,17 @@ class TraceConverter:
         register_header or dalvik_jni_thread_header or dalvik_native_thread_header or \
         revision_header or unreachable_header:
       ret = True
-      if self.trace_lines or self.value_lines:
+      if self.trace_lines or self.value_lines or self.mte_stack_records:
         self.PrintOutput(self.trace_lines, self.value_lines)
         self.PrintDivider()
         self.trace_lines = []
         self.value_lines = []
+        self.mte_fault_address = None
+        self.mte_stack_records = []
         self.last_frame = -1
+      if self.mte_sync_line.match(line):
+        match = self.mte_sync_line.match(line)
+        self.mte_fault_address = int(match.group("address"), 16)
       if process_header:
         print(process_header.group(1))
       if signal_header:
@@ -566,6 +612,16 @@ class TraceConverter:
                                    value,
                                    object_symbol_with_offset,
                                    source_location))
+    if self.mte_stack_record_line.match(line):
+      ret = True
+      match = self.mte_stack_record_line.match(line)
+      if self.mte_fault_address is not None:
+        self.mte_stack_records.append(
+          (match.group("object"),
+           match.group("buildid"),
+           int(match.group("offset"), 16),
+           int(match.group("fp"), 16),
+           int(match.group("tag"), 16)))
 
     return ret
 
