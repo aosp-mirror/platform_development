@@ -672,9 +672,10 @@ impl ManagedRepo {
         for (_, krate) in cc.map_field() {
             println!("{} = \"={}\"", krate.name(), krate.version());
             let mut metadata = GoogleMetadata::try_from(krate.path().join(&"METADATA")?)?;
-            metadata.set_identifier(krate.name(), krate.version().to_string())?;
+            metadata.set_version_and_urls(krate.name(), krate.version().to_string())?;
             metadata.migrate_archive();
             metadata.migrate_homepage();
+            metadata.remove_deprecated_url();
             metadata.write()?;
         }
 
