@@ -33,7 +33,7 @@ use spdx::Licensee;
 
 use crate::{
     cargo_embargo_autoconfig, copy_dir, most_restrictive_type, update_module_license_files, Crate,
-    CrateCollection, Migratable, PseudoCrate, VersionMatch,
+    CrateCollection, PseudoCrate, VersionMatch,
 };
 
 pub struct ManagedRepo {
@@ -81,7 +81,6 @@ impl ManagedRepo {
 
         let mut cc = self.new_cc();
         cc.add_from(self.legacy_dir_for(crate_name).rel())?;
-        cc.map_field_mut().retain(|_nv, krate| krate.is_crates_io());
         if cc.map_field().len() != 1 {
             return Err(anyhow!(
                 "Expected a single crate version for {}, but found {}. Crates with multiple versions are not supported yet.",
@@ -191,38 +190,36 @@ impl ManagedRepo {
                 pair.dest.version()
             );
         }
-        if !pair.dest.is_migratable() {
-            if !pair.dest.patch_success() {
-                println!("Patches did not apply successfully to the migrated crate");
-                if verbose {
-                    for output in pair.dest.patch_output() {
-                        if !output.1.status.success() {
-                            println!(
-                                "Failed to apply {}\nstdout:\n{}\nstderr:\n:{}",
-                                output.0,
-                                from_utf8(&output.1.stdout)?,
-                                from_utf8(&output.1.stderr)?
-                            );
-                        }
+        if !pair.dest.patch_success() {
+            println!("Patches did not apply successfully to the migrated crate");
+            if verbose {
+                for output in pair.dest.patch_output() {
+                    if !output.1.status.success() {
+                        println!(
+                            "Failed to apply {}\nstdout:\n{}\nstderr:\n:{}",
+                            output.0,
+                            from_utf8(&output.1.stdout)?,
+                            from_utf8(&output.1.stderr)?
+                        );
                     }
                 }
             }
-            if !pair.dest.generate_android_bp_success() {
-                println!("cargo_embargo execution did not succeed for the migrated crate");
-            } else if !pair.dest.android_bp_unchanged() {
-                println!("Running cargo_embargo for the migrated crate produced changes to the Android.bp file");
-                if verbose {
-                    println!(
-                        "{}",
-                        from_utf8(
-                            &pair
-                                .dest
-                                .android_bp_diff()
-                                .ok_or(anyhow!("No Android.bp diff found"))?
-                                .stdout
-                        )?
-                    );
-                }
+        }
+        if !pair.dest.generate_android_bp_success() {
+            println!("cargo_embargo execution did not succeed for the migrated crate");
+        } else if !pair.dest.android_bp_unchanged() {
+            println!("Running cargo_embargo for the migrated crate produced changes to the Android.bp file");
+            if verbose {
+                println!(
+                    "{}",
+                    from_utf8(
+                        &pair
+                            .dest
+                            .android_bp_diff()
+                            .ok_or(anyhow!("No Android.bp diff found"))?
+                            .stdout
+                    )?
+                );
             }
         }
 
@@ -257,7 +254,10 @@ impl ManagedRepo {
                 .wait()?;
         }
 
-        if !pair.dest.is_migratable() {
+        if !pair.dest.patch_success()
+            || !pair.dest.generate_android_bp_success()
+            || !pair.dest.android_bp_unchanged()
+        {
             println!("The crate is UNHEALTHY");
             return Err(anyhow!("Crate {} is unhealthy", crate_name));
         }
@@ -488,7 +488,6 @@ impl ManagedRepo {
 
             // Source
             cc.add_from(android_crate_dir.rel())?;
-            cc.map_field_mut().retain(|_nv, krate| krate.is_crates_io());
             let num_versions = cc.get_versions(crate_name).count();
             if num_versions != 1 {
                 return Err(anyhow!(
@@ -620,7 +619,6 @@ impl ManagedRepo {
     fn add_crate_and_dependencies(&self, crate_name: &str) -> Result<BTreeSet<String>> {
         let mut cc = self.new_cc();
         cc.add_from("external/rust/crates")?;
-        cc.map_field_mut().retain(|_nv, krate| krate.is_crates_io());
         let unmigrated_crates =
             cc.map_field().keys().map(|nv| nv.name().to_string()).collect::<BTreeSet<_>>();
 

@@ -22,7 +22,7 @@ use anyhow::{anyhow, Context, Result};
 use semver::Version;
 use thiserror::Error;
 
-pub use self::crate_type::{diff_android_bp, Crate, Migratable};
+pub use self::crate_type::{diff_android_bp, Crate};
 mod crate_type;
 
 pub use self::crate_collection::CrateCollection;
