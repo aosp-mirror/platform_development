@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import {ClipboardModule} from '@angular/cdk/clipboard';
 import {ScrollingModule} from '@angular/cdk/scrolling';
 import {CommonModule} from '@angular/common';
 import {HttpClientModule} from '@angular/common/http';
@@ -94,6 +95,7 @@ describe('ViewerInputComponent', () => {
         MatButtonModule,
         MatSelectModule,
         ScrollingModule,
+        ClipboardModule,
       ],
       declarations: [
         ViewerInputComponent,

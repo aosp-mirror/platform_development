@@ -42,7 +42,8 @@ export interface SfCuratedProperties {
   bufferTransformType: string;
   destinationFrame: string;
   z: string;
-  relativeParent: string;
+  relativeParent: string | SfLayerSummary;
+  relativeChildren: SfLayerSummary[];
   calcColor: string;
   calcShadowRadius: string;
   calcCornerRadius: string;

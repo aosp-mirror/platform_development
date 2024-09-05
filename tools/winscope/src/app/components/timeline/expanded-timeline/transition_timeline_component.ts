@@ -16,11 +16,11 @@
 
 import {Component, Input} from '@angular/core';
 import {TimelineUtils} from 'app/components/timeline/timeline_utils';
-import {assertDefined} from 'common/assert_utils';
+import {assertDefined, assertTrue} from 'common/assert_utils';
 import {Point} from 'common/geometry/point';
 import {Rect} from 'common/geometry/rect';
-import {Timestamp} from 'common/time';
-import {Trace, TraceEntry} from 'trace/trace';
+import {TimeRange, Timestamp} from 'common/time';
+import {AbsoluteEntryIndex, Trace, TraceEntry} from 'trace/trace';
 import {TraceType} from 'trace/trace_type';
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
 import {AbstractTimelineRowComponent} from './abstract_timeline_row_component';
@@ -30,7 +30,7 @@ import {AbstractTimelineRowComponent} from './abstract_timeline_row_component';
   template: `
     <div
       class="transition-timeline"
-      matTooltip="Some or all transitions will not be rendered in timeline due to unknown dispatch time"
+      matTooltip="Some or all transitions will not be rendered in timeline due to unknown dispatch and finish or abort time"
       [matTooltipDisabled]="shouldNotRenderEntries.length === 0"
       [style.background-color]="getBackgroundColor()"
       (click)="onTimelineClick($event)"
@@ -56,7 +56,8 @@ import {AbstractTimelineRowComponent} from './abstract_timeline_row_component';
 export class TransitionTimelineComponent extends AbstractTimelineRowComponent<PropertyTreeNode> {
   @Input() selectedEntry: TraceEntry<PropertyTreeNode> | undefined;
   @Input() trace: Trace<PropertyTreeNode> | undefined;
-  @Input() traceEntries: PropertyTreeNode[] | undefined;
+  @Input() transitionEntries: Array<PropertyTreeNode | undefined> | undefined;
+  @Input() fullRange: TimeRange | undefined;
 
   hoveringEntry?: TraceEntry<PropertyTreeNode>;
   rowsToUse = new Map<number, number>();
@@ -65,9 +66,11 @@ export class TransitionTimelineComponent extends AbstractTimelineRowComponent<Pr
 
   ngOnInit() {
     assertDefined(this.trace);
+    assertTrue(this.trace?.type === TraceType.TRANSITION);
     assertDefined(this.selectionRange);
-    assertDefined(this.traceEntries);
-    this.processTraceEntries();
+    assertDefined(this.transitionEntries);
+    assertDefined(this.fullRange);
+    this.computeRowsToUse();
   }
 
   getAvailableWidth() {
@@ -87,56 +90,58 @@ export class TransitionTimelineComponent extends AbstractTimelineRowComponent<Pr
   }
 
   override drawTimeline() {
-    (this.trace as Trace<PropertyTreeNode>).mapEntry((entry) => {
-      const transition = this.traceEntries?.at(entry.getIndex());
-      if (!transition) {
+    let selectedRect: Rect | undefined;
+    assertDefined(this.trace).forEachEntry((entry) => {
+      const index = entry.getIndex();
+      const rect = this.getRectFromIndex(entry.getIndex());
+      if (!rect) {
         return;
       }
-      const timeRange = TimelineUtils.getTimeRangeForTransition(
-        transition,
-        assertDefined(this.selectionRange),
-        assertDefined(this.timestampConverter),
-      );
-      if (!timeRange) {
-        return;
+      const transition = assertDefined(this.transitionEntries?.at(index));
+      this.drawSegment(rect, transition);
+      if (index === this.selectedEntry?.getIndex()) {
+        selectedRect = rect;
       }
-      const rowToUse = this.getRowToUseFor(entry);
-
-      this.drawSegment(timeRange.from, timeRange.to, rowToUse, transition);
     });
-    this.drawSelectedTransitionEntry();
+    if (selectedRect) {
+      this.canvasDrawer.drawRectBorder(selectedRect);
+    }
+  }
+
+  private getRectFromIndex(entryIndex: AbsoluteEntryIndex): Rect | undefined {
+    if (this.shouldNotRenderEntries.includes(entryIndex)) {
+      return undefined;
+    }
+    const transition = this.transitionEntries?.at(entryIndex);
+    if (!transition) {
+      return undefined;
+    }
+    const timeRange = TimelineUtils.getTimeRangeForTransition(
+      transition,
+      assertDefined(this.selectionRange),
+      assertDefined(this.timestampConverter),
+    );
+    if (!timeRange) {
+      return undefined;
+    }
+    const row = this.getRowToUseFor(entryIndex);
+    return this.getSegmentRect(timeRange.from, timeRange.to, row);
   }
 
   protected override getEntryAt(
     mousePoint: Point,
   ): TraceEntry<PropertyTreeNode> | undefined {
-    if (assertDefined(this.trace).type !== TraceType.TRANSITION) {
-      return undefined;
-    }
+    const transitionEntries = assertDefined(this.trace).mapEntry(
+      (entry) => entry,
+    );
 
-    const transitions = assertDefined(this.trace).mapEntry((entry) => {
-      const transition = this.traceEntries?.at(entry.getIndex());
-      if (!transition) {
-        return;
-      }
-      const timeRange = TimelineUtils.getTimeRangeForTransition(
-        transition,
-        assertDefined(this.selectionRange),
-        assertDefined(this.timestampConverter),
-      );
-
-      if (!timeRange) {
-        return undefined;
-      }
-      const rowToUse = this.getRowToUseFor(entry);
-      const rect = this.getSegmentRect(timeRange.from, timeRange.to, rowToUse);
-      if (rect.containsPoint(mousePoint)) {
+    for (const entry of transitionEntries) {
+      const rect = this.getRectFromIndex(entry.getIndex());
+      if (rect?.containsPoint(mousePoint)) {
         return entry;
       }
-      return undefined;
-    });
-
-    return transitions.find((entry) => entry !== undefined);
+    }
+    return undefined;
   }
 
   private drawSegmentHover(mousePoint: Point) {
@@ -152,23 +157,10 @@ export class TransitionTimelineComponent extends AbstractTimelineRowComponent<Pr
       return;
     }
 
-    const transition = this.traceEntries?.at(this.hoveringEntry.getIndex());
-    if (!transition) {
-      return;
+    const rect = this.getRectFromIndex(this.hoveringEntry.getIndex());
+    if (rect) {
+      this.canvasDrawer.drawRectBorder(rect);
     }
-    const timeRange = TimelineUtils.getTimeRangeForTransition(
-      transition,
-      assertDefined(this.selectionRange),
-      assertDefined(this.timestampConverter),
-    );
-
-    if (!timeRange) {
-      return;
-    }
-
-    const rowToUse = this.getRowToUseFor(this.hoveringEntry);
-    const rect = this.getSegmentRect(timeRange.from, timeRange.to, rowToUse);
-    this.canvasDrawer.drawRectBorder(rect);
   }
 
   private getXPosOf(entry: Timestamp): number {
@@ -190,12 +182,6 @@ export class TransitionTimelineComponent extends AbstractTimelineRowComponent<Pr
     const selectionStart = assertDefined(this.selectionRange).from.getValueNs();
     const selectionEnd = assertDefined(this.selectionRange).to.getValueNs();
 
-    const width = Number(
-      (BigInt(this.getAvailableWidth()) *
-        (end.getValueNs() - start.getValueNs())) /
-        (selectionEnd - selectionStart),
-    );
-
     const borderPadding = 5;
     let totalRowHeight =
       (this.canvasDrawer.getScaledCanvasHeight() - 2 * borderPadding) /
@@ -210,6 +196,15 @@ export class TransitionTimelineComponent extends AbstractTimelineRowComponent<Pr
     const padding = 5;
     const rowHeight = totalRowHeight - padding;
 
+    const width = Math.max(
+      Number(
+        (BigInt(this.getAvailableWidth()) *
+          (end.getValueNs() - start.getValueNs())) /
+          (selectionEnd - selectionStart),
+      ),
+      rowHeight,
+    );
+
     return new Rect(
       xPosStart,
       borderPadding + rowToUse * totalRowHeight,
@@ -218,14 +213,7 @@ export class TransitionTimelineComponent extends AbstractTimelineRowComponent<Pr
     );
   }
 
-  private drawSegment(
-    start: Timestamp,
-    end: Timestamp,
-    rowToUse: number,
-    transition: PropertyTreeNode,
-  ) {
-    const rect = this.getSegmentRect(start, end, rowToUse);
-
+  private drawSegment(rect: Rect, transition: PropertyTreeNode) {
     const aborted = assertDefined(
       transition.getChildByName('aborted'),
     ).getValue();
@@ -243,71 +231,40 @@ export class TransitionTimelineComponent extends AbstractTimelineRowComponent<Pr
     );
   }
 
-  private drawSelectedTransitionEntry() {
-    if (this.selectedEntry === undefined) {
-      return;
-    }
-
-    const transition = this.traceEntries?.at(this.selectedEntry.getIndex());
-    if (!transition) {
-      return;
-    }
-    const timeRange = TimelineUtils.getTimeRangeForTransition(
-      transition,
-      assertDefined(this.selectionRange),
-      assertDefined(this.timestampConverter),
-    );
-    if (!timeRange) {
-      return;
-    }
-
-    const rowIndex = this.getRowToUseFor(this.selectedEntry);
-    const rect = this.getSegmentRect(timeRange.from, timeRange.to, rowIndex);
-    const alpha = transition.getChildByName('aborted') ? 0.25 : 1.0;
-    this.canvasDrawer.drawRect(rect, this.color, alpha);
-    this.canvasDrawer.drawRectBorder(rect);
-  }
-
-  private getRowToUseFor(entry: TraceEntry<PropertyTreeNode>): number {
-    const rowToUse = this.rowsToUse.get(entry.getIndex());
+  private getRowToUseFor(entryIndex: AbsoluteEntryIndex): number {
+    const rowToUse = this.rowsToUse.get(entryIndex);
     if (rowToUse === undefined) {
-      console.error('Failed to find', entry, 'in', this.rowsToUse);
-      throw new Error('Could not find entry in rowsToUse');
+      throw new Error(`Could not find entry ${entryIndex} in rowsToUse`);
     }
     return rowToUse;
   }
 
-  private processTraceEntries(): void {
+  private computeRowsToUse(): void {
     const rowAvailableFrom: Array<bigint | undefined> = [];
-    assertDefined(this.trace).mapEntry((entry) => {
+    assertDefined(this.trace).forEachEntry((entry) => {
       const index = entry.getIndex();
-      const transition = this.traceEntries?.at(entry.getIndex());
+      const transition = this.transitionEntries?.at(entry.getIndex());
       if (!transition) {
         return;
       }
 
       const timeRange = TimelineUtils.getTimeRangeForTransition(
         transition,
-        assertDefined(this.selectionRange),
+        assertDefined(this.fullRange),
         assertDefined(this.timestampConverter),
       );
 
-      if (!timeRange) {
+      if (timeRange === undefined) {
         this.shouldNotRenderEntries.push(index);
+        return;
       }
 
       let rowToUse = 0;
-      while (
-        (rowAvailableFrom[rowToUse] ?? 0n) >
-        (timeRange?.from.getValueNs() ??
-          assertDefined(this.selectionRange).from.getValueNs())
-      ) {
+      while ((rowAvailableFrom[rowToUse] ?? 0n) > timeRange.from.getValueNs()) {
         rowToUse++;
       }
 
-      rowAvailableFrom[rowToUse] =
-        timeRange?.to.getValueNs() ??
-        assertDefined(this.selectionRange).to.getValueNs();
+      rowAvailableFrom[rowToUse] = timeRange.to.getValueNs();
 
       if (rowToUse + 1 > this.maxRowsRequires) {
         this.maxRowsRequires = rowToUse + 1;

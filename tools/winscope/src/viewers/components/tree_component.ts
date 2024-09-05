@@ -275,8 +275,9 @@ export class TreeComponent {
 
   showFullOpacity(node: UiPropertyTreeNode | UiHierarchyTreeNode) {
     if (node instanceof UiPropertyTreeNode) return true;
-    const showState = this.rectIdToShowState?.get(node.id);
-    return node === undefined || showState === RectShowState.SHOW;
+    if (this.rectIdToShowState === undefined) return true;
+    const showState = this.rectIdToShowState.get(node.id);
+    return showState === RectShowState.SHOW;
   }
 
   toggleRectShowState() {
@@ -307,9 +308,9 @@ export class TreeComponent {
   ) {
     if (this.store && this.useStoredExpandedState && shouldUpdateStoredState) {
       if (isExpanded) {
-        this.store.removeItem(this.storeKeyCollapsedState);
+        this.store.clear(this.storeKeyCollapsedState);
       } else {
-        this.store.setItem(this.storeKeyCollapsedState, 'true');
+        this.store.add(this.storeKeyCollapsedState, 'true');
       }
     } else {
       this.localExpandedState = isExpanded;
@@ -334,7 +335,7 @@ export class TreeComponent {
 
   private isCollapsedInStore(): boolean {
     return (
-      assertDefined(this.store).getItem(this.storeKeyCollapsedState) === 'true'
+      assertDefined(this.store).get(this.storeKeyCollapsedState) === 'true'
     );
   }
 }

@@ -41,24 +41,11 @@ pub use self::android_bp::{
 };
 mod android_bp;
 
-pub use self::name_and_version::{
-    IsUpgradableTo, NameAndVersion, NameAndVersionRef, NamedAndVersioned,
-};
-mod name_and_version;
+pub use self::license::{most_restrictive_type, update_module_license_files};
+mod license;
 
-pub use self::repo_path::RepoPath;
-mod repo_path;
-
-pub use self::google_metadata::GoogleMetadata;
-mod google_metadata;
-
-#[cfg(test)]
-pub use self::name_and_version_map::try_name_version_map_from_iter;
-pub use self::name_and_version_map::{
-    crates_with_multiple_versions, crates_with_single_version, most_recent_version,
-    NameAndVersionMap,
-};
-mod name_and_version_map;
+pub use self::managed_repo::ManagedRepo;
+mod managed_repo;
 
 #[derive(Error, Debug)]
 pub enum CrateError {
@@ -81,7 +68,7 @@ pub fn default_repo_root() -> Result<PathBuf> {
     Err(anyhow!(".repo directory not found in any ancestor of {}", cwd.display()))
 }
 
-pub fn ensure_exists_and_empty(dir: &impl AsRef<Path>) -> Result<()> {
+pub fn ensure_exists_and_empty(dir: impl AsRef<Path>) -> Result<()> {
     let dir = dir.as_ref();
     if dir.exists() {
         remove_dir_all(&dir).context(format!("Failed to remove {}", dir.display()))?;
@@ -113,7 +100,7 @@ impl RunQuiet for Command {
 }
 
 // The copy_dir crate doesn't handle symlinks.
-pub fn copy_dir(src: &impl AsRef<Path>, dst: &impl AsRef<Path>) -> Result<()> {
+pub fn copy_dir(src: impl AsRef<Path>, dst: impl AsRef<Path>) -> Result<()> {
     Command::new("cp")
         .arg("--archive")
         .arg(src.as_ref())
@@ -121,5 +108,3 @@ pub fn copy_dir(src: &impl AsRef<Path>, dst: &impl AsRef<Path>) -> Result<()> {
         .run_quiet_and_expect_success()?;
     Ok(())
 }
-
-include!(concat!(env!("OUT_DIR"), "/protos/mod.rs"));

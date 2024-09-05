@@ -27,4 +27,11 @@
         android:onClick="onStartBlockedActivityForResultSelected"
         android:text="@string/start_blocked_activity_for_result" />
 
+    <Button
+        android:id="@+id/secure_window_demo"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:onClick="onStartSecureWindowDemo"
+        android:text="@string/secure_window_demo" />
+
 </LinearLayout>
