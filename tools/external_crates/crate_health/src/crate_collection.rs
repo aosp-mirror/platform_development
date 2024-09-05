@@ -45,7 +45,7 @@ impl CrateCollection {
             if entry.file_name() == "Cargo.toml" {
                 match Crate::from(RootedPath::new(
                     self.repo_root.clone(),
-                    entry.path().strip_prefix(self.repo_root())?,
+                    entry.path().strip_prefix(&self.repo_root)?,
                 )?) {
                     Ok(krate) => self.crates.insert_or_error(
                         NameAndVersion::new(krate.name().to_string(), krate.version().clone()),
@@ -59,9 +59,6 @@ impl CrateCollection {
             }
         }
         Ok(())
-    }
-    pub fn repo_root(&self) -> &Path {
-        self.repo_root.as_path()
     }
     pub fn stage_crates(&self) -> Result<()> {
         for krate in self.crates.values() {
