@@ -59,14 +59,14 @@ impl ManagedRepo {
         self.pseudo_crate.get_path().join("vendor").unwrap().join(crate_name).unwrap()
     }
     pub fn legacy_dir_for(&self, crate_name: &str) -> RootedPath {
-        self.path.with_same_root("external/rust/crates").unwrap().join(&crate_name).unwrap()
+        self.path.with_same_root("external/rust/crates").unwrap().join(crate_name).unwrap()
     }
     pub fn new_cc(&self) -> CrateCollection {
         CrateCollection::new(self.path.root())
     }
     pub fn vendored_crates(&self) -> Result<CrateCollection> {
         let mut cc = self.new_cc();
-        cc.add_from(&self.pseudo_crate.get_path().join("vendor")?.rel())?;
+        cc.add_from(self.pseudo_crate.get_path().join("vendor")?.rel())?;
         Ok(cc)
     }
     pub fn migration_health(
@@ -80,7 +80,7 @@ impl ManagedRepo {
         }
 
         let mut cc = self.new_cc();
-        cc.add_from(&self.legacy_dir_for(crate_name).rel())?;
+        cc.add_from(self.legacy_dir_for(crate_name).rel())?;
         cc.map_field_mut().retain(|_nv, krate| krate.is_crates_io());
         if cc.map_field().len() != 1 {
             return Err(anyhow!(
@@ -163,7 +163,7 @@ impl ManagedRepo {
         self.pseudo_crate.vendor()?;
 
         let mut source = self.new_cc();
-        source.add_from(&self.legacy_dir_for(crate_name).rel())?;
+        source.add_from(self.legacy_dir_for(crate_name).rel())?;
 
         let dest = self.vendored_crates()?;
 
@@ -293,9 +293,9 @@ impl ManagedRepo {
             }
             copy_dir(src_dir, self.managed_dir_for(crate_name))?;
             if unpinned.contains(crate_name) {
-                self.pseudo_crate.add_unpinned(&NameAndVersionRef::new(&crate_name, &version))?;
+                self.pseudo_crate.add_unpinned(&NameAndVersionRef::new(crate_name, &version))?;
             } else {
-                self.pseudo_crate.add(&NameAndVersionRef::new(&crate_name, &version))?;
+                self.pseudo_crate.add(&NameAndVersionRef::new(crate_name, &version))?;
             }
         }
 
@@ -349,7 +349,7 @@ impl ManagedRepo {
 
             let vendored_dir = self.vendored_dir_for(dep);
             let managed_dir = self.managed_dir_for(dep);
-            copy_dir(&vendored_dir.abs(), &managed_dir.abs())?;
+            copy_dir(vendored_dir.abs(), managed_dir.abs())?;
 
             // TODO: Copy to a temp dir, because otherwise we might run cargo and create/modify Cargo.lock.
             let output = cargo_embargo_autoconfig(&managed_dir)?;
@@ -487,7 +487,7 @@ impl ManagedRepo {
             }
 
             // Source
-            cc.add_from(&android_crate_dir.rel())?;
+            cc.add_from(android_crate_dir.rel())?;
             cc.map_field_mut().retain(|_nv, krate| krate.is_crates_io());
             let num_versions = cc.get_versions(crate_name).count();
             if num_versions != 1 {
@@ -547,8 +547,8 @@ impl ManagedRepo {
 
         Ok(version_match)
     }
-    pub fn preupload_check(&self, files: &Vec<String>) -> Result<()> {
-        let deps = self.pseudo_crate.deps()?.keys().map(|k| k.clone()).collect::<BTreeSet<_>>();
+    pub fn preupload_check(&self, files: &[String]) -> Result<()> {
+        let deps = self.pseudo_crate.deps()?.keys().cloned().collect::<BTreeSet<_>>();
 
         let mut managed_dirs = BTreeSet::new();
         for entry in read_dir(self.managed_dir())? {
@@ -650,9 +650,9 @@ impl ManagedRepo {
     }
     pub fn fix_licenses(&self) -> Result<()> {
         let mut cc = self.new_cc();
-        cc.add_from(&self.managed_dir().rel())?;
+        cc.add_from(self.managed_dir().rel())?;
 
-        for (_, krate) in cc.map_field() {
+        for krate in cc.map_field().values() {
             println!("{} = \"={}\"", krate.name(), krate.version());
             let state = find_licenses(krate.path().abs(), krate.name(), krate.license())?;
             if !state.unsatisfied.is_empty() {
@@ -667,11 +667,11 @@ impl ManagedRepo {
     }
     pub fn fix_metadata(&self) -> Result<()> {
         let mut cc = self.new_cc();
-        cc.add_from(&self.managed_dir().rel())?;
+        cc.add_from(self.managed_dir().rel())?;
 
-        for (_, krate) in cc.map_field() {
+        for krate in cc.map_field().values() {
             println!("{} = \"={}\"", krate.name(), krate.version());
-            let mut metadata = GoogleMetadata::try_from(krate.path().join(&"METADATA")?)?;
+            let mut metadata = GoogleMetadata::try_from(krate.path().join("METADATA")?)?;
             metadata.set_version_and_urls(krate.name(), krate.version().to_string())?;
             metadata.migrate_archive();
             metadata.migrate_homepage();
@@ -684,7 +684,7 @@ impl ManagedRepo {
 }
 
 // Files that are ignored when migrating a crate to the monorepo.
-static IGNORED_FILES: &'static [&'static str] = &[
+static IGNORED_FILES: &[&str] = &[
     ".appveyor.yml",
     ".bazelci",
     ".bazelignore",
