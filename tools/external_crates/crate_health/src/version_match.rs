@@ -202,9 +202,10 @@ impl VersionMatch<CrateCollection> {
             let mut writeback = false;
             writeback |= metadata.migrate_homepage();
             writeback |= metadata.migrate_archive();
+            writeback |= metadata.remove_deprecated_url();
             if pair.source.version() != pair.dest.version() {
                 metadata.set_date_to_today()?;
-                metadata.set_identifier(pair.dest.name(), pair.dest.version().to_string())?;
+                metadata.set_version_and_urls(pair.dest.name(), pair.dest.version().to_string())?;
                 writeback |= true;
             }
             if writeback {
