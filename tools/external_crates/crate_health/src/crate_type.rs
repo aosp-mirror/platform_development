@@ -28,7 +28,7 @@ use name_and_version::{IsUpgradableTo, NameAndVersionRef, NamedAndVersioned};
 use rooted_path::RootedPath;
 use semver::Version;
 
-use crate::{copy_dir, ensure_exists_and_empty, CrateError};
+use crate::{copy_dir, ensure_exists_and_empty, generate_android_bps, CrateError};
 
 #[derive(Debug)]
 pub struct Crate {
@@ -163,6 +163,15 @@ impl Crate {
         Ok(())
     }
 
+    pub fn generate_android_bp(&mut self) -> Result<()> {
+        let (_, output) = generate_android_bps([&*self].into_iter())?
+            .into_iter()
+            .next()
+            .ok_or(anyhow!("Failed to get next element"))?;
+        self.set_generate_android_bp_output(output);
+        Ok(())
+    }
+
     pub fn diff_android_bp(&mut self) -> Result<()> {
         self.set_diff_output(
             diff_android_bp(
@@ -209,14 +218,11 @@ impl Crate {
     pub fn generate_android_bp_output(&self) -> Option<&Output> {
         self.generate_android_bp_output.as_ref()
     }
-    pub fn set_generate_android_bp_output(&mut self, c2a_output: Output) {
-        self.generate_android_bp_output.replace(c2a_output);
+    pub fn set_generate_android_bp_output(&mut self, cargo_embargo_output: Output) {
+        self.generate_android_bp_output.replace(cargo_embargo_output);
     }
     pub fn set_diff_output(&mut self, diff_output: Output) {
         self.android_bp_diff.replace(diff_output);
-    }
-    pub fn set_patch_output(&mut self, patch_output: Vec<(String, Output)>) {
-        self.patch_output = patch_output;
     }
     pub fn patch_output(&self) -> &Vec<(String, Output)> {
         &self.patch_output

@@ -89,12 +89,11 @@ impl ManagedRepo {
             ));
         }
 
-        cc.stage_crates()?;
-        cc.generate_android_bps()?;
-        cc.diff_android_bps()?;
-
-        let krate = cc.map_field().values().next().unwrap();
+        let krate = cc.map_field_mut().values_mut().next().unwrap();
         println!("Found {} v{} in {}", krate.name(), krate.version(), krate.path());
+        krate.stage_crate()?;
+        krate.generate_android_bp()?;
+        krate.diff_android_bp()?;
         if !krate.is_android_bp_healthy() {
             let mut show_cargo_embargo_results = true;
             if krate.is_migration_denied() {
