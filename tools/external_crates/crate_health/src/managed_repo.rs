@@ -467,6 +467,8 @@ impl ManagedRepo {
             rename(pair.dest.staging_path(), &android_crate_dir)?;
         }
 
+        self.pseudo_crate.regenerate_crate_list()?;
+
         Ok(())
     }
     pub fn regenerate_all(&self, update_metadata: bool) -> Result<()> {
@@ -563,6 +565,12 @@ impl ManagedRepo {
         if deps != managed_dirs {
             return Err(anyhow!("Deps in pseudo_crate/Cargo.toml don't match directories in {}\nDirectories not in Cargo.toml: {}\nCargo.toml deps with no directory: {}",
                 self.managed_dir(), managed_dirs.difference(&deps).join(", "), deps.difference(&managed_dirs).join(", ")));
+        }
+
+        let crate_list = self.pseudo_crate.read_crate_list()?;
+        if deps.iter().ne(crate_list.iter()) {
+            return Err(anyhow!("Deps in pseudo_crate/Cargo.toml don't match deps in crate-list.txt\nCargo.toml: {}\ncrate-list.txt: {}",
+                deps.iter().join(", "), crate_list.iter().join(", ")));
         }
 
         let changed_android_crates = files
@@ -664,9 +672,10 @@ impl ManagedRepo {
         for (_, krate) in cc.map_field() {
             println!("{} = \"={}\"", krate.name(), krate.version());
             let mut metadata = GoogleMetadata::try_from(krate.path().join(&"METADATA")?)?;
-            metadata.set_identifier(krate)?;
+            metadata.set_version_and_urls(krate.name(), krate.version().to_string())?;
             metadata.migrate_archive();
             metadata.migrate_homepage();
+            metadata.remove_deprecated_url();
             metadata.write()?;
         }
 

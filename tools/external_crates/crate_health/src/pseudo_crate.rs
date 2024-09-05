@@ -14,12 +14,14 @@
 
 use std::{
     collections::{BTreeMap, BTreeSet},
-    fs::{create_dir, write},
+    fs::{create_dir, read, write},
+    io::BufRead,
     process::Command,
     str::from_utf8,
 };
 
 use anyhow::{anyhow, Context, Result};
+use itertools::Itertools;
 use name_and_version::NamedAndVersioned;
 use rooted_path::RootedPath;
 use serde::Serialize;
@@ -155,5 +157,16 @@ impl PseudoCrate {
             deps.insert(line.split_once(' ').unwrap().0.to_string());
         }
         Ok(deps)
+    }
+    pub fn regenerate_crate_list(&self) -> Result<()> {
+        write(self.path.join("crate-list.txt")?, format!("{}\n", self.deps()?.keys().join("\n")))?;
+        Ok(())
+    }
+    pub fn read_crate_list(&self) -> Result<Vec<String>> {
+        let mut lines = Vec::new();
+        for line in read(self.path.join("crate-list.txt")?)?.lines() {
+            lines.push(line?);
+        }
+        Ok(lines)
     }
 }
