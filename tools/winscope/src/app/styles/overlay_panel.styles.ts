@@ -14,43 +14,39 @@
  * limitations under the License.
  */
 
-import {Color} from 'app/colors';
-
-export const userOptionStyle = `
-  .user-option {
+export const overlayPanelStyles = `
+  .close-button {
+    width: 24px;
+    height: 24px;
     line-height: 24px;
-    padding: 0 10px;
-    margin-inline-end: 10px;
-    min-width: fit-content;
-  }
-  .user-option.not-enabled {
-    background-color: var(--disabled-color);
   }
 
-  .user-option-label {
+  .overlay-panel {
+    font-family: 'Roboto', sans-serif;
+    background: var(--overlay-panel-background-color);
+    box-shadow: 0px 0px 9px 0px rgba(0, 0, 0, 0.36);
+  }
+
+  .overlay-panel-title {
     display: flex;
     flex-direction: row;
-  }
-  .user-option-label.with-chip {
-    align-items: baseline;
-  }
-  .user-option-label:not(.with-chip) {
+    justify-content: space-between;
     align-items: center;
+    margin: 15px;
+    font-size: 20px;
   }
-  .user-option .mat-icon {
-    margin-inline-start: 5px;
+  .overlay-panel-content {
+    margin: 15px;
+    display: flex;
+    flex-direction: column;
   }
 
-  .user-option-chip {
-    margin-inline-start: 5px;
-    margin-top: 2px;
-    padding: 0 10px;
-    border-radius: 10px;
-    background-color: ${Color.CHIP_GRAY};
-    font-weight: normal;
-    color: ${Color.TEXT_BLACK};
-    height: 18px;
-    align-items: center;
-    display: flex;
+  .overlay-panel-section {
+    margin: 10px 0px;
+  }
+
+  .overlay-panel-section-title {
+    display: block;
+    width: 100%;
   }
 `;

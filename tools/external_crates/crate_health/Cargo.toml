@@ -25,9 +25,10 @@ threadpool = "1"
 tinytemplate = "1.2"
 walkdir = "2"
 whoami = "1"
+google_metadata = { path = "../google_metadata"}
+license_checker = { path = "../license_checker" }
 name_and_version = { path = "../name_and_version" }
 name_and_version_proc_macros = { path = "../name_and_version_proc_macros" }
-license_checker = { path = "../license_checker" }
 rooted_path = { path = "../rooted_path" }
 
 [build-dependencies]
