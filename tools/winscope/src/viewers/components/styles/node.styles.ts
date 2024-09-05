@@ -36,16 +36,16 @@ export const nodeStyles =
 
     .node:not(.selected).added,
     .node:not(.selected).addedMove {
-        background: ${Color.ADDED_ELEMENT_BACKGROUND};
+        background-color: var(--added-element-color);
     }
 
     .node:not(.selected).deleted,
     .node:not(.selected).deletedMove {
-        background: ${Color.DELETED_ELEMENT_BACKGROUND};
+        background-color: var(--deleted-element-color);
     }
 
     .node:not(.selected).modified {
-        background: ${Color.MODIFIED_ELEMENT_BACKGROUND};
+        background-color: var(--modified-element-color);
     }
 
     .node:hover:not(.selected) {
@@ -57,7 +57,7 @@ export const nodeStyles =
         content: 'moved';
         font: 14px 'Roboto', sans-serif;
         margin: 0 5px;
-        background: ${Color.CHIP_BLUE};
+        background-color: ${Color.CHIP_BLUE};
         border-radius: 5px;
         height: fit-content;
         padding: 3px;
@@ -165,17 +165,17 @@ export const nodeInnerItemStyles = `
     }
 
     .expand-tree-btn.modified {
-        background: ${Color.MODIFIED_ELEMENT_BACKGROUND};
+        background-color: var(--modified-element-color);
     }
 
     .expand-tree-btn.deleted,
     .expand-tree-btn.deletedMove {
-        background: ${Color.DELETED_ELEMENT_BACKGROUND};
+        background-color: var(--deleted-element-color);
     }
 
     .expand-tree-btn.added,
     .expand-tree-btn.addedMove {
-        background: ${Color.ADDED_ELEMENT_BACKGROUND};
+        background-color: var(--added-element-color);
     }
 
     .icon-wrapper-show-state {

@@ -17,7 +17,6 @@
 export enum Color {
   ACTIVE_BORDER = '#1967D2',
   ACTIVE_POINTER = ACTIVE_BORDER,
-  ADDED_ELEMENT_BACKGROUND = 'rgba(3, 255, 53, 0.5)',
   BOOKMARK = '#E88C65',
   CHIP_BLUE = '#448aff',
   CHIP_GRAY = '#aaa',
@@ -25,9 +24,7 @@ export enum Color {
   CHIP_ORANGE = '#ffaa6b',
   CHIP_PINK = '#e198b1',
   CHIP_RED = '#ff6b6b',
-  DELETED_ELEMENT_BACKGROUND = 'rgba(255, 107, 107, 0.5)',
   GUIDE_BAR = '#9AA0A6',
-  MODIFIED_ELEMENT_BACKGROUND = 'rgba(0, 255, 255, 0.4)',
   PINNED_ITEM_BORDER = '#FFC24B',
   TEXT_BLACK = 'rgba(0, 0, 0, 0.87)',
   TEXT_GRAY = '#9b9b9b',
