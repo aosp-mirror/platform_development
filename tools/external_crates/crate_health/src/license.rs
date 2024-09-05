@@ -18,9 +18,9 @@ use std::{
     path::Path,
 };
 
-use crate::metadata::LicenseType;
 use anyhow::{anyhow, Result};
 use glob::glob;
+use google_metadata::metadata::LicenseType;
 use lazy_static::lazy_static;
 use license_checker::LicenseState;
 use spdx::{LicenseReq, Licensee};

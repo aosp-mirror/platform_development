@@ -14,20 +14,8 @@
  * limitations under the License.
  */
 
-export const timeButtonStyle = `
-    .time button {
-      padding: 0px;
-      line-height: normal;
-      text-align: left;
-    }
-`;
+import {FilterFlag} from 'common/filter_flag';
 
-export const inlineButtonStyle = `
-    .inline button {
-      padding: 0px;
-      min-width: fit-content;
-      width: fit-content;
-      line-height: normal;
-      text-align: left;
-    }
-`;
+export class TextFilter {
+  constructor(public filterString: string, public flags: FilterFlag[]) {}
+}

@@ -14,20 +14,15 @@
  * limitations under the License.
  */
 
-export const timeButtonStyle = `
-    .time button {
-      padding: 0px;
-      line-height: normal;
-      text-align: left;
-    }
-`;
+import {UserOptions} from 'viewers/common/user_options';
+import {RectShowState} from './rect_show_state';
+import {TextFilter} from './text_filter';
 
-export const inlineButtonStyle = `
-    .inline button {
-      padding: 0px;
-      min-width: fit-content;
-      width: fit-content;
-      line-height: normal;
-      text-align: left;
-    }
-`;
+export interface PresetHierarchy {
+  hierarchyUserOptions: UserOptions;
+  hierarchyFilter: TextFilter;
+  propertiesUserOptions: UserOptions;
+  propertiesFilter: TextFilter;
+  rectsUserOptions?: UserOptions;
+  rectIdToShowState?: Map<string, RectShowState> | undefined;
+}
