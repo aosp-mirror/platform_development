@@ -105,10 +105,10 @@ import {LoadProgressComponent} from './load_progress_component';
             <mat-icon class="warning-icon" *ngIf="!canVisualizeTrace(trace)" [matTooltip]="cannotVisualizeTraceTooltip(trace)">
               warning
             </mat-icon>
-            <mat-icon class="error-icon" *ngIf="trace.isCorrupted()" [matTooltip]="traceErrorTooltip(trace)">
+            <mat-icon class="trace-error-icon" *ngIf="trace.isCorrupted()" [matTooltip]="traceErrorTooltip(trace)">
               error
             </mat-icon>
-            <button color="primary" mat-icon-button (click)="onRemoveTrace($event, trace)">
+            <button mat-icon-button (click)="onRemoveTrace($event, trace)">
               <mat-icon>close</mat-icon>
             </button>
           </mat-list-item>
@@ -205,8 +205,14 @@ import {LoadProgressComponent} from './load_progress_component';
       .trace-error {
         background-color: var(--error-background-color);
       }
-      .info-icon, .warning-icon {
+      .warning-icon, .trace-error-icon {
         flex-shrink: 0;
+      }
+      .warning-icon {
+        color: var(--warning-color);
+      }
+      .trace-error-icon {
+        color: var(--error-color);
       }
     `,
   ],
