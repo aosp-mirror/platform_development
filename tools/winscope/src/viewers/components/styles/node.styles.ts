@@ -54,14 +54,14 @@ export const nodeStyles =
 
     .node.addedMove:after,
     .node.deletedMove:after {
-        content: 'moved';
+        content: 'Moved';
         font: 14px 'Roboto', sans-serif;
         margin: 0 5px;
         background-color: ${Color.CHIP_BLUE};
-        border-radius: 5px;
+        color: ${Color.TEXT_BLACK};
+        border-radius: 10px;
         height: fit-content;
         padding: 3px;
-        color: white;
     }
 ` + selectedElementStyle;
 
