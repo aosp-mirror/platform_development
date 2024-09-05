@@ -628,7 +628,7 @@ fun SystemUi(
 
 // Adapted from [androidx.compose.material3.windowsizeclass.calculateWindowSizeClass].
 @Composable
-private fun calculateWindowSizeClass(): WindowSizeClass {
+internal fun calculateWindowSizeClass(): WindowSizeClass {
     // Observe view configuration changes and recalculate the size class on each change. We can't
     // use Activity#onConfigurationChanged as this will sometimes fail to be called on different
     // API levels, hence why this function needs to be @Composable so we can observe the
