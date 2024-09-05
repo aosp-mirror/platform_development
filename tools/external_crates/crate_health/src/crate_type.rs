@@ -122,16 +122,6 @@ impl Crate {
         format!("{}-{}", self.name(), self.version())
     }
 
-    pub fn is_crates_io(&self) -> bool {
-        const NOT_CRATES_IO: &[&str] = &[
-            "external/rust/beto-rust/",                 // Google crates
-            "external/rust/pica/",                      // Google crate
-            "external/rust/crates/webpki/third-party/", // Internal/example code
-            "external/rust/cxx/third-party/",           // Internal/example code
-            "external/rust/cxx/demo/",                  // Internal/example code
-        ];
-        !NOT_CRATES_IO.iter().any(|prefix| self.path().rel().starts_with(prefix))
-    }
     pub fn is_migration_denied(&self) -> bool {
         const MIGRATION_DENYLIST: &[&str] = &[
             "external/rust/crates/openssl/", // It's complicated.
@@ -139,9 +129,9 @@ impl Crate {
         ];
         MIGRATION_DENYLIST.iter().any(|prefix| self.path().rel().starts_with(prefix))
     }
+
     pub fn is_android_bp_healthy(&self) -> bool {
-        !self.is_migration_denied()
-            && self.android_bp().abs().exists()
+        self.android_bp().abs().exists()
             && self.cargo_embargo_json().abs().exists()
             && self.generate_android_bp_success()
             && self.android_bp_unchanged()
@@ -233,23 +223,6 @@ impl Crate {
     }
 }
 
-pub trait Migratable {
-    fn is_migration_eligible(&self) -> bool;
-    fn is_migratable(&self) -> bool;
-}
-
-impl Migratable for Crate {
-    fn is_migration_eligible(&self) -> bool {
-        self.is_crates_io()
-            && !self.is_migration_denied()
-            && self.android_bp().abs().exists()
-            && self.cargo_embargo_json().abs().exists()
-    }
-    fn is_migratable(&self) -> bool {
-        self.patch_success() && self.generate_android_bp_success() && self.android_bp_unchanged()
-    }
-}
-
 #[cfg(test)]
 mod tests {
     use std::{
@@ -278,7 +251,6 @@ mod tests {
         let krate = Crate::from(cargo_toml)?;
         assert_eq!(krate.name(), "foo");
         assert_eq!(krate.version().to_string(), "1.2.0");
-        assert!(krate.is_crates_io());
         assert_eq!(krate.android_bp().abs(), temp_crate_dir.path().join("Android.bp"));
         assert_eq!(
             krate.cargo_embargo_json().abs(),
