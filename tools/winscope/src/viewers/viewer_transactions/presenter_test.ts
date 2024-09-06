@@ -21,6 +21,7 @@ import {TraceBuilder} from 'test/unit/trace_builder';
 import {UnitTestUtils} from 'test/unit/utils';
 import {Parser} from 'trace/parser';
 import {Trace} from 'trace/trace';
+import {TraceType} from 'trace/trace_type';
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
 import {NotifyLogViewCallbackType} from 'viewers/common/abstract_log_viewer_presenter';
 import {AbstractLogViewerPresenterTest} from 'viewers/common/abstract_log_viewer_presenter_test';
@@ -220,10 +221,11 @@ class PresenterTransactionsTest extends AbstractLogViewerPresenterTest<UiData> {
     );
   }
 
-  override createPresenterWithEmptyTrace(
+  override async createPresenterWithEmptyTrace(
     callback: NotifyLogViewCallbackType<UiData>,
-  ): Presenter {
+  ): Promise<Presenter> {
     const emptyTrace = new TraceBuilder<PropertyTreeNode>()
+      .setType(TraceType.TRANSACTIONS)
       .setEntries([])
       .build();
     return new Presenter(emptyTrace, new InMemoryStorage(), callback);
