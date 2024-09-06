@@ -41,7 +41,12 @@ export class Presenter extends AbstractLogViewerPresenter<UiData> {
   private transitionTrace: Trace<PropertyTreeNode>;
 
   protected override logPresenter = new LogPresenter<CujEntry>();
-  protected override propertiesPresenter = new PropertiesPresenter({}, [], []);
+  protected override propertiesPresenter = new PropertiesPresenter(
+    {},
+    undefined,
+    [],
+    [],
+  );
 
   constructor(
     trace: Trace<PropertyTreeNode>,

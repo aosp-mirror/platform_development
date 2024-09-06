@@ -24,13 +24,11 @@ use cargo::{
     util::toml::read_manifest,
     Config,
 };
+use name_and_version::{IsUpgradableTo, NameAndVersionRef, NamedAndVersioned};
 use rooted_path::RootedPath;
 use semver::Version;
 
-use crate::{
-    copy_dir, ensure_exists_and_empty, name_and_version::IsUpgradableTo, CrateError,
-    NameAndVersionRef, NamedAndVersioned,
-};
+use crate::{copy_dir, ensure_exists_and_empty, CrateError};
 
 #[derive(Debug)]
 pub struct Crate {
@@ -50,7 +48,7 @@ impl NamedAndVersioned for Crate {
     fn version(&self) -> &Version {
         self.manifest.version()
     }
-    fn key<'k>(&'k self) -> NameAndVersionRef<'k> {
+    fn key(&self) -> NameAndVersionRef {
         NameAndVersionRef::new(self.name(), self.version())
     }
 }
@@ -85,16 +83,16 @@ impl Crate {
     }
 
     pub fn description(&self) -> &str {
-        self.manifest.metadata().description.as_ref().map(|x| x.as_str()).unwrap_or("")
+        self.manifest.metadata().description.as_deref().unwrap_or("")
     }
     pub fn license(&self) -> Option<&str> {
-        self.manifest.metadata().license.as_ref().map(|x| x.as_str())
+        self.manifest.metadata().license.as_deref()
     }
     pub fn license_file(&self) -> Option<&str> {
-        self.manifest.metadata().license_file.as_ref().map(|x| x.as_str())
+        self.manifest.metadata().license_file.as_deref()
     }
     pub fn repository(&self) -> Option<&str> {
-        self.manifest.metadata().repository.as_ref().map(|x| x.as_str())
+        self.manifest.metadata().repository.as_deref()
     }
     pub fn path(&self) -> &RootedPath {
         &self.path
@@ -121,29 +119,19 @@ impl Crate {
                 return dirname.to_string();
             }
         }
-        format!("{}-{}", self.name(), self.version().to_string())
+        format!("{}-{}", self.name(), self.version())
     }
 
-    pub fn is_crates_io(&self) -> bool {
-        const NOT_CRATES_IO: &'static [&'static str] = &[
-            "external/rust/beto-rust/",                 // Google crates
-            "external/rust/pica/",                      // Google crate
-            "external/rust/crates/webpki/third-party/", // Internal/example code
-            "external/rust/cxx/third-party/",           // Internal/example code
-            "external/rust/cxx/demo/",                  // Internal/example code
-        ];
-        !NOT_CRATES_IO.iter().any(|prefix| self.path().rel().starts_with(prefix))
-    }
     pub fn is_migration_denied(&self) -> bool {
-        const MIGRATION_DENYLIST: &'static [&'static str] = &[
+        const MIGRATION_DENYLIST: &[&str] = &[
             "external/rust/crates/openssl/", // It's complicated.
             "external/rust/cxx/",            // It's REALLY complicated.
         ];
         MIGRATION_DENYLIST.iter().any(|prefix| self.path().rel().starts_with(prefix))
     }
+
     pub fn is_android_bp_healthy(&self) -> bool {
-        !self.is_migration_denied()
-            && self.android_bp().abs().exists()
+        self.android_bp().abs().exists()
             && self.cargo_embargo_json().abs().exists()
             && self.generate_android_bp_success()
             && self.android_bp_unchanged()
@@ -235,23 +223,6 @@ impl Crate {
     }
 }
 
-pub trait Migratable {
-    fn is_migration_eligible(&self) -> bool;
-    fn is_migratable(&self) -> bool;
-}
-
-impl Migratable for Crate {
-    fn is_migration_eligible(&self) -> bool {
-        self.is_crates_io()
-            && !self.is_migration_denied()
-            && self.android_bp().abs().exists()
-            && self.cargo_embargo_json().abs().exists()
-    }
-    fn is_migratable(&self) -> bool {
-        self.patch_success() && self.generate_android_bp_success() && self.android_bp_unchanged()
-    }
-}
-
 #[cfg(test)]
 mod tests {
     use std::{
@@ -280,7 +251,6 @@ mod tests {
         let krate = Crate::from(cargo_toml)?;
         assert_eq!(krate.name(), "foo");
         assert_eq!(krate.version().to_string(), "1.2.0");
-        assert!(krate.is_crates_io());
         assert_eq!(krate.android_bp().abs(), temp_crate_dir.path().join("Android.bp"));
         assert_eq!(
             krate.cargo_embargo_json().abs(),
