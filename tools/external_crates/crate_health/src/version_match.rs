@@ -15,11 +15,10 @@
 use std::{collections::BTreeMap, path::Path};
 
 use anyhow::{anyhow, Result};
+use google_metadata::GoogleMetadata;
+use name_and_version::{NameAndVersion, NameAndVersionMap, NamedAndVersioned};
 
-use crate::{
-    generate_android_bps, CrateCollection, GoogleMetadata, Migratable, NameAndVersion,
-    NameAndVersionMap, NamedAndVersioned,
-};
+use crate::{generate_android_bps, CrateCollection};
 
 #[derive(Debug)]
 pub struct VersionPair<'a, T> {
@@ -98,16 +97,16 @@ impl<CollectionType: NameAndVersionMap> VersionMatch<CollectionType> {
             self.compatibility.get(*nv).is_some_and(|compatibility| compatibility.is_none())
         })
     }
-    pub fn pairs<'a>(&'a self) -> impl Iterator<Item = VersionPair<'a, CollectionType::Value>> {
+    pub fn pairs(&self) -> impl Iterator<Item = VersionPair<CollectionType::Value>> {
         self.source
             .map_field()
             .iter()
             .map(|(nv, source)| VersionPair { source, dest: self.get_compatible_item(nv) })
     }
-    pub fn compatible_pairs<'a>(
-        &'a self,
-    ) -> impl Iterator<Item = CompatibleVersionPair<'a, CollectionType::Value>> {
-        self.pairs().into_iter().filter_map(
+    pub fn compatible_pairs(
+        &self,
+    ) -> impl Iterator<Item = CompatibleVersionPair<CollectionType::Value>> {
+        self.pairs().filter_map(
             |pair: VersionPair<'_, <CollectionType as NameAndVersionMap>::Value>| {
                 pair.to_compatible()
             },
@@ -115,62 +114,32 @@ impl<CollectionType: NameAndVersionMap> VersionMatch<CollectionType> {
     }
 }
 
-impl<CollectionType: NameAndVersionMap> VersionMatch<CollectionType>
-where
-    CollectionType::Value: Migratable,
-{
-    pub fn ineligible(&self) -> impl Iterator<Item = &CollectionType::Value> {
-        self.source.map_field().values().filter(|val| !val.is_migration_eligible())
-    }
-    pub fn eligible_but_not_migratable<'a>(
-        &'a self,
-    ) -> impl Iterator<Item = VersionPair<'a, CollectionType::Value>> {
-        self.pairs().filter(|pair| {
-            pair.source.is_migration_eligible()
-                && !pair.dest.is_some_and(|dest| dest.is_migratable())
-        })
-    }
-    pub fn compatible_and_eligible<'a>(
-        &'a self,
-    ) -> impl Iterator<Item = CompatibleVersionPair<'a, CollectionType::Value>> {
-        self.compatible_pairs().filter(|crate_pair| crate_pair.source.is_migration_eligible())
-    }
-    pub fn migratable<'a>(
-        &'a self,
-    ) -> impl Iterator<Item = CompatibleVersionPair<'a, CollectionType::Value>> {
-        self.compatible_pairs()
-            .filter(|pair| pair.source.is_migration_eligible() && pair.dest.is_migratable())
-    }
-}
-
 impl VersionMatch<CrateCollection> {
     pub fn copy_customizations(&self) -> Result<()> {
-        for pair in self.compatible_and_eligible() {
+        for pair in self.compatible_pairs() {
             pair.copy_customizations()?;
         }
         Ok(())
     }
     pub fn stage_crates(&mut self) -> Result<()> {
-        for pair in self.compatible_and_eligible() {
+        for pair in self.compatible_pairs() {
             pair.dest.stage_crate()?;
         }
         Ok(())
     }
     pub fn apply_patches(&mut self) -> Result<()> {
         let (s, d, c) = (&self.source, &mut self.dest, &self.compatibility);
-        for (source_key, source_crate) in s.map_field() {
-            if source_crate.is_migration_eligible() {
-                if let Some(dest_crate) = c.get(source_key).and_then(|compatibility| {
-                    compatibility.as_ref().and_then(|dest_key| d.map_field_mut().get_mut(dest_key))
-                }) {
-                    dest_crate.apply_patches()?
-                }
+        for source_key in s.map_field().keys() {
+            if let Some(dest_crate) = c.get(source_key).and_then(|compatibility| {
+                compatibility.as_ref().and_then(|dest_key| d.map_field_mut().get_mut(dest_key))
+            }) {
+                dest_crate.apply_patches()?
             }
         }
         Ok(())
     }
     pub fn generate_android_bps(&mut self) -> Result<()> {
-        let results = generate_android_bps(self.compatible_and_eligible().map(|pair| pair.dest))?;
+        let results = generate_android_bps(self.compatible_pairs().map(|pair| pair.dest))?;
         for (nv, output) in results.into_iter() {
             self.dest
                 .map_field_mut()
@@ -183,7 +152,7 @@ impl VersionMatch<CrateCollection> {
 
     pub fn diff_android_bps(&mut self) -> Result<()> {
         let mut results = BTreeMap::new();
-        for pair in self.compatible_and_eligible() {
+        for pair in self.compatible_pairs() {
             results.insert_or_error(NameAndVersion::from(pair.dest), pair.diff_android_bps()?)?;
         }
         for (nv, output) in results.into_iter() {
@@ -197,13 +166,19 @@ impl VersionMatch<CrateCollection> {
     }
 
     pub fn update_metadata(&self) -> Result<()> {
-        for pair in self.compatible_and_eligible() {
+        for pair in self.compatible_pairs() {
+            let mut metadata =
+                GoogleMetadata::try_from(pair.dest.staging_path().join(Path::new("METADATA"))?)?;
+            let mut writeback = false;
+            writeback |= metadata.migrate_homepage();
+            writeback |= metadata.migrate_archive();
+            writeback |= metadata.remove_deprecated_url();
             if pair.source.version() != pair.dest.version() {
-                let mut metadata = GoogleMetadata::try_from(
-                    pair.dest.staging_path().join(&Path::new("METADATA")).abs(),
-                )?;
                 metadata.set_date_to_today()?;
-                metadata.set_identifier(pair.dest)?;
+                metadata.set_version_and_urls(pair.dest.name(), pair.dest.version().to_string())?;
+                writeback |= true;
+            }
+            if writeback {
                 metadata.write()?;
             }
         }
@@ -213,12 +188,20 @@ impl VersionMatch<CrateCollection> {
 
 #[cfg(test)]
 mod tests {
-    use crate::try_name_version_map_from_iter;
-
     use super::*;
     use anyhow::Result;
     use itertools::assert_equal;
     use std::collections::BTreeMap;
+
+    fn try_name_version_map_from_iter<'a, ValueType>(
+        nvs: impl IntoIterator<Item = (&'a str, &'a str, ValueType)>,
+    ) -> Result<BTreeMap<NameAndVersion, ValueType>, name_and_version::Error> {
+        let mut test_map = BTreeMap::new();
+        for (name, version, val) in nvs {
+            test_map.insert_or_error(NameAndVersion::try_from_str(name, version)?, val)?;
+        }
+        Ok(test_map)
+    }
 
     #[test]
     fn test_version_map() -> Result<()> {
@@ -338,83 +321,6 @@ mod tests {
         assert_equal(
             version_match.compatible_pairs().map(|x| x.dest),
             ["compatible dest", "equal dest"],
-        );
-
-        Ok(())
-    }
-
-    #[derive(Debug, PartialEq, Eq)]
-    struct FakeMigratable {
-        name: String,
-        source: bool,
-        eligible: bool,
-        migratable: bool,
-    }
-
-    impl FakeMigratable {
-        pub fn source(name: &str, eligible: bool) -> FakeMigratable {
-            FakeMigratable { name: name.to_string(), source: true, eligible, migratable: false }
-        }
-        pub fn dest(migratable: bool) -> FakeMigratable {
-            FakeMigratable { name: "".to_string(), source: false, eligible: false, migratable }
-        }
-    }
-
-    impl Migratable for FakeMigratable {
-        fn is_migration_eligible(&self) -> bool {
-            if !self.source {
-                unreachable!("Checking if dest is migration-eligible");
-            }
-            self.eligible
-        }
-
-        fn is_migratable(&self) -> bool {
-            if self.source {
-                unreachable!("Checking if source is migratable");
-            }
-            self.migratable
-        }
-    }
-
-    #[test]
-    fn test_migratability() -> Result<()> {
-        let source = try_name_version_map_from_iter([
-            ("ineligible", "1.2.3", FakeMigratable::source("ineligible", false)),
-            (
-                "eligible incompatible",
-                "1.2.3",
-                FakeMigratable::source("eligible incompatible", true),
-            ),
-            ("eligible compatible", "1.2.3", FakeMigratable::source("eligible compatible", true)),
-            ("migratable", "1.2.3", FakeMigratable::source("migratable", true)),
-            (
-                "migratable incompatible",
-                "1.2.3",
-                FakeMigratable::source("migratable incompatible", true),
-            ),
-        ])?;
-        let dest = try_name_version_map_from_iter([
-            ("ineligible", "1.2.3", FakeMigratable::dest(true)),
-            ("eligible incompatible", "2.0.0", FakeMigratable::dest(true)),
-            ("eligible compatible", "1.2.3", FakeMigratable::dest(false)),
-            ("migratable", "1.2.3", FakeMigratable::dest(true)),
-            ("migratable incompatible", "2.0.0", FakeMigratable::dest(true)),
-        ])?;
-
-        let version_match = VersionMatch::new(source, dest)?;
-
-        assert_equal(version_match.ineligible().map(|m| m.name.as_str()), ["ineligible"]);
-        assert_equal(
-            version_match.eligible_but_not_migratable().map(|pair| pair.source.name.as_str()),
-            ["eligible compatible", "eligible incompatible", "migratable incompatible"],
-        );
-        assert_equal(
-            version_match.compatible_and_eligible().map(|pair| pair.source.name.as_str()),
-            ["eligible compatible", "migratable"],
-        );
-        assert_equal(
-            version_match.migratable().map(|pair| pair.source.name.as_str()),
-            ["migratable"],
         );
 
         Ok(())

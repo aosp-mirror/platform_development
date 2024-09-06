@@ -57,7 +57,6 @@ class PresenterInputTest extends AbstractLogViewerPresenterTest<UiData> {
 
   override readonly shouldExecuteHeaderTests = true;
   override readonly shouldExecuteFilterTests = true;
-  override readonly shouldExecuteCurrentIndexTests = true;
   override readonly shouldExecutePropertiesTests = true;
 
   override readonly totalOutputEntries = 8;
@@ -295,7 +294,7 @@ class PresenterInputTest extends AbstractLogViewerPresenterTest<UiData> {
   }
 
   override executeSpecializedTests() {
-    describe('Specialized tests', async () => {
+    describe('Specialized tests', () => {
       const time0 = TimestampConverterUtils.makeRealTimestamp(0n);
       const time10 = TimestampConverterUtils.makeRealTimestamp(10n);
       const time19 = TimestampConverterUtils.makeRealTimestamp(19n);

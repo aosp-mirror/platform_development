@@ -99,3 +99,16 @@ body.dark-mode button.mat-flat-button.mat-primary {
 .mat-dialog-container {
     border-radius: 20px !important;
 }
+
+.mat-tooltip {
+    word-break: break-word;
+}
+
+.outline-field .mat-form-field-wrapper {
+    padding-bottom: 0px;
+}
+
+.outline-field .mat-form-field-infix {
+    padding: 6px 0 10px 0;
+    border-top: 8px solid transparent;
+}

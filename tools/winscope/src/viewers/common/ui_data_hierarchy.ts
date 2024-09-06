@@ -19,6 +19,7 @@ import {UserOptions} from 'viewers/common/user_options';
 import {UiRect} from 'viewers/components/rects/ui_rect';
 import {DisplayIdentifier} from './display_identifier';
 import {RectShowState} from './rect_show_state';
+import {TextFilter} from './text_filter';
 import {UiPropertyTreeNode} from './ui_property_tree_node';
 
 export interface UiDataHierarchy {
@@ -29,6 +30,8 @@ export interface UiDataHierarchy {
   propertiesUserOptions: UserOptions;
   propertiesTree: UiPropertyTreeNode | undefined;
   highlightedProperty: string;
+  hierarchyFilter: TextFilter;
+  propertiesFilter: TextFilter;
   rectsToDraw?: UiRect[];
   rectIdToShowState?: Map<string, RectShowState> | undefined;
   displays?: DisplayIdentifier[];
