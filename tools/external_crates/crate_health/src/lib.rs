@@ -22,7 +22,7 @@ use anyhow::{anyhow, Context, Result};
 use semver::Version;
 use thiserror::Error;
 
-pub use self::crate_type::{diff_android_bp, Crate, Migratable};
+pub use self::crate_type::{diff_android_bp, Crate};
 mod crate_type;
 
 pub use self::crate_collection::CrateCollection;
@@ -41,27 +41,11 @@ pub use self::android_bp::{
 };
 mod android_bp;
 
-pub use self::name_and_version::{
-    IsUpgradableTo, NameAndVersion, NameAndVersionRef, NamedAndVersioned,
-};
-mod name_and_version;
-
-pub use self::google_metadata::GoogleMetadata;
-mod google_metadata;
-
 pub use self::license::{most_restrictive_type, update_module_license_files};
 mod license;
 
 pub use self::managed_repo::ManagedRepo;
 mod managed_repo;
-
-#[cfg(test)]
-pub use self::name_and_version_map::try_name_version_map_from_iter;
-pub use self::name_and_version_map::{
-    crates_with_multiple_versions, crates_with_single_version, most_recent_version,
-    NameAndVersionMap,
-};
-mod name_and_version_map;
 
 #[derive(Error, Debug)]
 pub enum CrateError {
@@ -87,9 +71,9 @@ pub fn default_repo_root() -> Result<PathBuf> {
 pub fn ensure_exists_and_empty(dir: impl AsRef<Path>) -> Result<()> {
     let dir = dir.as_ref();
     if dir.exists() {
-        remove_dir_all(&dir).context(format!("Failed to remove {}", dir.display()))?;
+        remove_dir_all(dir).context(format!("Failed to remove {}", dir.display()))?;
     }
-    create_dir_all(&dir).context(format!("Failed to create {}", dir.display()))
+    create_dir_all(dir).context(format!("Failed to create {}", dir.display()))
 }
 
 pub trait RunQuiet {
@@ -124,5 +108,3 @@ pub fn copy_dir(src: impl AsRef<Path>, dst: impl AsRef<Path>) -> Result<()> {
         .run_quiet_and_expect_success()?;
     Ok(())
 }
-
-include!(concat!(env!("OUT_DIR"), "/protos/mod.rs"));

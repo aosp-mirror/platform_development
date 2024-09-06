@@ -57,6 +57,10 @@ JsonObjectRef::JsonObjectRef(const Json::Value &json_value, bool &ok)
   }
 }
 
+bool JsonObjectRef::IsMember(const std::string &key) const {
+  return object_.isMember(key);
+}
+
 const Json::Value &
 JsonObjectRef::Get(const std::string &key, const Json::Value &default_value,
                    IsExpectedJsonType is_expected_type) const {
@@ -227,6 +231,24 @@ void JsonIRReader::ReadTypeInfo(const JsonObjectRef &type_decl,
       type_decl.GetString("referenced_type", type_ir->GetSelfType()));
 }
 
+static void ReadAvailabilityAttrs(const JsonObjectRef &object,
+                                  HasAvailabilityAttrs *decl_ir) {
+  for (auto &&attr : object.GetObjects("availability_attrs")) {
+    repr::AvailabilityAttrIR attr_ir;
+    if (attr.IsMember("introduced_major")) {
+      attr_ir.SetIntroduced(attr.GetUint("introduced_major"));
+    }
+    if (attr.IsMember("deprecated_major")) {
+      attr_ir.SetDeprecated(attr.GetUint("deprecated_major"));
+    }
+    if (attr.IsMember("obsoleted_major")) {
+      attr_ir.SetObsoleted(attr.GetUint("obsoleted_major"));
+    }
+    attr_ir.SetUnavailable(attr.GetBool("unavailable"));
+    decl_ir->AddAvailabilityAttr(std::move(attr_ir));
+  }
+}
+
 void JsonIRReader::ReadRecordFields(const JsonObjectRef &record_type,
                                     RecordTypeIR *record_ir) {
   for (auto &&field : record_type.GetObjects("fields")) {
@@ -234,6 +256,7 @@ void JsonIRReader::ReadRecordFields(const JsonObjectRef &record_type,
         field.GetString("field_name"), field.GetString("referenced_type"),
         field.GetUint("field_offset"), GetAccess(field),
         field.GetBool("is_bit_field"), field.GetUint("bit_width"));
+    ReadAvailabilityAttrs(field, &record_field_ir);
     record_ir->AddRecordField(std::move(record_field_ir));
   }
 }
@@ -265,13 +288,16 @@ void JsonIRReader::ReadVTableLayout(const JsonObjectRef &record_type,
 void JsonIRReader::ReadEnumFields(const JsonObjectRef &enum_type,
                                   EnumTypeIR *enum_ir) {
   for (auto &&field : enum_type.GetObjects("enum_fields")) {
-    std::string name = field.GetString("name");
+    EnumFieldIR enum_field_ir;
+    enum_field_ir.SetName(field.GetString("name"));
     const Json::Value &value = field.GetIntegralValue("enum_field_value");
     if (value.isUInt64()) {
-      enum_ir->AddEnumField(EnumFieldIR(name, value.asUInt64()));
+      enum_field_ir.SetUnsignedValue(value.asUInt64());
     } else {
-      enum_ir->AddEnumField(EnumFieldIR(name, value.asInt64()));
+      enum_field_ir.SetSignedValue(value.asInt64());
     }
+    ReadAvailabilityAttrs(field, &enum_field_ir);
+    enum_ir->AddEnumField(std::move(enum_field_ir));
   }
 }
 
@@ -294,6 +320,7 @@ FunctionIR JsonIRReader::FunctionJsonToIR(const JsonObjectRef &function) {
   function_ir.SetSourceFile(function.GetString("source_file"));
   ReadFunctionParametersAndReturnType(function, &function_ir);
   ReadTemplateInfo(function, &function_ir);
+  ReadAvailabilityAttrs(function, &function_ir);
   return function_ir;
 }
 
@@ -316,6 +343,7 @@ JsonIRReader::RecordTypeJsonToIR(const JsonObjectRef &record_type) {
   ReadBaseSpecifiers(record_type, &record_type_ir);
   record_type_ir.SetRecordKind(GetRecordKind(record_type));
   record_type_ir.SetAnonymity(record_type.GetBool("is_anonymous"));
+  ReadAvailabilityAttrs(record_type, &record_type_ir);
   return record_type_ir;
 }
 
@@ -325,6 +353,7 @@ EnumTypeIR JsonIRReader::EnumTypeJsonToIR(const JsonObjectRef &enum_type) {
   enum_type_ir.SetUnderlyingType(enum_type.GetString("underlying_type"));
   enum_type_ir.SetAccess(GetAccess(enum_type));
   ReadEnumFields(enum_type, &enum_type_ir);
+  ReadAvailabilityAttrs(enum_type, &enum_type_ir);
   return enum_type_ir;
 }
 
@@ -341,6 +370,7 @@ void JsonIRReader::ReadGlobalVariables(const JsonObjectRef &tu) {
     // ReferencesOtherType
     global_variable_ir.SetReferencedType(global_variable.GetString(
         "referenced_type", global_variable_ir.GetLinkerSetKey()));
+    ReadAvailabilityAttrs(global_variable, &global_variable_ir);
     module_->AddGlobalVariable(std::move(global_variable_ir));
   }
 }

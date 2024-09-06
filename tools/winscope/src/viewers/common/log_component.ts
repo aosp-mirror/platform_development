@@ -26,10 +26,12 @@ import {
   ViewChild,
 } from '@angular/core';
 import {MatSelectChange} from '@angular/material/select';
+
 import {Timestamp} from 'common/time';
 import {TraceType} from 'trace/trace_type';
 import {
   LogFilterChangeDetail,
+  LogTextFilterChangeDetail,
   TimestampClickDetail,
   ViewerEvents,
 } from 'viewers/common/viewer_events';
@@ -44,6 +46,7 @@ import {
   viewerCardInnerStyle,
   viewerCardStyle,
 } from 'viewers/components/styles/viewer_card.styles';
+import {TextFilter} from './text_filter';
 import {
   LogEntry,
   LogField,
@@ -97,14 +100,15 @@ import {
               (selectChange)="onFilterChange($event, filter.type)">
           </select-with-filter>
 
-          <mat-form-field *ngIf="filter.options === undefined" appearance="fill" (keydown.enter)="$event.target.blur()">
-            <mat-label>{{filter.type}}</mat-label>
-            <input
-                matInput
-                [name]="getLogFieldName(filter.type)"
-                [ngModel]="emptyFilterValue"
-                (ngModelChange)="onFilterChange($event, filter.type)" />
-          </mat-form-field>
+          <search-box
+            *ngIf="filter.textFilter"
+            appearance="fill"
+            [textFilter]="filter.textFilter"
+            [fontSize]="12"
+            [wideField]="true"
+            [label]="getLogFieldName(filter.type)"
+            [filterName]="getLogFieldName(filter.type)"
+            (filterChange)="onSearchBoxChange($event, filter.type)"></search-box>
         </div>
 
         <button
@@ -188,12 +192,12 @@ import {
   `,
   styles: [
     `
-        .view-header {
-          display: flex;
-          flex-direction: column;
-          flex: 0 0 auto
-        }
-      `,
+      .view-header {
+        display: flex;
+        flex-direction: column;
+        flex: 0 0 auto
+      }
+    `,
     selectedElementStyle,
     currentElementStyle,
     timeButtonStyle,
@@ -256,11 +260,17 @@ export class LogComponent {
     }
   }
 
-  onFilterChange(event: MatSelectChange | string, filterType: LogFieldType) {
-    const value = event instanceof MatSelectChange ? event.value : event;
+  onFilterChange(event: MatSelectChange, filterType: LogFieldType) {
     this.emitEvent(
       ViewerEvents.LogFilterChange,
-      new LogFilterChangeDetail(filterType, value),
+      new LogFilterChangeDetail(filterType, event.value),
+    );
+  }
+
+  onSearchBoxChange(detail: TextFilter, filterType: LogFieldType) {
+    this.emitEvent(
+      ViewerEvents.LogTextFilterChange,
+      new LogTextFilterChangeDetail(filterType, detail),
     );
   }
 

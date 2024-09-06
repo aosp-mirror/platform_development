@@ -46,7 +46,7 @@ describe('RectFilter', () => {
   let expectedRectIdToShowState: Map<string, RectShowState>;
 
   beforeEach(() => {
-    rectFilter = new RectFilter();
+    rectFilter = new RectFilter((id: string) => id);
     expectedRectIdToShowState = new Map([
       [visibleContentRect.id, RectShowState.SHOW],
       [visibleNoContentRect.id, RectShowState.SHOW],
@@ -221,6 +221,16 @@ describe('RectFilter', () => {
     expect(rectFilter.filterRects(allRects, true, true, true)).toEqual(
       filteredRects,
     );
+  });
+
+  it('applies forced state key callback', () => {
+    const relaxedRectFilter = new RectFilter((id) =>
+      id.slice(id.length - 5, id.length - 1),
+    );
+    relaxedRectFilter.updateRectShowState('TestRect', RectShowState.HIDE);
+    expect(
+      relaxedRectFilter.filterRects(allRects, false, false, false),
+    ).toEqual([displayRect]);
   });
 
   function isShown(rectId: string) {
