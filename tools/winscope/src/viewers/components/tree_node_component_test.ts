@@ -102,6 +102,18 @@ describe('TreeNodeComponent', () => {
     expect(spy).toHaveBeenCalledWith(component.node);
   });
 
+  it('can trigger rect show state toggle on click of icon', () => {
+    component.treeNodeComponent.showStateIcon = 'visibility';
+    fixture.detectChanges();
+
+    const spy = spyOn(component.treeNodeComponent.rectShowStateChange, 'emit');
+    const pinNodeButton = assertDefined(
+      htmlElement.querySelector('.toggle-rect-show-state-btn'),
+    );
+    (pinNodeButton as HTMLButtonElement).click();
+    expect(spy).toHaveBeenCalled();
+  });
+
   @Component({
     selector: 'host-component',
     template: `

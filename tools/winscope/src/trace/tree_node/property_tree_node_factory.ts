@@ -15,6 +15,7 @@
  */
 
 import {Timestamp} from 'common/time';
+import {TimeDuration} from 'common/time_duration';
 import {
   PropertySource,
   PropertyTreeNode,
@@ -115,6 +116,7 @@ export class PropertyTreeNodeFactory {
     if (Array.isArray(value)) return value.length > 0;
     if (this.isLongType(value)) return false;
     if (value instanceof Timestamp) return false;
+    if (value instanceof TimeDuration) return false;
     return typeof value === 'object' && Object.keys(value).length > 0;
   }
 

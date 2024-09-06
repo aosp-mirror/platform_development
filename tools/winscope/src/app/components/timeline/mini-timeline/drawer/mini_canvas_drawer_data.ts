@@ -16,43 +16,44 @@
 
 import {Transformer} from 'app/components/timeline/mini-timeline/transformer';
 import {Segment} from 'app/components/timeline/segment';
-import {TraceType} from 'trace/trace_type';
+import {TimeRange} from 'common/time';
+import {Trace} from 'trace/trace';
 import {MiniTimelineDrawerOutput} from './mini_timeline_drawer_output';
 
-export type TimelineEntries = Map<
-  TraceType,
-  {
-    points: number[];
-    segments: Segment[];
-    activePoint: number | undefined;
-    activeSegment: Segment | undefined;
-  }
->;
+export type TimelineTraces = Map<Trace<object>, TimelineTrace>;
+
+export interface TimelineTrace {
+  points: number[];
+  segments: Segment[];
+  activePoint: number | undefined;
+  activeSegment: Segment | undefined;
+}
 
 export class MiniCanvasDrawerData {
   constructor(
     public selectedPosition: number,
     public selection: Segment,
-    private timelineEntriesGetter: () => Promise<TimelineEntries>,
+    private timelineTracesGetter: () => Promise<TimelineTraces>,
     public transformer: Transformer,
+    public bookmarks: number[],
   ) {}
 
-  private entries: TimelineEntries | undefined = undefined;
+  private traces: TimelineTraces | undefined = undefined;
 
-  async getTimelineEntries(): Promise<TimelineEntries> {
-    if (this.entries === undefined) {
-      this.entries = await this.timelineEntriesGetter();
+  async getTimelineTraces(): Promise<TimelineTraces> {
+    if (this.traces === undefined) {
+      this.traces = await this.timelineTracesGetter();
     }
-    return this.entries;
+    return this.traces;
   }
 
   toOutput(): MiniTimelineDrawerOutput {
     return new MiniTimelineDrawerOutput(
       this.transformer.untransform(this.selectedPosition),
-      {
-        from: this.transformer.untransform(this.selection.from),
-        to: this.transformer.untransform(this.selection.to),
-      },
+      new TimeRange(
+        this.transformer.untransform(this.selection.from),
+        this.transformer.untransform(this.selection.to),
+      ),
     );
   }
 }

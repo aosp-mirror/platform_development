@@ -23,7 +23,7 @@ import {MatTooltipModule} from '@angular/material/tooltip';
 import {FilesSource} from 'app/files_source';
 import {TracePipeline} from 'app/trace_pipeline';
 import {assertDefined} from 'common/assert_utils';
-import {WinscopeErrorListenerStub} from 'messaging/winscope_error_listener_stub';
+import {UserNotificationsListenerStub} from 'messaging/user_notifications_listener_stub';
 import {UnitTestUtils} from 'test/unit/utils';
 import {LoadProgressComponent} from './load_progress_component';
 import {UploadTracesComponent} from './upload_traces_component';
@@ -172,12 +172,36 @@ describe('UploadTracesComponent', () => {
     expect((viewTracesButton as HTMLButtonElement).disabled).toBeFalse();
   });
 
+  it('shows warning elements for traces without visualization', async () => {
+    const shellTransitionFile = await UnitTestUtils.getFixtureFile(
+      'traces/elapsed_and_real_timestamp/shell_transition_trace.pb',
+    );
+    await loadFiles([shellTransitionFile]);
+    fixture.detectChanges();
+
+    expect(htmlElement.querySelector('.warning-icon')).toBeTruthy();
+    const viewTracesButton = assertDefined(
+      htmlElement.querySelector('.load-btn'),
+    );
+    expect((viewTracesButton as HTMLButtonElement).disabled).toBeTrue();
+  });
+
+  it('shows info elements for traces with upload info for the user', async () => {
+    const shellTransitionFile = await UnitTestUtils.getFixtureFile(
+      'traces/eventlog.winscope',
+    );
+    await loadFiles([shellTransitionFile]);
+    fixture.detectChanges();
+
+    expect(htmlElement.querySelector('.info-icon')).toBeTruthy();
+  });
+
   async function loadFiles(files: File[]) {
     component.tracePipeline.clear();
     await component.tracePipeline.loadFiles(
       files,
       FilesSource.TEST,
-      new WinscopeErrorListenerStub(),
+      new UserNotificationsListenerStub(),
       undefined,
     );
   }

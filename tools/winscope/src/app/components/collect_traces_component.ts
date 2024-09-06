@@ -27,7 +27,10 @@ import {
 } from '@angular/core';
 import {assertDefined} from 'common/assert_utils';
 import {PersistentStoreProxy} from 'common/persistent_store_proxy';
+import {Analytics} from 'logging/analytics';
 import {ProgressListener} from 'messaging/progress_listener';
+import {WinscopeEvent, WinscopeEventType} from 'messaging/winscope_event';
+import {WinscopeEventListener} from 'messaging/winscope_event_listener';
 import {Connection} from 'trace_collection/connection';
 import {ProxyState} from 'trace_collection/proxy_client';
 import {ProxyConnection} from 'trace_collection/proxy_connection';
@@ -62,7 +65,7 @@ import {LoadProgressComponent} from './load_progress_component';
           <!-- <button class="web-tab" color="primary" mat-raised-button [ngClass]="tabClass(false)" (click)="displayWebAdbTab()">Web ADB</button> -->
           <adb-proxy
             *ngIf="isAdbProxy"
-            [(proxy)]="connect.proxy!"
+            [(proxy)]="connect.proxy"
             (addKey)="onAddKey($event)"></adb-proxy>
           <!-- <web-adb *ngIf="!isAdbProxy"></web-adb> TODO: fix web adb workflow -->
         </div>
@@ -98,9 +101,7 @@ import {LoadProgressComponent} from './load_progress_component';
         </div>
 
         <div
-          *ngIf="
-            connect.isStartTraceState() || connect.isEndTraceState() || isOperationInProgress()
-          "
+          *ngIf="showTraceCollectionConfig()"
           class="trace-collection-config">
           <mat-list>
             <mat-list-item>
@@ -120,10 +121,10 @@ import {LoadProgressComponent} from './load_progress_component';
             </mat-list-item>
           </mat-list>
 
-          <mat-tab-group class="tracing-tabs">
+          <mat-tab-group [selectedIndex]="selectedTabIndex" class="tracing-tabs">
             <mat-tab
               label="Trace"
-              [disabled]="connect.isEndTraceState() || isOperationInProgress()">
+              [disabled]="connect.isEndTraceState() || isOperationInProgress() || refreshDumps">
               <div class="tabbed-section">
                 <div class="trace-section" *ngIf="connect.isStartTraceState()">
                   <trace-config [(traceConfig)]="traceConfig"></trace-config>
@@ -134,12 +135,22 @@ import {LoadProgressComponent} from './load_progress_component';
                   </div>
                 </div>
 
-                <div *ngIf="connect.isEndTraceState()" class="end-tracing">
-                  <div class="progress-desc">
-                    <p class="mat-body-3"><mat-icon fontIcon="cable"></mat-icon></p>
-                    <mat-progress-bar mode="indeterminate"></mat-progress-bar>
-                    <p class="mat-body-1">Tracing...</p>
+                <div *ngIf="connect.isStartingTraceState()" class="starting-trace">
+                  <load-progress
+                    message="Starting trace...">
+                  </load-progress>
+                  <div class="end-btn">
+                    <button color="primary" mat-raised-button [disabled]="true">
+                      End trace
+                    </button>
                   </div>
+                </div>
+
+                <div *ngIf="connect.isEndTraceState()" class="end-tracing">
+                  <load-progress
+                    icon="cable"
+                    message="Tracing...">
+                  </load-progress>
                   <div class="end-btn">
                     <button color="primary" mat-raised-button (click)="endTrace()">
                       End trace
@@ -153,7 +164,7 @@ import {LoadProgressComponent} from './load_progress_component';
                     [message]="progressMessage">
                   </load-progress>
                   <div class="end-btn">
-                    <button color="primary" mat-raised-button (click)="endTrace()" disabled="true">
+                    <button color="primary" mat-raised-button [disabled]="true">
                       End trace
                     </button>
                   </div>
@@ -162,7 +173,7 @@ import {LoadProgressComponent} from './load_progress_component';
             </mat-tab>
             <mat-tab label="Dump" [disabled]="connect.isEndTraceState() || isOperationInProgress()">
               <div class="tabbed-section">
-                <div class="dump-section" *ngIf="connect.isStartTraceState()">
+                <div class="dump-section" *ngIf="connect.isStartTraceState() && !refreshDumps">
                   <h3 class="mat-subheading-2">Dump targets</h3>
                   <div class="selection">
                     <mat-checkbox
@@ -173,7 +184,7 @@ import {LoadProgressComponent} from './load_progress_component';
                       >{{ dumpConfig[dumpKey].name }}</mat-checkbox
                     >
                   </div>
-                  <div class="dump-btn">
+                  <div class="dump-btn" *ngIf="!refreshDumps">
                     <button color="primary" mat-stroked-button (click)="dumpState()">
                       Dump state
                     </button>
@@ -181,7 +192,7 @@ import {LoadProgressComponent} from './load_progress_component';
                 </div>
 
                 <load-progress
-                  *ngIf="isOperationInProgress()"
+                  *ngIf="refreshDumps || isOperationInProgress()"
                   [progressPercentage]="progressPercentage"
                   [message]="progressMessage">
                 </load-progress>
@@ -231,6 +242,7 @@ import {LoadProgressComponent} from './load_progress_component';
       .trace-collection-config,
       .trace-section,
       .dump-section,
+      .starting-trace,
       .end-tracing,
       .load-data,
       trace-config {
@@ -240,6 +252,7 @@ import {LoadProgressComponent} from './load_progress_component';
       }
       .trace-section,
       .dump-section,
+      .starting-trace,
       .end-tracing,
       .load-data {
         height: 100%;
@@ -322,11 +335,6 @@ import {LoadProgressComponent} from './load_progress_component';
         height: 100%;
       }
 
-      .load-data p,
-      .end-tracing p {
-        opacity: 0.7;
-      }
-
       .progress-desc {
         display: flex;
         height: 100%;
@@ -348,7 +356,7 @@ import {LoadProgressComponent} from './load_progress_component';
   encapsulation: ViewEncapsulation.None,
 })
 export class CollectTracesComponent
-  implements OnInit, OnDestroy, ProgressListener
+  implements OnInit, OnDestroy, ProgressListener, WinscopeEventListener
 {
   objectKeys = Object.keys;
   isAdbProxy = true;
@@ -357,6 +365,8 @@ export class CollectTracesComponent
   progressMessage = 'Fetching...';
   progressPercentage: number | undefined;
   lastUiProgressUpdateTimeMs?: number;
+  refreshDumps = false;
+  selectedTabIndex = 0;
 
   @Input() traceConfig: TraceConfigurationMap | undefined;
   @Input() dumpConfig: TraceConfigurationMap | undefined;
@@ -371,14 +381,14 @@ export class CollectTracesComponent
   ngOnInit() {
     if (this.isAdbProxy) {
       this.connect = new ProxyConnection(
-        (newState) => this.changeDetectorRef.detectChanges(),
+        (newState) => this.onProxyStateChange(),
         (progress) => this.onLoadProgressUpdate(progress),
         this.setTraceConfigForAvailableTraces,
       );
     } else {
       // TODO: change to WebAdbConnection
       this.connect = new ProxyConnection(
-        (newState) => this.changeDetectorRef.detectChanges(),
+        (newState) => this.onProxyStateChange(),
         (progress) => this.onLoadProgressUpdate(progress),
         this.setTraceConfigForAvailableTraces,
       );
@@ -391,6 +401,18 @@ export class CollectTracesComponent
 
   async onDeviceClick(deviceId: string) {
     await assertDefined(this.connect).selectDevice(deviceId);
+  }
+
+  async onWinscopeEvent(event: WinscopeEvent) {
+    await event.visit(
+      WinscopeEventType.APP_REFRESH_DUMPS_REQUEST,
+      async (event) => {
+        this.selectedTabIndex = 1;
+        this.progressMessage = 'Refreshing dumps...';
+        this.progressPercentage = 0;
+        this.refreshDumps = true;
+      },
+    );
   }
 
   onProgressUpdate(message: string, progressPercentage: number | undefined) {
@@ -429,7 +451,7 @@ export class CollectTracesComponent
   displayAdbProxyTab() {
     this.isAdbProxy = true;
     this.connect = new ProxyConnection(
-      (newState) => this.changeDetectorRef.detectChanges(),
+      (newState) => this.onProxyStateChange(),
       (progress) => this.onLoadProgressUpdate(progress),
       this.setTraceConfigForAvailableTraces,
     );
@@ -439,9 +461,19 @@ export class CollectTracesComponent
     this.isAdbProxy = false;
     //TODO: change to WebAdbConnection
     this.connect = new ProxyConnection(
-      (newState) => this.changeDetectorRef.detectChanges(),
+      (newState) => this.onProxyStateChange(),
       (progress) => this.onLoadProgressUpdate(progress),
       this.setTraceConfigForAvailableTraces,
+    );
+  }
+
+  showTraceCollectionConfig() {
+    const connect = assertDefined(this.connect);
+    return (
+      connect.isStartTraceState() ||
+      connect.isStartingTraceState() ||
+      connect.isEndTraceState() ||
+      this.isOperationInProgress()
     );
   }
 
@@ -456,6 +488,7 @@ export class CollectTracesComponent
   async startTracing() {
     console.log('begin tracing');
     const requestedTraces = this.getRequestedTraces();
+    Analytics.Tracing.logCollectTraces(requestedTraces);
     const reqEnableConfig = this.requestedEnableConfig();
     const reqSelectedSfConfig = this.requestedSelection('layers_trace');
     const reqSelectedWmConfig = this.requestedSelection('window_trace');
@@ -475,9 +508,11 @@ export class CollectTracesComponent
   async dumpState() {
     console.log('begin dump');
     const requestedDumps = this.getRequestedDumps();
+    Analytics.Tracing.logCollectDumps(requestedDumps);
     const dumpSuccessful = await assertDefined(this.connect).dumpState(
       requestedDumps,
     );
+    this.refreshDumps = false;
     if (dumpSuccessful) {
       this.filesCollected.emit(assertDefined(this.connect).adbData());
     }
@@ -505,22 +540,29 @@ export class CollectTracesComponent
     );
   }
 
+  private onProxyStateChange() {
+    this.changeDetectorRef.detectChanges();
+    if (
+      !this.refreshDumps ||
+      this.connect?.isLoadDataState() ||
+      this.connect?.isConnectingState()
+    ) {
+      return;
+    }
+    if (this.connect?.isStartTraceState()) {
+      this.dumpState();
+    } else {
+      // device is not connected or proxy is not started/invalid/in error state
+      // so cannot refresh dump automatically
+      this.refreshDumps = false;
+    }
+  }
+
   private getRequestedTraces() {
     const tracesFromCollection: string[] = [];
     const tracingConfig = assertDefined(this.traceConfig);
     const requested = Object.keys(tracingConfig).filter((traceKey: string) => {
-      const traceConfig = tracingConfig[traceKey];
-      if (traceConfig.isTraceCollection) {
-        traceConfig.config?.enableConfigs.forEach(
-          (innerTrace: EnableConfiguration) => {
-            if (innerTrace.enabled) {
-              tracesFromCollection.push(innerTrace.key);
-            }
-          },
-        );
-        return false;
-      }
-      return traceConfig.run;
+      return tracingConfig[traceKey].run;
     });
     requested.push(...tracesFromCollection);
     requested.push('perfetto_trace'); // always start/stop/fetch perfetto trace
@@ -541,12 +583,7 @@ export class CollectTracesComponent
     const tracingConfig = assertDefined(this.traceConfig);
     Object.keys(tracingConfig).forEach((traceKey: string) => {
       const trace = tracingConfig[traceKey];
-      if (
-        !trace.isTraceCollection &&
-        trace.run &&
-        trace.config &&
-        trace.config.enableConfigs
-      ) {
+      if (trace.run && trace.config && trace.config.enableConfigs) {
         trace.config.enableConfigs.forEach((con: EnableConfiguration) => {
           if (con.enabled) {
             req.push(con.key);

@@ -57,7 +57,7 @@ export class ZOrderPathsComputation implements Computation {
     });
 
     root.forEachNodeDfs((node) => {
-      const zOrderRelativeOf = root
+      const zOrderRelativeOf = node
         .getEagerPropertyByName('zOrderRelativeOf')
         ?.getValue();
       if (zOrderRelativeOf && zOrderRelativeOf !== -1) {

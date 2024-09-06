@@ -15,8 +15,8 @@
  */
 
 import {StringUtils} from 'common/string_utils';
-import {Timestamp, TimestampType} from 'common/time';
-import {AbstractParser} from 'parsers/abstract_parser';
+import {Timestamp} from 'common/time';
+import {AbstractParser} from 'parsers/legacy/abstract_parser';
 import {TraceType} from 'trace/trace_type';
 import {PropertyTreeBuilderFromProto} from 'trace/tree_node/property_tree_builder_from_proto';
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
@@ -35,6 +35,14 @@ class ParserEventLog extends AbstractParser<PropertyTreeNode> {
     return ParserEventLog.MAGIC_NUMBER;
   }
 
+  override getRealToMonotonicTimeOffsetNs(): bigint | undefined {
+    return undefined;
+  }
+
+  override getRealToBootTimeOffsetNs(): bigint | undefined {
+    return undefined;
+  }
+
   override decodeTrace(buffer: Uint8Array): Event[] {
     const decodedLogs = this.decodeByteArray(buffer);
     const events = this.parseLogs(decodedLogs);
@@ -43,21 +51,13 @@ class ParserEventLog extends AbstractParser<PropertyTreeNode> {
     });
   }
 
-  override getTimestamp(
-    type: TimestampType,
-    entry: Event,
-  ): undefined | Timestamp {
-    if (type === TimestampType.REAL) {
-      return this.timestampFactory.makeRealTimestamp(entry.eventTimestamp);
-    }
-    return undefined;
+  protected override getTimestamp(entry: Event): Timestamp {
+    return this.timestampConverter.makeTimestampFromRealNs(
+      entry.eventTimestamp,
+    );
   }
 
-  override processDecodedEntry(
-    index: number,
-    timestampType: TimestampType,
-    entry: Event,
-  ): PropertyTreeNode {
+  override processDecodedEntry(index: number, entry: Event): PropertyTreeNode {
     return new PropertyTreeBuilderFromProto()
       .setData(entry)
       .setRootId('EventLogTrace')

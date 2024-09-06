@@ -1,0 +1,48 @@
+:host {
+  display: flex;
+  flex: 0 0 100%;
+  flex-direction: column;
+}
+
+.wrapper {
+  position: relative;
+  margin: 16px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+
+  border-radius: 12px;
+  border: 1px solid #c4c6d0;
+}
+
+.label {
+  position: absolute;
+  top: -12px;
+  padding: 0 16px;
+  background: var(--mat-app-background-color);
+}
+
+img.screenshot {
+  width: fit-content;
+}
+
+.screenshot-container {
+  width: fit-content;
+
+  border-radius: 8px;
+  background-color: black;
+  padding: 12px;
+}
+img.screenshot {
+  width: fit-content;
+  background-image: linear-gradient(45deg, #808080 25%, transparent 25%),
+    linear-gradient(-45deg, #808080 25%, transparent 25%),
+    linear-gradient(45deg, transparent 75%, #808080 75%),
+    linear-gradient(-45deg, transparent 75%, #808080 75%);
+  background-size: 20px 20px;
+  background-position:
+    0 0,
+    0 10px,
+    10px -10px,
+    -10px 0px;
+}

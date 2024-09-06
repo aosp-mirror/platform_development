@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import {assertDefined} from 'common/assert_utils';
 import {IDENTITY_MATRIX, TransformMatrix} from 'common/geometry_types';
 import {Size, UiRect} from 'viewers/components/rects/types2d';
 import {
@@ -24,6 +25,7 @@ import {
   Point3D,
   Rect3D,
   Scene3D,
+  ShadingMode,
 } from './types3d';
 
 class Mapper3D {
@@ -36,7 +38,7 @@ class Mapper3D {
   private static readonly LABEL_CIRCLE_RADIUS = 15;
   private static readonly ZOOM_FACTOR_INIT = 1;
   private static readonly ZOOM_FACTOR_MIN = 0.1;
-  private static readonly ZOOM_FACTOR_MAX = 8.5;
+  private static readonly ZOOM_FACTOR_MAX = 30;
   private static readonly ZOOM_FACTOR_STEP = 0.2;
 
   private rects: UiRect[] = [];
@@ -45,8 +47,9 @@ class Mapper3D {
   private zSpacingFactor = Mapper3D.Z_SPACING_FACTOR_INIT;
   private zoomFactor = Mapper3D.ZOOM_FACTOR_INIT;
   private panScreenDistance = new Distance2D(0, 0);
-  private showOnlyVisibleMode = false; // by default show all
   private currentGroupId = 0; // default stack id is usually 0
+  private shadingModeIndex = 0;
+  private allowedShadingModes: ShadingMode[] = [ShadingMode.GRADIENT];
 
   setRects(rects: UiRect[]) {
     this.rects = rects;
@@ -72,13 +75,13 @@ class Mapper3D {
     this.zSpacingFactor = Math.min(Math.max(factor, 0), 1);
   }
 
-  increaseZoomFactor(times = 1) {
-    this.zoomFactor += Mapper3D.ZOOM_FACTOR_STEP * times;
+  increaseZoomFactor(ratio = 1) {
+    this.zoomFactor += Mapper3D.ZOOM_FACTOR_STEP * ratio;
     this.zoomFactor = Math.min(this.zoomFactor, Mapper3D.ZOOM_FACTOR_MAX);
   }
 
-  decreaseZoomFactor(times = 1) {
-    this.zoomFactor -= Mapper3D.ZOOM_FACTOR_STEP * times;
+  decreaseZoomFactor(ratio = 1) {
+    this.zoomFactor -= Mapper3D.ZOOM_FACTOR_STEP * ratio;
     this.zoomFactor = Math.max(this.zoomFactor, Mapper3D.ZOOM_FACTOR_MIN);
   }
 
@@ -87,20 +90,16 @@ class Mapper3D {
     this.panScreenDistance.dy += distance.dy;
   }
 
-  resetCamera() {
+  resetToOrthogonalState() {
     this.cameraRotationFactor = Mapper3D.CAMERA_ROTATION_FACTOR_INIT;
     this.zSpacingFactor = Mapper3D.Z_SPACING_FACTOR_INIT;
+  }
+
+  resetCamera() {
+    this.resetToOrthogonalState();
     this.zoomFactor = Mapper3D.ZOOM_FACTOR_INIT;
     this.panScreenDistance.dx = 0;
     this.panScreenDistance.dy = 0;
-  }
-
-  getShowOnlyVisibleMode(): boolean {
-    return this.showOnlyVisibleMode;
-  }
-
-  setShowOnlyVisibleMode(enabled: boolean) {
-    this.showOnlyVisibleMode = enabled;
   }
 
   getCurrentGroupId(): number {
@@ -111,8 +110,48 @@ class Mapper3D {
     this.currentGroupId = id;
   }
 
-  private compareDepth(a: UiRect, b: UiRect): number {
-    return a.depth > b.depth ? -1 : 1;
+  setAllowedShadingModes(modes: ShadingMode[]) {
+    this.allowedShadingModes = modes;
+  }
+
+  setShadingMode(newMode: ShadingMode) {
+    const newModeIndex = this.allowedShadingModes.findIndex(
+      (m) => m === newMode,
+    );
+    if (newModeIndex !== -1) {
+      this.shadingModeIndex = newModeIndex;
+    }
+  }
+
+  getShadingMode(): ShadingMode {
+    return this.allowedShadingModes[this.shadingModeIndex];
+  }
+
+  updateShadingMode() {
+    this.shadingModeIndex =
+      this.shadingModeIndex < this.allowedShadingModes.length - 1
+        ? this.shadingModeIndex + 1
+        : 0;
+  }
+
+  isWireFrame(): boolean {
+    return (
+      this.allowedShadingModes.at(this.shadingModeIndex) ===
+      ShadingMode.WIRE_FRAME
+    );
+  }
+
+  isShadedByGradient(): boolean {
+    return (
+      this.allowedShadingModes.at(this.shadingModeIndex) ===
+      ShadingMode.GRADIENT
+    );
+  }
+
+  isShadedByOpacity(): boolean {
+    return (
+      this.allowedShadingModes.at(this.shadingModeIndex) === ShadingMode.OPACITY
+    );
   }
 
   computeScene(): Scene3D {
@@ -136,14 +175,12 @@ class Mapper3D {
     return scene;
   }
 
+  private compareDepth(a: UiRect, b: UiRect): number {
+    return b.depth - a.depth;
+  }
+
   private selectRectsToDraw(rects: UiRect[]): UiRect[] {
-    rects = rects.filter((rect) => rect.groupId === this.currentGroupId);
-
-    if (this.showOnlyVisibleMode) {
-      rects = rects.filter((rect) => rect.isVisible || rect.isDisplay);
-    }
-
-    return rects;
+    return rects.filter((rect) => rect.groupId === this.currentGroupId);
   }
 
   private computeRects(rects2d: UiRect[]): Rect3D[] {
@@ -181,10 +218,16 @@ class Mapper3D {
         (Mapper3D.Z_SPACING_MAX * rect2d.depth +
           computeAntiZFightingOffset(rect2d.depth));
 
-      const darkFactor = rect2d.isVisible
-        ? (visibleRectsTotal - visibleRectsSoFar++) / visibleRectsTotal
-        : (nonVisibleRectsTotal - nonVisibleRectsSoFar++) /
+      let darkFactor = 0;
+      if (rect2d.isVisible) {
+        darkFactor = this.isShadedByOpacity()
+          ? assertDefined(rect2d.opacity)
+          : (visibleRectsTotal - visibleRectsSoFar++) / visibleRectsTotal;
+      } else {
+        darkFactor =
+          (nonVisibleRectsTotal - nonVisibleRectsSoFar++) /
           nonVisibleRectsTotal;
+      }
 
       const rect = {
         id: rect2d.id,
@@ -212,17 +255,25 @@ class Mapper3D {
   }
 
   private getColorType(rect2d: UiRect): ColorType {
-    let colorType: ColorType;
     if (this.highlightedRectId === rect2d.id && rect2d.isClickable) {
-      colorType = ColorType.HIGHLIGHTED;
-    } else if (rect2d.hasContent === true) {
-      colorType = ColorType.HAS_CONTENT;
-    } else if (rect2d.isVisible) {
-      colorType = ColorType.VISIBLE;
-    } else {
-      colorType = ColorType.NOT_VISIBLE;
+      return ColorType.HIGHLIGHTED;
     }
-    return colorType;
+    if (this.isWireFrame()) {
+      return ColorType.EMPTY;
+    }
+    if (rect2d.hasContent === true) {
+      if (this.isShadedByOpacity()) {
+        return ColorType.HAS_CONTENT_AND_OPACITY;
+      }
+      return ColorType.HAS_CONTENT;
+    }
+    if (rect2d.isVisible) {
+      if (this.isShadedByOpacity()) {
+        return ColorType.VISIBLE_WITH_OPACITY;
+      }
+      return ColorType.VISIBLE;
+    }
+    return ColorType.NOT_VISIBLE;
   }
 
   private getMaxDisplaySize(rects2d: UiRect[]): Size {

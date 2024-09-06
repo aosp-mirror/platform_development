@@ -16,7 +16,7 @@
 
 import {assertDefined} from 'common/assert_utils';
 import {FunctionUtils} from 'common/function_utils';
-import {NO_TIMEZONE_OFFSET_FACTORY} from 'common/timestamp_factory';
+import {TimestampConverterUtils} from 'test/unit/timestamp_converter_utils';
 import {TracesBuilder} from 'test/unit/traces_builder';
 import {TracesUtils} from 'test/unit/traces_utils';
 import {TraceBuilder} from 'test/unit/trace_builder';
@@ -29,16 +29,16 @@ import {TraceType} from './trace_type';
 describe('Traces', () => {
   let traces: Traces;
 
-  const time1 = NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(1n);
-  const time2 = NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(2n);
-  const time3 = NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(3n);
-  const time4 = NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(4n);
-  const time5 = NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(5n);
-  const time6 = NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(6n);
-  const time7 = NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(7n);
-  const time8 = NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(8n);
-  const time9 = NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(9n);
-  const time10 = NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(10n);
+  const time1 = TimestampConverterUtils.makeRealTimestamp(1n);
+  const time2 = TimestampConverterUtils.makeRealTimestamp(2n);
+  const time3 = TimestampConverterUtils.makeRealTimestamp(3n);
+  const time4 = TimestampConverterUtils.makeRealTimestamp(4n);
+  const time5 = TimestampConverterUtils.makeRealTimestamp(5n);
+  const time6 = TimestampConverterUtils.makeRealTimestamp(6n);
+  const time7 = TimestampConverterUtils.makeRealTimestamp(7n);
+  const time8 = TimestampConverterUtils.makeRealTimestamp(8n);
+  const time9 = TimestampConverterUtils.makeRealTimestamp(9n);
+  const time10 = TimestampConverterUtils.makeRealTimestamp(10n);
 
   let extractedEntriesEmpty: Map<TraceType, Array<{}>>;
   let extractedEntriesFull: Map<TraceType, Array<{}>>;
@@ -56,8 +56,7 @@ describe('Traces', () => {
     //                          \        \        \     \
     // Frame on screen:          0        1        2     3---4
     traces = new Traces();
-    traces.setTrace(
-      TraceType.TEST_TRACE_STRING,
+    traces.addTrace(
       new TraceBuilder<string>()
         .setType(TraceType.TEST_TRACE_STRING)
         .setEntries(['0', '1', '2', '3', '4'])
@@ -70,8 +69,7 @@ describe('Traces', () => {
         .setFrame(4, 4)
         .build(),
     );
-    traces.setTrace(
-      TraceType.TEST_TRACE_NUMBER,
+    traces.addTrace(
       new TraceBuilder<number>()
         .setType(TraceType.TEST_TRACE_NUMBER)
         .setEntries([0, 1, 2, 3, 4])
@@ -157,6 +155,86 @@ describe('Traces', () => {
       extractedEntriesFull.get(TraceType.TEST_TRACE_NUMBER) as number[],
     );
     expect(traces.getTrace(TraceType.SURFACE_FLINGER)).toBeUndefined();
+  });
+
+  it('getTraces()', async () => {
+    expect(traces.getTraces(TraceType.TEST_TRACE_NUMBER)).toEqual([
+      assertDefined(traces.getTrace(TraceType.TEST_TRACE_NUMBER)),
+    ]);
+  });
+
+  it('deleteTrace()', () => {
+    const trace0 = new TraceBuilder<string>()
+      .setType(TraceType.TEST_TRACE_STRING)
+      .setEntries([])
+      .build();
+    const trace1 = new TraceBuilder<number>()
+      .setType(TraceType.TEST_TRACE_NUMBER)
+      .setEntries([])
+      .build();
+
+    const traces = new Traces();
+    traces.addTrace(trace0);
+    traces.addTrace(trace1);
+
+    expect(TracesUtils.extractTraces(traces)).toEqual([trace0, trace1]);
+
+    traces.deleteTrace(trace0);
+    expect(TracesUtils.extractTraces(traces)).toEqual([trace1]);
+
+    traces.deleteTrace(trace1);
+    expect(TracesUtils.extractTraces(traces)).toEqual([]);
+
+    traces.deleteTrace(trace1);
+    expect(TracesUtils.extractTraces(traces)).toEqual([]);
+  });
+
+  it('deleteTracesByType()', () => {
+    const trace0 = new TraceBuilder<string>()
+      .setType(TraceType.TEST_TRACE_STRING)
+      .setEntries([])
+      .build();
+    const trace1 = new TraceBuilder<number>()
+      .setType(TraceType.TEST_TRACE_NUMBER)
+      .setEntries([])
+      .build();
+    const trace2 = new TraceBuilder<number>()
+      .setType(TraceType.TEST_TRACE_NUMBER)
+      .setEntries([])
+      .build();
+
+    const traces = new Traces();
+    traces.addTrace(trace0);
+    traces.addTrace(trace1);
+    traces.addTrace(trace2);
+
+    expect(TracesUtils.extractTraces(traces)).toEqual([trace0, trace1, trace2]);
+
+    traces.deleteTracesByType(TraceType.TEST_TRACE_NUMBER);
+    expect(TracesUtils.extractTraces(traces)).toEqual([trace0]);
+
+    traces.deleteTracesByType(TraceType.TEST_TRACE_STRING);
+    expect(TracesUtils.extractTraces(traces)).toEqual([]);
+
+    traces.deleteTracesByType(TraceType.TEST_TRACE_STRING);
+    expect(TracesUtils.extractTraces(traces)).toEqual([]);
+  });
+
+  it('hasTrace()', () => {
+    const trace0 = new TraceBuilder<string>()
+      .setType(TraceType.TEST_TRACE_STRING)
+      .setEntries([])
+      .build();
+    const trace1 = new TraceBuilder<number>()
+      .setType(TraceType.TEST_TRACE_NUMBER)
+      .setEntries([])
+      .build();
+
+    const traces = new Traces();
+    traces.addTrace(trace0);
+
+    expect(traces.hasTrace(trace0)).toBeTrue();
+    expect(traces.hasTrace(trace1)).toBeFalse();
   });
 
   it('sliceTime()', async () => {
@@ -263,7 +341,7 @@ describe('Traces', () => {
     );
   });
 
-  it('it supports empty traces', async () => {
+  it('supports empty traces', async () => {
     const traces = new TracesBuilder()
       .setEntries(TraceType.TEST_TRACE_STRING, [])
       .setFrameMap(
@@ -300,7 +378,7 @@ describe('Traces', () => {
     );
   });
 
-  it('it supports unavailable frame mapping', async () => {
+  it('supports unavailable frame mapping', async () => {
     const traces = new TracesBuilder()
       .setEntries(TraceType.TEST_TRACE_STRING, ['entry-0'])
       .setTimestamps(TraceType.TEST_TRACE_STRING, [time1])
@@ -330,5 +408,26 @@ describe('Traces', () => {
     expect(() => {
       traces.mapFrame(FunctionUtils.DO_NOTHING);
     }).toThrow();
+  });
+
+  it('supports multiple traces with same type', () => {
+    const traceShort = new TraceBuilder<number>()
+      .setType(TraceType.TEST_TRACE_NUMBER)
+      .setEntries([0])
+      .build();
+    const traceLong = new TraceBuilder<number>()
+      .setType(TraceType.TEST_TRACE_NUMBER)
+      .setEntries([1, 2])
+      .build();
+
+    const traces = new Traces();
+    traces.addTrace(traceShort);
+    traces.addTrace(traceLong);
+
+    expect(traces.getTraces(TraceType.TEST_TRACE_NUMBER)).toEqual([
+      traceShort,
+      traceLong,
+    ]);
+    expect(traces.getTrace(TraceType.TEST_TRACE_NUMBER)).toEqual(traceLong);
   });
 });
