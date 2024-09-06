@@ -424,13 +424,17 @@ export class MiniTimelineDrawerImpl implements MiniTimelineDrawer {
 
   private fillActiveTimelineBackground(fromTop: number, lineHeight: number) {
     this.ctx.globalAlpha = 1.0;
-    this.ctx.fillStyle = this.inputGetter().isDarkMode ? '#546481' : '#E2ECFF'; // Keep in sync with var(--selected-element-color) in material-theme.scss;
+    this.ctx.fillStyle = getComputedStyle(this.canvas).getPropertyValue(
+      '--selected-element-color',
+    );
     this.ctx.fillRect(0, fromTop, this.getUsableRange().to, lineHeight);
   }
 
   private fillHoverTimelineBackground(fromTop: number, lineHeight: number) {
     this.ctx.globalAlpha = 1.0;
-    this.ctx.fillStyle = this.inputGetter().isDarkMode ? '#656565' : '#eaeaea'; // Keep in sync with var(--hover-element-color) in material-theme.scss;
+    this.ctx.fillStyle = getComputedStyle(this.canvas).getPropertyValue(
+      '--hover-element-color',
+    );
     this.ctx.fillRect(0, fromTop, this.getUsableRange().to, lineHeight);
   }
 
