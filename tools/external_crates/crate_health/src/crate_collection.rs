@@ -21,11 +21,11 @@ use std::{
     path::{Path, PathBuf},
 };
 
-use anyhow::{anyhow, Result};
+use anyhow::Result;
 use semver::Version;
 use walkdir::WalkDir;
 
-use crate::{android_bp::generate_android_bps, Crate, CrateError};
+use crate::{Crate, CrateError};
 
 use std::collections::BTreeMap;
 
@@ -57,27 +57,6 @@ impl CrateCollection {
                     },
                 };
             }
-        }
-        Ok(())
-    }
-    pub fn stage_crates(&self) -> Result<()> {
-        for krate in self.crates.values() {
-            krate.stage_crate()?
-        }
-        Ok(())
-    }
-    pub fn generate_android_bps(&mut self) -> Result<()> {
-        for (nv, output) in generate_android_bps(self.crates.values())?.into_iter() {
-            self.crates
-                .get_mut(&nv)
-                .ok_or(anyhow!("Failed to get crate {} {}", nv.name(), nv.version()))?
-                .set_generate_android_bp_output(output);
-        }
-        Ok(())
-    }
-    pub fn diff_android_bps(&mut self) -> Result<()> {
-        for krate in self.crates.values_mut() {
-            krate.diff_android_bp()?;
         }
         Ok(())
     }
