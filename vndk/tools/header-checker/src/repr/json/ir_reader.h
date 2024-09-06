@@ -33,6 +33,8 @@ class JsonObjectRef {
   // The constructor sets ok to false if json_value is not an object.
   JsonObjectRef(const Json::Value &json_value, bool &ok);
 
+  bool IsMember(const std::string &key) const;
+
   // This method gets a value from the object and checks the type.
   // If the type mismatches, it sets ok_ to false and returns default value.
   // If the key doesn't exist, it doesn't change ok_ and returns default value.
