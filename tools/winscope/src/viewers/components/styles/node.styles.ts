@@ -26,7 +26,7 @@ export const nodeStyles =
         width: 100%;
     }
 
-    .node:not(.selected):not(.full-opacity) {
+    .node:not(.selected):not(.full-opacity):not(:hover) {
         opacity: 0.5;
     }
 
@@ -49,7 +49,7 @@ export const nodeStyles =
     }
 
     .node:hover:not(.selected) {
-        background-color: ${Color.HOVER_ELEMENT_BACKGROUND};
+        background-color: var(--hover-element-color);
     }
 
     .node.addedMove:after,

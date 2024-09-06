@@ -93,7 +93,9 @@ import {LoadProgressComponent} from './load_progress_component';
           *ngIf="!isLoadingFiles && tracePipeline.getTraces().getSize() > 0"
           class="uploaded-files">
           <mat-list-item [class.no-visualization]="!canVisualizeTrace(trace)" [class.trace-error]="trace.isCorrupted()" *ngFor="let trace of tracePipeline.getTraces()">
-            <mat-icon matListIcon>
+            <mat-icon
+              matListIcon
+              [style]="{color: TRACE_INFO[trace.type].color}">
               {{ TRACE_INFO[trace.type].icon }}
             </mat-icon>
 

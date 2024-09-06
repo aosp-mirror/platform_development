@@ -27,7 +27,6 @@ export enum Color {
   CHIP_RED = '#ff6b6b',
   DELETED_ELEMENT_BACKGROUND = 'rgba(255, 107, 107, 0.5)',
   GUIDE_BAR = '#9AA0A6',
-  HOVER_ELEMENT_BACKGROUND = 'rgba(127, 127, 127, 0.5)',
   MODIFIED_ELEMENT_BACKGROUND = 'rgba(0, 255, 255, 0.4)',
   PINNED_ITEM_BORDER = '#FFC24B',
   TEXT_BLACK = 'rgba(0, 0, 0, 0.87)',
