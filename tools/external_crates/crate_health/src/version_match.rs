@@ -97,16 +97,16 @@ impl<CollectionType: NameAndVersionMap> VersionMatch<CollectionType> {
             self.compatibility.get(*nv).is_some_and(|compatibility| compatibility.is_none())
         })
     }
-    pub fn pairs<'a>(&'a self) -> impl Iterator<Item = VersionPair<'a, CollectionType::Value>> {
+    pub fn pairs(&self) -> impl Iterator<Item = VersionPair<CollectionType::Value>> {
         self.source
             .map_field()
             .iter()
             .map(|(nv, source)| VersionPair { source, dest: self.get_compatible_item(nv) })
     }
-    pub fn compatible_pairs<'a>(
-        &'a self,
-    ) -> impl Iterator<Item = CompatibleVersionPair<'a, CollectionType::Value>> {
-        self.pairs().into_iter().filter_map(
+    pub fn compatible_pairs(
+        &self,
+    ) -> impl Iterator<Item = CompatibleVersionPair<CollectionType::Value>> {
+        self.pairs().filter_map(
             |pair: VersionPair<'_, <CollectionType as NameAndVersionMap>::Value>| {
                 pair.to_compatible()
             },
@@ -121,22 +121,22 @@ where
     pub fn ineligible(&self) -> impl Iterator<Item = &CollectionType::Value> {
         self.source.map_field().values().filter(|val| !val.is_migration_eligible())
     }
-    pub fn eligible_but_not_migratable<'a>(
-        &'a self,
-    ) -> impl Iterator<Item = VersionPair<'a, CollectionType::Value>> {
+    pub fn eligible_but_not_migratable(
+        &self,
+    ) -> impl Iterator<Item = VersionPair<'_, CollectionType::Value>> {
         self.pairs().filter(|pair| {
             pair.source.is_migration_eligible()
                 && !pair.dest.is_some_and(|dest| dest.is_migratable())
         })
     }
-    pub fn compatible_and_eligible<'a>(
-        &'a self,
-    ) -> impl Iterator<Item = CompatibleVersionPair<'a, CollectionType::Value>> {
+    pub fn compatible_and_eligible(
+        &self,
+    ) -> impl Iterator<Item = CompatibleVersionPair<'_, CollectionType::Value>> {
         self.compatible_pairs().filter(|crate_pair| crate_pair.source.is_migration_eligible())
     }
-    pub fn migratable<'a>(
-        &'a self,
-    ) -> impl Iterator<Item = CompatibleVersionPair<'a, CollectionType::Value>> {
+    pub fn migratable(
+        &self,
+    ) -> impl Iterator<Item = CompatibleVersionPair<'_, CollectionType::Value>> {
         self.compatible_pairs()
             .filter(|pair| pair.source.is_migration_eligible() && pair.dest.is_migratable())
     }
@@ -198,13 +198,14 @@ impl VersionMatch<CrateCollection> {
     pub fn update_metadata(&self) -> Result<()> {
         for pair in self.compatible_and_eligible() {
             let mut metadata =
-                GoogleMetadata::try_from(pair.dest.staging_path().join(&Path::new("METADATA"))?)?;
+                GoogleMetadata::try_from(pair.dest.staging_path().join(Path::new("METADATA"))?)?;
             let mut writeback = false;
             writeback |= metadata.migrate_homepage();
             writeback |= metadata.migrate_archive();
+            writeback |= metadata.remove_deprecated_url();
             if pair.source.version() != pair.dest.version() {
                 metadata.set_date_to_today()?;
-                metadata.set_identifier(pair.dest.name(), pair.dest.version().to_string())?;
+                metadata.set_version_and_urls(pair.dest.name(), pair.dest.version().to_string())?;
                 writeback |= true;
             }
             if writeback {

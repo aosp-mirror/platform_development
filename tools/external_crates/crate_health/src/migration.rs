@@ -23,10 +23,10 @@ use glob::glob;
 
 use crate::{copy_dir, crate_type::diff_android_bp, CompatibleVersionPair, Crate};
 
-static CUSTOMIZATIONS: &'static [&'static str] =
+static CUSTOMIZATIONS: &[&str] =
     &["*.bp", "cargo_embargo.json", "patches", "METADATA", "TEST_MAPPING", "MODULE_LICENSE_*"];
 
-static SYMLINKS: &'static [&'static str] = &["LICENSE", "NOTICE"];
+static SYMLINKS: &[&str] = &["LICENSE", "NOTICE"];
 
 impl<'a> CompatibleVersionPair<'a, Crate> {
     pub fn copy_customizations(&self) -> Result<()> {
@@ -82,7 +82,7 @@ impl<'a> CompatibleVersionPair<'a, Crate> {
     pub fn diff_android_bps(&self) -> Result<Output> {
         diff_android_bp(
             &self.source.android_bp().rel(),
-            &self.dest.staging_path().join(&"Android.bp")?.rel(),
+            &self.dest.staging_path().join("Android.bp")?.rel(),
             &self.source.path().root(),
         )
         .context("Failed to diff Android.bp".to_string())
