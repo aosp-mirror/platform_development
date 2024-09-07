@@ -15,6 +15,7 @@
  */
 
 import {assertDefined} from 'common/assert_utils';
+import {Store} from 'common/store';
 import {Timestamp} from 'common/time';
 import {TimeUtils} from 'common/time_utils';
 import {UserNotifier} from 'common/user_notifier';
@@ -44,6 +45,7 @@ import {WinscopeEventListener} from 'messaging/winscope_event_listener';
 import {TraceEntry} from 'trace/trace';
 import {TRACE_INFO} from 'trace/trace_info';
 import {TracePosition} from 'trace/trace_position';
+import {TraceType} from 'trace/trace_type';
 import {RequestedTraceTypes} from 'trace_collection/adb_files';
 import {View, Viewer, ViewType} from 'viewers/viewer';
 import {ViewerFactory} from 'viewers/viewer_factory';
@@ -62,7 +64,7 @@ export class Mediator {
   private traceViewComponent?: WinscopeEventEmitter & WinscopeEventListener;
   private timelineComponent?: WinscopeEventEmitter & WinscopeEventListener;
   private appComponent: WinscopeEventListener;
-  private storage: Storage;
+  private storage: Store;
 
   private tracePipeline: TracePipeline;
   private timelineData: TimelineData;
@@ -78,7 +80,7 @@ export class Mediator {
     abtChromeExtensionProtocol: WinscopeEventEmitter & WinscopeEventListener,
     crossToolProtocol: CrossToolProtocol,
     appComponent: WinscopeEventListener,
-    storage: Storage,
+    storage: Store,
   ) {
     this.tracePipeline = tracePipeline;
     this.timelineData = timelineData;
@@ -272,6 +274,20 @@ export class Mediator {
       WinscopeEventType.NO_TRACE_TARGETS_SELECTED,
       async (event) => {
         UserNotifier.add(new NoTraceTargetsSelected()).notify();
+      },
+    );
+
+    await event.visit(
+      WinscopeEventType.FILTER_PRESET_SAVE_REQUEST,
+      async (event) => {
+        await this.findViewerByType(event.traceType)?.onWinscopeEvent(event);
+      },
+    );
+
+    await event.visit(
+      WinscopeEventType.FILTER_PRESET_APPLY_REQUEST,
+      async (event) => {
+        await this.findViewerByType(event.traceType)?.onWinscopeEvent(event);
       },
     );
   }
@@ -517,5 +533,9 @@ export class Mediator {
     for (const overlay of overlayViewers) {
       await overlay.onWinscopeEvent(event);
     }
+  }
+
+  private findViewerByType(type: TraceType): Viewer | undefined {
+    return this.viewers.find((viewer) => viewer.getTraces()[0].type === type);
   }
 }

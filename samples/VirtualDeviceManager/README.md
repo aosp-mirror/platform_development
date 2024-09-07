@@ -63,6 +63,21 @@ run
 The interactive script will prompt you which apps to install to which of the
 available devices, build the APKs and install them.
 
+### Using adevice on the host device
+
+1.  Track the required modules.
+
+    ```shell
+    adevice track VdmHost
+    adevice track VdmDemos
+    ```
+
+1.  Update the device
+
+    ```shell
+    adevice update
+    ```
+
 ### Manually
 
 1.  Source `build/envsetup.sh` and run `lunch` or set
@@ -377,6 +392,9 @@ display, if the mouse pointer is currently positioned on a streamed display.
 -   **Sensors**: A simple activity balancing a beam on the screen based on the
     accelerometer events, which allows for selecting which device's sensor to
     use. By default, will use the sensors of the device it's shown on.
+
+-   **Display Power**: A simple activity showcasing the behavior of proximity
+    locks, screen brightness override and requesting the screen to be kept on.
 
 -   **Rotation**: A simple activity that is in landscape by default and can send
     orientation change requests on demand. Showcases the display rotation on the

@@ -12,21 +12,20 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use crate_health_proc_macros::NameAndVersionMap;
+use name_and_version::{NameAndVersion, NameAndVersionMap, NamedAndVersioned};
+use name_and_version_proc_macros::NameAndVersionMap;
+use rooted_path::RootedPath;
 
 use std::{
     collections::HashSet,
     path::{Path, PathBuf},
 };
 
-use anyhow::{anyhow, Result};
+use anyhow::Result;
 use semver::Version;
 use walkdir::WalkDir;
 
-use crate::{
-    android_bp::generate_android_bps, Crate, CrateError, NameAndVersion, NameAndVersionMap,
-    NamedAndVersioned,
-};
+use crate::{Crate, CrateError};
 
 use std::collections::BTreeMap;
 
@@ -40,11 +39,14 @@ impl CrateCollection {
     pub fn new<P: Into<PathBuf>>(repo_root: P) -> CrateCollection {
         CrateCollection { crates: BTreeMap::new(), repo_root: repo_root.into() }
     }
-    pub fn add_from(&mut self, path: &impl AsRef<Path>) -> Result<()> {
+    pub fn add_from(&mut self, path: impl AsRef<Path>) -> Result<()> {
         for entry_or_err in WalkDir::new(self.repo_root.join(path)) {
             let entry = entry_or_err?;
             if entry.file_name() == "Cargo.toml" {
-                match Crate::from(&entry.path(), &self.repo_root.as_path()) {
+                match Crate::from(RootedPath::new(
+                    self.repo_root.clone(),
+                    entry.path().strip_prefix(&self.repo_root)?,
+                )?) {
                     Ok(krate) => self.crates.insert_or_error(
                         NameAndVersion::new(krate.name().to_string(), krate.version().clone()),
                         krate,
@@ -55,30 +57,6 @@ impl CrateCollection {
                     },
                 };
             }
-        }
-        Ok(())
-    }
-    pub fn repo_root(&self) -> &Path {
-        self.repo_root.as_path()
-    }
-    pub fn stage_crates(&self) -> Result<()> {
-        for krate in self.crates.values() {
-            krate.stage_crate()?
-        }
-        Ok(())
-    }
-    pub fn generate_android_bps(&mut self) -> Result<()> {
-        for (nv, output) in generate_android_bps(self.crates.values())?.into_iter() {
-            self.crates
-                .get_mut(&nv)
-                .ok_or(anyhow!("Failed to get crate {} {}", nv.name(), nv.version()))?
-                .set_generate_android_bp_output(output);
-        }
-        Ok(())
-    }
-    pub fn diff_android_bps(&mut self) -> Result<()> {
-        for krate in self.crates.values_mut() {
-            krate.diff_android_bp()?;
         }
         Ok(())
     }
