@@ -130,6 +130,13 @@
             android:exported="false"
             android:label="@string/turn_screen_on_activity" />
 
+        <activity
+            android:name=".TurnScreenOnShowWhenLockedActivity"
+            android:turnScreenOn="true"
+            android:showWhenLocked="true"
+            android:exported="false"
+            android:label="@string/turn_screen_on_show_when_locked_activity" />
+
     </application>
     <!-- LINT.ThenChange(/samples/VirtualDeviceManager/README.md:demos) -->
 </manifest>

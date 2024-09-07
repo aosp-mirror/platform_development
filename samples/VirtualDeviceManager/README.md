@@ -394,7 +394,8 @@ display, if the mouse pointer is currently positioned on a streamed display.
     use. By default, will use the sensors of the device it's shown on.
 
 -   **Display Power**: A simple activity showcasing the behavior of proximity
-    locks, screen brightness override and requesting the screen to be kept on.
+    locks, screen brightness override and requesting the screen to be kept on
+    or turned on.
 
 -   **Rotation**: A simple activity that is in landscape by default and can send
     orientation change requests on demand. Showcases the display rotation on the
