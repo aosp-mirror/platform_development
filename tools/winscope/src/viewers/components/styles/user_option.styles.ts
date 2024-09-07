@@ -46,7 +46,7 @@ export const userOptionStyle = `
     margin-top: 2px;
     padding: 0 10px;
     border-radius: 10px;
-    background-color: ${Color.CHIP_GRAY};
+    background-color: ${Color.CHIP_BLUE};
     font-weight: normal;
     color: ${Color.TEXT_BLACK};
     height: 18px;
