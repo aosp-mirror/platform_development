@@ -17,7 +17,7 @@ import {RelativeEntryIndex, TraceEntryEager} from './trace';
 
 export enum CustomQueryType {
   SF_LAYERS_ID_AND_NAME,
-  VIEW_CAPTURE_PACKAGE_NAME,
+  VIEW_CAPTURE_METADATA,
   VSYNCID,
   WM_WINDOWS_TOKEN_AND_TITLE,
 }
@@ -29,9 +29,9 @@ export class ProcessParserResult {
     return parserResult;
   }
 
-  static [CustomQueryType.VIEW_CAPTURE_PACKAGE_NAME]<T>(
-    parserResult: CustomQueryParserResultTypeMap[CustomQueryType.VIEW_CAPTURE_PACKAGE_NAME],
-  ): CustomQueryResultTypeMap<T>[CustomQueryType.VIEW_CAPTURE_PACKAGE_NAME] {
+  static [CustomQueryType.VIEW_CAPTURE_METADATA]<T>(
+    parserResult: CustomQueryParserResultTypeMap[CustomQueryType.VIEW_CAPTURE_METADATA],
+  ): CustomQueryResultTypeMap<T>[CustomQueryType.VIEW_CAPTURE_METADATA] {
     return parserResult;
   }
 
@@ -56,14 +56,17 @@ export class ProcessParserResult {
 
 export interface CustomQueryParamTypeMap {
   [CustomQueryType.SF_LAYERS_ID_AND_NAME]: never;
-  [CustomQueryType.VIEW_CAPTURE_PACKAGE_NAME]: never;
+  [CustomQueryType.VIEW_CAPTURE_METADATA]: never;
   [CustomQueryType.VSYNCID]: never;
   [CustomQueryType.WM_WINDOWS_TOKEN_AND_TITLE]: never;
 }
 
 export interface CustomQueryParserResultTypeMap {
   [CustomQueryType.SF_LAYERS_ID_AND_NAME]: Array<{id: number; name: string}>;
-  [CustomQueryType.VIEW_CAPTURE_PACKAGE_NAME]: string;
+  [CustomQueryType.VIEW_CAPTURE_METADATA]: {
+    packageName: string;
+    windowName: string;
+  };
   [CustomQueryType.VSYNCID]: Array<bigint>;
   [CustomQueryType.WM_WINDOWS_TOKEN_AND_TITLE]: Array<{
     token: string;
@@ -73,7 +76,10 @@ export interface CustomQueryParserResultTypeMap {
 
 export interface CustomQueryResultTypeMap<T> {
   [CustomQueryType.SF_LAYERS_ID_AND_NAME]: Array<{id: number; name: string}>;
-  [CustomQueryType.VIEW_CAPTURE_PACKAGE_NAME]: string;
+  [CustomQueryType.VIEW_CAPTURE_METADATA]: {
+    packageName: string;
+    windowName: string;
+  };
   [CustomQueryType.VSYNCID]: Array<TraceEntryEager<T, bigint>>;
   [CustomQueryType.WM_WINDOWS_TOKEN_AND_TITLE]: Array<{
     token: string;

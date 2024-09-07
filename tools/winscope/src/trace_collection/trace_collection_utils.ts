@@ -14,10 +14,12 @@
  * limitations under the License.
  */
 
+import {TRACE_INFO} from 'trace/trace_info';
+import {TraceType} from 'trace/trace_type';
+
 export interface TraceConfiguration {
   name: string | undefined;
   run: boolean | undefined;
-  isTraceCollection: boolean | undefined;
   config: ConfigurationOptions | undefined;
 }
 
@@ -112,105 +114,58 @@ const sfTraceSelectionConfigs: SelectionConfiguration[] = [
 
 const traceConfigurations: TraceConfigurationMap = {
   layers_trace: {
-    name: 'Surface Flinger',
+    name: TRACE_INFO[TraceType.SURFACE_FLINGER].name,
     run: true,
-    isTraceCollection: undefined,
     config: {
       enableConfigs: sfTraceEnableConfigs,
       selectionConfigs: sfTraceSelectionConfigs,
     },
   },
   window_trace: {
-    name: 'Window Manager',
+    name: TRACE_INFO[TraceType.WINDOW_MANAGER].name,
     run: true,
-    isTraceCollection: undefined,
     config: {
       enableConfigs: [],
       selectionConfigs: wmTraceSelectionConfigs,
     },
   },
   screen_recording: {
-    name: 'Screen Recording',
-    isTraceCollection: undefined,
+    name: TRACE_INFO[TraceType.SCREEN_RECORDING].name,
     run: true,
     config: undefined,
   },
-  ime_tracing: {
-    name: 'IME Tracing',
-    run: true,
-    isTraceCollection: true,
-    config: {
-      enableConfigs: [
-        {
-          name: 'Input Method Clients',
-          key: 'ime_trace_clients',
-          enabled: true,
-        },
-        {
-          name: 'Input Method Service',
-          key: 'ime_trace_service',
-          enabled: true,
-        },
-        {
-          name: 'Input Method Manager Service',
-          key: 'ime_trace_managerservice',
-          enabled: true,
-        },
-      ],
-      selectionConfigs: [],
-    },
-  },
-  ime_trace_clients: {
-    name: 'Input Method Clients',
-    isTraceCollection: undefined,
-    run: true,
-    config: undefined,
-  },
-  ime_trace_service: {
-    name: 'Input Method Service',
-    isTraceCollection: undefined,
-    run: true,
-    config: undefined,
-  },
-  ime_trace_managerservice: {
-    name: 'Input Method Manager Service',
-    isTraceCollection: undefined,
+  ime: {
+    name: 'IME',
     run: true,
     config: undefined,
   },
   transactions: {
-    name: 'Transaction',
-    isTraceCollection: undefined,
+    name: TRACE_INFO[TraceType.TRANSACTIONS].name,
     run: false,
     config: undefined,
   },
   proto_log: {
-    name: 'ProtoLog',
-    isTraceCollection: undefined,
+    name: TRACE_INFO[TraceType.PROTO_LOG].name,
     run: false,
     config: undefined,
   },
   wayland_trace: {
-    name: 'Wayland',
-    isTraceCollection: undefined,
+    name: TRACE_INFO[TraceType.WAYLAND].name,
     run: false,
     config: undefined,
   },
   eventlog: {
-    name: 'Event Log',
-    isTraceCollection: undefined,
+    name: TRACE_INFO[TraceType.EVENT_LOG].name,
     run: false,
     config: undefined,
   },
   transition_traces: {
-    name: 'Shell Transitions',
-    isTraceCollection: undefined,
+    name: TRACE_INFO[TraceType.SHELL_TRANSITION].name,
     run: false,
     config: undefined,
   },
   view_capture_traces: {
     name: 'View Capture',
-    isTraceCollection: undefined,
     run: false,
     config: undefined,
   },
@@ -223,7 +178,7 @@ export const TRACES: {[key: string]: TraceConfigurationMap} = {
     transactions: traceConfigurations['transactions'],
     proto_log: traceConfigurations['proto_log'],
     screen_recording: traceConfigurations['screen_recording'],
-    ime_tracing: traceConfigurations['ime_tracing'],
+    ime: traceConfigurations['ime'],
     eventlog: traceConfigurations['eventlog'],
     transition_traces: traceConfigurations['transition_traces'],
     view_capture_trace: traceConfigurations['view_capture_traces'],
