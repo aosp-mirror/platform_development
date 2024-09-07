@@ -101,8 +101,6 @@ public final class VdmService extends Hilt_VdmService {
 
     private static final String ACTION_STOP = "com.example.android.vdmdemo.host.VdmService.STOP";
 
-    public static final String ACTION_LOCKDOWN =
-            "com.example.android.vdmdemo.host.VdmService.LOCKDOWN";
     private int mRecordingAudioSessionId;
     private int mPlaybackAudioSessionId;
 
@@ -283,11 +281,6 @@ public final class VdmService extends Hilt_VdmService {
             stopForeground(STOP_FOREGROUND_REMOVE);
             stopSelf();
             return START_NOT_STICKY;
-        }
-
-        if (intent != null && ACTION_LOCKDOWN.equals(intent.getAction())) {
-            lockdown();
-            return START_STICKY;
         }
 
         NotificationChannel notificationChannel =
@@ -598,11 +591,6 @@ public final class VdmService extends Hilt_VdmService {
         mRemoteIo.sendMessage(RemoteEvent.newBuilder()
                 .setDeviceState(RemoteEventProto.DeviceState.newBuilder().setPowerOn(true))
                 .build());
-    }
-
-    private void lockdown() {
-        Log.i(TAG, "Initiating Lockdown.");
-        mDisplayRepository.clear();
     }
 
     private synchronized void closeVirtualDevice() {
