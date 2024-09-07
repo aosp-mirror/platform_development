@@ -18,7 +18,6 @@ import {Timestamp} from 'common/time';
 import {TraceEntry} from 'trace/trace';
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
 import {UserOptions} from 'viewers/common/user_options';
-import {TextFilter} from './text_filter';
 import {UiPropertyTreeNode} from './ui_property_tree_node';
 
 export interface UiDataLog {
@@ -31,13 +30,11 @@ export interface UiDataLog {
   currentIndex?: undefined | number;
   propertiesTree?: undefined | UiPropertyTreeNode;
   propertiesUserOptions?: UserOptions;
-  propertiesFilter?: TextFilter;
 }
 
 export interface LogFilter {
   type: LogFieldType;
   options?: string[];
-  textFilter?: TextFilter;
 }
 
 export interface LogEntry {

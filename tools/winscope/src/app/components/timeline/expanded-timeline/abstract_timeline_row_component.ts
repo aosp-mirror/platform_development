@@ -58,7 +58,7 @@ export abstract class AbstractTimelineRowComponent<T extends {}> {
   }
 
   getBackgroundColor() {
-    return this.isActive ? 'var(--selected-element-color)' : undefined;
+    return this.isActive ? 'var(--drawer-block-secondary)' : undefined;
   }
 
   ngAfterViewInit() {
@@ -158,7 +158,6 @@ export abstract class AbstractTimelineRowComponent<T extends {}> {
 
   @HostListener('wheel', ['$event'])
   updateScroll(event: WheelEvent) {
-    event.preventDefault();
     this.onScrollEvent.emit(event);
   }
 

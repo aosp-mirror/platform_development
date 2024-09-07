@@ -38,7 +38,6 @@ import {TraceType} from 'trace/trace_type';
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
 import {
   LogFilterChangeDetail,
-  LogTextFilterChangeDetail,
   TimestampClickDetail,
   ViewerEvents,
 } from 'viewers/common/viewer_events';
@@ -48,7 +47,6 @@ import {PropertiesComponent} from 'viewers/components/properties_component';
 import {SearchBoxComponent} from 'viewers/components/search_box_component';
 import {SelectWithFilterComponent} from 'viewers/components/select_with_filter_component';
 import {LogComponent} from './log_component';
-import {TextFilter} from './text_filter';
 import {LogEntry, LogFieldType} from './ui_data_log';
 
 describe('LogComponent', () => {
@@ -122,23 +120,7 @@ describe('LogComponent', () => {
     });
 
     it('applies select filter correctly', async () => {
-      const allEntries = component.entries.slice();
-      htmlElement.addEventListener(ViewerEvents.LogFilterChange, (event) => {
-        const detail: LogFilterChangeDetail = (event as CustomEvent).detail;
-        if (detail.value.length === 0) {
-          component.entries = allEntries;
-          return;
-        }
-        component.entries = allEntries.filter((entry) => {
-          const entryValue = assertDefined(
-            entry.fields.find((f) => f.type === detail.type),
-          ).value.toString();
-          if (Array.isArray(detail.value)) {
-            return detail.value.includes(entryValue);
-          }
-          return entryValue.includes(detail.value);
-        });
-      });
+      addFilterChangeEventListener();
       expect(htmlElement.querySelectorAll('.entry').length).toEqual(2);
       const filterTrigger = assertDefined(
         htmlElement.querySelector(`.filters .tag .mat-select-trigger`),
@@ -159,29 +141,12 @@ describe('LogComponent', () => {
     });
 
     it('applies text filter correctly', async () => {
-      const allEntries = component.entries.slice();
-      htmlElement.addEventListener(
-        ViewerEvents.LogTextFilterChange,
-        (event) => {
-          const detail: LogTextFilterChangeDetail = (event as CustomEvent)
-            .detail;
-          if (detail.filter.filterString.length === 0) {
-            component.entries = allEntries;
-            return;
-          }
-          component.entries = allEntries.filter((entry) => {
-            const entryValue = assertDefined(
-              entry.fields.find((f) => f.type === detail.type),
-            ).value.toString();
-            return entryValue.includes(detail.filter.filterString);
-          });
-        },
-      );
+      addFilterChangeEventListener();
       expect(htmlElement.querySelectorAll('.entry').length).toEqual(2);
 
       const inputEl = assertDefined(
-        htmlElement.querySelector<HTMLInputElement>(`.filters .vsyncid input`),
-      );
+        htmlElement.querySelector(`.filters .vsyncid input`),
+      ) as HTMLInputElement;
 
       inputEl.value = '123';
       inputEl.dispatchEvent(new Event('input'));
@@ -318,13 +283,33 @@ describe('LogComponent', () => {
 
       const filters = [
         {type: LogFieldType.TAG, options: ['Test tag 1', 'Test tag 2']},
-        {type: LogFieldType.VSYNC_ID, textFilter: new TextFilter('', [])},
+        {type: LogFieldType.VSYNC_ID},
       ];
 
       component.entries = entries;
       component.filters = filters;
       component.selectedIndex = 0;
       component.traceType = TraceType.CUJS;
+    }
+
+    function addFilterChangeEventListener() {
+      const allEntries = component.entries.slice();
+      htmlElement.addEventListener(ViewerEvents.LogFilterChange, (event) => {
+        const detail: LogFilterChangeDetail = (event as CustomEvent).detail;
+        if (detail.value.length === 0) {
+          component.entries = allEntries;
+          return;
+        }
+        component.entries = allEntries.filter((entry) => {
+          const entryValue = assertDefined(
+            entry.fields.find((f) => f.type === detail.type),
+          ).value.toString();
+          if (Array.isArray(detail.value)) {
+            return detail.value.includes(entryValue);
+          }
+          return entryValue.includes(detail.value);
+        });
+      });
     }
   });
 });

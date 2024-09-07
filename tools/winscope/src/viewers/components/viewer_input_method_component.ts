@@ -40,7 +40,6 @@ import {viewerCardStyle} from './styles/viewer_card.styles';
           [highlightedItem]="inputData?.highlightedItem"
           [pinnedItems]="inputData?.pinnedItems ?? []"
           [tableProperties]="inputData?.hierarchyTableProperties"
-          [textFilter]="inputData?.hierarchyFilter"
           [store]="store"
           [userOptions]="inputData?.hierarchyUserOptions ?? {}"
           (collapseButtonClicked)="sections.onCollapseStateChange(CollapsibleSectionType.HIERARCHY, true)"
@@ -61,7 +60,6 @@ import {viewerCardStyle} from './styles/viewer_card.styles';
         [userOptions]="inputData?.propertiesUserOptions ?? {}"
         [propertiesTree]="inputData?.propertiesTree"
         [traceType]="inputData?.traceType"
-        [textFilter]="inputData?.propertiesFilter"
         (collapseButtonClicked)="sections.onCollapseStateChange(CollapsibleSectionType.PROPERTIES, true)"
         [class.collapsed]="sections.isSectionCollapsed(CollapsibleSectionType.PROPERTIES)"
         placeholderText="No selected item."></properties-view>

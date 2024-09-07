@@ -40,7 +40,6 @@ export class TraceBuilder<T> {
   private frameMap?: FrameMap;
   private frameMapBuilder?: FrameMapBuilder;
   private descriptors: string[] = [];
-  private isCorrupted = false;
 
   setType(type: TraceType): TraceBuilder<T> {
     this.type = type;
@@ -91,11 +90,6 @@ export class TraceBuilder<T> {
     return this;
   }
 
-  setIsCorrupted(value: boolean): TraceBuilder<T> {
-    this.isCorrupted = value;
-    return this;
-  }
-
   build(): Trace<T> {
     if (!this.parser) {
       this.parser = this.createParser();
@@ -122,9 +116,7 @@ export class TraceBuilder<T> {
   }
 
   private createParser(): Parser<T> {
-    const builder = new ParserBuilder<T>()
-      .setType(this.type)
-      .setIsCorrupted(this.isCorrupted);
+    const builder = new ParserBuilder<T>().setType(this.type);
 
     if (this.timestamps) {
       builder.setTimestamps(this.timestamps);

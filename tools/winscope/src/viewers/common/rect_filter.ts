@@ -20,8 +20,6 @@ import {RectShowState} from './rect_show_state';
 export class RectFilter {
   private forcedStates = new Map<string, RectShowState>();
 
-  constructor(private convertToForcedStateKey: (id: string) => string) {}
-
   filterRects(
     rects: UiRect[],
     isOnlyVisibleMode: boolean,
@@ -42,9 +40,8 @@ export class RectFilter {
       }
 
       const satisfiesOnlyVisible = rect.isDisplay || rect.isVisible;
-      const key = this.convertToForcedStateKey(rect.id);
-      const forceHidden = this.forcedStates.get(key) === RectShowState.HIDE;
-      const forceShow = this.forcedStates.get(key) === RectShowState.SHOW;
+      const forceHidden = this.forcedStates.get(rect.id) === RectShowState.HIDE;
+      const forceShow = this.forcedStates.get(rect.id) === RectShowState.SHOW;
 
       if (isOnlyVisibleMode && !isIgnoreRectShowStateMode) {
         return forceShow || (satisfiesOnlyVisible && !forceHidden);
@@ -62,8 +59,7 @@ export class RectFilter {
   ): Map<string, RectShowState> {
     const rectIdToShowState = new Map<string, RectShowState>();
     allRects.forEach((rect) => {
-      const key = this.convertToForcedStateKey(rect.id);
-      const forcedState = this.forcedStates.get(key);
+      const forcedState = this.forcedStates.get(rect.id);
       if (forcedState !== undefined) {
         rectIdToShowState.set(rect.id, forcedState);
         return;
@@ -76,10 +72,6 @@ export class RectFilter {
   }
 
   updateRectShowState(id: string, newShowState: RectShowState) {
-    this.forcedStates.set(this.convertToForcedStateKey(id), newShowState);
-  }
-
-  clear() {
-    this.forcedStates.clear();
+    this.forcedStates.set(id, newShowState);
   }
 }

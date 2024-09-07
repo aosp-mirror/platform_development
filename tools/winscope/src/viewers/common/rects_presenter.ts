@@ -23,7 +23,7 @@ import {RectShowState} from './rect_show_state';
 import {UserOptions} from './user_options';
 
 export class RectsPresenter {
-  private readonly rectFilter = new RectFilter(this.convertToKey);
+  private readonly rectFilter = new RectFilter();
   private allCurrentRects: UiRect[] = [];
   private rectsToDraw: UiRect[] = [];
   private displays: DisplayIdentifier[] = [];
@@ -36,22 +36,21 @@ export class RectsPresenter {
       trace: Trace<HierarchyTreeNode>,
     ) => UiRect[],
     private makeDisplaysStrategy?: (rects: UiRect[]) => DisplayIdentifier[],
-    private convertToKey: (rectId: string) => string = (id: string) => id,
   ) {}
 
-  getUserOptions(): UserOptions {
+  getUserOptions() {
     return this.userOptions;
   }
 
-  getRectsToDraw(): UiRect[] {
+  getRectsToDraw() {
     return this.rectsToDraw;
   }
 
-  getRectIdToShowState(): Map<string, RectShowState> | undefined {
+  getRectIdToShowState() {
     return this.rectIdToShowState;
   }
 
-  getDisplays(): DisplayIdentifier[] {
+  getDisplays() {
     return this.displays;
   }
 
@@ -84,24 +83,11 @@ export class RectsPresenter {
     this.updateRectsToDrawAndRectIdToShowState();
   }
 
-  updateRectShowStates(
-    rectIdToShowState: Map<string, RectShowState> | undefined,
-  ) {
-    this.rectFilter.clear();
-    if (rectIdToShowState) {
-      for (const [id, state] of rectIdToShowState.entries()) {
-        this.rectFilter.updateRectShowState(id, state);
-      }
-    }
-    this.updateRectsToDrawAndRectIdToShowState();
-  }
-
   clear() {
     this.allCurrentRects = [];
     this.rectsToDraw = [];
     this.displays = [];
     this.rectIdToShowState = undefined;
-    this.rectFilter.clear();
   }
 
   private updateRectsToDrawAndRectIdToShowState() {

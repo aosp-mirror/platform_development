@@ -753,7 +753,6 @@ fn choose_license(license: &str) -> &str {
         "Apache-2.0 / MIT" => "Apache-2.0",
         "Unlicense OR MIT" => "MIT",
         "BSD-3-Clause OR MIT OR Apache-2.0" => "Apache-2.0",
-        "BSD-2-Clause OR Apache-2.0 OR MIT" => "Apache-2.0",
         _ => license,
     }
 }
@@ -1254,10 +1253,9 @@ fn crate_to_rulesmk(
             )
         })
         .map(|dep| {
-            // Rewrite dependency name so it is passed to the FIND_CRATE macro
-            // which will expand to the module path when building Trusty.
+            // Rewrite dependency name to module path for Trusty build system
             if let Some(dep) = dep.strip_prefix("lib") {
-                format!("$(call FIND_CRATE,{dep})")
+                format!("external/rust/crates/{dep}")
             } else {
                 dep
             }

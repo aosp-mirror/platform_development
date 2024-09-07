@@ -22,15 +22,16 @@ import {
   Output,
   ViewChild,
 } from '@angular/core';
+import {assertDefined} from 'common/assert_utils';
 import {PersistentStore} from 'common/persistent_store';
 import {Analytics} from 'logging/analytics';
+import {TRACE_INFO} from 'trace/trace_info';
 import {TraceType} from 'trace/trace_type';
 import {CollapsibleSectionType} from 'viewers/common/collapsible_section_type';
 import {CuratedProperties} from 'viewers/common/curated_properties';
-import {TextFilter} from 'viewers/common/text_filter';
 import {UiPropertyTreeNode} from 'viewers/common/ui_property_tree_node';
 import {UserOptions} from 'viewers/common/user_options';
-import {ViewerEvents} from 'viewers/common/viewer_events';
+import {TextFilterDetail, ViewerEvents} from 'viewers/common/viewer_events';
 import {nodeStyles} from 'viewers/components/styles/node.styles';
 import {SearchBoxComponent} from './search_box_component';
 import {viewerCardInnerStyle} from './styles/viewer_card.styles';
@@ -47,7 +48,8 @@ import {viewerCardInnerStyle} from './styles/viewer_card.styles';
           (collapseButtonClicked)="collapseButtonClicked.emit()"></collapsible-section-title>
         <search-box
           *ngIf="showFilter"
-          [textFilter]="textFilter"
+          [store]="store"
+          [storeKey]="storeKeyFilterFlags"
           (filterChange)="onFilterChange($event)"></search-box>
       </div>
 
@@ -115,6 +117,7 @@ export class PropertiesComponent {
   Analytics = Analytics;
   CollapsibleSectionType = CollapsibleSectionType;
   ViewerEvents = ViewerEvents;
+  storeKeyFilterFlags: string | undefined;
 
   @Input() title = 'PROPERTIES';
   @Input() showFilter = true;
@@ -127,7 +130,6 @@ export class PropertiesComponent {
   @Input() isProtoDump = false;
   @Input() traceType: TraceType | undefined;
   @Input() store: PersistentStore | undefined;
-  @Input() textFilter: TextFilter | undefined;
 
   @Output() collapseButtonClicked = new EventEmitter();
 
@@ -135,7 +137,13 @@ export class PropertiesComponent {
 
   constructor(@Inject(ElementRef) private elementRef: ElementRef) {}
 
-  onFilterChange(detail: TextFilter) {
+  ngOnInit() {
+    this.storeKeyFilterFlags =
+      TRACE_INFO[assertDefined(this.traceType)].name +
+      'propertiesView.filterFlags';
+  }
+
+  onFilterChange(detail: TextFilterDetail) {
     const event = new CustomEvent(ViewerEvents.PropertiesFilterChange, {
       bubbles: true,
       detail,
@@ -158,7 +166,7 @@ export class PropertiesComponent {
   showViewCaptureFormat(): boolean {
     return (
       this.traceType === TraceType.VIEW_CAPTURE &&
-      this.textFilter?.filterString === '' &&
+      (this.searchBox?.filterString ?? '') === '' &&
       // Todo: Highlight Inline in formatted ViewCapture Properties Component.
       !this.userOptions['showDiff']?.enabled &&
       this.curatedProperties !== undefined

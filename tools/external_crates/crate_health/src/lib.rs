@@ -22,7 +22,7 @@ use anyhow::{anyhow, Context, Result};
 use semver::Version;
 use thiserror::Error;
 
-pub use self::crate_type::{diff_android_bp, Crate};
+pub use self::crate_type::{diff_android_bp, Crate, Migratable};
 mod crate_type;
 
 pub use self::crate_collection::CrateCollection;
@@ -40,6 +40,9 @@ pub use self::android_bp::{
     build_cargo_embargo, cargo_embargo_autoconfig, generate_android_bps, maybe_build_cargo_embargo,
 };
 mod android_bp;
+
+pub use self::google_metadata::GoogleMetadata;
+mod google_metadata;
 
 pub use self::license::{most_restrictive_type, update_module_license_files};
 mod license;
@@ -71,9 +74,9 @@ pub fn default_repo_root() -> Result<PathBuf> {
 pub fn ensure_exists_and_empty(dir: impl AsRef<Path>) -> Result<()> {
     let dir = dir.as_ref();
     if dir.exists() {
-        remove_dir_all(dir).context(format!("Failed to remove {}", dir.display()))?;
+        remove_dir_all(&dir).context(format!("Failed to remove {}", dir.display()))?;
     }
-    create_dir_all(dir).context(format!("Failed to create {}", dir.display()))
+    create_dir_all(&dir).context(format!("Failed to create {}", dir.display()))
 }
 
 pub trait RunQuiet {
@@ -108,3 +111,5 @@ pub fn copy_dir(src: impl AsRef<Path>, dst: impl AsRef<Path>) -> Result<()> {
         .run_quiet_and_expect_success()?;
     Ok(())
 }
+
+include!(concat!(env!("OUT_DIR"), "/protos/mod.rs"));

@@ -26,7 +26,7 @@ export const nodeStyles =
         width: 100%;
     }
 
-    .node:not(.selected):not(.full-opacity):not(:hover) {
+    .node:not(.selected):not(.full-opacity) {
         opacity: 0.5;
     }
 
@@ -36,32 +36,32 @@ export const nodeStyles =
 
     .node:not(.selected).added,
     .node:not(.selected).addedMove {
-        background-color: var(--added-element-color);
+        background: ${Color.ADDED_ELEMENT_BACKGROUND};
     }
 
     .node:not(.selected).deleted,
     .node:not(.selected).deletedMove {
-        background-color: var(--deleted-element-color);
+        background: ${Color.DELETED_ELEMENT_BACKGROUND};
     }
 
     .node:not(.selected).modified {
-        background-color: var(--modified-element-color);
+        background: ${Color.MODIFIED_ELEMENT_BACKGROUND};
     }
 
     .node:hover:not(.selected) {
-        background-color: var(--hover-element-color);
+        background-color: ${Color.HOVER_ELEMENT_BACKGROUND};
     }
 
     .node.addedMove:after,
     .node.deletedMove:after {
-        content: 'Moved';
+        content: 'moved';
         font: 14px 'Roboto', sans-serif;
         margin: 0 5px;
-        background-color: ${Color.CHIP_BLUE};
-        color: ${Color.TEXT_BLACK};
-        border-radius: 10px;
+        background: ${Color.CHIP_BLUE};
+        border-radius: 5px;
         height: fit-content;
         padding: 3px;
+        color: white;
     }
 ` + selectedElementStyle;
 
@@ -165,17 +165,17 @@ export const nodeInnerItemStyles = `
     }
 
     .expand-tree-btn.modified {
-        background-color: var(--modified-element-color);
+        background: ${Color.MODIFIED_ELEMENT_BACKGROUND};
     }
 
     .expand-tree-btn.deleted,
     .expand-tree-btn.deletedMove {
-        background-color: var(--deleted-element-color);
+        background: ${Color.DELETED_ELEMENT_BACKGROUND};
     }
 
     .expand-tree-btn.added,
     .expand-tree-btn.addedMove {
-        background-color: var(--added-element-color);
+        background: ${Color.ADDED_ELEMENT_BACKGROUND};
     }
 
     .icon-wrapper-show-state {

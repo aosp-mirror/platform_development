@@ -552,10 +552,6 @@ class HeaderCheckerTest(unittest.TestCase):
             flags=["-input-format-new", "Json", "-input-format-old", "Json"],
             create_old=False, create_new=True)
 
-    def test_availability(self):
-        self.prepare_and_absolute_diff_all_archs(
-            "libavailability", "libavailability")
-
 
 if __name__ == '__main__':
     unittest.main()

@@ -1,7 +1,0 @@
-libattribute {
-  global:
-    func;
-    ignored_func;
-    var; # var
-    ignored_var; # var
-};

@@ -21,14 +21,7 @@ import {
   AbstractLogViewerPresenter,
   NotifyLogViewCallbackType,
 } from './abstract_log_viewer_presenter';
-import {TextFilter} from './text_filter';
 import {LogEntry, LogFieldType, LogFieldValue, UiDataLog} from './ui_data_log';
-import {
-  LogFilterChangeDetail,
-  LogTextFilterChangeDetail,
-  TimestampClickDetail,
-  ViewerEvents,
-} from './viewer_events';
 
 export abstract class AbstractLogViewerPresenterTest<UiData extends UiDataLog> {
   execute() {
@@ -78,80 +71,6 @@ export abstract class AbstractLogViewerPresenterTest<UiData extends UiDataLog> {
             this.executePropertiesChecksForEmptyTrace(uiData);
           }
         }
-      });
-
-      it('adds events listeners', async () => {
-        const element = document.createElement('div');
-        presenter.addEventListeners(element);
-
-        let spy: jasmine.Spy = spyOn(presenter, 'onFilterChange');
-        const filterDetail = new LogFilterChangeDetail(
-          LogFieldType.CUJ_TYPE,
-          '',
-        );
-        element.dispatchEvent(
-          new CustomEvent(ViewerEvents.LogFilterChange, {
-            detail: filterDetail,
-          }),
-        );
-        expect(spy).toHaveBeenCalledWith(filterDetail.type, filterDetail.value);
-
-        spy = spyOn(presenter, 'onTextFilterChange');
-        const textFilterDetail = new LogTextFilterChangeDetail(
-          LogFieldType.CUJ_TYPE,
-          new TextFilter('', []),
-        );
-        element.dispatchEvent(
-          new CustomEvent(ViewerEvents.LogTextFilterChange, {
-            detail: textFilterDetail,
-          }),
-        );
-        expect(spy).toHaveBeenCalledWith(
-          textFilterDetail.type,
-          textFilterDetail.filter,
-        );
-
-        spy = spyOn(presenter, 'onLogEntryClick');
-        element.dispatchEvent(
-          new CustomEvent(ViewerEvents.LogEntryClick, {
-            detail: 0,
-          }),
-        );
-        expect(spy).toHaveBeenCalledWith(0);
-
-        spy = spyOn(presenter, 'onArrowDownPress');
-        element.dispatchEvent(new CustomEvent(ViewerEvents.ArrowDownPress));
-        expect(spy).toHaveBeenCalled();
-
-        spy = spyOn(presenter, 'onArrowUpPress');
-        element.dispatchEvent(new CustomEvent(ViewerEvents.ArrowUpPress));
-        expect(spy).toHaveBeenCalled();
-
-        await presenter.onAppEvent(this.getPositionUpdate());
-        spy = spyOn(presenter, 'onLogTimestampClick');
-        element.dispatchEvent(
-          new CustomEvent(ViewerEvents.TimestampClick, {
-            detail: new TimestampClickDetail(uiData.entries[0].traceEntry),
-          }),
-        );
-        expect(spy).toHaveBeenCalledWith(uiData.entries[0].traceEntry);
-
-        spy = spyOn(presenter, 'onRawTimestampClick');
-        const ts = TimestampConverterUtils.makeZeroTimestamp();
-        element.dispatchEvent(
-          new CustomEvent(ViewerEvents.TimestampClick, {
-            detail: new TimestampClickDetail(undefined, ts),
-          }),
-        );
-        expect(spy).toHaveBeenCalledWith(ts);
-
-        spy = spyOn(presenter, 'onPropertiesUserOptionsChange');
-        element.dispatchEvent(
-          new CustomEvent(ViewerEvents.PropertiesUserOptionsChange, {
-            detail: {userOptions: {}},
-          }),
-        );
-        expect(spy).toHaveBeenCalledWith({});
       });
 
       it('processes trace position updates', async () => {
@@ -224,7 +143,7 @@ export abstract class AbstractLogViewerPresenterTest<UiData extends UiDataLog> {
               const filterValues = valuesToSet[i];
               const expectedFieldValues = expected[i];
 
-              await presenter.onFilterChange(type, filterValues);
+              await presenter.onFilterChange(type, filterValues, []);
               const fieldValues = uiData.entries.map((entry) =>
                 assertDefined(this.getFieldValue(entry, type)),
               );
@@ -235,7 +154,7 @@ export abstract class AbstractLogViewerPresenterTest<UiData extends UiDataLog> {
               } else {
                 expect(fieldValues.length).toEqual(expectedFieldValues);
               }
-              await presenter.onFilterChange(type, []);
+              await presenter.onFilterChange(type, [], []);
             }
           }
         });
@@ -243,7 +162,7 @@ export abstract class AbstractLogViewerPresenterTest<UiData extends UiDataLog> {
         it('updates indices when filters change', async () => {
           await presenter.onAppEvent(this.getSecondPositionUpdate());
           const filterName = assertDefined(this.filterNameForCurrentIndexTest);
-          await presenter.onFilterChange(filterName, []);
+          await presenter.onFilterChange(filterName, [], []);
           expect(uiData.currentIndex).toEqual(
             this.expectedIndexOfSecondPositionUpdate,
           );
@@ -259,6 +178,7 @@ export abstract class AbstractLogViewerPresenterTest<UiData extends UiDataLog> {
           await presenter.onFilterChange(
             filterName,
             assertDefined(this.filterChangeForCurrentIndexTest),
+            [],
           );
           expect(uiData.currentIndex).toEqual(
             this.expectedCurrentIndexAfterFilterChange,
@@ -276,6 +196,7 @@ export abstract class AbstractLogViewerPresenterTest<UiData extends UiDataLog> {
           await presenter.onFilterChange(
             filterName,
             assertDefined(this.secondFilterChangeForCurrentIndexTest),
+            [],
           );
           expect(uiData.currentIndex).toEqual(
             this.expectedCurrentIndexAfterSecondFilterChange,
@@ -339,41 +260,6 @@ export abstract class AbstractLogViewerPresenterTest<UiData extends UiDataLog> {
           this.expectedIndexOfSecondPositionUpdate,
         );
       });
-
-      it('emits event on log timestamp click', async () => {
-        const spy = jasmine.createSpy();
-        presenter.setEmitEvent(spy);
-
-        await presenter.onLogTimestampClick(uiData.entries[0].traceEntry);
-        expect(spy).toHaveBeenCalledWith(
-          TracePositionUpdate.fromTraceEntry(
-            uiData.entries[0].traceEntry,
-            true,
-          ),
-        );
-      });
-
-      it('emits event on raw timestamp click', async () => {
-        const spy = jasmine.createSpy();
-        presenter.setEmitEvent(spy);
-
-        const ts = TimestampConverterUtils.makeZeroTimestamp();
-        await presenter.onRawTimestampClick(ts);
-        expect(spy).toHaveBeenCalledWith(
-          TracePositionUpdate.fromTimestamp(ts, true),
-        );
-      });
-
-      if (!this.shouldExecutePropertiesTests) {
-        it('is robust to attempts to change properties', async () => {
-          await presenter.onAppEvent(this.getPositionUpdate());
-          await presenter.onLogEntryClick(this.logEntryClickIndex);
-
-          await presenter.onPropertiesUserOptionsChange({});
-          expect(uiData.propertiesUserOptions).toBeUndefined();
-          expect(uiData.propertiesTree).toBeUndefined();
-        });
-      }
     });
 
     if (this.executeSpecializedTests) {

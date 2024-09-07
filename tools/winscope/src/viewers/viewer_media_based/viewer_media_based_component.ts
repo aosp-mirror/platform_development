@@ -45,7 +45,7 @@ import {MediaBasedTraceEntry} from 'trace/media_based_trace_entry';
           [matTooltip]="titles.at(index)"
           matTooltipPosition="above"
           [matTooltipShowDelay]="300"
-          >{{ titles.at(0)?.split(".")[0].split(" ")[0] ?? 'Screen recording'}}</span>
+          >{{ titles.at(0)?.split(".")[0] ?? 'Screen recording'}}</span>
 
         <mat-select
           *ngIf="titles.length > 1"

@@ -15,7 +15,6 @@
  */
 
 import {ArrayUtils} from 'common/array_utils';
-import {assertDefined} from 'common/assert_utils';
 import {
   FilterFlag,
   makeFilterPredicate,
@@ -24,7 +23,6 @@ import {
 import {Timestamp} from 'common/time';
 import {TraceEntry} from 'trace/trace';
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
-import {TextFilter} from './text_filter';
 import {LogEntry, LogFieldType, LogFilter} from './ui_data_log';
 
 export class LogPresenter<Entry extends LogEntry> {
@@ -57,21 +55,6 @@ export class LogPresenter<Entry extends LogEntry> {
   setFilters(filters: LogFilter[]) {
     this.filters = filters;
     this.filterPredicates = new Map<LogFieldType, StringFilterPredicate>();
-    this.filters.forEach((filter) => {
-      if (
-        filter.textFilter &&
-        (filter.textFilter.filterString || filter.textFilter.flags.length > 0)
-      ) {
-        this.filterPredicates.set(
-          filter.type,
-          this.makeLogFilterPredicate(
-            filter.type,
-            filter.textFilter.filterString,
-            filter.textFilter.flags,
-          ),
-        );
-      }
-    });
     this.updateFilteredEntries();
     this.resetIndices();
   }
@@ -132,34 +115,19 @@ export class LogPresenter<Entry extends LogEntry> {
     this.resetIndices();
   }
 
-  applyTextFilterChange(type: LogFieldType, value: TextFilter) {
-    assertDefined(
-      this.filters.find((filter) => filter.type === type),
-    ).textFilter = value;
-    if (value.filterString.length > 0) {
-      this.filterPredicates.set(
-        type,
-        this.makeLogFilterPredicate(type, value.filterString, value.flags),
-      );
-    } else {
-      this.filterPredicates.delete(type);
-    }
-    this.updateEntriesAfterFilterChange();
-  }
-
-  applyFilterChange(type: LogFieldType, value: string[] | string) {
+  applyFilterChange(
+    type: LogFieldType,
+    value: string[] | string,
+    flags: FilterFlag[],
+  ) {
     if (value.length > 0) {
       this.filterPredicates.set(
         type,
-        this.makeLogFilterPredicate(type, value, []),
+        this.makeLogFilterPredicate(type, value, flags),
       );
     } else {
       this.filterPredicates.delete(type);
     }
-    this.updateEntriesAfterFilterChange();
-  }
-
-  private updateEntriesAfterFilterChange() {
     this.updateFilteredEntries();
     this.currentIndex = this.getCurrentTracePositionIndex();
     if (

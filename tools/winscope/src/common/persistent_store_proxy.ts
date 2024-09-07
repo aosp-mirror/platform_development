@@ -22,7 +22,7 @@ export class PersistentStoreProxy {
     defaultState: T,
     storage: Store,
   ): T {
-    const storedState = JSON.parse(storage.get(key) ?? '{}', parseMap);
+    const storedState = JSON.parse(storage.get(key) ?? '{}');
     const currentState = mergeDeep({}, structuredClone(defaultState));
     mergeDeepKeepingStructure(currentState, storedState);
     return wrapWithPersistentStoreProxy(key, currentState, storage) as T;
@@ -66,7 +66,7 @@ function wrapWithPersistentStoreProxy(
         (typeof prop === 'number' || !Number.isNaN(Number(prop)))
       ) {
         target[Number(prop)] = newValue;
-        storage.add(storeKey, JSON.stringify(baseObject, stringifyMap));
+        storage.add(storeKey, JSON.stringify(baseObject));
         return true;
       }
       if (!Array.isArray(target) && Array.isArray(newValue)) {
@@ -76,12 +76,12 @@ function wrapWithPersistentStoreProxy(
           storage,
           baseObject,
         );
-        storage.add(storeKey, JSON.stringify(baseObject, stringifyMap));
+        storage.add(storeKey, JSON.stringify(baseObject));
         return true;
       }
       if (!Array.isArray(target) && updatableProps.includes(prop)) {
         (target as any)[prop] = newValue;
-        storage.add(storeKey, JSON.stringify(baseObject, stringifyMap));
+        storage.add(storeKey, JSON.stringify(baseObject));
         return true;
       }
       throw new Error(
@@ -141,21 +141,4 @@ function mergeDeep(target: any, ...sources: any): any {
   }
 
   return mergeDeep(target, ...sources);
-}
-
-export function stringifyMap(key: string, value: any) {
-  if (value instanceof Map) {
-    return {
-      type: 'Map',
-      value: [...value],
-    };
-  }
-  return value;
-}
-
-export function parseMap(key: string, value: any) {
-  if (value && value.type === 'Map') {
-    return new Map(value.value);
-  }
-  return value;
 }

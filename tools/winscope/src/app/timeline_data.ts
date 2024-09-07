@@ -143,30 +143,6 @@ export class TimelineData {
       return;
     }
 
-    if (this.firstEntry && position) {
-      if (
-        this.firstEntry.getTimestamp().getValueNs() >
-        position.timestamp.getValueNs()
-      ) {
-        this.explicitlySetPosition = TracePosition.fromTraceEntry(
-          this.firstEntry,
-        );
-        return;
-      }
-    }
-
-    if (this.lastEntry && position) {
-      if (
-        this.lastEntry.getTimestamp().getValueNs() <
-        position.timestamp.getValueNs()
-      ) {
-        this.explicitlySetPosition = TracePosition.fromTraceEntry(
-          this.lastEntry,
-        );
-        return;
-      }
-    }
-
     this.explicitlySetPosition = position;
   }
 

@@ -143,7 +143,7 @@ class RectSfFactory {
       )
       .setName(name)
       .setCornerRadius(
-        assertDefined(layer.getEagerPropertyByName('cornerRadius')).getValue(),
+        layer.getEagerPropertyByName('cornerRadius')?.getValue() ?? 0,
       )
       .setTransform(
         Transform.from(assertDefined(layer.getEagerPropertyByName('transform')))

@@ -17,7 +17,6 @@
 import {ClipboardModule} from '@angular/cdk/clipboard';
 import {DragDropModule} from '@angular/cdk/drag-drop';
 import {CdkMenuModule} from '@angular/cdk/menu';
-import {OverlayModule} from '@angular/cdk/overlay';
 import {ScrollingModule} from '@angular/cdk/scrolling';
 import {CommonModule} from '@angular/common';
 import {HttpClientModule} from '@angular/common/http';
@@ -186,7 +185,6 @@ import {GlobalErrorHandler} from './global_error_handler';
     CdkMenuModule,
     MatDialogModule,
     MatTableModule,
-    OverlayModule,
   ],
   providers: [Title, {provide: ErrorHandler, useClass: GlobalErrorHandler}],
   schemas: [CUSTOM_ELEMENTS_SCHEMA],

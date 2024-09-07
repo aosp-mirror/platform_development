@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 import {ClipboardModule} from '@angular/cdk/clipboard';
-import {OverlayModule} from '@angular/cdk/overlay';
 import {CommonModule} from '@angular/common';
 import {HttpClientModule} from '@angular/common/http';
 import {ChangeDetectionStrategy} from '@angular/core';
@@ -108,7 +107,6 @@ describe('AppComponent', () => {
         HttpClientModule,
         MatListModule,
         MatProgressBarModule,
-        OverlayModule,
       ],
       declarations: [
         AdbProxyComponent,

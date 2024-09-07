@@ -109,13 +109,7 @@ pub enum TargetKind {
 pub fn parse_cargo_metadata_str(cargo_metadata: &str, cfg: &VariantConfig) -> Result<Vec<Crate>> {
     let metadata =
         serde_json::from_str(cargo_metadata).context("failed to parse cargo metadata")?;
-    parse_cargo_metadata(
-        &metadata,
-        &cfg.features,
-        &cfg.extra_cfg,
-        cfg.tests,
-        &cfg.workspace_excludes,
-    )
+    parse_cargo_metadata(&metadata, &cfg.features, &cfg.extra_cfg, cfg.tests)
 }
 
 fn parse_cargo_metadata(
@@ -123,13 +117,10 @@ fn parse_cargo_metadata(
     features: &Option<Vec<String>>,
     cfgs: &[String],
     include_tests: bool,
-    workspace_excludes: &[String],
 ) -> Result<Vec<Crate>> {
     let mut crates = Vec::new();
     for package in &metadata.packages {
-        if !metadata.workspace_members.contains(&package.id)
-            || workspace_excludes.contains(&package.name)
-        {
+        if !metadata.workspace_members.contains(&package.id) {
             continue;
         }
 
@@ -283,11 +274,7 @@ fn make_extern(packages: &[PackageMetadata], dependency: &DependencyMetadata) ->
         bail!("Package {} didn't have any library or proc-macro targets", dependency.name);
     };
     let lib_name = target.name.replace('-', "_");
-    // This is ugly but looking at the source path is the easiest way to tell if the raw
-    // crate name uses a hyphen instead of an underscore. It won't work if it uses both.
-    let raw_name = target.name.replace('_', "-");
-    let src_path = target.src_path.to_str().expect("failed to convert src_path to string");
-    let raw_name = if src_path.contains(&raw_name) { raw_name } else { lib_name.clone() };
+    let raw_name = target.name.clone();
     let name =
         if let Some(rename) = &dependency.rename { rename.clone() } else { lib_name.clone() };
 
@@ -298,6 +285,7 @@ fn make_extern(packages: &[PackageMetadata], dependency: &DependencyMetadata) ->
         } else {
             ExternType::Rust
         };
+
     Ok(Extern { name, lib_name, raw_name, extern_type })
 }
 

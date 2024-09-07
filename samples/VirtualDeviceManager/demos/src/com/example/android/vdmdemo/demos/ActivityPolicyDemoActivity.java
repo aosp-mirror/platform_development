@@ -49,9 +49,4 @@ public final class ActivityPolicyDemoActivity extends AppCompatActivity {
     public void onStartBlockedActivityForResultSelected(View view) {
         mActivityResultLauncher.launch(new Intent(this, BlockedActivity.class));
     }
-
-    /** Handle start secure window activity. */
-    public void onStartSecureWindowDemo(View view) {
-        startActivity(new Intent(this, SecureWindowDemoActivity.class));
-    }
 }

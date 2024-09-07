@@ -14,10 +14,18 @@
  * limitations under the License.
  */
 
-import {Component, EventEmitter, Input, Output} from '@angular/core';
-import {assertDefined} from 'common/assert_utils';
+import {
+  Component,
+  ElementRef,
+  EventEmitter,
+  Inject,
+  Input,
+  Output,
+} from '@angular/core';
 import {FilterFlag} from 'common/filter_flag';
-import {TextFilter} from 'viewers/common/text_filter';
+import {PersistentStoreProxy} from 'common/persistent_store_proxy';
+import {Store} from 'common/store';
+import {TextFilterDetail} from 'viewers/common/viewer_events';
 
 @Component({
   selector: 'search-box',
@@ -26,7 +34,7 @@ import {TextFilter} from 'viewers/common/text_filter';
       <mat-label>{{ label }}</mat-label>
       <input
         matInput
-        [(ngModel)]="textFilter.filterString"
+        [(ngModel)]="filterString"
         (ngModelChange)="onFilterChange()"
         [name]="filterName" />
       <div class="field-suffix" matSuffix>
@@ -70,32 +78,57 @@ import {TextFilter} from 'viewers/common/text_filter';
 })
 export class SearchBoxComponent {
   FilterFlag = FilterFlag;
+  filterString = '';
 
-  @Input() textFilter: TextFilter | undefined = new TextFilter('', []);
+  @Input() store: Store | undefined;
+  @Input() storeKey: string | undefined;
   @Input() label = 'Search';
   @Input() filterName = 'filter';
   @Input() appearance: string | undefined;
   @Input() fontSize = 14;
   @Input() wideField = false;
 
-  @Output() readonly filterChange = new EventEmitter<TextFilter>();
+  @Output() readonly filterChange = new EventEmitter<TextFilterDetail>();
+
+  private filterFlags: FilterFlags = {
+    flags: [],
+  };
+
+  constructor(@Inject(ElementRef) private elementRef: ElementRef) {}
+
+  ngOnInit() {
+    if (this.store && this.storeKey) {
+      this.filterFlags = PersistentStoreProxy.new<FilterFlags>(
+        this.storeKey,
+        this.filterFlags,
+        this.store,
+      );
+    }
+  }
 
   hasFlag(flag: FilterFlag): boolean {
-    return assertDefined(this.textFilter).flags.includes(flag) ?? false;
+    return this.filterFlags.flags.includes(flag);
   }
 
   onFilterFlagClick(event: MouseEvent, flag: FilterFlag) {
     event.stopPropagation();
-    const filter = assertDefined(this.textFilter);
     if (this.hasFlag(flag)) {
-      filter.flags = filter.flags.filter((f) => f !== flag);
+      this.filterFlags.flags = this.filterFlags.flags.filter((f) => f !== flag);
     } else {
-      filter.flags = filter.flags.concat(flag);
+      this.filterFlags.flags = this.filterFlags.flags.concat(flag);
     }
     this.onFilterChange();
   }
 
   onFilterChange() {
-    this.filterChange.emit(this.textFilter);
+    const detail = new TextFilterDetail(
+      this.filterString,
+      this.filterFlags.flags,
+    );
+    this.filterChange.emit(detail);
   }
+}
+
+interface FilterFlags {
+  flags: FilterFlag[];
 }

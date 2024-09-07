@@ -56,24 +56,12 @@ describe('ViewerMediaBasedComponent', () => {
   });
 
   it('renders title correctly', () => {
-    const title = assertDefined(htmlElement.querySelector('.overlay-title'));
-    expect(title.textContent).toEqual('Screen recording');
+    const title = assertDefined(htmlElement.querySelector('.header'));
+    expect(title.innerHTML).toContain('Screen recording');
 
     component.titles = ['Screenshot'];
     fixture.detectChanges();
-    expect(title.textContent).toEqual('Screenshot');
-
-    component.titles = ['Screenshot.png'];
-    fixture.detectChanges();
-    expect(title.textContent).toEqual('Screenshot');
-
-    component.titles = ['Screenshot.png (parent.zip)'];
-    fixture.detectChanges();
-    expect(title.textContent).toEqual('Screenshot');
-
-    component.titles = ['Screenshot (parent.zip)'];
-    fixture.detectChanges();
-    expect(title.textContent).toEqual('Screenshot');
+    expect(title.innerHTML).toContain('Screenshot');
   });
 
   it('can be minimized and maximized', () => {

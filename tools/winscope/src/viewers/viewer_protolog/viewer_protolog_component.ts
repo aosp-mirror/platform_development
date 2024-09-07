@@ -31,7 +31,8 @@ import {UiData} from './ui_data';
         [currentIndex]="inputData?.currentIndex"
         [entries]="inputData?.entries"
         [filters]="inputData?.filters"
-        [traceType]="${TraceType.PROTO_LOG}">
+        [traceType]="${TraceType.PROTO_LOG}"
+        [store]="store">
       </log-view>
     </div>
   `,

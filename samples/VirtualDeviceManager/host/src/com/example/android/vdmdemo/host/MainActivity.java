@@ -16,13 +16,11 @@
 
 package com.example.android.vdmdemo.host;
 
-import android.Manifest;
 import android.app.AlertDialog;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
-import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.util.Log;
@@ -33,11 +31,8 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.GridView;
 
-import androidx.activity.result.ActivityResultLauncher;
-import androidx.activity.result.contract.ActivityResultContracts.RequestPermission;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
-import androidx.core.content.ContextCompat;
 
 import dagger.hilt.android.AndroidEntryPoint;
 
@@ -55,18 +50,6 @@ public class MainActivity extends Hilt_MainActivity {
     private Button mHomeDisplayButton = null;
     private Button mMirrorDisplayButton = null;
     private LauncherAdapter mLauncherAdapter = null;
-
-    private final ActivityResultLauncher<String> mRequestPermissionLauncher =
-            registerForActivityResult(new RequestPermission(), isGranted -> {
-                // no-op
-            });
-
-    private final ActivityResultLauncher<String> mVdmServicePermissionLauncher =
-            registerForActivityResult(new RequestPermission(), isGranted -> {
-                if (mVdmService == null) {
-                    attemptStartVdmService();
-                }
-            });
 
     private final ServiceConnection mServiceConnection =
             new ServiceConnection() {
@@ -155,16 +138,10 @@ public class MainActivity extends Hilt_MainActivity {
     @Override
     protected void onStart() {
         super.onStart();
-        attemptStartVdmService();
-    }
-
-    @Override
-    protected void onResume() {
-        super.onResume();
-        if (ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO)
-                == PackageManager.PERMISSION_DENIED) {
-            mRequestPermissionLauncher.launch(Manifest.permission.RECORD_AUDIO);
-        }
+        Intent intent = new Intent(this, VdmService.class);
+        Log.i(TAG, "Starting Vdm Host service");
+        startForegroundService(intent);
+        bindService(intent, mServiceConnection, Context.BIND_AUTO_CREATE);
     }
 
     @Override
@@ -174,26 +151,6 @@ public class MainActivity extends Hilt_MainActivity {
             mVdmService.setVirtualDeviceListener(null);
         }
         unbindService(mServiceConnection);
-    }
-
-    private void attemptStartVdmService() {
-        // Need NEARBY_WIFI_DEVICES for WifiAware
-        if (ContextCompat.checkSelfPermission(this, Manifest.permission.NEARBY_WIFI_DEVICES)
-                == PackageManager.PERMISSION_DENIED) {
-            mVdmServicePermissionLauncher.launch(Manifest.permission.NEARBY_WIFI_DEVICES);
-            return;
-        }
-
-        // Need POST_NOTIFICATIONS for the foreground Service Notification
-        if (ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS)
-                == PackageManager.PERMISSION_DENIED) {
-            mVdmServicePermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS);
-            return;
-        }
-        Log.i(TAG, "Starting Vdm Host service");
-        Intent intent = new Intent(this, VdmService.class);
-        startForegroundService(intent);
-        bindService(intent, mServiceConnection, Context.BIND_AUTO_CREATE);
     }
 
     private void updateLauncherVisibility(boolean virtualDeviceActive) {

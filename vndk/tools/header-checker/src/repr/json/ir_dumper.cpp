@@ -46,31 +46,6 @@ static void AddRecordKind(JsonObject &record_type,
   }
 }
 
-static void AddAvailabilityAttrs(JsonObject &decl,
-                                 const HasAvailabilityAttrs *decl_ir) {
-  if (decl_ir->GetAvailabilityAttrs().empty()) {
-    return;
-  }
-  JsonArray attrs;
-  for (auto &&attr_ir : decl_ir->GetAvailabilityAttrs()) {
-    JsonObject attr;
-    if (auto introduced = attr_ir.GetIntroduced(); introduced.has_value()) {
-      attr.Set("introduced_major", (uint64_t)introduced.value());
-    }
-    if (auto deprecated = attr_ir.GetDeprecated(); deprecated.has_value()) {
-      attr.Set("deprecated_major", (uint64_t)deprecated.value());
-    }
-    if (auto obsoleted = attr_ir.GetObsoleted(); obsoleted.has_value()) {
-      attr.Set("obsoleted_major", (uint64_t)obsoleted.value());
-    }
-    if (attr_ir.IsUnavailable()) {
-      attr.Set("unavailable", true);
-    }
-    attrs.append(std::move(attr));
-  }
-  decl.Set("availability_attrs", attrs);
-}
-
 static void AddVtableComponentKind(JsonObject &vtable_component,
                                    VTableComponentIR::Kind value) {
   if (value != default_vtable_component_kind_ir) {
@@ -126,7 +101,6 @@ static JsonObject ConvertRecordFieldIR(const RecordFieldIR *record_field_ir) {
   record_field.Set("field_offset", (uint64_t)record_field_ir->GetOffset());
   record_field.Set("is_bit_field", record_field_ir->IsBitField());
   record_field.Set("bit_width", (uint64_t)record_field_ir->GetBitWidth());
-  AddAvailabilityAttrs(record_field, record_field_ir);
   return record_field;
 }
 
@@ -189,7 +163,6 @@ static JsonObject ConvertRecordTypeIR(const RecordTypeIR *recordp) {
   AddBaseSpecifiers(record_type, recordp);
   AddVTableLayout(record_type, recordp);
   AddTemplateInfo(record_type, recordp);
-  AddAvailabilityAttrs(record_type, recordp);
   return record_type;
 }
 
@@ -227,7 +200,6 @@ static JsonObject ConvertFunctionIR(const FunctionIR *functionp) {
   function.Set("function_name", functionp->GetName());
   AddFunctionParametersAndSetReturnType(function, functionp);
   AddTemplateInfo(function, functionp);
-  AddAvailabilityAttrs(function, functionp);
   return function;
 }
 
@@ -241,7 +213,6 @@ static JsonObject ConvertEnumFieldIR(const EnumFieldIR *enum_field_ir) {
   } else {
     enum_field_value = Json::UInt64(enum_field_ir->GetUnsignedValue());
   }
-  AddAvailabilityAttrs(enum_field, enum_field_ir);
   return enum_field;
 }
 
@@ -259,7 +230,6 @@ static JsonObject ConvertEnumTypeIR(const EnumTypeIR *enump) {
   enum_type.Set("underlying_type", enump->GetUnderlyingType());
   AddTypeInfo(enum_type, enump);
   AddEnumFields(enum_type, enump);
-  AddAvailabilityAttrs(enum_type, enump);
   return enum_type;
 }
 
@@ -277,7 +247,6 @@ static JsonObject ConvertGlobalVarIR(const GlobalVarIR *global_varp) {
   if (linker_set_key != referenced_type) {
     global_var.Set("referenced_type", referenced_type);
   }
-  AddAvailabilityAttrs(global_var, global_varp);
   return global_var;
 }
 

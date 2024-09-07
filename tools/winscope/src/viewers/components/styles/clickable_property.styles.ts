@@ -26,7 +26,6 @@ export const inlineButtonStyle = `
     .inline button {
       padding: 0px;
       min-width: fit-content;
-      width: fit-content;
       line-height: normal;
       text-align: left;
     }

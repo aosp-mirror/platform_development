@@ -17,40 +17,40 @@
 import {Color} from 'app/colors';
 
 export const userOptionStyle = `
-  .user-option {
-    line-height: 24px;
-    padding: 0 10px;
-    margin-inline-end: 10px;
-    min-width: fit-content;
-  }
-  .user-option.not-enabled {
-    background-color: var(--disabled-color);
-  }
+    .user-option {
+        line-height: 24px;
+        padding: 0 10px;
+        margin-right: 10px;
+        min-width: fit-content;
+    }
+    .user-option.not-enabled {
+        background-color: var(--disabled-color);
+    }
 
-  .user-option-label {
-    display: flex;
-    flex-direction: row;
-  }
-  .user-option-label.with-chip {
-    align-items: baseline;
-  }
-  .user-option-label:not(.with-chip) {
-    align-items: center;
-  }
-  .user-option .mat-icon {
-    margin-inline-start: 5px;
-  }
+    .user-option-label {
+      display: flex;
+      flex-direction: row;
+    }
+    .user-option-label.with-chip {
+      align-items: baseline;
+    }
+    .user-option-label:not(.with-chip) {
+      align-items: center;
+    }
+    .user-option .mat-icon {
+      margin-left: 5px;
+    }
 
-  .user-option-chip {
-    margin-inline-start: 5px;
-    margin-top: 2px;
-    padding: 0 10px;
-    border-radius: 10px;
-    background-color: ${Color.CHIP_BLUE};
-    font-weight: normal;
-    color: ${Color.TEXT_BLACK};
-    height: 18px;
-    align-items: center;
-    display: flex;
-  }
+    .user-option-chip {
+        margin-left: 5px;
+        margin-top: 2px;
+        padding: 0 10px;
+        border-radius: 10px;
+        background-color: ${Color.CHIP_GRAY};
+        font-weight: normal;
+        color: ${Color.TEXT_BLACK};
+        height: 18px;
+        align-items: center;
+        display: flex;
+      }
 `;

@@ -29,7 +29,6 @@ import {
   LogFieldType,
   LogFieldValue,
 } from 'viewers/common/ui_data_log';
-import {UserOptions} from 'viewers/common/user_options';
 import {Presenter} from './presenter';
 import {TransactionsEntryType, UiData} from './ui_data';
 
@@ -157,9 +156,11 @@ class PresenterTransactionsTest extends AbstractLogViewerPresenterTest<UiData> {
       });
 
       it('includes no op transitions', async () => {
-        await presenter.onFilterChange(LogFieldType.TRANSACTION_TYPE, [
-          TransactionsEntryType.NO_OP,
-        ]);
+        await presenter.onFilterChange(
+          LogFieldType.TRANSACTION_TYPE,
+          [TransactionsEntryType.NO_OP],
+          [],
+        );
         const fieldValues = assertDefined(uiData).entries.map((entry) =>
           getFieldValue(entry, LogFieldType.TRANSACTION_TYPE),
         );
@@ -174,31 +175,6 @@ class PresenterTransactionsTest extends AbstractLogViewerPresenterTest<UiData> {
           expect(getFieldValue(entry, LogFieldType.FLAGS)).toEqual('');
           expect(entry.propertiesTree).toEqual(undefined);
         }
-      });
-
-      it('shows/hides defaults', async () => {
-        const userOptions: UserOptions = {
-          showDiff: {
-            name: 'Show diff',
-            enabled: true,
-          },
-          showDefaults: {
-            name: 'Show defaults',
-            enabled: true,
-          },
-        };
-
-        await presenter.onAppEvent(this.getPositionUpdate());
-        await presenter.onLogEntryClick(this.logEntryClickIndex);
-        expect(
-          assertDefined(uiData.propertiesTree).getAllChildren().length,
-        ).toEqual(6);
-
-        await presenter.onPropertiesUserOptionsChange(userOptions);
-        expect(uiData.propertiesUserOptions).toEqual(userOptions);
-        expect(
-          assertDefined(uiData.propertiesTree).getAllChildren().length,
-        ).toEqual(42);
       });
 
       function getFieldValue(entry: LogEntry, logFieldName: LogFieldType) {

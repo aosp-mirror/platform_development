@@ -27,10 +27,6 @@ describe('ZOrderPathsComputation', () => {
     computation = new ZOrderPathsComputation();
   });
 
-  it('throws error if root not set', () => {
-    expect(() => computation.executeInPlace()).toThrowError();
-  });
-
   it('calculates zOrderPath for tree without rel z parent', () => {
     const hierarchyRoot = new HierarchyTreeBuilder()
       .setId('LayerTraceEntry')

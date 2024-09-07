@@ -68,19 +68,13 @@ import {TimelineData} from './timeline_data';
 import {TracePipeline} from './trace_pipeline';
 
 describe('Mediator', () => {
-  const TIMESTAMP_10 = TimestampConverterUtils.makeRealTimestamp(10n);
-  const TIMESTAMP_11 = TimestampConverterUtils.makeRealTimestamp(11n);
-
-  const POSITION_10 = TracePosition.fromTimestamp(TIMESTAMP_10);
-  const POSITION_11 = TracePosition.fromTimestamp(TIMESTAMP_11);
-
   const traceSf = new TraceBuilder<HierarchyTreeNode>()
     .setType(TraceType.SURFACE_FLINGER)
-    .setTimestamps([TIMESTAMP_10])
+    .setEntries([])
     .build();
   const traceWm = new TraceBuilder<HierarchyTreeNode>()
     .setType(TraceType.WINDOW_MANAGER)
-    .setTimestamps([TIMESTAMP_11])
+    .setEntries([])
     .build();
   const traceDump = new TraceBuilder<HierarchyTreeNode>()
     .setType(TraceType.SURFACE_FLINGER)
@@ -115,6 +109,12 @@ describe('Mediator', () => {
   const viewerDump = new ViewerStub('TitleDump', undefined, traceDump);
   const viewers = [viewerStub0, viewerStub1, viewerOverlay, viewerDump];
   let tracePositionUpdateListeners: WinscopeEventListener[];
+
+  const TIMESTAMP_10 = TimestampConverterUtils.makeRealTimestamp(10n);
+  const TIMESTAMP_11 = TimestampConverterUtils.makeRealTimestamp(11n);
+
+  const POSITION_10 = TracePosition.fromTimestamp(TIMESTAMP_10);
+  const POSITION_11 = TracePosition.fromTimestamp(TIMESTAMP_11);
 
   beforeAll(async () => {
     inputFiles = [
@@ -476,19 +476,25 @@ describe('Mediator', () => {
       tracePipeline.getTimestampConverter().setRealToMonotonicTimeOffsetNs(0n);
       await loadFiles();
       await loadTraceView();
-      const traceSfEntry = assertDefined(
-        tracePipeline.getTraces().getTrace(TraceType.SURFACE_FLINGER),
-      ).getEntry(2);
 
       // receive timestamp
       resetSpyCalls();
       await mediator.onWinscopeEvent(
-        new RemoteToolTimestampReceived(() => traceSfEntry.getTimestamp()),
+        new RemoteToolTimestampReceived(() => TIMESTAMP_10),
       );
-
       checkTracePositionUpdateEvents(
         [viewerStub0, viewerOverlay, timelineComponent],
-        TracePosition.fromTraceEntry(traceSfEntry),
+        POSITION_10,
+      );
+
+      // receive timestamp
+      resetSpyCalls();
+      await mediator.onWinscopeEvent(
+        new RemoteToolTimestampReceived(() => TIMESTAMP_11),
+      );
+      checkTracePositionUpdateEvents(
+        [viewerStub0, viewerOverlay, timelineComponent],
+        POSITION_11,
       );
     });
 
@@ -512,37 +518,24 @@ describe('Mediator', () => {
     it('defers trace position propagation till traces are loaded and visualized', async () => {
       // ensure converter has been used to create real timestamps
       tracePipeline.getTimestampConverter().makeTimestampFromRealNs(0n);
-
-      // load files but do not load trace view
-      await loadFiles();
-      expect(timelineComponent.onWinscopeEvent).not.toHaveBeenCalled();
-      const traceSf = assertDefined(
-        tracePipeline.getTraces().getTrace(TraceType.SURFACE_FLINGER),
-      );
-
       // keep timestamp for later
       await mediator.onWinscopeEvent(
-        new RemoteToolTimestampReceived(() =>
-          traceSf.getEntry(1).getTimestamp(),
-        ),
+        new RemoteToolTimestampReceived(() => TIMESTAMP_10),
       );
       expect(timelineComponent.onWinscopeEvent).not.toHaveBeenCalled();
 
       // keep timestamp for later (replace previous one)
       await mediator.onWinscopeEvent(
-        new RemoteToolTimestampReceived(() =>
-          traceSf.getEntry(2).getTimestamp(),
-        ),
+        new RemoteToolTimestampReceived(() => TIMESTAMP_11),
       );
       expect(timelineComponent.onWinscopeEvent).not.toHaveBeenCalled();
 
       // apply timestamp
+      await loadFiles();
       await loadTraceView();
 
       expect(timelineComponent.onWinscopeEvent).toHaveBeenCalledWith(
-        makeExpectedTracePositionUpdate(
-          TracePosition.fromTraceEntry(traceSf.getEntry(2)),
-        ),
+        makeExpectedTracePositionUpdate(POSITION_11),
       );
     });
   });

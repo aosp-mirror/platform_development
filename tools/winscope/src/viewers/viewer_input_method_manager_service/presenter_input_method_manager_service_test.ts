@@ -23,13 +23,12 @@ import {
   PropertyTreeNode,
 } from 'trace/tree_node/property_tree_node';
 import {AbstractPresenterInputMethodTest} from 'viewers/common/abstract_presenter_input_method_test';
-import {TextFilter} from 'viewers/common/text_filter';
 import {PresenterInputMethodManagerService} from './presenter_input_method_manager_service';
 
 class PresenterInputMethodManagerServiceTest extends AbstractPresenterInputMethodTest {
   override readonly numberOfDefaultProperties = 1;
   override readonly numberOfNonDefaultProperties = 2;
-  override readonly propertiesFilter = new TextFilter('elapsedNanos', []);
+  override readonly propertiesFilterString = 'elapsedNanos';
   override readonly numberOfFilteredProperties = 1;
 
   protected override readonly PresenterInputMethod =

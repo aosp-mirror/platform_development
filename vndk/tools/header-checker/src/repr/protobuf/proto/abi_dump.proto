@@ -61,15 +61,6 @@ message FunctionType {
   repeated ParamDecl parameters = 3;
 }
 
-message AvailabilityAttr {
-  // A version tuple consists of major, minor, subminor, and build.
-  // This tool dumps the major version only.
-  optional uint32 introduced_major = 1;
-  optional uint32 deprecated_major = 2;
-  optional uint32 obsoleted_major = 3;
-  optional bool unavailable = 4;
-}
-
 message FunctionDecl {
   // Return type reference
   optional string return_type = 1;
@@ -79,7 +70,6 @@ message FunctionDecl {
   optional TemplateInfo template_info = 5;
   optional string linker_set_key = 6;
   optional AccessSpecifier access = 7 [default = public_access];
-  repeated AvailabilityAttr availability_attrs = 8;
 }
 
 message ParamDecl {
@@ -95,13 +85,11 @@ message RecordFieldDecl {
   optional AccessSpecifier access = 4 [default = public_access];
   optional bool is_bit_field = 5;
   optional uint64 bit_width = 6;
-  repeated AvailabilityAttr availability_attrs = 7;
 }
 
 message EnumFieldDecl {
   optional int64 enum_field_value = 1;  // assumption: fits int64
   optional string name = 3;
-  repeated AvailabilityAttr availability_attrs = 4;
 }
 
 message TemplateInfo {
@@ -151,7 +139,6 @@ message RecordType {
   optional AccessSpecifier access = 8 [default = public_access];
   optional bool is_anonymous = 9;
   optional RecordKind record_kind = 10 [default = struct_kind];
-  repeated AvailabilityAttr availability_attrs = 11;
 }
 
 message EnumType {
@@ -159,7 +146,6 @@ message EnumType {
   optional string underlying_type = 2;
   repeated EnumFieldDecl enum_fields = 3;
   optional AccessSpecifier access = 4 [default = public_access];
-  repeated AvailabilityAttr availability_attrs = 5;
 }
 
 message GlobalVarDecl {
@@ -168,7 +154,6 @@ message GlobalVarDecl {
   optional string linker_set_key = 3;
   optional string referenced_type = 4;
   optional AccessSpecifier access = 5 [default = public_access];
-  repeated AvailabilityAttr availability_attrs = 6;
 }
 
 enum ElfSymbolBinding {

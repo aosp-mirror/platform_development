@@ -17,7 +17,6 @@
 import {assertDefined} from 'common/assert_utils';
 import {Rect} from 'common/geometry/rect';
 import {InMemoryStorage} from 'common/in_memory_storage';
-import {Store} from 'common/store';
 import {TracePositionUpdate} from 'messaging/winscope_event';
 import {TraceBuilder} from 'test/unit/trace_builder';
 import {UnitTestUtils} from 'test/unit/utils';
@@ -28,7 +27,6 @@ import {HierarchyTreeNode} from 'trace/tree_node/hierarchy_tree_node';
 import {NotifyHierarchyViewCallbackType} from 'viewers/common/abstract_hierarchy_viewer_presenter';
 import {AbstractHierarchyViewerPresenterTest} from 'viewers/common/abstract_hierarchy_viewer_presenter_test';
 import {DiffType} from 'viewers/common/diff_type';
-import {TextFilter} from 'viewers/common/text_filter';
 import {UiHierarchyTreeNode} from 'viewers/common/ui_hierarchy_tree_node';
 import {UiTreeUtils} from 'viewers/common/ui_tree_utils';
 import {Presenter} from './presenter';
@@ -50,7 +48,7 @@ class PresenterWindowManagerTest extends AbstractHierarchyViewerPresenterTest<Ui
   override readonly numberOfDefaultProperties = 29;
   override readonly numberOfNonDefaultProperties = 21;
   override readonly expectedFirstRect = new Rect(0, 0, 1080, 2400);
-  override readonly propertiesFilter = new TextFilter('requested', []);
+  override readonly propertiesFilterString = 'requested';
   override readonly expectedTotalRects = 12;
   override readonly expectedVisibleRects = 7;
   override readonly treeNodeLongName =
@@ -58,7 +56,7 @@ class PresenterWindowManagerTest extends AbstractHierarchyViewerPresenterTest<Ui
   override readonly treeNodeShortName =
     'com.google.(...).NexusLauncherActivity';
   override readonly numberOfFilteredProperties = 2;
-  override readonly hierarchyFilter = new TextFilter('ScreenDecor', []);
+  override readonly hierarchyFilterString = 'ScreenDecor';
   override readonly expectedHierarchyChildrenAfterStringFilter = 2;
   override readonly propertyWithDiff = 'animator';
   override readonly expectedPropertyDiffType = DiffType.ADDED;
@@ -107,27 +105,13 @@ class PresenterWindowManagerTest extends AbstractHierarchyViewerPresenterTest<Ui
     return new Presenter(trace, traces, new InMemoryStorage(), callback);
   }
 
-  override createPresenterWithCorruptedTrace(
-    callback: NotifyHierarchyViewCallbackType<UiData>,
-  ): Presenter {
-    const trace = new TraceBuilder<HierarchyTreeNode>()
-      .setType(TraceType.WINDOW_MANAGER)
-      .setEntries([assertDefined(this.selectedTree)])
-      .setIsCorrupted(true)
-      .build();
-    const traces = new Traces();
-    traces.addTrace(trace);
-    return new Presenter(trace, traces, new InMemoryStorage(), callback);
-  }
-
   override createPresenter(
     callback: NotifyHierarchyViewCallbackType<UiData>,
-    storage: Store,
   ): Presenter {
     const traces = new Traces();
     const trace = assertDefined(this.trace);
     traces.addTrace(trace);
-    return new Presenter(trace, traces, storage, callback);
+    return new Presenter(trace, traces, new InMemoryStorage(), callback);
   }
 
   override getPositionUpdate(): TracePositionUpdate {

@@ -60,7 +60,6 @@ import {UiData} from './ui_data';
         [dependencies]="inputData?.dependencies ?? []"
         [highlightedItem]="inputData?.highlightedItem ?? ''"
         [pinnedItems]="inputData?.pinnedItems ?? []"
-        [textFilter]="inputData?.hierarchyFilter"
         [store]="store"
         [userOptions]="inputData?.hierarchyUserOptions ?? {}"
         [rectIdToShowState]="inputData?.rectIdToShowState"
@@ -75,7 +74,6 @@ import {UiData} from './ui_data';
         [store]="store"
         [isProtoDump]="false"
         placeholderText="No selected item."
-        [textFilter]="inputData?.propertiesFilter"
         (collapseButtonClicked)="sections.onCollapseStateChange(CollapsibleSectionType.PROPERTIES, true)"></properties-view>
     </div>
   `,

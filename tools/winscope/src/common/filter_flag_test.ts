@@ -17,13 +17,6 @@
 import {FilterFlag, makeFilterPredicate} from './filter_flag';
 
 describe('makeFilterPredicate', () => {
-  it('with empty filter string', () => {
-    const predicate = makeFilterPredicate('', []);
-    expect(predicate('')).toBeTrue();
-    expect(predicate('foobar')).toBeTrue();
-    expect(predicate(' ')).toBeTrue();
-  });
-
   it('without flags', () => {
     const predicate = makeFilterPredicate('foo', []);
     expect(predicate('foo')).toBeTrue();

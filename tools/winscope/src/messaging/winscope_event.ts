@@ -18,7 +18,6 @@ import {assertTrue} from 'common/assert_utils';
 import {Timestamp} from 'common/time';
 import {Trace, TraceEntry} from 'trace/trace';
 import {TracePosition} from 'trace/trace_position';
-import {TraceType} from 'trace/trace_type';
 import {AdbFiles} from 'trace_collection/adb_files';
 import {View, Viewer, ViewType} from 'viewers/viewer';
 
@@ -41,8 +40,6 @@ export enum WinscopeEventType {
   ACTIVE_TRACE_CHANGED,
   DARK_MODE_TOGGLED,
   NO_TRACE_TARGETS_SELECTED,
-  FILTER_PRESET_SAVE_REQUEST,
-  FILTER_PRESET_APPLY_REQUEST,
 }
 
 interface TypeMap {
@@ -64,8 +61,6 @@ interface TypeMap {
   [WinscopeEventType.ACTIVE_TRACE_CHANGED]: ActiveTraceChanged;
   [WinscopeEventType.DARK_MODE_TOGGLED]: DarkModeToggled;
   [WinscopeEventType.NO_TRACE_TARGETS_SELECTED]: NoTraceTargetsSelected;
-  [WinscopeEventType.FILTER_PRESET_SAVE_REQUEST]: FilterPresetSaveRequest;
-  [WinscopeEventType.FILTER_PRESET_APPLY_REQUEST]: FilterPresetApplyRequest;
 }
 
 export abstract class WinscopeEvent {
@@ -222,18 +217,4 @@ export class DarkModeToggled extends WinscopeEvent {
 
 export class NoTraceTargetsSelected extends WinscopeEvent {
   override readonly type = WinscopeEventType.NO_TRACE_TARGETS_SELECTED;
-}
-
-export class FilterPresetSaveRequest extends WinscopeEvent {
-  override readonly type = WinscopeEventType.FILTER_PRESET_SAVE_REQUEST;
-  constructor(readonly name: string, readonly traceType: TraceType) {
-    super();
-  }
-}
-
-export class FilterPresetApplyRequest extends WinscopeEvent {
-  override readonly type = WinscopeEventType.FILTER_PRESET_APPLY_REQUEST;
-  constructor(readonly name: string, readonly traceType: TraceType) {
-    super();
-  }
 }

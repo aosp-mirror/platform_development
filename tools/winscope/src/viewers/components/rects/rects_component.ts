@@ -172,9 +172,7 @@ import {ShadingMode} from './shading_mode';
               </mat-select-trigger>
               <mat-option
                 *ngFor="let display of internalDisplays"
-                [value]="display"
-                [matTooltip]="'Display Id: ' + display.displayId"
-                matTooltipPosition="right">
+                [value]="display">
                 <div class="option-label">
                   <button
                     mat-flat-button

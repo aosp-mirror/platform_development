@@ -12,9 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-//! Data structures for representing a crate name and version, which can be
-//! used as a map key.
-
 use std::{
     borrow::Borrow,
     cmp::Ordering,
@@ -26,24 +23,29 @@ use semver::{BuildMetadata, Prerelease, Version, VersionReq};
 static MIN_VERSION: Version =
     Version { major: 0, minor: 0, patch: 0, pre: Prerelease::EMPTY, build: BuildMetadata::EMPTY };
 
-/// A name and version pair trait.
 pub trait NamedAndVersioned {
-    /// Returns the name.
     fn name(&self) -> &str;
-    /// Returns the version.
     fn version(&self) -> &Version;
-    /// Returns a reference that can be used as a map key.
-    fn key(&self) -> NameAndVersionRef;
+    fn key<'a>(&'a self) -> NameAndVersionRef<'a>;
+    fn crate_archive_url(&self) -> String {
+        format!(
+            "https://static.crates.io/crates/{}/{}-{}.crate",
+            self.name(),
+            self.name(),
+            self.version()
+        )
+    }
+    fn crates_io_homepage(&self) -> String {
+        format!("https://crates.io/crates/{}", self.name())
+    }
 }
 
-/// An owned namd and version.
 #[derive(Debug, PartialOrd, Ord, PartialEq, Eq, Hash, Clone)]
 pub struct NameAndVersion {
     name: String,
     version: Version,
 }
 
-/// A reference to a name and version.
 #[derive(Copy, Clone, Debug, PartialOrd, Ord, PartialEq, Eq, Hash)]
 pub struct NameAndVersionRef<'a> {
     name: &'a str,
@@ -51,15 +53,12 @@ pub struct NameAndVersionRef<'a> {
 }
 
 impl NameAndVersion {
-    /// Constructor that takes ownership of args.
     pub fn new(name: String, version: Version) -> Self {
         NameAndVersion { name, version }
     }
-    /// Constructor that clones a reference.
     pub fn from(nv: &impl NamedAndVersioned) -> Self {
         NameAndVersion { name: nv.name().to_string(), version: nv.version().clone() }
     }
-    /// The lowest possible version, used to find the first key in a map with this name.
     pub fn min_version(name: String) -> Self {
         NameAndVersion { name, version: MIN_VERSION.clone() }
     }
@@ -77,12 +76,11 @@ impl NamedAndVersioned for NameAndVersion {
     fn version(&self) -> &Version {
         &self.version
     }
-    fn key(&self) -> NameAndVersionRef {
+    fn key<'k>(&'k self) -> NameAndVersionRef<'k> {
         NameAndVersionRef::new(self.name(), self.version())
     }
 }
 
-#[allow(missing_docs)]
 impl<'a> NameAndVersionRef<'a> {
     pub fn new(name: &'a str, version: &'a Version) -> Self {
         NameAndVersionRef { name, version }
@@ -96,7 +94,7 @@ impl<'a> NamedAndVersioned for NameAndVersionRef<'a> {
     fn version(&self) -> &Version {
         self.version
     }
-    fn key(&self) -> NameAndVersionRef {
+    fn key<'k>(&'k self) -> NameAndVersionRef<'k> {
         *self
     }
 }
@@ -117,7 +115,7 @@ impl<'a> Eq for (dyn NamedAndVersioned + 'a) {}
 
 impl<'a> PartialOrd for (dyn NamedAndVersioned + 'a) {
     fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-        Some(self.cmp(other))
+        self.key().partial_cmp(&other.key())
     }
 }
 
@@ -133,9 +131,7 @@ impl<'a> Hash for (dyn NamedAndVersioned + 'a) {
     }
 }
 
-/// A trait for determining semver compatibility.
 pub trait IsUpgradableTo: NamedAndVersioned {
-    /// Returns true if the object version is semver-compatible with 'other'.
     fn is_upgradable_to(&self, other: &impl NamedAndVersioned) -> bool {
         self.name() == other.name()
             && VersionReq::parse(&self.version().to_string())
@@ -143,7 +139,7 @@ pub trait IsUpgradableTo: NamedAndVersioned {
     }
 }
 
-impl IsUpgradableTo for NameAndVersion {}
+impl<'a> IsUpgradableTo for NameAndVersion {}
 impl<'a> IsUpgradableTo for NameAndVersionRef<'a> {}
 
 #[cfg(test)]

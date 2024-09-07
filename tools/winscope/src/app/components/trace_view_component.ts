@@ -15,23 +15,17 @@
  */
 
 import {
-  ChangeDetectorRef,
   Component,
   ElementRef,
   Inject,
   Input,
-  NgZone,
   SimpleChanges,
 } from '@angular/core';
-import {FormControl, ValidationErrors, Validators} from '@angular/forms';
-import {overlayPanelStyles} from 'app/styles/overlay_panel.styles';
 import {assertDefined} from 'common/assert_utils';
 import {FunctionUtils} from 'common/function_utils';
-import {Store} from 'common/store';
+import {PersistentStore} from 'common/persistent_store';
 import {Analytics} from 'logging/analytics';
 import {
-  FilterPresetApplyRequest,
-  FilterPresetSaveRequest,
   TabbedViewSwitched,
   WinscopeEvent,
   WinscopeEventType,
@@ -42,8 +36,6 @@ import {
 } from 'messaging/winscope_event_emitter';
 import {WinscopeEventListener} from 'messaging/winscope_event_listener';
 import {TRACE_INFO} from 'trace/trace_info';
-import {TraceType} from 'trace/trace_type';
-import {inlineButtonStyle} from 'viewers/components/styles/clickable_property.styles';
 import {View, Viewer, ViewType} from 'viewers/viewer';
 
 interface Tab {
@@ -57,95 +49,29 @@ interface Tab {
       <div class="overlay-container">
       </div>
       <div class="header-items-wrapper">
-        <div class="trace-tabs-wrapper header-items-wrapper">
           <nav mat-tab-nav-bar class="tabs-navigation-bar">
-            <a
-                *ngFor="let tab of tabs; last as isLast"
-                mat-tab-link
-                [active]="isCurrentActiveTab(tab)"
-                [class.active]="isCurrentActiveTab(tab)"
-                [matTooltip]="getTabTooltip(tab.view)"
-                matTooltipPosition="above"
-                [matTooltipShowDelay]="300"
-                (click)="onTabClick(tab)"
-                (focus)="$event.target.blur()"
-                [class.last]="isLast"
-                class="tab">
-              <mat-icon
-                class="icon"
-                [style]="{color: TRACE_INFO[tab.view.traces[0].type].color, marginRight: '0.5rem'}">
-                  {{ TRACE_INFO[tab.view.traces[0].type].icon }}
-              </mat-icon>
-              <span>
-                {{ getTitle(tab.view) }}
-              </span>
-            </a>
+              <a
+                  *ngFor="let tab of tabs; last as isLast"
+                  mat-tab-link
+                  [active]="isCurrentActiveTab(tab)"
+                  [class.active]="isCurrentActiveTab(tab)"
+                  [matTooltip]="getTabTooltip(tab.view)"
+                  matTooltipPosition="above"
+                  [matTooltipShowDelay]="300"
+                  (click)="onTabClick(tab)"
+                  (focus)="$event.target.blur()"
+                  [class.last]="isLast"
+                  class="tab">
+                <mat-icon
+                  class="icon"
+                  [style]="{color: TRACE_INFO[tab.view.traces[0].type].color, marginRight: '0.5rem'}">
+                    {{ TRACE_INFO[tab.view.traces[0].type].icon }}
+                </mat-icon>
+                <span>
+                  {{ getTitle(tab.view) }}
+                </span>
+              </a>
           </nav>
-        </div>
-
-        <button
-          [disabled]="!currentTabHasFilterPresets()"
-          mat-flat-button
-          cdkOverlayOrigin
-          #filterPresetsTrigger="cdkOverlayOrigin"
-          color="primary"
-          class="filter-presets"
-          (click)="onFilterPresetsClick()">
-          <span class="filter-presets-label">
-            <mat-icon class="material-symbols-outlined">save</mat-icon>
-            <span> Filter Presets </span>
-          </span>
-        </button>
-
-        <ng-template
-          cdkConnectedOverlay
-          [cdkConnectedOverlayOrigin]="filterPresetsTrigger"
-          [cdkConnectedOverlayOpen]="isFilterPresetsPanelOpen"
-          [cdkConnectedOverlayHasBackdrop]="true"
-          cdkConnectedOverlayBackdropClass="cdk-overlay-transparent-backdrop"
-          (backdropClick)="onFilterPresetsClick()"
-        >
-          <div class="overlay-panel filter-presets-panel">
-            <h2 class="overlay-panel-title">
-              <span> FILTER PRESETS </span>
-              <button (click)="onFilterPresetsClick()" class="close-button" mat-icon-button>
-                <mat-icon> close </mat-icon>
-              </button>
-            </h2>
-            <div class="overlay-panel-content">
-              <span class="mat-body-1"> Save the current configuration of filters for this trace type to access later, or select one of the existing configurations below. </span>
-
-              <div class="overlay-panel-section save-section">
-                <span class="mat-body-2 overlay-panel-section-title"> Preset Name </span>
-                <div class="save-field outline-field">
-                  <mat-form-field appearance="outline">
-                    <input matInput [formControl]="filterPresetNameControl" (keydown.enter)="savePreset()"/>
-                    <mat-error *ngIf="filterPresetNameControl.invalid && filterPresetNameControl.value">Preset with that name already exists.</mat-error>
-                  </mat-form-field>
-                  <button mat-flat-button color="primary" [disabled]="filterPresetNameControl.invalid" (click)="savePreset()"> Save </button>
-                </div>
-              </div>
-
-              <mat-divider></mat-divider>
-
-              <div class="overlay-panel-section existing-presets-section">
-                <span class="mat-body-2 overlay-panel-section-title"> Apply a preset </span>
-                <span class="mat-body-1" *ngIf="getCurrentFilterPresets().length === 0"> No existing presets found. </span>
-                <div *ngFor="let preset of getCurrentFilterPresets()" class="existing-preset inline">
-                  <button
-                      mat-button
-                      color="primary"
-                      (click)="onExistingPresetClick(preset)">
-                    {{ preset.split(".")[0] }}
-                  </button>
-                  <button mat-icon-button class="delete-button" (click)="deletePreset(preset)">
-                    <mat-icon class="material-symbols-outlined"> delete </mat-icon>
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        </ng-template>
       </div>
       <mat-divider></mat-divider>
       <div class="trace-view-content"></div>
@@ -160,10 +86,6 @@ interface Tab {
         display: flex;
         flex-direction: row;
         justify-content: space-between;
-        align-items: center;
-      }
-
-      .trace-tabs-wrapper {
         overflow-x: auto;
       }
 
@@ -191,114 +113,27 @@ interface Tab {
         width: 1px;
         background-color: #C4C0C0;
       }
-
-      .filter-presets {
-        line-height: 24px;
-        padding: 0 10px;
-        margin-inline: 10px;
-        min-width: fit-content;
-        min-height: fit-content;
-      }
-
-      .filter-presets-label {
-        display: flex;
-        flex-direction: row;
-        align-items: center;
-      }
-
-      .filter-presets-label .mat-icon {
-        margin-inline-end: 5px;
-      }
-
-      .filter-presets-panel {
-        max-width: 440px;
-        max-height: 500px;
-        overflow-y: auto;
-        border-radius: 15px;
-      }
-
-      .save-field {
-        display: flex;
-        align-items: center;
-        font-size: 14px;
-        width: 100%;
-      }
-
-      .save-field mat-form-field {
-        width: 100%;
-      }
-
-      .save-field button {
-        height: fit-content;
-        margin-inline-start: 10px;
-      }
-
-      .existing-preset {
-        display: flex;
-        flex-direction: row;
-        justify-content: space-between;
-        align-items: center;
-        width: 100%:
-      }
-
-      .existing-preset:hover {
-        background-color: var(--hover-element-color);
-      }
-
-      .existing-preset:not(:hover) .delete-button {
-        opacity: 0.5;
-      }
     `,
-    overlayPanelStyles,
-    inlineButtonStyle,
   ],
 })
 export class TraceViewComponent
   implements WinscopeEventEmitter, WinscopeEventListener
 {
   @Input() viewers: Viewer[] = [];
-  @Input() store: Store | undefined;
+  @Input() store: PersistentStore | undefined;
 
   TRACE_INFO = TRACE_INFO;
   tabs: Tab[] = [];
-  isFilterPresetsPanelOpen = false;
-  filterPresetNameControl = new FormControl(
-    '',
-    assertDefined(
-      Validators.compose([
-        Validators.required,
-        (control: FormControl) =>
-          this.validateFilterPresetName(
-            control,
-            this.allFilterPresets,
-            (input: string) =>
-              this.makeFilterPresetName(
-                input,
-                assertDefined(this.getCurrentTabTraceType()),
-              ),
-          ),
-      ]),
-    ),
-  );
 
+  private elementRef: ElementRef;
   private currentActiveTab: undefined | Tab;
   private emitAppEvent: EmitEvent = FunctionUtils.DO_NOTHING_ASYNC;
-  private filterPresetsStoreKey = 'filterPresets';
-  private allFilterPresets: string[] = [];
 
-  constructor(
-    @Inject(ElementRef) private elementRef: ElementRef,
-    @Inject(ChangeDetectorRef) private changeDetectorRef: ChangeDetectorRef,
-    @Inject(NgZone) private ngZone: NgZone,
-  ) {}
+  constructor(@Inject(ElementRef) elementRef: ElementRef) {
+    this.elementRef = elementRef;
+  }
 
   ngOnChanges(changes: SimpleChanges) {
-    if (changes['store']?.firstChange) {
-      const storedPresets = this.store?.get(this.filterPresetsStoreKey);
-      if (storedPresets) {
-        this.allFilterPresets = JSON.parse(storedPresets);
-      }
-    }
     this.renderViewsTab(changes['viewers']?.firstChange ?? false);
     this.renderViewsOverlay();
   }
@@ -334,83 +169,6 @@ export class TraceViewComponent
   getTitle(view: View): string {
     const isDump = view.traces.length === 1 && view.traces[0].isDump();
     return view.title + (isDump ? ' Dump' : '');
-  }
-
-  getCurrentFilterPresets(): string[] {
-    const currentTabTraceType = this.getCurrentTabTraceType();
-    if (currentTabTraceType === undefined) return [];
-    return this.allFilterPresets.filter((preset) =>
-      preset.includes(TRACE_INFO[currentTabTraceType].name),
-    );
-  }
-
-  onFilterPresetsClick() {
-    this.ngZone.run(() => {
-      this.isFilterPresetsPanelOpen = !this.isFilterPresetsPanelOpen;
-      this.changeDetectorRef.detectChanges();
-    });
-  }
-
-  async savePreset() {
-    if (this.filterPresetNameControl.invalid) return;
-    await this.ngZone.run(async () => {
-      const value = assertDefined(this.filterPresetNameControl.value);
-      const currentTabTraceType = assertDefined(this.getCurrentTabTraceType());
-      const presetName = this.makeFilterPresetName(value, currentTabTraceType);
-
-      this.allFilterPresets.push(presetName);
-      if (this.store) {
-        this.store?.add(
-          this.filterPresetsStoreKey,
-          JSON.stringify(this.allFilterPresets),
-        );
-      }
-
-      this.filterPresetNameControl.reset();
-      this.changeDetectorRef.detectChanges();
-      await this.emitAppEvent(
-        new FilterPresetSaveRequest(presetName, currentTabTraceType),
-      );
-    });
-  }
-
-  onExistingPresetClick(preset: string) {
-    this.emitAppEvent(
-      new FilterPresetApplyRequest(
-        preset,
-        assertDefined(this.getCurrentTabTraceType()),
-      ),
-    );
-  }
-
-  deletePreset(preset: string) {
-    this.allFilterPresets = this.allFilterPresets.filter((p) => p !== preset);
-    this.store?.clear(preset);
-    this.store?.add(
-      this.filterPresetsStoreKey,
-      JSON.stringify(this.allFilterPresets),
-    );
-    this.filterPresetNameControl.updateValueAndValidity();
-    this.changeDetectorRef.detectChanges();
-  }
-
-  currentTabHasFilterPresets(): boolean {
-    const currentTabTraceType = this.getCurrentTabTraceType();
-    return (
-      currentTabTraceType !== undefined &&
-      [
-        TraceType.SURFACE_FLINGER,
-        TraceType.WINDOW_MANAGER,
-        TraceType.INPUT_METHOD_CLIENTS,
-        TraceType.INPUT_METHOD_MANAGER_SERVICE,
-        TraceType.INPUT_METHOD_SERVICE,
-        TraceType.VIEW_CAPTURE,
-      ].includes(currentTabTraceType)
-    );
-  }
-
-  private getCurrentTabTraceType(): TraceType | undefined {
-    return this.currentActiveTab?.view.traces[0].type;
   }
 
   private renderViewsTab(firstToRender: boolean) {
@@ -488,20 +246,5 @@ export class TraceViewComponent
       );
       await this.emitAppEvent(new TabbedViewSwitched(tab.view));
     }
-  }
-
-  private validateFilterPresetName(
-    control: FormControl,
-    filterPresets: string[],
-    makeFilterPresetName: (input: string) => string,
-  ): ValidationErrors | null {
-    const valid =
-      control.value &&
-      !filterPresets.includes(makeFilterPresetName(control.value));
-    return !valid ? {invalidInput: control.value} : null;
-  }
-
-  private makeFilterPresetName(input: string, traceType: TraceType) {
-    return input + '.' + TRACE_INFO[traceType].name;
   }
 }

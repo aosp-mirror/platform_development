@@ -53,7 +53,6 @@ export class Presenter extends AbstractLogViewerPresenter<UiData> {
   protected override logPresenter = new LogPresenter<TransitionsEntry>(false);
   protected override propertiesPresenter = new PropertiesPresenter(
     {},
-    undefined,
     [],
     [
       new UpdateTransitionChangesNames(

@@ -45,7 +45,6 @@ import {WinscopeEventListener} from 'messaging/winscope_event_listener';
 import {TraceEntry} from 'trace/trace';
 import {TRACE_INFO} from 'trace/trace_info';
 import {TracePosition} from 'trace/trace_position';
-import {TraceType} from 'trace/trace_type';
 import {RequestedTraceTypes} from 'trace_collection/adb_files';
 import {View, Viewer, ViewType} from 'viewers/viewer';
 import {ViewerFactory} from 'viewers/viewer_factory';
@@ -274,20 +273,6 @@ export class Mediator {
       WinscopeEventType.NO_TRACE_TARGETS_SELECTED,
       async (event) => {
         UserNotifier.add(new NoTraceTargetsSelected()).notify();
-      },
-    );
-
-    await event.visit(
-      WinscopeEventType.FILTER_PRESET_SAVE_REQUEST,
-      async (event) => {
-        await this.findViewerByType(event.traceType)?.onWinscopeEvent(event);
-      },
-    );
-
-    await event.visit(
-      WinscopeEventType.FILTER_PRESET_APPLY_REQUEST,
-      async (event) => {
-        await this.findViewerByType(event.traceType)?.onWinscopeEvent(event);
       },
     );
   }
@@ -533,9 +518,5 @@ export class Mediator {
     for (const overlay of overlayViewers) {
       await overlay.onWinscopeEvent(event);
     }
-  }
-
-  private findViewerByType(type: TraceType): Viewer | undefined {
-    return this.viewers.find((viewer) => viewer.getTraces()[0].type === type);
   }
 }

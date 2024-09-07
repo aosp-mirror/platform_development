@@ -24,7 +24,8 @@ import {MatTooltipModule} from '@angular/material/tooltip';
 import {BrowserAnimationsModule} from '@angular/platform-browser/animations';
 import {assertDefined} from 'common/assert_utils';
 import {FilterFlag} from 'common/filter_flag';
-import {TextFilter} from 'viewers/common/text_filter';
+import {InMemoryStorage} from 'common/in_memory_storage';
+import {TextFilterDetail} from 'viewers/common/viewer_events';
 import {SearchBoxComponent} from './search_box_component';
 
 describe('SearchBoxComponent', () => {
@@ -48,7 +49,8 @@ describe('SearchBoxComponent', () => {
     fixture = TestBed.createComponent(SearchBoxComponent);
     component = fixture.componentInstance;
     htmlElement = fixture.nativeElement;
-    component.textFilter = new TextFilter('', []);
+    component.store = new InMemoryStorage();
+    component.storeKey = 'testStoreKey.searchBox';
     fixture.detectChanges();
   });
 
@@ -67,10 +69,10 @@ describe('SearchBoxComponent', () => {
 
   it('handles change in filter', () => {
     const spy = spyOn(component.filterChange, 'emit');
-    expect(component.textFilter?.filterString).toEqual('');
+    expect(component.filterString).toBe('');
     changeFilterString('Test');
-    expect(component.textFilter?.filterString).toEqual('Test');
-    expect(spy).toHaveBeenCalledWith(new TextFilter('Test', []));
+    expect(component.filterString).toBe('Test');
+    expect(spy).toHaveBeenCalledWith(new TextFilterDetail('Test', []));
   });
 
   it('handles change in flags', () => {
@@ -82,23 +84,44 @@ describe('SearchBoxComponent', () => {
     buttons.item(0).click();
     fixture.detectChanges();
     expect(spy).toHaveBeenCalledWith(
-      new TextFilter('', [FilterFlag.MATCH_CASE]),
+      new TextFilterDetail('', [FilterFlag.MATCH_CASE]),
     );
 
     buttons.item(0).click();
     fixture.detectChanges();
-    expect(spy).toHaveBeenCalledWith(new TextFilter('', []));
+    expect(spy).toHaveBeenCalledWith(new TextFilterDetail('', []));
 
     buttons.item(2).click();
     fixture.detectChanges();
     expect(spy).toHaveBeenCalledWith(
-      new TextFilter('', [FilterFlag.USE_REGEX]),
+      new TextFilterDetail('', [FilterFlag.USE_REGEX]),
     );
 
     buttons.item(1).click();
     fixture.detectChanges();
     expect(spy).toHaveBeenCalledWith(
-      new TextFilter('', [FilterFlag.USE_REGEX, FilterFlag.MATCH_WORD]),
+      new TextFilterDetail('', [FilterFlag.USE_REGEX, FilterFlag.MATCH_WORD]),
+    );
+  });
+
+  it('stores flag changes', () => {
+    const button = assertDefined(
+      htmlElement.querySelector<HTMLElement>('.search-box button'),
+    );
+    button.click();
+    fixture.detectChanges();
+
+    const newFixture = TestBed.createComponent(SearchBoxComponent);
+    const newComponent = newFixture.componentInstance;
+    const newHtmlElement = newFixture.nativeElement;
+    newComponent.store = component.store;
+    newComponent.storeKey = component.storeKey;
+    newFixture.detectChanges();
+
+    const spy = spyOn(newComponent.filterChange, 'emit');
+    changeFilterString('Test', newHtmlElement, newFixture);
+    expect(spy).toHaveBeenCalledWith(
+      new TextFilterDetail('Test', [FilterFlag.MATCH_CASE]),
     );
   });
 
