@@ -211,7 +211,7 @@ describe('ZOrderPathsComputation', () => {
       layer2WithPath
         .getEagerPropertyByName('relZChildren')
         ?.getAllChildren()
-        .map((c) => c.getValue()),
+        .map((c) => c.formattedValue()),
     ).toEqual([layer4WithPath.id, layer5WithPath.id]);
     expect(
       layer4WithPath.getEagerPropertyByName('relZChildren'),
