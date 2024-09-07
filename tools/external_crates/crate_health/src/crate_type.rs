@@ -28,7 +28,7 @@ use name_and_version::{IsUpgradableTo, NameAndVersionRef, NamedAndVersioned};
 use rooted_path::RootedPath;
 use semver::Version;
 
-use crate::{copy_dir, ensure_exists_and_empty, CrateError};
+use crate::{copy_dir, ensure_exists_and_empty, generate_android_bps, CrateError};
 
 #[derive(Debug)]
 pub struct Crate {
@@ -122,16 +122,6 @@ impl Crate {
         format!("{}-{}", self.name(), self.version())
     }
 
-    pub fn is_crates_io(&self) -> bool {
-        const NOT_CRATES_IO: &[&str] = &[
-            "external/rust/beto-rust/",                 // Google crates
-            "external/rust/pica/",                      // Google crate
-            "external/rust/crates/webpki/third-party/", // Internal/example code
-            "external/rust/cxx/third-party/",           // Internal/example code
-            "external/rust/cxx/demo/",                  // Internal/example code
-        ];
-        !NOT_CRATES_IO.iter().any(|prefix| self.path().rel().starts_with(prefix))
-    }
     pub fn is_migration_denied(&self) -> bool {
         const MIGRATION_DENYLIST: &[&str] = &[
             "external/rust/crates/openssl/", // It's complicated.
@@ -139,9 +129,9 @@ impl Crate {
         ];
         MIGRATION_DENYLIST.iter().any(|prefix| self.path().rel().starts_with(prefix))
     }
+
     pub fn is_android_bp_healthy(&self) -> bool {
-        !self.is_migration_denied()
-            && self.android_bp().abs().exists()
+        self.android_bp().abs().exists()
             && self.cargo_embargo_json().abs().exists()
             && self.generate_android_bp_success()
             && self.android_bp_unchanged()
@@ -170,6 +160,15 @@ impl Crate {
             remove_dir_all(staging_path.join(".git")?)
                 .with_context(|| "Failed to remove .git".to_string())?;
         }
+        Ok(())
+    }
+
+    pub fn generate_android_bp(&mut self) -> Result<()> {
+        let (_, output) = generate_android_bps([&*self].into_iter())?
+            .into_iter()
+            .next()
+            .ok_or(anyhow!("Failed to get next element"))?;
+        self.set_generate_android_bp_output(output);
         Ok(())
     }
 
@@ -219,34 +218,14 @@ impl Crate {
     pub fn generate_android_bp_output(&self) -> Option<&Output> {
         self.generate_android_bp_output.as_ref()
     }
-    pub fn set_generate_android_bp_output(&mut self, c2a_output: Output) {
-        self.generate_android_bp_output.replace(c2a_output);
+    pub fn set_generate_android_bp_output(&mut self, cargo_embargo_output: Output) {
+        self.generate_android_bp_output.replace(cargo_embargo_output);
     }
     pub fn set_diff_output(&mut self, diff_output: Output) {
         self.android_bp_diff.replace(diff_output);
     }
-    pub fn set_patch_output(&mut self, patch_output: Vec<(String, Output)>) {
-        self.patch_output = patch_output;
-    }
     pub fn patch_output(&self) -> &Vec<(String, Output)> {
         &self.patch_output
-    }
-}
-
-pub trait Migratable {
-    fn is_migration_eligible(&self) -> bool;
-    fn is_migratable(&self) -> bool;
-}
-
-impl Migratable for Crate {
-    fn is_migration_eligible(&self) -> bool {
-        self.is_crates_io()
-            && !self.is_migration_denied()
-            && self.android_bp().abs().exists()
-            && self.cargo_embargo_json().abs().exists()
-    }
-    fn is_migratable(&self) -> bool {
-        self.patch_success() && self.generate_android_bp_success() && self.android_bp_unchanged()
     }
 }
 
@@ -278,7 +257,6 @@ mod tests {
         let krate = Crate::from(cargo_toml)?;
         assert_eq!(krate.name(), "foo");
         assert_eq!(krate.version().to_string(), "1.2.0");
-        assert!(krate.is_crates_io());
         assert_eq!(krate.android_bp().abs(), temp_crate_dir.path().join("Android.bp"));
         assert_eq!(
             krate.cargo_embargo_json().abs(),
