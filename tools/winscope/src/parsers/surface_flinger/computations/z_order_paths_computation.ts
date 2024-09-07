@@ -78,11 +78,14 @@ export class ZOrderPathsComputation implements Computation {
         const existingRelZChildren =
           zParent.getEagerPropertyByName('relZChildren');
         if (existingRelZChildren) {
-          existingRelZChildren.addOrReplaceChild(
+          zParent.addEagerProperty(
             DEFAULT_PROPERTY_TREE_NODE_FACTORY.makeCalculatedProperty(
-              existingRelZChildren.id,
-              `${existingRelZChildren.getAllChildren().length}`,
-              node.id,
+              zParent.id,
+              'relZChildren',
+              existingRelZChildren
+                .getAllChildren()
+                .map((c) => c.getValue())
+                .concat([node.id]),
             ),
           );
         } else {
