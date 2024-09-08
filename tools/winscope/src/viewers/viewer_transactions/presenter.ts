@@ -61,6 +61,7 @@ export class Presenter extends AbstractLogViewerPresenter<UiData> {
       },
       this.storage,
     ),
+    undefined,
     [],
     [new SetRootDisplayNames()],
   );

@@ -27,6 +27,10 @@ describe('ZOrderPathsComputation', () => {
     computation = new ZOrderPathsComputation();
   });
 
+  it('throws error if root not set', () => {
+    expect(() => computation.executeInPlace()).toThrowError();
+  });
+
   it('calculates zOrderPath for tree without rel z parent', () => {
     const hierarchyRoot = new HierarchyTreeBuilder()
       .setId('LayerTraceEntry')
@@ -207,7 +211,7 @@ describe('ZOrderPathsComputation', () => {
       layer2WithPath
         .getEagerPropertyByName('relZChildren')
         ?.getAllChildren()
-        .map((c) => c.getValue()),
+        .map((c) => c.formattedValue()),
     ).toEqual([layer4WithPath.id, layer5WithPath.id]);
     expect(
       layer4WithPath.getEagerPropertyByName('relZChildren'),

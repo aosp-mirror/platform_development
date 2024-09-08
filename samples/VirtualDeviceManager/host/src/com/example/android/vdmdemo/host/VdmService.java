@@ -237,6 +237,12 @@ public final class VdmService extends Hilt_VdmService {
             mDisplayRepository.removeDisplay(displayId);
         }
 
+        @Override
+        public void onSecureWindowShown(
+                int displayId, @NonNull ComponentName componentName, @NonNull UserHandle user) {
+            Log.i(TAG, "Secure window shown on display " + displayId + " by " + componentName);
+        }
+
         private CharSequence getTitle(ComponentName componentName) {
             CharSequence title;
             try {

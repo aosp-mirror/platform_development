@@ -49,13 +49,6 @@
         android:text="@string/home_demo" />
 
     <Button
-        android:id="@+id/secure_window_demo"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:onClick="onDemoSelected"
-        android:text="@string/secure_window_demo" />
-
-    <Button
         android:id="@+id/permissions_demo"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"

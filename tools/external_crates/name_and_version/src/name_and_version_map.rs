@@ -12,33 +12,44 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+//! A mapping from crate names and versions to some associated data.
+
 use std::collections::{BTreeMap, HashSet};
 
-use anyhow::Result;
 use itertools::Itertools;
 use semver::Version;
 
-use crate::{CrateError, IsUpgradableTo, NameAndVersion, NamedAndVersioned};
+use crate::{Error, IsUpgradableTo, NameAndVersion, NamedAndVersioned};
 
+/// A mapping from crate names and versions to some associated data.
 pub trait NameAndVersionMap {
+    /// The data associated with each crate name and version.
     type Value;
 
+    /// Returns a reference to the map field.
     fn map_field(&self) -> &BTreeMap<NameAndVersion, Self::Value>;
+    /// Returns a mutable reference to the map field.
     fn map_field_mut(&mut self) -> &mut BTreeMap<NameAndVersion, Self::Value>;
-
-    fn insert_or_error(&mut self, key: NameAndVersion, val: Self::Value) -> Result<(), CrateError>;
+    /// Tries to insert a new key and value, returning an error if the key is already present.
+    fn insert_or_error(&mut self, key: NameAndVersion, val: Self::Value) -> Result<(), Error>;
+    /// Returns the number of crates. Multiple versions of a crate count multiple times.
     fn num_crates(&self) -> usize;
+    /// Returns true if the map contains a crate with the specified name.
     fn contains_name(&self, name: &str) -> bool {
         self.get_versions(name).next().is_some()
     }
+    /// Returns an iterator over versions of a specified crate
     fn get_versions<'a, 'b>(
         &'a self,
         name: &'b str,
     ) -> Box<dyn Iterator<Item = (&'a NameAndVersion, &'a Self::Value)> + 'a>;
+    /// Returns a mutable iterator over versions of a specified crate
     fn get_versions_mut<'a, 'b>(
         &'a mut self,
         name: &'b str,
     ) -> Box<dyn Iterator<Item = (&'a NameAndVersion, &'a mut Self::Value)> + 'a>;
+    /// Get the highest version in the map that is semver-compatible with
+    /// a given crate and version.
     fn get_version_upgradable_from<T: NamedAndVersioned + IsUpgradableTo>(
         &self,
         other: &T,
@@ -51,6 +62,8 @@ pub trait NameAndVersionMap {
         }
         best_version
     }
+    /// Returns an iterator over the map, filtered according to a predicate that acts on
+    /// all the available versions for a crate.
     fn filter_versions<
         'a: 'b,
         'b,
@@ -73,12 +86,15 @@ impl<ValueType> NameAndVersionMap for BTreeMap<NameAndVersion, ValueType> {
         self
     }
 
-    fn insert_or_error(&mut self, key: NameAndVersion, val: Self::Value) -> Result<(), CrateError> {
-        if self.contains_key(&key) {
-            Err(CrateError::DuplicateCrateVersion(key.name().to_string(), key.version().clone()))
-        } else {
-            self.insert(key, val);
-            Ok(())
+    fn insert_or_error(&mut self, key: NameAndVersion, val: Self::Value) -> Result<(), Error> {
+        match self.entry(key) {
+            std::collections::btree_map::Entry::Vacant(e) => {
+                e.insert(val);
+                Ok(())
+            }
+            std::collections::btree_map::Entry::Occupied(e) => {
+                Err(Error::DuplicateVersion(e.key().name().to_string(), e.key().version().clone()))
+            }
         }
     }
 
@@ -126,7 +142,7 @@ impl<ValueType> NameAndVersionMap for BTreeMap<NameAndVersion, ValueType> {
         f: F,
     ) -> Box<dyn Iterator<Item = (&'a NameAndVersion, &'a Self::Value)> + 'a> {
         let mut kept_keys: HashSet<NameAndVersion> = HashSet::new();
-        for (key, mut group) in self.iter().group_by(|item| item.0.name()).into_iter() {
+        for (key, mut group) in self.iter().chunk_by(|item| item.0.name()).into_iter() {
             kept_keys.extend(
                 f(&mut group).into_iter().map(move |v| NameAndVersion::new(key.to_string(), v)),
             );
@@ -135,6 +151,7 @@ impl<ValueType> NameAndVersionMap for BTreeMap<NameAndVersion, ValueType> {
     }
 }
 
+/// Select crates with a single version from an iterator.
 pub fn crates_with_single_version<'a, ValueType>(
     versions: &mut dyn Iterator<Item = (&'a NameAndVersion, &'a ValueType)>,
 ) -> HashSet<Version> {
@@ -146,6 +163,7 @@ pub fn crates_with_single_version<'a, ValueType>(
     vset
 }
 
+/// Select crates with multiple versions from an iterator.
 pub fn crates_with_multiple_versions<'a, ValueType>(
     versions: &mut dyn Iterator<Item = (&'a NameAndVersion, &'a ValueType)>,
 ) -> HashSet<Version> {
@@ -157,6 +175,7 @@ pub fn crates_with_multiple_versions<'a, ValueType>(
     vset
 }
 
+/// Select the most recent version of each crate from an iterator.
 pub fn most_recent_version<'a, ValueType>(
     versions: &mut dyn Iterator<Item = (&'a NameAndVersion, &'a ValueType)>,
 ) -> HashSet<Version> {
@@ -168,40 +187,36 @@ pub fn most_recent_version<'a, ValueType>(
 }
 
 #[cfg(test)]
-pub fn try_name_version_map_from_iter<'a, ValueType>(
-    nvs: impl IntoIterator<Item = (&'a str, &'a str, ValueType)>,
-) -> Result<BTreeMap<NameAndVersion, ValueType>> {
-    let mut test_map = BTreeMap::new();
-    for (name, version, val) in nvs {
-        test_map.insert_or_error(NameAndVersion::try_from_str(name, version)?, val)?;
-    }
-    Ok(test_map)
-}
-
-#[cfg(test)]
 mod tests {
     use crate::{NameAndVersion, NameAndVersionRef};
 
     use super::*;
-    use anyhow::Result;
     use itertools::assert_equal;
 
+    fn try_name_version_map_from_iter<'a, ValueType>(
+        nvs: impl IntoIterator<Item = (&'a str, &'a str, ValueType)>,
+    ) -> Result<BTreeMap<NameAndVersion, ValueType>, Error> {
+        let mut test_map = BTreeMap::new();
+        for (name, version, val) in nvs {
+            test_map.insert_or_error(NameAndVersion::try_from_str(name, version)?, val)?;
+        }
+        Ok(test_map)
+    }
+
     #[test]
-    fn test_name_and_version_map_empty() -> Result<()> {
+    fn test_name_and_version_map_empty() -> Result<(), Error> {
         let mut test_map: BTreeMap<NameAndVersion, String> = BTreeMap::new();
         let v = Version::parse("1.2.3")?;
         let nvp = NameAndVersionRef::new("foo", &v);
-        // let nvp = NameAndVersion::try_from_str("foo", "1.2.3")?;
         assert_eq!(test_map.num_crates(), 0);
         assert!(!test_map.contains_key(&nvp as &dyn NamedAndVersioned));
         assert!(!test_map.contains_name("foo"));
-        assert!(test_map.get(&nvp as &dyn NamedAndVersioned).is_none());
         assert!(test_map.get_mut(&nvp as &dyn NamedAndVersioned).is_none());
         Ok(())
     }
 
     #[test]
-    fn test_name_and_version_map_nonempty() -> Result<()> {
+    fn test_name_and_version_map_nonempty() -> Result<(), Error> {
         let mut test_map = try_name_version_map_from_iter([
             ("foo", "1.2.3", "foo v1".to_string()),
             ("foo", "2.3.4", "foo v2".to_string()),
@@ -229,8 +244,8 @@ mod tests {
         assert_eq!(test_map.get(&foo1), Some(&"foo v1".to_string()));
         assert_eq!(test_map.get(&foo2), Some(&"foo v2".to_string()));
         assert_eq!(test_map.get(&bar), Some(&"bar".to_string()));
-        assert!(test_map.get(&wrong_name).is_none());
-        assert!(test_map.get(&wrong_version).is_none());
+        assert!(!test_map.contains_key(&wrong_name));
+        assert!(!test_map.contains_key(&wrong_version));
 
         assert_eq!(test_map.get_mut(&foo1), Some(&mut "foo v1".to_string()));
         assert_eq!(test_map.get_mut(&foo2), Some(&mut "foo v2".to_string()));
@@ -261,7 +276,7 @@ mod tests {
     }
 
     #[test]
-    fn test_filter_versions() -> Result<()> {
+    fn test_filter_versions() -> Result<(), Error> {
         let test_map = try_name_version_map_from_iter([
             ("foo", "1.2.3", ()),
             ("foo", "2.3.4", ()),

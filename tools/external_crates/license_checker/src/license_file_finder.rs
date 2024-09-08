@@ -21,7 +21,7 @@ use glob::glob;
 
 use crate::LicenseCheckerError;
 
-static LICENSE_GLOBS: &'static [&'static str] =
+static LICENSE_GLOBS: &[&str] =
     &["LICENSE", "LICENCE", "LICENSE.*", "LICENSE-*", "LICENSES/*", "UNLICENSE", "COPYING"];
 
 pub(crate) fn find_license_files(
@@ -39,7 +39,7 @@ fn multiglob<T: AsRef<str>>(
     for pattern in patterns {
         let pattern = path.join(pattern.as_ref());
         for file in
-            glob(&pattern.to_str().ok_or(LicenseCheckerError::PathToString(pattern.clone()))?)?
+            glob(pattern.to_str().ok_or(LicenseCheckerError::PathToString(pattern.clone()))?)?
         {
             let file = file?;
             if !file.is_symlink() {
