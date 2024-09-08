@@ -80,17 +80,32 @@ fn parse_cargo_out_str(
 }
 
 fn args_from_rustc_invocation(rustc: &str) -> Vec<&str> {
-    rustc
-        .split_whitespace()
-        // Remove quotes from simple strings, panic for others.
-        .map(|arg| match (arg.chars().next(), arg.chars().skip(1).last()) {
-            (Some('"'), Some('"')) => &arg[1..arg.len() - 1],
-            (Some('\''), Some('\'')) => &arg[1..arg.len() - 1],
-            (Some('"'), _) => panic!("can't handle strings with whitespace"),
-            (Some('\''), _) => panic!("can't handle strings with whitespace"),
-            _ => arg,
-        })
-        .collect()
+    let mut args = Vec::new();
+    let mut chars = rustc.char_indices();
+    while let Some((start, c)) = chars.next() {
+        match c {
+            '\'' => {
+                let (end, _) =
+                    chars.find(|(_, c)| *c == '\'').expect("Missing closing single quote");
+                args.push(&rustc[start + 1..end]);
+            }
+            '"' => {
+                let (end, _) =
+                    chars.find(|(_, c)| *c == '"').expect("Missing closing double quote");
+                args.push(&rustc[start + 1..end]);
+            }
+            _ => {
+                if c.is_ascii_whitespace() {
+                    // Ignore, continue on to the next character.
+                } else if let Some((end, _)) = chars.find(|(_, c)| c.is_ascii_whitespace()) {
+                    args.push(&rustc[start..end]);
+                } else {
+                    args.push(&rustc[start..]);
+                }
+            }
+        }
+    }
+    args
 }
 
 /// Parse out the path name for a crate from a rustc invocation
@@ -397,6 +412,9 @@ impl Crate {
                 "--color" => {
                     arg_iter.next().unwrap();
                 }
+                "--check-cfg" => {
+                    arg_iter.next().unwrap();
+                }
                 _ if arg.starts_with("--error-format=") => {}
                 _ if arg.starts_with("--emit=") => {}
                 _ if arg.starts_with("--edition=") => {}
@@ -500,4 +518,20 @@ fn find_cargo_toml(src_path: &Path) -> Result<PathBuf> {
             .ok_or_else(|| anyhow!("No Cargo.toml found in parents of {:?}", src_path))?;
     }
     Ok(package_dir.to_path_buf())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn parse_args() {
+        assert_eq!(args_from_rustc_invocation("foo bar"), vec!["foo", "bar"]);
+        assert_eq!(args_from_rustc_invocation("  foo   bar "), vec!["foo", "bar"]);
+        assert_eq!(args_from_rustc_invocation("'foo' \"bar\""), vec!["foo", "bar"]);
+        assert_eq!(
+            args_from_rustc_invocation("'fo o' \" b ar\" ' baz '"),
+            vec!["fo o", " b ar", " baz "]
+        );
+    }
 }

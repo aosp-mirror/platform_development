@@ -14,24 +14,8 @@
  * limitations under the License.
  */
 
-export const searchBoxStyle = `
-  .search-box {
-    font-size: 14px;
-    height: 48px;
-  }
+import {FilterFlag} from 'common/filter_flag';
 
-  .search-box .mat-form-field-flex {
-    padding-left: 5px;
-  }
-  .search-box .mat-form-field-wrapper {
-      padding: 0 !important;
-  }
-  .search-box .mat-form-field-label-wrapper {
-      padding: 0 !important;
-  }
-  .search-box .mat-form-field-infix {
-      border-top: 0;
-      padding-top: 5px;
-      padding-bottom: 5px;
-  }
-`;
+export class TextFilter {
+  constructor(public filterString: string, public flags: FilterFlag[]) {}
+}

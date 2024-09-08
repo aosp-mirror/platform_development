@@ -16,16 +16,18 @@ use std::{
     collections::BTreeMap,
     env,
     ffi::OsString,
+    fs::{copy, remove_file, rename},
     path::Path,
     process::{Command, Output},
     sync::mpsc::channel,
 };
 
 use anyhow::{anyhow, Context, Result};
+use name_and_version::{NameAndVersion, NameAndVersionMap, NamedAndVersioned};
 use rooted_path::RootedPath;
 use threadpool::ThreadPool;
 
-use crate::{Crate, NameAndVersion, NameAndVersionMap, NamedAndVersioned};
+use crate::Crate;
 
 pub fn generate_android_bps<'a, T: Iterator<Item = &'a Crate>>(
     crates: T,
@@ -69,27 +71,43 @@ fn run_cargo_embargo(staging_path: &RootedPath) -> Result<Output> {
     maybe_build_cargo_embargo(&staging_path.root(), false)?;
     let new_path = add_bpfmt_to_path(staging_path.root())?;
 
+    let cargo_lock = staging_path.join("Cargo.lock")?;
+    let saved_cargo_lock = staging_path.join("Cargo.lock.saved")?;
+    if cargo_lock.abs().exists() {
+        copy(&cargo_lock, &saved_cargo_lock)?;
+    }
+
     let mut cmd =
-        Command::new(staging_path.with_same_root(&"out/host/linux-x86/bin/cargo_embargo")?.abs());
-    cmd.args(["generate", "cargo_embargo.json"])
+        Command::new(staging_path.with_same_root("out/host/linux-x86/bin/cargo_embargo")?.abs());
+    let output = cmd
+        .args(["generate", "cargo_embargo.json"])
         .env("PATH", new_path)
         .env("ANDROID_BUILD_TOP", staging_path.root())
         .env_remove("OUT_DIR")
-        .current_dir(&staging_path)
+        .current_dir(staging_path)
         .output()
-        .context(format!("Failed to execute {:?}", cmd.get_program()))
+        .context(format!("Failed to execute {:?}", cmd.get_program()))?;
+
+    if cargo_lock.abs().exists() {
+        remove_file(&cargo_lock)?;
+    }
+    if saved_cargo_lock.abs().exists() {
+        rename(saved_cargo_lock, cargo_lock)?;
+    }
+
+    Ok(output)
 }
 
 pub fn cargo_embargo_autoconfig(path: &RootedPath) -> Result<Output> {
     maybe_build_cargo_embargo(&path.root(), false)?;
     let new_path = add_bpfmt_to_path(path.root())?;
 
-    let mut cmd = Command::new(path.with_same_root(&"out/host/linux-x86/bin/cargo_embargo")?.abs());
+    let mut cmd = Command::new(path.with_same_root("out/host/linux-x86/bin/cargo_embargo")?.abs());
     cmd.args(["autoconfig", "cargo_embargo.json"])
         .env("PATH", new_path)
         .env("ANDROID_BUILD_TOP", path.root())
         .env_remove("OUT_DIR")
-        .current_dir(&path)
+        .current_dir(path)
         .output()
         .context(format!("Failed to execute {:?}", cmd.get_program()))
 }
