@@ -16,6 +16,7 @@
 import {Component, Inject} from '@angular/core';
 import {MatIconRegistry} from '@angular/material/icon';
 import {DomSanitizer} from '@angular/platform-browser';
+import {overlayPanelStyles} from 'app/styles/overlay_panel.styles';
 import {UrlUtils} from 'common/url_utils';
 
 @Component({
@@ -105,11 +106,6 @@ import {UrlUtils} from 'common/url_utils';
         display: flex;
         justify-content: space-between;
       }
-      .close-button {
-        width: 24px;
-        height: 24px;
-        line-height: 24px;
-      }
       .shortcuts-row {
         display: flex;
         flex-direction: row;
@@ -170,6 +166,7 @@ import {UrlUtils} from 'common/url_utils';
         font-style: italic;
       }
     `,
+    overlayPanelStyles,
   ],
 })
 export class ShortcutsComponent {
