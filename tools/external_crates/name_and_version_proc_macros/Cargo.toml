@@ -1,5 +1,5 @@
 [package]
-name = "crate_health_proc_macros"
+name = "name_and_version_proc_macros"
 version = "0.1.0"
 edition = "2021"
 

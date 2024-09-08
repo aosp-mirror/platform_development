@@ -41,27 +41,11 @@ pub use self::android_bp::{
 };
 mod android_bp;
 
-pub use self::name_and_version::{
-    IsUpgradableTo, NameAndVersion, NameAndVersionRef, NamedAndVersioned,
-};
-mod name_and_version;
-
-pub use self::google_metadata::GoogleMetadata;
-mod google_metadata;
-
 pub use self::license::{most_restrictive_type, update_module_license_files};
 mod license;
 
 pub use self::managed_repo::ManagedRepo;
 mod managed_repo;
-
-#[cfg(test)]
-pub use self::name_and_version_map::try_name_version_map_from_iter;
-pub use self::name_and_version_map::{
-    crates_with_multiple_versions, crates_with_single_version, most_recent_version,
-    NameAndVersionMap,
-};
-mod name_and_version_map;
 
 #[derive(Error, Debug)]
 pub enum CrateError {
@@ -124,5 +108,3 @@ pub fn copy_dir(src: impl AsRef<Path>, dst: impl AsRef<Path>) -> Result<()> {
         .run_quiet_and_expect_success()?;
     Ok(())
 }
-
-include!(concat!(env!("OUT_DIR"), "/protos/mod.rs"));
