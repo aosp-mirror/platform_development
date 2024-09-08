@@ -16,22 +16,24 @@ use std::{
     collections::BTreeSet,
     fs::{create_dir, read_dir, remove_dir_all, remove_file, rename, write},
     os::unix::fs::symlink,
+    path::Path,
     process::Command,
     str::from_utf8,
 };
 
 use anyhow::{anyhow, Result};
 use glob::glob;
+use google_metadata::GoogleMetadata;
 use itertools::Itertools;
 use license_checker::find_licenses;
+use name_and_version::{NameAndVersion, NameAndVersionMap, NameAndVersionRef, NamedAndVersioned};
 use rooted_path::RootedPath;
 use semver::Version;
 use spdx::Licensee;
 
 use crate::{
-    cargo_embargo_autoconfig, copy_dir, update_module_license_files, Crate, CrateCollection,
-    GoogleMetadata, Migratable, NameAndVersion, NameAndVersionMap, NameAndVersionRef,
-    NamedAndVersioned, PseudoCrate, VersionMatch,
+    cargo_embargo_autoconfig, copy_dir, most_restrictive_type, update_module_license_files, Crate,
+    CrateCollection, Migratable, PseudoCrate, VersionMatch,
 };
 
 pub struct ManagedRepo {
@@ -420,10 +422,11 @@ impl ManagedRepo {
             update_module_license_files(&krate.path().abs(), &licenses)?;
 
             let metadata = GoogleMetadata::init(
-                krate.path().abs().join("METADATA"),
-                &krate,
+                krate.path().join("METADATA")?,
+                krate.name(),
+                krate.version().to_string(),
                 krate.description(),
-                &licenses,
+                most_restrictive_type(&licenses),
             )?;
             metadata.write()?;
 
@@ -463,6 +466,8 @@ impl ManagedRepo {
             remove_dir_all(&android_crate_dir)?;
             rename(pair.dest.staging_path(), &android_crate_dir)?;
         }
+
+        self.pseudo_crate.regenerate_crate_list()?;
 
         Ok(())
     }
@@ -507,9 +512,42 @@ impl ManagedRepo {
         version_match.generate_android_bps()?;
         version_match.diff_android_bps()?;
 
+        for pair in version_match.pairs() {
+            let source_version = NameAndVersion::from(&pair.source.key());
+            let pair = pair.to_compatible().ok_or(anyhow!(
+                "No compatible vendored crate found for {} v{}",
+                source_version.name(),
+                source_version.version(),
+            ))?;
+
+            if !pair.dest.patch_success() {
+                for (patch, output) in pair.dest.patch_output() {
+                    if !output.status.success() {
+                        return Err(anyhow!(
+                            "Failed to patch {} with {}\nstdout:\n{}\nstderr:\n{}",
+                            pair.dest.name(),
+                            patch,
+                            from_utf8(&output.stdout)?,
+                            from_utf8(&output.stderr)?
+                        ));
+                    }
+                }
+            }
+            if !pair.dest.generate_android_bp_success() {
+                if let Some(output) = pair.dest.generate_android_bp_output() {
+                    return Err(anyhow!(
+                        "cargo_embargo execution failed for {}:\nstdout:\n{}\nstderr:\n:{}",
+                        pair.dest.name(),
+                        from_utf8(&output.stdout)?,
+                        from_utf8(&output.stderr)?
+                    ));
+                }
+            }
+        }
+
         Ok(version_match)
     }
-    pub fn preupload_check(&self) -> Result<()> {
+    pub fn preupload_check(&self, files: &Vec<String>) -> Result<()> {
         let deps = self.pseudo_crate.deps()?.keys().map(|k| k.clone()).collect::<BTreeSet<_>>();
 
         let mut managed_dirs = BTreeSet::new();
@@ -529,7 +567,26 @@ impl ManagedRepo {
                 self.managed_dir(), managed_dirs.difference(&deps).join(", "), deps.difference(&managed_dirs).join(", ")));
         }
 
-        let version_match = self.stage(deps.iter())?;
+        let crate_list = self.pseudo_crate.read_crate_list()?;
+        if deps.iter().ne(crate_list.iter()) {
+            return Err(anyhow!("Deps in pseudo_crate/Cargo.toml don't match deps in crate-list.txt\nCargo.toml: {}\ncrate-list.txt: {}",
+                deps.iter().join(", "), crate_list.iter().join(", ")));
+        }
+
+        let changed_android_crates = files
+            .iter()
+            .filter_map(|file| {
+                let path = Path::new(file);
+                let components = path.components().collect::<Vec<_>>();
+                if path.starts_with("crates/") && components.len() > 2 {
+                    Some(components[1].as_os_str().to_string_lossy().to_string())
+                } else {
+                    None
+                }
+            })
+            .collect::<BTreeSet<_>>();
+
+        let version_match = self.stage(changed_android_crates.iter())?;
 
         for pair in version_match.pairs() {
             println!("Checking {}", pair.source.name());
@@ -590,6 +647,38 @@ impl ManagedRepo {
         }
         self.pseudo_crate.vendor()?;
         Ok(added_deps)
+    }
+    pub fn fix_licenses(&self) -> Result<()> {
+        let mut cc = self.new_cc();
+        cc.add_from(&self.managed_dir().rel())?;
+
+        for (_, krate) in cc.map_field() {
+            println!("{} = \"={}\"", krate.name(), krate.version());
+            let state = find_licenses(krate.path().abs(), krate.name(), krate.license())?;
+            if !state.unsatisfied.is_empty() {
+                println!("{:?}", state);
+            } else {
+                // For now, just update MODULE_LICENSE_*
+                update_module_license_files(&krate.path().abs(), &state)?;
+            }
+        }
+
+        Ok(())
+    }
+    pub fn fix_metadata(&self) -> Result<()> {
+        let mut cc = self.new_cc();
+        cc.add_from(&self.managed_dir().rel())?;
+
+        for (_, krate) in cc.map_field() {
+            println!("{} = \"={}\"", krate.name(), krate.version());
+            let mut metadata = GoogleMetadata::try_from(krate.path().join(&"METADATA")?)?;
+            metadata.set_identifier(krate.name(), krate.version().to_string())?;
+            metadata.migrate_archive();
+            metadata.migrate_homepage();
+            metadata.write()?;
+        }
+
+        Ok(())
     }
 }
 

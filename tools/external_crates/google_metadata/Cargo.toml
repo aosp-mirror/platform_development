@@ -1,0 +1,13 @@
+[package]
+name = "google_metadata"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+chrono = "0.4"
+protobuf = "3"
+thiserror = "1.0"
+
+[build-dependencies]
+protobuf-codegen = "3"
+protobuf-parse = "3"
