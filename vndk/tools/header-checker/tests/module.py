@@ -840,6 +840,16 @@ TEST_MODULES = [
         dumper_flags=['-output-format', 'Json'],
         linker_flags=['-input-format', 'Json', '-output-format', 'Json'],
     ),
+    LsdumpModule(
+        name='libavailability',
+        arch='arm64',
+        srcs=['integration/availability/include/base.h'],
+        version_script='integration/availability/map.txt',
+        export_include_dirs=['integration/availability/include'],
+        dumper_flags=['-output-format', 'Json'],
+        linker_flags=['-input-format', 'Json', '-output-format', 'Json'],
+        has_reference_dump=True,
+    ),
 ]
 
 TEST_MODULES = {m.name: m for m in TEST_MODULES}
