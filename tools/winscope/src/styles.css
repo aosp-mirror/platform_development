@@ -32,6 +32,10 @@ app-root {
     margin: 0;
 }
 
+.mat-body-2 {
+    font: 500 14px / 20px 'Roboto', sans-serif;
+}
+
 .mat-button, .mat-icon-button, .mat-stroked-button, .mat-flat-button {
     user-select: auto !important;
 }
@@ -111,4 +115,8 @@ body.dark-mode button.mat-flat-button.mat-primary {
 .outline-field .mat-form-field-infix {
     padding: 6px 0 10px 0;
     border-top: 8px solid transparent;
+}
+
+log-view .filters .mat-form-field-infix {
+    width: 100%;
 }
