@@ -33,7 +33,7 @@ use spdx::Licensee;
 
 use crate::{
     cargo_embargo_autoconfig, copy_dir, most_restrictive_type, update_module_license_files, Crate,
-    CrateCollection, Migratable, PseudoCrate, VersionMatch,
+    CrateCollection, PseudoCrate, VersionMatch,
 };
 
 pub struct ManagedRepo {
@@ -59,14 +59,14 @@ impl ManagedRepo {
         self.pseudo_crate.get_path().join("vendor").unwrap().join(crate_name).unwrap()
     }
     pub fn legacy_dir_for(&self, crate_name: &str) -> RootedPath {
-        self.path.with_same_root("external/rust/crates").unwrap().join(&crate_name).unwrap()
+        self.path.with_same_root("external/rust/crates").unwrap().join(crate_name).unwrap()
     }
     pub fn new_cc(&self) -> CrateCollection {
         CrateCollection::new(self.path.root())
     }
     pub fn vendored_crates(&self) -> Result<CrateCollection> {
         let mut cc = self.new_cc();
-        cc.add_from(&self.pseudo_crate.get_path().join("vendor")?.rel())?;
+        cc.add_from(self.pseudo_crate.get_path().join("vendor")?.rel())?;
         Ok(cc)
     }
     pub fn migration_health(
@@ -80,8 +80,7 @@ impl ManagedRepo {
         }
 
         let mut cc = self.new_cc();
-        cc.add_from(&self.legacy_dir_for(crate_name).rel())?;
-        cc.map_field_mut().retain(|_nv, krate| krate.is_crates_io());
+        cc.add_from(self.legacy_dir_for(crate_name).rel())?;
         if cc.map_field().len() != 1 {
             return Err(anyhow!(
                 "Expected a single crate version for {}, but found {}. Crates with multiple versions are not supported yet.",
@@ -90,12 +89,11 @@ impl ManagedRepo {
             ));
         }
 
-        cc.stage_crates()?;
-        cc.generate_android_bps()?;
-        cc.diff_android_bps()?;
-
-        let krate = cc.map_field().values().next().unwrap();
+        let krate = cc.map_field_mut().values_mut().next().unwrap();
         println!("Found {} v{} in {}", krate.name(), krate.version(), krate.path());
+        krate.stage_crate()?;
+        krate.generate_android_bp()?;
+        krate.diff_android_bp()?;
         if !krate.is_android_bp_healthy() {
             let mut show_cargo_embargo_results = true;
             if krate.is_migration_denied() {
@@ -163,7 +161,7 @@ impl ManagedRepo {
         self.pseudo_crate.vendor()?;
 
         let mut source = self.new_cc();
-        source.add_from(&self.legacy_dir_for(crate_name).rel())?;
+        source.add_from(self.legacy_dir_for(crate_name).rel())?;
 
         let dest = self.vendored_crates()?;
 
@@ -191,38 +189,36 @@ impl ManagedRepo {
                 pair.dest.version()
             );
         }
-        if !pair.dest.is_migratable() {
-            if !pair.dest.patch_success() {
-                println!("Patches did not apply successfully to the migrated crate");
-                if verbose {
-                    for output in pair.dest.patch_output() {
-                        if !output.1.status.success() {
-                            println!(
-                                "Failed to apply {}\nstdout:\n{}\nstderr:\n:{}",
-                                output.0,
-                                from_utf8(&output.1.stdout)?,
-                                from_utf8(&output.1.stderr)?
-                            );
-                        }
+        if !pair.dest.patch_success() {
+            println!("Patches did not apply successfully to the migrated crate");
+            if verbose {
+                for output in pair.dest.patch_output() {
+                    if !output.1.status.success() {
+                        println!(
+                            "Failed to apply {}\nstdout:\n{}\nstderr:\n:{}",
+                            output.0,
+                            from_utf8(&output.1.stdout)?,
+                            from_utf8(&output.1.stderr)?
+                        );
                     }
                 }
             }
-            if !pair.dest.generate_android_bp_success() {
-                println!("cargo_embargo execution did not succeed for the migrated crate");
-            } else if !pair.dest.android_bp_unchanged() {
-                println!("Running cargo_embargo for the migrated crate produced changes to the Android.bp file");
-                if verbose {
-                    println!(
-                        "{}",
-                        from_utf8(
-                            &pair
-                                .dest
-                                .android_bp_diff()
-                                .ok_or(anyhow!("No Android.bp diff found"))?
-                                .stdout
-                        )?
-                    );
-                }
+        }
+        if !pair.dest.generate_android_bp_success() {
+            println!("cargo_embargo execution did not succeed for the migrated crate");
+        } else if !pair.dest.android_bp_unchanged() {
+            println!("Running cargo_embargo for the migrated crate produced changes to the Android.bp file");
+            if verbose {
+                println!(
+                    "{}",
+                    from_utf8(
+                        &pair
+                            .dest
+                            .android_bp_diff()
+                            .ok_or(anyhow!("No Android.bp diff found"))?
+                            .stdout
+                    )?
+                );
             }
         }
 
@@ -257,7 +253,10 @@ impl ManagedRepo {
                 .wait()?;
         }
 
-        if !pair.dest.is_migratable() {
+        if !pair.dest.patch_success()
+            || !pair.dest.generate_android_bp_success()
+            || !pair.dest.android_bp_unchanged()
+        {
             println!("The crate is UNHEALTHY");
             return Err(anyhow!("Crate {} is unhealthy", crate_name));
         }
@@ -293,9 +292,9 @@ impl ManagedRepo {
             }
             copy_dir(src_dir, self.managed_dir_for(crate_name))?;
             if unpinned.contains(crate_name) {
-                self.pseudo_crate.add_unpinned(&NameAndVersionRef::new(&crate_name, &version))?;
+                self.pseudo_crate.add_unpinned(&NameAndVersionRef::new(crate_name, &version))?;
             } else {
-                self.pseudo_crate.add(&NameAndVersionRef::new(&crate_name, &version))?;
+                self.pseudo_crate.add(&NameAndVersionRef::new(crate_name, &version))?;
             }
         }
 
@@ -349,7 +348,7 @@ impl ManagedRepo {
 
             let vendored_dir = self.vendored_dir_for(dep);
             let managed_dir = self.managed_dir_for(dep);
-            copy_dir(&vendored_dir.abs(), &managed_dir.abs())?;
+            copy_dir(vendored_dir.abs(), managed_dir.abs())?;
 
             // TODO: Copy to a temp dir, because otherwise we might run cargo and create/modify Cargo.lock.
             let output = cargo_embargo_autoconfig(&managed_dir)?;
@@ -467,6 +466,8 @@ impl ManagedRepo {
             rename(pair.dest.staging_path(), &android_crate_dir)?;
         }
 
+        self.pseudo_crate.regenerate_crate_list()?;
+
         Ok(())
     }
     pub fn regenerate_all(&self, update_metadata: bool) -> Result<()> {
@@ -485,8 +486,7 @@ impl ManagedRepo {
             }
 
             // Source
-            cc.add_from(&android_crate_dir.rel())?;
-            cc.map_field_mut().retain(|_nv, krate| krate.is_crates_io());
+            cc.add_from(android_crate_dir.rel())?;
             let num_versions = cc.get_versions(crate_name).count();
             if num_versions != 1 {
                 return Err(anyhow!(
@@ -545,8 +545,8 @@ impl ManagedRepo {
 
         Ok(version_match)
     }
-    pub fn preupload_check(&self, files: &Vec<String>) -> Result<()> {
-        let deps = self.pseudo_crate.deps()?.keys().map(|k| k.clone()).collect::<BTreeSet<_>>();
+    pub fn preupload_check(&self, files: &[String]) -> Result<()> {
+        let deps = self.pseudo_crate.deps()?.keys().cloned().collect::<BTreeSet<_>>();
 
         let mut managed_dirs = BTreeSet::new();
         for entry in read_dir(self.managed_dir())? {
@@ -563,6 +563,12 @@ impl ManagedRepo {
         if deps != managed_dirs {
             return Err(anyhow!("Deps in pseudo_crate/Cargo.toml don't match directories in {}\nDirectories not in Cargo.toml: {}\nCargo.toml deps with no directory: {}",
                 self.managed_dir(), managed_dirs.difference(&deps).join(", "), deps.difference(&managed_dirs).join(", ")));
+        }
+
+        let crate_list = self.pseudo_crate.read_crate_list()?;
+        if deps.iter().ne(crate_list.iter()) {
+            return Err(anyhow!("Deps in pseudo_crate/Cargo.toml don't match deps in crate-list.txt\nCargo.toml: {}\ncrate-list.txt: {}",
+                deps.iter().join(", "), crate_list.iter().join(", ")));
         }
 
         let changed_android_crates = files
@@ -612,7 +618,6 @@ impl ManagedRepo {
     fn add_crate_and_dependencies(&self, crate_name: &str) -> Result<BTreeSet<String>> {
         let mut cc = self.new_cc();
         cc.add_from("external/rust/crates")?;
-        cc.map_field_mut().retain(|_nv, krate| krate.is_crates_io());
         let unmigrated_crates =
             cc.map_field().keys().map(|nv| nv.name().to_string()).collect::<BTreeSet<_>>();
 
@@ -642,9 +647,9 @@ impl ManagedRepo {
     }
     pub fn fix_licenses(&self) -> Result<()> {
         let mut cc = self.new_cc();
-        cc.add_from(&self.managed_dir().rel())?;
+        cc.add_from(self.managed_dir().rel())?;
 
-        for (_, krate) in cc.map_field() {
+        for krate in cc.map_field().values() {
             println!("{} = \"={}\"", krate.name(), krate.version());
             let state = find_licenses(krate.path().abs(), krate.name(), krate.license())?;
             if !state.unsatisfied.is_empty() {
@@ -659,14 +664,15 @@ impl ManagedRepo {
     }
     pub fn fix_metadata(&self) -> Result<()> {
         let mut cc = self.new_cc();
-        cc.add_from(&self.managed_dir().rel())?;
+        cc.add_from(self.managed_dir().rel())?;
 
-        for (_, krate) in cc.map_field() {
+        for krate in cc.map_field().values() {
             println!("{} = \"={}\"", krate.name(), krate.version());
-            let mut metadata = GoogleMetadata::try_from(krate.path().join(&"METADATA")?)?;
-            metadata.set_identifier(krate.name(), krate.version().to_string())?;
+            let mut metadata = GoogleMetadata::try_from(krate.path().join("METADATA")?)?;
+            metadata.set_version_and_urls(krate.name(), krate.version().to_string())?;
             metadata.migrate_archive();
             metadata.migrate_homepage();
+            metadata.remove_deprecated_url();
             metadata.write()?;
         }
 
@@ -675,7 +681,7 @@ impl ManagedRepo {
 }
 
 // Files that are ignored when migrating a crate to the monorepo.
-static IGNORED_FILES: &'static [&'static str] = &[
+static IGNORED_FILES: &[&str] = &[
     ".appveyor.yml",
     ".bazelci",
     ".bazelignore",
@@ -732,10 +738,8 @@ static IGNORED_FILES: &'static [&'static str] = &[
     "Cargo.lock.saved",
     "Cargo.toml.orig",
     "OWNERS",
-    // rules.mk related files that we won't migrate.
+    // Deprecated config file for rules.mk.
     "cargo2rulesmk.json",
-    "CleanSpec.mk",
-    "rules.mk",
     // cargo_embargo intermediates.
     "Android.bp.orig",
     "cargo.metadata",

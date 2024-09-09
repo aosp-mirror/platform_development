@@ -283,7 +283,11 @@ fn make_extern(packages: &[PackageMetadata], dependency: &DependencyMetadata) ->
         bail!("Package {} didn't have any library or proc-macro targets", dependency.name);
     };
     let lib_name = target.name.replace('-', "_");
-    let raw_name = target.name.clone();
+    // This is ugly but looking at the source path is the easiest way to tell if the raw
+    // crate name uses a hyphen instead of an underscore. It won't work if it uses both.
+    let raw_name = target.name.replace('_', "-");
+    let src_path = target.src_path.to_str().expect("failed to convert src_path to string");
+    let raw_name = if src_path.contains(&raw_name) { raw_name } else { lib_name.clone() };
     let name =
         if let Some(rename) = &dependency.rename { rename.clone() } else { lib_name.clone() };
 
@@ -294,7 +298,6 @@ fn make_extern(packages: &[PackageMetadata], dependency: &DependencyMetadata) ->
         } else {
             ExternType::Rust
         };
-
     Ok(Extern { name, lib_name, raw_name, extern_type })
 }
 
