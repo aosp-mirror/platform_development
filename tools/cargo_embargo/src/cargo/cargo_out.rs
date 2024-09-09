@@ -190,7 +190,7 @@ impl CargoOut {
 
             // Cargo -v output of a call to rustc.
             static RUSTC_REGEX: Lazy<Regex> =
-                Lazy::new(|| Regex::new(r"^ +Running `rustc (.*)`$").unwrap());
+                Lazy::new(|| Regex::new(r"^ +Running `(?:/[^\s]*/)?rustc (.*)`$").unwrap());
             if let Some(args) = match1(&RUSTC_REGEX, line) {
                 result.rustc_invocations.push(args);
                 continue;
@@ -215,8 +215,9 @@ impl CargoOut {
                     break;
                 }
                 // The combined -vv output rustc command line pattern.
-                static RUSTC_VV_CMD_ARGS: Lazy<Regex> =
-                    Lazy::new(|| Regex::new(r"^ *Running `.*CARGO_.*=.* rustc (.*)`$").unwrap());
+                static RUSTC_VV_CMD_ARGS: Lazy<Regex> = Lazy::new(|| {
+                    Regex::new(r"^ *Running `.*CARGO_.*=.* (?:/[^\s]*/)?rustc (.*)`$").unwrap()
+                });
                 if let Some(args) = match1(&RUSTC_VV_CMD_ARGS, &line) {
                     result.rustc_invocations.push(args);
                 } else {
@@ -226,7 +227,7 @@ impl CargoOut {
             }
             // Cargo -vv output of a "cc" or "ar" command; all in one line.
             static CC_AR_VV_REGEX: Lazy<Regex> = Lazy::new(|| {
-                Regex::new(r#"^\[([^ ]*)[^\]]*\] running:? "(cc|ar)" (.*)$"#).unwrap()
+                Regex::new(r#"^\[([^ ]*)[^\]]*\] running:? "(?:/[^\s]*/)?(cc|ar)" (.*)$"#).unwrap()
             });
             if let Some((pkg, cmd, args)) = match3(&CC_AR_VV_REGEX, line) {
                 match cmd.as_str() {
