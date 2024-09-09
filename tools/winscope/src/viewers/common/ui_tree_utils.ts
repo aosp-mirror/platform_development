@@ -72,21 +72,8 @@ export class UiTreeUtils {
     return (node: TreeNode) => node.id === targetId;
   }
 
-  static makePropertyMatchFilter(targetValue: string): TreeNodeFilter {
-    return (node: TreeNode) => {
-      return (
-        node instanceof UiPropertyTreeNode &&
-        node.formattedValue() !== targetValue
-      );
-    };
-  }
-
   static makeDenyListFilterByName(denylist: string[]): TreeNodeFilter {
     return (node: TreeNode) => !denylist.includes(node.name);
-  }
-
-  static makeAllowListFilterById(allowlist: string[]): TreeNodeFilter {
-    return (node: TreeNode) => allowlist.includes(node.id);
   }
 
   static shouldGetProperties(node: UiHierarchyTreeNode): boolean {

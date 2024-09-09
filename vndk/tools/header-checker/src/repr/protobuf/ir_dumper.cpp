@@ -59,6 +59,27 @@ static bool AddTypeInfo(abi_dump::BasicNamedAndTypedDecl *type_info,
   return true;
 }
 
+template <typename HasAvailabilityAttrsMessage>
+void AddAvailabilityAttrs(HasAvailabilityAttrsMessage *decl_protobuf,
+                          const HasAvailabilityAttrs *decl_ir) {
+  for (const AvailabilityAttrIR &attr : decl_ir->GetAvailabilityAttrs()) {
+    abi_dump::AvailabilityAttr *attr_protobuf =
+        decl_protobuf->add_availability_attrs();
+    if (auto introduced = attr.GetIntroduced(); introduced.has_value()) {
+      attr_protobuf->set_introduced_major(introduced.value());
+    }
+    if (auto deprecated = attr.GetDeprecated(); deprecated.has_value()) {
+      attr_protobuf->set_deprecated_major(deprecated.value());
+    }
+    if (auto obsoleted = attr.GetObsoleted(); obsoleted.has_value()) {
+      attr_protobuf->set_obsoleted_major(obsoleted.value());
+    }
+    if (attr.IsUnavailable()) {
+      attr_protobuf->set_unavailable(true);
+    }
+  }
+}
+
 bool ConvertRecordFieldIR(abi_dump::RecordFieldDecl *record_field_protobuf,
                           const RecordFieldIR *record_field_ir) {
   if (!record_field_protobuf) {
@@ -75,6 +96,7 @@ bool ConvertRecordFieldIR(abi_dump::RecordFieldDecl *record_field_protobuf,
     record_field_protobuf->set_is_bit_field(true);
     record_field_protobuf->set_bit_width(record_field_ir->GetBitWidth());
   }
+  AddAvailabilityAttrs(record_field_protobuf, record_field_ir);
   return true;
 }
 
@@ -172,6 +194,7 @@ abi_dump::RecordType ConvertRecordTypeIR(const RecordTypeIR *recordp) {
     llvm::errs() << "Template information could not be added\n";
     ::exit(1);
   }
+  AddAvailabilityAttrs(&added_record_type, recordp);
   return added_record_type;
 }
 
@@ -242,6 +265,7 @@ abi_dump::FunctionDecl ConvertFunctionIR(const FunctionIR *functionp) {
     llvm::errs() << "Template information could not be added\n";
     ::exit(1);
   }
+  AddAvailabilityAttrs(&added_function, functionp);
   return added_function;
 }
 
@@ -257,6 +281,7 @@ bool ConvertEnumFieldIR(abi_dump::EnumFieldDecl *enum_field_protobuf,
   // dump file. Despite the wrong representation, the diff result isn't affected
   // because every integer has a unique representation.
   enum_field_protobuf->set_enum_field_value(enum_field_ir->GetSignedValue());
+  AddAvailabilityAttrs(enum_field_protobuf, enum_field_ir);
   return true;
 }
 
@@ -280,6 +305,7 @@ abi_dump::EnumType ConvertEnumTypeIR(const EnumTypeIR *enump) {
     llvm::errs() << "EnumTypeIR could not be converted\n";
     ::exit(1);
   }
+  AddAvailabilityAttrs(&added_enum_type, enump);
   return added_enum_type;
 }
 
@@ -291,6 +317,7 @@ abi_dump::GlobalVarDecl ConvertGlobalVarIR(const GlobalVarIR *global_varp) {
   added_global_var.set_linker_set_key(global_varp->GetLinkerSetKey());
   added_global_var.set_access(
       AccessIRToProtobuf(global_varp->GetAccess()));
+  AddAvailabilityAttrs(&added_global_var, global_varp);
   return added_global_var;
 }
 

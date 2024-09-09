@@ -198,8 +198,8 @@ if [[ -n "${HOST_SERIAL}" ]]; then
   install_app "${HOST_SERIAL}" "${OUT}/system/app/VdmDemos/VdmDemos.apk" demos
   echo
 
-  readonly HOST_PERM_BASENAME=com.example.android.vdmdemo.host.xml
-  readonly HOST_PERM_SRC="${ANDROID_BUILD_TOP}/development/samples/VirtualDeviceManager/host/${HOST_PERM_BASENAME}"
+  readonly HOST_PERM_BASENAME=VdmHost.xml
+  readonly HOST_PERM_SRC="${OUT}/system/etc/permissions/${HOST_PERM_BASENAME}"
   readonly HOST_PERM_DST="/system/etc/permissions/${HOST_PERM_BASENAME}"
   readonly HOST_APK_DIR=/system/priv-app/VdmHost
 
