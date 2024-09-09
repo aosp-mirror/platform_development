@@ -26,6 +26,7 @@ import android.companion.virtual.flags.Flags;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.util.ArrayMap;
+import android.util.Log;
 
 import androidx.annotation.StringRes;
 import androidx.core.os.BuildCompat;
@@ -52,6 +53,8 @@ import javax.inject.Singleton;
  */
 @Singleton
 final class PreferenceController {
+
+    private static final String TAG = PreferenceController.class.getSimpleName();
 
     // LINT.IfChange
     private static final Set<PrefRule<?>> RULES = Set.of(
@@ -210,15 +213,17 @@ final class PreferenceController {
         }
 
         void evaluate(Context context, SharedPreferences prefs, SharedPreferences.Editor editor) {
-            if (!prefs.contains(context.getString(mKey)) || !isSatisfied()) {
+            String preferenceName = context.getString(mKey);
+            if (!prefs.contains(preferenceName) || !isSatisfied(preferenceName)) {
                 reset(context, editor);
             }
         }
 
         void evaluate(Context context, PreferenceManager preferenceManager)  {
-            Preference preference = preferenceManager.findPreference(context.getString(mKey));
+            String preferenceName = context.getString(mKey);
+            Preference preference = preferenceManager.findPreference(preferenceName);
             if (preference != null) {
-                boolean enabled = isSatisfied();
+                boolean enabled = isSatisfied(preferenceName);
                 if (preference.isEnabled() != enabled) {
                     preference.setEnabled(enabled);
                 }
@@ -227,9 +232,14 @@ final class PreferenceController {
 
         protected abstract void reset(Context context, SharedPreferences.Editor editor);
 
-        protected boolean isSatisfied() {
-            return isSdkVersionSatisfied()
-                    && Arrays.stream(mRequiredFlags).allMatch(BooleanSupplier::getAsBoolean);
+        protected boolean isSatisfied(String preferenceName) {
+            try {
+                return isSdkVersionSatisfied()
+                        && Arrays.stream(mRequiredFlags).allMatch(BooleanSupplier::getAsBoolean);
+            } catch (NoSuchMethodError e) {
+                Log.w(TAG, "Missing at least one required flag for feature: " + preferenceName, e);
+                return false;
+            }
         }
 
         private boolean isSdkVersionSatisfied() {
@@ -260,7 +270,8 @@ final class PreferenceController {
 
         @Override
         void evaluate(Context context, SharedPreferences prefs, SharedPreferences.Editor editor) {
-            editor.putBoolean(context.getString(mKey), isSatisfied());
+            String preferenceName = context.getString(mKey);
+            editor.putBoolean(preferenceName, isSatisfied(preferenceName));
         }
     }
 
