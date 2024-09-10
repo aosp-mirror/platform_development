@@ -77,7 +77,7 @@ private object NotificationContentPicker : StaticElementContentPicker {
         element: ElementKey,
         transition: TransitionState.Transition,
         fromContentZIndex: Float,
-        toContentZIndex: Float
+        toContentZIndex: Float,
     ): ContentKey {
         return when {
             transition.isTransitioning(from = Scenes.Lockscreen, to = Scenes.Shade) -> Scenes.Shade
