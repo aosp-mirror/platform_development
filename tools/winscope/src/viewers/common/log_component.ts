@@ -27,7 +27,7 @@ import {
 } from '@angular/core';
 import {MatSelectChange} from '@angular/material/select';
 
-import {Timestamp} from 'common/time';
+import {Timestamp, TimestampFormatType} from 'common/time';
 import {TraceType} from 'trace/trace_type';
 import {
   LogFilterChangeDetail,
@@ -84,13 +84,13 @@ import {
 
     <div class="entries">
       <div class="headers" *ngIf="headers.length > 0">
-        <div *ngFor="let header of headers" class="mat-body-2" [class]="getLogFieldClass(header)">{{getLogFieldName(header)}}</div>
+        <div *ngFor="let header of headers" class="mat-body-2" [class]="getLogFieldClass(header)" [class.with-date]="areMultipleDatesPresent()">{{getLogFieldName(header)}}</div>
       </div>
 
       <div class="filters" *ngIf="!showFiltersInTitle && filters.length > 0">
-        <div *ngIf="showTraceEntryTimes" class="time"></div>
+        <div *ngIf="showTraceEntryTimes" class="time" [class.with-date]="areMultipleDatesPresent()"></div>
 
-        <div class="filter" *ngFor="let filter of filters" [class]="getLogFieldClass(filter.type)">
+        <div class="filter" *ngFor="let filter of filters" [class]="getLogFieldClass(filter.type)" [class.with-date]="areMultipleDatesPresent()">
           <select-with-filter
               *ngIf="filter.options?.length > 0"
               [label]="getLogFieldName(filter.type)"
@@ -162,17 +162,17 @@ import {
             [class.current]="isCurrentEntry(i)"
             [class.selected]="isSelectedEntry(i)"
             (click)="onEntryClicked(i)">
-          <div *ngIf="showTraceEntryTimes" class="time">
+          <div *ngIf="showTraceEntryTimes" class="time" [class.with-date]="areMultipleDatesPresent()">
             <button
                 mat-button
                 color="primary"
                 (click)="onTraceEntryTimestampClick($event, entry)"
                 [disabled]="!entry.traceEntry.hasValidTimestamp()">
-              {{ entry.traceEntry.getTimestamp().format() }}
+              {{ formatTimestamp(entry.traceEntry.getTimestamp()) }}
             </button>
           </div>
 
-          <div [class]="getLogFieldClass(field.type)" *ngFor="let field of entry.fields; index as i">
+          <div [class]="getLogFieldClass(field.type)" [class.with-date]="areMultipleDatesPresent()" *ngFor="let field of entry.fields; index as i">
             <span class="mat-body-1" *ngIf="!showFieldButton(field)">{{ field.value }}</span>
             <button
                 *ngIf="showFieldButton(field)"
@@ -238,8 +238,22 @@ export class LogComponent {
 
   formatFieldButton(field: LogField): string | number {
     return field.value instanceof Timestamp
-      ? field.value.format()
+      ? this.formatTimestamp(field.value)
       : field.value;
+  }
+
+  areMultipleDatesPresent(): boolean {
+    return (
+      this.entries.at(0)?.traceEntry.getFullTrace().spansMultipleDates() ??
+      false
+    );
+  }
+
+  formatTimestamp(timestamp: Timestamp) {
+    if (!this.areMultipleDatesPresent()) {
+      return timestamp.format(TimestampFormatType.DROP_DATE);
+    }
+    return timestamp.format();
   }
 
   getLogFieldClass(fieldType: LogFieldType) {

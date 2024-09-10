@@ -16,6 +16,7 @@
 
 import {ArrayUtils} from 'common/array_utils';
 import {INVALID_TIME_NS, Timestamp} from 'common/time';
+import {TimestampUtils} from 'common/timestamp_utils';
 import {
   CustomQueryParamTypeMap,
   CustomQueryParserResultTypeMap,
@@ -484,6 +485,22 @@ export class Trace<T> {
   setCorruptedState(value: boolean, reason?: string) {
     this.corruptedState = value;
     this.corruptedReason = reason;
+  }
+
+  spansMultipleDates(): boolean {
+    if (this.lengthEntries > 0) {
+      const firstTs = this.getEntry(0).getTimestamp().format();
+      const firstDate = TimestampUtils.extractDateFromHumanTimestamp(firstTs);
+      if (firstDate) {
+        const lastDate = TimestampUtils.extractDateFromHumanTimestamp(
+          this.getEntry(this.lengthEntries - 1)
+            .getTimestamp()
+            .format(),
+        );
+        return firstDate !== lastDate;
+      }
+    }
+    return false;
   }
 
   private getEntryInternal<
