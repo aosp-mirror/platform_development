@@ -94,6 +94,10 @@ final class PreferenceController {
 
             new BoolRule(R.string.pref_enable_custom_home, VANILLA_ICE_CREAM, Flags::vdmCustomHome),
 
+            new BoolRule(R.string.pref_enable_custom_status_bar,
+                    VANILLA_ICE_CREAM,  // TODO: update to post-V once available
+                    android.companion.virtualdevice.flags.Flags::statusBarAndInsets),
+
             new StringRule(R.string.pref_display_ime_policy, VANILLA_ICE_CREAM, Flags::vdmCustomIme)
                     .withDefaultValue(String.valueOf(0)),
 
