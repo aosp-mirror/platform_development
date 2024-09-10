@@ -63,6 +63,21 @@ run
 The interactive script will prompt you which apps to install to which of the
 available devices, build the APKs and install them.
 
+### Using adevice on the host device
+
+1.  Track the required modules.
+
+    ```shell
+    adevice track VdmHost
+    adevice track VdmDemos
+    ```
+
+1.  Update the device
+
+    ```shell
+    adevice update
+    ```
+
 ### Manually
 
 1.  Source `build/envsetup.sh` and run `lunch` or set

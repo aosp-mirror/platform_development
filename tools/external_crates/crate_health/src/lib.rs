@@ -22,7 +22,7 @@ use anyhow::{anyhow, Context, Result};
 use semver::Version;
 use thiserror::Error;
 
-pub use self::crate_type::{diff_android_bp, Crate, Migratable};
+pub use self::crate_type::{diff_android_bp, Crate};
 mod crate_type;
 
 pub use self::crate_collection::CrateCollection;
@@ -71,9 +71,9 @@ pub fn default_repo_root() -> Result<PathBuf> {
 pub fn ensure_exists_and_empty(dir: impl AsRef<Path>) -> Result<()> {
     let dir = dir.as_ref();
     if dir.exists() {
-        remove_dir_all(&dir).context(format!("Failed to remove {}", dir.display()))?;
+        remove_dir_all(dir).context(format!("Failed to remove {}", dir.display()))?;
     }
-    create_dir_all(&dir).context(format!("Failed to create {}", dir.display()))
+    create_dir_all(dir).context(format!("Failed to create {}", dir.display()))
 }
 
 pub trait RunQuiet {
