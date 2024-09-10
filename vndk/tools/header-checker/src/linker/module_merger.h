@@ -40,12 +40,9 @@ public:
 
 class ModuleMerger {
 public:
-  ModuleMerger(const std::set<std::string> *exported_headers)
-      : module_(new repr::ModuleIR(exported_headers)) {}
+  ModuleMerger() : module_(std::make_unique<repr::ModuleIR>()) {}
 
-  const repr::ModuleIR &GetModule() {
-    return *module_;
-  }
+  const repr::ModuleIR &GetModule() { return *module_; }
 
   void MergeGraphs(const repr::ModuleIR &addend);
 

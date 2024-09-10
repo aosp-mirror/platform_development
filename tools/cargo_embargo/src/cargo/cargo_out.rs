@@ -80,17 +80,32 @@ fn parse_cargo_out_str(
 }
 
 fn args_from_rustc_invocation(rustc: &str) -> Vec<&str> {
-    rustc
-        .split_whitespace()
-        // Remove quotes from simple strings, panic for others.
-        .map(|arg| match (arg.chars().next(), arg.chars().skip(1).last()) {
-            (Some('"'), Some('"')) => &arg[1..arg.len() - 1],
-            (Some('\''), Some('\'')) => &arg[1..arg.len() - 1],
-            (Some('"'), _) => panic!("can't handle strings with whitespace"),
-            (Some('\''), _) => panic!("can't handle strings with whitespace"),
-            _ => arg,
-        })
-        .collect()
+    let mut args = Vec::new();
+    let mut chars = rustc.char_indices();
+    while let Some((start, c)) = chars.next() {
+        match c {
+            '\'' => {
+                let (end, _) =
+                    chars.find(|(_, c)| *c == '\'').expect("Missing closing single quote");
+                args.push(&rustc[start + 1..end]);
+            }
+            '"' => {
+                let (end, _) =
+                    chars.find(|(_, c)| *c == '"').expect("Missing closing double quote");
+                args.push(&rustc[start + 1..end]);
+            }
+            _ => {
+                if c.is_ascii_whitespace() {
+                    // Ignore, continue on to the next character.
+                } else if let Some((end, _)) = chars.find(|(_, c)| c.is_ascii_whitespace()) {
+                    args.push(&rustc[start..end]);
+                } else {
+                    args.push(&rustc[start..]);
+                }
+            }
+        }
+    }
+    args
 }
 
 /// Parse out the path name for a crate from a rustc invocation
@@ -175,7 +190,7 @@ impl CargoOut {
 
             // Cargo -v output of a call to rustc.
             static RUSTC_REGEX: Lazy<Regex> =
-                Lazy::new(|| Regex::new(r"^ +Running `rustc (.*)`$").unwrap());
+                Lazy::new(|| Regex::new(r"^ +Running `(?:/[^\s]*/)?rustc (.*)`$").unwrap());
             if let Some(args) = match1(&RUSTC_REGEX, line) {
                 result.rustc_invocations.push(args);
                 continue;
@@ -200,8 +215,9 @@ impl CargoOut {
                     break;
                 }
                 // The combined -vv output rustc command line pattern.
-                static RUSTC_VV_CMD_ARGS: Lazy<Regex> =
-                    Lazy::new(|| Regex::new(r"^ *Running `.*CARGO_.*=.* rustc (.*)`$").unwrap());
+                static RUSTC_VV_CMD_ARGS: Lazy<Regex> = Lazy::new(|| {
+                    Regex::new(r"^ *Running `.*CARGO_.*=.* (?:/[^\s]*/)?rustc (.*)`$").unwrap()
+                });
                 if let Some(args) = match1(&RUSTC_VV_CMD_ARGS, &line) {
                     result.rustc_invocations.push(args);
                 } else {
@@ -211,7 +227,7 @@ impl CargoOut {
             }
             // Cargo -vv output of a "cc" or "ar" command; all in one line.
             static CC_AR_VV_REGEX: Lazy<Regex> = Lazy::new(|| {
-                Regex::new(r#"^\[([^ ]*)[^\]]*\] running:? "(cc|ar)" (.*)$"#).unwrap()
+                Regex::new(r#"^\[([^ ]*)[^\]]*\] running:? "(?:/[^\s]*/)?(cc|ar)" (.*)$"#).unwrap()
             });
             if let Some((pkg, cmd, args)) = match3(&CC_AR_VV_REGEX, line) {
                 match cmd.as_str() {
@@ -397,6 +413,9 @@ impl Crate {
                 "--color" => {
                     arg_iter.next().unwrap();
                 }
+                "--check-cfg" => {
+                    arg_iter.next().unwrap();
+                }
                 _ if arg.starts_with("--error-format=") => {}
                 _ if arg.starts_with("--emit=") => {}
                 _ if arg.starts_with("--edition=") => {}
@@ -457,6 +476,8 @@ impl Crate {
         out.package_name.clone_from(&package_metadata.name);
         out.version = Some(package_metadata.version.clone());
         out.edition.clone_from(&package_metadata.edition);
+        out.license.clone_from(&package_metadata.license);
+        out.license_file.clone_from(&package_metadata.license_file);
 
         let output_filename = out.name.clone() + &extra_filename;
         if let Some(test_contents) = tests.get(&output_filename).and_then(|m| m.get(&out.main_src))
@@ -498,4 +519,20 @@ fn find_cargo_toml(src_path: &Path) -> Result<PathBuf> {
             .ok_or_else(|| anyhow!("No Cargo.toml found in parents of {:?}", src_path))?;
     }
     Ok(package_dir.to_path_buf())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn parse_args() {
+        assert_eq!(args_from_rustc_invocation("foo bar"), vec!["foo", "bar"]);
+        assert_eq!(args_from_rustc_invocation("  foo   bar "), vec!["foo", "bar"]);
+        assert_eq!(args_from_rustc_invocation("'foo' \"bar\""), vec!["foo", "bar"]);
+        assert_eq!(
+            args_from_rustc_invocation("'fo o' \" b ar\" ' baz '"),
+            vec!["fo o", " b ar", " baz "]
+        );
+    }
 }

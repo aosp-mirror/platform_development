@@ -32,7 +32,12 @@ export interface TimezoneInfo {
 }
 
 export interface TimestampFormatter {
-  format(timestamp: Timestamp): string;
+  format(timestamp: Timestamp, type: TimestampFormatType): string;
+}
+
+export enum TimestampFormatType {
+  FULL,
+  DROP_DATE,
 }
 
 export class Timestamp {
@@ -75,7 +80,7 @@ export class Timestamp {
     return new Timestamp(this.getValueNs() / n, this.formatter);
   }
 
-  format(): string {
-    return this.formatter.format(this);
+  format(type = TimestampFormatType.FULL): string {
+    return this.formatter.format(this, type);
   }
 }

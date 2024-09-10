@@ -15,6 +15,8 @@
  */
 
 import {assertDefined} from 'common/assert_utils';
+import {PersistentStoreProxy} from 'common/persistent_store_proxy';
+import {Store} from 'common/store';
 import {Trace} from 'trace/trace';
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
 import {
@@ -22,10 +24,16 @@ import {
   NotifyLogViewCallbackType,
 } from 'viewers/common/abstract_log_viewer_presenter';
 import {LogPresenter} from 'viewers/common/log_presenter';
-import {LogField, LogFieldType, LogFilter} from 'viewers/common/ui_data_log';
+import {TextFilter} from 'viewers/common/text_filter';
+import {
+  LogEntry,
+  LogField,
+  LogFieldType,
+  LogFilter,
+} from 'viewers/common/ui_data_log';
 import {ProtologEntry, UiData} from './ui_data';
 
-export class Presenter extends AbstractLogViewerPresenter {
+export class Presenter extends AbstractLogViewerPresenter<UiData> {
   static readonly FIELD_TYPES = [
     LogFieldType.LOG_LEVEL,
     LogFieldType.TAG,
@@ -34,13 +42,14 @@ export class Presenter extends AbstractLogViewerPresenter {
   ];
   private isInitialized = false;
 
-  protected override logPresenter = new LogPresenter(true);
+  protected override logPresenter = new LogPresenter<LogEntry>();
 
   constructor(
     trace: Trace<PropertyTreeNode>,
-    notifyViewCallback: NotifyLogViewCallbackType,
+    notifyViewCallback: NotifyLogViewCallbackType<UiData>,
+    private storage: Store,
   ) {
-    super(trace, notifyViewCallback, UiData.EMPTY);
+    super(trace, notifyViewCallback, UiData.createEmpty());
   }
 
   protected override async initializeIfNeeded() {
@@ -54,6 +63,11 @@ export class Presenter extends AbstractLogViewerPresenter {
       if (type === LogFieldType.TEXT) {
         filters.push({
           type,
+          textFilter: PersistentStoreProxy.new(
+            'ProtoLog' + type,
+            new TextFilter('', []),
+            this.storage,
+          ),
         });
       } else {
         filters.push({
@@ -71,7 +85,8 @@ export class Presenter extends AbstractLogViewerPresenter {
 
     this.logPresenter.setAllEntries(allEntries);
     this.logPresenter.setFilters(filters);
-    this.refreshUIData(UiData.EMPTY);
+
+    this.refreshUiData();
     this.isInitialized = true;
   }
 

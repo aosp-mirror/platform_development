@@ -58,8 +58,8 @@ object Lockscreen {
                             requiresFullDistanceSwipe = requiresFullDistanceSwipeToShade,
                         )
                 )
-                add(Swipe.Left to Scenes.StubRight)
-                add(Swipe.Right to Scenes.StubLeft)
+                add(Swipe.Start to Scenes.StubEnd)
+                add(Swipe.End to Scenes.StubStart)
                 add(
                     Swipe.Up to
                         if (isLockscreenDismissable) {
@@ -103,7 +103,7 @@ fun SceneScope.Lockscreen(
             Box(Modifier.padding(horizontal = 16.dp)) { mediaPlayer() }
         }
 
-        Box(Modifier.weight(1f).verticalNestedScrollToScene()) { notificationList() }
+        Box(Modifier.weight(1f)) { notificationList() }
 
         LockButton(
             isDismissable,

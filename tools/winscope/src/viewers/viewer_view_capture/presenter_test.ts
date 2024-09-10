@@ -15,8 +15,9 @@
  */
 
 import {assertDefined} from 'common/assert_utils';
+import {Rect} from 'common/geometry/rect';
 import {InMemoryStorage} from 'common/in_memory_storage';
-import {Rect} from 'common/rect';
+import {Store} from 'common/store';
 import {TracePositionUpdate} from 'messaging/winscope_event';
 import {TraceBuilder} from 'test/unit/trace_builder';
 import {UnitTestUtils} from 'test/unit/utils';
@@ -29,13 +30,14 @@ import {HierarchyTreeNode} from 'trace/tree_node/hierarchy_tree_node';
 import {NotifyHierarchyViewCallbackType} from 'viewers/common/abstract_hierarchy_viewer_presenter';
 import {AbstractHierarchyViewerPresenterTest} from 'viewers/common/abstract_hierarchy_viewer_presenter_test';
 import {DiffType} from 'viewers/common/diff_type';
+import {TextFilter} from 'viewers/common/text_filter';
 import {UiDataHierarchy} from 'viewers/common/ui_data_hierarchy';
 import {UiHierarchyTreeNode} from 'viewers/common/ui_hierarchy_tree_node';
 import {UiTreeUtils} from 'viewers/common/ui_tree_utils';
 import {Presenter} from 'viewers/viewer_view_capture/presenter';
 import {UiData} from 'viewers/viewer_view_capture/ui_data';
 
-class PresenterViewCaptureTest extends AbstractHierarchyViewerPresenterTest {
+class PresenterViewCaptureTest extends AbstractHierarchyViewerPresenterTest<UiData> {
   private traces: Traces | undefined;
   private positionUpdate: TracePositionUpdate | undefined;
   private secondPositionUpdate: TracePositionUpdate | undefined;
@@ -51,14 +53,14 @@ class PresenterViewCaptureTest extends AbstractHierarchyViewerPresenterTest {
   override readonly numberOfDefaultProperties = 3;
   override readonly numberOfNonDefaultProperties = 15;
   override readonly expectedFirstRect = new Rect(0, 0, 1080, 249);
-  override readonly propertiesFilterString = 'alpha';
+  override readonly propertiesFilter = new TextFilter('alpha', []);
   override readonly expectedTotalRects = 13;
   override readonly expectedVisibleRects = 5;
   override readonly treeNodeLongName =
     'com.android.launcher3.taskbar.TaskbarView@80213537';
   override readonly treeNodeShortName = 'TaskbarView@80213537';
   override readonly numberOfFilteredProperties = 1;
-  override readonly hierarchyFilterString = 'BubbleBarView';
+  override readonly hierarchyFilter = new TextFilter('BubbleBarView', []);
   override readonly expectedHierarchyChildrenAfterStringFilter = 1;
   override readonly propertyWithDiff = 'translationY';
   override readonly expectedPropertyDiffType = DiffType.MODIFIED;
@@ -104,7 +106,7 @@ class PresenterViewCaptureTest extends AbstractHierarchyViewerPresenterTest {
   }
 
   override createPresenterWithEmptyTrace(
-    callback: NotifyHierarchyViewCallbackType,
+    callback: NotifyHierarchyViewCallbackType<UiData>,
   ): Presenter {
     const trace = new TraceBuilder<HierarchyTreeNode>()
       .setType(TraceType.VIEW_CAPTURE)
@@ -119,14 +121,28 @@ class PresenterViewCaptureTest extends AbstractHierarchyViewerPresenterTest {
     return new Presenter(traces, new InMemoryStorage(), callback);
   }
 
-  override createPresenter(
-    callback: NotifyHierarchyViewCallbackType,
+  override createPresenterWithCorruptedTrace(
+    callback: NotifyHierarchyViewCallbackType<UiData>,
   ): Presenter {
-    return new Presenter(
-      assertDefined(this.traces),
-      new InMemoryStorage(),
-      callback,
-    );
+    const trace = new TraceBuilder<HierarchyTreeNode>()
+      .setType(TraceType.VIEW_CAPTURE)
+      .setEntries([assertDefined(this.selectedTree)])
+      .setParserCustomQueryResult(CustomQueryType.VIEW_CAPTURE_METADATA, {
+        packageName: 'the_package_name',
+        windowName: 'the_window_name',
+      })
+      .setIsCorrupted(true)
+      .build();
+    const traces = new Traces();
+    traces.addTrace(trace);
+    return new Presenter(traces, new InMemoryStorage(), callback);
+  }
+
+  override createPresenter(
+    callback: NotifyHierarchyViewCallbackType<UiData>,
+    storage: Store,
+  ): Presenter {
+    return new Presenter(assertDefined(this.traces), storage, callback);
   }
 
   override getPositionUpdate(): TracePositionUpdate {
@@ -178,6 +194,10 @@ class PresenterViewCaptureTest extends AbstractHierarchyViewerPresenterTest {
         propertiesTree.getChildByName('translationY'),
       ).formattedValue(),
     ).toEqual('-0.633');
+    expect(uiData.displays).toEqual([
+      {displayId: 0, groupId: 0, name: 'Taskbar', isActive: true},
+      {displayId: 1, groupId: 1, name: 'PhoneWindow@25063d9', isActive: true},
+    ]);
   }
 
   override executeChecksForPropertiesTreeAfterSecondPositionUpdate(

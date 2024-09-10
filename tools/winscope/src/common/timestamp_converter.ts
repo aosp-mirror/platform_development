@@ -19,6 +19,7 @@ import {
   INVALID_TIME_NS,
   Timestamp,
   TimestampFormatter,
+  TimestampFormatType,
   TimezoneInfo,
 } from './time';
 import {TimestampUtils} from './timestamp_utils';
@@ -40,7 +41,7 @@ class RealTimestampFormatter implements TimestampFormatter {
     this.utcOffset = value;
   }
 
-  format(timestamp: Timestamp): string {
+  format(timestamp: Timestamp, type: TimestampFormatType): string {
     const timestampNanos =
       timestamp.getValueNs() + (this.utcOffset.getValueNs() ?? 0n);
     const ms = timestampNanos / 1000000n;
@@ -48,7 +49,11 @@ class RealTimestampFormatter implements TimestampFormatter {
       .toISOString()
       .replace('Z', '')
       .replace('T', ', ');
-
+    if (type === TimestampFormatType.DROP_DATE) {
+      return assertDefined(
+        TimestampUtils.extractTimeFromHumanTimestamp(formattedTimestamp),
+      );
+    }
     return formattedTimestamp;
   }
 }

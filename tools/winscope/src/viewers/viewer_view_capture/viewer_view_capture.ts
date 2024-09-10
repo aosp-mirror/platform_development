@@ -15,6 +15,7 @@
  */
 
 import {FunctionUtils} from 'common/function_utils';
+import {Store} from 'common/store';
 import {WinscopeEvent} from 'messaging/winscope_event';
 import {EmitEvent} from 'messaging/winscope_event_emitter';
 import {Trace} from 'trace/trace';
@@ -22,7 +23,6 @@ import {Traces} from 'trace/traces';
 import {TRACE_INFO} from 'trace/trace_info';
 import {TraceType} from 'trace/trace_type';
 import {HierarchyTreeNode} from 'trace/tree_node/hierarchy_tree_node';
-import {NotifyHierarchyViewCallbackType} from 'viewers/common/abstract_hierarchy_viewer_presenter';
 import {ViewerEvents} from 'viewers/common/viewer_events';
 import {View, Viewer, ViewType} from 'viewers/viewer';
 import {Presenter} from './presenter';
@@ -37,17 +37,13 @@ export class ViewerViewCapture implements Viewer {
   private readonly view: View;
   private emitAppEvent: EmitEvent = FunctionUtils.DO_NOTHING_ASYNC;
 
-  constructor(traces: Traces, storage: Storage) {
+  constructor(traces: Traces, storage: Store) {
     this.traces = traces;
     this.htmlElement = document.createElement('viewer-view-capture');
     const notifyViewCallback = (uiData: UiData) => {
       (this.htmlElement as any).inputData = uiData;
     };
-    this.presenter = new Presenter(
-      traces,
-      storage,
-      notifyViewCallback as NotifyHierarchyViewCallbackType,
-    );
+    this.presenter = new Presenter(traces, storage, notifyViewCallback);
     this.presenter.addEventListeners(this.htmlElement);
 
     this.htmlElement.addEventListener(

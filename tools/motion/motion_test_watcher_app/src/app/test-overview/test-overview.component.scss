@@ -4,22 +4,15 @@
   flex-direction: column;
 }
 
-.wrapper {
-  position: relative;
-  margin: 16px;
+.status {
   padding: 16px;
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
+  align-items: baseline;
 
-  border-radius: 12px;
-  border: 1px solid #c4c6d0;
-}
-
-.label {
-  position: absolute;
-  top: -12px;
-  padding: 0 16px;
-  background: var(--mat-app-background-color);
+  .spacer {
+    flex-grow: 1;
+  }
 }
 
 .tag {
@@ -42,4 +35,11 @@
   &.FAILED {
     background-color: red;
   }
+}
+
+.contents {
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+  overflow: overlay;
 }

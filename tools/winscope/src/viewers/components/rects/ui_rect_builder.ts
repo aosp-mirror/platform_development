@@ -14,8 +14,9 @@
  * limitations under the License.
  */
 
-import {TransformMatrix} from 'common/geometry_types';
-import {UiRect} from './types2d';
+import {Region} from 'common/geometry/region';
+import {TransformMatrix} from 'common/geometry/transform_matrix';
+import {UiRect} from './ui_rect';
 
 export class UiRectBuilder {
   x: number | undefined;
@@ -26,14 +27,15 @@ export class UiRectBuilder {
   transform: TransformMatrix | undefined;
   isVisible: boolean | undefined;
   isDisplay: boolean | undefined;
+  isActiveDisplay: boolean | undefined;
   id: string | undefined;
   groupId: number | undefined;
-  isVirtual: boolean | undefined;
   isClickable: boolean | undefined;
   cornerRadius: number | undefined;
   depth: number | undefined;
   hasContent: boolean | undefined;
   opacity: number | undefined;
+  fillRegion: Region | undefined;
 
   setX(value: number) {
     this.x = value;
@@ -75,6 +77,11 @@ export class UiRectBuilder {
     return this;
   }
 
+  setIsActiveDisplay(value: boolean) {
+    this.isActiveDisplay = value;
+    return this;
+  }
+
   setId(value: string) {
     this.id = value;
     return this;
@@ -82,11 +89,6 @@ export class UiRectBuilder {
 
   setGroupId(value: number) {
     this.groupId = value;
-    return this;
-  }
-
-  setIsVirtual(value: boolean) {
-    this.isVirtual = value;
     return this;
   }
 
@@ -112,6 +114,11 @@ export class UiRectBuilder {
 
   setOpacity(value: number | undefined) {
     this.opacity = value;
+    return this;
+  }
+
+  setFillRegion(region: Region | undefined) {
+    this.fillRegion = region;
     return this;
   }
 
@@ -144,16 +151,16 @@ export class UiRectBuilder {
       throw new Error('isDisplay not set');
     }
 
+    if (this.isActiveDisplay === undefined) {
+      throw new Error('isActiveDisplay not set');
+    }
+
     if (this.id === undefined) {
       throw new Error('id not set');
     }
 
     if (this.groupId === undefined) {
       throw new Error('groupId not set');
-    }
-
-    if (this.isVirtual === undefined) {
-      throw new Error('isVirtual not set');
     }
 
     if (this.isClickable === undefined) {
@@ -176,15 +183,16 @@ export class UiRectBuilder {
       this.label,
       this.isVisible,
       this.isDisplay,
+      this.isActiveDisplay,
       this.id,
       this.groupId,
-      this.isVirtual,
       this.isClickable,
       this.cornerRadius,
       this.transform,
       this.depth,
       this.hasContent,
       this.opacity,
+      this.fillRegion,
     );
   }
 }

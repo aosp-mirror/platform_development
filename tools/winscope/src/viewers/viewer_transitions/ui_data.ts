@@ -28,12 +28,15 @@ export class UiData implements UiDataLog {
   constructor(
     public headers: LogFieldType[],
     public entries: LogEntry[],
+    public currentIndex: undefined | number,
     public selectedIndex: undefined | number,
     public scrollToIndex: undefined | number,
     public propertiesTree: undefined | UiPropertyTreeNode,
   ) {}
 
-  static EMPTY = new UiData([], [], undefined, undefined, undefined);
+  static createEmpty(): UiData {
+    return new UiData([], [], undefined, undefined, undefined, undefined);
+  }
 }
 
 export class TransitionsEntry implements LogEntry {

@@ -40,7 +40,7 @@ import {assertDefined} from 'common/assert_utils';
 import {FunctionUtils} from 'common/function_utils';
 import {PersistentStore} from 'common/persistent_store';
 import {StringUtils} from 'common/string_utils';
-import {TimeRange, Timestamp} from 'common/time';
+import {TimeRange, Timestamp, TimestampFormatType} from 'common/time';
 import {TimestampUtils} from 'common/timestamp_utils';
 import {Analytics} from 'logging/analytics';
 import {
@@ -100,7 +100,7 @@ import {MiniTimelineComponent} from './mini-timeline/mini_timeline_component';
     </div>
     <div class="navbar-toggle">
       <div class="navbar" #collapsedTimeline>
-        <ng-template [ngIf]="timelineData.hasMoreThanOneDistinctTimestamp()">
+        <ng-template [ngIf]="timelineData.hasTimestamps()">
           <div id="time-selector">
             <form [formGroup]="timestampForm" class="time-selector-form">
               <mat-form-field
@@ -213,7 +213,7 @@ import {MiniTimelineComponent} from './mini-timeline/mini_timeline_component';
                       class="trace-icon"
                       *ngFor="let selectedTrace of getSelectedTracesToShow()"
                       [style]="{color: TRACE_INFO[selectedTrace.type].color}"
-                      [matTooltip]="TRACE_INFO[selectedTrace.type].name"
+                      [matTooltip]="getTraceTooltip(selectedTrace)"
                       #tooltip="matTooltip"
                       (mouseenter)="tooltip.disabled = false"
                       (mouseleave)="tooltip.disabled = true">
@@ -230,6 +230,7 @@ import {MiniTimelineComponent} from './mini-timeline/mini_timeline_component';
             </mat-form-field>
           </div>
           <mini-timeline
+            *ngIf="timelineData.hasMoreThanOneDistinctTimestamp()"
             [timelineData]="timelineData"
             [currentTracePosition]="getCurrentTracePosition()"
             [selectedTraces]="selectedTraces"
@@ -246,15 +247,16 @@ import {MiniTimelineComponent} from './mini-timeline/mini_timeline_component';
             id="mini-timeline"
             #miniTimeline></mini-timeline>
         </ng-template>
-        <div *ngIf="!timelineData.hasTimestamps()" class="no-timestamps-msg">
-          <p class="mat-body-2">No timeline to show!</p>
-          <p class="mat-body-1">All loaded traces contain no timestamps.</p>
-        </div>
         <div
-          *ngIf="timelineData.hasTimestamps() && !timelineData.hasMoreThanOneDistinctTimestamp()"
-          class="no-timestamps-msg">
-          <p class="mat-body-2">No timeline to show!</p>
-          <p class="mat-body-1">Only a single timestamp has been recorded.</p>
+          *ngIf="!timelineData.hasMoreThanOneDistinctTimestamp()"
+          class="no-timeline-msg">
+            <p class="mat-body-2">No timeline to show!</p>
+            <p
+              *ngIf="timelineData.hasTimestamps()"
+              class="mat-body-1">Only a single timestamp has been recorded.</p>
+            <p
+              *ngIf="!timelineData.hasTimestamps()"
+              class="mat-body-1">All loaded traces contain no timestamps.</p>
         </div>
       </div>
     </div>
@@ -266,6 +268,8 @@ import {MiniTimelineComponent} from './mini-timeline/mini_timeline_component';
         flex-direction: column;
         align-items: end;
         position: relative;
+        max-height: 20vh;
+        overflow: auto;
       }
       #toggle {
         width: fit-content;
@@ -292,6 +296,8 @@ import {MiniTimelineComponent} from './mini-timeline/mini_timeline_component';
         flex-direction: row;
         border-bottom: 1px solid #3333;
         border-top: 1px solid #3333;
+        max-height: 60vh;
+        overflow: hidden;
       }
       #time-selector {
         display: flex;
@@ -379,7 +385,7 @@ import {MiniTimelineComponent} from './mini-timeline/mini_timeline_component';
       #video-content {
         position: relative;
         min-width: 20rem;
-        min-height: 35rem;
+        max-height: 60vh;
         align-self: stretch;
         text-align: center;
         border: 2px solid black;
@@ -397,6 +403,8 @@ import {MiniTimelineComponent} from './mini-timeline/mini_timeline_component';
       }
       #expanded-timeline {
         flex-grow: 1;
+        overflow-y: auto;
+        overflow-x: hidden;
       }
       #trace-selector .mat-form-field-infix {
         width: 80px;
@@ -438,6 +446,11 @@ import {MiniTimelineComponent} from './mini-timeline/mini_timeline_component';
         position: relative;
         bottom: 120px;
       }
+      .select-traces-panel {
+        max-height: 60vh;
+        overflow-y: auto;
+        overflow-x: hidden;
+      }
       .tip {
         padding: 16px;
         font-weight: 300;
@@ -453,11 +466,12 @@ import {MiniTimelineComponent} from './mini-timeline/mini_timeline_component';
         padding: 1rem;
         font-family: 'Roboto', sans-serif;
       }
-      .no-timestamps-msg {
+      .no-timeline-msg {
         padding: 1rem;
         align-items: center;
         display: flex;
         flex-direction: column;
+        width: 100%;
       }
     `,
     multlineTooltip,
@@ -544,7 +558,9 @@ export class TimelineComponent
     this.selectedTraces = this.sortedTraces.filter((trace) => {
       return (
         timelineData.hasTrace(trace) &&
-        !storedDeselectedTraces.includes(trace.type)
+        (!storedDeselectedTraces.includes(trace.type) ||
+          timelineData.getActiveTrace() === trace ||
+          !timelineData.hasMoreThanOneDistinctTimestamp())
       );
     });
     this.selectedTracesFormControl = new FormControl<Array<Trace<object>>>(
@@ -694,7 +710,7 @@ export class TimelineComponent
   async handleKeyboardEvent(event: KeyboardEvent) {
     if (
       this.isInputFormFocused ||
-      !assertDefined(this.timelineData).hasTimestamps()
+      !assertDefined(this.timelineData).hasMoreThanOneDistinctTimestamp()
     ) {
       return;
     }
@@ -907,6 +923,13 @@ export class TimelineComponent
     this.changeDetectorRef.detectChanges();
   }
 
+  getTraceTooltip(trace: Trace<object>) {
+    if (trace.type === TraceType.SCREEN_RECORDING) {
+      return trace.getDescriptors()[0].split('.')[0];
+    }
+    return TRACE_INFO[trace.type].name;
+  }
+
   private updateSelectedTraces(trace: Trace<object> | undefined) {
     if (!trace) {
       return;
@@ -924,16 +947,11 @@ export class TimelineComponent
       this.getCurrentTracePosition().timestamp.getValueNs();
     const timelineData = assertDefined(this.timelineData);
 
-    let formattedCurrentTimestamp = assertDefined(
+    const formattedCurrentTimestamp = assertDefined(
       timelineData.getTimestampConverter(),
     )
       .makeTimestampFromNs(currentTimestampNs)
-      .format();
-    if (TimestampUtils.isHumanRealTimestampFormat(formattedCurrentTimestamp)) {
-      formattedCurrentTimestamp = assertDefined(
-        TimestampUtils.extractTimeFromHumanTimestamp(formattedCurrentTimestamp),
-      );
-    }
+      .format(TimestampFormatType.DROP_DATE);
     this.selectedTimeFormControl.setValue(formattedCurrentTimestamp);
     this.selectedNsFormControl.setValue(`${currentTimestampNs} ns`);
   }

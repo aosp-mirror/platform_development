@@ -14,7 +14,9 @@
  * limitations under the License.
  */
 
-export class PersistentStore {
+import {Store} from './store';
+
+export class PersistentStore implements Store {
   add(key: string, value: string) {
     localStorage.setItem(key, value);
   }

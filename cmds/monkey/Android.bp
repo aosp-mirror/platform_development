@@ -12,6 +12,12 @@ java_binary {
     name: "monkey",
     srcs: ["**/*.java"],
     wrapper: "monkey.sh",
+    static_libs: [
+        "monkey_aidl-java",
+    ],
+    jni_libs: [
+        "libmonkey_jni",
+    ],
 }
 
 android_test {
@@ -20,8 +26,9 @@ android_test {
     // not available for the host.
     // Therefore, we are relying on 'android_test' here until ravenwood is ready.
     name: "monkey_test",
-    srcs: ["**/*.java",
-           "**/*.kt",
+    srcs: [
+        "**/*.java",
+        "**/*.kt",
     ],
 
     kotlincflags: [
@@ -30,6 +37,10 @@ android_test {
 
     static_libs: [
         "androidx.test.runner",
+        "monkey_aidl-java",
+    ],
+    jni_libs: [
+        "libmonkey_jni",
     ],
 
     libs: [

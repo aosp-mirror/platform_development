@@ -18,11 +18,17 @@
         <SwitchPreferenceCompat
             android:key="@string/pref_hide_from_recents"
             android:title="Hide streamed app from recents"
-            android:defaultValue="false"
+            android:defaultValue="true"
             app:iconSpaceReserved="false"/>
         <SwitchPreferenceCompat
             android:key="@string/pref_enable_cross_device_clipboard"
             android:title="Enable cross-device clipboard"
+            android:defaultValue="false"
+            app:iconSpaceReserved="false"/>
+        <SwitchPreferenceCompat
+            android:key="@string/pref_enable_custom_activity_policy"
+            android:title="Enable custom activity policy"
+            android:summary="Show a custom notification when an activity could not be launched and try to send it to the default display"
             android:defaultValue="false"
             app:iconSpaceReserved="false"/>
     </PreferenceCategory>
@@ -59,10 +65,16 @@
             android:defaultValue="true"
             app:iconSpaceReserved="false" />
         <SwitchPreferenceCompat
+            android:key="@string/pref_enable_display_category"
+            android:title="Enable display category"
+            android:summary="Set a category for the remote display to restrict activity launches"
+            android:defaultValue="true"
+            app:iconSpaceReserved="false" />
+        <SwitchPreferenceCompat
             android:key="@string/pref_always_unlocked_device"
             android:title="Always unlocked"
             android:summary="Remote displays remain unlocked even when the host is locked"
-            android:defaultValue="false"
+            android:defaultValue="true"
             app:iconSpaceReserved="false" />
         <SwitchPreferenceCompat
             android:key="@string/pref_show_pointer_icon"
@@ -74,6 +86,12 @@
             android:key="@string/pref_enable_custom_home"
             android:title="Custom home"
             android:summary="Use a custom home activity instead of the default one on home displays"
+            android:defaultValue="false"
+            app:iconSpaceReserved="false" />
+        <SwitchPreferenceCompat
+            android:key="@string/pref_enable_custom_status_bar"
+            android:title="Custom status bar"
+            android:summary="Show a custom status bar on the remote displays."
             android:defaultValue="false"
             app:iconSpaceReserved="false" />
     </PreferenceCategory>

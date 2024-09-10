@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import {ScreenRecordingTraceEntry} from './screen_recording';
+import {MediaBasedTraceEntry} from './media_based_trace_entry';
 import {HierarchyTreeNode} from './tree_node/hierarchy_tree_node';
 import {PropertyTreeNode} from './tree_node/property_tree_node';
 
@@ -53,8 +53,8 @@ export type ImeTraceType =
 export interface TraceEntryTypeMap {
   [TraceType.PROTO_LOG]: PropertyTreeNode;
   [TraceType.SURFACE_FLINGER]: HierarchyTreeNode;
-  [TraceType.SCREEN_RECORDING]: ScreenRecordingTraceEntry;
-  [TraceType.SCREENSHOT]: ScreenRecordingTraceEntry;
+  [TraceType.SCREEN_RECORDING]: MediaBasedTraceEntry;
+  [TraceType.SCREENSHOT]: MediaBasedTraceEntry;
   [TraceType.SYSTEM_UI]: object;
   [TraceType.TRANSACTIONS]: PropertyTreeNode;
   [TraceType.TRANSACTIONS_LEGACY]: object;
@@ -92,6 +92,7 @@ export class TraceTypeUtils {
 
   private static TRACES_WITH_VIEWERS_DISPLAY_ORDER = [
     TraceType.SCREEN_RECORDING,
+    TraceType.SCREENSHOT,
     TraceType.SURFACE_FLINGER,
     TraceType.WINDOW_MANAGER,
     TraceType.INPUT_EVENT_MERGED,
@@ -134,18 +135,16 @@ export class TraceTypeUtils {
     return tIndex - uIndex;
   }
 
-  static canVisualizeTrace(t: TraceType): boolean {
-    return t !== TraceType.WM_TRANSITION && t !== TraceType.SHELL_TRANSITION;
-  }
-
   static getReasonForNoTraceVisualization(t: TraceType): string {
     switch (t) {
       case TraceType.WM_TRANSITION:
-        return 'Must also upload a shell transitions trace to visualize transitions';
+        return 'Must also upload a shell transitions trace to visualize transitions.';
       case TraceType.SHELL_TRANSITION:
-        return 'Must also upload a wm transitions trace to visualize transitions';
+        return 'Must also upload a wm transitions trace to visualize transitions.';
+      case TraceType.EVENT_LOG:
+        return 'Uploaded file does not contain CUJs. Only CUJ visualization is supported in Winscope.';
       default:
-        return 'Visualization for this trace is not supported in Winscope';
+        return 'Visualization for this trace is not supported in Winscope.';
     }
   }
 

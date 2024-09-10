@@ -25,9 +25,9 @@ import {
 import {LogPresenter} from 'viewers/common/log_presenter';
 import {PropertiesPresenter} from 'viewers/common/properties_presenter';
 import {LogField, LogFieldType} from 'viewers/common/ui_data_log';
-import {CujEntry, CujStatus, CujType, UiData} from './ui_data';
+import {CujEntry, CujStatus, UiData} from './ui_data';
 
-export class Presenter extends AbstractLogViewerPresenter {
+export class Presenter extends AbstractLogViewerPresenter<UiData> {
   static readonly FIELD_NAMES = [
     LogFieldType.CUJ_TYPE,
     LogFieldType.START_TIME,
@@ -40,14 +40,19 @@ export class Presenter extends AbstractLogViewerPresenter {
   private isInitialized = false;
   private transitionTrace: Trace<PropertyTreeNode>;
 
-  protected override logPresenter = new LogPresenter(false);
-  protected override propertiesPresenter = new PropertiesPresenter({}, [], []);
+  protected override logPresenter = new LogPresenter<CujEntry>();
+  protected override propertiesPresenter = new PropertiesPresenter(
+    {},
+    undefined,
+    [],
+    [],
+  );
 
   constructor(
     trace: Trace<PropertyTreeNode>,
-    notifyViewCallback: NotifyLogViewCallbackType,
+    notifyViewCallback: NotifyLogViewCallbackType<UiData>,
   ) {
-    super(trace, notifyViewCallback, UiData.EMPTY);
+    super(trace, notifyViewCallback, UiData.createEmpty());
     this.transitionTrace = trace;
   }
 
@@ -60,7 +65,7 @@ export class Presenter extends AbstractLogViewerPresenter {
 
     this.logPresenter.setAllEntries(allEntries);
     this.logPresenter.setHeaders(Presenter.FIELD_NAMES);
-    this.refreshUIData(UiData.EMPTY);
+    this.refreshUiData();
     this.isInitialized = true;
   }
 
@@ -96,14 +101,14 @@ export class Presenter extends AbstractLogViewerPresenter {
         timeDiff = new TimeDuration(timeDiffNs);
       }
 
-      const cujTypeId = assertDefined(
+      const cujType = assertDefined(
         cujNode.getChildByName('cujType'),
-      ).getValue();
+      ).formattedValue();
 
       const fields: LogField[] = [
         {
           type: LogFieldType.CUJ_TYPE,
-          value: `${CujType[cujTypeId]} (${cujTypeId})`,
+          value: cujType,
         },
         {
           type: LogFieldType.START_TIME,

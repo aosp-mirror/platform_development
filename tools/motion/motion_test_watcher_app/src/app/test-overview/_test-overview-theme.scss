@@ -1,0 +1,59 @@
+@use "sass:map";
+@use "@angular/material" as mat;
+
+@mixin color($theme) {
+  .contents {
+    background-color: mat.get-theme-color($theme, surface);
+    color: mat.get-theme-color($theme, on-surface);
+  }
+
+  .status {
+    background-color: mat.get-theme-color($theme, surface);
+    color: mat.get-theme-color($theme, on-surface);
+
+    &.passing {
+      background-color: green;
+      color: white;
+
+      mat-paginator {
+        background-color: transparent;
+        color: white;
+        --mat-paginator-disabled-icon-color: lightgreen;
+        --mat-paginator-enabled-icon-color: white;
+      }
+    }
+
+    &.failing {
+      background-color: mat.get-theme-color($theme, error);
+      color: mat.get-theme-color($theme, on-error);
+      mat-paginator {
+        background-color: transparent;
+        color: white;
+        --mat-paginator-disabled-icon-color: lightred;
+        --mat-paginator-enabled-icon-color: white;
+      }
+    }
+  }
+  .mat-mdc-row:hover {
+    background-color: mat.get-theme-color($theme, surface-bright);
+  }
+}
+
+@mixin typography($theme) {
+  .status {
+    font: mat.get-theme-typography($theme, label-large, font);
+  }
+
+  .mat-mdc-row.selected {
+    font: mat.get-theme-typography($theme, label-large, font);
+  }
+}
+
+@mixin theme($theme) {
+  @if mat.theme-has($theme, color) {
+    @include color($theme);
+  }
+  @if mat.theme-has($theme, typography) {
+    @include typography($theme);
+  }
+}

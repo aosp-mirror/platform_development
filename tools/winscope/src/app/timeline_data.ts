@@ -16,6 +16,8 @@
 
 import {TimeRange, Timestamp} from 'common/time';
 import {ComponentTimestampConverter} from 'common/timestamp_converter';
+import {UserNotifier} from 'common/user_notifier';
+import {CannotParseAllTransitions} from 'messaging/user_warnings';
 import {ScreenRecordingUtils} from 'trace/screen_recording_utils';
 import {Trace, TraceEntry} from 'trace/trace';
 import {Traces} from 'trace/traces';
@@ -39,7 +41,7 @@ export class TimelineData {
     TraceEntry<any> | undefined
   >();
   private activeTrace: Trace<object> | undefined;
-  private transitions: PropertyTreeNode[] = []; // cached trace entries to avoid TP and object creation latencies each time transition timeline is redrawn
+  private transitionEntries: Array<PropertyTreeNode | undefined> = []; // cached trace entries to avoid TP and object creation latencies each time transition timeline is redrawn
   private timestampConverter: ComponentTimestampConverter | undefined;
 
   async initialize(
@@ -63,13 +65,20 @@ export class TimelineData {
 
     const transitionTrace = this.traces.getTrace(TraceType.TRANSITION);
     if (transitionTrace) {
-      try {
-        this.transitions = await Promise.all(
-          transitionTrace.mapEntry(async (entry) => await entry.getValue()),
-        );
-      } catch (error) {
-        transitionTrace.setCorruptedState(true);
-        throw error;
+      let someCorrupted = false;
+      await Promise.all(
+        transitionTrace.mapEntry(async (entry) => {
+          let transition: PropertyTreeNode | undefined;
+          try {
+            transition = await entry.getValue();
+          } catch (e) {
+            someCorrupted = true;
+          }
+          this.transitionEntries.push(transition);
+        }),
+      );
+      if (someCorrupted) {
+        UserNotifier.add(new CannotParseAllTransitions()).notify();
       }
     }
 
@@ -92,8 +101,8 @@ export class TimelineData {
     }
   }
 
-  getTransitions(): PropertyTreeNode[] {
-    return this.transitions;
+  getTransitionEntries(): Array<PropertyTreeNode | undefined> {
+    return this.transitionEntries;
   }
 
   getTimestampConverter(): ComponentTimestampConverter | undefined {
@@ -132,6 +141,30 @@ export class TimelineData {
         'Attempted to set position on traces with no timestamps/entries...',
       );
       return;
+    }
+
+    if (this.firstEntry && position) {
+      if (
+        this.firstEntry.getTimestamp().getValueNs() >
+        position.timestamp.getValueNs()
+      ) {
+        this.explicitlySetPosition = TracePosition.fromTraceEntry(
+          this.firstEntry,
+        );
+        return;
+      }
+    }
+
+    if (this.lastEntry && position) {
+      if (
+        this.lastEntry.getTimestamp().getValueNs() <
+        position.timestamp.getValueNs()
+      ) {
+        this.explicitlySetPosition = TracePosition.fromTraceEntry(
+          this.lastEntry,
+        );
+        return;
+      }
     }
 
     this.explicitlySetPosition = position;
