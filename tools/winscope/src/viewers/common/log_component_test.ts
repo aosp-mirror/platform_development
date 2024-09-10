@@ -101,10 +101,12 @@ describe('LogComponent', () => {
     it('renders entries', () => {
       expect(htmlElement.querySelector('.scroll')).toBeTruthy();
 
-      const entry = assertDefined(htmlElement.querySelector('.scroll .entry'));
-      expect(entry.innerHTML).toContain('Test tag');
-      expect(entry.innerHTML).toContain('123');
-      expect(entry.innerHTML).toContain('2ns');
+      const entryText = assertDefined(
+        htmlElement.querySelector('.scroll .entry'),
+      ).textContent;
+      expect(entryText).toContain('Test tag');
+      expect(entryText).toContain('123');
+      expect(entryText).toContain('2ns');
     });
 
     it('scrolls to current entry on button click', () => {
@@ -228,8 +230,6 @@ describe('LogComponent', () => {
     });
 
     it('propagates entry on trace entry timestamp click', () => {
-      setComponentInputData();
-      fixture.detectChanges();
       let entry: TraceEntry<PropertyTreeNode> | undefined;
       htmlElement.addEventListener(ViewerEvents.TimestampClick, (event) => {
         const detail: TimestampClickDetail = (event as CustomEvent).detail;
@@ -244,8 +244,6 @@ describe('LogComponent', () => {
     });
 
     it('propagates timestamp on raw timestamp click', () => {
-      setComponentInputData();
-      fixture.detectChanges();
       let timestamp: Timestamp | undefined;
       htmlElement.addEventListener(ViewerEvents.TimestampClick, (event) => {
         const detail: TimestampClickDetail = (event as CustomEvent).detail;
@@ -286,9 +284,39 @@ describe('LogComponent', () => {
       expect(htmlElement.querySelector('.placeholder-text')).toBeTruthy();
     });
 
-    function setComponentInputData() {
-      const entryTime = TimestampConverterUtils.makeElapsedTimestamp(1n);
-      const fieldTime = TimestampConverterUtils.makeElapsedTimestamp(2n);
+    it('formats timestamp without date unless multiple dates present', () => {
+      const entry = assertDefined(htmlElement.querySelector('.scroll .entry'));
+      expect(entry.textContent?.trim()).toEqual('1ns Test tag 1123 2ns');
+
+      const spy = spyOn(component, 'areMultipleDatesPresent').and.returnValue(
+        true,
+      );
+      fixture.detectChanges();
+      expect(entry.textContent?.trim()).toEqual('1ns Test tag 1123 2ns');
+
+      setComponentInputData(false);
+      fixture.detectChanges();
+      expect(entry.textContent?.trim()).toEqual(
+        '1970-01-01, 00:00:00.000 Test tag 21234 1970-01-01, 00:00:00.000',
+      );
+
+      spy.and.returnValue(false);
+      fixture.detectChanges();
+      expect(entry.textContent?.trim()).toEqual(
+        '00:00:00.000 Test tag 21234 00:00:00.000',
+      );
+    });
+
+    function setComponentInputData(elapsed = true) {
+      let entryTime: Timestamp;
+      let fieldTime: Timestamp;
+      if (elapsed) {
+        entryTime = TimestampConverterUtils.makeElapsedTimestamp(1n);
+        fieldTime = TimestampConverterUtils.makeElapsedTimestamp(2n);
+      } else {
+        entryTime = TimestampConverterUtils.makeRealTimestamp(1n);
+        fieldTime = TimestampConverterUtils.makeRealTimestamp(2n);
+      }
 
       const fields1 = [
         {type: LogFieldType.TAG, value: 'Test tag 1'},
