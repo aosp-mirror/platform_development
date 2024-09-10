@@ -21,6 +21,7 @@ import {PropertyTreeBuilder} from 'test/unit/property_tree_builder';
 import {TimestampConverterUtils} from 'test/unit/timestamp_converter_utils';
 import {TraceBuilder} from 'test/unit/trace_builder';
 import {Trace} from 'trace/trace';
+import {TraceType} from 'trace/trace_type';
 import {
   DEFAULT_PROPERTY_FORMATTER,
   TIMESTAMP_NODE_FORMATTER,
@@ -231,10 +232,11 @@ class PresenterProtologTest extends AbstractLogViewerPresenterTest<UiData> {
     this.secondPositionUpdate = TracePositionUpdate.fromTimestamp(time11);
   }
 
-  override createPresenterWithEmptyTrace(
+  override async createPresenterWithEmptyTrace(
     callback: NotifyLogViewCallbackType<UiData>,
-  ): Presenter {
+  ): Promise<Presenter> {
     const emptyTrace = new TraceBuilder<PropertyTreeNode>()
+      .setType(TraceType.PROTO_LOG)
       .setEntries([])
       .build();
     return new Presenter(emptyTrace, callback, new InMemoryStorage());

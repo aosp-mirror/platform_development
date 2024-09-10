@@ -41,7 +41,7 @@ describe('Viewer Protolog', () => {
     );
     await E2eTestUtils.checkTimelineTraceSelector({
       icon: 'notes',
-      color: 'rgba(64, 165, 138, 1)',
+      color: 'rgba(52, 168, 83, 1)',
     });
     await E2eTestUtils.checkFinalRealTimestamp('2022-11-21, 18:05:18.259');
     await E2eTestUtils.checkInitialRealTimestamp('2022-11-21, 18:05:09.777');
