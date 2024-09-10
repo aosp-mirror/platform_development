@@ -22,10 +22,10 @@ import {
   NgZone,
   Output,
 } from '@angular/core';
-import {TRACE_INFO} from 'app/trace_info';
 import {TracePipeline} from 'app/trace_pipeline';
 import {ProgressListener} from 'messaging/progress_listener';
 import {Trace} from 'trace/trace';
+import {TRACE_INFO} from 'trace/trace_info';
 import {TraceTypeUtils} from 'trace/trace_type';
 import {LoadProgressComponent} from './load_progress_component';
 
@@ -42,7 +42,7 @@ import {LoadProgressComponent} from './load_progress_component';
             color="primary"
             mat-raised-button
             class="load-btn"
-            matTooltip="Upload trace with an associated viewer to visualise"
+            matTooltip="Upload trace with an associated viewer to visualize"
             [matTooltipDisabled]="hasLoadedFilesWithViewers()"
             [disabled]="!hasLoadedFilesWithViewers()"
             (click)="onViewTracesButtonClick()">
@@ -88,7 +88,7 @@ import {LoadProgressComponent} from './load_progress_component';
         <mat-list
           *ngIf="!isLoadingFiles && this.tracePipeline.getTraces().getSize() > 0"
           class="uploaded-files">
-          <mat-list-item *ngFor="let trace of this.tracePipeline.getTraces()">
+          <mat-list-item [class.no-visualization]="!canVisualizeTrace(trace)" *ngFor="let trace of this.tracePipeline.getTraces()">
             <mat-icon matListIcon>
               {{ TRACE_INFO[trace.type].icon }}
             </mat-icon>
@@ -96,6 +96,12 @@ import {LoadProgressComponent} from './load_progress_component';
             <p matLine>{{ TRACE_INFO[trace.type].name }}</p>
             <p matLine *ngFor="let descriptor of trace.getDescriptors()">{{ descriptor }}</p>
 
+            <mat-icon class="info-icon" *ngIf="traceUploadInfo(trace)" [matTooltip]="traceUploadInfo(trace)">
+              info
+            </mat-icon>
+            <mat-icon class="warning-icon" *ngIf="!canVisualizeTrace(trace)" [matTooltip]="cannotVisualizeTraceTooltip(trace)">
+              warning
+            </mat-icon>
             <button color="primary" mat-icon-button (click)="onRemoveTrace($event, trace)">
               <mat-icon>close</mat-icon>
             </button>
@@ -185,6 +191,12 @@ import {LoadProgressComponent} from './load_progress_component';
       }
       mat-card-content {
         flex-grow: 1;
+      }
+      .no-visualization {
+        background-color: var(--warning-background-color);
+      }
+      .info-icon, .warning-icon {
+        flex-shrink: 0;
       }
     `,
   ],
@@ -281,6 +293,18 @@ export class UploadTracesComponent implements ProgressListener {
 
       return hasFilesWithViewers;
     });
+  }
+
+  traceUploadInfo(trace: Trace<object>): string | undefined {
+    return TraceTypeUtils.traceUploadInfo(trace.type);
+  }
+
+  canVisualizeTrace(trace: Trace<object>): boolean {
+    return TraceTypeUtils.canVisualizeTrace(trace.type);
+  }
+
+  cannotVisualizeTraceTooltip(trace: Trace<object>): string {
+    return TraceTypeUtils.getReasonForNoTraceVisualization(trace.type);
   }
 
   private getInputFiles(event: Event): File[] {

@@ -15,38 +15,45 @@
  */
 
 import {assertDefined} from 'common/assert_utils';
-import {TimeRange, TimestampType} from 'common/time';
-import {NO_TIMEZONE_OFFSET_FACTORY} from 'common/timestamp_factory';
-import {
-  TraceHasOldData,
-  TraceOverridden,
-  WinscopeError,
-} from 'messaging/winscope_error';
+import {FileUtils} from 'common/file_utils';
+import {TimeRange} from 'common/time';
+import {UserWarning} from 'messaging/user_warning';
+import {TraceHasOldData, TraceOverridden} from 'messaging/user_warnings';
 import {FileAndParser} from 'parsers/file_and_parser';
 import {FileAndParsers} from 'parsers/file_and_parsers';
 import {ParserBuilder} from 'test/unit/parser_builder';
+import {TimestampConverterUtils} from 'test/unit/timestamp_converter_utils';
 import {Parser} from 'trace/parser';
 import {TraceFile} from 'trace/trace_file';
 import {TraceType} from 'trace/trace_type';
 import {LoadedParsers} from './loaded_parsers';
 
 describe('LoadedParsers', () => {
+  const realZeroTimestamp = TimestampConverterUtils.makeRealTimestamp(0n);
+  const elapsedZeroTimestamp = TimestampConverterUtils.makeElapsedTimestamp(0n);
   const oldTimestamps = [
-    NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(0n),
-    NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(1n),
-    NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(2n),
-    NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(3n),
-    NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(4n),
+    realZeroTimestamp,
+    TimestampConverterUtils.makeRealTimestamp(1n),
+    TimestampConverterUtils.makeRealTimestamp(2n),
+    TimestampConverterUtils.makeRealTimestamp(3n),
+    TimestampConverterUtils.makeRealTimestamp(4n),
+  ];
+
+  const elapsedTimestamps = [
+    elapsedZeroTimestamp,
+    TimestampConverterUtils.makeElapsedTimestamp(1n),
+    TimestampConverterUtils.makeElapsedTimestamp(2n),
+    TimestampConverterUtils.makeElapsedTimestamp(3n),
+    TimestampConverterUtils.makeElapsedTimestamp(4n),
   ];
 
   const timestamps = [
-    NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(5n * 60n * 1000000000n + 10n), // 5m10ns
-    NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(5n * 60n * 1000000000n + 11n), // 5m11ns
-    NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(5n * 60n * 1000000000n + 12n), // 5m12ns
+    TimestampConverterUtils.makeRealTimestamp(5n * 60n * 1000000000n + 10n), // 5m10ns
+    TimestampConverterUtils.makeRealTimestamp(5n * 60n * 1000000000n + 11n), // 5m11ns
+    TimestampConverterUtils.makeRealTimestamp(5n * 60n * 1000000000n + 12n), // 5m12ns
   ];
 
   const filename = 'filename';
-  const file = new TraceFile(new File([], filename));
 
   const parserSf0 = new ParserBuilder<object>()
     .setType(TraceType.SURFACE_FLINGER)
@@ -68,6 +75,12 @@ describe('LoadedParsers', () => {
     .setTimestamps([])
     .setDescriptors([filename])
     .build();
+  const parserSf_elapsed = new ParserBuilder<object>()
+    .setType(TraceType.SURFACE_FLINGER)
+    .setTimestamps(elapsedTimestamps)
+    .setDescriptors([filename])
+    .setNoOffsets(true)
+    .build();
   const parserWm0 = new ParserBuilder<object>()
     .setType(TraceType.WINDOW_MANAGER)
     .setTimestamps(timestamps)
@@ -80,12 +93,48 @@ describe('LoadedParsers', () => {
     .build();
   const parserWm_dump = new ParserBuilder<object>()
     .setType(TraceType.WINDOW_MANAGER)
-    .setTimestamps([NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(0n)])
+    .setTimestamps([realZeroTimestamp])
+    .setDescriptors([filename])
+    .build();
+  const parserWm_elapsed = new ParserBuilder<object>()
+    .setType(TraceType.WINDOW_MANAGER)
+    .setTimestamps(elapsedTimestamps)
+    .setDescriptors([filename])
+    .setNoOffsets(true)
+    .build();
+  const parserWmTransitions = new ParserBuilder<object>()
+    .setType(TraceType.WM_TRANSITION)
+    .setTimestamps([
+      elapsedZeroTimestamp,
+      elapsedZeroTimestamp,
+      elapsedZeroTimestamp,
+    ])
+    .setDescriptors([filename])
+    .build();
+  const parserEventlog = new ParserBuilder<object>()
+    .setType(TraceType.EVENT_LOG)
+    .setTimestamps(timestamps)
+    .setDescriptors([filename])
+    .setNoOffsets(true)
+    .build();
+  const parserScreenRecording = new ParserBuilder<object>()
+    .setType(TraceType.SCREEN_RECORDING)
+    .setTimestamps(timestamps)
+    .setDescriptors([filename])
+    .build();
+  const parserViewCapture0 = new ParserBuilder<object>()
+    .setType(TraceType.VIEW_CAPTURE)
+    .setEntries([])
+    .setDescriptors([filename])
+    .build();
+  const parserViewCapture1 = new ParserBuilder<object>()
+    .setType(TraceType.VIEW_CAPTURE)
+    .setEntries([])
     .setDescriptors([filename])
     .build();
 
   let loadedParsers: LoadedParsers;
-  let errors: WinscopeError[] = [];
+  let warnings: UserWarning[] = [];
 
   beforeEach(async () => {
     loadedParsers = new LoadedParsers();
@@ -102,7 +151,12 @@ describe('LoadedParsers', () => {
     expectLoadResult([parserSf0], []);
   });
 
-  it('loads legacy parser without dropping already-loaded legacy parser with different type', async () => {
+  it('loads multiple perfetto parsers with same trace type', async () => {
+    loadParsers([], [parserSf0, parserSf1]);
+    expectLoadResult([parserSf0, parserSf1], []);
+  });
+
+  it('loads legacy parser without dropping already-loaded legacy parser (different trace type)', async () => {
     loadParsers([parserSf0], []);
     expectLoadResult([parserSf0], []);
 
@@ -110,26 +164,34 @@ describe('LoadedParsers', () => {
     expectLoadResult([parserSf0, parserWm0], []);
   });
 
-  it('loads legacy parser overriding already-loaded legacy parser with same type (newly loaded file/archive always wins)', () => {
+  it('loads legacy parser without dropping already-loaded legacy parser (same trace type)', async () => {
     loadParsers([parserSf0], []);
     expectLoadResult([parserSf0], []);
 
     loadParsers([parserSf1], []);
-    expectLoadResult([parserSf1], [new TraceOverridden(filename)]);
+    expectLoadResult([parserSf0, parserSf1], []);
   });
 
-  it('gives priority to parsers with longer data', () => {
-    loadParsers([parserWm0, parserWm_dump], []);
-    expectLoadResult([parserWm0], [new TraceOverridden(filename)]);
+  it('drops elapsed-only parsers if parsers with real timestamps present', () => {
+    loadParsers([parserSf_elapsed, parserSf0], []);
+    expectLoadResult([parserSf0], [new TraceHasOldData(filename)]);
+  });
+
+  it('doesnt drop elapsed-only parsers if no parsers with real timestamps present', () => {
+    loadParsers([parserSf_elapsed, parserWm_elapsed], []);
+    expectLoadResult([parserSf_elapsed, parserWm_elapsed], []);
+  });
+
+  it('keeps real-time parsers without offset', () => {
+    loadParsers([parserSf0, parserEventlog], []);
+    expectLoadResult([parserSf0, parserEventlog], []);
   });
 
   describe('drops legacy parser with old data (dangling old trace file)', () => {
     const timeGapFrom = assertDefined(
-      parserSf_longButOldData.getTimestamps(TimestampType.REAL)?.at(-1),
+      parserSf_longButOldData.getTimestamps()?.at(-1),
     );
-    const timeGapTo = assertDefined(
-      parserWm0.getTimestamps(TimestampType.REAL)?.at(0),
-    );
+    const timeGapTo = assertDefined(parserWm0.getTimestamps()?.at(0));
     const timeGap = new TimeRange(timeGapFrom, timeGapTo);
 
     it('taking into account other legacy parsers', () => {
@@ -156,11 +218,16 @@ describe('LoadedParsers', () => {
       expectLoadResult([parserWm_dump, parserSf0], []);
     });
 
+    it('doesnt drop legacy parser with wm transitions', () => {
+      // Only Shell Transition data used to set timestamps of merged Transition trace,
+      // so WM Transition data should not be considered by "old data" policy
+      loadParsers([parserWmTransitions, parserSf0], []);
+      expectLoadResult([parserWmTransitions, parserSf0], []);
+    });
+
     it('is robust to traces with time range overlap', () => {
       const parser = parserSf0;
-      const timestamps = assertDefined(
-        parserSf0.getTimestamps(TimestampType.REAL),
-      );
+      const timestamps = assertDefined(parserSf0.getTimestamps());
 
       const timestampsOverlappingFront = [
         timestamps[0].add(-1n),
@@ -261,7 +328,7 @@ describe('LoadedParsers', () => {
   describe('is robust to multiple parsers of same type loaded at once', () => {
     it('legacy parsers', () => {
       loadParsers([parserSf0, parserSf1], []);
-      expectLoadResult([parserSf0], [new TraceOverridden(filename)]);
+      expectLoadResult([parserSf0, parserSf1], []);
     });
 
     it('legacy + perfetto parsers', () => {
@@ -286,12 +353,22 @@ describe('LoadedParsers', () => {
   });
 
   describe('handles screen recordings and screenshots', () => {
-    const parserScreenRecording = new ParserBuilder<object>()
+    const parserScreenRecording0 = new ParserBuilder<object>()
       .setType(TraceType.SCREEN_RECORDING)
       .setTimestamps(timestamps)
       .setDescriptors(['screen_recording.mp4'])
       .build();
-    const parserScreenshot = new ParserBuilder<object>()
+    const parserScreenRecording1 = new ParserBuilder<object>()
+      .setType(TraceType.SCREEN_RECORDING)
+      .setTimestamps(timestamps)
+      .setDescriptors(['screen_recording.mp4'])
+      .build();
+    const parserScreenshot0 = new ParserBuilder<object>()
+      .setType(TraceType.SCREENSHOT)
+      .setTimestamps(timestamps)
+      .setDescriptors(['screenshot.png'])
+      .build();
+    const parserScreenshot1 = new ParserBuilder<object>()
       .setType(TraceType.SCREENSHOT)
       .setTimestamps(timestamps)
       .setDescriptors(['screenshot.png'])
@@ -302,39 +379,67 @@ describe('LoadedParsers', () => {
     );
 
     it('loads screenshot parser', () => {
-      loadParsers([parserScreenshot], []);
-      expectLoadResult([parserScreenshot], []);
+      loadParsers([parserScreenshot0], []);
+      expectLoadResult([parserScreenshot0], []);
     });
 
     it('loads screen recording parser', () => {
-      loadParsers([parserScreenRecording], []);
-      expectLoadResult([parserScreenRecording], []);
+      loadParsers([parserScreenRecording0], []);
+      expectLoadResult([parserScreenRecording0], []);
     });
 
     it('discards screenshot parser in favour of screen recording parser', () => {
-      loadParsers([parserScreenshot, parserScreenRecording], []);
-      expectLoadResult([parserScreenRecording], [overrideError]);
+      loadParsers([parserScreenshot0, parserScreenRecording0], []);
+      expectLoadResult([parserScreenRecording0], [overrideError]);
     });
 
     it('does not load screenshot parser after loading screen recording parser in same call', () => {
-      loadParsers([parserScreenRecording, parserScreenshot], []);
-      expectLoadResult([parserScreenRecording], [overrideError]);
+      loadParsers([parserScreenRecording0, parserScreenshot0], []);
+      expectLoadResult([parserScreenRecording0], [overrideError]);
     });
 
     it('does not load screenshot parser after loading screen recording parser in previous call', () => {
-      loadParsers([parserScreenRecording], []);
-      expectLoadResult([parserScreenRecording], []);
+      loadParsers([parserScreenRecording0], []);
+      expectLoadResult([parserScreenRecording0], []);
 
-      loadParsers([parserScreenshot], []);
-      expectLoadResult([parserScreenRecording], [overrideError]);
+      loadParsers([parserScreenshot0], []);
+      expectLoadResult([parserScreenRecording0], [overrideError]);
     });
 
     it('overrides previously loaded screenshot parser with screen recording parser', () => {
-      loadParsers([parserScreenshot], []);
-      expectLoadResult([parserScreenshot], []);
+      loadParsers([parserScreenshot0], []);
+      expectLoadResult([parserScreenshot0], []);
 
-      loadParsers([parserScreenRecording], []);
-      expectLoadResult([parserScreenRecording], [overrideError]);
+      loadParsers([parserScreenRecording0], []);
+      expectLoadResult([parserScreenRecording0], [overrideError]);
+    });
+
+    it('enforces limit of single screenshot or screenrecord parser', () => {
+      loadParsers([parserScreenshot0], []);
+      expectLoadResult([parserScreenshot0], []);
+
+      loadParsers([parserScreenshot1], []);
+      expectLoadResult(
+        [parserScreenshot0],
+        [new TraceOverridden('screenshot.png', TraceType.SCREENSHOT)],
+      );
+
+      loadParsers([parserScreenRecording0], []);
+      expectLoadResult(
+        [parserScreenRecording0],
+        [new TraceOverridden('screenshot.png', TraceType.SCREEN_RECORDING)],
+      );
+
+      loadParsers([parserScreenRecording1], []);
+      expectLoadResult(
+        [parserScreenRecording0],
+        [
+          new TraceOverridden(
+            'screen_recording.mp4',
+            TraceType.SCREEN_RECORDING,
+          ),
+        ],
+      );
     });
   });
 
@@ -342,10 +447,10 @@ describe('LoadedParsers', () => {
     loadParsers([parserSf0], [parserWm0]);
     expectLoadResult([parserSf0, parserWm0], []);
 
-    loadedParsers.remove(TraceType.WINDOW_MANAGER);
+    loadedParsers.remove(parserWm0);
     expectLoadResult([parserSf0], []);
 
-    loadedParsers.remove(TraceType.SURFACE_FLINGER);
+    loadedParsers.remove(parserSf0);
     expectLoadResult([], []);
   });
 
@@ -361,47 +466,106 @@ describe('LoadedParsers', () => {
     expectLoadResult([parserSf0, parserWm0], []);
   });
 
+  it('can make zip archive of traces with appropriate directories and extensions', async () => {
+    const fileDuplicated = new File([], filename);
+
+    const legacyFiles = [
+      // ScreenRecording
+      new File([], filename),
+
+      // ViewCapture
+      // Multiple parsers point to the same viewcapture file,
+      // but we expect to see only one in the output archive (deduplicated)
+      fileDuplicated,
+      fileDuplicated,
+
+      // WM
+      new File([], filename + '.pb'),
+
+      // WM
+      // Same filename as above.
+      // Expect this file to be automatically renamed to avoid clashes/overwrites
+      new File([], filename + '.pb'),
+    ];
+
+    loadParsers(
+      [
+        parserScreenRecording,
+        parserViewCapture0,
+        parserViewCapture1,
+        parserWm0,
+        parserWm1,
+      ],
+      [parserSf0, parserWmTransitions],
+      legacyFiles,
+    );
+    expectLoadResult(
+      [
+        parserScreenRecording,
+        parserViewCapture0,
+        parserViewCapture1,
+        parserWm0,
+        parserWm1,
+        parserSf0,
+        parserWmTransitions,
+      ],
+      [],
+    );
+
+    const zipArchive = await loadedParsers.makeZipArchive();
+    const zipFile = new File([zipArchive], 'winscope.zip');
+    const actualArchiveContents = (await FileUtils.unzipFile(zipFile))
+      .map((file) => file.name)
+      .sort();
+
+    const expectedArchiveContents = [
+      'filename.mp4',
+      'filename.perfetto-trace',
+      'vc/filename.winscope',
+      'wm/filename (1).pb',
+      'wm/filename.pb',
+    ];
+    expect(actualArchiveContents).toEqual(expectedArchiveContents);
+  });
+
   function loadParsers(
     legacy: Array<Parser<object>>,
     perfetto: Array<Parser<object>>,
+    legacyFiles?: File[],
   ) {
-    const legacyFileAndParsers = legacy.map(
-      (parser) => new FileAndParser(file, parser),
-    );
-    const perfettoFileAndParsers =
-      perfetto.length > 0 ? new FileAndParsers(file, perfetto) : undefined;
+    const legacyFileAndParsers = legacy.map((parser, i) => {
+      const legacyFile = legacyFiles ? legacyFiles[i] : new File([], filename);
+      return new FileAndParser(new TraceFile(legacyFile), parser);
+    });
 
-    errors = [];
-    const errorListener = {
-      onError(error: WinscopeError) {
-        errors.push(error);
+    const perfettoTraceFile = new TraceFile(new File([], filename));
+    const perfettoFileAndParsers =
+      perfetto.length > 0
+        ? new FileAndParsers(perfettoTraceFile, perfetto)
+        : undefined;
+
+    warnings = [];
+    const listener = {
+      onNotifications(notifications: UserWarning[]) {
+        warnings.push(...notifications);
       },
     };
 
     loadedParsers.addParsers(
       legacyFileAndParsers,
       perfettoFileAndParsers,
-      errorListener,
+      listener,
     );
   }
 
   function expectLoadResult(
     expectedParsers: Array<Parser<object>>,
-    expectedErrors: WinscopeError[],
+    expectedWarnings: UserWarning[],
   ) {
-    expectedParsers.sort((a, b) => a.getTraceType() - b.getTraceType());
-    const actualParsers = loadedParsers
-      .getParsers()
-      .sort((a, b) => a.getTraceType() - b.getTraceType());
+    const actualParsers = loadedParsers.getParsers();
+    expect(actualParsers.length).toEqual(expectedParsers.length);
+    expect(new Set([...actualParsers])).toEqual(new Set([...expectedParsers]));
 
-    for (
-      let i = 0;
-      i < Math.max(expectedParsers.length, actualParsers.length);
-      ++i
-    ) {
-      expect(actualParsers[i]).toBe(expectedParsers[i]);
-    }
-
-    expect(errors).toEqual(expectedErrors);
+    expect(warnings).toEqual(expectedWarnings);
   }
 });

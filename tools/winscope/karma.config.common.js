@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+const path = require('path');
 const webpackConfig = require('./webpack.config.common');
 delete webpackConfig.entry;
 delete webpackConfig.output;
@@ -40,9 +41,11 @@ module.exports = (config) => {
         served: true,
       },
     ],
+    reporters: ['progress'],
     preprocessors: {
       'src/main_unit_test.ts': ['webpack', 'sourcemap'],
     },
+    verbose: true, // output config used by istanbul for debugging
     webpack: webpackConfig,
   });
 };

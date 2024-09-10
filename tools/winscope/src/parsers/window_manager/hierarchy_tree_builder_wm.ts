@@ -21,33 +21,53 @@ import {PropertiesProvider} from 'trace/tree_node/properties_provider';
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
 
 export class HierarchyTreeBuilderWm extends HierarchyTreeBuilder {
-  protected override buildIdentifierToChildMap(
+  protected override buildIdentifierToChildrenMap(
     containers: PropertiesProvider[],
-  ): Map<string, PropertiesProvider[]> {
+  ): Map<string, readonly HierarchyTreeNode[]> {
     const map = containers.reduce((map, container) => {
       const containerProperties = container.getEagerProperties();
+      const containerNode = this.makeNode(
+        containerProperties.id,
+        this.getSubtreeName(containerProperties.name),
+        container,
+      );
       const token = assertDefined(
         containerProperties.getChildByName('token'),
       ).getValue();
-      map.set(token, [container]);
+      map.set(token, [containerNode]);
       return map;
-    }, new Map<string, PropertiesProvider[]>());
+    }, new Map<string, HierarchyTreeNode[]>());
     return map;
   }
 
-  protected override makeRootChildren(
-    children: PropertiesProvider[],
-    identifierToChild: Map<string | number, PropertiesProvider[]>,
-  ): readonly HierarchyTreeNode[] {
-    if (children.length === 0) return [];
-    return this.buildSubtree(children[0], identifierToChild).getAllChildren();
+  protected override assignParentChildRelationships(
+    node: HierarchyTreeNode,
+    identifierToChildren: Map<string | number, HierarchyTreeNode[]>,
+    isRoot?: boolean,
+  ): void {
+    let childrenTokens: readonly PropertyTreeNode[] | undefined;
+    if (isRoot) {
+      const rootWindowContainerProps = assertDefined(this.children)
+        .at(0)
+        ?.getEagerProperties();
+      childrenTokens =
+        rootWindowContainerProps
+          ?.getChildByName('children')
+          ?.getAllChildren() ?? [];
+    } else {
+      childrenTokens =
+        node.getEagerPropertyByName('children')?.getAllChildren() ?? [];
+    }
+    for (const childToken of childrenTokens) {
+      const child = identifierToChildren.get(childToken.getValue())?.at(0);
+      if (child) {
+        this.setParentChildRelationship(node, child);
+        this.assignParentChildRelationships(child, identifierToChildren);
+      }
+    }
   }
 
-  protected override getIdentifierValue(identifier: PropertyTreeNode): string {
-    return identifier.getValue();
-  }
-
-  protected override getSubtreeName(tokenAndName: string): string {
+  private getSubtreeName(tokenAndName: string): string {
     const splitId = tokenAndName.split(' ');
     return splitId.slice(1, splitId.length).join(' ');
   }

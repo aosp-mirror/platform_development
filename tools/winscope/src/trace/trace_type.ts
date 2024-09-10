@@ -40,20 +40,14 @@ export enum TraceType {
   TEST_TRACE_STRING,
   TEST_TRACE_NUMBER,
   VIEW_CAPTURE,
-  VIEW_CAPTURE_LAUNCHER_ACTIVITY,
-  VIEW_CAPTURE_TASKBAR_DRAG_LAYER,
-  VIEW_CAPTURE_TASKBAR_OVERLAY_DRAG_LAYER,
+  INPUT_MOTION_EVENT,
+  INPUT_KEY_EVENT,
 }
 
 export type ImeTraceType =
   | TraceType.INPUT_METHOD_CLIENTS
   | TraceType.INPUT_METHOD_MANAGER_SERVICE
   | TraceType.INPUT_METHOD_SERVICE;
-export type ViewCaptureTraceType =
-  | TraceType.VIEW_CAPTURE
-  | TraceType.VIEW_CAPTURE_LAUNCHER_ACTIVITY
-  | TraceType.VIEW_CAPTURE_TASKBAR_DRAG_LAYER
-  | TraceType.VIEW_CAPTURE_TASKBAR_OVERLAY_DRAG_LAYER;
 
 export interface TraceEntryTypeMap {
   [TraceType.PROTO_LOG]: PropertyTreeNode;
@@ -77,9 +71,8 @@ export interface TraceEntryTypeMap {
   [TraceType.TEST_TRACE_STRING]: string;
   [TraceType.TEST_TRACE_NUMBER]: number;
   [TraceType.VIEW_CAPTURE]: HierarchyTreeNode;
-  [TraceType.VIEW_CAPTURE_LAUNCHER_ACTIVITY]: HierarchyTreeNode;
-  [TraceType.VIEW_CAPTURE_TASKBAR_DRAG_LAYER]: HierarchyTreeNode;
-  [TraceType.VIEW_CAPTURE_TASKBAR_OVERLAY_DRAG_LAYER]: HierarchyTreeNode;
+  [TraceType.INPUT_MOTION_EVENT]: PropertyTreeNode;
+  [TraceType.INPUT_KEY_EVENT]: PropertyTreeNode;
 }
 
 export class TraceTypeUtils {
@@ -104,11 +97,8 @@ export class TraceTypeUtils {
     TraceType.TRANSACTIONS,
     TraceType.TRANSACTIONS_LEGACY,
     TraceType.PROTO_LOG,
-    TraceType.TRANSITION,
     TraceType.VIEW_CAPTURE,
-    TraceType.VIEW_CAPTURE_LAUNCHER_ACTIVITY,
-    TraceType.VIEW_CAPTURE_TASKBAR_DRAG_LAYER,
-    TraceType.VIEW_CAPTURE_TASKBAR_OVERLAY_DRAG_LAYER,
+    TraceType.TRANSITION,
   ];
 
   static isTraceTypeWithViewer(t: TraceType): boolean {
@@ -137,6 +127,30 @@ export class TraceTypeUtils {
       TraceTypeUtils.TRACES_WITH_VIEWERS_DISPLAY_ORDER,
     );
     return tIndex - uIndex;
+  }
+
+  static canVisualizeTrace(t: TraceType): boolean {
+    return t !== TraceType.WM_TRANSITION && t !== TraceType.SHELL_TRANSITION;
+  }
+
+  static traceUploadInfo(t: TraceType): string | undefined {
+    switch (t) {
+      case TraceType.CUJS:
+        return 'Used to show CUJ boundaries in timeline';
+      default:
+        return undefined;
+    }
+  }
+
+  static getReasonForNoTraceVisualization(t: TraceType): string {
+    switch (t) {
+      case TraceType.WM_TRANSITION:
+        return 'Must also upload a shell transitions trace to visualize transitions';
+      case TraceType.SHELL_TRANSITION:
+        return 'Must also upload a wm transitions trace to visualize transitions';
+      default:
+        return 'Visualization for this trace is not supported in Winscope';
+    }
   }
 
   private static findIndexInOrder(

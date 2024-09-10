@@ -1,0 +1,15 @@
+<div class="wrapper">
+  <div class=".mat-app-background label">Motion Golden result</div>
+  <div class="toolbar">
+    <button mat-icon-button (click)="updateGolden()">
+      <mat-icon>save</mat-icon>
+    </button>
+  </div>
+  <div>Repo file: {{ golden.goldenRepoPath }}</div>
+
+  @if (golden.filmstripUrl) {
+    <div class="screenshot-container">
+      <img class="screenshot" [src]="golden.filmstripUrl" />
+    </div>
+  }
+</div>

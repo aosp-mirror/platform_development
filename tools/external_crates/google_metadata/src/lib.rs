@@ -83,7 +83,7 @@ impl GoogleMetadata {
         let mut metadata = GoogleMetadata { path, metadata: MetaData::new() };
         let name = name.into();
         metadata.set_date_to_today()?;
-        metadata.set_identifier(&name, version)?;
+        metadata.set_version_and_urls(&name, version)?;
         let third_party = metadata.metadata.third_party.mut_or_insert_default();
         third_party.set_homepage(crates_io_homepage(&name));
         third_party.set_license_type(license_type);
@@ -111,10 +111,11 @@ impl GoogleMetadata {
         date.set_year(now.year());
         Ok(())
     }
-    /// Sets the identifier.
+    /// Sets the version and URL fields.
     ///
-    /// The identifier contains the URL and version for the crate.
-    pub fn set_identifier<Q: Into<String>>(
+    /// Sets third_party.homepage and third_party.version, and
+    /// a single "Archive" identifier with crate archive URL and version.
+    pub fn set_version_and_urls<Q: Into<String>>(
         &mut self,
         name: impl AsRef<str>,
         version: Q,
@@ -126,9 +127,12 @@ impl GoogleMetadata {
                 name.as_ref().to_string(),
             ));
         }
+        let third_party = self.metadata.third_party.mut_or_insert_default();
+        third_party.set_homepage(crates_io_homepage(&name));
+        let version = version.into();
+        third_party.set_version(version.clone());
         let mut identifier = Identifier::new();
         identifier.set_type("Archive".to_string());
-        let version = version.into();
         identifier.set_value(crate_archive_url(name, &version));
         identifier.set_version(version);
         self.metadata.third_party.mut_or_insert_default().identifier.clear();
@@ -160,6 +164,12 @@ impl GoogleMetadata {
                 updated = true;
             }
         }
+        updated
+    }
+    /// Remove deprecate URL fields.
+    pub fn remove_deprecated_url(&mut self) -> bool {
+        let updated = !self.metadata.third_party.url.is_empty();
+        self.metadata.third_party.mut_or_insert_default().url.clear();
         updated
     }
 }
