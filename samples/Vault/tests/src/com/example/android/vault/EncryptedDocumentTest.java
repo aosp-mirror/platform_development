@@ -19,7 +19,8 @@ package com.example.android.vault;
 import android.os.ParcelFileDescriptor;
 import android.test.AndroidTestCase;
 import android.test.MoreAsserts;
-import android.test.suitebuilder.annotation.MediumTest;
+
+import androidx.test.filters.MediumTest;
 
 import org.json.JSONObject;
 

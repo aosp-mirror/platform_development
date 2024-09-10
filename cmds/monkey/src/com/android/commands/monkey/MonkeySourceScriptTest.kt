@@ -36,14 +36,14 @@ import org.junit.Test
 
 private fun receiveEvent(script: MonkeySourceScript, type: Int): MonkeyEvent {
     val event = script.getNextEvent()
-    assertNotNull(event)
-    assertEquals(type, event.getEventType())
+    assertNotNull("Should receive a valid event", event)
+    assertEquals("Wrong event type", type, event.getEventType())
     return event
 }
 
 private fun assertTouchEvent(script: MonkeySourceScript, action: Int) {
     val motionEvent = receiveEvent(script, MonkeyEvent.EVENT_TYPE_TOUCH) as MonkeyMotionEvent
-    assertEquals(action, motionEvent.getAction())
+    assertEquals(action, motionEvent.action)
 }
 
 /**
@@ -62,7 +62,7 @@ class MonkeySourceScriptTest {
     @Test
     fun pinchZoom() {
         val file = File.createTempFile("pinch_zoom", null)
-        val fileName = file.getAbsolutePath()
+        val fileName = file.absolutePath
         BufferedWriter(FileWriter(fileName)).use { writer ->
             writer.write("start data >>\n")
             writer.write("PinchZoom(100,100,200,200,50,50,10,10,5)\n")
@@ -78,6 +78,37 @@ class MonkeySourceScriptTest {
         assertTouchEvent(script, ACTION_MOVE)
         assertTouchEvent(script, ACTION_MOVE)
         assertTouchEvent(script, ACTION_POINTER_1_UP)
+        assertTouchEvent(script, ACTION_UP)
+        receiveEvent(script, MonkeyEvent.EVENT_TYPE_THROTTLE)
+        assertNull(script.getNextEvent())
+
+        file.deleteOnExit()
+    }
+
+    /**
+     * Send two PressAndHold commands in a row and ensure that the injected stream is consistent.
+     */
+    @Test
+    fun pressAndHoldTwice() {
+        val file = File.createTempFile("press_and_hold_twice", null)
+        val fileName = file.absolutePath
+        BufferedWriter(FileWriter(fileName)).use { writer ->
+            writer.write("start data >>\n")
+            writer.write("PressAndHold(100,100,10)\n")
+            writer.write("PressAndHold(200,200,10)\n")
+        }
+
+        val script = MonkeySourceScript(Random(), fileName, 0, false, 0, 0)
+
+        assertTouchEvent(script, ACTION_DOWN)
+        receiveEvent(script, MonkeyEvent.EVENT_TYPE_THROTTLE)
+        receiveEvent(script, MonkeyEvent.EVENT_TYPE_THROTTLE)
+        assertTouchEvent(script, ACTION_UP)
+        receiveEvent(script, MonkeyEvent.EVENT_TYPE_THROTTLE)
+
+        assertTouchEvent(script, ACTION_DOWN)
+        receiveEvent(script, MonkeyEvent.EVENT_TYPE_THROTTLE)
+        receiveEvent(script, MonkeyEvent.EVENT_TYPE_THROTTLE)
         assertTouchEvent(script, ACTION_UP)
         receiveEvent(script, MonkeyEvent.EVENT_TYPE_THROTTLE)
         assertNull(script.getNextEvent())

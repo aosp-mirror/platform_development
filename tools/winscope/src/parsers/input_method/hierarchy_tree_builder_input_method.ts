@@ -17,29 +17,37 @@
 import {HierarchyTreeBuilder} from 'parsers/hierarchy_tree_builder';
 import {HierarchyTreeNode} from 'trace/tree_node/hierarchy_tree_node';
 import {PropertiesProvider} from 'trace/tree_node/properties_provider';
-import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
 
 export class HierarchyTreeBuilderInputMethod extends HierarchyTreeBuilder {
-  protected override buildIdentifierToChildMap(
+  private childIdentifier = 'child';
+
+  protected override buildIdentifierToChildrenMap(
     children: PropertiesProvider[],
-  ): Map<string | number, PropertiesProvider[]> {
-    // only ever one child (client, service, manager service) so map unnecessary
-    return new Map<string | number, PropertiesProvider[]>();
+  ): Map<string, readonly HierarchyTreeNode[]> {
+    const map = children.reduce((map, child) => {
+      const childProperties = child.getEagerProperties();
+      const childNode = this.makeNode(
+        childProperties.id,
+        childProperties.name,
+        child,
+      );
+      map.set(this.childIdentifier, [childNode]);
+      return map;
+    }, new Map<string, HierarchyTreeNode[]>());
+    return map;
   }
 
-  protected override makeRootChildren(
-    children: PropertiesProvider[],
-    identifierToChild: Map<string | number, PropertiesProvider[]>,
-  ): readonly HierarchyTreeNode[] {
-    if (children.length === 0) return [];
-    return [this.buildSubtree(children[0], identifierToChild)];
-  }
-
-  protected override getIdentifierValue(identifier: PropertyTreeNode): number {
-    return identifier.getValue();
-  }
-
-  protected override getSubtreeName(propertyTreeName: string): string {
-    return propertyTreeName;
+  protected override assignParentChildRelationships(
+    node: HierarchyTreeNode,
+    identifierToChildren: Map<string | number, HierarchyTreeNode[]>,
+    isRoot?: boolean,
+  ): void {
+    // only ever one child
+    const child: HierarchyTreeNode | undefined = identifierToChildren
+      .get(this.childIdentifier)
+      ?.at(0);
+    if (child) {
+      this.setParentChildRelationship(node, child);
+    }
   }
 }

@@ -39,11 +39,9 @@ exports.config = {
     defaultTimeoutInterval: 10000,
   },
 
-  onPrepare: function () {
-    // allow specifying the file protocol within browser.get(...)
+  onPrepare: async () => {
     browser.ignoreSynchronization = true;
-    browser.waitForAngular();
-    browser.sleep(500);
-    browser.resetUrl = 'file:///';
+    await browser.waitForAngular();
+    await browser.sleep(500);
   },
 };

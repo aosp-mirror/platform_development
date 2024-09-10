@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import {NO_TIMEZONE_OFFSET_FACTORY} from 'common/timestamp_factory';
+import {TimestampConverterUtils} from 'test/unit/timestamp_converter_utils';
 import {TracesUtils} from 'test/unit/traces_utils';
 import {TraceBuilder} from 'test/unit/trace_builder';
 import {CustomQueryType} from './custom_query';
@@ -28,16 +28,16 @@ import {HierarchyTreeNode} from './tree_node/hierarchy_tree_node';
 import {PropertyTreeNode} from './tree_node/property_tree_node';
 
 describe('FrameMapper', () => {
-  const time0 = NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(0n);
-  const time1 = NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(1n);
-  const time2 = NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(2n);
-  const time3 = NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(3n);
-  const time4 = NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(4n);
-  const time5 = NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(5n);
-  const time6 = NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(6n);
-  const time7 = NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(7n);
-  const time8 = NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(8n);
-  const time10seconds = NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(
+  const time0 = TimestampConverterUtils.makeRealTimestamp(0n);
+  const time1 = TimestampConverterUtils.makeRealTimestamp(1n);
+  const time2 = TimestampConverterUtils.makeRealTimestamp(2n);
+  const time3 = TimestampConverterUtils.makeRealTimestamp(3n);
+  const time4 = TimestampConverterUtils.makeRealTimestamp(4n);
+  const time5 = TimestampConverterUtils.makeRealTimestamp(5n);
+  const time6 = TimestampConverterUtils.makeRealTimestamp(6n);
+  const time7 = TimestampConverterUtils.makeRealTimestamp(7n);
+  const time8 = TimestampConverterUtils.makeRealTimestamp(8n);
+  const time10seconds = TimestampConverterUtils.makeRealTimestamp(
     10n * 1000000000n,
   );
 
@@ -53,6 +53,7 @@ describe('FrameMapper', () => {
       // WINDOW_MANAGER:          0     1
       // Time:           0  1  2  3  4  5  6
       protoLog = new TraceBuilder<PropertyTreeNode>()
+        .setType(TraceType.PROTO_LOG)
         .setEntries([
           'entry-0' as unknown as PropertyTreeNode,
           'entry-1' as unknown as PropertyTreeNode,
@@ -65,6 +66,7 @@ describe('FrameMapper', () => {
         .build();
 
       windowManager = new TraceBuilder<HierarchyTreeNode>()
+        .setType(TraceType.WINDOW_MANAGER)
         .setEntries([
           'entry-0' as unknown as HierarchyTreeNode,
           'entry-1' as unknown as HierarchyTreeNode,
@@ -73,8 +75,8 @@ describe('FrameMapper', () => {
         .build();
 
       traces = new Traces();
-      traces.setTrace(TraceType.PROTO_LOG, protoLog);
-      traces.setTrace(TraceType.WINDOW_MANAGER, windowManager);
+      traces.addTrace(protoLog);
+      traces.addTrace(windowManager);
       await new FrameMapper(traces).computeMapping();
     });
 
@@ -113,6 +115,7 @@ describe('FrameMapper', () => {
       // WINDOW_MANAGER:    0        1  2
       // Time:           0  1  2  3  4  5
       ime = new TraceBuilder<HierarchyTreeNode>()
+        .setType(TraceType.INPUT_METHOD_CLIENTS)
         .setEntries([
           'entry-0' as unknown as HierarchyTreeNode,
           'entry-1' as unknown as HierarchyTreeNode,
@@ -123,6 +126,7 @@ describe('FrameMapper', () => {
         .build();
 
       windowManager = new TraceBuilder<HierarchyTreeNode>()
+        .setType(TraceType.WINDOW_MANAGER)
         .setEntries([
           'entry-0' as unknown as HierarchyTreeNode,
           'entry-1' as unknown as HierarchyTreeNode,
@@ -132,8 +136,8 @@ describe('FrameMapper', () => {
         .build();
 
       traces = new Traces();
-      traces.setTrace(TraceType.INPUT_METHOD_CLIENTS, ime);
-      traces.setTrace(TraceType.WINDOW_MANAGER, windowManager);
+      traces.addTrace(ime);
+      traces.addTrace(windowManager);
       await new FrameMapper(traces).computeMapping();
     });
 
@@ -181,6 +185,7 @@ describe('FrameMapper', () => {
       // Frames:          0  1   2    3     4  ... 5
       // Time:            0  1  2  3  4  5  6  ... 10s
       windowManager = new TraceBuilder<HierarchyTreeNode>()
+        .setType(TraceType.WINDOW_MANAGER)
         .setEntries([
           'entry-0' as unknown as HierarchyTreeNode,
           'entry-1' as unknown as HierarchyTreeNode,
@@ -191,6 +196,7 @@ describe('FrameMapper', () => {
         .build();
 
       transactions = new TraceBuilder<PropertyTreeNode>()
+        .setType(TraceType.TRANSACTIONS)
         .setEntries([
           'entry-0' as unknown as PropertyTreeNode,
           'entry-1' as unknown as PropertyTreeNode,
@@ -219,8 +225,8 @@ describe('FrameMapper', () => {
         .build();
 
       traces = new Traces();
-      traces.setTrace(TraceType.WINDOW_MANAGER, windowManager);
-      traces.setTrace(TraceType.TRANSACTIONS, transactions);
+      traces.addTrace(windowManager);
+      traces.addTrace(transactions);
       await new FrameMapper(traces).computeMapping();
     });
 
@@ -276,6 +282,99 @@ describe('FrameMapper', () => {
     });
   });
 
+  describe('ViewCapture <-> SurfaceFlinger', () => {
+    let viewCapture: Trace<PropertyTreeNode>;
+    let surfaceFlinger: Trace<HierarchyTreeNode>;
+    let traces: Traces;
+
+    beforeAll(async () => {
+      // VIEW_CAPTURE:   0  1  2---     3
+      //                  \     \  \     \
+      //                   \     \  \     \
+      // SURFACE_FLINGER:   0     1  2     3
+      // Time:           0  1  2  3  4  5  6
+      viewCapture = new TraceBuilder<PropertyTreeNode>()
+        .setType(TraceType.VIEW_CAPTURE)
+        .setEntries([
+          'entry-0' as unknown as PropertyTreeNode,
+          'entry-1' as unknown as PropertyTreeNode,
+          'entry-2' as unknown as PropertyTreeNode,
+          'entry-3' as unknown as PropertyTreeNode,
+        ])
+        .setTimestamps([time0, time1, time2, time5])
+        .build();
+
+      surfaceFlinger = new TraceBuilder<HierarchyTreeNode>()
+        .setType(TraceType.SURFACE_FLINGER)
+        .setEntries([
+          'entry-0' as unknown as HierarchyTreeNode,
+          'entry-1' as unknown as HierarchyTreeNode,
+          'entry-2' as unknown as HierarchyTreeNode,
+          'entry-3' as unknown as HierarchyTreeNode,
+        ])
+        .setTimestamps([time1, time3, time4, time6])
+        .setFrame(0, 0)
+        .setFrame(1, 1)
+        .setFrame(2, 2)
+        .setFrame(3, 3)
+        .build();
+
+      traces = new Traces();
+      traces.addTrace(viewCapture);
+      traces.addTrace(surfaceFlinger);
+      await new FrameMapper(traces).computeMapping();
+    });
+
+    it('associates entries/frames', async () => {
+      const expectedFrames = new Map<
+        AbsoluteFrameIndex,
+        Map<TraceType, Array<{}>>
+      >();
+      expectedFrames.set(
+        0,
+        new Map<TraceType, Array<{}>>([
+          [TraceType.VIEW_CAPTURE, [await viewCapture.getEntry(0).getValue()]],
+          [
+            TraceType.SURFACE_FLINGER,
+            [await surfaceFlinger.getEntry(0).getValue()],
+          ],
+        ]),
+      );
+      expectedFrames.set(
+        1,
+        new Map<TraceType, Array<{}>>([
+          [TraceType.VIEW_CAPTURE, [await viewCapture.getEntry(2).getValue()]],
+          [
+            TraceType.SURFACE_FLINGER,
+            [await surfaceFlinger.getEntry(1).getValue()],
+          ],
+        ]),
+      );
+      expectedFrames.set(
+        2,
+        new Map<TraceType, Array<{}>>([
+          [TraceType.VIEW_CAPTURE, [await viewCapture.getEntry(2).getValue()]],
+          [
+            TraceType.SURFACE_FLINGER,
+            [await surfaceFlinger.getEntry(2).getValue()],
+          ],
+        ]),
+      );
+      expectedFrames.set(
+        3,
+        new Map<TraceType, Array<{}>>([
+          [TraceType.VIEW_CAPTURE, [await viewCapture.getEntry(3).getValue()]],
+          [
+            TraceType.SURFACE_FLINGER,
+            [await surfaceFlinger.getEntry(3).getValue()],
+          ],
+        ]),
+      );
+
+      expect(await TracesUtils.extractFrames(traces)).toEqual(expectedFrames);
+    });
+  });
+
   describe('Transactions <-> SurfaceFlinger', () => {
     let transactions: Trace<PropertyTreeNode>;
     let surfaceFlinger: Trace<HierarchyTreeNode>;
@@ -287,6 +386,7 @@ describe('FrameMapper', () => {
       //                   \     \        \
       // SURFACE_FLINGER:   0     1        2
       transactions = new TraceBuilder<PropertyTreeNode>()
+        .setType(TraceType.TRANSACTIONS)
         .setEntries([
           'entry-0' as unknown as PropertyTreeNode,
           'entry-1' as unknown as PropertyTreeNode,
@@ -305,6 +405,7 @@ describe('FrameMapper', () => {
         .build();
 
       surfaceFlinger = new TraceBuilder<HierarchyTreeNode>()
+        .setType(TraceType.SURFACE_FLINGER)
         .setEntries([
           'entry-0' as unknown as HierarchyTreeNode,
           'entry-1' as unknown as HierarchyTreeNode,
@@ -315,8 +416,8 @@ describe('FrameMapper', () => {
         .build();
 
       traces = new Traces();
-      traces.setTrace(TraceType.TRANSACTIONS, transactions);
-      traces.setTrace(TraceType.SURFACE_FLINGER, surfaceFlinger);
+      traces.addTrace(transactions);
+      traces.addTrace(surfaceFlinger);
       await new FrameMapper(traces).computeMapping();
     });
 
@@ -378,6 +479,7 @@ describe('FrameMapper', () => {
       // SCREEN_RECORDING:     0        1  2  3        4 ... 5 <-- ignored (not connected) because too far
       // Time:                 0  1  2  3  4  5  6  7  8     10s
       surfaceFlinger = new TraceBuilder<HierarchyTreeNode>()
+        .setType(TraceType.SURFACE_FLINGER)
         .setEntries([
           'entry-0' as unknown as HierarchyTreeNode,
           'entry-1' as unknown as HierarchyTreeNode,
@@ -391,6 +493,7 @@ describe('FrameMapper', () => {
         .build();
 
       screenRecording = new TraceBuilder<ScreenRecordingTraceEntry>()
+        .setType(TraceType.SCREEN_RECORDING)
         .setEntries([
           'entry-0' as unknown as ScreenRecordingTraceEntry,
           'entry-1' as unknown as ScreenRecordingTraceEntry,
@@ -403,8 +506,8 @@ describe('FrameMapper', () => {
         .build();
 
       traces = new Traces();
-      traces.setTrace(TraceType.SURFACE_FLINGER, surfaceFlinger);
-      traces.setTrace(TraceType.SCREEN_RECORDING, screenRecording);
+      traces.addTrace(surfaceFlinger);
+      traces.addTrace(screenRecording);
       await new FrameMapper(traces).computeMapping();
     });
 
@@ -457,6 +560,53 @@ describe('FrameMapper', () => {
       );
 
       expect(await TracesUtils.extractFrames(traces)).toEqual(expectedFrames);
+    });
+  });
+
+  it('supports multiple traces with same type', async () => {
+    // SURFACE_FLINGER_0:    0
+    //                        \
+    //                         \
+    // SURFACE_FLINGER_1:    0  \
+    //                        \ |
+    //                         \|
+    // SCREEN_RECORDING:        0
+    // Time:                 0  1
+    const surfaceFlinger0 = new TraceBuilder<HierarchyTreeNode>()
+      .setType(TraceType.SURFACE_FLINGER)
+      .setEntries(['entry-0' as unknown as HierarchyTreeNode])
+      .setTimestamps([time0])
+      .build();
+
+    const surfaceFlinger1 = new TraceBuilder<HierarchyTreeNode>()
+      .setType(TraceType.SURFACE_FLINGER)
+      .setEntries(['entry-0' as unknown as HierarchyTreeNode])
+      .setTimestamps([time0])
+      .build();
+
+    const screenRecording = new TraceBuilder<ScreenRecordingTraceEntry>()
+      .setType(TraceType.SCREEN_RECORDING)
+      .setEntries(['entry-0' as unknown as ScreenRecordingTraceEntry])
+      .setTimestamps([time1])
+      .build();
+
+    const traces = new Traces();
+    traces.addTrace(surfaceFlinger0);
+    traces.addTrace(surfaceFlinger1);
+    traces.addTrace(screenRecording);
+    await new FrameMapper(traces).computeMapping();
+
+    expect(surfaceFlinger0.getEntry(0).getFramesRange()).toEqual({
+      start: 0,
+      end: 1,
+    });
+    expect(surfaceFlinger1.getEntry(0).getFramesRange()).toEqual({
+      start: 0,
+      end: 1,
+    });
+    expect(screenRecording.getEntry(0).getFramesRange()).toEqual({
+      start: 0,
+      end: 1,
     });
   });
 });

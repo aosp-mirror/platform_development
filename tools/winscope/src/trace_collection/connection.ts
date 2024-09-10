@@ -34,6 +34,7 @@ export interface Connection {
   isDevicesState(): boolean;
   isStartTraceState(): boolean;
   isErrorState(): boolean;
+  isStartingTraceState(): boolean;
   isEndTraceState(): boolean;
   isLoadDataState(): boolean;
   isConnectingState(): boolean;

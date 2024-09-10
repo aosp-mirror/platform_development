@@ -32,17 +32,13 @@ describe('Viewer Surface Flinger', () => {
       icon: 'layers',
       color: 'rgba(78, 205, 230, 1)',
     });
-    await E2eTestUtils.checkInitialRealTimestamp(
-      '2022-11-21T18:05:09.780689244',
-    );
-    await E2eTestUtils.checkFinalRealTimestamp('2022-11-21T18:05:18.607915280');
+    await E2eTestUtils.checkInitialRealTimestamp('2022-11-21, 18:05:09.780');
+    await E2eTestUtils.checkFinalRealTimestamp('2022-11-21, 18:05:18.607');
 
     await E2eTestUtils.changeRealTimestampInWinscope(
-      '2022-11-21T18:05:11.314875855',
+      '2022-11-21, 18:05:11.314',
     );
-    await E2eTestUtils.checkWinscopeRealTimestamp(
-      '2022-11-21T18:05:11.314875855',
-    );
+    await E2eTestUtils.checkWinscopeRealTimestamp('18:05:11.314');
     await E2eTestUtils.filterHierarchy(
       viewerSelector,
       'ConversationListActivity#632',

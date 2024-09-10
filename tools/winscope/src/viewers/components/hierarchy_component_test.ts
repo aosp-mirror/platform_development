@@ -20,7 +20,7 @@ import {
   TestBed,
 } from '@angular/core/testing';
 import {FormsModule} from '@angular/forms';
-import {MatCheckboxModule} from '@angular/material/checkbox';
+import {MatButtonModule} from '@angular/material/button';
 import {MatDividerModule} from '@angular/material/divider';
 import {MatFormFieldModule} from '@angular/material/form-field';
 import {MatIconModule} from '@angular/material/icon';
@@ -29,11 +29,16 @@ import {MatTooltipModule} from '@angular/material/tooltip';
 import {BrowserAnimationsModule} from '@angular/platform-browser/animations';
 import {assertDefined} from 'common/assert_utils';
 import {PersistentStore} from 'common/persistent_store';
-import {TreeNodeUtils} from 'test/unit/tree_node_utils';
+import {HierarchyTreeBuilder} from 'test/unit/hierarchy_tree_builder';
+import {TraceType} from 'trace/trace_type';
+import {UiHierarchyTreeNode} from 'viewers/common/ui_hierarchy_tree_node';
+import {ViewerEvents} from 'viewers/common/viewer_events';
 import {HierarchyTreeNodeDataViewComponent} from 'viewers/components/hierarchy_tree_node_data_view_component';
 import {TreeComponent} from 'viewers/components/tree_component';
 import {TreeNodeComponent} from 'viewers/components/tree_node_component';
+import {CollapsibleSectionTitleComponent} from './collapsible_section_title_component';
 import {HierarchyComponent} from './hierarchy_component';
+import {UserOptionsComponent} from './user_options_component';
 
 describe('HierarchyComponent', () => {
   let fixture: ComponentFixture<HierarchyComponent>;
@@ -48,10 +53,12 @@ describe('HierarchyComponent', () => {
         TreeComponent,
         TreeNodeComponent,
         HierarchyTreeNodeDataViewComponent,
+        CollapsibleSectionTitleComponent,
+        UserOptionsComponent,
       ],
       imports: [
         CommonModule,
-        MatCheckboxModule,
+        MatButtonModule,
         MatDividerModule,
         MatInputModule,
         MatFormFieldModule,
@@ -66,14 +73,13 @@ describe('HierarchyComponent', () => {
     component = fixture.componentInstance;
     htmlElement = fixture.nativeElement;
 
-    const tree = TreeNodeUtils.makeUiHierarchyNode({
-      id: 'RootNode1',
-      name: 'Root node',
-    });
-    tree.addOrReplaceChild(
-      TreeNodeUtils.makeUiHierarchyNode({id: 'Child1', name: 'Child node'}),
+    component.tree = UiHierarchyTreeNode.from(
+      new HierarchyTreeBuilder()
+        .setId('RootNode1')
+        .setName('Root node')
+        .setChildren([{id: 'Child1', name: 'Child node'}])
+        .build(),
     );
-    component.tree = tree;
 
     component.store = new PersistentStore();
     component.userOptions = {
@@ -83,6 +89,7 @@ describe('HierarchyComponent', () => {
         isUnavailable: false,
       },
     };
+    component.dependencies = [TraceType.SURFACE_FLINGER];
 
     fixture.detectChanges();
   });
@@ -99,30 +106,8 @@ describe('HierarchyComponent', () => {
   it('renders view controls', () => {
     const viewControls = htmlElement.querySelector('.view-controls');
     expect(viewControls).toBeTruthy();
-    const box = htmlElement.querySelector('.view-controls input');
-    expect(box).toBeTruthy(); //renders at least one view control option
-  });
-
-  it('disables checkboxes if option unavailable', () => {
-    let box = htmlElement.querySelector('.view-controls input');
-    expect(box).toBeTruthy();
-    expect((box as HTMLInputElement).disabled).toBeFalse();
-
-    component.userOptions['showDiff'].isUnavailable = true;
-    fixture.detectChanges();
-    box = htmlElement.querySelector('.view-controls input');
-    expect((box as HTMLInputElement).disabled).toBeTrue();
-  });
-
-  it('updates tree on user option checkbox change', () => {
-    const box = htmlElement.querySelector('.view-controls input');
-    expect(box).toBeTruthy();
-
-    const spy = spyOn(component, 'onUserOptionChange');
-    (box as HTMLInputElement).checked = true;
-    (box as HTMLInputElement).dispatchEvent(new Event('click'));
-    fixture.detectChanges();
-    expect(spy).toHaveBeenCalled();
+    const button = htmlElement.querySelector('.view-controls .user-option');
+    expect(button).toBeTruthy(); //renders at least one view control option
   });
 
   it('renders initial tree elements', () => {
@@ -130,6 +115,19 @@ describe('HierarchyComponent', () => {
     expect(treeView).toBeTruthy();
     expect(assertDefined(treeView).innerHTML).toContain('Root node');
     expect(assertDefined(treeView).innerHTML).toContain('Child node');
+  });
+
+  it('renders subtrees', () => {
+    component.subtrees = [
+      UiHierarchyTreeNode.from(
+        new HierarchyTreeBuilder().setId('subtree').setName('subtree').build(),
+      ),
+    ];
+    fixture.detectChanges();
+    const subtree = assertDefined(
+      htmlElement.querySelector('.tree-wrapper .subtrees tree-view'),
+    );
+    expect(assertDefined(subtree).innerHTML).toContain('subtree');
   });
 
   it('renders pinned nodes', () => {
@@ -143,28 +141,73 @@ describe('HierarchyComponent', () => {
   });
 
   it('handles pinned node click', () => {
-    component.pinnedItems = [assertDefined(component.tree)];
+    const node = assertDefined(component.tree);
+    component.pinnedItems = [node];
     fixture.detectChanges();
-    const pinnedNodeEl = htmlElement.querySelector('.pinned-items tree-node');
-    expect(pinnedNodeEl).toBeTruthy();
 
-    const propertyTreeChangeSpy = spyOn(component, 'onSelectedTreeChange');
-    const highlightedChangeSpy = spyOn(component, 'onHighlightedItemChange');
+    let highlightedItem: UiHierarchyTreeNode | undefined;
+    htmlElement.addEventListener(
+      ViewerEvents.HighlightedNodeChange,
+      (event) => {
+        highlightedItem = (event as CustomEvent).detail.node;
+      },
+    );
+
+    const pinnedNodeEl = assertDefined(
+      htmlElement.querySelector('.pinned-items tree-node'),
+    );
+
     (pinnedNodeEl as HTMLButtonElement).click();
     fixture.detectChanges();
-    expect(propertyTreeChangeSpy).toHaveBeenCalled();
-    expect(highlightedChangeSpy).toHaveBeenCalled();
+    expect(highlightedItem).toEqual(node);
+  });
+
+  it('handles pinned item change from tree', () => {
+    let pinnedItem: UiHierarchyTreeNode | undefined;
+    htmlElement.addEventListener(
+      ViewerEvents.HierarchyPinnedChange,
+      (event) => {
+        pinnedItem = (event as CustomEvent).detail.pinnedItem;
+      },
+    );
+    const child = assertDefined(component.tree?.getChildByName('Child node'));
+    component.pinnedItems = [child];
+    fixture.detectChanges();
+
+    const pinButton = assertDefined(
+      htmlElement.querySelector('.pinned-items tree-node .pin-node-btn'),
+    );
+    (pinButton as HTMLButtonElement).click();
+    fixture.detectChanges();
+
+    expect(pinnedItem).toEqual(child);
   });
 
   it('handles change in filter', () => {
-    const inputEl = htmlElement.querySelector('.title-filter input');
-    expect(inputEl).toBeTruthy();
+    let filterString: string | undefined;
+    htmlElement.addEventListener(
+      ViewerEvents.HierarchyFilterChange,
+      (event) => {
+        filterString = (event as CustomEvent).detail.filterString;
+      },
+    );
+    const inputEl = assertDefined(
+      htmlElement.querySelector('.title-section input'),
+    ) as HTMLInputElement;
 
-    const spy = spyOn(component, 'onFilterChange');
-    (inputEl as HTMLInputElement).value = 'Root';
-    (inputEl as HTMLInputElement).dispatchEvent(new Event('input'));
+    inputEl.value = 'Root';
+    inputEl.dispatchEvent(new Event('input'));
+    fixture.detectChanges();
+    expect(filterString).toBe('Root');
+  });
+
+  it('handles collapse button click', () => {
+    const spy = spyOn(component.collapseButtonClicked, 'emit');
+    const collapseButton = assertDefined(
+      htmlElement.querySelector('collapsible-section-title button'),
+    ) as HTMLButtonElement;
+    collapseButton.click();
     fixture.detectChanges();
     expect(spy).toHaveBeenCalled();
-    expect(component.filterString).toBe('Root');
   });
 });

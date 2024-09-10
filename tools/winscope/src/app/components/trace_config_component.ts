@@ -33,11 +33,6 @@ import {
         color="primary"
         class="trace-checkbox"
         [checked]="this.traceConfig[traceKey].run"
-        [indeterminate]="
-          this.traceConfig[traceKey].isTraceCollection
-            ? someTraces(this.traceConfig[traceKey])
-            : false
-        "
         (change)="changeRunTrace($event.checked, this.traceConfig[traceKey])"
         >{{ this.traceConfig[traceKey].name }}</mat-checkbox
       >
@@ -55,11 +50,8 @@ import {
           *ngFor="let enableConfig of traceEnableConfigs(this.traceConfig[traceKey])"
           color="primary"
           class="enable-config"
-          [disabled]="
-            !this.traceConfig[traceKey].run && !this.traceConfig[traceKey].isTraceCollection
-          "
+          [disabled]="!this.traceConfig[traceKey].run"
           [(ngModel)]="enableConfig.enabled"
-          (change)="changeTraceCollectionConfig(this.traceConfig[traceKey])"
           >{{ enableConfig.name }}</mat-checkbox
         >
       </div>
@@ -144,18 +136,5 @@ export class TraceConfigComponent {
 
   changeRunTrace(run: boolean, trace: TraceConfiguration): void {
     trace.run = run;
-    if (trace.isTraceCollection) {
-      this.traceEnableConfigs(trace).forEach(
-        (c: EnableConfiguration) => (c.enabled = run),
-      );
-    }
-  }
-
-  changeTraceCollectionConfig(trace: TraceConfiguration): void {
-    if (trace.isTraceCollection) {
-      trace.run = this.traceEnableConfigs(trace).every(
-        (c: EnableConfiguration) => c.enabled,
-      );
-    }
   }
 }

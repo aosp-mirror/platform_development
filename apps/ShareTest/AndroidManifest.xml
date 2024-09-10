@@ -30,6 +30,41 @@
             </intent-filter>
         </activity>
 
+        <activity
+            android:name=".RefinementActivity"
+            android:theme="@style/ShareTestDialog"
+            />
+
+        <activity
+            android:name=".SendTextActivity"
+            android:exported="true"
+            android:theme="@style/ShareTest"
+            android:label="Send Text">
+            <intent-filter>
+                <action android:name="android.intent.action.SEND" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:mimeType="text/*" />
+          </intent-filter>
+        </activity>
+
+        <activity
+            android:name=".CallerDirectTargetActivity"
+            android:exported="true"
+            android:theme="@style/ShareTest"
+            android:label="Direct Target">
+            <intent-filter>
+                <action android:name="android.intent.action.SEND" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:mimeType="text/*" />
+            </intent-filter>
+            <intent-filter>
+                <action android:name="android.intent.action.SEND" />
+                <action android:name="android.intent.action.SEND_MULTIPLE" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:mimeType="image/*" />
+            </intent-filter>
+        </activity>
+
         <provider
             android:authorities="com.android.sharetest.provider"
             android:name=".ImageContentProvider"
