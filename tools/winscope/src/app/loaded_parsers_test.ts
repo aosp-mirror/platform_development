@@ -394,13 +394,8 @@ describe('LoadedParsers', () => {
       expectLoadResult([parserScreenRecording0], []);
     });
 
-    it('discards screenshot parser in favour of screen recording parser', () => {
-      loadParsers([parserScreenshot0, parserScreenRecording0], []);
-      expectLoadResult([parserScreenRecording0], [overrideError]);
-    });
-
     it('does not load screenshot parser after loading screen recording parser in same call', () => {
-      loadParsers([parserScreenRecording0, parserScreenshot0], []);
+      loadParsers([parserScreenshot0, parserScreenRecording0], []);
       expectLoadResult([parserScreenRecording0], [overrideError]);
     });
 
@@ -420,32 +415,12 @@ describe('LoadedParsers', () => {
       expectLoadResult([parserScreenRecording0], [overrideError]);
     });
 
-    it('enforces limit of single screenshot or screenrecord parser', () => {
-      loadParsers([parserScreenshot0], []);
-      expectLoadResult([parserScreenshot0], []);
-
-      loadParsers([parserScreenshot1], []);
-      expectLoadResult(
-        [parserScreenshot0],
-        [new TraceOverridden('screenshot.png', TraceType.SCREENSHOT)],
-      );
-
+    it('loads multiple screen recordings', () => {
       loadParsers([parserScreenRecording0], []);
-      expectLoadResult(
-        [parserScreenRecording0],
-        [new TraceOverridden('screenshot.png', TraceType.SCREEN_RECORDING)],
-      );
+      expectLoadResult([parserScreenRecording0], []);
 
       loadParsers([parserScreenRecording1], []);
-      expectLoadResult(
-        [parserScreenRecording0],
-        [
-          new TraceOverridden(
-            'screen_recording.mp4',
-            TraceType.SCREEN_RECORDING,
-          ),
-        ],
-      );
+      expectLoadResult([parserScreenRecording0, parserScreenRecording1], []);
     });
   });
 
@@ -458,6 +433,19 @@ describe('LoadedParsers', () => {
 
     loadedParsers.remove(parserSf0);
     expectLoadResult([], []);
+  });
+
+  it('can remove parsers but keep for download', async () => {
+    loadParsers([parserSf0, parserWm0], []);
+    expectLoadResult([parserSf0, parserWm0], []);
+
+    loadedParsers.remove(parserWm0, true);
+    expectLoadResult([parserSf0], []);
+
+    await expectDownloadResult([
+      'sf/filename.winscope',
+      'wm/filename.winscope',
+    ]);
   });
 
   it('can be cleared', () => {
@@ -518,20 +506,28 @@ describe('LoadedParsers', () => {
       [],
     );
 
-    const zipArchive = await loadedParsers.makeZipArchive();
-    const zipFile = new File([zipArchive], 'winscope.zip');
-    const actualArchiveContents = (await FileUtils.unzipFile(zipFile))
-      .map((file) => file.name)
-      .sort();
-
-    const expectedArchiveContents = [
+    await expectDownloadResult([
       'filename.mp4',
       'filename.perfetto-trace',
       'vc/filename.winscope',
       'wm/filename (1).pb',
       'wm/filename.pb',
-    ];
-    expect(actualArchiveContents).toEqual(expectedArchiveContents);
+    ]);
+  });
+
+  it('makes zip archive with progress listener', async () => {
+    loadParsers([parserSf0], [parserWm0]);
+    expectLoadResult([parserSf0, parserWm0], []);
+
+    const progressSpy = jasmine.createSpy();
+    await loadedParsers.makeZipArchive(progressSpy);
+
+    expect(progressSpy).toHaveBeenCalledTimes(5);
+    expect(progressSpy).toHaveBeenCalledWith(0);
+    expect(progressSpy).toHaveBeenCalledWith(0.25);
+    expect(progressSpy).toHaveBeenCalledWith(0.5);
+    expect(progressSpy).toHaveBeenCalledWith(0.75);
+    expect(progressSpy).toHaveBeenCalledWith(1);
   });
 
   function loadParsers(
@@ -562,5 +558,13 @@ describe('LoadedParsers', () => {
     expect(new Set([...actualParsers])).toEqual(new Set([...expectedParsers]));
 
     userNotifierChecker.expectAdded(expectedWarnings);
+  }
+
+  async function expectDownloadResult(expectedArchiveContents: string[]) {
+    const zipArchive = await loadedParsers.makeZipArchive();
+    const actualArchiveContents = (await FileUtils.unzipFile(zipArchive))
+      .map((file) => file.name)
+      .sort();
+    expect(actualArchiveContents).toEqual(expectedArchiveContents);
   }
 });

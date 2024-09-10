@@ -49,6 +49,8 @@ pub struct PackageMetadata {
     pub features: BTreeMap<String, Vec<String>>,
     pub id: String,
     pub targets: Vec<TargetMetadata>,
+    pub license: Option<String>,
+    pub license_file: Option<String>,
 }
 
 #[derive(Clone, Debug, Deserialize, Eq, PartialEq)]
@@ -107,7 +109,13 @@ pub enum TargetKind {
 pub fn parse_cargo_metadata_str(cargo_metadata: &str, cfg: &VariantConfig) -> Result<Vec<Crate>> {
     let metadata =
         serde_json::from_str(cargo_metadata).context("failed to parse cargo metadata")?;
-    parse_cargo_metadata(&metadata, &cfg.features, &cfg.extra_cfg, cfg.tests)
+    parse_cargo_metadata(
+        &metadata,
+        &cfg.features,
+        &cfg.extra_cfg,
+        cfg.tests,
+        &cfg.workspace_excludes,
+    )
 }
 
 fn parse_cargo_metadata(
@@ -115,10 +123,13 @@ fn parse_cargo_metadata(
     features: &Option<Vec<String>>,
     cfgs: &[String],
     include_tests: bool,
+    workspace_excludes: &[String],
 ) -> Result<Vec<Crate>> {
     let mut crates = Vec::new();
     for package in &metadata.packages {
-        if !metadata.workspace_members.contains(&package.id) {
+        if !metadata.workspace_members.contains(&package.id)
+            || workspace_excludes.contains(&package.name)
+        {
             continue;
         }
 
@@ -169,6 +180,8 @@ fn parse_cargo_metadata(
                     types: target.crate_types.clone(),
                     features: features_without_deps.clone(),
                     edition: package.edition.to_owned(),
+                    license: package.license.clone(),
+                    license_file: package.license_file.clone(),
                     package_dir: package_dir.clone(),
                     main_src: main_src.to_owned(),
                     target: target_triple.clone(),
@@ -193,6 +206,8 @@ fn parse_cargo_metadata(
                     types: vec![CrateType::Test],
                     features: features_without_deps.clone(),
                     edition: package.edition.to_owned(),
+                    license: package.license.clone(),
+                    license_file: package.license_file.clone(),
                     package_dir: package_dir.clone(),
                     main_src: main_src.to_owned(),
                     target: target_triple.clone(),
@@ -268,7 +283,11 @@ fn make_extern(packages: &[PackageMetadata], dependency: &DependencyMetadata) ->
         bail!("Package {} didn't have any library or proc-macro targets", dependency.name);
     };
     let lib_name = target.name.replace('-', "_");
-    let raw_name = target.name.clone();
+    // This is ugly but looking at the source path is the easiest way to tell if the raw
+    // crate name uses a hyphen instead of an underscore. It won't work if it uses both.
+    let raw_name = target.name.replace('_', "-");
+    let src_path = target.src_path.to_str().expect("failed to convert src_path to string");
+    let raw_name = if src_path.contains(&raw_name) { raw_name } else { lib_name.clone() };
     let name =
         if let Some(rename) = &dependency.rename { rename.clone() } else { lib_name.clone() };
 
@@ -279,7 +298,6 @@ fn make_extern(packages: &[PackageMetadata], dependency: &DependencyMetadata) ->
         } else {
             ExternType::Rust
         };
-
     Ok(Extern { name, lib_name, raw_name, extern_type })
 }
 

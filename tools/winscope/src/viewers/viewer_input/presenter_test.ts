@@ -57,7 +57,6 @@ class PresenterInputTest extends AbstractLogViewerPresenterTest<UiData> {
 
   override readonly shouldExecuteHeaderTests = true;
   override readonly shouldExecuteFilterTests = true;
-  override readonly shouldExecuteCurrentIndexTests = false;
   override readonly shouldExecutePropertiesTests = true;
 
   override readonly totalOutputEntries = 8;
@@ -126,6 +125,16 @@ class PresenterInputTest extends AbstractLogViewerPresenterTest<UiData> {
     ],
   ]);
 
+  override readonly filterNameForCurrentIndexTest =
+    LogFieldType.INPUT_DISPATCH_WINDOWS;
+  override readonly filterChangeForCurrentIndexTest = [wrappedName('98')];
+  override readonly secondFilterChangeForCurrentIndexTest = [
+    wrappedName('98'),
+    wrappedName('515'),
+  ];
+  override readonly expectedCurrentIndexAfterFilterChange = 0;
+  override readonly expectedCurrentIndexAfterSecondFilterChange = 0;
+
   override async setUpTestEnvironment(): Promise<void> {
     const parser = (await UnitTestUtils.getTracesParser([
       'traces/perfetto/input-events.perfetto-trace',
@@ -153,9 +162,9 @@ class PresenterInputTest extends AbstractLogViewerPresenterTest<UiData> {
     );
   }
 
-  override createPresenterWithEmptyTrace(
+  override async createPresenterWithEmptyTrace(
     callback: NotifyLogViewCallbackType<UiData>,
-  ): Presenter {
+  ): Promise<Presenter> {
     const traces = new TracesBuilder()
       .setEntries(TraceType.INPUT_EVENT_MERGED, [])
       .build();
@@ -211,7 +220,8 @@ class PresenterInputTest extends AbstractLogViewerPresenterTest<UiData> {
     uiDataLog: UiDataLog,
   ): void {
     expect(uiDataLog.entries.length).toEqual(8);
-    expect(uiDataLog.selectedIndex).toEqual(0);
+    expect(uiDataLog.currentIndex).toEqual(0);
+    expect(uiDataLog.selectedIndex).toBeUndefined();
     const curEntry = uiDataLog.entries[0];
     const expectedFields = [
       {
@@ -284,7 +294,7 @@ class PresenterInputTest extends AbstractLogViewerPresenterTest<UiData> {
   }
 
   override executeSpecializedTests() {
-    describe('Specialized tests', async () => {
+    describe('Specialized tests', () => {
       const time0 = TimestampConverterUtils.makeRealTimestamp(0n);
       const time10 = TimestampConverterUtils.makeRealTimestamp(10n);
       const time19 = TimestampConverterUtils.makeRealTimestamp(19n);

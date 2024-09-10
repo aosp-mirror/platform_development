@@ -15,11 +15,13 @@
  */
 
 import {assertDefined} from 'common/assert_utils';
+import {InMemoryStorage} from 'common/in_memory_storage';
 import {TracePositionUpdate} from 'messaging/winscope_event';
 import {PropertyTreeBuilder} from 'test/unit/property_tree_builder';
 import {TimestampConverterUtils} from 'test/unit/timestamp_converter_utils';
 import {TraceBuilder} from 'test/unit/trace_builder';
 import {Trace} from 'trace/trace';
+import {TraceType} from 'trace/trace_type';
 import {
   DEFAULT_PROPERTY_FORMATTER,
   TIMESTAMP_NODE_FORMATTER,
@@ -27,6 +29,7 @@ import {
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
 import {NotifyLogViewCallbackType} from 'viewers/common/abstract_log_viewer_presenter';
 import {AbstractLogViewerPresenterTest} from 'viewers/common/abstract_log_viewer_presenter_test';
+import {TextFilter} from 'viewers/common/text_filter';
 import {LogFieldType, LogFieldValue} from 'viewers/common/ui_data_log';
 import {Presenter} from './presenter';
 import {UiData} from './ui_data';
@@ -38,7 +41,6 @@ class PresenterProtologTest extends AbstractLogViewerPresenterTest<UiData> {
 
   override readonly shouldExecuteHeaderTests = false;
   override readonly shouldExecuteFilterTests = true;
-  override readonly shouldExecuteCurrentIndexTests = true;
   override readonly shouldExecutePropertiesTests = false;
 
   override readonly totalOutputEntries = 3;
@@ -103,6 +105,41 @@ class PresenterProtologTest extends AbstractLogViewerPresenterTest<UiData> {
     'level1',
   ];
   override readonly expectedCurrentIndexAfterSecondFilterChange = 1;
+
+  override executeSpecializedTests() {
+    describe('Specialized tests', () => {
+      let presenter: Presenter;
+      let uiData: UiData;
+
+      beforeAll(async () => {
+        await this.setUpTestEnvironment();
+      });
+
+      beforeEach(async () => {
+        const notifyViewCallback = (newData: UiData) => {
+          uiData = newData;
+        };
+        presenter = await this.createPresenter(notifyViewCallback);
+      });
+
+      it('handles text filter change', async () => {
+        await presenter.onAppEvent(this.getSecondPositionUpdate());
+        expect(uiData.entries.length).toEqual(3);
+        expect(uiData.currentIndex).toEqual(1);
+        expect(uiData.scrollToIndex).toEqual(1);
+        expect(uiData.selectedIndex).toEqual(undefined);
+
+        await presenter.onTextFilterChange(
+          LogFieldType.TEXT,
+          new TextFilter('text0', []),
+        );
+        expect(uiData.entries.length).toEqual(1);
+        expect(uiData.currentIndex).toEqual(0);
+        expect(uiData.scrollToIndex).toEqual(0);
+        expect(uiData.selectedIndex).toEqual(undefined);
+      });
+    });
+  }
 
   override async setUpTestEnvironment(): Promise<void> {
     const time10 = TimestampConverterUtils.makeRealTimestamp(10n);
@@ -195,19 +232,24 @@ class PresenterProtologTest extends AbstractLogViewerPresenterTest<UiData> {
     this.secondPositionUpdate = TracePositionUpdate.fromTimestamp(time11);
   }
 
-  override createPresenterWithEmptyTrace(
+  override async createPresenterWithEmptyTrace(
     callback: NotifyLogViewCallbackType<UiData>,
-  ): Presenter {
+  ): Promise<Presenter> {
     const emptyTrace = new TraceBuilder<PropertyTreeNode>()
+      .setType(TraceType.PROTO_LOG)
       .setEntries([])
       .build();
-    return new Presenter(emptyTrace, callback);
+    return new Presenter(emptyTrace, callback, new InMemoryStorage());
   }
 
   override async createPresenter(
     callback: NotifyLogViewCallbackType<UiData>,
   ): Promise<Presenter> {
-    const presenter = new Presenter(assertDefined(this.trace), callback);
+    const presenter = new Presenter(
+      assertDefined(this.trace),
+      callback,
+      new InMemoryStorage(),
+    );
     await presenter.onAppEvent(this.getPositionUpdate()); // trigger initialization
     return presenter;
   }

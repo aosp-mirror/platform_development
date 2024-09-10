@@ -50,12 +50,10 @@ export class Presenter extends AbstractLogViewerPresenter<UiData> {
   private windowTokenToTitle = new Map<string, string>();
 
   protected override keepCalculated = false;
-  protected override logPresenter = new LogPresenter<TransitionsEntry>(
-    false,
-    false,
-  );
+  protected override logPresenter = new LogPresenter<TransitionsEntry>(false);
   protected override propertiesPresenter = new PropertiesPresenter(
     {},
+    undefined,
     [],
     [
       new UpdateTransitionChangesNames(
@@ -132,7 +130,12 @@ export class Presenter extends AbstractLogViewerPresenter<UiData> {
       ++traceIndex
     ) {
       const entry = assertDefined(this.trace.getEntry(traceIndex));
-      const transitionNode = await entry.getValue();
+      let transitionNode: PropertyTreeNode;
+      try {
+        transitionNode = await entry.getValue();
+      } catch (e) {
+        continue;
+      }
       const wmDataNode = assertDefined(transitionNode.getChildByName('wmData'));
       const shellDataNode = assertDefined(
         transitionNode.getChildByName('shellData'),

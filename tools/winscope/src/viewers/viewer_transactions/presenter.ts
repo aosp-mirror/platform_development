@@ -16,6 +16,7 @@
 
 import {assertDefined} from 'common/assert_utils';
 import {PersistentStoreProxy} from 'common/persistent_store_proxy';
+import {Store} from 'common/store';
 import {Trace} from 'trace/trace';
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
 import {
@@ -43,7 +44,7 @@ export class Presenter extends AbstractLogViewerPresenter<UiData> {
   private isInitialized = false;
 
   protected override keepCalculated = true;
-  protected override logPresenter = new LogPresenter<TransactionsEntry>(true);
+  protected override logPresenter = new LogPresenter<TransactionsEntry>();
   protected override propertiesPresenter = new PropertiesPresenter(
     PersistentStoreProxy.new<UserOptions>(
       'TransactionsPropertyOptions',
@@ -60,13 +61,14 @@ export class Presenter extends AbstractLogViewerPresenter<UiData> {
       },
       this.storage,
     ),
+    undefined,
     [],
     [new SetRootDisplayNames()],
   );
 
   constructor(
     trace: Trace<PropertyTreeNode>,
-    readonly storage: Storage,
+    readonly storage: Store,
     notifyViewCallback: NotifyLogViewCallbackType<UiData>,
   ) {
     super(trace, notifyViewCallback, UiData.createEmpty());

@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import {TransformMatrix} from 'common/geometry/transform_matrix';
 import {UiRectBuilder} from 'viewers/components/rects/ui_rect_builder';
 import {RectFilter} from './rect_filter';
 import {RectShowState} from './rect_show_state';
@@ -45,7 +46,7 @@ describe('RectFilter', () => {
   let expectedRectIdToShowState: Map<string, RectShowState>;
 
   beforeEach(() => {
-    rectFilter = new RectFilter();
+    rectFilter = new RectFilter((id: string) => id);
     expectedRectIdToShowState = new Map([
       [visibleContentRect.id, RectShowState.SHOW],
       [visibleNoContentRect.id, RectShowState.SHOW],
@@ -222,6 +223,16 @@ describe('RectFilter', () => {
     );
   });
 
+  it('applies forced state key callback', () => {
+    const relaxedRectFilter = new RectFilter((id) =>
+      id.slice(id.length - 5, id.length - 1),
+    );
+    relaxedRectFilter.updateRectShowState('TestRect', RectShowState.HIDE);
+    expect(
+      relaxedRectFilter.filterRects(allRects, false, false, false),
+    ).toEqual([displayRect]);
+  });
+
   function isShown(rectId: string) {
     const nonHiddenRectIds = rectFilter.getRectIdToShowState(
       allRects,
@@ -242,16 +253,19 @@ describe('RectFilter', () => {
       .setWidth(1)
       .setHeight(1)
       .setLabel(id)
-      .setTransform({
-        dsdx: 1,
-        dsdy: 0,
-        dtdx: 0,
-        dtdy: 1,
-        tx: 0,
-        ty: 0,
-      })
+      .setTransform(
+        TransformMatrix.from({
+          dsdx: 1,
+          dsdy: 0,
+          dtdx: 0,
+          dtdy: 1,
+          tx: 0,
+          ty: 0,
+        }),
+      )
       .setIsVisible(isVisible)
       .setIsDisplay(isDisplay)
+      .setIsActiveDisplay(false)
       .setId(id)
       .setGroupId(0)
       .setIsClickable(false)

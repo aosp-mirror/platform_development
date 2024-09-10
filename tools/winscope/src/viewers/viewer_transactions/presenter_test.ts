@@ -21,6 +21,7 @@ import {TraceBuilder} from 'test/unit/trace_builder';
 import {UnitTestUtils} from 'test/unit/utils';
 import {Parser} from 'trace/parser';
 import {Trace} from 'trace/trace';
+import {TraceType} from 'trace/trace_type';
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
 import {NotifyLogViewCallbackType} from 'viewers/common/abstract_log_viewer_presenter';
 import {AbstractLogViewerPresenterTest} from 'viewers/common/abstract_log_viewer_presenter_test';
@@ -29,6 +30,7 @@ import {
   LogFieldType,
   LogFieldValue,
 } from 'viewers/common/ui_data_log';
+import {UserOptions} from 'viewers/common/user_options';
 import {Presenter} from './presenter';
 import {TransactionsEntryType, UiData} from './ui_data';
 
@@ -39,7 +41,6 @@ class PresenterTransactionsTest extends AbstractLogViewerPresenterTest<UiData> {
 
   override readonly shouldExecuteHeaderTests = false;
   override readonly shouldExecuteFilterTests = true;
-  override readonly shouldExecuteCurrentIndexTests = true;
   override readonly shouldExecutePropertiesTests = true;
 
   override readonly totalOutputEntries = 1647;
@@ -176,6 +177,31 @@ class PresenterTransactionsTest extends AbstractLogViewerPresenterTest<UiData> {
         }
       });
 
+      it('shows/hides defaults', async () => {
+        const userOptions: UserOptions = {
+          showDiff: {
+            name: 'Show diff',
+            enabled: true,
+          },
+          showDefaults: {
+            name: 'Show defaults',
+            enabled: true,
+          },
+        };
+
+        await presenter.onAppEvent(this.getPositionUpdate());
+        await presenter.onLogEntryClick(this.logEntryClickIndex);
+        expect(
+          assertDefined(uiData.propertiesTree).getAllChildren().length,
+        ).toEqual(6);
+
+        await presenter.onPropertiesUserOptionsChange(userOptions);
+        expect(uiData.propertiesUserOptions).toEqual(userOptions);
+        expect(
+          assertDefined(uiData.propertiesTree).getAllChildren().length,
+        ).toEqual(42);
+      });
+
       function getFieldValue(entry: LogEntry, logFieldName: LogFieldType) {
         return entry.fields.find((f) => f.type === logFieldName)?.value;
       }
@@ -195,10 +221,11 @@ class PresenterTransactionsTest extends AbstractLogViewerPresenterTest<UiData> {
     );
   }
 
-  override createPresenterWithEmptyTrace(
+  override async createPresenterWithEmptyTrace(
     callback: NotifyLogViewCallbackType<UiData>,
-  ): Presenter {
+  ): Promise<Presenter> {
     const emptyTrace = new TraceBuilder<PropertyTreeNode>()
+      .setType(TraceType.TRANSACTIONS)
       .setEntries([])
       .build();
     return new Presenter(emptyTrace, new InMemoryStorage(), callback);

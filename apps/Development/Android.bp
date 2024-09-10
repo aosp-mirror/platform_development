@@ -23,7 +23,7 @@ android_app {
 
     libs: [
         "android.test.runner.stubs",
-        "org.apache.http.legacy",
+        "org.apache.http.legacy.stubs.system",
         "telephony-common",
     ],
 

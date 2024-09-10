@@ -22,7 +22,14 @@ import {TimestampConverter} from 'common/timestamp_converter';
 import {CrossToolProtocol} from 'cross_tool/cross_tool_protocol';
 import {ProgressListener} from 'messaging/progress_listener';
 import {ProgressListenerStub} from 'messaging/progress_listener_stub';
-import {IncompleteFrameMapping, NoValidFiles} from 'messaging/user_warnings';
+import {
+  FailedToCreateTracesParser,
+  IncompleteFrameMapping,
+  InvalidLegacyTrace,
+  NoValidFiles,
+  ProxyTracingErrors,
+  UnsupportedFileFormat,
+} from 'messaging/user_warnings';
 import {
   ActiveTraceChanged,
   AppFilesCollected,
@@ -61,13 +68,19 @@ import {TimelineData} from './timeline_data';
 import {TracePipeline} from './trace_pipeline';
 
 describe('Mediator', () => {
+  const TIMESTAMP_10 = TimestampConverterUtils.makeRealTimestamp(10n);
+  const TIMESTAMP_11 = TimestampConverterUtils.makeRealTimestamp(11n);
+
+  const POSITION_10 = TracePosition.fromTimestamp(TIMESTAMP_10);
+  const POSITION_11 = TracePosition.fromTimestamp(TIMESTAMP_11);
+
   const traceSf = new TraceBuilder<HierarchyTreeNode>()
     .setType(TraceType.SURFACE_FLINGER)
-    .setEntries([])
+    .setTimestamps([TIMESTAMP_10])
     .build();
   const traceWm = new TraceBuilder<HierarchyTreeNode>()
     .setType(TraceType.WINDOW_MANAGER)
-    .setEntries([])
+    .setTimestamps([TIMESTAMP_11])
     .build();
   const traceDump = new TraceBuilder<HierarchyTreeNode>()
     .setType(TraceType.SURFACE_FLINGER)
@@ -75,6 +88,7 @@ describe('Mediator', () => {
     .build();
 
   let inputFiles: File[];
+  let eventLogFile: File;
   let tracePipeline: TracePipeline;
   let timelineData: TimelineData;
   let abtChromeExtensionProtocol: WinscopeEventEmitter & WinscopeEventListener;
@@ -102,12 +116,6 @@ describe('Mediator', () => {
   const viewers = [viewerStub0, viewerStub1, viewerOverlay, viewerDump];
   let tracePositionUpdateListeners: WinscopeEventListener[];
 
-  const TIMESTAMP_10 = TimestampConverterUtils.makeRealTimestamp(10n);
-  const TIMESTAMP_11 = TimestampConverterUtils.makeRealTimestamp(11n);
-
-  const POSITION_10 = TracePosition.fromTimestamp(TIMESTAMP_10);
-  const POSITION_11 = TracePosition.fromTimestamp(TIMESTAMP_11);
-
   beforeAll(async () => {
     inputFiles = [
       await UnitTestUtils.getFixtureFile(
@@ -120,6 +128,9 @@ describe('Mediator', () => {
         'traces/elapsed_and_real_timestamp/screen_recording_metadata_v2.mp4',
       ),
     ];
+    eventLogFile = await UnitTestUtils.getFixtureFile(
+      'traces/eventlog_no_cujs.winscope',
+    );
     userNotifierChecker = new UserNotifierChecker();
   });
 
@@ -216,14 +227,102 @@ describe('Mediator', () => {
   });
 
   it('handles collected traces from Winscope', async () => {
-    await mediator.onWinscopeEvent(new AppFilesCollected(inputFiles));
+    await mediator.onWinscopeEvent(
+      new AppFilesCollected({requested: [], collected: inputFiles}),
+    );
     await checkLoadTraceViewEvents(collectTracesComponent);
   });
 
+  it('handles invalid collected traces from Winscope', async () => {
+    await mediator.onWinscopeEvent(
+      new AppFilesCollected({
+        requested: [],
+        collected: [await UnitTestUtils.getFixtureFile('traces/empty.pb')],
+      }),
+    );
+    expect(
+      userNotifierChecker.expectNotified([
+        new UnsupportedFileFormat('empty.pb'),
+      ]),
+    );
+    expect(appComponent.onWinscopeEvent).not.toHaveBeenCalled();
+  });
+
+  it('handles collected traces with no entries from Winscope', async () => {
+    await mediator.onWinscopeEvent(
+      new AppFilesCollected({
+        requested: [],
+        collected: [
+          await UnitTestUtils.getFixtureFile(
+            'traces/no_entries_InputMethodClients.pb',
+          ),
+        ],
+      }),
+    );
+    expect(
+      userNotifierChecker.expectNotified([
+        new InvalidLegacyTrace(
+          'no_entries_InputMethodClients.pb',
+          'Trace has no entries',
+        ),
+      ]),
+    );
+    expect(appComponent.onWinscopeEvent).not.toHaveBeenCalled();
+  });
+
+  it('handles collected trace with no visualization from Winscope', async () => {
+    await mediator.onWinscopeEvent(
+      new AppFilesCollected({
+        requested: [],
+        collected: [eventLogFile],
+      }),
+    );
+    expect(
+      userNotifierChecker.expectNotified([
+        new FailedToCreateTracesParser(
+          TraceType.CUJS,
+          'eventlog_no_cujs.winscope has no relevant entries',
+        ),
+      ]),
+    );
+    expect(appComponent.onWinscopeEvent).not.toHaveBeenCalled();
+  });
+
   it('handles empty collected traces from Winscope', async () => {
-    await mediator.onWinscopeEvent(new AppFilesCollected([]));
+    await mediator.onWinscopeEvent(
+      new AppFilesCollected({
+        requested: [],
+        collected: [],
+      }),
+    );
     expect(userNotifierChecker.expectNotified([new NoValidFiles()]));
     expect(appComponent.onWinscopeEvent).not.toHaveBeenCalled();
+  });
+
+  it('handles requested traces with missing collected traces from Winscope', async () => {
+    await mediator.onWinscopeEvent(
+      new AppFilesCollected({
+        requested: [
+          {
+            name: 'Collected Trace',
+            types: [TraceType.EVENT_LOG, TraceType.CUJS],
+          },
+          {
+            name: 'Uncollected Trace',
+            types: [TraceType.TRANSITION],
+          },
+        ],
+        collected: inputFiles.concat([eventLogFile]),
+      }),
+    );
+    expect(
+      userNotifierChecker.expectNotified([
+        new ProxyTracingErrors([
+          'Failed to find valid files for Uncollected Trace',
+        ]),
+      ]),
+    );
+    expect(appComponent.onWinscopeEvent).toHaveBeenCalled();
   });
 
   it('handles request to refresh dumps', async () => {
@@ -377,25 +476,19 @@ describe('Mediator', () => {
       tracePipeline.getTimestampConverter().setRealToMonotonicTimeOffsetNs(0n);
       await loadFiles();
       await loadTraceView();
+      const traceSfEntry = assertDefined(
+        tracePipeline.getTraces().getTrace(TraceType.SURFACE_FLINGER),
+      ).getEntry(2);
 
       // receive timestamp
       resetSpyCalls();
       await mediator.onWinscopeEvent(
-        new RemoteToolTimestampReceived(() => TIMESTAMP_10),
-      );
-      checkTracePositionUpdateEvents(
-        [viewerStub0, viewerOverlay, timelineComponent],
-        POSITION_10,
+        new RemoteToolTimestampReceived(() => traceSfEntry.getTimestamp()),
       );
 
-      // receive timestamp
-      resetSpyCalls();
-      await mediator.onWinscopeEvent(
-        new RemoteToolTimestampReceived(() => TIMESTAMP_11),
-      );
       checkTracePositionUpdateEvents(
         [viewerStub0, viewerOverlay, timelineComponent],
-        POSITION_11,
+        TracePosition.fromTraceEntry(traceSfEntry),
       );
     });
 
@@ -419,24 +512,37 @@ describe('Mediator', () => {
     it('defers trace position propagation till traces are loaded and visualized', async () => {
       // ensure converter has been used to create real timestamps
       tracePipeline.getTimestampConverter().makeTimestampFromRealNs(0n);
+
+      // load files but do not load trace view
+      await loadFiles();
+      expect(timelineComponent.onWinscopeEvent).not.toHaveBeenCalled();
+      const traceSf = assertDefined(
+        tracePipeline.getTraces().getTrace(TraceType.SURFACE_FLINGER),
+      );
+
       // keep timestamp for later
       await mediator.onWinscopeEvent(
-        new RemoteToolTimestampReceived(() => TIMESTAMP_10),
+        new RemoteToolTimestampReceived(() =>
+          traceSf.getEntry(1).getTimestamp(),
+        ),
       );
       expect(timelineComponent.onWinscopeEvent).not.toHaveBeenCalled();
 
       // keep timestamp for later (replace previous one)
       await mediator.onWinscopeEvent(
-        new RemoteToolTimestampReceived(() => TIMESTAMP_11),
+        new RemoteToolTimestampReceived(() =>
+          traceSf.getEntry(2).getTimestamp(),
+        ),
       );
       expect(timelineComponent.onWinscopeEvent).not.toHaveBeenCalled();
 
       // apply timestamp
-      await loadFiles();
       await loadTraceView();
 
       expect(timelineComponent.onWinscopeEvent).toHaveBeenCalledWith(
-        makeExpectedTracePositionUpdate(POSITION_11),
+        makeExpectedTracePositionUpdate(
+          TracePosition.fromTraceEntry(traceSf.getEntry(2)),
+        ),
       );
     });
   });

@@ -70,6 +70,8 @@ import com.example.android.vdmdemo.common.VideoManager;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
+import java.util.Collections;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
 
@@ -102,6 +104,7 @@ class RemoteDisplay implements AutoCloseable {
     private final VirtualDevice mVirtualDevice;
     private final @DisplayType int mDisplayType;
     private final AtomicBoolean mClosed = new AtomicBoolean(false);
+    private StatusBar mStatusBar;
     private int mRotation;
     private int mWidth;
     private int mHeight;
@@ -140,9 +143,17 @@ class RemoteDisplay implements AutoCloseable {
             flags &= ~DisplayManager.VIRTUAL_DISPLAY_FLAG_OWN_CONTENT_ONLY;
         }
 
+        Set<String> displayCategories;
+        if (mPreferenceController.getBoolean(R.string.pref_enable_display_category)) {
+            displayCategories = Set.of(context.getString(R.string.display_category));
+        } else {
+            displayCategories = Collections.emptySet();
+        }
+
         VirtualDisplayConfig.Builder virtualDisplayBuilder =
                 new VirtualDisplayConfig.Builder(
                                 "VirtualDisplay" + mRemoteDisplayId, mWidth, mHeight, mDpi)
+                        .setDisplayCategories(displayCategories)
                         .setFlags(flags);
 
         if (mDisplayType == DISPLAY_TYPE_HOME) {
@@ -195,6 +206,20 @@ class RemoteDisplay implements AutoCloseable {
         mVirtualDisplay.setSurface(surface);
 
         mRotation = mVirtualDisplay.getDisplay().getRotation();
+
+        if (mPreferenceController.getBoolean(R.string.pref_enable_custom_status_bar)
+                && mDisplayType != DISPLAY_TYPE_MIRROR) {
+            // Custom status bar cannot be shown on mirror displays. Also, it needs to be recreated
+            // whenever the dimensions of the display change.
+            final Context displayContext =
+                    mContext.createDisplayContext(mVirtualDisplay.getDisplay());
+            mContext.getMainExecutor().execute(() -> {
+                if (mStatusBar != null) {
+                    mStatusBar.destroy(displayContext);
+                }
+                mStatusBar = StatusBar.create(displayContext);
+            });
+        }
 
         if (mTouchscreen != null) {
             mTouchscreen.close();

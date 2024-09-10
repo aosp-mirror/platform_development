@@ -16,6 +16,7 @@
 
 import {assertDefined, assertTrue} from 'common/assert_utils';
 import {PersistentStoreProxy} from 'common/persistent_store_proxy';
+import {Store} from 'common/store';
 import {
   TabbedViewSwitchRequest,
   WinscopeEvent,
@@ -38,10 +39,11 @@ import {DisplayIdentifier} from 'viewers/common/display_identifier';
 import {HierarchyPresenter} from 'viewers/common/hierarchy_presenter';
 import {PropertiesPresenter} from 'viewers/common/properties_presenter';
 import {RectsPresenter} from 'viewers/common/rects_presenter';
+import {TextFilter} from 'viewers/common/text_filter';
 import {UiHierarchyTreeNode} from 'viewers/common/ui_hierarchy_tree_node';
 import {UI_RECT_FACTORY} from 'viewers/common/ui_rect_factory';
 import {UserOptions} from 'viewers/common/user_options';
-import {UiRect} from 'viewers/components/rects/types2d';
+import {UiRect} from 'viewers/components/rects/ui_rect';
 import {UiData} from './ui_data';
 
 export class Presenter extends AbstractHierarchyViewerPresenter<UiData> {
@@ -67,6 +69,11 @@ export class Presenter extends AbstractHierarchyViewerPresenter<UiData> {
           enabled: true,
         },
       },
+      this.storage,
+    ),
+    PersistentStoreProxy.new<TextFilter>(
+      'VcHierarchyFilter',
+      new TextFilter('', []),
       this.storage,
     ),
     Presenter.DENYLIST_PROPERTY_NAMES,
@@ -95,6 +102,7 @@ export class Presenter extends AbstractHierarchyViewerPresenter<UiData> {
         tree,
         this.getIdFromViewCaptureTrace(trace),
       ),
+    undefined,
   );
   protected override propertiesPresenter = new PropertiesPresenter(
     PersistentStoreProxy.new<UserOptions>(
@@ -117,6 +125,11 @@ export class Presenter extends AbstractHierarchyViewerPresenter<UiData> {
       },
       this.storage,
     ),
+    PersistentStoreProxy.new<TextFilter>(
+      'VcPropertiesFilter',
+      new TextFilter('', []),
+      this.storage,
+    ),
     Presenter.DENYLIST_PROPERTY_NAMES,
   );
   protected override readonly multiTraceType = TraceType.VIEW_CAPTURE;
@@ -130,7 +143,7 @@ export class Presenter extends AbstractHierarchyViewerPresenter<UiData> {
 
   constructor(
     traces: Traces,
-    storage: Readonly<Storage>,
+    storage: Readonly<Store>,
     notifyViewCallback: NotifyHierarchyViewCallbackType<UiData>,
   ) {
     super(undefined, traces, storage, notifyViewCallback, new UiData());
@@ -156,6 +169,7 @@ export class Presenter extends AbstractHierarchyViewerPresenter<UiData> {
   }
 
   override async onAppEvent(event: WinscopeEvent) {
+    await this.handleCommonWinscopeEvents(event);
     await event.visit(
       WinscopeEventType.TRACE_POSITION_UPDATE,
       async (event) => {
@@ -175,6 +189,15 @@ export class Presenter extends AbstractHierarchyViewerPresenter<UiData> {
             );
           }
         }
+        this.updateCuratedProperties();
+        this.refreshUIData();
+      },
+    );
+    await event.visit(
+      WinscopeEventType.FILTER_PRESET_APPLY_REQUEST,
+      async (event) => {
+        const filterPresetName = event.name;
+        await this.applyPresetConfig(filterPresetName);
         this.updateCuratedProperties();
         this.refreshUIData();
       },
@@ -248,16 +271,15 @@ export class Presenter extends AbstractHierarchyViewerPresenter<UiData> {
   }
 
   private getWindows(windowNames: string[]): DisplayIdentifier[] {
-    return this.viewCaptureTraces
-      .map((trace, i) => {
-        const traceId = this.getIdFromViewCaptureTrace(trace);
-        return {
-          displayId: traceId,
-          groupId: traceId,
-          name: windowNames[i],
-        };
-      })
-      .sort((a, b) => a.name.localeCompare(b.name));
+    return this.viewCaptureTraces.map((trace, i) => {
+      const traceId = this.getIdFromViewCaptureTrace(trace);
+      return {
+        displayId: traceId,
+        groupId: traceId,
+        name: windowNames[i],
+        isActive: true,
+      };
+    });
   }
 
   private updateCuratedProperties() {

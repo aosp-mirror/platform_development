@@ -15,6 +15,7 @@
  */
 
 import {PersistentStoreProxy} from 'common/persistent_store_proxy';
+import {Store} from 'common/store';
 import {WinscopeEvent, WinscopeEventType} from 'messaging/winscope_event';
 import {Trace} from 'trace/trace';
 import {Traces} from 'trace/traces';
@@ -29,10 +30,11 @@ import {DisplayIdentifier} from 'viewers/common/display_identifier';
 import {HierarchyPresenter} from 'viewers/common/hierarchy_presenter';
 import {PropertiesPresenter} from 'viewers/common/properties_presenter';
 import {RectsPresenter} from 'viewers/common/rects_presenter';
+import {TextFilter} from 'viewers/common/text_filter';
 import {UiHierarchyTreeNode} from 'viewers/common/ui_hierarchy_tree_node';
 import {UI_RECT_FACTORY} from 'viewers/common/ui_rect_factory';
 import {UserOptions} from 'viewers/common/user_options';
-import {UiRect} from 'viewers/components/rects/types2d';
+import {UiRect} from 'viewers/components/rects/ui_rect';
 import {UpdateDisplayNames} from './operations/update_display_names';
 import {UiData} from './ui_data';
 
@@ -69,6 +71,11 @@ export class Presenter extends AbstractHierarchyViewerPresenter<UiData> {
       },
       this.storage,
     ),
+    PersistentStoreProxy.new<TextFilter>(
+      'WmHierarchyFilter',
+      new TextFilter('', []),
+      this.storage,
+    ),
     Presenter.DENYLIST_PROPERTY_NAMES,
     true,
     false,
@@ -94,6 +101,7 @@ export class Presenter extends AbstractHierarchyViewerPresenter<UiData> {
     ),
     (tree: HierarchyTreeNode) => UI_RECT_FACTORY.makeUiRects(tree),
     this.getDisplays,
+    this.convertRectIdtoContainerName,
   );
   protected override propertiesPresenter = new PropertiesPresenter(
     PersistentStoreProxy.new<UserOptions>(
@@ -116,6 +124,11 @@ export class Presenter extends AbstractHierarchyViewerPresenter<UiData> {
       },
       this.storage,
     ),
+    PersistentStoreProxy.new<TextFilter>(
+      'WmPropertiesFilter',
+      new TextFilter('', []),
+      this.storage,
+    ),
     Presenter.DENYLIST_PROPERTY_NAMES,
   );
   protected override multiTraceType = undefined;
@@ -123,17 +136,26 @@ export class Presenter extends AbstractHierarchyViewerPresenter<UiData> {
   constructor(
     trace: Trace<HierarchyTreeNode>,
     traces: Traces,
-    storage: Readonly<Storage>,
+    storage: Readonly<Store>,
     notifyViewCallback: NotifyHierarchyViewCallbackType<UiData>,
   ) {
     super(trace, traces, storage, notifyViewCallback, new UiData());
   }
 
   override async onAppEvent(event: WinscopeEvent) {
+    await this.handleCommonWinscopeEvents(event);
     await event.visit(
       WinscopeEventType.TRACE_POSITION_UPDATE,
       async (event) => {
         await this.applyTracePositionUpdate(event);
+        this.refreshUIData();
+      },
+    );
+    await event.visit(
+      WinscopeEventType.FILTER_PRESET_APPLY_REQUEST,
+      async (event) => {
+        const filterPresetName = event.name;
+        await this.applyPresetConfig(filterPresetName);
         this.refreshUIData();
       },
     );
@@ -169,17 +191,19 @@ export class Presenter extends AbstractHierarchyViewerPresenter<UiData> {
     rects.forEach((rect: UiRect) => {
       if (!rect.isDisplay) return;
       const displayName = rect.label.slice(10, rect.label.length);
-      ids.push({displayId: rect.id, groupId: rect.groupId, name: displayName});
+      ids.push({
+        displayId: rect.id,
+        groupId: rect.groupId,
+        name: displayName,
+        isActive: rect.isActiveDisplay,
+      });
     });
-    return ids.sort((a, b) => {
-      if (a.name < b.name) {
-        return -1;
-      }
-      if (a.name > b.name) {
-        return 1;
-      }
-      return 0;
-    });
+    return ids.sort();
+  }
+
+  private convertRectIdtoContainerName(id: string) {
+    const parts = id.split(' ');
+    return parts.slice(2).join(' ');
   }
 
   private refreshUIData() {

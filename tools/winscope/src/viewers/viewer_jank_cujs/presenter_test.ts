@@ -16,7 +16,6 @@
 
 import {assertDefined} from 'common/assert_utils';
 import {TracePositionUpdate} from 'messaging/winscope_event';
-import {TracesBuilder} from 'test/unit/traces_builder';
 import {TraceBuilder} from 'test/unit/trace_builder';
 import {UnitTestUtils} from 'test/unit/utils';
 import {Parser} from 'trace/parser';
@@ -36,7 +35,6 @@ class PresenterJankCujsTest extends AbstractLogViewerPresenterTest<UiData> {
 
   override readonly shouldExecuteHeaderTests = true;
   override readonly shouldExecuteFilterTests = false;
-  override readonly shouldExecuteCurrentIndexTests = false;
   override readonly shouldExecutePropertiesTests = true;
 
   override readonly totalOutputEntries = 16;
@@ -62,13 +60,13 @@ class PresenterJankCujsTest extends AbstractLogViewerPresenterTest<UiData> {
     );
   }
 
-  override createPresenterWithEmptyTrace(
+  override async createPresenterWithEmptyTrace(
     callback: NotifyLogViewCallbackType<UiData>,
-  ): Presenter {
-    const traces = new TracesBuilder()
-      .setEntries(TraceType.TRANSITION, [])
+  ): Promise<Presenter> {
+    const trace = new TraceBuilder<PropertyTreeNode>()
+      .setType(TraceType.CUJS)
+      .setEntries([])
       .build();
-    const trace = assertDefined(traces.getTrace(TraceType.TRANSITION));
     return new Presenter(trace, callback);
   }
 

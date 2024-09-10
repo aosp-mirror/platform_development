@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import {TransformType} from 'parsers/surface_flinger/transform_utils';
+import {TransformTypeFlags} from 'parsers/surface_flinger/transform_utils';
 import {HierarchyTreeNode} from 'trace/tree_node/hierarchy_tree_node';
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
 import {DEFAULT_PROPERTY_TREE_NODE_FACTORY} from 'trace/tree_node/property_tree_node_factory';
@@ -96,7 +96,7 @@ export class TreeNodeUtils {
       .build();
   }
 
-  static makeTransformNode(type: TransformType): PropertyTreeNode {
+  static makeTransformNode(type: TransformTypeFlags): PropertyTreeNode {
     return new PropertyTreeBuilder()
       .setRootId('test node')
       .setName('transform')

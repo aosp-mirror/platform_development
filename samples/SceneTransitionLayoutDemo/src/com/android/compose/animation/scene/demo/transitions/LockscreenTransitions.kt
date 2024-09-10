@@ -16,12 +16,15 @@
 
 package com.android.compose.animation.scene.demo.transitions
 
+import androidx.compose.animation.core.CubicBezierEasing
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.gestures.Orientation
 import androidx.compose.ui.unit.dp
 import com.android.compose.animation.scene.Edge
 import com.android.compose.animation.scene.SceneKey
 import com.android.compose.animation.scene.SceneTransitionsBuilder
+import com.android.compose.animation.scene.TransitionBuilder
+import com.android.compose.animation.scene.TransitionKey
 import com.android.compose.animation.scene.demo.Bouncer
 import com.android.compose.animation.scene.demo.Camera
 import com.android.compose.animation.scene.demo.Clock
@@ -43,15 +46,13 @@ fun SceneTransitionsBuilder.lockscreenTransitions(configuration: DemoConfigurati
     commonLockscreenTransitions(Scenes.SplitLockscreen)
 
     if (configuration.useOverscrollSpec) {
-        overscroll(Scenes.Lockscreen, Orientation.Vertical) {}
+        overscrollDisabled(Scenes.Lockscreen, Orientation.Vertical)
 
         overscroll(Scenes.StubStart, Orientation.Horizontal) {
-            progressConverter = configuration.overscrollProgress::convert
             translate(Stub.Elements.TextStart, x = { absoluteDistance })
         }
 
         overscroll(Scenes.StubEnd, Orientation.Horizontal) {
-            progressConverter = configuration.overscrollProgress::convert
             translate(Stub.Elements.TextEnd, x = { absoluteDistance })
         }
     }
@@ -60,13 +61,20 @@ fun SceneTransitionsBuilder.lockscreenTransitions(configuration: DemoConfigurati
 val BouncerBackgroundEndProgress = 0.5f
 
 fun SceneTransitionsBuilder.commonLockscreenTransitions(lockscreenScene: SceneKey) {
-    from(lockscreenScene, to = Scenes.Bouncer) {
-        spec = tween(durationMillis = 500)
-
-        translate(Bouncer.Elements.Content, y = 300.dp)
-        fractionRange(end = BouncerBackgroundEndProgress) { fade(Bouncer.Elements.Background) }
-        fractionRange(start = BouncerBackgroundEndProgress) { fade(Bouncer.Elements.Content) }
+    from(
+        Scenes.Bouncer,
+        to = lockscreenScene,
+        preview = {
+            fractionRange(easing = CubicBezierEasing(0.1f, 0.1f, 0f, 1f)) {
+                scaleDraw(Bouncer.Elements.Content, scaleY = 0.8f, scaleX = 0.8f)
+            }
+        },
+        key = TransitionKey.PredictiveBack
+    ) {
+        bouncerToLockscreenTransition()
     }
+
+    from(Scenes.Bouncer, to = lockscreenScene) { bouncerToLockscreenTransition() }
 
     from(lockscreenScene, to = Scenes.Launcher) {
         spec = tween(durationMillis = 500)
@@ -107,4 +115,12 @@ fun SceneTransitionsBuilder.commonLockscreenTransitions(lockscreenScene: SceneKe
 
         fade(Camera.Elements.Background)
     }
+}
+
+private fun TransitionBuilder.bouncerToLockscreenTransition() {
+    spec = tween(durationMillis = 500)
+
+    translate(Bouncer.Elements.Content, y = 300.dp)
+    fractionRange(start = BouncerBackgroundEndProgress) { fade(Bouncer.Elements.Background) }
+    fractionRange(end = BouncerBackgroundEndProgress) { fade(Bouncer.Elements.Content) }
 }
