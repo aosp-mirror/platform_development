@@ -13,52 +13,58 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import {Component, ElementRef, Inject, Input} from '@angular/core';
+import {
+  Component,
+  ElementRef,
+  EventEmitter,
+  Inject,
+  Input,
+  Output,
+} from '@angular/core';
 import {PersistentStore} from 'common/persistent_store';
+import {Analytics} from 'logging/analytics';
 import {TraceType} from 'trace/trace_type';
+import {CollapsibleSectionType} from 'viewers/common/collapsible_section_type';
 import {CuratedProperties} from 'viewers/common/curated_properties';
 import {UiPropertyTreeNode} from 'viewers/common/ui_property_tree_node';
 import {UserOptions} from 'viewers/common/user_options';
 import {ViewerEvents} from 'viewers/common/viewer_events';
 import {nodeStyles} from 'viewers/components/styles/node.styles';
+import {searchBoxStyle} from './styles/search_box.styles';
+import {viewerCardInnerStyle} from './styles/viewer_card.styles';
 
 @Component({
   selector: 'properties-view',
   template: `
     <div class="view-header">
-      <div class="title-filter">
-        <h2 class="properties-title mat-title" [class.padded-title]="hasUserOptions()">{{title.toUpperCase()}}</h2>
+      <div class="title-section">
+       <collapsible-section-title
+          class="properties-title"
+          [class.padded-title]="!hasUserOptions()"
+          [title]="title"
+          (collapseButtonClicked)="collapseButtonClicked.emit()"></collapsible-section-title>
 
-        <mat-form-field *ngIf="showFilter" (keydown.enter)="$event.target.blur()">
-          <mat-label>Filter...</mat-label>
+        <mat-form-field *ngIf="showFilter" class="search-box" (keydown.enter)="$event.target.blur()">
+          <mat-label>Search</mat-label>
 
           <input matInput [(ngModel)]="filterString" (ngModelChange)="filterTree()" name="filter" />
         </mat-form-field>
       </div>
 
-      <div class="view-controls">
-        <mat-checkbox
-          *ngFor="let option of objectKeys(userOptions)"
-          color="primary"
-          [(ngModel)]="userOptions[option].enabled"
-          [disabled]="userOptions[option].isUnavailable ?? false"
-          (ngModelChange)="onUserOptionChange()"
-          [matTooltip]="userOptions[option].tooltip ?? ''"
-          >{{ userOptions[option].name }}</mat-checkbox
-        >
-      </div>
+      <user-options
+        *ngIf="hasUserOptions()"
+        class="view-controls"
+        [userOptions]="userOptions"
+        [eventType]="ViewerEvents.PropertiesUserOptionsChange"
+        [traceType]="traceType"
+        [logCallback]="Analytics.Navigation.logPropertiesSettingsChanged">
+      </user-options>
     </div>
 
-    <mat-divider></mat-divider>
+    <mat-divider *ngIf="hasUserOptions()"></mat-divider>
 
-    <ng-container *ngIf="showSurfaceFlingerPropertyGroups() || showViewCaptureFormat()">
-      <surface-flinger-property-groups
-        *ngIf="showSurfaceFlingerPropertyGroups()"
-        class="property-groups"
-        [properties]="curatedProperties"></surface-flinger-property-groups>
-
+    <ng-container *ngIf="showViewCaptureFormat()">
       <view-capture-property-groups
-        *ngIf="showViewCaptureFormat()"
         class="property-groups"
         [properties]="curatedProperties"></view-capture-property-groups>
 
@@ -66,14 +72,9 @@ import {nodeStyles} from 'viewers/components/styles/node.styles';
     </ng-container>
 
     <div *ngIf="showPropertiesTree()" class="properties-content">
-      <h3 *ngIf="isProtoDump" class="properties-dump-title mat-title">
-        PROTO DUMP
-      </h3>
-
       <div class="tree-wrapper">
         <tree-view
           [node]="propertiesTree"
-          [store]="store"
           [useStoredExpandedState]="!!store"
           [itemsClickable]="true"
           [highlightedItem]="highlightedProperty"
@@ -88,29 +89,14 @@ import {nodeStyles} from 'viewers/components/styles/node.styles';
       .view-header {
         display: flex;
         flex-direction: column;
-        margin-bottom: 12px;
-      }
-
-      .title-filter {
-        display: flex;
-        flex-direction: row;
-        flex-wrap: wrap;
-        justify-content: space-between;
-      }
-
-      .mat-title {
-        padding-top: 16px;
       }
 
       .padded-title {
-        padding-bottom: 16px;
+        padding-bottom: 8px;
       }
 
-      .view-controls {
-        display: flex;
-        flex-direction: row;
-        flex-wrap: wrap;
-        column-gap: 10px;
+      .property-groups {
+        overflow-y: auto;
       }
 
       .properties-content {
@@ -118,27 +104,23 @@ import {nodeStyles} from 'viewers/components/styles/node.styles';
         display: flex;
         flex-direction: column;
         overflow-y: auto;
-      }
-
-      .property-groups {
-        flex: 2;
-        overflow-y: auto;
-      }
-
-      .tree-wrapper {
-        overflow: auto;
+        padding: 0px 12px;
       }
 
       .placeholder-text {
-        padding-top: 4px;
+        padding: 8px 12px;
       }
     `,
     nodeStyles,
+    searchBoxStyle,
+    viewerCardInnerStyle,
   ],
 })
 export class PropertiesComponent {
-  objectKeys = Object.keys;
+  Analytics = Analytics;
+  CollapsibleSectionType = CollapsibleSectionType;
   filterString = '';
+  ViewerEvents = ViewerEvents;
 
   @Input() title = 'PROPERTIES';
   @Input() showFilter = true;
@@ -152,6 +134,8 @@ export class PropertiesComponent {
   @Input() traceType: TraceType | undefined;
   @Input() store: PersistentStore | undefined;
 
+  @Output() collapseButtonClicked = new EventEmitter();
+
   constructor(@Inject(ElementRef) private elementRef: ElementRef) {}
 
   filterTree() {
@@ -162,24 +146,16 @@ export class PropertiesComponent {
     this.elementRef.nativeElement.dispatchEvent(event);
   }
 
-  onHighlightedPropertyChange(newId: string) {
+  onHighlightedPropertyChange(newNode: UiPropertyTreeNode) {
     const event = new CustomEvent(ViewerEvents.HighlightedPropertyChange, {
       bubbles: true,
-      detail: {id: newId},
-    });
-    this.elementRef.nativeElement.dispatchEvent(event);
-  }
-
-  onUserOptionChange() {
-    const event = new CustomEvent(ViewerEvents.PropertiesUserOptionsChange, {
-      bubbles: true,
-      detail: {userOptions: this.userOptions},
+      detail: {id: newNode.id},
     });
     this.elementRef.nativeElement.dispatchEvent(event);
   }
 
   hasUserOptions() {
-    return this.objectKeys(this.userOptions).length > 0;
+    return Object.keys(this.userOptions).length > 0;
   }
 
   showViewCaptureFormat(): boolean {
@@ -189,14 +165,6 @@ export class PropertiesComponent {
       // Todo: Highlight Inline in formatted ViewCapture Properties Component.
       !this.userOptions['showDiff']?.enabled &&
       this.curatedProperties !== undefined
-    );
-  }
-
-  showSurfaceFlingerPropertyGroups(): boolean {
-    return (
-      !!this.curatedProperties &&
-      this.traceType === TraceType.SURFACE_FLINGER &&
-      this.displayPropertyGroups
     );
   }
 

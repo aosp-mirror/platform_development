@@ -89,7 +89,7 @@ export class VisibilityPropertiesComputation implements Computation {
           ) {
             return false;
           }
-          if (!this.layerContains(layer, other, displaySize)) {
+          if (!this.layerContains(other, layer, displaySize)) {
             return false;
           }
           const cornerRadiusOther =
@@ -102,7 +102,7 @@ export class VisibilityPropertiesComputation implements Computation {
               0)
           );
         })
-        .map((other) => this.getDefinedValue(other, 'id'));
+        .map((other) => other.id);
 
       if (occludedBy.length > 0) {
         isVisible = false;
@@ -131,12 +131,12 @@ export class VisibilityPropertiesComputation implements Computation {
           ) {
             return false;
           }
-          if (!this.layerOverlaps(layer, other, displaySize)) {
+          if (!this.layerOverlaps(other, layer, displaySize)) {
             return false;
           }
-          return !occludedBy.includes(this.getDefinedValue(other, 'id'));
+          return !occludedBy.includes(other.id);
         })
-        .map((other) => this.getDefinedValue(other, 'id'));
+        .map((other) => other.id);
 
       layer.addEagerProperty(
         DEFAULT_PROPERTY_TREE_NODE_FACTORY.makeCalculatedProperty(
@@ -156,7 +156,7 @@ export class VisibilityPropertiesComputation implements Computation {
           }
           return this.layerOverlaps(other, layer, displaySize);
         })
-        .map((other) => this.getDefinedValue(other, 'id'));
+        .map((other) => other.id);
 
       layer.addEagerProperty(
         DEFAULT_PROPERTY_TREE_NODE_FACTORY.makeCalculatedProperty(
@@ -166,24 +166,17 @@ export class VisibilityPropertiesComputation implements Computation {
         ),
       );
 
-      this.getDefinedValue(layer, 'isOpaque')
+      this.isOpaque(layer)
         ? opaqueLayers.push(layer)
         : transparentLayers.push(layer);
-
-      if (!isVisible) {
-        layer.addEagerProperty(
-          DEFAULT_PROPERTY_TREE_NODE_FACTORY.makeCalculatedProperty(
-            layer.id,
-            'visibilityReason',
-            this.getVisibilityReasons(layer),
-          ),
-        );
-      }
     }
   }
 
   private getIsVisible(layer: HierarchyTreeNode): boolean {
     if (this.isHiddenByParent(layer) || this.isHiddenByPolicy(layer)) {
+      return false;
+    }
+    if (this.hasZeroAlpha(layer)) {
       return false;
     }
     if (
@@ -242,8 +235,7 @@ export class VisibilityPropertiesComputation implements Computation {
       reasons.push('buffer is empty');
     }
 
-    const color = this.getColor(layer);
-    if (color && this.getDefinedValue(color, 'a') === 0) {
+    if (this.hasZeroAlpha(layer)) {
       reasons.push('alpha is 0');
     }
 
@@ -252,6 +244,7 @@ export class VisibilityPropertiesComputation implements Computation {
       reasons.push('bounds is 0x0');
     }
 
+    const color = this.getColor(layer);
     if (
       color &&
       bounds &&
@@ -289,6 +282,13 @@ export class VisibilityPropertiesComputation implements Computation {
       this.hasValidEmptyVisibleRegion(visibleRegionNode)
     ) {
       reasons.push('visible region calculated by Composition Engine is empty');
+    }
+
+    if (
+      visibleRegionNode?.getValue() === null &&
+      !layer.getEagerPropertyByName('excludesCompositionState')?.getValue()
+    ) {
+      reasons.push('null visible region');
     }
 
     if (reasons.length === 0) reasons.push('unknown');
@@ -389,7 +389,7 @@ export class VisibilityPropertiesComputation implements Computation {
   }
 
   private isHiddenByParent(layer: HierarchyTreeNode): boolean {
-    const parentLayer = assertDefined(layer.getZParent());
+    const parentLayer = assertDefined(layer.getParent());
     return (
       !parentLayer.isRoot() &&
       (this.isHiddenByPolicy(parentLayer) || this.isHiddenByParent(parentLayer))
@@ -402,6 +402,19 @@ export class VisibilityPropertiesComputation implements Computation {
       this.getDefinedValue(layer, 'id') ===
         VisibilityPropertiesComputation.OFFSCREEN_LAYER_ROOT_ID
     );
+  }
+
+  private hasZeroAlpha(layer: HierarchyTreeNode): boolean {
+    const alpha = this.getColor(layer)?.getChildByName('a')?.getValue() ?? 0;
+    return alpha === 0;
+  }
+
+  private isOpaque(layer: HierarchyTreeNode): boolean {
+    const alpha = this.getColor(layer)?.getChildByName('a')?.getValue();
+    if (alpha !== 1) {
+      return false;
+    }
+    return this.getDefinedValue(layer, 'isOpaque');
   }
 
   private isActiveBufferEmpty(buffer: PropertyTreeNode | undefined): boolean {

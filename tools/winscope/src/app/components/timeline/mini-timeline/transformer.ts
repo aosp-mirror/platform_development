@@ -15,21 +15,21 @@
  */
 
 import {Segment} from 'app/components/timeline/segment';
-import {TimeRange, Timestamp, TimestampType} from 'common/time';
-import {NO_TIMEZONE_OFFSET_FACTORY} from 'common/timestamp_factory';
+import {TimeRange, Timestamp} from 'common/time';
+import {ComponentTimestampConverter} from 'common/timestamp_converter';
 
 export class Transformer {
-  private timestampType: TimestampType;
-
   private fromWidth: bigint;
   private targetWidth: number;
 
   private fromOffset: bigint;
   private toOffset: number;
 
-  constructor(private fromRange: TimeRange, private toRange: Segment) {
-    this.timestampType = fromRange.from.getType();
-
+  constructor(
+    private fromRange: TimeRange,
+    private toRange: Segment,
+    private timestampConverter: ComponentTimestampConverter,
+  ) {
     this.fromWidth =
       this.fromRange.to.getValueNs() - this.fromRange.from.getValueNs();
     // Needs to be a whole number to be compatible with bigints
@@ -53,10 +53,6 @@ export class Transformer {
     const valueNs =
       this.fromOffset +
       (BigInt(x - this.toOffset) * this.fromWidth) / BigInt(this.targetWidth);
-    return NO_TIMEZONE_OFFSET_FACTORY.makeTimestampFromType(
-      this.timestampType,
-      valueNs,
-      0n,
-    );
+    return this.timestampConverter.makeTimestampFromNs(valueNs);
   }
 }

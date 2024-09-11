@@ -13,52 +13,87 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 import {CommonModule} from '@angular/common';
-import {CUSTOM_ELEMENTS_SCHEMA, NO_ERRORS_SCHEMA} from '@angular/core';
+import {Component, CUSTOM_ELEMENTS_SCHEMA, ViewChild} from '@angular/core';
 import {ComponentFixture, TestBed} from '@angular/core/testing';
 import {MatCardModule} from '@angular/material/card';
 import {MatDividerModule} from '@angular/material/divider';
+import {MatTabsModule} from '@angular/material/tabs';
+import {assertDefined} from 'common/assert_utils';
 import {
   TabbedViewSwitchRequest,
   WinscopeEvent,
   WinscopeEventType,
 } from 'messaging/winscope_event';
+import {TraceBuilder} from 'test/unit/trace_builder';
 import {TraceType} from 'trace/trace_type';
+import {Viewer, ViewType} from 'viewers/viewer';
 import {ViewerStub} from 'viewers/viewer_stub';
 import {TraceViewComponent} from './trace_view_component';
 
 describe('TraceViewComponent', () => {
-  let fixture: ComponentFixture<TraceViewComponent>;
-  let component: TraceViewComponent;
+  const traceSf = new TraceBuilder<object>()
+    .setType(TraceType.SURFACE_FLINGER)
+    .setEntries([])
+    .build();
+  const traceWm = new TraceBuilder<object>()
+    .setType(TraceType.WINDOW_MANAGER)
+    .setEntries([])
+    .build();
+  const traceSr = new TraceBuilder<object>()
+    .setType(TraceType.SCREEN_RECORDING)
+    .setEntries([])
+    .build();
+
+  let fixture: ComponentFixture<TestHostComponent>;
+  let component: TestHostComponent;
   let htmlElement: HTMLElement;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      declarations: [TraceViewComponent],
-      imports: [CommonModule, MatCardModule, MatDividerModule],
-      schemas: [NO_ERRORS_SCHEMA, CUSTOM_ELEMENTS_SCHEMA],
+      declarations: [TestHostComponent, TraceViewComponent],
+      imports: [CommonModule, MatCardModule, MatDividerModule, MatTabsModule],
+      schemas: [CUSTOM_ELEMENTS_SCHEMA],
     }).compileComponents();
-    fixture = TestBed.createComponent(TraceViewComponent);
+    fixture = TestBed.createComponent(TestHostComponent);
     htmlElement = fixture.nativeElement;
     component = fixture.componentInstance;
     component.viewers = [
-      new ViewerStub('Title0', 'Content0', [TraceType.SURFACE_FLINGER]),
-      new ViewerStub('Title1', 'Content1', [TraceType.WINDOW_MANAGER]),
+      new ViewerStub('Title0', 'Content0', traceSf, ViewType.TAB),
+      new ViewerStub('Title1', 'Content1', traceWm, ViewType.TAB),
+      new ViewerStub('Title2', 'Content2', traceSr, ViewType.OVERLAY),
     ];
-    component.ngOnChanges();
     fixture.detectChanges();
   });
 
   it('can be created', () => {
-    fixture.detectChanges();
     expect(component).toBeTruthy();
   });
 
   it('creates viewer tabs', () => {
-    const tabs: NodeList = htmlElement.querySelectorAll('.tab');
+    const tabs = htmlElement.querySelectorAll('.tab');
     expect(tabs.length).toEqual(2);
-    expect(tabs.item(0)!.textContent).toContain('Title0');
-    expect(tabs.item(1)!.textContent).toContain('Title1');
+    expect(tabs.item(0).textContent).toContain('Title0');
+    expect(tabs.item(1).textContent).toContain('Title1');
+  });
+
+  it('creates viewer overlay', () => {
+    const overlayContainer = assertDefined(
+      htmlElement.querySelector('.overlay-container'),
+    );
+    expect(overlayContainer.textContent).toContain('Content2');
+  });
+
+  it('throws error if more than one overlay present', () => {
+    expect(() => {
+      component.viewers = [
+        new ViewerStub('Title0', 'Content0', traceSf, ViewType.TAB),
+        new ViewerStub('Title1', 'Content1', traceWm, ViewType.OVERLAY),
+        new ViewerStub('Title2', 'Content2', traceSr, ViewType.OVERLAY),
+      ];
+      fixture.detectChanges();
+    }).toThrowError();
   });
 
   it('switches view on click', () => {
@@ -86,10 +121,11 @@ describe('TraceViewComponent', () => {
   });
 
   it("emits 'view switched' events", () => {
+    const traceViewComponent = assertDefined(component.traceViewComponent);
     const tabButtons = htmlElement.querySelectorAll('.tab');
 
     const emitAppEvent = jasmine.createSpy();
-    component.setEmitEvent(emitAppEvent);
+    traceViewComponent.setEmitEvent(emitAppEvent);
 
     expect(emitAppEvent).not.toHaveBeenCalled();
 
@@ -111,7 +147,7 @@ describe('TraceViewComponent', () => {
   });
 
   it("handles 'view switch' requests", async () => {
-    const tabButtons = htmlElement.querySelectorAll('.tab');
+    const traceViewComponent = assertDefined(component.traceViewComponent);
 
     // Initially tab 0
     let visibleTabContents = getVisibleTabContents();
@@ -119,8 +155,8 @@ describe('TraceViewComponent', () => {
     expect(visibleTabContents[0].innerHTML).toEqual('Content0');
 
     // Switch to tab 1
-    await component.onWinscopeEvent(
-      new TabbedViewSwitchRequest(TraceType.WINDOW_MANAGER),
+    await traceViewComponent.onWinscopeEvent(
+      new TabbedViewSwitchRequest(traceWm),
     );
     fixture.detectChanges();
     visibleTabContents = getVisibleTabContents();
@@ -128,8 +164,8 @@ describe('TraceViewComponent', () => {
     expect(visibleTabContents[0].innerHTML).toEqual('Content1');
 
     // Switch to tab 0
-    await component.onWinscopeEvent(
-      new TabbedViewSwitchRequest(TraceType.SURFACE_FLINGER),
+    await traceViewComponent.onWinscopeEvent(
+      new TabbedViewSwitchRequest(traceSf),
     );
     fixture.detectChanges();
     visibleTabContents = getVisibleTabContents();
@@ -137,13 +173,15 @@ describe('TraceViewComponent', () => {
     expect(visibleTabContents[0].innerHTML).toEqual('Content0');
   });
 
-  it('emits tab set onChanges', () => {
+  it('emits TabbedViewSwitched event on viewer changes', () => {
+    const traceViewComponent = assertDefined(component.traceViewComponent);
     const emitAppEvent = jasmine.createSpy();
-    component.setEmitEvent(emitAppEvent);
+    traceViewComponent.setEmitEvent(emitAppEvent);
 
     expect(emitAppEvent).not.toHaveBeenCalled();
 
-    component.ngOnChanges();
+    component.viewers = [new ViewerStub('Title1', 'Content1', traceWm)];
+    fixture.detectChanges();
 
     expect(emitAppEvent).toHaveBeenCalledTimes(1);
     expect(emitAppEvent).toHaveBeenCalledWith(
@@ -164,4 +202,18 @@ describe('TraceViewComponent', () => {
       });
     return contents;
   };
+
+  @Component({
+    selector: 'host-component',
+    template: `
+      <trace-view
+        [viewers]="viewers"></trace-view>
+    `,
+  })
+  class TestHostComponent {
+    viewers: Viewer[] = [];
+
+    @ViewChild(TraceViewComponent)
+    traceViewComponent: TraceViewComponent | undefined;
+  }
 });

@@ -103,7 +103,13 @@ function privileged_install() {
 }
 
 
-[[ -f build/make/envsetup.sh ]] || die "Run this script from the root of the tree."
+if [[ ! -f build/make/envsetup.sh ]] ; then
+  if [[  -n ${ANDROID_BUILD_TOP} ]] ; then
+    cd ${ANDROID_BUILD_TOP}
+  else
+    die "Run this script from the root of the tree."
+  fi
+fi
 
 INSTALL_HOST=true
 INSTALL_CLIENT=true

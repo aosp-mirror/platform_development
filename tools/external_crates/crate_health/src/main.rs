@@ -81,7 +81,7 @@ enum Cmd {
 }
 
 fn parse_crate_list(arg: &str) -> Result<BTreeSet<String>> {
-    Ok(arg.split(",").map(|k| k.to_string()).collect())
+    Ok(arg.split(',').map(|k| k.to_string()).collect())
 }
 
 fn main() -> Result<()> {
@@ -96,7 +96,7 @@ fn main() -> Result<()> {
         Cmd::MigrationHealth { crates, unpinned } => {
             for crate_name in &crates {
                 managed_repo.migration_health(
-                    &crate_name,
+                    crate_name,
                     args.verbose,
                     unpinned.contains(crate_name),
                 )?;

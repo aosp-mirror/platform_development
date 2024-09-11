@@ -21,10 +21,13 @@ import {TimelineData} from 'app/timeline_data';
 import {assertDefined} from 'common/assert_utils';
 import {TimeRange, Timestamp} from 'common/time';
 import {Trace, TraceEntry} from 'trace/trace';
-import {Traces} from 'trace/traces';
 import {TraceType} from 'trace/trace_type';
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
-import {MiniCanvasDrawerData, TimelineEntries} from './mini_canvas_drawer_data';
+import {
+  MiniCanvasDrawerData,
+  TimelineTrace,
+  TimelineTraces,
+} from './mini_canvas_drawer_data';
 
 export class MiniTimelineDrawerInput {
   constructor(
@@ -32,12 +35,18 @@ export class MiniTimelineDrawerInput {
     public selectedPosition: Timestamp,
     public selection: TimeRange,
     public zoomRange: TimeRange,
-    public traces: Traces,
+    public traces: Array<Trace<object>>,
     public timelineData: TimelineData,
+    public bookmarks: Timestamp[],
+    public isDarkMode: boolean,
   ) {}
 
   transform(mapToRange: Segment): MiniCanvasDrawerData {
-    const transformer = new Transformer(this.zoomRange, mapToRange);
+    const transformer = new Transformer(
+      this.zoomRange,
+      mapToRange,
+      assertDefined(this.timelineData.getTimestampConverter()),
+    );
 
     return new MiniCanvasDrawerData(
       transformer.transform(this.selectedPosition),
@@ -49,82 +58,75 @@ export class MiniTimelineDrawerInput {
         return this.transformTracesTimestamps(transformer);
       },
       transformer,
+      this.transformBookmarks(transformer),
     );
   }
 
   private async transformTracesTimestamps(
     transformer: Transformer,
-  ): Promise<TimelineEntries> {
-    const transformedTraceSegments = new Map<
-      TraceType,
-      {
-        points: number[];
-        segments: Segment[];
-        activePoint: number | undefined;
-        activeSegment: Segment | undefined;
+  ): Promise<TimelineTraces> {
+    const transformedTraceSegments = new Map<Trace<object>, TimelineTrace>();
+
+    this.traces.forEach((trace) => {
+      const activeEntry = this.timelineData.findCurrentEntryFor(trace);
+
+      if (trace.type === TraceType.TRANSITION) {
+        // Transition trace is a special case, with entries with time ranges
+        transformedTraceSegments.set(trace, {
+          points: [],
+          activePoint: undefined,
+          segments: this.transformTransitionTraceTimestamps(
+            transformer,
+            trace as Trace<PropertyTreeNode>,
+          ),
+          activeSegment: activeEntry
+            ? this.transformTransitionEntry(
+                transformer,
+                activeEntry as TraceEntry<PropertyTreeNode>,
+              )
+            : undefined,
+        });
+      } else {
+        transformedTraceSegments.set(trace, {
+          points: this.transformTraceTimestamps(transformer, trace),
+          activePoint: activeEntry
+            ? transformer.transform(activeEntry.getTimestamp())
+            : undefined,
+          segments: [],
+          activeSegment: undefined,
+        });
       }
-    >();
-
-    await Promise.all(
-      this.traces.mapTrace(async (trace, type) => {
-        const activeEntry = this.timelineData.findCurrentEntryFor(
-          trace.type,
-        ) as TraceEntry<PropertyTreeNode>;
-
-        if (type === TraceType.TRANSITION) {
-          // Transition trace is a special case, with entries with time ranges
-          const transitionTrace = assertDefined(this.traces.getTrace(type));
-          transformedTraceSegments.set(trace.type, {
-            points: [],
-            activePoint: undefined,
-            segments: await this.transformTransitionTraceTimestamps(
-              transformer,
-              transitionTrace,
-            ),
-            activeSegment: activeEntry
-              ? await this.transformTransitionEntry(transformer, activeEntry)
-              : undefined,
-          });
-        } else {
-          transformedTraceSegments.set(trace.type, {
-            points: this.transformTraceTimestamps(transformer, trace),
-            activePoint: activeEntry
-              ? transformer.transform(activeEntry.getTimestamp())
-              : undefined,
-            segments: [],
-            activeSegment: undefined,
-          });
-        }
-      }),
-    );
+    });
 
     return transformedTraceSegments;
   }
 
-  private async transformTransitionTraceTimestamps(
+  private transformTransitionTraceTimestamps(
     transformer: Transformer,
     trace: Trace<PropertyTreeNode>,
-  ): Promise<Segment[]> {
-    const promises: Array<Promise<Segment | undefined>> = [];
-    trace.forEachEntry((entry) => {
-      promises.push(this.transformTransitionEntry(transformer, entry));
-    });
-
-    return (await Promise.all(promises)).filter(
-      (it) => it !== undefined,
-    ) as Segment[];
+  ): Segment[] {
+    return trace
+      .mapEntry((entry) => this.transformTransitionEntry(transformer, entry))
+      .filter((it) => it !== undefined) as Segment[];
   }
 
-  private async transformTransitionEntry(
+  private transformBookmarks(transformer: Transformer): number[] {
+    return this.bookmarks.map((bookmarkedTimestamp) =>
+      transformer.transform(bookmarkedTimestamp),
+    );
+  }
+
+  private transformTransitionEntry(
     transformer: Transformer,
     entry: TraceEntry<PropertyTreeNode>,
-  ): Promise<Segment | undefined> {
-    const transition: PropertyTreeNode = await entry.getValue();
+  ): Segment | undefined {
+    const transition: PropertyTreeNode =
+      this.timelineData.getTransitions()[entry.getIndex()];
 
     const timeRange = TimelineUtils.getTimeRangeForTransition(
       transition,
-      entry.getTimestamp().getType(),
       this.selection,
+      assertDefined(this.timelineData.getTimestampConverter()),
     );
 
     if (!timeRange) {

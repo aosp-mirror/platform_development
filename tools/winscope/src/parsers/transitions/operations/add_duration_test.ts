@@ -14,16 +14,17 @@
  * limitations under the License.
  */
 
-import {NO_TIMEZONE_OFFSET_FACTORY} from 'common/timestamp_factory';
+import {TimeDuration} from 'common/time_duration';
 import {PropertyTreeBuilder} from 'test/unit/property_tree_builder';
-import {TIMESTAMP_FORMATTER} from 'trace/tree_node/formatters';
+import {TimestampConverterUtils} from 'test/unit/timestamp_converter_utils';
+import {TIMESTAMP_NODE_FORMATTER} from 'trace/tree_node/formatters';
 import {PropertySource} from 'trace/tree_node/property_tree_node';
 import {AddDuration} from './add_duration';
 
 describe('AddDuration', () => {
   let operation: AddDuration;
-  const TIMESTAMP_10 = NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(10n);
-  const TIMESTAMP_30 = NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(30n);
+  const TIMESTAMP_10 = TimestampConverterUtils.makeRealTimestamp(10n);
+  const TIMESTAMP_30 = TimestampConverterUtils.makeRealTimestamp(30n);
 
   beforeEach(() => {
     operation = new AddDuration();
@@ -59,9 +60,9 @@ describe('AddDuration', () => {
         },
         {
           name: 'duration',
-          value: NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(20n),
+          value: new TimeDuration(20n),
           source: PropertySource.CALCULATED,
-          formatter: TIMESTAMP_FORMATTER,
+          formatter: TIMESTAMP_NODE_FORMATTER,
         },
       ])
       .build();

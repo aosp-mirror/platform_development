@@ -15,49 +15,79 @@
  */
 
 import {assertDefined} from 'common/assert_utils';
-import {NO_TIMEZONE_OFFSET_FACTORY} from 'common/timestamp_factory';
+import {InMemoryStorage} from 'common/in_memory_storage';
+import {Rect} from 'common/rect';
 import {TracePositionUpdate} from 'messaging/winscope_event';
-import {MockStorage} from 'test/unit/mock_storage';
 import {TraceBuilder} from 'test/unit/trace_builder';
-import {TreeNodeUtils} from 'test/unit/tree_node_utils';
 import {UnitTestUtils} from 'test/unit/utils';
 import {CustomQueryType} from 'trace/custom_query';
 import {Parser} from 'trace/parser';
 import {Trace} from 'trace/trace';
 import {Traces} from 'trace/traces';
-import {TraceType, ViewCaptureTraceType} from 'trace/trace_type';
+import {TraceType} from 'trace/trace_type';
 import {HierarchyTreeNode} from 'trace/tree_node/hierarchy_tree_node';
+import {NotifyHierarchyViewCallbackType} from 'viewers/common/abstract_hierarchy_viewer_presenter';
+import {AbstractHierarchyViewerPresenterTest} from 'viewers/common/abstract_hierarchy_viewer_presenter_test';
 import {DiffType} from 'viewers/common/diff_type';
+import {UiDataHierarchy} from 'viewers/common/ui_data_hierarchy';
 import {UiHierarchyTreeNode} from 'viewers/common/ui_hierarchy_tree_node';
 import {UiTreeUtils} from 'viewers/common/ui_tree_utils';
-import {UserOptions} from 'viewers/common/user_options';
 import {Presenter} from 'viewers/viewer_view_capture/presenter';
 import {UiData} from 'viewers/viewer_view_capture/ui_data';
 
-describe('PresenterViewCapture', () => {
-  let parser: Parser<HierarchyTreeNode>;
-  let trace: Trace<HierarchyTreeNode>;
-  let uiData: UiData;
-  let presenter: Presenter;
-  let positionUpdate: TracePositionUpdate;
-  let selectedTree: UiHierarchyTreeNode;
+class PresenterViewCaptureTest extends AbstractHierarchyViewerPresenterTest {
+  private traces: Traces | undefined;
+  private positionUpdate: TracePositionUpdate | undefined;
+  private secondPositionUpdate: TracePositionUpdate | undefined;
+  private diffPositionUpdate: TracePositionUpdate | undefined;
+  private selectedTree: UiHierarchyTreeNode | undefined;
 
-  beforeAll(async () => {
-    parser = (await UnitTestUtils.getParser(
+  override readonly shouldExecuteFlatTreeTest = false;
+  override readonly shouldExecuteRectTests = true;
+  override readonly shouldExecuteShowDiffTests = true;
+  override readonly shouldExecuteSimplifyNamesTest = true;
+
+  override readonly numberOfDefaultProperties = 3;
+  override readonly numberOfNonDefaultProperties = 15;
+  override readonly expectedFirstRect = new Rect(0, 0, 1080, 249);
+  override readonly propertiesFilterString = 'alpha';
+  override readonly expectedTotalRects = 13;
+  override readonly expectedVisibleRects = 5;
+  override readonly treeNodeLongName =
+    'com.android.launcher3.taskbar.TaskbarView@80213537';
+  override readonly treeNodeShortName = 'TaskbarView@80213537';
+  override readonly numberOfFilteredProperties = 1;
+  override readonly hierarchyFilterString = 'BubbleBarView';
+  override readonly expectedHierarchyChildrenAfterStringFilter = 1;
+  override readonly propertyWithDiff = 'translationY';
+  override readonly expectedPropertyDiffType = DiffType.MODIFIED;
+
+  override async setUpTestEnvironment(): Promise<void> {
+    const parsers = (await UnitTestUtils.getParsers(
       'traces/elapsed_and_real_timestamp/com.google.android.apps.nexuslauncher_0.vc',
-    )) as Parser<HierarchyTreeNode>;
+    )) as Array<Parser<HierarchyTreeNode>>;
 
-    trace = new TraceBuilder<HierarchyTreeNode>()
-      .setType(TraceType.VIEW_CAPTURE_LAUNCHER_ACTIVITY)
-      .setParser(parser)
-      .build();
+    this.traces = new Traces();
+    for (const parser of parsers) {
+      this.traces.addTrace(Trace.fromParser(parser));
+    }
 
-    const firstEntry = trace.getEntry(0);
-    positionUpdate = TracePositionUpdate.fromTraceEntry(firstEntry);
+    const traceTaskbar = assertDefined(
+      this.traces.getTraces(TraceType.VIEW_CAPTURE)[0],
+    );
+    const firstEntry = traceTaskbar.getEntry(0);
+    this.positionUpdate = TracePositionUpdate.fromTraceEntry(firstEntry);
+
+    const traceLauncherActivity = assertDefined(
+      this.traces.getTraces(TraceType.VIEW_CAPTURE)[1],
+    );
+    const firstEntryLauncherActivity = traceLauncherActivity.getEntry(0);
+    this.secondPositionUpdate = TracePositionUpdate.fromTraceEntry(
+      firstEntryLauncherActivity,
+    );
 
     const firstEntryDataTree = await firstEntry.getValue();
-
-    selectedTree = UiHierarchyTreeNode.from(
+    this.selectedTree = UiHierarchyTreeNode.from(
       assertDefined(
         firstEntryDataTree.findDfs(
           UiTreeUtils.makeIdMatchFilter(
@@ -66,240 +96,116 @@ describe('PresenterViewCapture', () => {
         ),
       ),
     );
-  });
 
-  beforeEach(() => {
-    presenter = createPresenter(trace);
-  });
-
-  it('is robust to empty trace', async () => {
-    const emptyTrace = new TraceBuilder<HierarchyTreeNode>()
-      .setType(TraceType.VIEW_CAPTURE_LAUNCHER_ACTIVITY)
-      .setEntries([])
-      .setParserCustomQueryResult(
-        CustomQueryType.VIEW_CAPTURE_PACKAGE_NAME,
-        'the_package_name',
-      )
-      .build();
-    const presenter = createPresenter(emptyTrace);
-
-    const positionUpdateWithoutTraceEntry = TracePositionUpdate.fromTimestamp(
-      NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(0n),
-    );
-    await presenter.onAppEvent(positionUpdateWithoutTraceEntry);
-    expect(uiData.hierarchyUserOptions).toBeTruthy();
-    expect(uiData.tree).toBeFalsy();
-  });
-
-  it('processes trace position updates', async () => {
-    await presenter.onAppEvent(positionUpdate);
-    expect(uiData.rects.length).toBeGreaterThan(0);
-    expect(uiData.highlightedItem?.length).toEqual(0);
-
-    const hierarchyOpts = Object.keys(uiData.hierarchyUserOptions);
-    expect(hierarchyOpts).toBeTruthy();
-    const propertyOpts = Object.keys(uiData.propertiesUserOptions);
-    expect(propertyOpts).toBeTruthy();
-    expect(assertDefined(uiData.tree).getAllChildren().length > 0).toBeTrue();
-  });
-
-  it('creates input data for rects view', async () => {
-    await presenter.onAppEvent(positionUpdate);
-    expect(uiData.rects.length).toBeGreaterThan(0);
-    expect(uiData.rects[0].x).toEqual(0);
-    expect(uiData.rects[0].y).toEqual(0);
-    expect(uiData.rects[0].w).toEqual(1080);
-    expect(uiData.rects[0].h).toEqual(249);
-  });
-
-  it('updates pinned items', async () => {
-    const pinnedItem = TreeNodeUtils.makeUiHierarchyNode({
-      id: 'id',
-      name: 'FirstPinnedItem',
-    });
-    await presenter.onAppEvent(positionUpdate);
-    presenter.onPinnedItemChange(pinnedItem);
-    expect(uiData.pinnedItems).toContain(pinnedItem);
-  });
-
-  it('updates highlighted item', async () => {
-    await presenter.onAppEvent(positionUpdate);
-    expect(uiData.highlightedItem).toEqual('');
-
-    const id = '4';
-    presenter.onHighlightedItemChange(id);
-    expect(uiData.highlightedItem).toBe(id);
-  });
-
-  it('shows only visible in hierarchy tree', async () => {
-    await presenter.onAppEvent(positionUpdate);
-
-    expect(
-      // TaskbarDragLayer -> TaskbarView
-      uiData.tree?.getAllChildren()[0].name,
-    ).toEqual('com.android.launcher3.taskbar.TaskbarView@80213537');
-
-    const userOptions: UserOptions = {
-      showDiff: {
-        name: 'Show diff',
-        enabled: false,
-      },
-      simplifyNames: {
-        name: 'Simplify names',
-        enabled: false,
-      },
-      onlyVisible: {
-        name: 'Only visible',
-        enabled: true,
-      },
-    };
-    await presenter.onHierarchyUserOptionsChange(userOptions);
-    expect(uiData.hierarchyUserOptions).toEqual(userOptions);
-    expect(
-      // TaskbarDragLayer -> TaskbarScrimView
-      uiData.tree?.getAllChildren()[0].name,
-    ).toEqual('com.android.launcher3.taskbar.TaskbarScrimView@114418695');
-  });
-
-  it('simplifies names in hierarchy tree', async () => {
-    await presenter.onAppEvent(positionUpdate);
-
-    expect(
-      // TaskbarDragLayer -> TaskbarView
-      uiData.tree?.getAllChildren()[0].getDisplayName(),
-    ).toEqual('TaskbarView@80213537');
-
-    const userOptions: UserOptions = {
-      showDiff: {
-        name: 'Show diff',
-        enabled: false,
-      },
-      simplifyNames: {
-        name: 'Simplify names',
-        enabled: false,
-      },
-      onlyVisible: {
-        name: 'Only visible',
-        enabled: false,
-      },
-    };
-    await presenter.onHierarchyUserOptionsChange(userOptions);
-    expect(uiData.hierarchyUserOptions).toEqual(userOptions);
-    expect(
-      // TaskbarDragLayer -> TaskbarScrimView
-      uiData.tree?.getAllChildren()[0].getDisplayName(),
-    ).toEqual('com.android.launcher3.taskbar.TaskbarView@80213537');
-  });
-
-  it('filters hierarchy tree', async () => {
-    const userOptions: UserOptions = {
-      showDiff: {
-        name: 'Show diff',
-        enabled: false,
-      },
-      simplifyNames: {
-        name: 'Simplify names',
-        enabled: true,
-      },
-      onlyVisible: {
-        name: 'Only visible',
-        enabled: false,
-      },
-    };
-    await presenter.onAppEvent(positionUpdate);
-    await presenter.onHierarchyUserOptionsChange(userOptions);
-    await presenter.onHierarchyFilterChange('BubbleBarView');
-
-    expect(
-      // TaskbarDragLayer -> BubbleBarView if filter works as expected
-      uiData.tree?.getAllChildren()[0].name,
-    ).toEqual('com.android.launcher3.taskbar.bubbles.BubbleBarView@256010548');
-  });
-
-  it('sets properties tree and associated ui data', async () => {
-    await presenter.onAppEvent(positionUpdate);
-    await presenter.onSelectedHierarchyTreeChange(selectedTree);
-    expect(uiData.propertiesTree).toBeTruthy();
-  });
-
-  it('updates properties tree', async () => {
-    const userOptions: UserOptions = {
-      showDiff: {
-        name: 'Show diff',
-        enabled: true,
-      },
-      showDefaults: {
-        name: 'Show defaults',
-        enabled: true,
-        tooltip: `
-                      If checked, shows the value of all properties.
-                      Otherwise, hides all properties whose value is
-                      the default for its data type.
-                    `,
-      },
-    };
-
-    const entry = trace.getEntry(21);
-    const update = TracePositionUpdate.fromTraceEntry(entry);
-
-    await presenter.onAppEvent(update);
-    await presenter.onSelectedHierarchyTreeChange(selectedTree);
-    expect(
-      assertDefined(
-        uiData.propertiesTree?.getChildByName('translationY'),
-      ).getDiff(),
-    ).toEqual(DiffType.NONE);
-
-    await presenter.onPropertiesUserOptionsChange(userOptions);
-
-    expect(uiData.propertiesUserOptions).toEqual(userOptions);
-    expect(
-      assertDefined(
-        uiData.propertiesTree?.getChildByName('translationY'),
-      ).getDiff(),
-    ).toEqual(DiffType.MODIFIED);
-  });
-
-  it('filters properties tree', async () => {
-    await presenter.onAppEvent(positionUpdate);
-
-    const userOptions: UserOptions = {
-      showDiff: {
-        name: 'Show diff',
-        enabled: true,
-      },
-      showDefaults: {
-        name: 'Show defaults',
-        enabled: true,
-        tooltip: `
-                        If checked, shows the value of all properties.
-                        Otherwise, hides all properties whose value is
-                        the default for its data type.
-                      `,
-      },
-    };
-    await presenter.onPropertiesUserOptionsChange(userOptions);
-    expect(
-      assertDefined(uiData.propertiesTree).getAllChildren().length,
-    ).toEqual(18);
-
-    await presenter.onPropertiesFilterChange('alpha');
-    expect(
-      assertDefined(uiData.propertiesTree).getAllChildren().length,
-    ).toEqual(1);
-  });
-
-  function createPresenter(trace: Trace<HierarchyTreeNode>): Presenter {
-    const traces = new Traces();
-    const traceType = parser.getTraceType();
-    traces.setTrace(traceType, trace);
-    return new Presenter(
-      traceType as ViewCaptureTraceType,
-      traces,
-      new MockStorage(),
-      (newData: UiData) => {
-        uiData = newData;
-      },
+    this.diffPositionUpdate = TracePositionUpdate.fromTraceEntry(
+      traceTaskbar.getEntry(21),
     );
   }
+
+  override createPresenterWithEmptyTrace(
+    callback: NotifyHierarchyViewCallbackType,
+  ): Presenter {
+    const trace = new TraceBuilder<HierarchyTreeNode>()
+      .setType(TraceType.VIEW_CAPTURE)
+      .setEntries([])
+      .setParserCustomQueryResult(CustomQueryType.VIEW_CAPTURE_METADATA, {
+        packageName: 'the_package_name',
+        windowName: 'the_window_name',
+      })
+      .build();
+    const traces = new Traces();
+    traces.addTrace(trace);
+    return new Presenter(traces, new InMemoryStorage(), callback);
+  }
+
+  override createPresenter(
+    callback: NotifyHierarchyViewCallbackType,
+  ): Presenter {
+    return new Presenter(
+      assertDefined(this.traces),
+      new InMemoryStorage(),
+      callback,
+    );
+  }
+
+  override getPositionUpdate(): TracePositionUpdate {
+    return assertDefined(this.positionUpdate);
+  }
+
+  override getSecondPositionUpdate(): TracePositionUpdate {
+    return assertDefined(this.secondPositionUpdate);
+  }
+
+  override getShowDiffPositionUpdate(): TracePositionUpdate {
+    return assertDefined(this.diffPositionUpdate);
+  }
+
+  override getExpectedChildrenBeforeVisibilityFilter(): number {
+    return this.numberOfNestedChildren;
+  }
+
+  override getExpectedChildrenAfterVisibilityFilter(): number {
+    return this.numberOfVisibleChildren;
+  }
+
+  override getExpectedHierarchyChildrenBeforeStringFilter(): number {
+    return this.numberOfNestedChildren;
+  }
+
+  override executeSpecializedChecksForPropertiesFromNode(
+    uiData: UiDataHierarchy,
+  ) {
+    expect(
+      assertDefined((uiData as UiData).curatedProperties).translationY,
+    ).toEqual('-0.633');
+  }
+
+  override getSelectedTree(): UiHierarchyTreeNode {
+    return assertDefined(this.selectedTree);
+  }
+
+  override getSelectedTreeAfterPositionUpdate(): UiHierarchyTreeNode {
+    return assertDefined(this.selectedTree);
+  }
+
+  override executeChecksForPropertiesTreeAfterPositionUpdate(
+    uiData: UiDataHierarchy,
+  ) {
+    const propertiesTree = assertDefined(uiData.propertiesTree);
+    expect(
+      assertDefined(
+        propertiesTree.getChildByName('translationY'),
+      ).formattedValue(),
+    ).toEqual('-0.633');
+  }
+
+  override executeChecksForPropertiesTreeAfterSecondPositionUpdate(
+    uiData: UiDataHierarchy,
+  ) {
+    const propertiesTree = assertDefined(uiData.propertiesTree);
+    expect(
+      assertDefined(
+        propertiesTree.getChildByName('translationY'),
+      ).formattedValue(),
+    ).toEqual('0');
+  }
+
+  override executeSpecializedChecksForPropertiesFromRect(
+    uiData: UiDataHierarchy,
+  ) {
+    const curatedProperties = assertDefined(
+      (uiData as UiData).curatedProperties,
+    );
+    expect(curatedProperties.translationX).toEqual('233.075');
+    expect(curatedProperties.translationY).toEqual('81');
+    expect(curatedProperties.alpha).toEqual('1');
+    expect(curatedProperties.willNotDraw).toEqual('false');
+  }
+
+  private readonly numberOfVisibleChildren = 6;
+  private readonly numberOfNestedChildren = 16;
+}
+
+describe('PresenterViewCapture', () => {
+  new PresenterViewCaptureTest().execute();
 });

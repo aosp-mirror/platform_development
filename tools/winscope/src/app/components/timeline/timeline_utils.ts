@@ -14,15 +14,15 @@
  * limitations under the License.
  */
 
-import {TimeRange, Timestamp, TimestampType} from 'common/time';
-import {NO_TIMEZONE_OFFSET_FACTORY} from 'common/timestamp_factory';
+import {TimeRange, Timestamp} from 'common/time';
+import {ComponentTimestampConverter} from 'common/timestamp_converter';
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
 
 export class TimelineUtils {
   static getTimeRangeForTransition(
     transition: PropertyTreeNode,
-    timestampType: TimestampType,
     fullTimeRange: TimeRange,
+    converter: ComponentTimestampConverter,
   ): TimeRange | undefined {
     const shellData = transition.getChildByName('shellData');
     const wmData = transition.getChildByName('wmData');
@@ -50,54 +50,21 @@ export class TimelineUtils {
       return undefined;
     }
 
-    let dispatchTimeNs: bigint | undefined;
-    let finishTimeNs: bigint | undefined;
-
     const timeRangeMin = fullTimeRange.from.getValueNs();
     const timeRangeMax = fullTimeRange.to.getValueNs();
 
-    if (timestampType === TimestampType.ELAPSED) {
-      const startOffset =
-        shellData
-          ?.getChildByName('realToElapsedTimeOffsetTimestamp')
-          ?.getValue()
-          .getValueNs() ?? 0n;
-      const finishOffset = aborted
-        ? startOffset
-        : shellData
-            ?.getChildByName('realToElapsedTimeOffsetTimestamp')
-            ?.getValue()
-            .getValueNs() ?? 0n;
+    const dispatchTimeNs = dispatchTimestamp
+      ? dispatchTimestamp.getValueNs()
+      : timeRangeMin;
+    const finishTimeNs = finishOrAbortTimestamp
+      ? finishOrAbortTimestamp.getValueNs()
+      : timeRangeMax;
 
-      dispatchTimeNs = dispatchTimestamp
-        ? dispatchTimestamp.getValueNs() - startOffset
-        : timeRangeMin;
-      finishTimeNs = finishOrAbortTimestamp
-        ? finishOrAbortTimestamp.getValueNs() - finishOffset
-        : timeRangeMax;
-    } else {
-      dispatchTimeNs = dispatchTimestamp
-        ? dispatchTimestamp.getValueNs()
-        : timeRangeMin;
-      finishTimeNs = finishOrAbortTimestamp
-        ? finishOrAbortTimestamp.getValueNs()
-        : timeRangeMax;
-    }
-
-    const startTime = NO_TIMEZONE_OFFSET_FACTORY.makeTimestampFromType(
-      timestampType,
+    const startTime = converter.makeTimestampFromNs(
       dispatchTimeNs > timeRangeMin ? dispatchTimeNs : timeRangeMin,
-      0n,
     );
-    const finishTime = NO_TIMEZONE_OFFSET_FACTORY.makeTimestampFromType(
-      timestampType,
-      finishTimeNs,
-      0n,
-    );
+    const finishTime = converter.makeTimestampFromNs(finishTimeNs);
 
-    return {
-      from: startTime,
-      to: finishTime,
-    };
+    return new TimeRange(startTime, finishTime);
   }
 }

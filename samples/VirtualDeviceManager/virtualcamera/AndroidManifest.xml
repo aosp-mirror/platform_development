@@ -5,7 +5,7 @@
     android:versionName="1.0">
 
     <uses-sdk
-        android:minSdkVersion="34"
+        android:minSdkVersion="35"
         android:targetSdkVersion="35" />
 
     <uses-feature android:name="android.software.companion_device_setup" />
@@ -34,7 +34,7 @@
     <application
         android:name=".VirtualCameraDemoApplication"
         android:label="@string/app_name"
-        android:theme="@style/Theme.AppCompat.Light.NoActionBar">
+        android:theme="@style/AppTheme">
         <activity
             android:name=".MainActivity"
             android:exported="true">

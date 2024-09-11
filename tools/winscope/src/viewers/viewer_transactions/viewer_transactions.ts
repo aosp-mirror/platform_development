@@ -14,60 +14,82 @@
  * limitations under the License.
  */
 
-import {FunctionUtils} from 'common/function_utils';
-import {Timestamp} from 'common/time';
-import {TracePositionUpdate, WinscopeEvent} from 'messaging/winscope_event';
+import {assertDefined} from 'common/assert_utils';
+import {WinscopeEvent} from 'messaging/winscope_event';
 import {EmitEvent} from 'messaging/winscope_event_emitter';
+import {Trace} from 'trace/trace';
 import {Traces} from 'trace/traces';
 import {TraceType} from 'trace/trace_type';
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
-import {ViewerEvents} from 'viewers/common/viewer_events';
+import {TimestampClickDetail, ViewerEvents} from 'viewers/common/viewer_events';
 import {View, Viewer, ViewType} from 'viewers/viewer';
-import {Events} from './events';
 import {Presenter} from './presenter';
 import {UiData} from './ui_data';
 
 class ViewerTransactions implements Viewer {
   static readonly DEPENDENCIES: TraceType[] = [TraceType.TRANSACTIONS];
 
+  private readonly trace: Trace<PropertyTreeNode>;
   private readonly htmlElement: HTMLElement;
   private readonly presenter: Presenter;
   private readonly view: View;
-  private emitAppEvent: EmitEvent = FunctionUtils.DO_NOTHING_ASYNC;
 
-  constructor(traces: Traces, storage: Storage) {
+  constructor(
+    trace: Trace<PropertyTreeNode>,
+    traces: Traces,
+    storage: Storage,
+  ) {
+    this.trace = trace;
     this.htmlElement = document.createElement('viewer-transactions');
 
-    this.presenter = new Presenter(traces, storage, (data: UiData) => {
+    this.presenter = new Presenter(trace, storage, (data: UiData) => {
       (this.htmlElement as any).inputData = data;
     });
 
-    this.htmlElement.addEventListener(Events.VSyncIdFilterChanged, (event) => {
-      this.presenter.onVSyncIdFilterChanged((event as CustomEvent).detail);
-    });
-
-    this.htmlElement.addEventListener(Events.PidFilterChanged, (event) => {
-      this.presenter.onPidFilterChanged((event as CustomEvent).detail);
-    });
-
-    this.htmlElement.addEventListener(Events.UidFilterChanged, (event) => {
-      this.presenter.onUidFilterChanged((event as CustomEvent).detail);
-    });
-
-    this.htmlElement.addEventListener(Events.TypeFilterChanged, (event) => {
-      this.presenter.onTypeFilterChanged((event as CustomEvent).detail);
-    });
-
-    this.htmlElement.addEventListener(Events.LayerIdFilterChanged, (event) => {
-      this.presenter.onLayerIdFilterChanged((event as CustomEvent).detail);
-    });
-
-    this.htmlElement.addEventListener(Events.WhatFilterChanged, (event) => {
-      this.presenter.onWhatFilterChanged((event as CustomEvent).detail);
-    });
+    this.htmlElement.addEventListener(
+      ViewerEvents.VSyncIdFilterChanged,
+      (event) => {
+        this.presenter.onVSyncIdFilterChanged((event as CustomEvent).detail);
+      },
+    );
 
     this.htmlElement.addEventListener(
-      Events.TransactionIdFilterChanged,
+      ViewerEvents.PidFilterChanged,
+      (event) => {
+        this.presenter.onPidFilterChanged((event as CustomEvent).detail);
+      },
+    );
+
+    this.htmlElement.addEventListener(
+      ViewerEvents.UidFilterChanged,
+      (event) => {
+        this.presenter.onUidFilterChanged((event as CustomEvent).detail);
+      },
+    );
+
+    this.htmlElement.addEventListener(
+      ViewerEvents.TypeFilterChanged,
+      (event) => {
+        this.presenter.onTypeFilterChanged((event as CustomEvent).detail);
+      },
+    );
+
+    this.htmlElement.addEventListener(
+      ViewerEvents.LayerIdFilterChanged,
+      (event) => {
+        this.presenter.onLayerIdFilterChanged((event as CustomEvent).detail);
+      },
+    );
+
+    this.htmlElement.addEventListener(
+      ViewerEvents.WhatFilterChanged,
+      (event) => {
+        this.presenter.onWhatFilterChanged((event as CustomEvent).detail);
+      },
+    );
+
+    this.htmlElement.addEventListener(
+      ViewerEvents.TransactionIdFilterChanged,
       (event) => {
         this.presenter.onTransactionIdFilterChanged(
           (event as CustomEvent).detail,
@@ -75,12 +97,22 @@ class ViewerTransactions implements Viewer {
       },
     );
 
-    this.htmlElement.addEventListener(Events.EntryClicked, (event) => {
+    this.htmlElement.addEventListener(ViewerEvents.LogClicked, (event) => {
       this.presenter.onEntryClicked((event as CustomEvent).detail);
     });
-    this.htmlElement.addEventListener(ViewerEvents.TimestampClick, (event) => {
-      this.propagateTimestamp((event as CustomEvent).detail);
-    });
+    this.htmlElement.addEventListener(
+      ViewerEvents.LogChangedByKeyPress,
+      (event) => {
+        this.presenter.onEntryChangedByKeyPress((event as CustomEvent).detail);
+      },
+    );
+    this.htmlElement.addEventListener(
+      ViewerEvents.TimestampClick,
+      async (event) => {
+        const detail: TimestampClickDetail = (event as CustomEvent).detail;
+        await this.presenter.onLogTimestampClicked(assertDefined(detail.index));
+      },
+    );
 
     this.htmlElement.addEventListener(
       ViewerEvents.PropertiesUserOptionsChange,
@@ -92,10 +124,9 @@ class ViewerTransactions implements Viewer {
 
     this.view = new View(
       ViewType.TAB,
-      this.getDependencies(),
+      this.getTraces(),
       this.htmlElement,
       'Transactions',
-      TraceType.TRANSACTIONS,
     );
   }
 
@@ -104,20 +135,15 @@ class ViewerTransactions implements Viewer {
   }
 
   setEmitEvent(callback: EmitEvent) {
-    this.emitAppEvent = callback;
-  }
-
-  async propagateTimestamp(timestampNode: PropertyTreeNode) {
-    const timestamp: Timestamp = timestampNode.getValue();
-    await this.emitAppEvent(TracePositionUpdate.fromTimestamp(timestamp, true));
+    this.presenter.setEmitEvent(callback);
   }
 
   getViews(): View[] {
     return [this.view];
   }
 
-  getDependencies(): TraceType[] {
-    return ViewerTransactions.DEPENDENCIES;
+  getTraces(): Array<Trace<PropertyTreeNode>> {
+    return [this.trace];
   }
 }
 

@@ -30,15 +30,18 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 final class RunningVdmUidsTracker implements ActivityListener {
     private static final String TAG = RunningVdmUidsTracker.class.getSimpleName();
 
     private final PackageManager mPackageManager;
+    private final PreferenceController mPreferenceController;
     private final AudioStreamer mAudioStreamer;
     private final AudioInjector mAudioInjector;
 
@@ -50,11 +53,28 @@ final class RunningVdmUidsTracker implements ActivityListener {
     @GuardedBy("mLock")
     private Set<Integer> mRunningVdmUids = Collections.emptySet();
 
-    RunningVdmUidsTracker(@NonNull Context context, @NonNull AudioStreamer audioStreamer,
+    RunningVdmUidsTracker(@NonNull Context context,
+            @NonNull PreferenceController preferenceController,
+            @NonNull AudioStreamer audioStreamer,
             @NonNull AudioInjector audioInjector) {
         mPackageManager = Objects.requireNonNull(context).getPackageManager();
+        mPreferenceController = Objects.requireNonNull(preferenceController);
         mAudioStreamer = Objects.requireNonNull(audioStreamer);
         mAudioInjector = Objects.requireNonNull(audioInjector);
+
+        mPreferenceController.addPreferenceObserver(this, createPreferenceObserver());
+    }
+
+    private Map<Integer, Consumer<Object>> createPreferenceObserver() {
+        HashMap<Integer, Consumer<Object>> observers = new HashMap<>();
+
+        observers.put(R.string.pref_enable_client_audio, b -> {
+            synchronized (mLock) {
+                updateVdmUids(mRunningVdmUids);
+            }
+        });
+
+        return observers;
     }
 
     @Override
@@ -78,8 +98,7 @@ final class RunningVdmUidsTracker implements ActivityListener {
             updatedUids = mRunningVdmUids;
         }
 
-        mAudioStreamer.updateVdmUids(updatedUids);
-        mAudioInjector.updateVdmUids(updatedUids);
+        updateVdmUids(updatedUids);
     }
 
     @Override
@@ -97,8 +116,14 @@ final class RunningVdmUidsTracker implements ActivityListener {
         }
 
         if (!uidsAfter.equals(uidsBefore)) {
-            mAudioStreamer.updateVdmUids(uidsAfter);
-            mAudioInjector.updateVdmUids(uidsAfter);
+            updateVdmUids(uidsAfter);
+        }
+    }
+
+    private void updateVdmUids(Set<Integer> uids) {
+        if (mPreferenceController.getBoolean(R.string.pref_enable_client_audio)) {
+            mAudioStreamer.updateVdmUids(uids);
+            mAudioInjector.updateVdmUids(uids);
         }
     }
 

@@ -1,0 +1,32 @@
+<div class="wrapper">
+  <div class=".mat-app-background label">
+    {{ passingTestCount }} of {{ totalTestCount }} test pass
+  </div>
+
+  <mat-selection-list
+    (selectionChange)="goldenSelected($event)"
+    [multiple]="false"
+  >
+    @for (golden of goldens; track golden.id) {
+      <mat-list-option [value]="golden.id">
+        {{ golden.label }}
+
+        @if (golden.updated) {
+          <span class="tag updated">UPDATED</span>
+        } @else {
+          <span class="tag {{ golden.result }}">{{ golden.result }}</span>
+        }
+      </mat-list-option>
+    }
+  </mat-selection-list>
+</div>
+
+@if (selectedGolden?.type === "motion") {
+  <app-motion-golden [golden]="$any(selectedGolden)"></app-motion-golden>
+}
+
+@if (selectedGolden?.type === "screenshot") {
+  <app-screenshot-golden
+    [golden]="$any(selectedGolden)"
+  ></app-screenshot-golden>
+}

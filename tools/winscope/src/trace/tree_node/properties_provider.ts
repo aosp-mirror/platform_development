@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import {assertDefined} from 'common/assert_utils';
 import {SetFormatters} from 'parsers/operations/set_formatters';
 import {OperationChain} from 'trace/tree_node/operations/operation_chain';
 import {
@@ -31,7 +32,9 @@ export class PropertiesProvider {
 
   constructor(
     eagerPropertiesRoot: PropertyTreeNode,
-    private readonly lazyPropertiesStrategy: LazyPropertiesStrategyType,
+    private readonly lazyPropertiesStrategy:
+      | LazyPropertiesStrategyType
+      | undefined,
     private readonly commonOperations: OperationChain<PropertyTreeNode>,
     private readonly eagerOperations: OperationChain<PropertyTreeNode>,
     private readonly lazyOperations: OperationChain<PropertyTreeNode>,
@@ -62,22 +65,24 @@ export class PropertiesProvider {
     const children = [...this.eagerPropertiesRoot.getAllChildren()];
 
     // all eager properties have already had operations applied so no need to reapply
-    if (!this.lazyPropertiesRoot) {
+    const mustFetchLazyProperties =
+      !this.lazyPropertiesRoot && this.lazyPropertiesStrategy !== undefined;
+    if (mustFetchLazyProperties) {
       this.lazyPropertiesRoot = this.commonOperations.apply(
-        this.lazyOperations.apply(await this.lazyPropertiesStrategy()),
+        this.lazyOperations.apply(
+          await assertDefined(this.lazyPropertiesStrategy)(),
+        ),
       );
     }
+    if (this.lazyPropertiesRoot) {
+      children.push(...this.lazyPropertiesRoot.getAllChildren());
+    }
 
-    children.push(...this.lazyPropertiesRoot.getAllChildren());
     children.forEach((child) => root.addOrReplaceChild(child));
 
     root.setIsRoot(true);
 
     this.allPropertiesRoot = root;
     return this.allPropertiesRoot;
-  }
-
-  private sortChildren(a: PropertyTreeNode, b: PropertyTreeNode): number {
-    return a.name < b.name ? -1 : 1;
   }
 }

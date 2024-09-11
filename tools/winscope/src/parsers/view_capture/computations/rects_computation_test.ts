@@ -41,6 +41,7 @@ describe('RectsComputation', () => {
         translationX: 0,
         translationY: 0,
         isComputedVisible: true,
+        alpha: 1,
       })
       .setChildren([
         {
@@ -57,6 +58,7 @@ describe('RectsComputation', () => {
             height: 2,
             translationX: 0,
             translationY: 0,
+            alpha: 1,
           },
           children: [
             {
@@ -73,6 +75,7 @@ describe('RectsComputation', () => {
                 height: 3,
                 translationX: 0,
                 translationY: 0,
+                alpha: 1,
               },
               children: [],
             },
@@ -99,6 +102,7 @@ describe('RectsComputation', () => {
         .setIsDisplay(false)
         .setIsVirtual(false)
         .setDepth(0)
+        .setOpacity(1)
         .build(),
 
       new TraceRectBuilder()
@@ -114,6 +118,7 @@ describe('RectsComputation', () => {
         .setIsDisplay(false)
         .setIsVirtual(false)
         .setDepth(4)
+        .setOpacity(1)
         .build(),
 
       new TraceRectBuilder()
@@ -129,6 +134,7 @@ describe('RectsComputation', () => {
         .setIsDisplay(false)
         .setIsVirtual(false)
         .setDepth(8)
+        .setOpacity(1)
         .build(),
     ];
 
