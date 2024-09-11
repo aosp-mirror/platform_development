@@ -126,7 +126,7 @@ data class DemoConfiguration(
                         lsToShadeRequiresFullSwipe =
                             it[lsToShadeRequiresFullSwipe] as ToggleableState,
                     )
-                }
+                },
             )
         }
     }
@@ -142,7 +142,7 @@ data class DemoSpringConfigurations(
                 systemUiSprings.stiffness,
                 systemUiSprings.dampingRatio,
                 notificationSprings.stiffness,
-                notificationSprings.dampingRatio
+                notificationSprings.dampingRatio,
             )
             .joinToString(",")
 
@@ -168,25 +168,22 @@ data class DemoSpringConfigurations(
                     systemUiSprings =
                         SpringConfiguration(
                             stiffness = (Spring.StiffnessLow + Spring.StiffnessVeryLow) / 2f,
-                            dampingRatio = 0.85f
+                            dampingRatio = 0.85f,
                         ),
                     notificationSprings =
-                        SpringConfiguration(
-                            Spring.StiffnessMediumLow,
-                            Spring.DampingRatioLowBouncy
-                        ),
+                        SpringConfiguration(Spring.StiffnessMediumLow, Spring.DampingRatioLowBouncy),
                 ),
                 DemoSpringConfigurations(
                     name = "Less Bouncy",
                     systemUiSprings =
                         SpringConfiguration(
                             stiffness = (Spring.StiffnessMediumLow + Spring.StiffnessLow) / 2f,
-                            dampingRatio = 0.8f
+                            dampingRatio = 0.8f,
                         ),
                     notificationSprings =
                         SpringConfiguration(
                             stiffness = Spring.StiffnessMediumLow,
-                            dampingRatio = 0.8f
+                            dampingRatio = 0.8f,
                         ),
                 ),
                 DemoSpringConfigurations(
@@ -194,13 +191,10 @@ data class DemoSpringConfigurations(
                     systemUiSprings =
                         SpringConfiguration(
                             stiffness = (Spring.StiffnessMediumLow + Spring.StiffnessLow) / 2f,
-                            dampingRatio = Spring.DampingRatioLowBouncy
+                            dampingRatio = Spring.DampingRatioLowBouncy,
                         ),
                     notificationSprings =
-                        SpringConfiguration(
-                            Spring.StiffnessMediumLow,
-                            Spring.DampingRatioLowBouncy
-                        ),
+                        SpringConfiguration(Spring.StiffnessMediumLow, Spring.DampingRatioLowBouncy),
                 ),
                 DemoSpringConfigurations(
                     name = "VeryBouncy",
@@ -209,7 +203,7 @@ data class DemoSpringConfigurations(
                     notificationSprings =
                         SpringConfiguration(
                             Spring.StiffnessMediumLow,
-                            Spring.DampingRatioMediumBouncy
+                            Spring.DampingRatioMediumBouncy,
                         ),
                 ),
             )
@@ -257,10 +251,8 @@ data class DemoSpringConfigurations(
     }
 }
 
-sealed class DemoOverscrollProgress(
-    val name: String,
-    val params: LinkedHashMap<String, Any>,
-) : ProgressConverter {
+sealed class DemoOverscrollProgress(val name: String, val params: LinkedHashMap<String, Any>) :
+    ProgressConverter {
     // Note: the order is guaranteed because we are using an ordered map (LinkedHashMap).
     fun save(): String = "$name:${params.values.joinToString(",")}"
 
@@ -317,10 +309,7 @@ private fun Any?.restoreOverscrollProgress(): DemoOverscrollProgress {
     }
 }
 
-data class SpringConfiguration(
-    val stiffness: Float,
-    val dampingRatio: Float,
-)
+data class SpringConfiguration(val stiffness: Float, val dampingRatio: Float)
 
 @Composable
 fun DemoConfigurationDialog(
@@ -376,7 +365,7 @@ fun DemoConfigurationDialog(
                     value = configuration.springConfigurations,
                     onValue = {
                         onConfigurationChange(configuration.copy(springConfigurations = it))
-                    }
+                    },
                 )
 
                 Text(text = "Scrollable", style = MaterialTheme.typography.titleMedium)
@@ -410,7 +399,7 @@ fun DemoConfigurationDialog(
                     value = configuration.overscrollProgressConverter,
                     onValue = {
                         onConfigurationChange(configuration.copy(overscrollProgressConverter = it))
-                    }
+                    },
                 )
 
                 Text(text = "Media", style = MaterialTheme.typography.titleMedium)
@@ -447,7 +436,7 @@ fun DemoConfigurationDialog(
                     configuration.notificationsInShade,
                     onValueChange = {
                         onConfigurationChange(configuration.copy(notificationsInShade = it))
-                    }
+                    },
                 )
 
                 // Number of notifications in the Lockscreen scene.
@@ -456,7 +445,7 @@ fun DemoConfigurationDialog(
                     configuration.notificationsInLockscreen,
                     onValueChange = {
                         onConfigurationChange(configuration.copy(notificationsInLockscreen = it))
-                    }
+                    },
                 )
 
                 Text(text = "Lockscreen", style = MaterialTheme.typography.titleMedium)
@@ -608,11 +597,11 @@ fun SpringsPicker(value: DemoSpringConfigurations, onValue: (DemoSpringConfigura
                     onValue(
                         value.copy(
                             name = "Custom",
-                            systemUiSprings = value.systemUiSprings.copy(stiffness = it)
+                            systemUiSprings = value.systemUiSprings.copy(stiffness = it),
                         )
                     )
                 },
-                values = DemoSpringConfigurations.stiffnessValues
+                values = DemoSpringConfigurations.stiffnessValues,
             )
 
             Text(
@@ -635,7 +624,7 @@ fun SpringsPicker(value: DemoSpringConfigurations, onValue: (DemoSpringConfigura
                     onValue(
                         value.copy(
                             name = "Custom",
-                            systemUiSprings = value.systemUiSprings.copy(dampingRatio = it)
+                            systemUiSprings = value.systemUiSprings.copy(dampingRatio = it),
                         )
                     )
                 },
@@ -664,11 +653,11 @@ fun SpringsPicker(value: DemoSpringConfigurations, onValue: (DemoSpringConfigura
                     onValue(
                         value.copy(
                             name = "Custom",
-                            notificationSprings = value.notificationSprings.copy(stiffness = it)
+                            notificationSprings = value.notificationSprings.copy(stiffness = it),
                         )
                     )
                 },
-                DemoSpringConfigurations.stiffnessValues
+                DemoSpringConfigurations.stiffnessValues,
             )
 
             Text(
@@ -691,7 +680,7 @@ fun SpringsPicker(value: DemoSpringConfigurations, onValue: (DemoSpringConfigura
                     onValue(
                         value.copy(
                             name = "Custom",
-                            notificationSprings = value.notificationSprings.copy(dampingRatio = it)
+                            notificationSprings = value.notificationSprings.copy(dampingRatio = it),
                         )
                     )
                 },
@@ -704,7 +693,7 @@ fun SpringsPicker(value: DemoSpringConfigurations, onValue: (DemoSpringConfigura
 @Composable
 fun OverscrollProgressPicker(
     value: DemoOverscrollProgress,
-    onValue: (DemoOverscrollProgress) -> Unit
+    onValue: (DemoOverscrollProgress) -> Unit,
 ) {
     Text(text = "Overscroll progress")
     val presets = DemoOverscrollProgress.presets
@@ -712,7 +701,7 @@ fun OverscrollProgressPicker(
         value = value,
         onValueChange = onValue,
         values = DemoOverscrollProgress.presets,
-        onValueNotFound = { presets.indexOfFirst { it.name == value.name } }
+        onValueNotFound = { presets.indexOfFirst { it.name == value.name } },
     )
 
     var isExpanded by remember { mutableStateOf(false) }

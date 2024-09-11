@@ -155,10 +155,7 @@ internal fun SceneScope.LockButton(
 }
 
 @Composable
-internal fun SceneScope.LockscreenCameraButton(
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
+internal fun SceneScope.LockscreenCameraButton(onClick: () -> Unit, modifier: Modifier = Modifier) {
     CameraButton(
         backgroundColor = MaterialTheme.colorScheme.surfaceBright,
         iconColor = MaterialTheme.colorScheme.onSurface,
