@@ -14,11 +14,17 @@
  * limitations under the License.
  */
 
-import {Component, ElementRef, Inject, Input} from '@angular/core';
-import {TRACE_INFO} from 'app/trace_info';
+import {
+  Component,
+  ElementRef,
+  Inject,
+  Input,
+  SimpleChanges,
+} from '@angular/core';
 import {assertDefined} from 'common/assert_utils';
 import {FunctionUtils} from 'common/function_utils';
 import {PersistentStore} from 'common/persistent_store';
+import {Analytics} from 'logging/analytics';
 import {
   TabbedViewSwitched,
   WinscopeEvent,
@@ -29,6 +35,7 @@ import {
   WinscopeEventEmitter,
 } from 'messaging/winscope_event_emitter';
 import {WinscopeEventListener} from 'messaging/winscope_event_listener';
+import {TRACE_INFO} from 'trace/trace_info';
 import {View, Viewer, ViewType} from 'viewers/viewer';
 
 interface Tab {
@@ -39,63 +46,37 @@ interface Tab {
 @Component({
   selector: 'trace-view',
   template: `
-    <div class="overlay">
-      <div class="draggable-container" cdkDrag cdkDragBoundary=".overlay">
-        <!--
-        TODO:
-        this draggable div is a temporary hack. We should remove the div and move the cdkDrag
-        directives into the overlay view (e.g. ViewerScreenReocordingComponent) as soon as the new
-        Angular's directive composition API is available
-        (https://github.com/angular/angular/issues/8785).
-         -->
+      <div class="overlay-container">
       </div>
-    </div>
-    <div class="header-items-wrapper">
-      <nav mat-tab-nav-bar class="tabs-navigation-bar">
-        <a
-          *ngFor="let tab of tabs; last as isLast"
-          mat-tab-link
-          [active]="isCurrentActiveTab(tab)"
-          [class.active]="isCurrentActiveTab(tab)"
-          (click)="onTabClick(tab)"
-          (focus)="$event.target.blur()"
-          [class.last]="isLast"
-          class="tab">
-          <mat-icon
-            class="icon"
-            [matTooltip]="TRACE_INFO[tab.view.traceType].name"
-            [style]="{color: TRACE_INFO[tab.view.traceType].color, marginRight: '0.5rem'}">
-            {{ TRACE_INFO[tab.view.traceType].icon }}
-          </mat-icon>
-          <span>
-            {{ tab.view.title }}
-          </span>
-        </a>
-      </nav>
-    </div>
-    <mat-divider></mat-divider>
-    <div class="trace-view-content"></div>
+      <div class="header-items-wrapper">
+          <nav mat-tab-nav-bar class="tabs-navigation-bar">
+              <a
+                  *ngFor="let tab of tabs; last as isLast"
+                  mat-tab-link
+                  [active]="isCurrentActiveTab(tab)"
+                  [class.active]="isCurrentActiveTab(tab)"
+                  (click)="onTabClick(tab)"
+                  (focus)="$event.target.blur()"
+                  [class.last]="isLast"
+                  class="tab">
+                <mat-icon
+                  class="icon"
+                  [style]="{color: TRACE_INFO[tab.view.traces[0].type].color, marginRight: '0.5rem'}">
+                    {{ TRACE_INFO[tab.view.traces[0].type].icon }}
+                </mat-icon>
+                <span>
+                  {{ tab.view.title }}
+                </span>
+              </a>
+          </nav>
+      </div>
+      <mat-divider></mat-divider>
+      <div class="trace-view-content"></div>
   `,
   styles: [
     `
       .tab.active {
         opacity: 100%;
-      }
-
-      .overlay {
-        z-index: 30;
-        position: fixed;
-        top: 0px;
-        left: 0px;
-        width: 100%;
-        height: 100%;
-        pointer-events: none;
-      }
-
-      .overlay .draggable-container {
-        position: absolute;
-        right: 0;
-        top: 20vh;
       }
 
       .header-items-wrapper {
@@ -112,6 +93,7 @@ interface Tab {
       .trace-view-content {
         height: 100%;
         overflow: auto;
+        background-color: var(--trace-view-background-color);
       }
 
       .tab {
@@ -147,25 +129,23 @@ export class TraceViewComponent
     this.elementRef = elementRef;
   }
 
-  ngOnChanges() {
-    this.renderViewsTab();
+  ngOnChanges(changes: SimpleChanges) {
+    this.renderViewsTab(changes['viewers']?.firstChange ?? false);
     this.renderViewsOverlay();
   }
 
   async onTabClick(tab: Tab) {
-    await this.showTab(tab);
+    await this.showTab(tab, false);
   }
 
   async onWinscopeEvent(event: WinscopeEvent) {
     await event.visit(
       WinscopeEventType.TABBED_VIEW_SWITCH_REQUEST,
       async (event) => {
-        const tab = this.tabs.find(
-          (tab) => tab.view.traceType === event.newFocusedViewId,
+        const tab = this.tabs.find((tab) =>
+          tab.view.traces.some((trace) => trace === event.newActiveTrace),
         );
-        if (tab) {
-          await this.showTab(tab);
-        }
+        await this.showTab(assertDefined(tab), false);
       },
     );
   }
@@ -178,7 +158,7 @@ export class TraceViewComponent
     return tab === this.currentActiveTab;
   }
 
-  private renderViewsTab() {
+  private renderViewsTab(firstToRender: boolean) {
     this.tabs = this.viewers
       .map((viewer) => viewer.getViews())
       .flat()
@@ -197,7 +177,7 @@ export class TraceViewComponent
     });
 
     if (this.tabs.length > 0) {
-      this.showTab(this.tabs[0]);
+      this.showTab(this.tabs[0], firstToRender);
     }
   }
 
@@ -219,15 +199,13 @@ export class TraceViewComponent
     views.forEach((view) => {
       view.htmlElement.style.pointerEvents = 'all';
       const container = assertDefined(
-        this.elementRef.nativeElement.querySelector(
-          '.overlay .draggable-container',
-        ),
+        this.elementRef.nativeElement.querySelector('.overlay-container'),
       );
       container.appendChild(view.htmlElement);
     });
   }
 
-  private async showTab(tab: Tab) {
+  private async showTab(tab: Tab, firstToRender: boolean) {
     if (this.currentActiveTab) {
       this.currentActiveTab.view.htmlElement.style.display = 'none';
     }
@@ -249,6 +227,11 @@ export class TraceViewComponent
 
     this.currentActiveTab = tab;
 
-    await this.emitAppEvent(new TabbedViewSwitched(tab.view));
+    if (!firstToRender) {
+      Analytics.Navigation.logTabSwitched(
+        TRACE_INFO[tab.view.traces[0].type].name,
+      );
+      await this.emitAppEvent(new TabbedViewSwitched(tab.view));
+    }
   }
 }

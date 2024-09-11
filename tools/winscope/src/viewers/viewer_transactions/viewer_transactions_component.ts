@@ -14,26 +14,38 @@
  * limitations under the License.
  */
 import {CdkVirtualScrollViewport} from '@angular/cdk/scrolling';
-import {Component, ElementRef, Inject, Input, ViewChild} from '@angular/core';
+import {
+  Component,
+  ElementRef,
+  HostListener,
+  Inject,
+  Input,
+  ViewChild,
+} from '@angular/core';
 import {MatSelectChange} from '@angular/material/select';
 import {TraceType} from 'trace/trace_type';
-import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
-import {ViewerEvents} from 'viewers/common/viewer_events';
+import {CollapsibleSections} from 'viewers/common/collapsible_sections';
+import {CollapsibleSectionType} from 'viewers/common/collapsible_section_type';
+import {TimestampClickDetail, ViewerEvents} from 'viewers/common/viewer_events';
+import {timeButtonStyle} from 'viewers/components/styles/clickable_property.styles';
 import {currentElementStyle} from 'viewers/components/styles/current_element.styles';
 import {selectedElementStyle} from 'viewers/components/styles/selected_element.styles';
-import {timeButtonStyle} from 'viewers/components/styles/timestamp_button.styles';
 import {viewerCardStyle} from 'viewers/components/styles/viewer_card.styles';
-import {Events} from './events';
-import {UiData} from './ui_data';
+import {UiData, UiDataEntry} from './ui_data';
 
 @Component({
   selector: 'viewer-transactions',
   template: `
     <div class="card-grid">
-      <div class="entries">
+      <collapsed-sections
+        [class.empty]="sections.areAllSectionsExpanded()"
+        [sections]="sections"
+        (sectionChange)="sections.onCollapseStateChange($event, false)">
+      </collapsed-sections>
+      <div class="log-view entries">
         <div class="filters">
           <div class="time"></div>
-          <div class="id">
+          <div class="id transaction-id">
             <select-with-filter
               label="TX ID"
               [options]="uiData.allTransactionIds"
@@ -73,7 +85,7 @@ import {UiData} from './ui_data';
               (selectChange)="onTypeFilterChanged($event)">
             </select-with-filter>
           </div>
-          <div class="id">
+          <div class="id layer-or-display-id">
             <select-with-filter
               label="LAYER/DISP ID"
               outerFilterWidth="125"
@@ -116,8 +128,8 @@ import {UiData} from './ui_data';
             <div class="time">
               <button
                 mat-button
-                [color]="isCurrentEntry(i) ? 'secondary' : 'primary'"
-                (click)="onTimestampClicked(entry.time)">
+                color="primary"
+                (click)="onTimestampClicked(entry)">
                 {{ entry.time.formattedValue() }}
               </button>
             </div>
@@ -146,28 +158,21 @@ import {UiData} from './ui_data';
         </cdk-virtual-scroll-viewport>
       </div>
 
-      <mat-divider [vertical]="true"></mat-divider>
-
       <properties-view
         *ngIf="uiData.currentPropertiesTree"
         class="properties-view"
-        title="PROPERTIES - PROTO DUMP"
+        [title]="propertiesTitle"
         [showFilter]="false"
         [userOptions]="uiData.propertiesUserOptions"
         [propertiesTree]="uiData.currentPropertiesTree"
         [traceType]="${TraceType.TRANSACTIONS}"
-        [isProtoDump]="false"></properties-view>
+        [isProtoDump]="false"
+        (collapseButtonClicked)="sections.onCollapseStateChange(CollapsibleSectionType.PROPERTIES, true)"
+        [class.collapsed]="sections.isSectionCollapsed(CollapsibleSectionType.PROPERTIES)"></properties-view>
     </div>
   `,
   styles: [
     `
-      .entries {
-        flex: 3;
-        display: flex;
-        flex-direction: column;
-        padding: 16px;
-      }
-
       .properties-view {
         flex: 1;
       }
@@ -235,12 +240,6 @@ import {UiData} from './ui_data';
         height: 65%;
         width: fit-content;
       }
-
-      ::ng-deep .mat-select-panel-wrap {
-        overflow: scroll;
-        overflow-x: hidden;
-        max-height: 75vh;
-      }
     `,
     selectedElementStyle,
     currentElementStyle,
@@ -252,6 +251,15 @@ class ViewerTransactionsComponent {
   objectKeys = Object.keys;
   uiData: UiData = UiData.EMPTY;
   private lastClicked = '';
+  propertiesTitle = 'PROPERTIES - PROTO DUMP';
+  CollapsibleSectionType = CollapsibleSectionType;
+  sections = new CollapsibleSections([
+    {
+      type: CollapsibleSectionType.PROPERTIES,
+      label: this.propertiesTitle,
+      isCollapsed: false,
+    },
+  ]);
 
   @ViewChild(CdkVirtualScrollViewport)
   scrollComponent?: CdkVirtualScrollViewport;
@@ -272,46 +280,35 @@ class ViewerTransactionsComponent {
   }
 
   onVSyncIdFilterChanged(event: MatSelectChange) {
-    this.emitEvent(Events.VSyncIdFilterChanged, event.value);
+    this.emitEvent(ViewerEvents.VSyncIdFilterChanged, event.value);
   }
 
   onPidFilterChanged(event: MatSelectChange) {
-    this.emitEvent(Events.PidFilterChanged, event.value);
+    this.emitEvent(ViewerEvents.PidFilterChanged, event.value);
   }
 
   onUidFilterChanged(event: MatSelectChange) {
-    this.emitEvent(Events.UidFilterChanged, event.value);
+    this.emitEvent(ViewerEvents.UidFilterChanged, event.value);
   }
 
   onTypeFilterChanged(event: MatSelectChange) {
-    this.emitEvent(Events.TypeFilterChanged, event.value);
+    this.emitEvent(ViewerEvents.TypeFilterChanged, event.value);
   }
 
   onLayerIdFilterChanged(event: MatSelectChange) {
-    this.emitEvent(Events.LayerIdFilterChanged, event.value);
+    this.emitEvent(ViewerEvents.LayerIdFilterChanged, event.value);
   }
 
   onWhatFilterChanged(event: MatSelectChange) {
-    this.emitEvent(Events.WhatFilterChanged, event.value);
+    this.emitEvent(ViewerEvents.WhatFilterChanged, event.value);
   }
 
   onTransactionIdFilterChanged(event: MatSelectChange) {
-    this.emitEvent(Events.TransactionIdFilterChanged, event.value);
+    this.emitEvent(ViewerEvents.TransactionIdFilterChanged, event.value);
   }
 
   onEntryClicked(index: number) {
-    this.emitEvent(Events.EntryClicked, index);
-  }
-
-  onUserOptionChange() {
-    const event: CustomEvent = new CustomEvent(
-      ViewerEvents.PropertiesUserOptionsChange,
-      {
-        bubbles: true,
-        detail: {userOptions: this.uiData.propertiesUserOptions},
-      },
-    );
-    this.elementRef.nativeElement.dispatchEvent(event);
+    this.emitEvent(ViewerEvents.LogClicked, index);
   }
 
   onGoToCurrentTimeClick() {
@@ -320,9 +317,29 @@ class ViewerTransactionsComponent {
     }
   }
 
-  onTimestampClicked(timestamp: PropertyTreeNode) {
-    this.lastClicked = timestamp.formattedValue();
-    this.emitEvent(ViewerEvents.TimestampClick, timestamp);
+  onTimestampClicked(entry: UiDataEntry) {
+    this.emitEvent(
+      ViewerEvents.TimestampClick,
+      new TimestampClickDetail(entry.time.getValue(), entry.traceIndex),
+    );
+  }
+
+  @HostListener('document:keydown', ['$event'])
+  async handleKeyboardEvent(event: KeyboardEvent) {
+    const index =
+      this.uiData.selectedEntryIndex ?? this.uiData.currentEntryIndex;
+    if (index === undefined) {
+      return;
+    }
+    if (event.key === 'ArrowDown' && index < this.uiData.entries.length - 1) {
+      event.preventDefault();
+      this.emitEvent(ViewerEvents.LogChangedByKeyPress, index + 1);
+    }
+
+    if (event.key === 'ArrowUp' && index > 0) {
+      event.preventDefault();
+      this.emitEvent(ViewerEvents.LogChangedByKeyPress, index - 1);
+    }
   }
 
   isCurrentEntry(index: number): boolean {

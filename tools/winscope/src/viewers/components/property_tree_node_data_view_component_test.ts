@@ -21,10 +21,10 @@ import {
 import {MatButtonModule} from '@angular/material/button';
 import {BrowserAnimationsModule} from '@angular/platform-browser/animations';
 import {assertDefined} from 'common/assert_utils';
-import {NO_TIMEZONE_OFFSET_FACTORY} from 'common/timestamp_factory';
+import {Timestamp} from 'common/time';
 import {PropertyTreeBuilder} from 'test/unit/property_tree_builder';
-import {TIMESTAMP_FORMATTER} from 'trace/tree_node/formatters';
-import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
+import {TimestampConverterUtils} from 'test/unit/timestamp_converter_utils';
+import {TIMESTAMP_NODE_FORMATTER} from 'trace/tree_node/formatters';
 import {UiPropertyTreeNode} from 'viewers/common/ui_property_tree_node';
 import {ViewerEvents} from 'viewers/common/viewer_events';
 import {PropertyTreeNodeDataViewComponent} from './property_tree_node_data_view_component';
@@ -34,15 +34,12 @@ describe('PropertyTreeNodeDataViewComponent', () => {
   let component: PropertyTreeNodeDataViewComponent;
   let htmlElement: HTMLElement;
 
-  beforeAll(async () => {
+  beforeEach(async () => {
     await TestBed.configureTestingModule({
       providers: [{provide: ComponentFixtureAutoDetect, useValue: true}],
       declarations: [PropertyTreeNodeDataViewComponent],
       imports: [MatButtonModule, BrowserAnimationsModule],
     }).compileComponents();
-  });
-
-  beforeEach(() => {
     fixture = TestBed.createComponent(PropertyTreeNodeDataViewComponent);
     component = fixture.componentInstance;
     htmlElement = fixture.nativeElement;
@@ -53,18 +50,18 @@ describe('PropertyTreeNodeDataViewComponent', () => {
   });
 
   it('can emit timestamp', () => {
-    let timestamp: PropertyTreeNode | undefined;
+    let timestamp: Timestamp | undefined;
     htmlElement.addEventListener(ViewerEvents.TimestampClick, (event) => {
-      timestamp = (event as CustomEvent).detail;
+      timestamp = (event as CustomEvent).detail.timestamp;
     });
     const node = UiPropertyTreeNode.from(
       new PropertyTreeBuilder()
         .setRootId('test node')
         .setName('timestamp')
         .setValue(
-          NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(1659126889102158832n),
+          TimestampConverterUtils.makeRealTimestamp(1659126889102158832n),
         )
-        .setFormatter(TIMESTAMP_FORMATTER)
+        .setFormatter(TIMESTAMP_NODE_FORMATTER)
         .build(),
     );
     component.node = node;
@@ -76,8 +73,8 @@ describe('PropertyTreeNodeDataViewComponent', () => {
     timestampButton.click();
     fixture.detectChanges();
 
-    expect(assertDefined(timestamp).formattedValue()).toEqual(
-      '2022-07-29T20:34:49.102158832',
+    expect(assertDefined(timestamp).format()).toEqual(
+      '2022-07-29, 20:34:49.102',
     );
   });
 });

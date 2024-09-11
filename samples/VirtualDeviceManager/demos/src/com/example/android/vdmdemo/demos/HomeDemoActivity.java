@@ -54,6 +54,11 @@ public final class HomeDemoActivity extends AppCompatActivity {
         moveTaskToBack(true);
     }
 
+    /** Handle calculator intent request. */
+    public void onCalculatorNewTask(View view) {
+        sendIntentToDisplay(Intent.CATEGORY_APP_CALCULATOR);
+    }
+
     private void sendIntentToDisplay(String category) {
         Display[] displays = mDisplayManager.getDisplays();
 

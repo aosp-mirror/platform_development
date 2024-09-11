@@ -33,6 +33,7 @@ export class UiRectBuilder {
   cornerRadius: number | undefined;
   depth: number | undefined;
   hasContent: boolean | undefined;
+  opacity: number | undefined;
 
   setX(value: number) {
     this.x = value;
@@ -109,6 +110,11 @@ export class UiRectBuilder {
     return this;
   }
 
+  setOpacity(value: number | undefined) {
+    this.opacity = value;
+    return this;
+  }
+
   build(): UiRect {
     if (this.x === undefined) {
       throw Error('x not set');
@@ -178,6 +184,7 @@ export class UiRectBuilder {
       this.transform,
       this.depth,
       this.hasContent,
+      this.opacity,
     );
   }
 }

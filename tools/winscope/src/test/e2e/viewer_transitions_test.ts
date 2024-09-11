@@ -27,7 +27,7 @@ describe('Viewer Transitions', () => {
       'traces/elapsed_and_real_timestamp/wm_transition_trace.pb',
       'traces/elapsed_and_real_timestamp/shell_transition_trace.pb',
     );
-    await E2eTestUtils.closeSnackBarIfNeeded();
+    await E2eTestUtils.closeSnackBar();
     await E2eTestUtils.clickViewTracesButton();
 
     const isViewerRendered = await element(

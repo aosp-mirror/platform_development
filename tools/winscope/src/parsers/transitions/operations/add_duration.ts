@@ -16,8 +16,8 @@
 
 import {assertDefined} from 'common/assert_utils';
 import {Timestamp} from 'common/time';
-import {NO_TIMEZONE_OFFSET_FACTORY} from 'common/timestamp_factory';
-import {TIMESTAMP_FORMATTER} from 'trace/tree_node/formatters';
+import {TimeDuration} from 'common/time_duration';
+import {TIMESTAMP_NODE_FORMATTER} from 'trace/tree_node/formatters';
 import {AddOperation} from 'trace/tree_node/operations/add_operation';
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
 import {DEFAULT_PROPERTY_TREE_NODE_FACTORY} from 'trace/tree_node/property_tree_node_factory';
@@ -39,10 +39,8 @@ export class AddDuration extends AddOperation<PropertyTreeNode> {
       return [];
     }
 
-    const timeDiffNs = finishTime.minus(sendTime).getValueNs();
-
-    const timeDiff =
-      NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(timeDiffNs);
+    const timeDiffNs = finishTime.minus(sendTime.getValueNs()).getValueNs();
+    const timeDiff = new TimeDuration(timeDiffNs);
 
     const durationNode =
       DEFAULT_PROPERTY_TREE_NODE_FACTORY.makeCalculatedProperty(
@@ -50,7 +48,7 @@ export class AddDuration extends AddOperation<PropertyTreeNode> {
         'duration',
         timeDiff,
       );
-    durationNode.setFormatter(TIMESTAMP_FORMATTER);
+    durationNode.setFormatter(TIMESTAMP_NODE_FORMATTER);
 
     return [durationNode];
   }

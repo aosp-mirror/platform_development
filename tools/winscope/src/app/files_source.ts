@@ -18,6 +18,5 @@ export enum FilesSource {
   TEST = 'test',
   COLLECTED = 'collected_traces',
   UPLOADED = 'uploaded_traces',
-  BUGREPORT = 'bugreport',
-  BUGANIZER = 'buganizer',
+  REMOTE_TOOL = 'remote',
 }

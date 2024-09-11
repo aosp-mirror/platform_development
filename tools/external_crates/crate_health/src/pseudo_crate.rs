@@ -29,7 +29,7 @@ use tinytemplate::TinyTemplate;
 
 use crate::{ensure_exists_and_empty, RunQuiet};
 
-static CARGO_TOML_TEMPLATE: &'static str = include_str!("templates/Cargo.toml.template");
+static CARGO_TOML_TEMPLATE: &str = include_str!("templates/Cargo.toml.template");
 
 #[derive(Serialize)]
 struct Dep {
@@ -133,7 +133,7 @@ impl PseudoCrate {
             .run_quiet_and_expect_success()?;
         let mut deps = BTreeMap::new();
         for line in from_utf8(&output.stdout)?.lines().skip(1) {
-            let words = line.split(" ").collect::<Vec<_>>();
+            let words = line.split(' ').collect::<Vec<_>>();
             if words.len() < 2 {
                 return Err(anyhow!(
                     "Failed to parse crate name and version from cargo tree: {}",
@@ -141,7 +141,7 @@ impl PseudoCrate {
                 ));
             }
             let version = words[1]
-                .strip_prefix("v")
+                .strip_prefix('v')
                 .ok_or(anyhow!("Failed to parse version: {}", words[1]))?;
             deps.insert(words[0].to_string(), version.to_string());
         }
