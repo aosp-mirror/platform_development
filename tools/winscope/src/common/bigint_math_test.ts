@@ -15,19 +15,16 @@
  */
 
 import {BigintMath} from './bigint_math';
-import {TIME_UNIT_TO_NANO} from './time_units';
 
-export class TimeDuration {
-  constructor(private timeDiffNs: bigint) {}
-  getValueNs(): bigint {
-    return this.timeDiffNs;
-  }
-
-  format(): string {
-    const msString = BigintMath.divideAndRound(
-      this.timeDiffNs,
-      BigInt(TIME_UNIT_TO_NANO.ms),
-    );
-    return msString.toLocaleString() + ' ms';
-  }
-}
+describe('BigintMath', () => {
+  it('divideAndRound()', () => {
+    expect(BigintMath.divideAndRound(0n, 10n)).toEqual(0n);
+    expect(BigintMath.divideAndRound(10n, 10n)).toEqual(1n);
+    expect(BigintMath.divideAndRound(10n, 6n)).toEqual(2n);
+    expect(BigintMath.divideAndRound(10n, 5n)).toEqual(2n);
+    expect(BigintMath.divideAndRound(10n, 4n)).toEqual(3n);
+    expect(() => BigintMath.divideAndRound(1n, 0n)).toThrowError();
+    expect(BigintMath.divideAndRound(10000n + 4999n, 10000n)).toEqual(1n);
+    expect(BigintMath.divideAndRound(10000n + 5000n, 10000n)).toEqual(2n);
+  });
+});

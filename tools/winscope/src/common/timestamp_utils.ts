@@ -15,7 +15,6 @@
  */
 
 import {Timestamp} from 'common/time';
-import {TIME_UNITS} from './time_units';
 
 export class TimestampUtils {
   // (?=.) checks there is at least one character with a lookahead match
@@ -102,26 +101,5 @@ export class TimestampUtils {
     }
 
     return ts1;
-  }
-
-  static formatElapsedNs(timestampNanos: bigint): string {
-    let leftNanos = timestampNanos;
-    const parts: Array<{value: bigint; unit: string}> = TIME_UNITS.slice()
-      .reverse()
-      .map(({nanosInUnit, unit}) => {
-        let amountOfUnit = BigInt(0);
-        if (leftNanos >= nanosInUnit) {
-          amountOfUnit = leftNanos / BigInt(nanosInUnit);
-        }
-        leftNanos = leftNanos % BigInt(nanosInUnit);
-        return {value: amountOfUnit, unit};
-      });
-
-    // Remove all 0ed units at start
-    while (parts.length > 1 && parts[0].value === 0n) {
-      parts.shift();
-    }
-
-    return parts.map((part) => `${part.value}${part.unit}`).join('');
   }
 }

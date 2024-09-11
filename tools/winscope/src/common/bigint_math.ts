@@ -14,20 +14,12 @@
  * limitations under the License.
  */
 
-import {BigintMath} from './bigint_math';
-import {TIME_UNIT_TO_NANO} from './time_units';
-
-export class TimeDuration {
-  constructor(private timeDiffNs: bigint) {}
-  getValueNs(): bigint {
-    return this.timeDiffNs;
-  }
-
-  format(): string {
-    const msString = BigintMath.divideAndRound(
-      this.timeDiffNs,
-      BigInt(TIME_UNIT_TO_NANO.ms),
-    );
-    return msString.toLocaleString() + ' ms';
+export class BigintMath {
+  static divideAndRound(ns: bigint, div: bigint): bigint {
+    let quot = ns / div;
+    if (ns % div >= div / 2n) {
+      quot += 1n;
+    }
+    return quot;
   }
 }
