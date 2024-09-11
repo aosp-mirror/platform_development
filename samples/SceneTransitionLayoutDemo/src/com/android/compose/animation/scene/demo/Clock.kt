@@ -39,10 +39,7 @@ object Clock {
 }
 
 @Composable
-fun SceneScope.Clock(
-    color: Color,
-    modifier: Modifier = Modifier,
-) {
+fun SceneScope.Clock(color: Color, modifier: Modifier = Modifier) {
     Element(Clock.Elements.Clock, modifier) {
         val color by animateElementColorAsState(color, Clock.Values.TextColor)
 
