@@ -44,8 +44,13 @@ export const logComponentStyles = `
     padding: 4px;
   }
 
-  .time {
+  .time:not(.with-date) {
+    flex: 0 1 100px;
+  }
+
+  .time.with-date {
     flex: 0 1 250px;
+    min-width: 250px;
   }
 
   .go-to-current-time {
