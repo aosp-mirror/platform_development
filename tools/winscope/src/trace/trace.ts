@@ -15,6 +15,7 @@
  */
 
 import {ArrayUtils} from 'common/array_utils';
+import {assertDefined} from 'common/assert_utils';
 import {INVALID_TIME_NS, Timestamp} from 'common/time';
 import {TimestampUtils} from 'common/timestamp_utils';
 import {
@@ -489,8 +490,19 @@ export class Trace<T> {
 
   spansMultipleDates(): boolean {
     if (this.lengthEntries > 0) {
-      const firstTs = this.getEntry(0).getTimestamp().format();
-      const firstDate = TimestampUtils.extractDateFromHumanTimestamp(firstTs);
+      let firstTs: string | undefined;
+      let i = 0;
+      while (firstTs === undefined && i < this.lengthEntries) {
+        const entry = this.getEntry(i);
+        if (entry.hasValidTimestamp()) {
+          firstTs = entry.getTimestamp().format();
+          break;
+        }
+        i++;
+      }
+      const firstDate = TimestampUtils.extractDateFromHumanTimestamp(
+        assertDefined(firstTs),
+      );
       if (firstDate) {
         const lastDate = TimestampUtils.extractDateFromHumanTimestamp(
           this.getEntry(this.lengthEntries - 1)
