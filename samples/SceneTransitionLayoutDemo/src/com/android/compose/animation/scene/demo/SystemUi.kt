@@ -130,10 +130,8 @@ object Scenes {
      * A smart saver that restores the right scene depending on the current [lockscreenScene] and
      * [shadeScene].
      */
-    class SceneSaver(
-        private val lockscreenScene: SceneKey,
-        private val shadeScene: SceneKey,
-    ) : Saver<SceneKey, String> {
+    class SceneSaver(private val lockscreenScene: SceneKey, private val shadeScene: SceneKey) :
+        Saver<SceneKey, String> {
         override fun SaverScope.save(value: SceneKey): String = value.debugName
 
         override fun restore(value: String): SceneKey {
@@ -269,11 +267,7 @@ fun SystemUi(
     val springConfiguration = configuration.springConfigurations.systemUiSprings
     val transitions =
         remember(quickSettingsPagerState, springConfiguration, configuration) {
-            systemUiTransitions(
-                quickSettingsPagerState,
-                springConfiguration,
-                configuration,
-            )
+            systemUiTransitions(quickSettingsPagerState, springConfiguration, configuration)
         }
     val enableInterruptions = configuration.enableInterruptions
 
@@ -306,7 +300,7 @@ fun SystemUi(
                 sceneSaver,
                 transitions,
                 canChangeScene,
-                enableInterruptions
+                enableInterruptions,
             )
         }
     val layoutState =
@@ -336,7 +330,7 @@ fun SystemUi(
         // size class.
         layoutState.setTargetScene(
             Scenes.ensureCorrectScene(scene, lockscreenScene, shadeScene),
-            coroutineScope
+            coroutineScope,
         )
     }
 
@@ -418,7 +412,7 @@ fun SystemUi(
                         {
                             MediaPlayer(
                                 isPlaying = isMediaPlayerPlaying,
-                                onIsPlayingChange = { isMediaPlayerPlaying = it }
+                                onIsPlayingChange = { isMediaPlayerPlaying = it },
                             )
                         }
                     } else {
@@ -451,8 +445,8 @@ fun SystemUi(
                                         ToggleableState.Off -> false
                                         ToggleableState.Indeterminate ->
                                             configuration.interactiveNotifications
-                                    }
-                            )
+                                    },
+                            ),
                         ) {
                             Lockscreen(
                                 notificationList = {
@@ -471,7 +465,7 @@ fun SystemUi(
                         }
                         scene(
                             Scenes.SplitLockscreen,
-                            SplitLockscreen.userActions(isLockscreenDismissable, shadeScene)
+                            SplitLockscreen.userActions(isLockscreenDismissable, shadeScene),
                         ) {
                             SplitLockscreen(
                                 notificationList = {
@@ -544,7 +538,7 @@ fun SystemUi(
                         }
                         scene(
                             Scenes.SplitShade,
-                            SplitShade.userActions(isLockscreenDismissed, lockscreenScene)
+                            SplitShade.userActions(isLockscreenDismissed, lockscreenScene),
                         ) {
                             SplitShade(
                                 notificationList = {

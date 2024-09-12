@@ -45,19 +45,16 @@ export const logComponentStyles = `
   }
 
   .time:not(.with-date) {
-    flex: 0 1 100px;
+    flex: 0 0 135px;
   }
 
   .time.with-date {
-    flex: 0 1 250px;
-    min-width: 250px;
+    flex: 0 0 175px;
   }
 
   .go-to-current-time {
-    flex: none;
-    margin-top: 4px;
     font-size: 12px;
-    height: 65%;
+    height: 75%;
     width: fit-content;
   }
 
@@ -66,13 +63,13 @@ export const logComponentStyles = `
   }
 
   .layer-or-display-id, .transaction-id {
-    flex: none;
-    width: 125px;
+    flex: 1;
+    min-width: 85px;
   }
 
   .vsyncid {
     flex: none;
-    width: 110px;
+    width: 90px;
   }
 
   .pid {
@@ -86,22 +83,20 @@ export const logComponentStyles = `
   }
 
   .transaction-type {
-    width: 200px;
+    flex: 1;
+    min-width: 85px;
   }
 
   .flags, .flags select-with-filter {
-    flex: 2 0 250px;
-  }
-
-  .filters .flags {
-    margin-right: 16px;
+    flex: 2;
   }
 
   .log-level {
     flex: 1;
+    min-width: 85px;
   }
 
-  .filters .log-level, .filters .log-level select-with-filter {
+  .filters .log-level select-with-filter {
     flex: 1;
   }
 
@@ -139,29 +134,34 @@ export const logComponentStyles = `
   }
 
   .transition-type {
-    flex: 2;
-  }
-
-  .jank_cuj-type {
-    flex: 5;
-  }
-
-  .start-time, .end-time, .dispatch-time, .send-time {
-    flex: 4;
-  }
-
-  .duration {
     flex: 3;
   }
 
-  .status {
+  .jank_cuj-type {
+    flex: 8;
+  }
+
+  .start-time, .end-time, .dispatch-time, .send-time {
+    flex: 3;
+  }
+
+  .duration {
     flex: 2;
+  }
+
+  .duration, .status {
+    text-align: end;
+  }
+
+  .status {
+    flex: 3;
   }
 
   .entry .status {
     display: flex;
     align-items: center;
     gap: 5px;
+    justify-content: end;
   }
 
   .status .mat-icon {
@@ -184,6 +184,7 @@ export const logComponentStyles = `
   }
   .input-display-id {
     flex: 1;
+    min-width: 50px;
   }
   .input-details {
     flex: 4;

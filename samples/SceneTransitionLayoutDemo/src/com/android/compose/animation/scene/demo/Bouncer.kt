@@ -43,10 +43,7 @@ import com.android.compose.grid.VerticalGrid
 
 object Bouncer {
     fun userActions(lockscreenScene: SceneKey) =
-        mapOf(
-            Back to lockscreenScene,
-            Swipe.Down to lockscreenScene,
-        )
+        mapOf(Back to lockscreenScene, Swipe.Down to lockscreenScene)
 
     object Elements {
         val Background = ElementKey("BouncerBackground")

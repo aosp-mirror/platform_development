@@ -60,9 +60,9 @@ describe('Perfetto ParserTransitions', () => {
       expect(entry.getChildByName('id')?.getValue()).toEqual(32n);
       expect(
         wmDataNode.getChildByName('createTimeNs')?.formattedValue(),
-      ).toEqual('2023-11-21, 13:30:25.428');
+      ).toEqual('2023-11-21, 13:30:25.429');
       expect(wmDataNode.getChildByName('sendTimeNs')?.formattedValue()).toEqual(
-        '2023-11-21, 13:30:25.441',
+        '2023-11-21, 13:30:25.442',
       );
       expect(
         wmDataNode.getChildByName('finishTimeNs')?.formattedValue(),

@@ -57,7 +57,7 @@ fun SceneScope.Launcher(columnsCount: Int, modifier: Modifier = Modifier) {
     Column(modifier.element(Launcher.Elements.Scene)) {
         SmartSpace(
             MaterialTheme.colorScheme.onBackground,
-            Modifier.element(Launcher.Elements.SmartSpace).padding(top = 40.dp, start = 40.dp)
+            Modifier.element(Launcher.Elements.SmartSpace).padding(top = 40.dp, start = 40.dp),
         )
 
         VerticalGrid(columnsCount, Modifier.element(Launcher.Elements.IconsGrid).padding(16.dp)) {

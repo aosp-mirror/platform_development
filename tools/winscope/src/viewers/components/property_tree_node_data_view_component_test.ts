@@ -68,7 +68,7 @@ describe('PropertyTreeNodeDataViewComponent', () => {
     fixture.detectChanges();
 
     const timestampButton = assertDefined(
-      htmlElement.querySelector('.time button'),
+      htmlElement.querySelector('.time-button'),
     ) as HTMLButtonElement;
     timestampButton.click();
     fixture.detectChanges();
