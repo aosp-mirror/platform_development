@@ -85,7 +85,7 @@ object MediaPlayer {
             element: ElementKey,
             transition: TransitionState.Transition,
             fromContentZIndex: Float,
-            toContentZIndex: Float
+            toContentZIndex: Float,
         ): ContentKey {
             return when {
                 // During the Lockscreen => Shade transition, the media player is visible in the
@@ -163,10 +163,7 @@ fun SceneScope.MediaPlayer(
 }
 
 @Composable
-private fun BoxScope.Sinusoid(
-    isPlaying: Boolean,
-    modifier: Modifier = Modifier,
-) {
+private fun BoxScope.Sinusoid(isPlaying: Boolean, modifier: Modifier = Modifier) {
     val color = MaterialTheme.colorScheme.onTertiary
     val waveWidth = 10.dp
     val maxWaveHeight = 5.dp
@@ -175,7 +172,7 @@ private fun BoxScope.Sinusoid(
     val waveHeight by
         animateDpAsState(
             if (isPlaying) maxWaveHeight else 0.dp,
-            spring(stiffness = Spring.StiffnessMediumLow)
+            spring(stiffness = Spring.StiffnessMediumLow),
         )
 
     val shouldAnimateWave by remember { derivedStateOf { waveHeight > 0.dp } }

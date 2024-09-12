@@ -35,7 +35,7 @@ import {TimestampConverterUtils} from 'test/unit/timestamp_converter_utils';
 import {TraceBuilder} from 'test/unit/trace_builder';
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
 import {LogComponent} from 'viewers/common/log_component';
-import {executeScrollComponentTests} from 'viewers/common/scroll_component_test_utils';
+import {executeScrollComponentTests} from 'viewers/common/scroll_component_tests';
 import {LogFieldType} from 'viewers/common/ui_data_log';
 import {SelectWithFilterComponent} from 'viewers/components/select_with_filter_component';
 import {ProtologScrollDirective} from './scroll_strategy/protolog_scroll_directive';
