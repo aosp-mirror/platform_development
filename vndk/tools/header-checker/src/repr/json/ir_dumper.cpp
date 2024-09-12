@@ -15,19 +15,13 @@
 #include "repr/json/ir_dumper.h"
 
 #include "repr/ir_dumper.h"
-#include "repr/ir_reader.h"
-#include "repr/ir_representation_internal.h"
+#include "repr/ir_representation.h"
 #include "repr/json/api.h"
 #include "repr/json/converter.h"
 
-#include <json/reader.h>
 #include <json/writer.h>
 
-#include <llvm/Support/raw_ostream.h>
-
-#include <cstdlib>
 #include <fstream>
-#include <sstream>
 #include <string>
 
 
@@ -70,8 +64,8 @@ static void AddElfSymbolBinding(JsonObject &elf_symbol,
   }
 }
 
-void IRToJsonConverter::AddTemplateInfo(
-    JsonObject &type_decl, const TemplatedArtifactIR *template_ir) {
+static void AddTemplateInfo(JsonObject &type_decl,
+                            const TemplatedArtifactIR *template_ir) {
   JsonArray args;
   for (auto &&template_element_ir : template_ir->GetTemplateElements()) {
     args.append(template_element_ir.GetReferencedType());
@@ -79,8 +73,7 @@ void IRToJsonConverter::AddTemplateInfo(
   type_decl.Set("template_args", args);
 }
 
-void IRToJsonConverter::AddTypeInfo(JsonObject &type_decl,
-                                    const TypeIR *type_ir) {
+static void AddTypeInfo(JsonObject &type_decl, const TypeIR *type_ir) {
   // LinkableMessageIR
   type_decl.Set("source_file", type_ir->GetSourceFile());
   const std::string &linker_set_key = type_ir->GetLinkerSetKey();
@@ -111,8 +104,8 @@ static JsonObject ConvertRecordFieldIR(const RecordFieldIR *record_field_ir) {
   return record_field;
 }
 
-void IRToJsonConverter::AddRecordFields(JsonObject &record_type,
-                                        const RecordTypeIR *record_ir) {
+static void AddRecordFields(JsonObject &record_type,
+                            const RecordTypeIR *record_ir) {
   JsonArray fields;
   for (auto &&field_ir : record_ir->GetFields()) {
     fields.append(ConvertRecordFieldIR(&field_ir));
@@ -129,8 +122,8 @@ ConvertBaseSpecifierIR(const CXXBaseSpecifierIR &base_specifier_ir) {
   return base_specifier;
 }
 
-void IRToJsonConverter::AddBaseSpecifiers(JsonObject &record_type,
-                                          const RecordTypeIR *record_ir) {
+static void AddBaseSpecifiers(JsonObject &record_type,
+                              const RecordTypeIR *record_ir) {
   JsonArray base_specifiers;
   for (auto &&base_ir : record_ir->GetBases()) {
     base_specifiers.append(ConvertBaseSpecifierIR(base_ir));
@@ -149,8 +142,8 @@ ConvertVTableComponentIR(const VTableComponentIR &vtable_component_ir) {
   return vtable_component;
 }
 
-void IRToJsonConverter::AddVTableLayout(JsonObject &record_type,
-                                        const RecordTypeIR *record_ir) {
+static void AddVTableLayout(JsonObject &record_type,
+                            const RecordTypeIR *record_ir) {
   JsonArray vtable_components;
   for (auto &&vtable_component_ir :
        record_ir->GetVTableLayout().GetVTableComponents()) {
@@ -159,7 +152,7 @@ void IRToJsonConverter::AddVTableLayout(JsonObject &record_type,
   record_type.Set("vtable_components", vtable_components);
 }
 
-JsonObject IRToJsonConverter::ConvertRecordTypeIR(const RecordTypeIR *recordp) {
+static JsonObject ConvertRecordTypeIR(const RecordTypeIR *recordp) {
   JsonObject record_type;
 
   AddAccess(record_type, recordp->GetAccess());
@@ -173,14 +166,8 @@ JsonObject IRToJsonConverter::ConvertRecordTypeIR(const RecordTypeIR *recordp) {
   return record_type;
 }
 
-void IRToJsonConverter::AddFunctionParametersAndSetReturnType(
-    JsonObject &function, const CFunctionLikeIR *cfunction_like_ir) {
-  function.Set("return_type", cfunction_like_ir->GetReturnType());
-  AddFunctionParameters(function, cfunction_like_ir);
-}
-
-void IRToJsonConverter::AddFunctionParameters(
-    JsonObject &function, const CFunctionLikeIR *cfunction_like_ir) {
+static void AddFunctionParameters(JsonObject &function,
+                                  const CFunctionLikeIR *cfunction_like_ir) {
   JsonArray parameters;
   for (auto &&parameter_ir : cfunction_like_ir->GetParameters()) {
     JsonObject parameter;
@@ -192,15 +179,20 @@ void IRToJsonConverter::AddFunctionParameters(
   function.Set("parameters", parameters);
 }
 
-JsonObject
-IRToJsonConverter::ConvertFunctionTypeIR(const FunctionTypeIR *function_typep) {
+static void AddFunctionParametersAndSetReturnType(
+    JsonObject &function, const CFunctionLikeIR *cfunction_like_ir) {
+  function.Set("return_type", cfunction_like_ir->GetReturnType());
+  AddFunctionParameters(function, cfunction_like_ir);
+}
+
+static JsonObject ConvertFunctionTypeIR(const FunctionTypeIR *function_typep) {
   JsonObject function_type;
   AddTypeInfo(function_type, function_typep);
   AddFunctionParametersAndSetReturnType(function_type, function_typep);
   return function_type;
 }
 
-JsonObject IRToJsonConverter::ConvertFunctionIR(const FunctionIR *functionp) {
+static JsonObject ConvertFunctionIR(const FunctionIR *functionp) {
   JsonObject function;
   AddAccess(function, functionp->GetAccess());
   function.Set("linker_set_key", functionp->GetLinkerSetKey());
@@ -224,8 +216,7 @@ static JsonObject ConvertEnumFieldIR(const EnumFieldIR *enum_field_ir) {
   return enum_field;
 }
 
-void IRToJsonConverter::AddEnumFields(JsonObject &enum_type,
-                                      const EnumTypeIR *enum_ir) {
+static void AddEnumFields(JsonObject &enum_type, const EnumTypeIR *enum_ir) {
   JsonArray enum_fields;
   for (auto &&field : enum_ir->GetFields()) {
     enum_fields.append(ConvertEnumFieldIR(&field));
@@ -233,7 +224,7 @@ void IRToJsonConverter::AddEnumFields(JsonObject &enum_type,
   enum_type.Set("enum_fields", enum_fields);
 }
 
-JsonObject IRToJsonConverter::ConvertEnumTypeIR(const EnumTypeIR *enump) {
+static JsonObject ConvertEnumTypeIR(const EnumTypeIR *enump) {
   JsonObject enum_type;
   AddAccess(enum_type, enump->GetAccess());
   enum_type.Set("underlying_type", enump->GetUnderlyingType());
@@ -242,8 +233,7 @@ JsonObject IRToJsonConverter::ConvertEnumTypeIR(const EnumTypeIR *enump) {
   return enum_type;
 }
 
-JsonObject
-IRToJsonConverter::ConvertGlobalVarIR(const GlobalVarIR *global_varp) {
+static JsonObject ConvertGlobalVarIR(const GlobalVarIR *global_varp) {
   JsonObject global_var;
   // GlobalVarIR
   global_var.Set("name", global_varp->GetName());
@@ -260,15 +250,13 @@ IRToJsonConverter::ConvertGlobalVarIR(const GlobalVarIR *global_varp) {
   return global_var;
 }
 
-JsonObject
-IRToJsonConverter::ConvertPointerTypeIR(const PointerTypeIR *pointerp) {
+static JsonObject ConvertPointerTypeIR(const PointerTypeIR *pointerp) {
   JsonObject pointer_type;
   AddTypeInfo(pointer_type, pointerp);
   return pointer_type;
 }
 
-JsonObject
-IRToJsonConverter::ConvertQualifiedTypeIR(const QualifiedTypeIR *qualtypep) {
+static JsonObject ConvertQualifiedTypeIR(const QualifiedTypeIR *qualtypep) {
   JsonObject qualified_type;
   AddTypeInfo(qualified_type, qualtypep);
   qualified_type.Set("is_const", qualtypep->IsConst());
@@ -277,8 +265,7 @@ IRToJsonConverter::ConvertQualifiedTypeIR(const QualifiedTypeIR *qualtypep) {
   return qualified_type;
 }
 
-JsonObject
-IRToJsonConverter::ConvertBuiltinTypeIR(const BuiltinTypeIR *builtin_typep) {
+static JsonObject ConvertBuiltinTypeIR(const BuiltinTypeIR *builtin_typep) {
   JsonObject builtin_type;
   builtin_type.Set("is_unsigned", builtin_typep->IsUnsigned());
   builtin_type.Set("is_integral", builtin_typep->IsIntegralType());
@@ -286,22 +273,21 @@ IRToJsonConverter::ConvertBuiltinTypeIR(const BuiltinTypeIR *builtin_typep) {
   return builtin_type;
 }
 
-JsonObject
-IRToJsonConverter::ConvertArrayTypeIR(const ArrayTypeIR *array_typep) {
+static JsonObject ConvertArrayTypeIR(const ArrayTypeIR *array_typep) {
   JsonObject array_type;
   array_type.Set("is_of_unknown_bound", array_typep->IsOfUnknownBound());
   AddTypeInfo(array_type, array_typep);
   return array_type;
 }
 
-JsonObject IRToJsonConverter::ConvertLvalueReferenceTypeIR(
+static JsonObject ConvertLvalueReferenceTypeIR(
     const LvalueReferenceTypeIR *lvalue_reference_typep) {
   JsonObject lvalue_reference_type;
   AddTypeInfo(lvalue_reference_type, lvalue_reference_typep);
   return lvalue_reference_type;
 }
 
-JsonObject IRToJsonConverter::ConvertRvalueReferenceTypeIR(
+static JsonObject ConvertRvalueReferenceTypeIR(
     const RvalueReferenceTypeIR *rvalue_reference_typep) {
   JsonObject rvalue_reference_type;
   AddTypeInfo(rvalue_reference_type, rvalue_reference_typep);

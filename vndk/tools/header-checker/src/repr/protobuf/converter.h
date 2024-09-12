@@ -188,130 +188,32 @@ inline VTableComponentIR::Kind VTableComponentKindProtobufToIR(
   assert(false);
 }
 
-// Convert IR to the messages defined in abi_dump.proto.
-class IRToProtobufConverter {
- private:
-  static bool AddTemplateInformation(
-      abi_dump::TemplateInfo *ti, const TemplatedArtifactIR *ta);
+// ProtobufIRDiffDumper calls the following functions.
+bool ConvertVTableLayoutIR(abi_dump::VTableLayout *vtable_layout_protobuf,
+                           const VTableLayoutIR &vtable_layout_ir);
 
-  static bool AddTypeInfo(
-      abi_dump::BasicNamedAndTypedDecl *type_info, const TypeIR *typep);
+bool ConvertCXXBaseSpecifierIR(
+    abi_dump::CXXBaseSpecifier *base_specifier_protobuf,
+    const CXXBaseSpecifierIR &base_specifier_ir);
 
-  static bool AddRecordFields(
-      abi_dump::RecordType *record_protobuf, const RecordTypeIR *record_ir);
+bool ConvertRecordFieldIR(abi_dump::RecordFieldDecl *record_field_protobuf,
+                          const RecordFieldIR *record_field_ir);
 
-  static bool AddBaseSpecifiers(
-      abi_dump::RecordType *record_protobuf, const RecordTypeIR *record_ir);
+bool ConvertEnumFieldIR(abi_dump::EnumFieldDecl *enum_field_protobuf,
+                        const EnumFieldIR *enum_field_ir);
 
-  static bool AddVTableLayout(
-      abi_dump::RecordType *record_protobuf, const RecordTypeIR *record_ir);
+abi_dump::FunctionDecl ConvertFunctionIR(const FunctionIR *functionp);
 
-  static bool AddEnumFields(abi_dump::EnumType *enum_protobuf,
-                            const EnumTypeIR *enum_ir);
+abi_dump::GlobalVarDecl ConvertGlobalVarIR(const GlobalVarIR *global_varp);
 
- public:
-  static bool ConvertRecordFieldIR(
-      abi_dump::RecordFieldDecl *record_field_protobuf,
-      const RecordFieldIR *record_field_ir);
+abi_dump::ElfFunction ConvertElfFunctionIR(
+    const ElfFunctionIR *elf_function_ir);
 
-  static bool ConvertCXXBaseSpecifierIR(
-      abi_dump::CXXBaseSpecifier *base_specifier_protobuf,
-      const CXXBaseSpecifierIR &base_specifier_ir);
+abi_dump::ElfObject ConvertElfObjectIR(const ElfObjectIR *elf_object_ir);
 
-  static bool ConvertVTableLayoutIR(
-      abi_dump::VTableLayout *vtable_layout_protobuf,
-      const VTableLayoutIR &vtable_layout_ir);
+abi_dump::RecordType ConvertRecordTypeIR(const RecordTypeIR *recordp);
 
-  static bool ConvertEnumFieldIR(abi_dump::EnumFieldDecl *enum_field_protobuf,
-                                 const EnumFieldIR *enum_field_ir);
-
-  static abi_dump::EnumType ConvertEnumTypeIR(const EnumTypeIR *enump);
-
-  static abi_dump::RecordType ConvertRecordTypeIR(const RecordTypeIR *recordp);
-
-  static abi_dump::FunctionType ConvertFunctionTypeIR (
-      const FunctionTypeIR *function_typep);
-
-  template <typename CFunctionLikeMessage>
-  static bool AddFunctionParametersAndSetReturnType(
-      CFunctionLikeMessage *function_like_protobuf,
-      const CFunctionLikeIR *cfunction_like_ir);
-
-  template <typename CFunctionLikeMessage>
-  static bool AddFunctionParameters(CFunctionLikeMessage *function_protobuf,
-                                    const CFunctionLikeIR *cfunction_like_ir);
-
-  static abi_dump::FunctionDecl ConvertFunctionIR(const FunctionIR *functionp);
-
-  static abi_dump::GlobalVarDecl ConvertGlobalVarIR(
-      const GlobalVarIR *global_varp);
-
-  static abi_dump::PointerType ConvertPointerTypeIR(
-      const PointerTypeIR *pointerp);
-
-  static abi_dump::QualifiedType ConvertQualifiedTypeIR(
-      const QualifiedTypeIR *qualtypep);
-
-  static abi_dump::BuiltinType ConvertBuiltinTypeIR(
-      const BuiltinTypeIR *builtin_typep);
-
-  static abi_dump::ArrayType ConvertArrayTypeIR(
-      const ArrayTypeIR *array_typep);
-
-  static abi_dump::LvalueReferenceType ConvertLvalueReferenceTypeIR(
-      const LvalueReferenceTypeIR *lvalue_reference_typep);
-
-  static abi_dump::RvalueReferenceType ConvertRvalueReferenceTypeIR(
-      const RvalueReferenceTypeIR *rvalue_reference_typep);
-
-  static abi_dump::ElfFunction ConvertElfFunctionIR(
-      const ElfFunctionIR *elf_function_ir);
-
-  static abi_dump::ElfObject ConvertElfObjectIR(
-      const ElfObjectIR *elf_object_ir);
-};
-
-// Convert IR to the messages defined in abi_diff.proto.
-class IRDiffToProtobufConverter {
- private:
-  static bool AddTypeInfoDiff(
-      abi_diff::TypeInfoDiff *type_info_diff_protobuf,
-      const TypeDiffIR *type_diff_ir);
-
-  static bool AddVTableLayoutDiff(
-      abi_diff::VTableLayoutDiff *vtable_layout_diff_protobuf,
-      const VTableLayoutDiffIR *vtable_layout_diff_ir);
-
-  static bool AddBaseSpecifierDiffs(
-      abi_diff::CXXBaseSpecifierDiff *base_specifier_diff_protobuf,
-      const CXXBaseSpecifierDiffIR *base_specifier_diff_ir);
-
-  static bool AddRecordFields(
-      abi_diff::RecordTypeDiff *record_diff_protobuf,
-      const std::vector<const RecordFieldIR *> &record_fields_removed_ir,
-      bool removed);
-
-  static bool AddRecordFieldDiffs(
-      abi_diff::RecordTypeDiff *record_diff_protobuf,
-      const std::vector<RecordFieldDiffIR> &record_field_diff_ir);
-
-  static bool AddEnumUnderlyingTypeDiff(
-      abi_diff::UnderlyingTypeDiff *underlying_type_diff_protobuf,
-      const std::pair<std::string, std::string> *underlying_type_diff_ir);
-
- public:
-  static abi_diff::RecordTypeDiff ConvertRecordTypeDiffIR(
-      const RecordTypeDiffIR *record_type_diffp);
-
-  static abi_diff::EnumTypeDiff ConvertEnumTypeDiffIR(
-      const EnumTypeDiffIR *enum_type_diffp);
-
-  static abi_diff::FunctionDeclDiff ConvertFunctionDiffIR(
-      const FunctionDiffIR *function_diffp);
-
-  static abi_diff::GlobalVarDeclDiff ConvertGlobalVarDiffIR(
-      const GlobalVarDiffIR *global_var_diffp);
-};
+abi_dump::EnumType ConvertEnumTypeIR(const EnumTypeIR *enump);
 
 
 }  // namespace repr
