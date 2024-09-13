@@ -31,6 +31,7 @@ import {AbtChromeExtensionProtocol} from 'abt_chrome_extension/abt_chrome_extens
 import {Mediator} from 'app/mediator';
 import {TimelineData} from 'app/timeline_data';
 import {TracePipeline} from 'app/trace_pipeline';
+import {Download} from 'common/download';
 import {FileUtils} from 'common/file_utils';
 import {globalConfig} from 'common/global_config';
 import {InMemoryStorage} from 'common/in_memory_storage';
@@ -530,7 +531,7 @@ export class AppComponent implements WinscopeEventListener {
         ? this.filenameFormControl.value
         : this.tracePipeline.getDownloadArchiveFilename()
     }.zip`;
-    await this.downloadTraces(archiveBlob, archiveFilename);
+    this.downloadTraces(archiveBlob, archiveFilename);
     progressListener.onOperationFinished(true);
   }
 
@@ -568,15 +569,9 @@ export class AppComponent implements WinscopeEventListener {
     });
   }
 
-  async downloadTraces(blob: Blob, filename: string) {
-    const a = document.createElement('a');
-    document.body.appendChild(a);
+  downloadTraces(blob: Blob, filename: string) {
     const url = window.URL.createObjectURL(blob);
-    a.href = url;
-    a.download = filename;
-    a.click();
-    window.URL.revokeObjectURL(url);
-    document.body.removeChild(a);
+    Download.fromUrl(url, filename);
   }
 
   async onWinscopeEvent(event: WinscopeEvent) {
