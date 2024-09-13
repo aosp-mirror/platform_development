@@ -265,7 +265,7 @@ import {UploadTracesComponent} from './upload_traces_component';
         flex-direction: column;
         flex: 1;
         overflow: auto;
-        height: 820px;
+        height: 870px;
       }
       .horizontal-align {
         justify-content: center;
