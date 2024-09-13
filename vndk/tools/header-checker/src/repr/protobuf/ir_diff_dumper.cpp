@@ -327,6 +327,11 @@ CompatibilityStatusIR ProtobufIRDiffDumper::GetCompatibilityStatusIR() {
     combined_status = combined_status | CompatibilityStatusIR::ElfIncompatible;
   }
 
+  if (diff_tu_->added_elf_functions().size() != 0 ||
+      diff_tu_->added_elf_objects().size() != 0) {
+    combined_status = combined_status | CompatibilityStatusIR::ElfExtension;
+  }
+
   return combined_status;
 }
 

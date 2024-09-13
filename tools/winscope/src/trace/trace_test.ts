@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 
+import {TIME_UNIT_TO_NANO} from 'common/time_units';
+import {ParserBuilder} from 'test/unit/parser_builder';
 import {TimestampConverterUtils} from 'test/unit/timestamp_converter_utils';
 import {TraceBuilder} from 'test/unit/trace_builder';
 import {TraceUtils} from 'test/unit/trace_utils';
@@ -1370,5 +1372,67 @@ describe('Trace', () => {
       .setTimestamps([TimestampConverterUtils.makeZeroTimestamp()])
       .build();
     expect(trace.isDumpWithoutTimestamp()).toBeTrue();
+  });
+
+  it('updates corruptedState on failure to parse entry', async () => {
+    const trace = new TraceBuilder<string>()
+      .setParser(
+        new ParserBuilder<string>()
+          .setIsCorrupted(true)
+          .setEntries(['entry-0'])
+          .setTimestamps([TimestampConverterUtils.makeZeroTimestamp()])
+          .build(),
+      )
+      .build();
+    expect(trace.isCorrupted()).toBeFalse();
+    expect(trace.getCorruptedReason()).toBeUndefined();
+
+    expectAsync(trace.getEntry(0).getValue()).toBeRejected();
+    try {
+      await trace.getEntry(0).getValue();
+    } catch (e) {
+      expect(trace.isCorrupted()).toBeTrue();
+      expect(trace.getCorruptedReason()).toEqual(
+        'Cannot parse entry at index 0',
+      );
+    }
+  });
+
+  it('spansMultipleDates()', () => {
+    const emptyTrace = new TraceBuilder<string>()
+      .setEntries([])
+      .setTimestamps([])
+      .build();
+    expect(emptyTrace.spansMultipleDates()).toBeFalse();
+
+    const traceWithElapsedTimestamps = new TraceBuilder<string>()
+      .setEntries(['entry-0', 'entry-1'])
+      .setTimestamps([
+        TimestampConverterUtils.makeElapsedTimestamp(0n),
+        TimestampConverterUtils.makeElapsedTimestamp(
+          BigInt(TIME_UNIT_TO_NANO.d),
+        ),
+      ])
+      .build();
+    expect(traceWithElapsedTimestamps.spansMultipleDates()).toBeFalse();
+
+    const traceWithRealTimestampsOneDate = new TraceBuilder<string>()
+      .setEntries(['entry-0', 'entry-1'])
+      .setTimestamps([time10, time15])
+      .build();
+    expect(traceWithRealTimestampsOneDate.spansMultipleDates()).toBeFalse();
+
+    const traceWitMultipleDates = new TraceBuilder<string>()
+      .setEntries(['entry-0', 'entry-1'])
+      .setTimestamps([
+        TimestampConverterUtils.makeRealTimestamp(
+          BigInt(TIME_UNIT_TO_NANO.h * 23),
+        ),
+        TimestampConverterUtils.makeRealTimestamp(
+          BigInt(TIME_UNIT_TO_NANO.h * 25),
+        ),
+      ])
+      .build();
+    expect(traceWitMultipleDates.spansMultipleDates()).toBeTrue();
   });
 });

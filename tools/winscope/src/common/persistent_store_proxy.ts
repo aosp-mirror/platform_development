@@ -14,13 +14,15 @@
  * limitations under the License.
  */
 
+import {Store} from './store';
+
 export class PersistentStoreProxy {
   static new<T extends object>(
     key: string,
     defaultState: T,
-    storage: Storage,
+    storage: Store,
   ): T {
-    const storedState = JSON.parse(storage.getItem(key) ?? '{}');
+    const storedState = JSON.parse(storage.get(key) ?? '{}', parseMap);
     const currentState = mergeDeep({}, structuredClone(defaultState));
     mergeDeepKeepingStructure(currentState, storedState);
     return wrapWithPersistentStoreProxy(key, currentState, storage) as T;
@@ -30,7 +32,7 @@ export class PersistentStoreProxy {
 function wrapWithPersistentStoreProxy(
   storeKey: string,
   object: object,
-  storage: Storage,
+  storage: Store,
   baseObject: object = object,
 ): object {
   const updatableProps: string[] = [];
@@ -39,6 +41,7 @@ function wrapWithPersistentStoreProxy(
     if (
       typeof value === 'string' ||
       typeof value === 'boolean' ||
+      typeof value === 'number' ||
       value === undefined
     ) {
       if (!Array.isArray(object)) {
@@ -53,20 +56,32 @@ function wrapWithPersistentStoreProxy(
       );
     }
   }
-
   const proxyObj = new Proxy(object, {
     set: (target, prop, newValue) => {
       if (typeof prop === 'symbol') {
         throw new Error("Can't use symbol keys only strings");
       }
-      if (Array.isArray(target) && typeof prop === 'number') {
-        target[prop] = newValue;
-        storage.setItem(storeKey, JSON.stringify(baseObject));
+      if (
+        Array.isArray(target) &&
+        (typeof prop === 'number' || !Number.isNaN(Number(prop)))
+      ) {
+        target[Number(prop)] = newValue;
+        storage.add(storeKey, JSON.stringify(baseObject, stringifyMap));
+        return true;
+      }
+      if (!Array.isArray(target) && Array.isArray(newValue)) {
+        (target as any)[prop] = wrapWithPersistentStoreProxy(
+          storeKey,
+          newValue,
+          storage,
+          baseObject,
+        );
+        storage.add(storeKey, JSON.stringify(baseObject, stringifyMap));
         return true;
       }
       if (!Array.isArray(target) && updatableProps.includes(prop)) {
         (target as any)[prop] = newValue;
-        storage.setItem(storeKey, JSON.stringify(baseObject));
+        storage.add(storeKey, JSON.stringify(baseObject, stringifyMap));
         return true;
       }
       throw new Error(
@@ -126,4 +141,21 @@ function mergeDeep(target: any, ...sources: any): any {
   }
 
   return mergeDeep(target, ...sources);
+}
+
+export function stringifyMap(key: string, value: any) {
+  if (value instanceof Map) {
+    return {
+      type: 'Map',
+      value: [...value],
+    };
+  }
+  return value;
+}
+
+export function parseMap(key: string, value: any) {
+  if (value && value.type === 'Map') {
+    return new Map(value.value);
+  }
+  return value;
 }

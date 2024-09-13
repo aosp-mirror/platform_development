@@ -52,6 +52,7 @@ fun SceneTransitionLayoutBenchmarkScope.startDemoActivity(initialScene: String) 
                 addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK)
                 putExtra(StlDemoConstants.INITIAL_SCENE_EXTRA, initialScene)
                 putExtra(StlDemoConstants.FULLSCREEN_EXTRA, true)
+                putExtra(StlDemoConstants.DISABLE_RIPPLE_EXTRA, true)
             }
 
     val device = device()
@@ -72,11 +73,7 @@ fun SceneTransitionLayoutBenchmarkScope.setupSwipeFromScene(fromScene: String, t
     device.waitUntilGone(sceneSelector(toScene))
 }
 
-fun swipeFromScene(
-    fromScene: String,
-    toScene: String,
-    direction: Direction,
-) {
+fun swipeFromScene(fromScene: String, toScene: String, direction: Direction) {
     // Swipe in the given direction.
     val densityDpi = context().resources.configuration.densityDpi
     val density = densityDpi.toFloat() / DisplayMetrics.DENSITY_DEFAULT
@@ -84,11 +81,7 @@ fun swipeFromScene(
     val device = device()
     device
         .findObject(StlDemoConstants.ROOT_STL_SELECTOR)
-        .swipe(
-            direction,
-            /* percent= */ 0.9f,
-            /* speed= */ (swipeSpeed * density).roundToInt(),
-        )
+        .swipe(direction, /* percent= */ 0.9f, /* speed= */ (swipeSpeed * density).roundToInt())
 
     // Wait for fromScene to disappear.
     device.waitUntilGone(sceneSelector(fromScene))
@@ -101,10 +94,7 @@ fun swipeFromScene(
  * Navigate back to [previousScene] assuming that we are currently on [currentScene] and that going
  * back will land us at [previousScene].
  */
-fun navigateBackToPreviousScene(
-    previousScene: String,
-    currentScene: String,
-) {
+fun navigateBackToPreviousScene(previousScene: String, currentScene: String) {
     val device = device()
     device.waitUntilGone(sceneSelector(previousScene))
     device.waitForObject(sceneSelector(currentScene))
@@ -120,19 +110,13 @@ private fun context() = instrumentation().targetContext
 
 private fun device() = UiDevice.getInstance(instrumentation())
 
-private fun UiDevice.waitForObject(
-    selector: BySelector,
-    timeout: Long = 5_000,
-) {
+private fun UiDevice.waitForObject(selector: BySelector, timeout: Long = 5_000) {
     if (!wait(Until.hasObject(selector), timeout)) {
         error("Did not find $selector within $timeout ms")
     }
 }
 
-private fun UiDevice.waitUntilGone(
-    selector: BySelector,
-    timeout: Long = 5_000,
-) {
+private fun UiDevice.waitUntilGone(selector: BySelector, timeout: Long = 5_000) {
     if (!wait(Until.gone(selector), timeout)) {
         error("$selector is still there after waiting $timeout ms")
     }
@@ -148,14 +132,13 @@ object StlDemoConstants {
 
     internal const val INITIAL_SCENE_EXTRA = "initial_scene"
     internal const val FULLSCREEN_EXTRA = "fullscreen"
+    internal const val DISABLE_RIPPLE_EXTRA = "disable_ripple"
     internal val ROOT_STL_SELECTOR = By.res("SystemUiSceneTransitionLayout")
 }
 
 /** A scene whose key depends on whether we are using split scenes or not. */
-private class AdaptiveScene(
-    private val normalScene: String,
-    private val splitScene: String,
-) : ReadOnlyProperty<Any, String> {
+private class AdaptiveScene(private val normalScene: String, private val splitScene: String) :
+    ReadOnlyProperty<Any, String> {
     override fun getValue(thisRef: Any, property: KProperty<*>): String {
         val context = context()
         val density = Density(context)

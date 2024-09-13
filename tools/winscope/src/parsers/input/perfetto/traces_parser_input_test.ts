@@ -17,6 +17,7 @@
 import {assertDefined} from 'common/assert_utils';
 import {TimestampConverterUtils} from 'test/unit/timestamp_converter_utils';
 import {TraceBuilder} from 'test/unit/trace_builder';
+import {UserNotifierChecker} from 'test/unit/user_notifier_checker';
 import {UnitTestUtils} from 'test/unit/utils';
 import {CoarseVersion} from 'trace/coarse_version';
 import {CustomQueryType} from 'trace/custom_query';
@@ -26,12 +27,18 @@ import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
 
 describe('TracesParserInput', () => {
   let parser: Parser<PropertyTreeNode>;
+  let userNotifierChecker: UserNotifierChecker;
 
-  beforeAll(async () => {
+  beforeAll(() => {
+    userNotifierChecker = new UserNotifierChecker();
+  });
+
+  beforeEach(async () => {
     jasmine.addCustomEqualityTester(UnitTestUtils.timestampEqualityTester);
     parser = (await UnitTestUtils.getTracesParser([
       'traces/perfetto/input-events.perfetto-trace',
     ])) as Parser<PropertyTreeNode>;
+    userNotifierChecker.reset();
   });
 
   it('has expected trace type', () => {
@@ -40,6 +47,10 @@ describe('TracesParserInput', () => {
 
   it('has expected coarse version', () => {
     expect(parser.getCoarseVersion()).toEqual(CoarseVersion.LATEST);
+  });
+
+  it('has expected descriptors', () => {
+    expect(parser.getDescriptors()).toEqual(['input-events.perfetto-trace']);
   });
 
   it('provides timestamps', () => {
@@ -81,5 +92,18 @@ describe('TracesParserInput', () => {
       .customQuery(CustomQueryType.VSYNCID);
     const values = entries.map((entry) => entry.getValue());
     expect(values).toEqual([89113n, 89113n, 89114n]);
+    userNotifierChecker.expectNone();
+  });
+
+  it('supports VSYNCID custom query with missing vsync_ids', async () => {
+    const missingVsyncIdsParser = (await UnitTestUtils.getTracesParser([
+      'traces/perfetto/input-missing-vsync-ids.perfetto-trace',
+    ])) as Parser<PropertyTreeNode>;
+    const trace = new TraceBuilder()
+      .setType(TraceType.INPUT_EVENT_MERGED)
+      .setParser(missingVsyncIdsParser)
+      .build();
+    const entries = await trace.customQuery(CustomQueryType.VSYNCID);
+    expect(entries).toHaveSize(missingVsyncIdsParser.getLengthEntries());
   });
 });

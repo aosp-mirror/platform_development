@@ -23,8 +23,10 @@ import {MatTooltipModule} from '@angular/material/tooltip';
 import {FilesSource} from 'app/files_source';
 import {TracePipeline} from 'app/trace_pipeline';
 import {assertDefined} from 'common/assert_utils';
-import {UserNotificationsListenerStub} from 'messaging/user_notifications_listener_stub';
+import {TimestampConverterUtils} from 'test/unit/timestamp_converter_utils';
+import {TraceBuilder} from 'test/unit/trace_builder';
 import {UnitTestUtils} from 'test/unit/utils';
+import {Traces} from 'trace/traces';
 import {LoadProgressComponent} from './load_progress_component';
 import {UploadTracesComponent} from './upload_traces_component';
 
@@ -169,6 +171,27 @@ describe('UploadTracesComponent', () => {
     expect((viewTracesButton as HTMLButtonElement).disabled).toBeTrue();
   });
 
+  it('shows error elements for corrupted traces', async () => {
+    const corruptedTrace = new TraceBuilder<string>()
+      .setEntries(['entry-0'])
+      .setTimestamps([TimestampConverterUtils.makeZeroTimestamp()])
+      .build();
+    corruptedTrace.setCorruptedState(true);
+    const traces = new Traces();
+    traces.addTrace(corruptedTrace);
+    spyOn(assertDefined(component.tracePipeline), 'getTraces').and.returnValue(
+      traces,
+    );
+    fixture.detectChanges();
+
+    const viewTracesButton = assertDefined(
+      htmlElement.querySelector<HTMLButtonElement>('.load-btn'),
+    );
+
+    expect(htmlElement.querySelector('.trace-error-icon')).toBeTruthy();
+    expect(viewTracesButton.disabled).toBeTrue();
+  });
+
   it('emits download traces event', async () => {
     await loadFiles([validSfFile]);
     fixture.detectChanges();
@@ -185,11 +208,6 @@ describe('UploadTracesComponent', () => {
   async function loadFiles(files: File[]) {
     const tracePipeline = assertDefined(component.tracePipeline);
     tracePipeline.clear();
-    await tracePipeline.loadFiles(
-      files,
-      FilesSource.TEST,
-      new UserNotificationsListenerStub(),
-      undefined,
-    );
+    await tracePipeline.loadFiles(files, FilesSource.TEST, undefined);
   }
 });

@@ -71,8 +71,8 @@ object NotificationContent {
                 visibilityThreshold = 0.5f,
             )
 
-        overscroll(Notification.Scenes.Collapsed, Orientation.Vertical)
-        overscroll(Notification.Scenes.Expanded, Orientation.Vertical)
+        overscrollDisabled(Notification.Scenes.Collapsed, Orientation.Vertical)
+        overscrollDisabled(Notification.Scenes.Expanded, Orientation.Vertical)
 
         from(Notification.Scenes.Expanded, to = Notification.Scenes.Collapsed) {
             spec = tween(500)
@@ -86,7 +86,7 @@ object NotificationContent {
 fun SceneScope.CollapsedNotificationContent(
     i: Int,
     textMeasurer: TextMeasurer,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     Row(
         modifier.height(80.dp).padding(horizontal = 20.dp),
@@ -163,10 +163,7 @@ private fun SceneScope.Icon(icon: ImageVector, modifier: Modifier = Modifier) {
 }
 
 @Composable
-private fun SceneScope.Chevron(
-    rotate: Boolean,
-    modifier: Modifier = Modifier,
-) {
+private fun SceneScope.Chevron(rotate: Boolean, modifier: Modifier = Modifier) {
     val key = NotificationContent.Elements.Chevron
     Element(key, modifier) {
         val rotation by

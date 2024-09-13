@@ -38,8 +38,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.android.compose.animation.scene.SceneScope
-import com.android.compose.animation.scene.TransitionState
 import com.android.compose.animation.scene.animateSceneFloatAsState
+import com.android.compose.animation.scene.content.state.TransitionState
 import kotlin.math.ceil
 import kotlin.math.roundToInt
 import kotlinx.coroutines.flow.first
@@ -74,18 +74,15 @@ fun SceneScope.QuickSettingsPager(
                 animateSceneFloatAsState(
                     1f,
                     QuickSettingsGrid.Values.Expansion,
-                    canOverflow = false
+                    canOverflow = false,
                 )
 
-            HorizontalPager(
-                pagerState,
-                Modifier.fillMaxWidth(),
-            ) { page ->
+            HorizontalPager(pagerState, Modifier.fillMaxWidth()) { page ->
                 val firstTileIndex = page * nTilesPerPage
                 QuickSettingsGrid(
                     tiles.subList(
                         firstTileIndex,
-                        minOf(tiles.size, firstTileIndex + nTilesPerPage)
+                        minOf(tiles.size, firstTileIndex + nTilesPerPage),
                     ),
                     nColumns,
                     isExpanded = true,
@@ -102,7 +99,7 @@ fun SceneScope.QuickSettingsPager(
             pagerState,
             activeColor,
             inactiveColor,
-            Modifier.align(Alignment.CenterHorizontally)
+            Modifier.align(Alignment.CenterHorizontally),
         )
     }
 }

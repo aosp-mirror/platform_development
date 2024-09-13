@@ -16,6 +16,7 @@
 
 import {assertDefined} from 'common/assert_utils';
 import {PersistentStoreProxy} from 'common/persistent_store_proxy';
+import {Store} from 'common/store';
 import {Timestamp} from 'common/time';
 import {WinscopeEvent, WinscopeEventType} from 'messaging/winscope_event';
 import {Trace, TraceEntry} from 'trace/trace';
@@ -41,10 +42,11 @@ import {VISIBLE_CHIP} from './chip';
 import {HierarchyPresenter} from './hierarchy_presenter';
 import {UpdateSfSubtreeDisplayNames} from './operations/update_sf_subtree_display_names';
 import {PropertiesPresenter} from './properties_presenter';
+import {TextFilter} from './text_filter';
 import {UiHierarchyTreeNode} from './ui_hierarchy_tree_node';
 import {UiTreeUtils} from './ui_tree_utils';
 
-export abstract class AbstractPresenterInputMethod extends AbstractHierarchyViewerPresenter {
+export abstract class AbstractPresenterInputMethod extends AbstractHierarchyViewerPresenter<ImeUiData> {
   protected getHierarchyTreeNameStrategy = (
     entry: TraceEntry<HierarchyTreeNode>,
     tree: HierarchyTreeNode,
@@ -72,6 +74,11 @@ export abstract class AbstractPresenterInputMethod extends AbstractHierarchyView
       },
       this.storage,
     ),
+    PersistentStoreProxy.new<TextFilter>(
+      'ImeHierarchyFilter',
+      new TextFilter('', []),
+      this.storage,
+    ),
     [],
     true,
     false,
@@ -94,6 +101,11 @@ export abstract class AbstractPresenterInputMethod extends AbstractHierarchyView
       },
       this.storage,
     ),
+    PersistentStoreProxy.new<TextFilter>(
+      'ImePropertiesFilter',
+      new TextFilter('', []),
+      this.storage,
+    ),
     [],
   );
   protected override multiTraceType = undefined;
@@ -108,8 +120,8 @@ export abstract class AbstractPresenterInputMethod extends AbstractHierarchyView
   constructor(
     trace: Trace<HierarchyTreeNode>,
     traces: Traces,
-    storage: Storage,
-    notifyViewCallback: NotifyHierarchyViewCallbackType,
+    storage: Store,
+    notifyViewCallback: NotifyHierarchyViewCallbackType<ImeUiData>,
   ) {
     super(
       trace,
@@ -124,6 +136,7 @@ export abstract class AbstractPresenterInputMethod extends AbstractHierarchyView
   }
 
   async onAppEvent(event: WinscopeEvent) {
+    await this.handleCommonWinscopeEvents(event);
     await event.visit(
       WinscopeEventType.TRACE_POSITION_UPDATE,
       async (event) => {
@@ -172,6 +185,14 @@ export abstract class AbstractPresenterInputMethod extends AbstractHierarchyView
             }
           }
         }
+        this.refreshUIData();
+      },
+    );
+    await event.visit(
+      WinscopeEventType.FILTER_PRESET_APPLY_REQUEST,
+      async (event) => {
+        const filterPresetName = event.name;
+        await this.applyPresetConfig(filterPresetName);
         this.refreshUIData();
       },
     );
@@ -368,13 +389,9 @@ export abstract class AbstractPresenterInputMethod extends AbstractHierarchyView
   }
 
   private refreshUIData() {
-    this.refreshHierarchyViewerUiData(
-      new ImeUiData(
-        this.imeTrace.type as ImeTraceType,
-        this.hierarchyTableProperties,
-        this.additionalProperties,
-      ),
-    );
+    this.uiData.hierarchyTableProperties = this.hierarchyTableProperties;
+    this.uiData.additionalProperties = this.additionalProperties;
+    this.refreshHierarchyViewerUiData();
   }
 
   protected abstract getHierarchyTableProperties(): TableProperties;

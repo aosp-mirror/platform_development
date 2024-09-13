@@ -35,6 +35,7 @@ import {Filter} from './operations/filter';
 import {FlattenChildren} from './operations/flatten_children';
 import {SimplifyNames} from './operations/simplify_names';
 import {PropertiesPresenter} from './properties_presenter';
+import {TextFilter} from './text_filter';
 import {UiTreeFormatter} from './ui_tree_formatter';
 
 export type GetHierarchyTreeNameType = (
@@ -43,7 +44,7 @@ export type GetHierarchyTreeNameType = (
 ) => string;
 
 export class HierarchyPresenter {
-  private hierarchyFilter: TreeNodeFilter = UiTreeUtils.makeIdFilter('');
+  private hierarchyFilter: TreeNodeFilter;
   private pinnedItems: UiHierarchyTreeNode[] = [];
   private pinnedIds: string[] = [];
 
@@ -74,6 +75,7 @@ export class HierarchyPresenter {
 
   constructor(
     private userOptions: UserOptions,
+    private textFilter: TextFilter,
     private denylistProperties: string[],
     private showHeadings: boolean,
     private forceSelectFirstNode: boolean,
@@ -81,7 +83,12 @@ export class HierarchyPresenter {
     private customOperations?: Array<
       [TraceType, Array<Operation<UiHierarchyTreeNode>>]
     >,
-  ) {}
+  ) {
+    this.hierarchyFilter = UiTreeUtils.makeNodeFilter(
+      textFilter.filterString,
+      textFilter.flags,
+    );
+  }
 
   getUserOptions(): UserOptions {
     return this.userOptions;
@@ -321,12 +328,20 @@ export class HierarchyPresenter {
       );
   }
 
-  async applyHierarchyFilterChange(filterString: string) {
-    this.hierarchyFilter = UiTreeUtils.makeIdFilter(filterString);
+  async applyHierarchyFilterChange(textFilter: TextFilter) {
+    this.textFilter = textFilter;
+    this.hierarchyFilter = UiTreeUtils.makeNodeFilter(
+      textFilter.filterString,
+      textFilter.flags,
+    );
     this.currentFormattedTrees =
       await this.formatHierarchyTreesAndUpdatePinnedItems(
         this.currentHierarchyTrees,
       );
+  }
+
+  getTextFilter(): TextFilter {
+    return this.textFilter;
   }
 
   applyPinnedItemChange(pinnedItem: UiHierarchyTreeNode) {
@@ -336,9 +351,20 @@ export class HierarchyPresenter {
         (pinned) => pinned.id !== pinnedId,
       );
     } else {
-      this.pinnedItems.push(pinnedItem);
+      // Angular change detection requires new array as input
+      this.pinnedItems = this.pinnedItems.concat([pinnedItem]);
     }
     this.updatePinnedIds(pinnedId);
+  }
+
+  clear() {
+    this.previousEntries = undefined;
+    this.previousHierarchyTrees = undefined;
+    this.currentEntries = undefined;
+    this.currentHierarchyTrees = undefined;
+    this.currentHierarchyTreeNames = undefined;
+    this.currentFormattedTrees = undefined;
+    this.selectedHierarchyTree = undefined;
   }
 
   private updatePinnedIds(newId: string) {

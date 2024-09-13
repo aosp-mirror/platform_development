@@ -1,0 +1,37 @@
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="wrap_content"
+    android:layout_height="match_parent"
+    android:layout_gravity="center"
+    android:gravity="center"
+    android:orientation="vertical"
+    android:padding="10dp">
+
+    <Button
+        android:id="@+id/start_opted_out_activity"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:onClick="onStartOptedOutActivitySelected"
+        android:text="@string/start_opted_out_activity" />
+
+    <Button
+        android:id="@+id/start_activity"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:onClick="onStartBlockedActivitySelected"
+        android:text="@string/start_blocked_activity" />
+
+    <Button
+        android:id="@+id/start_activity_for_result"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:onClick="onStartBlockedActivityForResultSelected"
+        android:text="@string/start_blocked_activity_for_result" />
+
+    <Button
+        android:id="@+id/secure_window_demo"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:onClick="onStartSecureWindowDemo"
+        android:text="@string/secure_window_demo" />
+
+</LinearLayout>

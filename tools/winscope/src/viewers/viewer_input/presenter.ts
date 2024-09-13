@@ -15,28 +15,40 @@
  */
 
 import {assertDefined} from 'common/assert_utils';
+import {PersistentStoreProxy} from 'common/persistent_store_proxy';
+import {Store} from 'common/store';
+import {TabbedViewSwitchRequest} from 'messaging/winscope_event';
 import {CustomQueryType} from 'trace/custom_query';
-import {Trace} from 'trace/trace';
+import {Trace, TraceEntry} from 'trace/trace';
 import {Traces} from 'trace/traces';
 import {TraceType} from 'trace/trace_type';
-import {DEFAULT_PROPERTY_FORMATTER} from 'trace/tree_node/formatters';
+import {HierarchyTreeNode} from 'trace/tree_node/hierarchy_tree_node';
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
-import {DEFAULT_PROPERTY_TREE_NODE_FACTORY} from 'trace/tree_node/property_tree_node_factory';
-import {AbstractLogViewerPresenter} from 'viewers/common/abstract_log_viewer_presenter';
+import {
+  AbstractLogViewerPresenter,
+  NotifyLogViewCallbackType,
+} from 'viewers/common/abstract_log_viewer_presenter';
+import {VISIBLE_CHIP} from 'viewers/common/chip';
 import {LogPresenter} from 'viewers/common/log_presenter';
 import {PropertiesPresenter} from 'viewers/common/properties_presenter';
+import {RectsPresenter} from 'viewers/common/rects_presenter';
 import {LogField, LogFieldType} from 'viewers/common/ui_data_log';
+import {UI_RECT_FACTORY} from 'viewers/common/ui_rect_factory';
+import {UserOptions} from 'viewers/common/user_options';
 import {ViewerEvents} from 'viewers/common/viewer_events';
+import {
+  convertRectIdToLayerorDisplayName,
+  makeDisplayIdentifiers,
+} from 'viewers/viewer_surface_flinger/presenter';
+import {DispatchEntryFormatter} from './operations/dispatch_entry_formatter';
 import {InputEntry, UiData} from './ui_data';
-
-type NotifyViewCallbackType = (uiData: UiData) => void;
 
 enum InputEventType {
   KEY,
   MOTION,
 }
 
-export class Presenter extends AbstractLogViewerPresenter {
+export class Presenter extends AbstractLogViewerPresenter<UiData> {
   static readonly FIELD_TYPES = [
     LogFieldType.INPUT_TYPE,
     LogFieldType.INPUT_SOURCE,
@@ -49,24 +61,57 @@ export class Presenter extends AbstractLogViewerPresenter {
   static readonly DENYLIST_DISPATCH_PROPERTIES = ['eventId'];
 
   private readonly traces: Traces;
+  private readonly surfaceFlingerTrace: Trace<HierarchyTreeNode> | undefined;
   protected override uiData: UiData = UiData.createEmpty();
   private allEntries: InputEntry[] | undefined;
 
   private readonly layerIdToName = new Map<number, string>();
   private readonly allInputLayerIds = new Set<number>();
 
-  protected override logPresenter = new LogPresenter(false);
-  protected override propertiesPresenter = new PropertiesPresenter({}, []);
+  protected override logPresenter = new LogPresenter<InputEntry>();
+  protected override propertiesPresenter = new PropertiesPresenter(
+    {},
+    undefined,
+    [],
+  );
   protected dispatchPropertiesPresenter = new PropertiesPresenter(
     {},
+    undefined,
     Presenter.DENYLIST_DISPATCH_PROPERTIES,
+    [new DispatchEntryFormatter(this.layerIdToName)],
+  );
+  private readonly currentTargetWindowIds = new Set<string>();
+
+  private readonly rectsPresenter = new RectsPresenter(
+    PersistentStoreProxy.new<UserOptions>(
+      'InputWindowRectsOptions',
+      {
+        showOnlyWithContent: {
+          name: 'Has input',
+          icon: 'pan_tool_alt',
+          enabled: false,
+        },
+        showOnlyVisible: {
+          name: 'Show only',
+          chip: VISIBLE_CHIP,
+          enabled: true,
+        },
+      },
+      this.storage,
+    ),
+    (tree: HierarchyTreeNode) =>
+      UI_RECT_FACTORY.makeInputRects(tree, (id) =>
+        this.currentTargetWindowIds.has(id),
+      ),
+    makeDisplayIdentifiers,
+    convertRectIdToLayerorDisplayName,
   );
 
   constructor(
     traces: Traces,
     mergedInputEventTrace: Trace<PropertyTreeNode>,
-    private readonly storage: Storage,
-    private readonly notifyInputViewCallback: NotifyViewCallbackType,
+    private readonly storage: Store,
+    private readonly notifyInputViewCallback: NotifyLogViewCallbackType<UiData>,
   ) {
     super(
       mergedInputEventTrace,
@@ -74,6 +119,7 @@ export class Presenter extends AbstractLogViewerPresenter {
       UiData.createEmpty(),
     );
     this.traces = traces;
+    this.surfaceFlingerTrace = this.traces.getTrace(TraceType.SURFACE_FLINGER);
   }
 
   protected override async initializeIfNeeded() {
@@ -81,9 +127,8 @@ export class Presenter extends AbstractLogViewerPresenter {
       return;
     }
 
-    const sfTrace = this.traces.getTrace(TraceType.SURFACE_FLINGER);
-    if (sfTrace !== undefined) {
-      const layerMappings = await sfTrace.customQuery(
+    if (this.surfaceFlingerTrace !== undefined) {
+      const layerMappings = await this.surfaceFlingerTrace.customQuery(
         CustomQueryType.SF_LAYERS_ID_AND_NAME,
       );
       layerMappings.forEach(({id, name}) => this.layerIdToName.set(id, name));
@@ -102,7 +147,7 @@ export class Presenter extends AbstractLogViewerPresenter {
       },
     ]);
 
-    this.refreshUIData(UiData.createEmpty());
+    this.refreshUiData();
   }
 
   private async makeInputEntries(): Promise<InputEntry[]> {
@@ -127,17 +172,18 @@ export class Presenter extends AbstractLogViewerPresenter {
         const windowIdNode = dispatchEntry.getChildByName('windowId');
         const windowId = Number(windowIdNode?.getValue() ?? -1);
         this.allInputLayerIds.add(windowId);
-        // For now, add a new node to display the layer name in the dispatch properties view.
-        // TODO(b/332714237): Use a custom view to display dispatch properties.
-        const windowNameNode =
-          DEFAULT_PROPERTY_TREE_NODE_FACTORY.makeProtoProperty(
-            windowIdNode?.id ?? '',
-            'windowName',
-            this.getLayerDisplayName(windowId),
-          );
-        windowNameNode.setFormatter(DEFAULT_PROPERTY_FORMATTER);
-        dispatchEntry.addOrReplaceChild(windowNameNode);
       });
+
+      let sfEntry: TraceEntry<HierarchyTreeNode> | undefined;
+      if (this.surfaceFlingerTrace !== undefined && this.trace.hasFrameInfo()) {
+        const frame = entry.getFramesRange()?.start;
+        if (frame !== undefined) {
+          const sfFrame = this.surfaceFlingerTrace.getFrame(frame);
+          if (sfFrame.lengthEntries > 0) {
+            sfEntry = sfFrame.getEntry(0);
+          }
+        }
+      }
 
       entries.push(
         new InputEntry(
@@ -145,6 +191,7 @@ export class Presenter extends AbstractLogViewerPresenter {
           this.extractLogFields(eventTree, dispatchTree, type),
           eventTree,
           dispatchTree,
+          sfEntry,
         ),
       );
     }
@@ -250,7 +297,8 @@ export class Presenter extends AbstractLogViewerPresenter {
   protected override async updatePropertiesTree() {
     await super.updatePropertiesTree();
 
-    const tree = this.getDispatchTree();
+    const inputEntry = this.getCurrentEntry();
+    const tree = inputEntry?.dispatchPropertiesTree;
     this.dispatchPropertiesPresenter.setPropertiesTree(tree);
     await this.dispatchPropertiesPresenter.formatPropertiesTree(
       undefined,
@@ -259,9 +307,43 @@ export class Presenter extends AbstractLogViewerPresenter {
     );
     this.uiData.dispatchPropertiesTree =
       this.dispatchPropertiesPresenter.getFormattedTree();
+
+    await this.updateRects();
   }
 
-  private getDispatchTree(): PropertyTreeNode | undefined {
+  private async updateRects() {
+    if (this.surfaceFlingerTrace === undefined) {
+      return;
+    }
+    const inputEntry = this.getCurrentEntry();
+
+    this.currentTargetWindowIds.clear();
+    inputEntry?.dispatchPropertiesTree
+      ?.getAllChildren()
+      ?.forEach((dispatchEntry) => {
+        const windowId = dispatchEntry.getChildByName('windowId');
+        if (windowId !== undefined) {
+          this.currentTargetWindowIds.add(`${Number(windowId.getValue())}`);
+        }
+      });
+
+    if (inputEntry?.surfaceFlingerEntry !== undefined) {
+      const node = await inputEntry.surfaceFlingerEntry.getValue();
+      this.rectsPresenter.applyHierarchyTreesChange([
+        [this.surfaceFlingerTrace, [node]],
+      ]);
+      this.uiData.rectsToDraw = this.rectsPresenter.getRectsToDraw();
+      this.uiData.rectIdToShowState =
+        this.rectsPresenter.getRectIdToShowState();
+    } else {
+      this.uiData.rectsToDraw = [];
+      this.uiData.rectIdToShowState = undefined;
+    }
+    this.uiData.rectsUserOptions = this.rectsPresenter.getUserOptions();
+    this.uiData.displays = this.rectsPresenter.getDisplays();
+  }
+
+  private getCurrentEntry(): InputEntry | undefined {
     const entries = this.logPresenter.getFilteredEntries();
     const selectedIndex = this.logPresenter.getSelectedIndex();
     const currentIndex = this.logPresenter.getCurrentIndex();
@@ -269,7 +351,7 @@ export class Presenter extends AbstractLogViewerPresenter {
     if (index === undefined) {
       return undefined;
     }
-    return (entries[index] as InputEntry).dispatchPropertiesTree;
+    return entries[index];
   }
 
   override addEventListeners(htmlElement: HTMLElement) {
@@ -280,11 +362,47 @@ export class Presenter extends AbstractLogViewerPresenter {
       (event) =>
         this.onHighlightedPropertyChange((event as CustomEvent).detail.id),
     );
+
+    htmlElement.addEventListener(ViewerEvents.HighlightedIdChange, (event) =>
+      this.onHighlightedIdChange((event as CustomEvent).detail.id),
+    );
+
+    htmlElement.addEventListener(
+      ViewerEvents.RectsUserOptionsChange,
+      async (event) => {
+        await this.onRectsUserOptionsChange(
+          (event as CustomEvent).detail.userOptions,
+        );
+      },
+    );
+
+    htmlElement.addEventListener(ViewerEvents.RectsDblClick, async (event) => {
+      await this.onRectDoubleClick();
+    });
   }
 
   onHighlightedPropertyChange(id: string) {
     this.propertiesPresenter.applyHighlightedPropertyChange(id);
     this.dispatchPropertiesPresenter.applyHighlightedPropertyChange(id);
     this.uiData.highlightedProperty = id;
+    this.notifyViewChanged();
+  }
+
+  async onHighlightedIdChange(id: string) {
+    this.uiData.highlightedRect = id;
+    await this.updateRects();
+    this.notifyViewChanged();
+  }
+
+  async onRectsUserOptionsChange(userOptions: UserOptions) {
+    this.rectsPresenter.applyRectsUserOptionsChange(userOptions);
+    await this.updateRects();
+    this.notifyViewChanged();
+  }
+
+  async onRectDoubleClick() {
+    await this.emitAppEvent(
+      new TabbedViewSwitchRequest(assertDefined(this.surfaceFlingerTrace)),
+    );
   }
 }

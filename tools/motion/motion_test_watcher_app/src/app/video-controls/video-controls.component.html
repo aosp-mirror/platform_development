@@ -1,0 +1,42 @@
+<!--
+  ~ Copyright 2024 Google LLC
+  ~
+  ~ Licensed under the Apache License, Version 2.0 (the "License");
+  ~ you may not use this file except in compliance with the License.
+  ~ You may obtain a copy of the License at
+  ~
+  ~      http://www.apache.org/licenses/LICENSE-2.0
+  ~
+  ~ Unless required by applicable law or agreed to in writing, software
+  ~ distributed under the License is distributed on an "AS IS" BASIS,
+  ~ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  ~ See the License for the specific language governing permissions and
+  ~ limitations under the License.
+  -->
+
+<div class="toolbar">
+  <button mat-icon-button (click)="togglePlay()">
+    <mat-icon>{{ playStateIcon }}</mat-icon>
+  </button>
+
+  <div class="spacer"></div>
+  <div class="playbackRate">
+    <button mat-button [matMenuTriggerFor]="playbackRateMenu">
+      <mat-icon>speed</mat-icon>
+      {{ formatPlaybackRateLabel(playbackRate) }}
+    </button>
+
+    <mat-menu #playbackRateMenu="matMenu">
+      @for (rate of playbackRateOptions; track $index) {
+        <button mat-menu-item (click)="setPlaybackRate(rate)">
+          <span>{{ formatPlaybackRateLabel(rate) }}</span>
+        </button>
+      }
+    </mat-menu>
+  </div>
+
+  <button mat-icon-button (click)="toggleRepeat()" class="repeat">
+    <mat-icon>{{ repeatStateIcon }}</mat-icon>
+  </button>
+</div>
+<ng-keyboard-shortcuts [shortcuts]="shortcuts"></ng-keyboard-shortcuts>

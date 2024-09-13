@@ -49,10 +49,7 @@ object SmartSpace {
 }
 
 @Composable
-fun SceneScope.SmartSpace(
-    textColor: Color,
-    modifier: Modifier = Modifier,
-) {
+fun SceneScope.SmartSpace(textColor: Color, modifier: Modifier = Modifier) {
     Element(SmartSpace.Elements.SmartSpace, modifier) {
         val color = animateElementColorAsState(textColor, SmartSpace.Values.TextColor)
 
@@ -77,11 +74,7 @@ fun SceneScope.SmartSpace(
                         tint = color,
                     )
 
-                    Text(
-                        "13°C",
-                        color = color,
-                        fontSize = 14.sp,
-                    )
+                    Text("13°C", color = color, fontSize = 14.sp)
                 }
             }
         }

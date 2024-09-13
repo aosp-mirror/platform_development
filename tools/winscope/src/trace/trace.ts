@@ -15,7 +15,9 @@
  */
 
 import {ArrayUtils} from 'common/array_utils';
+import {assertDefined} from 'common/assert_utils';
 import {INVALID_TIME_NS, Timestamp} from 'common/time';
+import {TimestampUtils} from 'common/timestamp_utils';
 import {
   CustomQueryParamTypeMap,
   CustomQueryParserResultTypeMap,
@@ -94,7 +96,15 @@ export class TraceEntryLazy<T> extends TraceEntry<T> {
   }
 
   override async getValue(): Promise<T> {
-    return await this.parser.getEntry(this.index);
+    try {
+      return await this.parser.getEntry(this.index);
+    } catch (e) {
+      this.fullTrace.setCorruptedState(
+        true,
+        `Cannot parse entry at index ${this.index}`,
+      );
+      throw e;
+    }
   }
 }
 
@@ -129,6 +139,7 @@ export class Trace<T> {
   private frameMap?: FrameMap;
   private framesRange?: FramesRange;
   private corruptedState = false;
+  private corruptedReason: string | undefined;
 
   static fromParser<T>(parser: Parser<T>): Trace<T> {
     return new Trace(
@@ -456,20 +467,52 @@ export class Trace<T> {
     return this.framesRange;
   }
 
-  isDump() {
+  isDump(): boolean {
     return this.lengthEntries === 1;
   }
 
-  isDumpWithoutTimestamp() {
+  isDumpWithoutTimestamp(): boolean {
     return this.isDump() && !this.getEntry(0).hasValidTimestamp();
   }
 
-  isCorrupted() {
+  isCorrupted(): boolean {
     return this.corruptedState;
   }
 
-  setCorruptedState(value: boolean) {
+  getCorruptedReason(): string | undefined {
+    return this.corruptedReason;
+  }
+
+  setCorruptedState(value: boolean, reason?: string) {
     this.corruptedState = value;
+    this.corruptedReason = reason;
+  }
+
+  spansMultipleDates(): boolean {
+    if (this.lengthEntries > 0) {
+      let firstTs: string | undefined;
+      let i = 0;
+      while (firstTs === undefined && i < this.lengthEntries) {
+        const entry = this.getEntry(i);
+        if (entry.hasValidTimestamp()) {
+          firstTs = entry.getTimestamp().format();
+          break;
+        }
+        i++;
+      }
+      const firstDate = TimestampUtils.extractDateFromHumanTimestamp(
+        assertDefined(firstTs),
+      );
+      if (firstDate) {
+        const lastDate = TimestampUtils.extractDateFromHumanTimestamp(
+          this.getEntry(this.lengthEntries - 1)
+            .getTimestamp()
+            .format(),
+        );
+        return firstDate !== lastDate;
+      }
+    }
+    return false;
   }
 
   private getEntryInternal<

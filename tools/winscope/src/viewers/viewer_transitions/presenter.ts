@@ -31,7 +31,7 @@ import {LogField, LogFieldType} from 'viewers/common/ui_data_log';
 import {UpdateTransitionChangesNames} from './operations/update_transition_changes_names';
 import {TransitionsEntry, TransitionStatus, UiData} from './ui_data';
 
-export class Presenter extends AbstractLogViewerPresenter {
+export class Presenter extends AbstractLogViewerPresenter<UiData> {
   static readonly FIELD_TYPES = [
     LogFieldType.TRANSITION_ID,
     LogFieldType.TRANSITION_TYPE,
@@ -50,9 +50,10 @@ export class Presenter extends AbstractLogViewerPresenter {
   private windowTokenToTitle = new Map<string, string>();
 
   protected override keepCalculated = false;
-  protected override logPresenter = new LogPresenter(false, false);
+  protected override logPresenter = new LogPresenter<TransitionsEntry>(false);
   protected override propertiesPresenter = new PropertiesPresenter(
     {},
+    undefined,
     [],
     [
       new UpdateTransitionChangesNames(
@@ -65,7 +66,7 @@ export class Presenter extends AbstractLogViewerPresenter {
   constructor(
     trace: Trace<PropertyTreeNode>,
     traces: Traces,
-    notifyViewCallback: NotifyLogViewCallbackType,
+    notifyViewCallback: NotifyLogViewCallbackType<UiData>,
   ) {
     super(trace, notifyViewCallback, UiData.createEmpty());
     this.transitionTrace = trace;
@@ -100,7 +101,7 @@ export class Presenter extends AbstractLogViewerPresenter {
 
     this.logPresenter.setAllEntries(allEntries);
     this.logPresenter.setHeaders(Presenter.FIELD_TYPES);
-    this.refreshUIData(UiData.createEmpty());
+    this.refreshUiData();
     this.isInitialized = true;
   }
 
@@ -129,7 +130,12 @@ export class Presenter extends AbstractLogViewerPresenter {
       ++traceIndex
     ) {
       const entry = assertDefined(this.trace.getEntry(traceIndex));
-      const transitionNode = await entry.getValue();
+      let transitionNode: PropertyTreeNode;
+      try {
+        transitionNode = await entry.getValue();
+      } catch (e) {
+        continue;
+      }
       const wmDataNode = assertDefined(transitionNode.getChildByName('wmData'));
       const shellDataNode = assertDefined(
         transitionNode.getChildByName('shellData'),

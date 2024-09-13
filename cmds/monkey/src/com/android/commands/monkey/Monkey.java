@@ -16,6 +16,9 @@
 
 package com.android.commands.monkey;
 
+import static android.view.InputDevice.SOURCE_TOUCHSCREEN;
+import static android.view.MotionEvent.TOOL_TYPE_FINGER;
+
 import android.app.ActivityManager;
 import android.app.IActivityController;
 import android.app.IActivityManager;
@@ -23,15 +26,20 @@ import android.content.ComponentName;
 import android.content.Intent;
 import android.content.pm.IPackageManager;
 import android.content.pm.ResolveInfo;
+import android.hardware.display.DisplayManagerGlobal;
+import android.hardware.input.VirtualTouchEvent;
 import android.os.Build;
 import android.os.Debug;
 import android.os.Environment;
+import android.os.IBinder;
 import android.os.Process;
 import android.os.RemoteException;
 import android.os.ServiceManager;
 import android.os.StrictMode;
 import android.os.SystemClock;
+import android.view.Display;
 import android.view.IWindowManager;
+import android.view.MotionEvent;
 import android.view.Surface;
 
 import java.io.BufferedReader;
@@ -46,8 +54,8 @@ import java.io.Writer;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Arrays;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -59,6 +67,11 @@ import java.util.Set;
  * Application that injects random key events and other actions into the system.
  */
 public class Monkey {
+    static {
+        System.loadLibrary("monkey_jni");
+    }
+
+    private static native IBinder createNativeService(int width, int height);
 
     /**
      * Monkey Debugging/Dev Support
@@ -188,13 +201,18 @@ public class Monkey {
     /** Categories we are allowed to launch **/
     private ArrayList<String> mMainCategories = new ArrayList<String>();
 
-    /** Applications we can switch to, as well as their corresponding categories. */
+    /**
+     * Applications we can switch to, as well as their corresponding categories.
+     */
     private HashMap<ComponentName, String> mMainApps = new HashMap<>();
 
     /** The delay between event inputs **/
     long mThrottle = 0;
 
-    /** Whether to randomize each throttle (0-mThrottle ms) inserted between events. */
+    /**
+     * Whether to randomize each throttle (0-mThrottle ms) inserted between
+     * events.
+     */
     boolean mRandomizeThrottle = false;
 
     /** The number of iterations **/
@@ -205,6 +223,8 @@ public class Monkey {
 
     /** The random number generator **/
     Random mRandom = null;
+
+    private final IMonkey mMonkeyService = createMonkeyService();
 
     /** Dropped-event statistics **/
     long mDroppedKeyEvents = 0;
@@ -260,6 +280,15 @@ public class Monkey {
 
     public static String currentPackage;
 
+    private static IMonkey createMonkeyService() {
+        // Get the width and height of the touchscreen on the default display
+        Display display = DisplayManagerGlobal.getInstance().getRealDisplay(
+                Display.DEFAULT_DISPLAY);
+        final int width = display.getWidth();
+        final int height = display.getHeight();
+        return IMonkey.Stub.asInterface(createNativeService(width, height));
+    }
+
     /**
      * Monitor operations happening in the system.
      */
@@ -274,8 +303,8 @@ public class Monkey {
                 // around this region for the monkey to minimize
                 // harmless dropbox uploads from monkeys.
                 StrictMode.ThreadPolicy savedPolicy = StrictMode.allowThreadDiskWrites();
-                Logger.out.println("    // " + (allow ? "Allowing" : "Rejecting") + " start of "
-                        + intent + " in package " + pkg);
+                Logger.out.println("    // " + (allow ? "Allowing" : "Rejecting")
+                        + " start of " + intent + " in package " + pkg);
                 StrictMode.setThreadPolicy(savedPolicy);
             }
             currentPackage = pkg;
@@ -293,13 +322,11 @@ public class Monkey {
             // In case the activity is launching home and the default launcher
             // package is disabled, allow anyway to prevent ANR (see b/38121026)
             final Set<String> categories = intent.getCategories();
-            if (intent.getAction() == Intent.ACTION_MAIN
-                    && categories != null
+            if (intent.getAction() == Intent.ACTION_MAIN && categories != null
                     && categories.contains(Intent.CATEGORY_HOME)) {
                 try {
-                    final ResolveInfo resolveInfo =
-                            mPm.resolveIntent(intent, intent.getType(), 0,
-                                    ActivityManager.getCurrentUser());
+                    final ResolveInfo resolveInfo = mPm.resolveIntent(
+                            intent, intent.getType(), 0, ActivityManager.getCurrentUser());
                     final String launcherPackage = resolveInfo.activityInfo.packageName;
                     if (pkg.equals(launcherPackage)) {
                         return true;
@@ -315,8 +342,9 @@ public class Monkey {
         public boolean activityResuming(String pkg) {
             StrictMode.ThreadPolicy savedPolicy = StrictMode.allowThreadDiskWrites();
             Logger.out.println("    // activityResuming(" + pkg + ")");
-            boolean allow = MonkeyUtils.getPackageFilter().checkEnteringPackage(pkg)
-                    || (DEBUG_ALLOW_ANY_RESTARTS != 0);
+            boolean allow =
+                    MonkeyUtils.getPackageFilter().checkEnteringPackage(pkg)
+                            || (DEBUG_ALLOW_ANY_RESTARTS != 0);
             if (!allow) {
                 if (mVerbose > 0) {
                     Logger.out.println("    // " + (allow ? "Allowing" : "Rejecting")
@@ -328,9 +356,9 @@ public class Monkey {
             return allow;
         }
 
-        public boolean appCrashed(String processName, int pid,
-                String shortMsg, String longMsg,
-                long timeMillis, String stackTrace) {
+        public boolean appCrashed(String processName, int pid, String shortMsg,
+                                String longMsg, long timeMillis,
+                                String stackTrace) {
             StrictMode.ThreadPolicy savedPolicy = StrictMode.allowThreadDiskWrites();
             Logger.err.println("// CRASH: " + processName + " (pid " + pid + ")");
             Logger.err.println("// Short Msg: " + shortMsg);
@@ -350,7 +378,7 @@ public class Monkey {
                         if (!mIgnoreCrashes) {
                             mAbort = true;
                         }
-                        if (mRequestBugreport){
+                        if (mRequestBugreport) {
                             mRequestAppCrashBugreport = true;
                             mReportProcessName = processName;
                         }
@@ -365,7 +393,8 @@ public class Monkey {
             return 0;
         }
 
-        public int appNotResponding(String processName, int pid, String processStats) {
+        public int appNotResponding(String processName, int pid,
+                                    String processStats) {
             StrictMode.ThreadPolicy savedPolicy = StrictMode.allowThreadDiskWrites();
             Logger.err.println("// NOT RESPONDING: " + processName + " (pid " + pid + ")");
             Logger.err.println(processStats);
@@ -787,6 +816,80 @@ public class Monkey {
         }
     }
 
+    private int injectEvent(MonkeyEvent ev) {
+        if (ev instanceof MonkeyMotionEvent motion) {
+            final MotionEvent motionEvent = motion.getMotionEventForInjection();
+            if (motionEvent.isFromSource(SOURCE_TOUCHSCREEN)) {
+                return injectTouchEvent(motionEvent);
+            }
+        }
+        return ev.injectEvent(mWm, mAm, mVerbose);
+    }
+
+    private boolean writeTouchEvent(MotionEvent motion, int pointerIndex,
+                                    int action) throws RemoteException {
+        int pointerId = motion.getPointerId(pointerIndex);
+        return mMonkeyService.writeTouchEvent(
+            pointerId, TOOL_TYPE_FINGER, action, motion.getX(pointerIndex),
+            motion.getY(pointerIndex), motion.getPressure(pointerIndex),
+            motion.getTouchMajor(pointerIndex), motion.getEventTime());
+    }
+
+    private int injectTouchEvent(MotionEvent event) {
+        try {
+            boolean success = true;
+            switch (event.getActionMasked()) {
+                case MotionEvent.ACTION_DOWN:
+                case MotionEvent.ACTION_POINTER_DOWN: {
+                    // Send a single write
+                    int pointerIndex = event.getActionIndex();
+                    success &= writeTouchEvent(event, pointerIndex, VirtualTouchEvent.ACTION_DOWN);
+                    break;
+                }
+                case MotionEvent.ACTION_MOVE: {
+                    // Iterate through pointers and send them all!
+                    // This would currently result in multiple motion events to be sent, because
+                    // there's an EV_SYN being sent after each "writeTouchEvent". To avoid this,
+                    // we would ideally only send EV_SYN at the last call to "writeTouchEvent".
+                    // However, the current approach should be good enough, and batching
+                    // should help lump the events together, anyways.
+                    for (int pointerIndex = 0; pointerIndex < event.getPointerCount();
+                            pointerIndex++) {
+                        success &= writeTouchEvent(event, pointerIndex,
+                                VirtualTouchEvent.ACTION_MOVE);
+                    }
+                    break;
+                }
+                case MotionEvent.ACTION_UP:
+                case MotionEvent.ACTION_POINTER_UP: {
+                    // Send a single write
+                    int pointerIndex = event.getActionIndex();
+                    int resolvedAction = VirtualTouchEvent.ACTION_UP;
+                    if ((event.getFlags() & MotionEvent.FLAG_CANCELED) != 0) {
+                        resolvedAction = VirtualTouchEvent.ACTION_CANCEL;
+                    }
+                    success &= writeTouchEvent(event, pointerIndex, resolvedAction);
+                    break;
+                }
+                case MotionEvent.ACTION_CANCEL: {
+                    // Cancel all pointers!
+                    for (int pointerIndex = 0; pointerIndex < event.getPointerCount();
+                            pointerIndex++) {
+                        success &= writeTouchEvent(event, pointerIndex,
+                                                    VirtualTouchEvent.ACTION_CANCEL);
+                    }
+                    break;
+                }
+                default:
+                    throw new RuntimeException("Unhandled action " + event);
+            }
+            return success ? MonkeyEvent.INJECT_SUCCESS : MonkeyEvent.INJECT_FAIL;
+        } catch (RemoteException exc) {
+            exc.rethrowAsRuntimeException();
+        }
+        return MonkeyEvent.INJECT_FAIL;
+    }
+
     /**
      * Process the command-line options
      *
@@ -1019,6 +1122,7 @@ public class Monkey {
         }
 
         mWm = IWindowManager.Stub.asInterface(ServiceManager.getService("window"));
+
         if (mWm == null) {
             Logger.err.println("** Error: Unable to connect to window manager; is the system "
                     + "running?");
@@ -1208,7 +1312,7 @@ public class Monkey {
 
                 MonkeyEvent ev = mEventSource.getNextEvent();
                 if (ev != null) {
-                    int injectCode = ev.injectEvent(mWm, mAm, mVerbose);
+                    final int injectCode = injectEvent(ev);
                     if (injectCode == MonkeyEvent.INJECT_FAIL) {
                         Logger.out.println("    // Injection Failed");
                         if (ev instanceof MonkeyKeyEvent) {

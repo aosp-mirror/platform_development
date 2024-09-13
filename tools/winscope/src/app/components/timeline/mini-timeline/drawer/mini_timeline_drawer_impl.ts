@@ -17,7 +17,7 @@
 import {Color} from 'app/colors';
 import {Segment} from 'app/components/timeline/segment';
 import {TimelineUtils} from 'app/components/timeline/timeline_utils';
-import {Point} from 'common/geometry_types';
+import {Point} from 'common/geometry/point';
 import {MouseEventButton} from 'common/mouse_event_button';
 import {Padding} from 'common/padding';
 import {Timestamp} from 'common/time';
@@ -424,13 +424,17 @@ export class MiniTimelineDrawerImpl implements MiniTimelineDrawer {
 
   private fillActiveTimelineBackground(fromTop: number, lineHeight: number) {
     this.ctx.globalAlpha = 1.0;
-    this.ctx.fillStyle = this.inputGetter().isDarkMode ? '#696563' : '#eeeff0'; // Keep in sync with var(--drawer-block-primary) in material-theme.scss;
+    this.ctx.fillStyle = getComputedStyle(this.canvas).getPropertyValue(
+      '--selected-element-color',
+    );
     this.ctx.fillRect(0, fromTop, this.getUsableRange().to, lineHeight);
   }
 
   private fillHoverTimelineBackground(fromTop: number, lineHeight: number) {
     this.ctx.globalAlpha = 1.0;
-    this.ctx.fillStyle = this.inputGetter().isDarkMode ? '#4e5767' : '#E8F0FE'; // Keep in sync with var(--hover-element-color) in material-theme.scss;
+    this.ctx.fillStyle = getComputedStyle(this.canvas).getPropertyValue(
+      '--hover-element-color',
+    );
     this.ctx.fillRect(0, fromTop, this.getUsableRange().to, lineHeight);
   }
 

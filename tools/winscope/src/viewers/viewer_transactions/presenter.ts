@@ -16,6 +16,7 @@
 
 import {assertDefined} from 'common/assert_utils';
 import {PersistentStoreProxy} from 'common/persistent_store_proxy';
+import {Store} from 'common/store';
 import {Trace} from 'trace/trace';
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
 import {
@@ -29,7 +30,7 @@ import {UserOptions} from 'viewers/common/user_options';
 import {SetRootDisplayNames} from './operations/set_root_display_name';
 import {TransactionsEntry, TransactionsEntryType, UiData} from './ui_data';
 
-export class Presenter extends AbstractLogViewerPresenter {
+export class Presenter extends AbstractLogViewerPresenter<UiData> {
   private static readonly FIELD_TYPES = [
     LogFieldType.TRANSACTION_ID,
     LogFieldType.VSYNC_ID,
@@ -43,7 +44,7 @@ export class Presenter extends AbstractLogViewerPresenter {
   private isInitialized = false;
 
   protected override keepCalculated = true;
-  protected override logPresenter = new LogPresenter(true);
+  protected override logPresenter = new LogPresenter<TransactionsEntry>();
   protected override propertiesPresenter = new PropertiesPresenter(
     PersistentStoreProxy.new<UserOptions>(
       'TransactionsPropertyOptions',
@@ -60,14 +61,15 @@ export class Presenter extends AbstractLogViewerPresenter {
       },
       this.storage,
     ),
+    undefined,
     [],
     [new SetRootDisplayNames()],
   );
 
   constructor(
     trace: Trace<PropertyTreeNode>,
-    readonly storage: Storage,
-    notifyViewCallback: NotifyLogViewCallbackType,
+    readonly storage: Store,
+    notifyViewCallback: NotifyLogViewCallbackType<UiData>,
   ) {
     super(trace, notifyViewCallback, UiData.createEmpty());
   }
@@ -110,7 +112,7 @@ export class Presenter extends AbstractLogViewerPresenter {
 
     this.logPresenter.setAllEntries(allEntries);
     this.logPresenter.setFilters(filters);
-    this.refreshUIData(UiData.createEmpty());
+    this.refreshUiData();
     this.isInitialized = true;
   }
 

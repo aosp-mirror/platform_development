@@ -16,7 +16,13 @@
 
 import {assertDefined} from 'common/assert_utils';
 import {FunctionUtils} from 'common/function_utils';
-import {TracePositionUpdate, WinscopeEvent} from 'messaging/winscope_event';
+import {parseMap, stringifyMap} from 'common/persistent_store_proxy';
+import {Store} from 'common/store';
+import {
+  TracePositionUpdate,
+  WinscopeEvent,
+  WinscopeEventType,
+} from 'messaging/winscope_event';
 import {
   EmitEvent,
   WinscopeEventEmitter,
@@ -32,14 +38,17 @@ import {RectsPresenter} from 'viewers/common/rects_presenter';
 import {UiHierarchyTreeNode} from 'viewers/common/ui_hierarchy_tree_node';
 import {UserOptions} from 'viewers/common/user_options';
 import {HierarchyPresenter} from './hierarchy_presenter';
+import {PresetHierarchy} from './preset_hierarchy';
 import {RectShowState} from './rect_show_state';
+import {TextFilter} from './text_filter';
 import {UiDataHierarchy} from './ui_data_hierarchy';
 import {ViewerEvents} from './viewer_events';
 
-export type NotifyHierarchyViewCallbackType = (uiData: UiDataHierarchy) => void;
+export type NotifyHierarchyViewCallbackType<UiData> = (uiData: UiData) => void;
 
-export abstract class AbstractHierarchyViewerPresenter
-  implements WinscopeEventEmitter
+export abstract class AbstractHierarchyViewerPresenter<
+  UiData extends UiDataHierarchy,
+> implements WinscopeEventEmitter
 {
   protected emitWinscopeEvent: EmitEvent = FunctionUtils.DO_NOTHING_ASYNC;
   protected overridePropertiesTree: PropertyTreeNode | undefined;
@@ -53,9 +62,9 @@ export abstract class AbstractHierarchyViewerPresenter
   constructor(
     private readonly trace: Trace<HierarchyTreeNode> | undefined,
     protected readonly traces: Traces,
-    protected readonly storage: Readonly<Storage>,
-    private readonly notifyViewCallback: NotifyHierarchyViewCallbackType,
-    protected uiData: UiDataHierarchy,
+    protected readonly storage: Readonly<Store>,
+    private readonly notifyViewCallback: NotifyHierarchyViewCallbackType<UiData>,
+    protected readonly uiData: UiData,
   ) {
     this.copyUiDataAndNotifyView();
   }
@@ -87,10 +96,10 @@ export abstract class AbstractHierarchyViewerPresenter
     );
     htmlElement.addEventListener(
       ViewerEvents.HierarchyFilterChange,
-      async (event) =>
-        await this.onHierarchyFilterChange(
-          (event as CustomEvent).detail.filterString,
-        ),
+      async (event) => {
+        const detail: TextFilter = (event as CustomEvent).detail;
+        await this.onHierarchyFilterChange(detail);
+      },
     );
     htmlElement.addEventListener(
       ViewerEvents.PropertiesUserOptionsChange,
@@ -101,10 +110,10 @@ export abstract class AbstractHierarchyViewerPresenter
     );
     htmlElement.addEventListener(
       ViewerEvents.PropertiesFilterChange,
-      async (event) =>
-        await this.onPropertiesFilterChange(
-          (event as CustomEvent).detail.filterString,
-        ),
+      async (event) => {
+        const detail: TextFilter = (event as CustomEvent).detail;
+        await this.onPropertiesFilterChange(detail);
+      },
     );
     htmlElement.addEventListener(
       ViewerEvents.HighlightedNodeChange,
@@ -164,17 +173,14 @@ export abstract class AbstractHierarchyViewerPresenter
     this.copyUiDataAndNotifyView();
   }
 
-  async onHierarchyFilterChange(filterString: string) {
-    await this.hierarchyPresenter.applyHierarchyFilterChange(filterString);
+  async onHierarchyFilterChange(textFilter: TextFilter) {
+    await this.hierarchyPresenter.applyHierarchyFilterChange(textFilter);
     this.uiData.hierarchyTrees = this.hierarchyPresenter.getAllFormattedTrees();
     this.uiData.pinnedItems = this.hierarchyPresenter.getPinnedItems();
     this.copyUiDataAndNotifyView();
   }
 
   async onPropertiesUserOptionsChange(userOptions: UserOptions) {
-    if (!this.propertiesPresenter) {
-      return;
-    }
     this.propertiesPresenter.applyPropertiesUserOptionsChange(userOptions);
     await this.updatePropertiesTree();
     this.uiData.propertiesUserOptions =
@@ -183,11 +189,8 @@ export abstract class AbstractHierarchyViewerPresenter
     this.copyUiDataAndNotifyView();
   }
 
-  async onPropertiesFilterChange(filterString: string) {
-    if (!this.propertiesPresenter) {
-      return;
-    }
-    this.propertiesPresenter.applyPropertiesFilterChange(filterString);
+  async onPropertiesFilterChange(textFilter: TextFilter) {
+    this.propertiesPresenter.applyPropertiesFilterChange(textFilter);
     await this.updatePropertiesTree();
     this.uiData.propertiesTree = this.propertiesPresenter.getFormattedTree();
     this.copyUiDataAndNotifyView();
@@ -202,6 +205,58 @@ export abstract class AbstractHierarchyViewerPresenter
     this.uiData.rectsToDraw = this.rectsPresenter.getRectsToDraw();
     this.uiData.rectIdToShowState = this.rectsPresenter.getRectIdToShowState();
     this.copyUiDataAndNotifyView();
+  }
+
+  protected async handleCommonWinscopeEvents(event: WinscopeEvent) {
+    await event.visit(
+      WinscopeEventType.FILTER_PRESET_SAVE_REQUEST,
+      async (event) => {
+        this.saveConfigAsPreset(event.name);
+      },
+    );
+  }
+
+  protected saveConfigAsPreset(storeKey: string) {
+    const preset: PresetHierarchy = {
+      hierarchyUserOptions: this.uiData.hierarchyUserOptions,
+      hierarchyFilter: this.uiData.hierarchyFilter,
+      propertiesUserOptions: this.uiData.propertiesUserOptions,
+      propertiesFilter: this.uiData.propertiesFilter,
+      rectsUserOptions: this.uiData.rectsUserOptions,
+      rectIdToShowState: this.uiData.rectIdToShowState,
+    };
+    this.storage.add(storeKey, JSON.stringify(preset, stringifyMap));
+  }
+
+  protected async applyPresetConfig(storeKey: string) {
+    const preset = this.storage.get(storeKey);
+    if (preset) {
+      const parsedPreset: PresetHierarchy = JSON.parse(preset, parseMap);
+      await this.hierarchyPresenter.applyHierarchyUserOptionsChange(
+        parsedPreset.hierarchyUserOptions,
+      );
+      await this.hierarchyPresenter.applyHierarchyFilterChange(
+        parsedPreset.hierarchyFilter,
+      );
+
+      this.propertiesPresenter.applyPropertiesUserOptionsChange(
+        parsedPreset.propertiesUserOptions,
+      );
+      this.propertiesPresenter.applyPropertiesFilterChange(
+        parsedPreset.propertiesFilter,
+      );
+      await this.updatePropertiesTree();
+
+      if (this.rectsPresenter) {
+        this.rectsPresenter?.applyRectsUserOptionsChange(
+          assertDefined(parsedPreset.rectsUserOptions),
+        );
+        this.rectsPresenter?.updateRectShowStates(
+          parsedPreset.rectIdToShowState,
+        );
+      }
+      this.refreshHierarchyViewerUiData();
+    }
   }
 
   protected async applyTracePositionUpdate(event: TracePositionUpdate) {
@@ -226,10 +281,18 @@ export abstract class AbstractHierarchyViewerPresenter
       if (entry) entries.push(entry);
     }
 
-    await this.hierarchyPresenter.applyTracePositionUpdate(
-      entries,
-      this.highlightedItem,
-    );
+    try {
+      await this.hierarchyPresenter.applyTracePositionUpdate(
+        entries,
+        this.highlightedItem,
+      );
+    } catch (e) {
+      this.hierarchyPresenter.clear();
+      this.rectsPresenter?.clear();
+      this.propertiesPresenter.clear();
+      this.refreshHierarchyViewerUiData();
+      throw e;
+    }
 
     const propertiesOpts = this.propertiesPresenter.getUserOptions();
     const hasPreviousEntry = entries.some((e) => e.getIndex() > 0);
@@ -298,18 +361,21 @@ export abstract class AbstractHierarchyViewerPresenter
     }
   }
 
-  protected refreshHierarchyViewerUiData(uiData: UiDataHierarchy) {
-    this.uiData = uiData;
+  protected refreshHierarchyViewerUiData() {
     this.uiData.highlightedItem = this.highlightedItem;
     this.uiData.pinnedItems = this.hierarchyPresenter.getPinnedItems();
     this.uiData.hierarchyUserOptions = this.hierarchyPresenter.getUserOptions();
     this.uiData.hierarchyTrees = this.hierarchyPresenter.getAllFormattedTrees();
+    this.uiData.hierarchyFilter = this.hierarchyPresenter.getTextFilter();
 
     this.uiData.propertiesUserOptions =
       this.propertiesPresenter.getUserOptions();
     this.uiData.propertiesTree = this.propertiesPresenter.getFormattedTree();
     this.uiData.highlightedProperty =
       this.propertiesPresenter.getHighlightedProperty();
+    this.uiData.propertiesFilter = assertDefined(
+      this.propertiesPresenter.getTextFilter(),
+    );
 
     if (this.rectsPresenter) {
       this.uiData.rectsToDraw = this.rectsPresenter?.getRectsToDraw();
@@ -326,13 +392,6 @@ export abstract class AbstractHierarchyViewerPresenter
     return this.highlightedItem;
   }
 
-  private copyUiDataAndNotifyView() {
-    // Create a shallow copy of the data, otherwise the Angular OnPush change detection strategy
-    // won't detect the new input
-    const copy = Object.assign({}, this.uiData);
-    this.notifyViewCallback(copy);
-  }
-
   protected getEntryFormattedTimestamp(
     entry: TraceEntry<HierarchyTreeNode>,
   ): string {
@@ -340,6 +399,13 @@ export abstract class AbstractHierarchyViewerPresenter
       return 'Dump';
     }
     return entry.getTimestamp().format();
+  }
+
+  private copyUiDataAndNotifyView() {
+    // Create a shallow copy of the data, otherwise the Angular OnPush change detection strategy
+    // won't detect the new input
+    const copy = Object.assign({}, this.uiData);
+    this.notifyViewCallback(copy);
   }
 
   abstract onAppEvent(event: WinscopeEvent): Promise<void>;

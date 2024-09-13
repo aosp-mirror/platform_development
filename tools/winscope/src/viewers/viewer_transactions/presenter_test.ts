@@ -21,6 +21,7 @@ import {TraceBuilder} from 'test/unit/trace_builder';
 import {UnitTestUtils} from 'test/unit/utils';
 import {Parser} from 'trace/parser';
 import {Trace} from 'trace/trace';
+import {TraceType} from 'trace/trace_type';
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
 import {NotifyLogViewCallbackType} from 'viewers/common/abstract_log_viewer_presenter';
 import {AbstractLogViewerPresenterTest} from 'viewers/common/abstract_log_viewer_presenter_test';
@@ -29,17 +30,17 @@ import {
   LogFieldType,
   LogFieldValue,
 } from 'viewers/common/ui_data_log';
+import {UserOptions} from 'viewers/common/user_options';
 import {Presenter} from './presenter';
 import {TransactionsEntryType, UiData} from './ui_data';
 
-class PresenterTransactionsTest extends AbstractLogViewerPresenterTest {
+class PresenterTransactionsTest extends AbstractLogViewerPresenterTest<UiData> {
   private trace: Trace<PropertyTreeNode> | undefined;
   private positionUpdate: TracePositionUpdate | undefined;
   private secondPositionUpdate: TracePositionUpdate | undefined;
 
   override readonly shouldExecuteHeaderTests = false;
   override readonly shouldExecuteFilterTests = true;
-  override readonly shouldExecuteCurrentIndexTests = true;
   override readonly shouldExecutePropertiesTests = true;
 
   override readonly totalOutputEntries = 1647;
@@ -153,9 +154,7 @@ class PresenterTransactionsTest extends AbstractLogViewerPresenterTest {
         const notifyViewCallback = (newData: UiData) => {
           uiData = newData;
         };
-        presenter = await this.createPresenter(
-          notifyViewCallback as NotifyLogViewCallbackType,
-        );
+        presenter = await this.createPresenter(notifyViewCallback);
       });
 
       it('includes no op transitions', async () => {
@@ -178,6 +177,31 @@ class PresenterTransactionsTest extends AbstractLogViewerPresenterTest {
         }
       });
 
+      it('shows/hides defaults', async () => {
+        const userOptions: UserOptions = {
+          showDiff: {
+            name: 'Show diff',
+            enabled: true,
+          },
+          showDefaults: {
+            name: 'Show defaults',
+            enabled: true,
+          },
+        };
+
+        await presenter.onAppEvent(this.getPositionUpdate());
+        await presenter.onLogEntryClick(this.logEntryClickIndex);
+        expect(
+          assertDefined(uiData.propertiesTree).getAllChildren().length,
+        ).toEqual(6);
+
+        await presenter.onPropertiesUserOptionsChange(userOptions);
+        expect(uiData.propertiesUserOptions).toEqual(userOptions);
+        expect(
+          assertDefined(uiData.propertiesTree).getAllChildren().length,
+        ).toEqual(42);
+      });
+
       function getFieldValue(entry: LogEntry, logFieldName: LogFieldType) {
         return entry.fields.find((f) => f.type === logFieldName)?.value;
       }
@@ -197,17 +221,18 @@ class PresenterTransactionsTest extends AbstractLogViewerPresenterTest {
     );
   }
 
-  override createPresenterWithEmptyTrace(
-    callback: NotifyLogViewCallbackType,
-  ): Presenter {
+  override async createPresenterWithEmptyTrace(
+    callback: NotifyLogViewCallbackType<UiData>,
+  ): Promise<Presenter> {
     const emptyTrace = new TraceBuilder<PropertyTreeNode>()
+      .setType(TraceType.TRANSACTIONS)
       .setEntries([])
       .build();
     return new Presenter(emptyTrace, new InMemoryStorage(), callback);
   }
 
   override async createPresenter(
-    callback: NotifyLogViewCallbackType,
+    callback: NotifyLogViewCallbackType<UiData>,
   ): Promise<Presenter> {
     const presenter = new Presenter(
       assertDefined(this.trace),

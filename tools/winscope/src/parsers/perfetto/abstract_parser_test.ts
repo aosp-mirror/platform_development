@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 import {UnitTestUtils} from 'test/unit/utils';
+import {TraceType} from 'trace/trace_type';
 
 describe('Perfetto AbstractParser', () => {
   it('fails parsing if there are no trace entries', async () => {
@@ -21,5 +22,13 @@ describe('Perfetto AbstractParser', () => {
       'traces/perfetto/no_winscope_traces.perfetto-trace',
     );
     expect(parsers.length).toEqual(0);
+  });
+
+  it('has expected descriptors', async () => {
+    const parser = await UnitTestUtils.getPerfettoParser(
+      TraceType.SURFACE_FLINGER,
+      'traces/perfetto/layers_trace.perfetto-trace',
+    );
+    expect(parser.getDescriptors()).toEqual(['layers_trace.perfetto-trace']);
   });
 });

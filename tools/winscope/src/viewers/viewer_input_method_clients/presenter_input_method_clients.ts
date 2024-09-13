@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 import {PersistentStoreProxy} from 'common/persistent_store_proxy';
+import {Store} from 'common/store';
 import {Trace} from 'trace/trace';
 import {Traces} from 'trace/traces';
 import {TraceType} from 'trace/trace_type';
@@ -22,8 +23,10 @@ import {NotifyHierarchyViewCallbackType} from 'viewers/common/abstract_hierarchy
 import {AbstractPresenterInputMethod} from 'viewers/common/abstract_presenter_input_method';
 import {VISIBLE_CHIP} from 'viewers/common/chip';
 import {HierarchyPresenter} from 'viewers/common/hierarchy_presenter';
+import {ImeUiData} from 'viewers/common/ime_ui_data';
 import {UpdateSfSubtreeDisplayNames} from 'viewers/common/operations/update_sf_subtree_display_names';
 import {TableProperties} from 'viewers/common/table_properties';
+import {TextFilter} from 'viewers/common/text_filter';
 import {UserOptions} from 'viewers/common/user_options';
 import {UpdateDisplayNames} from './operations/update_display_names';
 
@@ -48,6 +51,11 @@ export class PresenterInputMethodClients extends AbstractPresenterInputMethod {
       },
       this.storage,
     ),
+    PersistentStoreProxy.new<TextFilter>(
+      'ImeHierarchyFilter',
+      new TextFilter('', []),
+      this.storage,
+    ),
     [],
     true,
     false,
@@ -60,8 +68,8 @@ export class PresenterInputMethodClients extends AbstractPresenterInputMethod {
   constructor(
     trace: Trace<HierarchyTreeNode>,
     traces: Traces,
-    storage: Storage,
-    notifyViewCallback: NotifyHierarchyViewCallbackType,
+    storage: Store,
+    notifyViewCallback: NotifyHierarchyViewCallbackType<ImeUiData>,
   ) {
     super(trace, traces, storage, notifyViewCallback);
   }

@@ -103,7 +103,7 @@ fun SceneScope.Lockscreen(
             Box(Modifier.padding(horizontal = 16.dp)) { mediaPlayer() }
         }
 
-        Box(Modifier.weight(1f).verticalNestedScrollToScene()) { notificationList() }
+        Box(Modifier.weight(1f)) { notificationList() }
 
         LockButton(
             isDismissable,
@@ -155,10 +155,7 @@ internal fun SceneScope.LockButton(
 }
 
 @Composable
-internal fun SceneScope.LockscreenCameraButton(
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
+internal fun SceneScope.LockscreenCameraButton(onClick: () -> Unit, modifier: Modifier = Modifier) {
     CameraButton(
         backgroundColor = MaterialTheme.colorScheme.surfaceBright,
         iconColor = MaterialTheme.colorScheme.onSurface,

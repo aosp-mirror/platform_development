@@ -140,6 +140,32 @@ bool ABIWrapper::SetupFunctionParameter(
   return true;
 }
 
+void ABIWrapper::SetupAvailabilityAttrs(repr::HasAvailabilityAttrs *decl_ir,
+                                        const clang::Decl *decl) {
+  for (const clang::AvailabilityAttr *attr :
+       decl->specific_attrs<clang::AvailabilityAttr>()) {
+    if (attr->getPlatform()->getName() !=
+        ast_contextp_->getTargetInfo().getPlatformName()) {
+      continue;
+    }
+    repr::AvailabilityAttrIR attr_ir;
+    clang::VersionTuple introduced = attr->getIntroduced();
+    if (!introduced.empty()) {
+      attr_ir.SetIntroduced(introduced.getMajor());
+    }
+    clang::VersionTuple deprecated = attr->getDeprecated();
+    if (!deprecated.empty()) {
+      attr_ir.SetDeprecated(deprecated.getMajor());
+    }
+    clang::VersionTuple obsoleted = attr->getObsoleted();
+    if (!obsoleted.empty()) {
+      attr_ir.SetObsoleted(obsoleted.getMajor());
+    }
+    attr_ir.SetUnavailable(attr->getUnavailable());
+    decl_ir->AddAvailabilityAttr(std::move(attr_ir));
+  }
+}
+
 static const clang::RecordDecl *GetAnonymousRecord(clang::QualType type) {
   const clang::Type *type_ptr = type.getTypePtr();
   assert(type_ptr != nullptr);
@@ -543,6 +569,7 @@ bool FunctionDeclWrapper::SetupFunction(repr::FunctionIR *functionp,
 
   functionp->SetReturnType(GetTypeUniqueId(return_type));
   functionp->SetAccess(AccessClangToIR(function_decl_->getAccess()));
+  SetupAvailabilityAttrs(functionp, function_decl_);
   return CreateBasicNamedAndTypedDecl(return_type, source_file) &&
       SetupFunctionParameters(functionp, source_file) &&
       SetupTemplateInfo(functionp, source_file);
@@ -607,9 +634,11 @@ bool RecordDeclWrapper::SetupRecordFields(repr::RecordTypeIR *recordp,
     uint64_t field_offset = record_layout.getFieldOffset(field_index);
     uint64_t bit_width =
         field->isBitField() ? field->getBitWidthValue(*ast_contextp_) : 0;
-    recordp->AddRecordField(repr::RecordFieldIR(
+    repr::RecordFieldIR record_field_ir(
         field_name, GetTypeUniqueId(field_type), field_offset,
-        AccessClangToIR(field->getAccess()), field->isBitField(), bit_width));
+        AccessClangToIR(field->getAccess()), field->isBitField(), bit_width);
+    SetupAvailabilityAttrs(&record_field_ir, *field);
+    recordp->AddRecordField(std::move(record_field_ir));
     field++;
     field_index++;
   }
@@ -720,7 +749,7 @@ repr::VTableComponentIR RecordDeclWrapper::SetupRecordVTableComponent(
         const clang::CXXMethodDecl *method_decl =
             vtable_component.getFunctionDecl();
         assert(method_decl != nullptr);
-        is_pure = method_decl->isPure();
+        is_pure = method_decl->isPureVirtual();
         switch (clang_component_kind) {
           case clang::VTableComponent::CK_FunctionPointer:
             kind = repr::VTableComponentIR::Kind::FunctionPointer;
@@ -819,6 +848,7 @@ bool RecordDeclWrapper::SetupRecordInfo(repr::RecordTypeIR *record_declp,
     record_declp->SetAnonymity(true);
   }
   record_declp->SetAccess(AccessClangToIR(record_decl_->getAccess()));
+  SetupAvailabilityAttrs(record_declp, record_decl_);
   return SetupRecordFields(record_declp, source_file) &&
       SetupCXXRecordInfo(record_declp, source_file);
 }
@@ -883,13 +913,16 @@ bool EnumDeclWrapper::SetupEnumFields(repr::EnumTypeIR *enump) {
   }
   clang::EnumDecl::enumerator_iterator enum_it = enum_decl_->enumerator_begin();
   while (enum_it != enum_decl_->enumerator_end()) {
-    std::string name = enum_it->getQualifiedNameAsString();
+    repr::EnumFieldIR enum_field_ir;
+    enum_field_ir.SetName(enum_it->getQualifiedNameAsString());
     const llvm::APSInt &value = enum_it->getInitVal();
     if (value.isUnsigned()) {
-      enump->AddEnumField(repr::EnumFieldIR(name, value.getZExtValue()));
+      enum_field_ir.SetUnsignedValue(value.getZExtValue());
     } else {
-      enump->AddEnumField(repr::EnumFieldIR(name, value.getSExtValue()));
+      enum_field_ir.SetSignedValue(value.getSExtValue());
     }
+    SetupAvailabilityAttrs(&enum_field_ir, *enum_it);
+    enump->AddEnumField(std::move(enum_field_ir));
     enum_it++;
   }
   return true;
@@ -905,6 +938,7 @@ bool EnumDeclWrapper::SetupEnum(repr::EnumTypeIR *enum_type,
   enum_type->SetSourceFile(source_file);
   enum_type->SetUnderlyingType(GetTypeUniqueId(enum_decl_->getIntegerType()));
   enum_type->SetAccess(AccessClangToIR(enum_decl_->getAccess()));
+  SetupAvailabilityAttrs(enum_type, enum_decl_);
   return SetupEnumFields(enum_type) &&
       CreateBasicNamedAndTypedDecl(enum_decl_->getIntegerType(), "");
 }
@@ -949,6 +983,7 @@ bool GlobalVarDeclWrapper::SetupGlobalVar(repr::GlobalVarIR *global_varp,
   global_varp->SetLinkerSetKey(mangled_name);
   global_varp->SetAccess(AccessClangToIR(global_var_decl_->getAccess()));
   global_varp->SetReferencedType(GetTypeUniqueId(global_var_decl_->getType()));
+  SetupAvailabilityAttrs(global_varp, global_var_decl_);
   return true;
 }
 

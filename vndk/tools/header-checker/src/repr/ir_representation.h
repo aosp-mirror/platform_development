@@ -18,6 +18,7 @@
 #include <list>
 #include <map>
 #include <memory>
+#include <optional>
 #include <set>
 #include <string>
 #include <unordered_map>
@@ -44,9 +45,14 @@ enum TextFormatIR {
 
 enum CompatibilityStatusIR {
   Compatible = 0,
+  // Changing classes or enums not referenced by functions or variables.
   UnreferencedChanges = 1,
+  // Adding symbols.
+  ElfExtension = 2,
+  // Adding functions, classes, class members, etc.
   Extension = 4,
   Incompatible = 8,
+  // Removing symbols.
   ElfIncompatible = 16
 };
 
@@ -153,6 +159,45 @@ class ReferencesOtherType {
 
  protected:
   std::string referenced_type_;
+};
+
+class AvailabilityAttrIR {
+ public:
+  void SetIntroduced(uint32_t version) { introduced_major_ = version; }
+
+  std::optional<uint32_t> GetIntroduced() const { return introduced_major_; }
+
+  void SetDeprecated(uint32_t version) { deprecated_major_ = version; }
+
+  std::optional<uint32_t> GetDeprecated() const { return deprecated_major_; }
+
+  void SetObsoleted(uint32_t version) { obsoleted_major_ = version; }
+
+  std::optional<uint32_t> GetObsoleted() const { return obsoleted_major_; }
+
+  void SetUnavailable(bool unavailable) { unavailable_ = unavailable; }
+
+  bool IsUnavailable() const { return unavailable_; }
+
+ private:
+  std::optional<uint32_t> introduced_major_;
+  std::optional<uint32_t> deprecated_major_;
+  std::optional<uint32_t> obsoleted_major_;
+  bool unavailable_ = false;
+};
+
+class HasAvailabilityAttrs {
+ public:
+  void AddAvailabilityAttr(AvailabilityAttrIR &&attr) {
+    availability_attrs_.emplace_back(std::move(attr));
+  }
+
+  const std::vector<AvailabilityAttrIR> &GetAvailabilityAttrs() const {
+    return availability_attrs_;
+  }
+
+ private:
+  std::vector<AvailabilityAttrIR> availability_attrs_;
 };
 
 // TODO: Break this up into types with sizes and those without types?
@@ -327,7 +372,7 @@ class TemplatedArtifactIR {
   TemplateInfoIR template_info_;
 };
 
-class RecordFieldIR : public ReferencesOtherType {
+class RecordFieldIR : public ReferencesOtherType, public HasAvailabilityAttrs {
  public:
   RecordFieldIR(const std::string &name, const std::string &type,
                 uint64_t offset, AccessSpecifierIR access, bool is_bit_field,
@@ -365,7 +410,9 @@ class RecordFieldIR : public ReferencesOtherType {
   uint64_t bit_width_ = 0;
 };
 
-class RecordTypeIR : public TypeIR, public TemplatedArtifactIR {
+class RecordTypeIR : public TypeIR,
+                     public TemplatedArtifactIR,
+                     public HasAvailabilityAttrs {
  public:
   enum RecordKind {
     struct_kind,
@@ -452,13 +499,9 @@ class RecordTypeIR : public TypeIR, public TemplatedArtifactIR {
   RecordKind record_kind_;
 };
 
-class EnumFieldIR {
+class EnumFieldIR : public HasAvailabilityAttrs {
  public:
-  EnumFieldIR(const std::string &name, int64_t value)
-      : name_(name), signed_value_(value), is_signed_(true) {}
-
-  EnumFieldIR(const std::string &name, uint64_t value)
-      : name_(name), unsigned_value_(value), is_signed_(false) {}
+  void SetName(std::string name) { name_ = std::move(name); }
 
   const std::string &GetName() const {
     return name_;
@@ -466,7 +509,17 @@ class EnumFieldIR {
 
   bool IsSigned() const { return is_signed_; }
 
+  void SetSignedValue(int64_t value) {
+    signed_value_ = value;
+    is_signed_ = true;
+  }
+
   int64_t GetSignedValue() const { return signed_value_; }
+
+  void SetUnsignedValue(uint64_t value) {
+    unsigned_value_ = value;
+    is_signed_ = false;
+  }
 
   uint64_t GetUnsignedValue() const { return unsigned_value_; }
 
@@ -474,12 +527,12 @@ class EnumFieldIR {
   std::string name_;
   union {
     int64_t signed_value_;
-    uint64_t unsigned_value_;
+    uint64_t unsigned_value_ = 0;
   };
-  bool is_signed_;
+  bool is_signed_ = false;
 };
 
-class EnumTypeIR : public TypeIR {
+class EnumTypeIR : public TypeIR, public HasAvailabilityAttrs {
  public:
   // Add Methods to get information from the IR.
   void AddEnumField(EnumFieldIR &&field) {
@@ -624,7 +677,9 @@ class QualifiedTypeIR : public TypeIR {
   bool is_volatile_;
 };
 
-class GlobalVarIR : public LinkableMessageIR , public ReferencesOtherType {
+class GlobalVarIR : public LinkableMessageIR,
+                    public ReferencesOtherType,
+                    public HasAvailabilityAttrs {
  public:
   // Add Methods to get information from the IR.
   void SetName(std::string &&name) {
@@ -709,8 +764,10 @@ class FunctionTypeIR : public TypeIR, public CFunctionLikeIR {
   }
 };
 
-class FunctionIR : public LinkableMessageIR, public TemplatedArtifactIR,
-                   public CFunctionLikeIR {
+class FunctionIR : public LinkableMessageIR,
+                   public TemplatedArtifactIR,
+                   public CFunctionLikeIR,
+                   public HasAvailabilityAttrs {
  public:
   void SetAccess(AccessSpecifierIR access) {
     access_ = access;

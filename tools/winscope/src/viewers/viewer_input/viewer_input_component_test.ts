@@ -14,14 +14,27 @@
  * limitations under the License.
  */
 
+import {ClipboardModule} from '@angular/cdk/clipboard';
 import {ScrollingModule} from '@angular/cdk/scrolling';
+import {CommonModule} from '@angular/common';
+import {HttpClientModule} from '@angular/common/http';
+import {CUSTOM_ELEMENTS_SCHEMA} from '@angular/core';
 import {
   ComponentFixture,
   ComponentFixtureAutoDetect,
   TestBed,
 } from '@angular/core/testing';
+import {FormsModule} from '@angular/forms';
+import {MatButtonModule} from '@angular/material/button';
+import {MatCheckboxModule} from '@angular/material/checkbox';
 import {MatDividerModule} from '@angular/material/divider';
+import {MatFormFieldModule} from '@angular/material/form-field';
 import {MatIconModule} from '@angular/material/icon';
+import {MatInputModule} from '@angular/material/input';
+import {MatSelectModule} from '@angular/material/select';
+import {MatSliderModule} from '@angular/material/slider';
+import {MatTooltipModule} from '@angular/material/tooltip';
+import {BrowserAnimationsModule} from '@angular/platform-browser/animations';
 import {assertDefined} from 'common/assert_utils';
 import {PropertyTreeBuilder} from 'test/unit/property_tree_builder';
 import {TimestampConverterUtils} from 'test/unit/timestamp_converter_utils';
@@ -35,6 +48,7 @@ import {CollapsedSectionsComponent} from 'viewers/components/collapsed_sections_
 import {CollapsibleSectionTitleComponent} from 'viewers/components/collapsible_section_title_component';
 import {PropertiesComponent} from 'viewers/components/properties_component';
 import {PropertyTreeNodeDataViewComponent} from 'viewers/components/property_tree_node_data_view_component';
+import {RectsComponent} from 'viewers/components/rects/rects_component';
 import {TreeComponent} from 'viewers/components/tree_component';
 import {TreeNodeComponent} from 'viewers/components/tree_node_component';
 import {Presenter} from './presenter';
@@ -66,7 +80,23 @@ describe('ViewerInputComponent', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       providers: [{provide: ComponentFixtureAutoDetect, useValue: true}],
-      imports: [MatDividerModule, ScrollingModule, MatIconModule],
+      imports: [
+        CommonModule,
+        MatIconModule,
+        MatDividerModule,
+        HttpClientModule,
+        MatCheckboxModule,
+        MatSliderModule,
+        MatFormFieldModule,
+        MatInputModule,
+        BrowserAnimationsModule,
+        FormsModule,
+        MatTooltipModule,
+        MatButtonModule,
+        MatSelectModule,
+        ScrollingModule,
+        ClipboardModule,
+      ],
       declarations: [
         ViewerInputComponent,
         TreeComponent,
@@ -76,8 +106,9 @@ describe('ViewerInputComponent', () => {
         CollapsedSectionsComponent,
         CollapsibleSectionTitleComponent,
         LogComponent,
+        RectsComponent,
       ],
-      schemas: [],
+      schemas: [CUSTOM_ELEMENTS_SCHEMA],
     }).compileComponents();
 
     fixture = TestBed.createComponent(ViewerInputComponent);
@@ -124,6 +155,12 @@ describe('ViewerInputComponent', () => {
     UnitTestUtils.checkSectionCollapseAndExpand(
       htmlElement,
       fixture,
+      '.rects-view',
+      'INPUT WINDOWS',
+    );
+    UnitTestUtils.checkSectionCollapseAndExpand(
+      htmlElement,
+      fixture,
       '.event-properties',
       'EVENT DETAILS',
     );
@@ -141,6 +178,18 @@ describe('ViewerInputComponent', () => {
     );
   });
 
+  it('shows rects view when rects are defined', () => {
+    assertDefined(component.inputData).rectsToDraw = [];
+    fixture.detectChanges();
+    expect(htmlElement.querySelector('.rects-view')).toBeTruthy();
+  });
+
+  it('hides rects view when rects are not defined', () => {
+    assertDefined(component.inputData).rectsToDraw = undefined;
+    fixture.detectChanges();
+    expect(htmlElement.querySelector('.rects-view')).toBeNull();
+  });
+
   function makeUiData(): UiData {
     const entries = [
       createInputEntry(entry, 1),
@@ -152,6 +201,8 @@ describe('ViewerInputComponent', () => {
     uiData.entries = entries;
     uiData.selectedIndex = 0;
     uiData.headers = Presenter.FIELD_TYPES;
+
+    uiData.rectsToDraw = [];
     return uiData;
   }
 
@@ -186,6 +237,6 @@ describe('ViewerInputComponent', () => {
       },
     ];
 
-    return new InputEntry(entry, fields, tree, tree);
+    return new InputEntry(entry, fields, tree, tree, undefined);
   }
 });

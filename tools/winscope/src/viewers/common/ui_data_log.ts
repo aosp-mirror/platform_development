@@ -18,6 +18,7 @@ import {Timestamp} from 'common/time';
 import {TraceEntry} from 'trace/trace';
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
 import {UserOptions} from 'viewers/common/user_options';
+import {TextFilter} from './text_filter';
 import {UiPropertyTreeNode} from './ui_property_tree_node';
 
 export interface UiDataLog {
@@ -30,11 +31,13 @@ export interface UiDataLog {
   currentIndex?: undefined | number;
   propertiesTree?: undefined | UiPropertyTreeNode;
   propertiesUserOptions?: UserOptions;
+  propertiesFilter?: TextFilter;
 }
 
 export interface LogFilter {
   type: LogFieldType;
   options?: string[];
+  textFilter?: TextFilter;
 }
 
 export interface LogEntry {
@@ -133,7 +136,7 @@ export const LogFieldClassNames: ReadonlyMap<LogFieldType, string> = new Map([
   [LogFieldType.END_TIME, 'end-time time'],
   [LogFieldType.DURATION, 'duration'],
   [LogFieldType.STATUS, 'status'],
-  [LogFieldType.INPUT_TYPE, 'input-type'],
+  [LogFieldType.INPUT_TYPE, 'input-type inline'],
   [LogFieldType.INPUT_SOURCE, 'input-source'],
   [LogFieldType.INPUT_ACTION, 'input-action'],
   [LogFieldType.INPUT_DEVICE_ID, 'input-device-id'],

@@ -73,10 +73,10 @@ impl BpProperties {
         BpProperties { map: BTreeMap::new(), raw_block: None }
     }
 
-    pub fn get_string(&self, k: &str) -> &str {
-        match self.map.get(k).unwrap() {
-            BpValue::String(s) => s,
-            _ => unreachable!(),
+    pub fn get_string(&self, k: &str) -> Option<&str> {
+        match self.map.get(k)? {
+            BpValue::String(s) => Some(s),
+            _ => None,
         }
     }
 
@@ -108,6 +108,7 @@ impl BpProperties {
             "defaults",
             "stem",
             "host_supported",
+            "host_cross_supported",
             "crate_name",
             "cargo_env_compat",
             "cargo_pkg_version",
