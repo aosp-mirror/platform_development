@@ -54,7 +54,7 @@ describe('Perfetto ParserProtolog', () => {
     expect(
       assertDefined(message.getChildByName('text')).formattedValue(),
     ).toEqual(
-      'Test message with different int formats: 1776, 0o3360, 0x6f0, 888.000000, 8.880000e+02.',
+      'Test message with different int formats: 888, 0o1570, 0x378, 888.000000, 8.880000e+02.',
     );
     expect(
       assertDefined(message.getChildByName('timestamp')).formattedValue(),
