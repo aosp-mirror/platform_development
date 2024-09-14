@@ -712,7 +712,7 @@ describe('CollectTracesComponent', () => {
       requested: [],
       collected: connection.files,
     });
-    userNotifierChecker.expectNotified([
+    userNotifierChecker.expectAdded([
       new ProxyTracingErrors(['tracing timed out']),
     ]);
   });

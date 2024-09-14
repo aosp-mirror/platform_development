@@ -103,7 +103,7 @@ export class SnackBarOpener {
       this.isOpen = true;
       const ref = this.snackBar.openFromComponent(SnackBarComponent, {
         data: messages,
-        duration: 10000,
+        duration: 5000 * messages.length,
       });
       ref.afterDismissed().subscribe(() => {
         this.isOpen = false;
