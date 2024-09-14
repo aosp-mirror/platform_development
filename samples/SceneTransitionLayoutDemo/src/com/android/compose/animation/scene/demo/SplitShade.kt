@@ -67,7 +67,7 @@ object SplitShade {
 
 @Composable
 fun SceneScope.SplitShade(
-    notificationList: @Composable (SceneScope.() -> Unit),
+    notificationList: @Composable SceneScope.() -> Unit,
     mediaPlayer: @Composable (SceneScope.() -> Unit)?,
     quickSettingsTiles: List<QuickSettingsTileViewModel>,
     nQuickSettingsRows: Int,
