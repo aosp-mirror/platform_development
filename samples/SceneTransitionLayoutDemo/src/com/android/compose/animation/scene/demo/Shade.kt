@@ -390,7 +390,7 @@ private fun SceneScope.UnderScrim(
 
 @Composable
 private fun SceneScope.Scrim(
-    notificationList: @Composable (SceneScope.() -> Unit),
+    notificationList: @Composable SceneScope.() -> Unit,
     shouldPunchHoleBehindScrim: Boolean,
     scrimMinTopPadding: Dp,
     modifier: Modifier = Modifier,
