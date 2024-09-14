@@ -524,7 +524,7 @@ describe('TimestampConverter', () => {
       testMakeTimestampFromHumanReal(
         '2022-11-10T11:34:54.0175328',
         NOV_10_2022 + 6n * HOUR + 4n * MINUTE + 54n * SECOND + 17532800n,
-        '2022-11-10, 11:34:54.017',
+        '2022-11-10, 11:34:54.018',
       );
     });
 

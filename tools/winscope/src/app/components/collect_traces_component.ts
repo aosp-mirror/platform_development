@@ -798,7 +798,7 @@ export class CollectTracesComponent
     const connection = assertDefined(this.adbConnection);
     const state = connection.getState();
     if (state === ConnectionState.TRACE_TIMEOUT) {
-      UserNotifier.add(new ProxyTracingErrors(['tracing timed out'])).notify();
+      UserNotifier.add(new ProxyTracingErrors(['tracing timed out']));
       this.filesCollected.emit({
         requested: this.requestedTraceTypes,
         collected: await connection.fetchLastTracingSessionData(

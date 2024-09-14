@@ -178,16 +178,14 @@ fun SceneScope.QuickSettings(
                         start = QuickSettings.Dimensions.FooterActionsPadding,
                         end = QuickSettings.Dimensions.FooterActionsPadding,
                         bottom = QuickSettings.Dimensions.FooterActionsBottomPadding,
-                    )
+                    ),
             )
         }
     }
 }
 
 @Composable
-fun SceneScope.QuickSettingsBackground(
-    modifier: Modifier = Modifier,
-) {
+fun SceneScope.QuickSettingsBackground(modifier: Modifier = Modifier) {
     Box(
         modifier
             .element(QuickSettings.Elements.Background)

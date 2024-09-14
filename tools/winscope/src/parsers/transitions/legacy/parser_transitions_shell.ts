@@ -73,7 +73,6 @@ export class ParserTransitionsShell extends AbstractParser<PropertyTreeNode> {
   protected override getTimestamp(
     entry: com.android.wm.shell.ITransition,
   ): Timestamp {
-    // for consistency with all transitions, elapsed nanos are defined as shell dispatch time else 0n
     return entry.dispatchTimeNs
       ? this.timestampConverter.makeTimestampFromBootTimeNs(
           BigInt(entry.dispatchTimeNs.toString()),

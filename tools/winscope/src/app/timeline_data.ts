@@ -78,7 +78,7 @@ export class TimelineData {
         }),
       );
       if (someCorrupted) {
-        UserNotifier.add(new CannotParseAllTransitions()).notify();
+        UserNotifier.add(new CannotParseAllTransitions());
       }
     }
 
