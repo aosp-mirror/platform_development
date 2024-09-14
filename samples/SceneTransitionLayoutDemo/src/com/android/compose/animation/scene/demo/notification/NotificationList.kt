@@ -94,7 +94,7 @@ fun SceneScope.NotificationList(
 
 @Composable
 private fun SceneScope.ExpandFirstNotificationWhenSwipingFromLockscreenToShade(
-    notifications: List<NotificationViewModel>,
+    notifications: List<NotificationViewModel>
 ) {
     val firstNotification = notifications.firstOrNull() ?: return
     val coroutineScope = rememberCoroutineScope()

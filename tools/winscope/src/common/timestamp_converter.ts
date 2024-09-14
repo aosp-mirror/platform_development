@@ -15,10 +15,12 @@
  */
 
 import {assertDefined, assertTrue} from './assert_utils';
+import {BigintMath} from './bigint_math';
 import {
   INVALID_TIME_NS,
   Timestamp,
   TimestampFormatter,
+  TimestampFormatType,
   TimezoneInfo,
 } from './time';
 import {TimestampUtils} from './timestamp_utils';
@@ -40,15 +42,22 @@ class RealTimestampFormatter implements TimestampFormatter {
     this.utcOffset = value;
   }
 
-  format(timestamp: Timestamp): string {
+  format(timestamp: Timestamp, type: TimestampFormatType): string {
     const timestampNanos =
       timestamp.getValueNs() + (this.utcOffset.getValueNs() ?? 0n);
-    const ms = timestampNanos / 1000000n;
+    const ms = BigintMath.divideAndRound(
+      timestampNanos,
+      BigInt(TIME_UNIT_TO_NANO.ms),
+    );
     const formattedTimestamp = new Date(Number(ms))
       .toISOString()
       .replace('Z', '')
       .replace('T', ', ');
-
+    if (type === TimestampFormatType.DROP_DATE) {
+      return assertDefined(
+        TimestampUtils.extractTimeFromHumanTimestamp(formattedTimestamp),
+      );
+    }
     return formattedTimestamp;
   }
 }
@@ -58,8 +67,24 @@ const REAL_TIMESTAMP_FORMATTER_UTC = new RealTimestampFormatter(
 
 class ElapsedTimestampFormatter {
   format(timestamp: Timestamp): string {
-    const timestampNanos = timestamp.getValueNs();
-    return TimestampUtils.formatElapsedNs(timestampNanos);
+    let leftNanos = timestamp.getValueNs();
+    const parts: Array<{value: bigint; unit: string}> = TIME_UNITS.slice()
+      .reverse()
+      .map(({nanosInUnit, unit}) => {
+        let amountOfUnit = BigInt(0);
+        if (leftNanos >= nanosInUnit) {
+          amountOfUnit = leftNanos / BigInt(nanosInUnit);
+        }
+        leftNanos = leftNanos % BigInt(nanosInUnit);
+        return {value: amountOfUnit, unit};
+      });
+
+    // Remove all 0ed units at start
+    while (parts.length > 1 && parts[0].value === 0n) {
+      parts.shift();
+    }
+
+    return parts.map((part) => `${part.value}${part.unit}`).join('');
   }
 }
 const ELAPSED_TIMESTAMP_FORMATTER = new ElapsedTimestampFormatter();

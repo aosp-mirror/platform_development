@@ -112,7 +112,7 @@ export class Utils {
     }
 
     if (vsyncIdOrderedByRow.length !== numEntries) {
-      UserNotifier.add(new MissingVsyncId(tableName)).notify();
+      UserNotifier.add(new MissingVsyncId(tableName));
     }
 
     const vsyncIdOrderedByEntry: Array<bigint> = [];

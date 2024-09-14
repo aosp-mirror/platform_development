@@ -22,9 +22,6 @@ import android.os.Bundle;
 import android.widget.GridView;
 
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.view.WindowCompat;
-import androidx.core.view.WindowInsetsCompat;
-import androidx.core.view.WindowInsetsControllerCompat;
 
 import dagger.hilt.android.AndroidEntryPoint;
 
@@ -40,12 +37,6 @@ public class CustomLauncherActivity extends Hilt_CustomLauncherActivity {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.custom_launcher);
-
-        WindowInsetsControllerCompat windowInsetsController =
-                WindowCompat.getInsetsController(getWindow(), getWindow().getDecorView());
-        windowInsetsController.setSystemBarsBehavior(
-                WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE);
-        windowInsetsController.hide(WindowInsetsCompat.Type.systemBars());
 
         GridView launcher = requireViewById(R.id.app_grid);
         LauncherAdapter launcherAdapter = new LauncherAdapter(

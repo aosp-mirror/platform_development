@@ -48,6 +48,8 @@ fun systemUiTransitions(
     lockscreenTransitions(configuration)
     bouncerTransitions(configuration)
     launcherTransitions()
+    notificationShadeTransitions()
+    quickSettingsShadeTransitions()
 }
 
 object DemoInterruptionHandler : InterruptionHandler {

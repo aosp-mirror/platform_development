@@ -67,6 +67,7 @@ import androidx.compose.runtime.saveable.Saver
 import androidx.compose.runtime.saveable.SaverScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.toComposeRect
@@ -83,8 +84,10 @@ import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.dp
 import androidx.window.layout.WindowMetricsCalculator
+import com.android.compose.animation.scene.DefaultEdgeDetector
 import com.android.compose.animation.scene.ElementKey
 import com.android.compose.animation.scene.MutableSceneTransitionLayoutState
+import com.android.compose.animation.scene.OverlayKey
 import com.android.compose.animation.scene.SceneKey
 import com.android.compose.animation.scene.SceneScope
 import com.android.compose.animation.scene.SceneTransitionLayout
@@ -130,10 +133,8 @@ object Scenes {
      * A smart saver that restores the right scene depending on the current [lockscreenScene] and
      * [shadeScene].
      */
-    class SceneSaver(
-        private val lockscreenScene: SceneKey,
-        private val shadeScene: SceneKey,
-    ) : Saver<SceneKey, String> {
+    class SceneSaver(private val lockscreenScene: SceneKey, private val shadeScene: SceneKey) :
+        Saver<SceneKey, String> {
         override fun SaverScope.save(value: SceneKey): String = value.debugName
 
         override fun restore(value: String): SceneKey {
@@ -156,6 +157,11 @@ object Scenes {
             else -> scene
         }
     }
+}
+
+object Overlays {
+    val Notifications = OverlayKey("NotificationsOverlay")
+    val QuickSettings = OverlayKey("QuickSettingsOverlay")
 }
 
 /** A [Saver] that restores a [MutableSceneTransitionLayoutState] to its previous [currentScene]. */
@@ -269,11 +275,7 @@ fun SystemUi(
     val springConfiguration = configuration.springConfigurations.systemUiSprings
     val transitions =
         remember(quickSettingsPagerState, springConfiguration, configuration) {
-            systemUiTransitions(
-                quickSettingsPagerState,
-                springConfiguration,
-                configuration,
-            )
+            systemUiTransitions(quickSettingsPagerState, springConfiguration, configuration)
         }
     val enableInterruptions = configuration.enableInterruptions
 
@@ -291,7 +293,7 @@ fun SystemUi(
     val canChangeScene =
         remember(configuration) {
             { scene: SceneKey ->
-                if (configuration.canChangeScene) {
+                if (configuration.canChangeSceneOrOverlays) {
                     maybeUpdateLockscreenDismissed(scene)
                     true
                 } else {
@@ -306,11 +308,17 @@ fun SystemUi(
                 sceneSaver,
                 transitions,
                 canChangeScene,
-                enableInterruptions
+                enableInterruptions,
             )
         }
     val layoutState =
-        rememberSaveable(transitions, canChangeScene, enableInterruptions, saver = stateSaver) {
+        rememberSaveable(
+            transitions,
+            canChangeScene,
+            enableInterruptions,
+            configuration,
+            saver = stateSaver,
+        ) {
             val initialScene =
                 initialScene?.let {
                     Scenes.ensureCorrectScene(
@@ -324,6 +332,9 @@ fun SystemUi(
                 initialScene,
                 transitions,
                 canChangeScene = canChangeScene,
+                canShowOverlay = { configuration.canChangeSceneOrOverlays },
+                canHideOverlay = { configuration.canChangeSceneOrOverlays },
+                canReplaceOverlay = { _, _ -> configuration.canChangeSceneOrOverlays },
                 enableInterruptions = enableInterruptions,
             )
         }
@@ -336,7 +347,7 @@ fun SystemUi(
         // size class.
         layoutState.setTargetScene(
             Scenes.ensureCorrectScene(scene, lockscreenScene, shadeScene),
-            coroutineScope
+            coroutineScope,
         )
     }
 
@@ -391,6 +402,21 @@ fun SystemUi(
                         .forEach { (scene, name) ->
                             Button(onClick = { onChangeScene(scene) }) { Text(name) }
                         }
+
+                    listOf(Overlays.Notifications to "NS", Overlays.QuickSettings to "QSS")
+                        .forEach { (overlay, name) ->
+                            Button(
+                                onClick = {
+                                    if (layoutState.currentOverlays.contains(overlay)) {
+                                        layoutState.hideOverlay(overlay, coroutineScope)
+                                    } else {
+                                        layoutState.showOverlay(overlay, coroutineScope)
+                                    }
+                                }
+                            ) {
+                                Text(name)
+                            }
+                        }
                 }
             }
         }
@@ -418,7 +444,7 @@ fun SystemUi(
                         {
                             MediaPlayer(
                                 isPlaying = isMediaPlayerPlaying,
-                                onIsPlayingChange = { isMediaPlayerPlaying = it }
+                                onIsPlayingChange = { isMediaPlayerPlaying = it },
                             )
                         }
                     } else {
@@ -436,8 +462,11 @@ fun SystemUi(
                             // Make this layout accessible to UiAutomator.
                             Modifier.semantics { testTagsAsResourceId = true }
                                 .testTag("SystemUiSceneTransitionLayout"),
+                        swipeSourceDetector =
+                            if (configuration.enableOverlays) HorizontalHalfScreenDetector
+                            else DefaultEdgeDetector,
                     ) {
-                        scene(Scenes.Launcher, Launcher.userActions(shadeScene)) {
+                        scene(Scenes.Launcher, Launcher.userActions(shadeScene, configuration)) {
                             Launcher(launcherColumns)
                         }
                         scene(
@@ -451,8 +480,9 @@ fun SystemUi(
                                         ToggleableState.Off -> false
                                         ToggleableState.Indeterminate ->
                                             configuration.interactiveNotifications
-                                    }
-                            )
+                                    },
+                                configuration,
+                            ),
                         ) {
                             Lockscreen(
                                 notificationList = {
@@ -471,7 +501,11 @@ fun SystemUi(
                         }
                         scene(
                             Scenes.SplitLockscreen,
-                            SplitLockscreen.userActions(isLockscreenDismissable, shadeScene)
+                            SplitLockscreen.userActions(
+                                isLockscreenDismissable,
+                                shadeScene,
+                                configuration,
+                            ),
                         ) {
                             SplitLockscreen(
                                 notificationList = {
@@ -544,7 +578,7 @@ fun SystemUi(
                         }
                         scene(
                             Scenes.SplitShade,
-                            SplitShade.userActions(isLockscreenDismissed, lockscreenScene)
+                            SplitShade.userActions(isLockscreenDismissed, lockscreenScene),
                         ) {
                             SplitShade(
                                 notificationList = {
@@ -560,8 +594,30 @@ fun SystemUi(
                                 ::onPowerButtonClicked,
                             )
                         }
+
                         scene(Scenes.AlwaysOnDisplay) {
                             AlwaysOnDisplay(Modifier.clickable { onChangeScene(lockscreenScene) })
+                        }
+
+                        overlay(
+                            Overlays.Notifications,
+                            userActions = NotificationShade.UserActions,
+                            alignment = Alignment.TopEnd,
+                        ) {
+                            NotificationShade(
+                                notificationList = {
+                                    NotificationList(
+                                        maxNotificationCount = configuration.notificationsInShade
+                                    )
+                                }
+                            )
+                        }
+                        overlay(
+                            Overlays.QuickSettings,
+                            userActions = QuickSettingsShade.UserActions,
+                            alignment = Alignment.TopStart,
+                        ) {
+                            QuickSettingsShade(mediaPlayer)
                         }
                     }
                 }
@@ -572,7 +628,7 @@ fun SystemUi(
 
 // Adapted from [androidx.compose.material3.windowsizeclass.calculateWindowSizeClass].
 @Composable
-private fun calculateWindowSizeClass(): WindowSizeClass {
+internal fun calculateWindowSizeClass(): WindowSizeClass {
     // Observe view configuration changes and recalculate the size class on each change. We can't
     // use Activity#onConfigurationChanged as this will sometimes fail to be called on different
     // API levels, hence why this function needs to be @Composable so we can observe the
