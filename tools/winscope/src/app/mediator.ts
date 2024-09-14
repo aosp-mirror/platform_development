@@ -139,6 +139,7 @@ export class Mediator {
     await event.visit(WinscopeEventType.APP_FILES_UPLOADED, async (event) => {
       this.currentProgressListener = this.uploadTracesComponent;
       await this.loadFiles(event.files, FilesSource.UPLOADED);
+      UserNotifier.notify();
     });
 
     await event.visit(WinscopeEventType.APP_FILES_COLLECTED, async (event) => {
@@ -160,15 +161,16 @@ export class Mediator {
               new ProxyTracingErrors([
                 `Failed to find valid files for ${failedTraces.join(', ')}`,
               ]),
-            ).notify();
+            );
           }
           await this.loadViewers();
         } else {
           this.currentProgressListener?.onOperationFinished(false);
         }
       } else {
-        UserNotifier.add(new NoValidFiles()).notify();
+        UserNotifier.add(new NoValidFiles());
       }
+      UserNotifier.notify();
     });
 
     await event.visit(WinscopeEventType.APP_RESET_REQUEST, async () => {
@@ -185,6 +187,7 @@ export class Mediator {
 
     await event.visit(WinscopeEventType.APP_TRACE_VIEW_REQUEST, async () => {
       await this.loadViewers();
+      UserNotifier.notify();
     });
 
     await event.visit(
@@ -242,6 +245,7 @@ export class Mediator {
         this.timelineData.getCurrentPosition(),
         false,
       );
+      UserNotifier.notify();
     });
 
     await event.visit(
@@ -251,6 +255,7 @@ export class Mediator {
           this.timelineData.setPosition(event.position);
         }
         await this.propagateTracePosition(event.position, false);
+        UserNotifier.notify();
       },
     );
 
@@ -298,7 +303,6 @@ export class Mediator {
       source,
       this.currentProgressListener,
     );
-    UserNotifier.notify();
   }
 
   private async propagateTracePosition(
@@ -338,7 +342,7 @@ export class Mediator {
     }
 
     if (warnings.length > 0) {
-      warnings.forEach((w) => UserNotifier.add(w).notify());
+      warnings.forEach((w) => UserNotifier.add(w));
     }
   }
 
@@ -382,12 +386,14 @@ export class Mediator {
       this.timelineData.getCurrentPosition(),
       true,
     );
+    UserNotifier.notify();
   }
 
   private async processRemoteFilesReceived(files: File[], source: FilesSource) {
     await this.resetAppToInitialState();
     this.currentProgressListener = this.uploadTracesComponent;
     await this.loadFiles(files, source);
+    UserNotifier.notify();
   }
 
   private async loadViewers() {
@@ -410,9 +416,7 @@ export class Mediator {
       await this.tracePipeline.buildTraces();
       this.currentProgressListener?.onOperationFinished(true);
     } catch (e) {
-      UserNotifier.add(
-        new IncompleteFrameMapping((e as Error).message),
-      ).notify();
+      UserNotifier.add(new IncompleteFrameMapping((e as Error).message));
       this.currentProgressListener?.onOperationFinished(false);
     }
 
@@ -433,7 +437,7 @@ export class Mediator {
       );
     } catch {
       this.currentProgressListener?.onOperationFinished(false);
-      UserNotifier.add(new FailedToInitializeTimelineData()).notify();
+      UserNotifier.add(new FailedToInitializeTimelineData());
       return;
     }
 

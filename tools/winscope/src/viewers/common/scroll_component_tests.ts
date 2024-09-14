@@ -28,8 +28,8 @@ export function executeScrollComponentTests(
     [ComponentFixture<ScrollComponent>, HTMLElement, CdkVirtualScrollViewport]
   >,
 ) {
-  describe('', () => {
-    let fixture: ComponentFixture<any>;
+  describe('common tests', () => {
+    let fixture: ComponentFixture<ScrollComponent>;
     let htmlElement: HTMLElement;
     let viewport: CdkVirtualScrollViewport;
 

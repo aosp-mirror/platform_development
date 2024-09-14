@@ -65,9 +65,9 @@ class PresenterTransitionsTest extends AbstractLogViewerPresenterTest<UiData> {
     );
   }
 
-  override createPresenterWithEmptyTrace(
+  override async createPresenterWithEmptyTrace(
     callback: NotifyLogViewCallbackType<UiData>,
-  ): Presenter {
+  ): Promise<Presenter> {
     const traces = new TracesBuilder()
       .setEntries(TraceType.TRANSITION, [])
       .build();

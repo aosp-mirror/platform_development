@@ -121,17 +121,17 @@ internal fun SceneScope.Notification(
                                     )
                                 }
                         }
-                        .background(backgroundColor)
+                        .background(backgroundColor),
                 ) {
                     scene(
                         Notification.Scenes.Collapsed,
-                        if (isInteractive) CollapsedUserActions else emptyMap()
+                        if (isInteractive) CollapsedUserActions else emptyMap(),
                     ) {
                         viewModel.collapsedContent(/* sceneScope= */ this)
                     }
                     scene(
                         Notification.Scenes.Expanded,
-                        if (isInteractive) ExpandedUserActions else emptyMap()
+                        if (isInteractive) ExpandedUserActions else emptyMap(),
                     ) {
                         viewModel.expandedContent(/* sceneScope= */ this)
                     }
