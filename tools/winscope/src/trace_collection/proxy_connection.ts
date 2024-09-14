@@ -231,9 +231,7 @@ export class ProxyConnection extends AdbConnection {
                   );
                 return processed;
               });
-              UserNotifier.add(
-                new ProxyTracingErrors(processedErrors),
-              ).notify();
+              UserNotifier.add(new ProxyTracingErrors(processedErrors));
             }
           },
         );

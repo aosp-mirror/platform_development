@@ -67,13 +67,14 @@ data class DemoConfiguration(
     val interactiveNotifications: Boolean = false,
     val showMediaPlayer: Boolean = true,
     val isFullscreen: Boolean = false,
-    val canChangeScene: Boolean = true,
+    val canChangeSceneOrOverlays: Boolean = true,
     val transitionInterceptionThreshold: Float = 0.05f,
     val springConfigurations: DemoSpringConfigurations = DemoSpringConfigurations.presets[1],
     val useOverscrollSpec: Boolean = true,
     val overscrollProgressConverter: DemoOverscrollProgress = Tanh(maxProgress = 0.2f, tilt = 3f),
     val enableInterruptions: Boolean = true,
     val lsToShadeRequiresFullSwipe: ToggleableState = ToggleableState.Indeterminate,
+    val enableOverlays: Boolean = false,
 ) {
     companion object {
         val Saver = run {
@@ -82,7 +83,7 @@ data class DemoConfiguration(
             val interactiveNotificationsKey = "interactiveNotifications"
             val showMediaPlayerKey = "showMediaPlayer"
             val isFullscreenKey = "isFullscreen"
-            val canChangeSceneKey = "canChangeScene"
+            val canChangeSceneOrOverlaysKey = "canChangeSceneOrOverlays"
             val transitionInterceptionThresholdKey = "transitionInterceptionThreshold"
             val springConfigurationsKey = "springConfigurations"
             val useOverscrollSpec = "useOverscrollSpec"
@@ -98,7 +99,7 @@ data class DemoConfiguration(
                         interactiveNotificationsKey to it.interactiveNotifications,
                         showMediaPlayerKey to it.showMediaPlayer,
                         isFullscreenKey to it.isFullscreen,
-                        canChangeSceneKey to it.canChangeScene,
+                        canChangeSceneOrOverlaysKey to it.canChangeSceneOrOverlays,
                         transitionInterceptionThresholdKey to it.transitionInterceptionThreshold,
                         springConfigurationsKey to it.springConfigurations.save(),
                         useOverscrollSpec to it.useOverscrollSpec,
@@ -114,7 +115,7 @@ data class DemoConfiguration(
                         interactiveNotifications = it[interactiveNotificationsKey] as Boolean,
                         showMediaPlayer = it[showMediaPlayerKey] as Boolean,
                         isFullscreen = it[isFullscreenKey] as Boolean,
-                        canChangeScene = it[canChangeSceneKey] as Boolean,
+                        canChangeSceneOrOverlays = it[canChangeSceneOrOverlaysKey] as Boolean,
                         transitionInterceptionThreshold =
                             it[transitionInterceptionThresholdKey] as Float,
                         springConfigurations =
@@ -350,11 +351,24 @@ fun DemoConfigurationDialog(
 
                 // Can change scene.
                 Checkbox(
-                    label = "Can change scene",
-                    checked = configuration.canChangeScene,
+                    label = "Can change scene or overlays",
+                    checked = configuration.canChangeSceneOrOverlays,
                     onCheckedChange = {
                         onConfigurationChange(
-                            configuration.copy(canChangeScene = !configuration.canChangeScene)
+                            configuration.copy(
+                                canChangeSceneOrOverlays = !configuration.canChangeSceneOrOverlays
+                            )
+                        )
+                    },
+                )
+
+                // Overlays.
+                Checkbox(
+                    label = "Overlays",
+                    checked = configuration.enableOverlays,
+                    onCheckedChange = {
+                        onConfigurationChange(
+                            configuration.copy(enableOverlays = !configuration.enableOverlays)
                         )
                     },
                 )

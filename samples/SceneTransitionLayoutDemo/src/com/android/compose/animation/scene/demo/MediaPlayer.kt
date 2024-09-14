@@ -79,6 +79,7 @@ object MediaPlayer {
                 Scenes.Shade,
                 Scenes.SplitShade,
                 Scenes.QuickSettings,
+                Overlays.QuickSettings,
             )
 
         override fun contentDuringTransition(
@@ -120,6 +121,7 @@ object MediaPlayer {
                     Scenes.SplitShade
                 transition.isTransitioningBetween(Scenes.Lockscreen, Scenes.QuickSettings) ->
                     Scenes.QuickSettings
+                transition.isTransitioningFromOrTo(Overlays.QuickSettings) -> Overlays.QuickSettings
                 else -> pickSingleContentIn(contents, transition, element)
             }
         }
