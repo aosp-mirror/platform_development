@@ -21,7 +21,7 @@ import {Component, Input} from '@angular/core';
   template: `
     <div class="container-progress">
       <p class="mat-body-3">
-        <mat-icon fontIcon="sync"> </mat-icon>
+        <mat-icon [fontIcon]="icon"> </mat-icon>
       </p>
 
       <mat-progress-bar *ngIf="progressPercentage === undefined" mode="indeterminate">
@@ -65,6 +65,7 @@ import {Component, Input} from '@angular/core';
 export class LoadProgressComponent {
   @Input() progressPercentage?: number;
   @Input() message = 'Loading...';
+  @Input() icon = 'sync';
   private static readonly MIN_UI_UPDATE_PERIOD_MS = 200;
 
   static canUpdateComponent(lastUpdateTimeMs: number | undefined): boolean {

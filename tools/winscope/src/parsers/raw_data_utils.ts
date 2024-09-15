@@ -99,6 +99,6 @@ export class RawDataUtils {
       color.getChildByName('a')?.getValue() ?? 0,
     ];
     if (a === 0) return true;
-    return r < 0 || g < 0 || b < 0 || (r === 0 && g === 0 && b === 0);
+    return r < 0 || g < 0 || b < 0;
   }
 }

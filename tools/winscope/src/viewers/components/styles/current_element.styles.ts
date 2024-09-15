@@ -16,7 +16,6 @@
 
 export const currentElementStyle = `
     .current {
-        color: white;
-        background-color: #365179;
+        background-color: var(--current-element-color);
     }
 `;

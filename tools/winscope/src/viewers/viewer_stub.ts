@@ -17,20 +17,22 @@
 import {FunctionUtils} from 'common/function_utils';
 import {WinscopeEvent} from 'messaging/winscope_event';
 import {EmitEvent} from 'messaging/winscope_event_emitter';
+import {TraceBuilder} from 'test/unit/trace_builder';
+import {Trace} from 'trace/trace';
 import {TraceType} from 'trace/trace_type';
 import {View, Viewer, ViewType} from './viewer';
 
 class ViewerStub implements Viewer {
+  private readonly trace: Trace<object>;
   private htmlElement: HTMLElement;
   private title: string;
   private view: View;
-  private dependencies: TraceType[];
   private emitAppEvent: EmitEvent = FunctionUtils.DO_NOTHING_ASYNC;
 
   constructor(
     title: string,
     viewContent?: string,
-    dependencies?: TraceType[],
+    trace?: Trace<object>,
     viewType?: ViewType,
   ) {
     this.title = title;
@@ -42,14 +44,15 @@ class ViewerStub implements Viewer {
       this.htmlElement = undefined as unknown as HTMLElement;
     }
 
-    this.dependencies = dependencies ?? [TraceType.WINDOW_MANAGER];
+    this.trace =
+      trace ??
+      new TraceBuilder<object>().setType(TraceType.WINDOW_MANAGER).build();
 
     this.view = new View(
       viewType ?? ViewType.TAB,
-      this.getDependencies(),
+      this.getTraces(),
       this.htmlElement,
       this.title,
-      this.getDependencies()[0],
     );
   }
 
@@ -69,8 +72,8 @@ class ViewerStub implements Viewer {
     return [this.view];
   }
 
-  getDependencies(): TraceType[] {
-    return this.dependencies;
+  getTraces(): Array<Trace<object>> {
+    return [this.trace];
   }
 }
 

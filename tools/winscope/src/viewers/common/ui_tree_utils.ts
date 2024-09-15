@@ -19,6 +19,7 @@ import {
   PropertyTreeNode,
 } from 'trace/tree_node/property_tree_node';
 import {TreeNode} from 'trace/tree_node/tree_node';
+import {DiffType} from './diff_type';
 import {UiHierarchyTreeNode} from './ui_hierarchy_tree_node';
 import {UiPropertyTreeNode} from './ui_property_tree_node';
 
@@ -83,7 +84,15 @@ export class UiTreeUtils {
     };
   }
 
-  static makeDenyListFilter(denylist: string[]): TreeNodeFilter {
+  static makeDenyListFilterByName(denylist: string[]): TreeNodeFilter {
     return (node: TreeNode) => !denylist.includes(node.name);
+  }
+
+  static makeAllowListFilterById(allowlist: string[]): TreeNodeFilter {
+    return (node: TreeNode) => allowlist.includes(node.id);
+  }
+
+  static shouldGetProperties(node: UiHierarchyTreeNode): boolean {
+    return !node.isOldNode() || node.getDiff() === DiffType.DELETED;
   }
 }
