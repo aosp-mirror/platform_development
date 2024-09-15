@@ -50,7 +50,6 @@ describe('TraceConfigComponent', () => {
     component.traceConfig = {
       layers_trace: {
         name: 'layers_trace',
-        isTraceCollection: undefined,
         run: false,
         config: {
           enableConfigs: [

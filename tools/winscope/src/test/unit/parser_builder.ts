@@ -15,7 +15,7 @@
  */
 
 import {Timestamp} from 'common/time';
-import {NO_TIMEZONE_OFFSET_FACTORY} from 'common/timestamp_factory';
+import {TimestampConverterUtils} from 'test/unit/timestamp_converter_utils';
 import {
   CustomQueryParserResultTypeMap,
   CustomQueryType,
@@ -30,6 +30,7 @@ export class ParserBuilder<T> {
   private timestamps?: Timestamp[];
   private customQueryResult = new Map<CustomQueryType, {}>();
   private descriptors = ['file descriptor'];
+  private noOffsets = false;
 
   setType(type: TraceType): this {
     this.type = type;
@@ -43,6 +44,11 @@ export class ParserBuilder<T> {
 
   setTimestamps(timestamps: Timestamp[]): this {
     this.timestamps = timestamps;
+    return this;
+  }
+
+  setNoOffsets(value: boolean): this {
+    this.noOffsets = value;
     return this;
   }
 
@@ -86,13 +92,14 @@ export class ParserBuilder<T> {
       this.entries,
       this.customQueryResult,
       this.descriptors,
+      this.noOffsets,
     );
   }
 
   private createTimestamps(entries: T[]): Timestamp[] {
     const timestamps = new Array<Timestamp>();
     for (let i = 0; i < entries.length; ++i) {
-      timestamps[i] = NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(BigInt(i));
+      timestamps[i] = TimestampConverterUtils.makeRealTimestamp(BigInt(i));
     }
     return timestamps;
   }

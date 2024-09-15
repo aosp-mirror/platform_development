@@ -52,9 +52,7 @@
 // The Winscope parsers need the 64-bit proto fields to be retrieved as Long instead of number,
 // otherwise data (e.g. state flags) would be lost because of the 53-bit integer limitation.
 // import './static_initializers';
-
 import protobuf from 'protobufjs/minimal';
-
 import {defer, Deferred} from './deferred';
 import {assertExists, assertFalse, assertTrue} from './logging';
 import {utf8Decode} from './string_utils';

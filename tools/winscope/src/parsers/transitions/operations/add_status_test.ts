@@ -14,15 +14,15 @@
  * limitations under the License.
  */
 
-import {NO_TIMEZONE_OFFSET_FACTORY} from 'common/timestamp_factory';
 import {PropertyTreeBuilder} from 'test/unit/property_tree_builder';
+import {TimestampConverterUtils} from 'test/unit/timestamp_converter_utils';
 import {PropertySource} from 'trace/tree_node/property_tree_node';
 import {AddStatus} from './add_status';
 
 describe('AddStatus', () => {
   let operation: AddStatus;
-  const time0 = NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(0n);
-  const time10 = NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(10n);
+  const time0 = TimestampConverterUtils.makeRealTimestamp(0n);
+  const time10 = TimestampConverterUtils.makeRealTimestamp(10n);
 
   beforeEach(() => {
     operation = new AddStatus();

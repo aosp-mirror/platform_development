@@ -18,9 +18,18 @@ import {TransformMatrix} from 'common/geometry_types';
 
 export enum ColorType {
   VISIBLE,
+  VISIBLE_WITH_OPACITY,
   NOT_VISIBLE,
   HIGHLIGHTED,
   HAS_CONTENT,
+  EMPTY,
+  HAS_CONTENT_AND_OPACITY,
+}
+
+export enum ShadingMode {
+  WIRE_FRAME = 'Wire frame',
+  GRADIENT = 'Shaded by gradient',
+  OPACITY = 'Shaded by opacity',
 }
 
 export class Distance2D {

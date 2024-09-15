@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-import {assertDefined} from 'common/assert_utils';
 import {WinscopeEvent, WinscopeEventType} from 'messaging/winscope_event';
 import {ScreenRecordingTraceEntry} from 'trace/screen_recording';
 import {Trace} from 'trace/trace';
@@ -31,15 +30,14 @@ class ViewerScreenshot implements Viewer {
   private readonly htmlElement: HTMLElement;
   private readonly view: View;
 
-  constructor(traces: Traces) {
-    this.trace = assertDefined(traces.getTrace(TraceType.SCREENSHOT));
+  constructor(trace: Trace<ScreenRecordingTraceEntry>, traces: Traces) {
+    this.trace = trace;
     this.htmlElement = document.createElement('viewer-screen-recording');
     this.view = new View(
       ViewType.OVERLAY,
-      this.getDependencies(),
+      this.getTraces(),
       this.htmlElement,
       'Screenshot',
-      TraceType.SCREENSHOT,
     );
   }
 
@@ -58,6 +56,14 @@ class ViewerScreenshot implements Viewer {
           'Screenshot';
       },
     );
+    await event.visit(
+      WinscopeEventType.EXPANDED_TIMELINE_TOGGLED,
+      async (event) => {
+        (
+          this.htmlElement as unknown as ViewerScreenRecordingComponent
+        ).forceMinimize = event.isTimelineExpanded;
+      },
+    );
   }
 
   setEmitEvent() {
@@ -68,8 +74,8 @@ class ViewerScreenshot implements Viewer {
     return [this.view];
   }
 
-  getDependencies(): TraceType[] {
-    return ViewerScreenshot.DEPENDENCIES;
+  getTraces(): Array<Trace<ScreenRecordingTraceEntry>> {
+    return [this.trace];
   }
 }
 

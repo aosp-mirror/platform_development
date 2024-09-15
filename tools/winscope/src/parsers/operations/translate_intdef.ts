@@ -76,7 +76,14 @@ export class TranslateIntDef implements Operation<PropertyTreeNode> {
   private getTypeDefSpecFromField(
     field: TamperedProtoField,
   ): string | undefined {
-    return field.options ? field.options['(.android.typedef)'] : undefined;
+    if (field.options === undefined) {
+      return undefined;
+    } else if (field.options['(.android.typedef)'] !== undefined) {
+      return field.options['(.android.typedef)'];
+    } else if (field.options['(.perfetto.protos.typedef)'] !== undefined) {
+      return field.options['(.perfetto.protos.typedef)'];
+    }
+    return undefined;
   }
 
   private getIntFlagsAsStrings(

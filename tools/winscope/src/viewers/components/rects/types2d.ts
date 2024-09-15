@@ -34,6 +34,7 @@ export class UiRect extends Rect {
     readonly transform: TransformMatrix | undefined,
     readonly depth: number,
     readonly hasContent: boolean | undefined,
+    readonly opacity: number | undefined,
   ) {
     super(x, y, w, h);
   }

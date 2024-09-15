@@ -14,10 +14,11 @@
  * limitations under the License.
  */
 
+import {AbsoluteEntryIndex} from 'trace/index_types';
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
 
 export interface UiDataMessage {
-  readonly originalIndex: number;
+  readonly traceIndex: AbsoluteEntryIndex;
   readonly text: string;
   readonly time: PropertyTreeNode;
   readonly tag: string;

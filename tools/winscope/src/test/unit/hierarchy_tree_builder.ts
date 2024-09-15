@@ -85,7 +85,7 @@ export class HierarchyTreeBuilder extends TreeBuilder<
       .setChildren(child.children ?? [])
       .build();
     rootNode.addOrReplaceChild(childNode);
-    childNode.setZParent(rootNode);
+    childNode.setParent(rootNode);
   }
 
   private makeHierarchyNodeId() {

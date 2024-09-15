@@ -15,9 +15,9 @@
  */
 
 import {assertDefined} from 'common/assert_utils';
-import {Timestamp, TimestampType} from 'common/time';
-import {NO_TIMEZONE_OFFSET_FACTORY} from 'common/timestamp_factory';
-import {AbstractTracesParser} from 'parsers/abstract_traces_parser';
+import {Timestamp} from 'common/time';
+import {ParserTimestampConverter} from 'common/timestamp_converter';
+import {AbstractTracesParser} from 'parsers/legacy/abstract_traces_parser';
 import {Trace} from 'trace/trace';
 import {Traces} from 'trace/traces';
 import {TraceType} from 'trace/trace_type';
@@ -33,8 +33,8 @@ export class TracesParserCujs extends AbstractTracesParser<PropertyTreeNode> {
   private readonly descriptors: string[];
   private decodedEntries: PropertyTreeNode[] | undefined;
 
-  constructor(traces: Traces) {
-    super();
+  constructor(traces: Traces, timestampConverter: ParserTimestampConverter) {
+    super(timestampConverter);
 
     const eventlogTrace = traces.getTrace(TraceType.EVENT_LOG);
     if (eventlogTrace !== undefined) {
@@ -63,17 +63,14 @@ export class TracesParserCujs extends AbstractTracesParser<PropertyTreeNode> {
       );
     });
     this.decodedEntries = this.makeCujsFromEvents(cujEvents);
-    await this.parseTimestamps();
+    await this.createTimestamps();
   }
 
   getLengthEntries(): number {
     return assertDefined(this.decodedEntries).length;
   }
 
-  getEntry(
-    index: number,
-    timestampType: TimestampType,
-  ): Promise<PropertyTreeNode> {
+  getEntry(index: number): Promise<PropertyTreeNode> {
     const entry = assertDefined(this.decodedEntries)[index];
     return Promise.resolve(entry);
   }
@@ -86,22 +83,18 @@ export class TracesParserCujs extends AbstractTracesParser<PropertyTreeNode> {
     return TraceType.CUJS;
   }
 
-  override getTimestamp(
-    type: TimestampType,
-    cuj: PropertyTreeNode,
-  ): undefined | Timestamp {
+  protected override getTimestamp(cuj: PropertyTreeNode): Timestamp {
     const cujTimestamp = assertDefined(cuj.getChildByName('startTimestamp'));
-    if (type === TimestampType.ELAPSED) {
-      const elapsedNanos = assertDefined(
-        cujTimestamp.getChildByName('elapsedNanos'),
-      ).getValue();
-      return NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(elapsedNanos);
-    } else if (type === TimestampType.REAL) {
-      const unixNanos = assertDefined(
-        cujTimestamp.getChildByName('unixNanos'),
-      ).getValue();
-      return NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(unixNanos);
-    }
+    return this.timestampConverter.makeTimestampFromRealNs(
+      assertDefined(cujTimestamp.getChildByName('unixNanos')).getValue(),
+    );
+  }
+
+  override getRealToMonotonicTimeOffsetNs(): bigint | undefined {
+    return undefined;
+  }
+
+  override getRealToBootTimeOffsetNs(): bigint | undefined {
     return undefined;
   }
 

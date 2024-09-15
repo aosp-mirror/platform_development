@@ -47,12 +47,15 @@ class UiRectFactory {
           ),
         )
         .setDepth(traceRect.depth)
+        .setOpacity(traceRect.opacity)
         .build();
     });
   }
 
-  makeVcUiRects(hierarchyRoot: HierarchyTreeNode): UiRect[] {
-    const traceRects = this.extractRects(hierarchyRoot);
+  makeVcUiRects(hierarchyRoot: HierarchyTreeNode, groupId: number): UiRect[] {
+    const traceRects = this.extractRects(hierarchyRoot).filter((traceRect) => {
+      return traceRect.h > 0 && traceRect.w > 0;
+    });
     return traceRects.map((traceRect) => {
       return new UiRectBuilder()
         .setX(traceRect.x)
@@ -64,12 +67,13 @@ class UiRectFactory {
         .setIsVisible(traceRect.isVisible)
         .setIsDisplay(traceRect.isDisplay)
         .setId(traceRect.id)
-        .setGroupId(traceRect.groupId)
+        .setGroupId(groupId)
         .setIsVirtual(traceRect.isVirtual)
         .setIsClickable(true)
         .setCornerRadius(traceRect.cornerRadius)
         .setHasContent(traceRect.isVisible)
         .setDepth(assertDefined(traceRect.depth))
+        .setOpacity(traceRect.opacity)
         .build();
     });
   }
