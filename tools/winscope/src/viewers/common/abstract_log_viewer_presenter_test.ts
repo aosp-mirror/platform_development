@@ -49,8 +49,9 @@ export abstract class AbstractLogViewerPresenterTest<UiData extends UiDataLog> {
         const notifyViewCallback = (newData: UiData) => {
           uiData = newData;
         };
-        const presenter =
-          this.createPresenterWithEmptyTrace(notifyViewCallback);
+        const presenter = await this.createPresenterWithEmptyTrace(
+          notifyViewCallback,
+        );
 
         const positionUpdateWithoutTraceEntry =
           TracePositionUpdate.fromTimestamp(
@@ -458,7 +459,7 @@ export abstract class AbstractLogViewerPresenterTest<UiData extends UiDataLog> {
   ): Promise<AbstractLogViewerPresenter<UiData>>;
   abstract createPresenterWithEmptyTrace(
     callback: NotifyLogViewCallbackType<UiData>,
-  ): AbstractLogViewerPresenter<UiData>;
+  ): Promise<AbstractLogViewerPresenter<UiData>>;
   abstract getPositionUpdate(): TracePositionUpdate;
   abstract getSecondPositionUpdate(): TracePositionUpdate;
 

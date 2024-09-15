@@ -73,11 +73,7 @@ class SceneTransitionLayoutDemoBenchmark {
         )
     }
 
-    private fun benchmarkSwipeFromScene(
-        fromScene: String,
-        toScene: String,
-        direction: Direction,
-    ) {
+    private fun benchmarkSwipeFromScene(fromScene: String, toScene: String, direction: Direction) {
         benchmarkRule.measureRepeated(
             packageName = StlDemoConstants.PACKAGE,
             metrics = listOf(FrameTimingMetric()),
