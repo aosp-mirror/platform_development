@@ -14,20 +14,14 @@
  * limitations under the License.
  */
 
-import {BigintMath} from './bigint_math';
-import {TIME_UNIT_TO_NANO} from './time_units';
-
-export class TimeDuration {
-  constructor(private timeDiffNs: bigint) {}
-  getValueNs(): bigint {
-    return this.timeDiffNs;
-  }
-
-  format(): string {
-    const msString = BigintMath.divideAndRound(
-      this.timeDiffNs,
-      BigInt(TIME_UNIT_TO_NANO.ms),
-    );
-    return msString.toLocaleString() + ' ms';
+export class Download {
+  static fromUrl(url: string, filename: string) {
+    const a = document.createElement('a');
+    document.body.appendChild(a);
+    a.href = url;
+    a.download = filename;
+    a.click();
+    window.URL.revokeObjectURL(url);
+    document.body.removeChild(a);
   }
 }

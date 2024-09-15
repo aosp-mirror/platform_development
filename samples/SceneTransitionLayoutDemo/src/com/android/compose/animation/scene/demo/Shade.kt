@@ -233,8 +233,8 @@ private fun SceneScope.ShadeLayout(
                     ) {
                         scrim()
                     }
-                }
-            )
+                },
+            ),
     ) { measurables, constraints ->
         check(measurables.size == 3)
         check(measurables[0].size == 1) { "background should compose only top-level composable" }
@@ -258,7 +258,7 @@ private fun SceneScope.ShadeLayout(
             val additionalScrimOffset = additionalScrimOffset?.value?.toPx() ?: 0f
             scrim.placeWithLayer(
                 0,
-                underScrim.height + (scrimOffset.value + additionalScrimOffset).roundToInt()
+                underScrim.height + (scrimOffset.value + additionalScrimOffset).roundToInt(),
             )
         }
     }
@@ -365,7 +365,7 @@ private fun SceneScope.UnderScrim(
                 animateSceneFloatAsState(
                     0f,
                     QuickSettingsGrid.Values.Expansion,
-                    canOverflow = false
+                    canOverflow = false,
                 )
 
             QuickSettingsGrid(
@@ -390,7 +390,7 @@ private fun SceneScope.UnderScrim(
 
 @Composable
 private fun SceneScope.Scrim(
-    notificationList: @Composable (SceneScope.() -> Unit),
+    notificationList: @Composable SceneScope.() -> Unit,
     shouldPunchHoleBehindScrim: Boolean,
     scrimMinTopPadding: Dp,
     modifier: Modifier = Modifier,
@@ -478,7 +478,7 @@ fun SceneScope.ShadeTime(scale: Float, modifier: Modifier = Modifier) {
                     scale(animatedScale, pivot = pivot) {
                         drawText(layoutResult, color = color, topLeft = topLeft)
                     }
-                },
+                }
         )
     }
 }

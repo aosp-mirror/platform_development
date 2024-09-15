@@ -37,7 +37,7 @@ import {TraceBuilder} from 'test/unit/trace_builder';
 import {UnitTestUtils} from 'test/unit/utils';
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
 import {LogComponent} from 'viewers/common/log_component';
-import {executeScrollComponentTests} from 'viewers/common/scroll_component_test_utils';
+import {executeScrollComponentTests} from 'viewers/common/scroll_component_tests';
 import {LogFieldType} from 'viewers/common/ui_data_log';
 import {UiPropertyTreeNode} from 'viewers/common/ui_property_tree_node';
 import {CollapsedSectionsComponent} from 'viewers/components/collapsed_sections_component';

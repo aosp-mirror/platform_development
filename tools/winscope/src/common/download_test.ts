@@ -14,20 +14,22 @@
  * limitations under the License.
  */
 
-import {BigintMath} from './bigint_math';
-import {TIME_UNIT_TO_NANO} from './time_units';
+import {Download} from './download';
 
-export class TimeDuration {
-  constructor(private timeDiffNs: bigint) {}
-  getValueNs(): bigint {
-    return this.timeDiffNs;
-  }
+describe('Download', () => {
+  it('fromUrl', () => {
+    const testElement = document.createElement('a');
+    testElement.className = 'test-download-link';
+    const clickSpy = spyOn(testElement, 'click');
 
-  format(): string {
-    const msString = BigintMath.divideAndRound(
-      this.timeDiffNs,
-      BigInt(TIME_UNIT_TO_NANO.ms),
-    );
-    return msString.toLocaleString() + ' ms';
-  }
-}
+    spyOn(document, 'createElement').and.returnValue(testElement);
+
+    Download.fromUrl('test_url', 'test_file_name');
+
+    expect(testElement.href.endsWith('test_url')).toBeTrue();
+    expect(testElement.download).toEqual('test_file_name');
+    expect(clickSpy).toHaveBeenCalled();
+
+    expect(document.querySelector('.test-download-link')).toBeNull();
+  });
+});

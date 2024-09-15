@@ -138,13 +138,7 @@ fun SceneScope.QuickSettingsGrid(
             verticalSpacing = QuickSettingsGrid.Dimensions.Spacing,
         ) {
             tiles.forEachIndexed { i, tile ->
-                key(tile.key) {
-                    Tile(
-                        tile,
-                        tileHeight,
-                        expansionProgress,
-                    )
-                }
+                key(tile.key) { Tile(tile, tileHeight, expansionProgress) }
             }
         }
 
@@ -287,7 +281,7 @@ private fun SceneScope.Tile(
             iconPlaceable.placeRelative(horizontalPadding, (height - iconPlaceable.height) / 2)
             chevronPlaceable?.placeRelative(
                 width - horizontalPadding - chevronPlaceable.width,
-                (height - chevronPlaceable.height) / 2
+                (height - chevronPlaceable.height) / 2,
             )
 
             // If there is no description, the title is always centered vertically.
