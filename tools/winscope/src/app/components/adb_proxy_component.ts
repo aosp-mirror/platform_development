@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 import {Component, EventEmitter, Input, Output} from '@angular/core';
+import {Download} from 'common/download';
 import {UrlUtils} from 'common/url_utils';
 import {ConnectionState} from 'trace_collection/connection_state';
 import {ProxyConnection} from 'trace_collection/proxy_connection';
@@ -175,6 +176,6 @@ export class AdbProxyComponent {
   }
 
   onDownloadProxyClick() {
-    window.open(this.downloadProxyUrl, '_blank')?.focus();
+    Download.fromUrl(this.downloadProxyUrl, 'winscope_proxy.py');
   }
 }

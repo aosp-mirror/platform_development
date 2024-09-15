@@ -48,16 +48,35 @@ object Lockscreen {
         isLockscreenDismissable: Boolean,
         shadeScene: SceneKey,
         requiresFullDistanceSwipeToShade: Boolean,
+        configuration: DemoConfiguration,
         fastSwipeToQuickSettings: Boolean = true,
     ): Map<UserAction, UserActionResult> {
         return buildList {
-                add(
-                    Swipe.Down to
-                        UserActionResult(
-                            shadeScene,
-                            requiresFullDistanceSwipe = requiresFullDistanceSwipeToShade,
-                        )
-                )
+                if (configuration.enableOverlays) {
+                    add(
+                        Swipe(SwipeDirection.Down, fromSource = HorizontalHalfScreen.Start) to
+                            UserActionResult.ShowOverlay(
+                                Overlays.QuickSettings,
+                                requiresFullDistanceSwipe = requiresFullDistanceSwipeToShade,
+                            )
+                    )
+                    add(
+                        Swipe(SwipeDirection.Down, fromSource = HorizontalHalfScreen.End) to
+                            UserActionResult.ShowOverlay(
+                                Overlays.Notifications,
+                                requiresFullDistanceSwipe = requiresFullDistanceSwipeToShade,
+                            )
+                    )
+                } else {
+                    add(
+                        Swipe.Down to
+                            UserActionResult(
+                                shadeScene,
+                                requiresFullDistanceSwipe = requiresFullDistanceSwipeToShade,
+                            )
+                    )
+                }
+
                 add(Swipe.Start to Scenes.StubEnd)
                 add(Swipe.End to Scenes.StubStart)
                 add(
