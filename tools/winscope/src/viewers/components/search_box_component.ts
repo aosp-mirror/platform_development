@@ -60,7 +60,7 @@ import {TextFilter} from 'viewers/common/text_filter';
       height: 48px;
     }
     .wide-field {
-      width: 80%;
+      width: 100%;
     }
     .search-box .mat-icon {
       font-size: 18px;

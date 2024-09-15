@@ -377,5 +377,11 @@ public class ConnectionManager {
                 onError("Failed to establish connection.");
             }
         }
+
+        @Override
+        public void onLost(@NonNull Network network) {
+            super.onLost(network);
+            startClientSession();
+        }
     }
 }

@@ -388,7 +388,7 @@ describe('ProxyConnection', () => {
         getHeader: getVersionHeader,
       });
       checkTraceEndedSuccessfully();
-      userNotifierChecker.expectNotified([
+      userNotifierChecker.expectAdded([
         new ProxyTracingErrors([
           'please check your display state (must be on at start of trace)',
           "'unknown error'",
