@@ -276,37 +276,9 @@ describe('CollectTracesComponent', () => {
     goToConfigSection();
     await fixture.whenStable();
     fixture.detectChanges();
-    const collectTracesComponent = getCollectTracesComponent();
 
-    expect(
-      collectTracesComponent.traceConfig['window_trace']?.enabled,
-    ).toBeTrue();
-    const traceSection = assertDefined(
-      htmlElement.querySelector('.trace-section'),
-    );
-    const traceCheckboxInput = assertDefined(
-      traceSection.querySelector<HTMLInputElement>('.trace-checkbox input'),
-    );
-    traceCheckboxInput.click();
-    fixture.detectChanges();
-    expect(
-      collectTracesComponent.traceConfig['window_trace']?.enabled,
-    ).toBeFalse();
-
-    expect(
-      collectTracesComponent.dumpConfig['window_dump']?.enabled,
-    ).toBeTrue();
-    const dumpSection = assertDefined(
-      htmlElement.querySelector('.dump-section'),
-    );
-    const dumpCheckboxInput = assertDefined(
-      dumpSection.querySelector<HTMLInputElement>('.trace-checkbox input'),
-    );
-    dumpCheckboxInput.click();
-    fixture.detectChanges();
-    expect(
-      collectTracesComponent.dumpConfig['window_dump']?.enabled,
-    ).toBeFalse();
+    clickCheckboxAndCheckTraceConfig('window_trace', false);
+    clickCheckboxAndCheckTraceConfig('window_dump', true);
   });
 
   it('start trace button works as expected', async () => {
@@ -663,17 +635,7 @@ describe('CollectTracesComponent', () => {
     goToConfigSection();
     await fixture.whenStable();
     fixture.detectChanges();
-    const collectTracesComponent = getCollectTracesComponent();
-    const dumpCheckboxInput = assertDefined(
-      htmlElement.querySelector<HTMLInputElement>(
-        '.dump-section .trace-checkbox input',
-      ),
-    );
-    dumpCheckboxInput.click();
-    fixture.detectChanges();
-    expect(
-      collectTracesComponent.dumpConfig['window_dump']?.enabled,
-    ).toBeFalse();
+    clickCheckboxAndCheckTraceConfig('window_dump', true);
 
     component.showSecondComponent = true;
     fixture.detectChanges();
@@ -772,6 +734,39 @@ describe('CollectTracesComponent', () => {
     );
     device.click();
     fixture.detectChanges();
+  }
+
+  function clickCheckboxAndCheckTraceConfig(key: string, isDump: boolean) {
+    const collectTracesComponent = getCollectTracesComponent();
+    expect(
+      isDump
+        ? collectTracesComponent.dumpConfig[key].enabled
+        : collectTracesComponent.traceConfig[key].enabled,
+    ).toBeTrue();
+
+    const checkboxSection = assertDefined(
+      htmlElement.querySelector(isDump ? '.dump-section' : '.trace-section'),
+    );
+    const traceBoxes = Array.from(
+      checkboxSection.querySelectorAll<HTMLElement>('.trace-checkbox'),
+    );
+
+    const expectedName = isDump
+      ? collectTracesComponent.dumpConfig[key].name
+      : collectTracesComponent.traceConfig[key].name;
+    const traceBox = assertDefined(
+      traceBoxes.find((box) => box.textContent?.includes(expectedName)),
+    );
+    const traceCheckboxInput = assertDefined(
+      traceBox.querySelector<HTMLInputElement>('input'),
+    );
+    traceCheckboxInput.click();
+    fixture.detectChanges();
+    expect(
+      isDump
+        ? collectTracesComponent.dumpConfig[key].enabled
+        : collectTracesComponent.traceConfig[key].enabled,
+    ).toBeFalse();
   }
 
   async function startProxyConnection() {
