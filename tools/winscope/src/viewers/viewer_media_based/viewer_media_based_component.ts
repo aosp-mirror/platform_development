@@ -295,9 +295,11 @@ class ViewerMediaBasedComponent {
       const headerHeight =
         this.elementRef.nativeElement.querySelector('.header')?.clientHeight ??
         0;
-      const maxWidth =
+      const maxWidth = Math.min(
         ((maxHeight - headerHeight) * this.frameSize.width) /
-        this.frameSize.height;
+          this.frameSize.height,
+        window.innerWidth,
+      );
       container.style.maxWidth = `${maxWidth}px`;
       this.changeDetectorRef.detectChanges();
     });
