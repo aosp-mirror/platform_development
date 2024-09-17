@@ -34,7 +34,7 @@ import {MatSnackBar, MatSnackBarModule} from '@angular/material/snack-bar';
 import {BrowserAnimationsModule} from '@angular/platform-browser/animations';
 import {assertDefined} from 'common/assert_utils';
 import {InMemoryStorage} from 'common/in_memory_storage';
-import {ProxyTracingErrors} from 'messaging/user_warnings';
+import {ProxyTraceTimeout} from 'messaging/user_warnings';
 import {NoTraceTargetsSelected, WinscopeEvent} from 'messaging/winscope_event';
 import {MockAdbConnection} from 'test/unit/mock_adb_connection';
 import {UserNotifierChecker} from 'test/unit/user_notifier_checker';
@@ -674,9 +674,7 @@ describe('CollectTracesComponent', () => {
       requested: [],
       collected: connection.files,
     });
-    userNotifierChecker.expectAdded([
-      new ProxyTracingErrors(['tracing timed out']),
-    ]);
+    userNotifierChecker.expectAdded([new ProxyTraceTimeout()]);
   });
 
   it('updates options in media based config on devices change from connection', () => {
