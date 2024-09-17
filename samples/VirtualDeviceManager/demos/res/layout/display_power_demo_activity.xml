@@ -42,4 +42,10 @@
         android:onClick="onLaunchTurnScreenOnActivity"
         android:text="Launch Turn Screen On Activity" />
 
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:onClick="onLaunchTurnScreenOnShowWhenLockedActivity"
+        android:text="Launch Turn Screen On Show When Locked Activity" />
+
 </LinearLayout>
