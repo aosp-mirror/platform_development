@@ -35,12 +35,18 @@ export class CorruptedArchive extends UserWarning {
 }
 
 export class NoValidFiles extends UserWarning {
+  constructor(private traces?: string[]) {
+    super();
+  }
   getDescriptor(): string {
     return 'no valid files';
   }
 
   getMessage(): string {
-    return `No valid trace files found`;
+    return (
+      'No valid trace files found' +
+      (this.traces ? ` for ${this.traces.join(', ')}` : '')
+    );
   }
 }
 
@@ -217,6 +223,16 @@ export class MissingVsyncId extends UserWarning {
 
   getMessage(): string {
     return `missing vsync_id value for one or more entries in ${this.tableName}`;
+  }
+}
+
+export class ProxyTraceTimeout extends UserWarning {
+  getDescriptor(): string {
+    return 'proxy trace timeout';
+  }
+
+  getMessage(): string {
+    return 'Errors occurred during tracing: trace timed out';
   }
 }
 
