@@ -242,18 +242,17 @@ describe('ViewerMediaBasedComponent', () => {
     const maxWidthAfterNewWindowHeight = getContainerMaxWidth();
     expect(maxWidthAfterNewWindowHeight < initialMaxWidth).toBeTrue();
 
-    const newWindowWidth =
-      Number(maxWidthAfterNewWindowHeight.slice(0, -2)) / 2;
+    const newWindowWidth = maxWidthAfterNewWindowHeight / 2;
     spyOnProperty(window, 'innerWidth').and.returnValue(newWindowWidth);
     resizeWindow();
     expect(getContainerMaxWidth() < maxWidthAfterNewWindowHeight).toBeTrue();
   });
 
-  function getContainerMaxWidth() {
+  function getContainerMaxWidth(): number {
     const container = assertDefined(
       htmlElement.querySelector<HTMLElement>('.container'),
     );
-    return container.style.maxWidth;
+    return Number(container.style.maxWidth.slice(0, -2));
   }
 
   async function openSelect() {
