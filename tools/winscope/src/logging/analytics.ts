@@ -206,9 +206,10 @@ export class Analytics {
   };
 
   static UserNotification = class {
-    static logUserWarning(description: string) {
+    static logUserWarning(description: string, message: string) {
       Analytics.doLogEvent(Analytics.USER_WARNING, {
         description,
+        message,
       } as Gtag.CustomParams);
     }
   };

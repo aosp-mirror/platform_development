@@ -28,6 +28,7 @@ import {globalConfig} from 'common/global_config';
 import {PersistentStoreProxy} from 'common/persistent_store_proxy';
 import {Store} from 'common/store';
 import {
+  EnableConfiguration,
   SelectionConfiguration,
   TraceConfigurationMap,
 } from 'trace_collection/trace_configuration';
@@ -38,28 +39,27 @@ import {userOptionStyle} from 'viewers/components/styles/user_option.styles';
   template: `
     <h3 class="mat-subheading-2">{{title}}</h3>
 
-    <div class="checkboxes">
+    <div class="checkboxes" [style.height]="getTraceCheckboxContainerHeight()">
       <mat-checkbox
-        *ngFor="let traceKey of objectKeys(this.traceConfig)"
+        *ngFor="let traceKey of getSortedTraceKeys()"
         color="primary"
         class="trace-checkbox"
         [disabled]="!this.traceConfig[traceKey].available"
         [(ngModel)]="this.traceConfig[traceKey].enabled"
         (ngModelChange)="onTraceConfigChange()"
-        >{{ this.traceConfig[traceKey].name }}</mat-checkbox
-      >
+        >{{ this.traceConfig[traceKey].name }}</mat-checkbox>
     </div>
 
-    <ng-container *ngFor="let traceKey of advancedConfigTraces()">
+    <ng-container *ngFor="let traceKey of getSortedConfigKeys()">
       <mat-divider></mat-divider>
 
-      <h3 class="mat-subheading-2">{{ this.traceConfig[traceKey].name }} configuration</h3>
+      <h3 class="config-heading mat-subheading-2">{{ this.traceConfig[traceKey].name }} configuration</h3>
 
       <div
         *ngIf="this.traceConfig[traceKey].config && this.traceConfig[traceKey].config.enableConfigs.length > 0"
         class="enable-config-opt">
         <mat-checkbox
-          *ngFor="let enableConfig of this.traceConfig[traceKey].config.enableConfigs"
+          *ngFor="let enableConfig of getSortedConfigs(this.traceConfig[traceKey].config.enableConfigs)"
           color="primary"
           class="enable-config"
           [disabled]="!this.traceConfig[traceKey].enabled"
@@ -72,7 +72,7 @@ import {userOptionStyle} from 'viewers/components/styles/user_option.styles';
       <div
         *ngIf="this.traceConfig[traceKey].config && this.traceConfig[traceKey].config.selectionConfigs.length > 0"
         class="selection-config-opt">
-        <ng-container *ngFor="let selectionConfig of this.traceConfig[traceKey].config.selectionConfigs">
+        <ng-container *ngFor="let selectionConfig of getSortedConfigs(this.traceConfig[traceKey].config.selectionConfigs)">
           <div class="config-selection-with-desc" [class.wide-field]="selectionConfig.wideField">
             <mat-form-field
               class="config-selection"
@@ -126,9 +126,9 @@ import {userOptionStyle} from 'viewers/components/styles/user_option.styles';
   styles: [
     `
       .checkboxes {
-        display: grid;
-        grid-template-columns: repeat(3, 1fr);
-        column-gap: 10px;
+        display: flex;
+        flex-direction: column;
+        flex-wrap: wrap;
       }
       .enable-config-opt,
       .selection-config-opt {
@@ -154,7 +154,6 @@ import {userOptionStyle} from 'viewers/components/styles/user_option.styles';
   ],
 })
 export class TraceConfigComponent {
-  objectKeys = Object.keys;
   changeDetectionWorker: number | undefined;
   traceConfig: TraceConfigurationMap | undefined;
 
@@ -194,14 +193,34 @@ export class TraceConfigComponent {
     window.clearInterval(this.changeDetectionWorker);
   }
 
-  advancedConfigTraces() {
+  getTraceCheckboxContainerHeight(): string {
+    const config = assertDefined(this.traceConfig);
+    return Math.ceil(Object.keys(config).length / 3) * 24 + 'px';
+  }
+
+  getSortedTraceKeys(): string[] {
+    const config = assertDefined(this.traceConfig);
+    return Object.keys(config).sort((a, b) => {
+      return config[a].name < config[b].name ? -1 : 1;
+    });
+  }
+
+  getSortedConfigKeys(): string[] {
     const advancedConfigs: string[] = [];
     Object.keys(assertDefined(this.traceConfig)).forEach((traceKey: string) => {
       if (assertDefined(this.traceConfig)[traceKey].config) {
         advancedConfigs.push(traceKey);
       }
     });
-    return advancedConfigs;
+    return advancedConfigs.sort();
+  }
+
+  getSortedConfigs(
+    configs: EnableConfiguration[] | SelectionConfiguration[],
+  ): EnableConfiguration[] | SelectionConfiguration[] {
+    return configs.sort((a, b) => {
+      return a.name < b.name ? -1 : 1;
+    });
   }
 
   onSelectOptionHover(event: MouseEvent, option: string) {
