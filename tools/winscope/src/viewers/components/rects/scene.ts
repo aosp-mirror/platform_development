@@ -15,7 +15,7 @@
  */
 
 import {Box3D} from 'common/geometry/box3d';
-import {Distance} from 'common/geometry/distance';
+import {Camera} from './camera';
 import {RectLabel} from './rect_label';
 import {UiRect3D} from './ui_rect3d';
 
@@ -24,11 +24,4 @@ export interface Scene {
   camera: Camera;
   rects: UiRect3D[];
   labels: RectLabel[];
-}
-
-interface Camera {
-  rotationAngleX: number;
-  rotationAngleY: number;
-  zoomFactor: number;
-  panScreenDistance: Distance;
 }
