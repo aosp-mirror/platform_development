@@ -11,3 +11,6 @@ thiserror = "1.0"
 [build-dependencies]
 protobuf-codegen = "3"
 protobuf-parse = "3"
+
+[lints.rust]
+unexpected_cfgs = { level = "warn", check-cfg = ['cfg(soong)'] }
