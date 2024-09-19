@@ -18,6 +18,7 @@ package com.example.android.vdmdemo.host;
 
 import android.Manifest;
 import android.app.AlertDialog;
+import android.companion.AssociationRequest;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
@@ -208,7 +209,12 @@ public class MainActivity extends Hilt_MainActivity {
                         mHomeDisplayButton.setVisibility(visibility);
                     }
                     if (mMirrorDisplayButton != null) {
-                        mMirrorDisplayButton.setVisibility(visibility);
+                        if (mPreferenceController.getString(R.string.pref_device_profile).equals(
+                                AssociationRequest.DEVICE_PROFILE_APP_STREAMING)) {
+                            mMirrorDisplayButton.setVisibility(visibility);
+                        } else {
+                            mMirrorDisplayButton.setVisibility(View.GONE);
+                        }
                     }
                 });
     }
