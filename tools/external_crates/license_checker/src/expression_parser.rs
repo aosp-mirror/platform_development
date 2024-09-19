@@ -12,10 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use std::collections::{BTreeMap, BTreeSet};
-
-use lazy_static::lazy_static;
 use spdx::{Expression, LicenseReq, Licensee};
+use std::{
+    collections::{BTreeMap, BTreeSet},
+    sync::LazyLock,
+};
 
 use crate::LicenseCheckerError;
 
@@ -56,8 +57,8 @@ fn get_spdx_expr(
     }
 }
 
-lazy_static! {
-    static ref LICENSE_PREFERENCE: Vec<Licensee> = vec![
+static LICENSE_PREFERENCE: LazyLock<Vec<Licensee>> = LazyLock::new(|| {
+    vec![
         "Apache-2.0",
         "MIT",
         "BSD-3-Clause",
@@ -73,14 +74,17 @@ lazy_static! {
     ]
     .into_iter()
     .map(|l| Licensee::parse(l).unwrap())
-    .collect();
-    static ref LICENSE_EXPR_SPECIAL_CASES: BTreeMap<&'static str, (Option<&'static str>, &'static str)> =
-        BTreeMap::from([
-            ("libfuzzer-sys", (Some("MIT/Apache-2.0/NCSA"), "(MIT OR Apache-2.0) AND NCSA")),
-            ("ring", (None, "MIT AND ISC AND OpenSSL")),
-            ("webpki", (None, "ISC AND BSD-3-Clause")),
-        ]);
-}
+    .collect()
+});
+static LICENSE_EXPR_SPECIAL_CASES: LazyLock<
+    BTreeMap<&'static str, (Option<&'static str>, &'static str)>,
+> = LazyLock::new(|| {
+    BTreeMap::from([
+        ("libfuzzer-sys", (Some("MIT/Apache-2.0/NCSA"), "(MIT OR Apache-2.0) AND NCSA")),
+        ("ring", (None, "MIT AND ISC AND OpenSSL")),
+        ("webpki", (None, "ISC AND BSD-3-Clause")),
+    ])
+});
 
 #[cfg(test)]
 mod tests {
