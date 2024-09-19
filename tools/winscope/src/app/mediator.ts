@@ -268,6 +268,9 @@ export class Mediator {
 
     await event.visit(WinscopeEventType.DARK_MODE_TOGGLED, async (event) => {
       await this.timelineComponent?.onWinscopeEvent(event);
+      for (const viewer of this.viewers) {
+        await viewer.onWinscopeEvent(event);
+      }
     });
 
     await event.visit(
