@@ -12,7 +12,6 @@ chrono = "0.4"
 clap = { version = "4.4.6", features = ["derive"] }
 glob = "0.3"
 itertools = "0.11"
-lazy_static = "1.5"
 num_cpus = "1"
 protobuf = "3"
 reqwest = { version = "0.12.5", features = ["blocking"] }

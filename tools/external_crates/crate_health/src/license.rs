@@ -16,12 +16,12 @@ use std::{
     collections::BTreeMap,
     fs::{remove_file, write},
     path::Path,
+    sync::LazyLock,
 };
 
 use anyhow::{anyhow, Result};
 use glob::glob;
 use google_metadata::metadata::LicenseType;
-use lazy_static::lazy_static;
 use license_checker::LicenseState;
 use spdx::{LicenseReq, Licensee};
 
@@ -68,8 +68,8 @@ pub fn most_restrictive_type(licenses: &LicenseState) -> LicenseType {
         .unwrap_or(LicenseType::UNKNOWN)
 }
 
-lazy_static! {
-    static ref MODULE_LICENSE_FILES: BTreeMap<LicenseReq, &'static str> = vec![
+static MODULE_LICENSE_FILES: LazyLock<BTreeMap<LicenseReq, &'static str>> = LazyLock::new(|| {
+    vec![
         ("Apache-2.0", "MODULE_LICENSE_APACHE2"),
         ("MIT", "MODULE_LICENSE_MIT"),
         ("BSD-3-Clause", "MODULE_LICENSE_BSD"),
@@ -85,8 +85,10 @@ lazy_static! {
     ]
     .into_iter()
     .map(|l| (Licensee::parse(l.0).unwrap().into_req(), l.1))
-    .collect();
-    static ref LICENSE_TYPES: BTreeMap<LicenseReq, LicenseType> = vec![
+    .collect()
+});
+static LICENSE_TYPES: LazyLock<BTreeMap<LicenseReq, LicenseType>> = LazyLock::new(|| {
+    vec![
         ("Apache-2.0", LicenseType::NOTICE),
         ("MIT", LicenseType::NOTICE),
         ("BSD-3-Clause", LicenseType::NOTICE),
@@ -102,5 +104,5 @@ lazy_static! {
     ]
     .into_iter()
     .map(|l| (Licensee::parse(l.0).unwrap().into_req(), l.1))
-    .collect();
-}
+    .collect()
+});
