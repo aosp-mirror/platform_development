@@ -269,8 +269,8 @@ class Mapper3D {
       if (rect2d.fillRegion) {
         fillRegion = rect2d.fillRegion.rects.map((r) => {
           return {
-            topLeft: {x: r.x, y: r.y, z},
-            bottomRight: {x: r.x + r.w, y: r.y + r.h, z},
+            topLeft: new Point3D(r.x, r.y, z),
+            bottomRight: new Point3D(r.x + r.w, r.y + r.h, z),
           };
         });
       }
@@ -278,16 +278,8 @@ class Mapper3D {
 
       const rect: UiRect3D = {
         id: rect2d.id,
-        topLeft: {
-          x: rect2d.x,
-          y: rect2d.y,
-          z,
-        },
-        bottomRight: {
-          x: rect2d.x + rect2d.w,
-          y: rect2d.y + rect2d.h,
-          z,
-        },
+        topLeft: new Point3D(rect2d.x, rect2d.y, z),
+        bottomRight: new Point3D(rect2d.x + rect2d.w, rect2d.y + rect2d.h, z),
         isOversized: false,
         cornerRadius: rect2d.cornerRadius,
         darkFactor,
@@ -417,16 +409,16 @@ class Mapper3D {
 
       const rect3d = rects3d[index];
 
-      const bottomLeft: Point3D = {
-        x: rect3d.topLeft.x,
-        y: rect3d.topLeft.y,
-        z: rect3d.topLeft.z,
-      };
-      const topRight: Point3D = {
-        x: rect3d.bottomRight.x,
-        y: rect3d.bottomRight.y,
-        z: rect3d.bottomRight.z,
-      };
+      const bottomLeft = new Point3D(
+        rect3d.topLeft.x,
+        rect3d.topLeft.y,
+        rect3d.topLeft.z,
+      );
+      const topRight = new Point3D(
+        rect3d.bottomRight.x,
+        rect3d.bottomRight.y,
+        rect3d.bottomRight.z,
+      );
       const lineStarts = [
         rect3d.transform.transformPoint3D(rect3d.topLeft),
         rect3d.transform.transformPoint3D(rect3d.bottomRight),
@@ -445,22 +437,18 @@ class Mapper3D {
 
       lineStart.x += Mapper3D.LABEL_CIRCLE_RADIUS / 2;
 
-      const lineEnd: Point3D = {
-        x: lineStart.x,
-        y: labelY + xDiff * cameraTiltFactor,
-        z: lineStart.z,
-      };
+      const lineEnd = new Point3D(
+        lineStart.x,
+        labelY + xDiff * cameraTiltFactor,
+        lineStart.z,
+      );
 
       const isHighlighted = this.isHighlighted(rect2d);
 
       const RectLabel: RectLabel = {
         circle: {
           radius: Mapper3D.LABEL_CIRCLE_RADIUS,
-          center: {
-            x: lineStart.x,
-            y: lineStart.y,
-            z: lineStart.z + 0.5,
-          },
+          center: new Point3D(lineStart.x, lineStart.y, lineStart.z + 0.5),
         },
         linePoints: [lineStart, lineEnd],
         textCenter: lineEnd,
@@ -480,7 +468,7 @@ class Mapper3D {
         width: 1,
         height: 1,
         depth: 1,
-        center: {x: 0, y: 0, z: 0},
+        center: new Point3D(0, 0, 0),
         diagonal: Math.sqrt(3),
       };
     }
@@ -525,11 +513,11 @@ class Mapper3D {
       });
     }
 
-    const center: Point3D = {
-      x: (minX + maxX) / 2,
-      y: (minY + maxY) / 2,
-      z: (minZ + maxZ) / 2,
-    };
+    const center = new Point3D(
+      (minX + maxX) / 2,
+      (minY + maxY) / 2,
+      (minZ + maxZ) / 2,
+    );
 
     const width = maxX - minX;
     const height = maxY - minY;

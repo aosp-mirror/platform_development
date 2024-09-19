@@ -369,16 +369,16 @@ export class Canvas {
   }
 
   private createRoundedRectShape(rect: UiRect3D): THREE.Shape {
-    const bottomLeft: Point3D = {
-      x: rect.topLeft.x,
-      y: rect.bottomRight.y,
-      z: rect.topLeft.z,
-    };
-    const topRight: Point3D = {
-      x: rect.bottomRight.x,
-      y: rect.topLeft.y,
-      z: rect.bottomRight.z,
-    };
+    const bottomLeft = new Point3D(
+      rect.topLeft.x,
+      rect.bottomRight.y,
+      rect.topLeft.z,
+    );
+    const topRight = new Point3D(
+      rect.bottomRight.x,
+      rect.topLeft.y,
+      rect.bottomRight.z,
+    );
 
     const cornerRadius = this.getAdjustedCornerRadius(rect);
 
@@ -416,16 +416,8 @@ export class Canvas {
   }
 
   private createRectShape(topLeft: Point3D, bottomRight: Point3D): THREE.Shape {
-    const bottomLeft: Point3D = {
-      x: topLeft.x,
-      y: bottomRight.y,
-      z: topLeft.z,
-    };
-    const topRight: Point3D = {
-      x: bottomRight.x,
-      y: topLeft.y,
-      z: bottomRight.z,
-    };
+    const bottomLeft = new Point3D(topLeft.x, bottomRight.y, topLeft.z);
+    const topRight = new Point3D(bottomRight.x, topLeft.y, bottomRight.z);
 
     // Create rect shape
     return new THREE.Shape()
