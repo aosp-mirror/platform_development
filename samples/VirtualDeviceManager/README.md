@@ -482,6 +482,8 @@ which showcases implicit intent handling.
 
 ### Android 16 / Baklava
 
+-   Added `COMPANION_DEVICE_NEARBY_SENSOR_STREAMING` device profile.
+
 -   Added support for custom power management.
 
 -   Added support for custom system windows (like status bar) and insets.

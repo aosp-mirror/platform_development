@@ -201,12 +201,17 @@ public class MainActivity extends Hilt_MainActivity {
                 () -> {
                     if (mLauncher != null) {
                         mLauncherAdapter.update();
-                        mLauncher.setVisibility(visibility);
+                        if (mPreferenceController.getBoolean(
+                                R.string.internal_pref_home_displays_supported)) {
+                            mLauncher.setVisibility(visibility);
+                        } else {
+                            mLauncher.setVisibility(View.GONE);
+                        }
                     }
                     if (mHomeDisplayButton != null) {
                         mHomeDisplayButton.setEnabled(
-                                mPreferenceController.getBoolean(R
-                                        .string.internal_pref_home_displays_supported));
+                                mPreferenceController.getBoolean(
+                                        R.string.internal_pref_home_displays_supported));
                         mHomeDisplayButton.setVisibility(visibility);
                     }
                     if (mMirrorDisplayButton != null) {
