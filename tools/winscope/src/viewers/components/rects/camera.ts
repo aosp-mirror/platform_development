@@ -1,11 +1,11 @@
 /*
- * Copyright (C) 2024, The Android Open Source Project
+ * Copyright (C) 2024 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *      http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,12 +14,11 @@
  * limitations under the License.
  */
 
-import {Point} from './point';
+import {Distance} from 'common/geometry/distance';
 
-export class Point3D implements Point {
-  constructor(public x: number, public y: number, public z: number) {}
-
-  isEqual(other: Point3D): boolean {
-    return this.x === other.x && this.y === other.y && this.z === other.z;
-  }
+export interface Camera {
+  rotationAngleX: number;
+  rotationAngleY: number;
+  zoomFactor: number;
+  panScreenDistance: Distance;
 }

@@ -34,6 +34,7 @@ import {TraceType} from 'trace/trace_type';
 import {VISIBLE_CHIP} from 'viewers/common/chip';
 import {DisplayIdentifier} from 'viewers/common/display_identifier';
 import {UiHierarchyTreeNode} from 'viewers/common/ui_hierarchy_tree_node';
+import {ViewerEvents} from 'viewers/common/viewer_events';
 import {CollapsibleSectionTitleComponent} from 'viewers/components/collapsible_section_title_component';
 import {RectsComponent} from 'viewers/components/rects/rects_component';
 import {UiRect} from 'viewers/components/rects/ui_rect';
@@ -439,6 +440,55 @@ describe('RectsComponent', () => {
     fixture.detectChanges();
     expect(canvasSpy).toHaveBeenCalledTimes(1);
     expect(canvasSpy.calls.mostRecent().args[0].rects[0].isPinned).toBeTrue();
+  });
+
+  it('emits rect id on rect click', () => {
+    component.rects = [rectGroup0];
+    fixture.detectChanges();
+
+    const testString = 'test_id';
+    spyOn(Canvas.prototype, 'getClickedRectId').and.returnValue(testString);
+    let id: string | undefined;
+    htmlElement.addEventListener(ViewerEvents.HighlightedIdChange, (event) => {
+      id = (event as CustomEvent).detail.id;
+    });
+
+    const canvas = assertDefined(
+      htmlElement.querySelector<HTMLElement>('.large-rects-canvas'),
+    );
+    canvas.click();
+    fixture.detectChanges();
+    expect(id).toEqual(testString);
+  });
+
+  it('pans view without emitting rect id', () => {
+    component.rects = [rectGroup0];
+    fixture.detectChanges();
+    canvasSpy.calls.reset();
+
+    const testString = 'test_id';
+    spyOn(Canvas.prototype, 'getClickedRectId').and.returnValue(testString);
+    let id: string | undefined;
+    htmlElement.addEventListener(ViewerEvents.HighlightedIdChange, (event) => {
+      id = (event as CustomEvent).detail.id;
+    });
+
+    const canvas = assertDefined(
+      htmlElement.querySelector<HTMLElement>('.large-rects-canvas'),
+    );
+    canvas.dispatchEvent(new MouseEvent('mousedown'));
+    document.dispatchEvent(new MouseEvent('mousemove'));
+    document.dispatchEvent(new MouseEvent('mouseup'));
+    fixture.detectChanges();
+    expect(canvasSpy).toHaveBeenCalled();
+
+    canvas.click();
+    fixture.detectChanges();
+    expect(id).toBeUndefined();
+
+    canvas.click();
+    fixture.detectChanges();
+    expect(id).toEqual(testString);
   });
 
   async function checkSelectedDisplay(
