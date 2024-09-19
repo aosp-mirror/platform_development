@@ -68,9 +68,9 @@ import {ShadingMode} from './shading_mode';
             [matTooltip]="getShadingMode()"
             [disabled]="shadingModes.length < 2"
             (click)="onShadingModeButtonClicked()" #shadingModeButton>
-            <mat-icon *ngIf="mapper3d.isWireFrame()" class="material-symbols-outlined" aria-hidden="true"> deployed_code </mat-icon>
-            <mat-icon *ngIf="mapper3d.isShadedByGradient()" svgIcon="cube_partial_shade"></mat-icon>
-            <mat-icon *ngIf="mapper3d.isShadedByOpacity()" svgIcon="cube_full_shade"></mat-icon>
+            <mat-icon *ngIf="largeRectsMapper3d.isWireFrame()" class="material-symbols-outlined" aria-hidden="true"> deployed_code </mat-icon>
+            <mat-icon *ngIf="largeRectsMapper3d.isShadedByGradient()" svgIcon="cube_partial_shade"></mat-icon>
+            <mat-icon *ngIf="largeRectsMapper3d.isShadedByOpacity()" svgIcon="cube_full_shade"></mat-icon>
           </button>
 
           <div class="icon-divider"></div>
@@ -88,7 +88,7 @@ import {ShadingMode} from './shading_mode';
               min="0"
               max="1"
               aria-label="units"
-              [value]="mapper3d.getCameraRotationFactor()"
+              [value]="largeRectsMapper3d.getCameraRotationFactor()"
               (input)="onRotationSliderChange($event.value)"
               (focus)="$event.target.blur()"
               color="accent"
@@ -350,7 +350,8 @@ export class RectsComponent implements OnInit, OnDestroy {
   private internalDisplays: DisplayIdentifier[] = [];
   private internalHighlightedItem = '';
   private currentDisplays: DisplayIdentifier[] = [];
-  private mapper3d: Mapper3D;
+  private largeRectsMapper3d = new Mapper3D();
+  private miniRectsMapper3d = new Mapper3D();
   private largeRectsCanvas?: Canvas;
   private miniRectsCanvas?: Canvas;
   private resizeObserver: ResizeObserver;
@@ -359,6 +360,7 @@ export class RectsComponent implements OnInit, OnDestroy {
   private largeRectsLabelsElement?: HTMLElement;
   private mouseMoveListener = (event: MouseEvent) => this.onMouseMove(event);
   private mouseUpListener = (event: MouseEvent) => this.onMouseUp(event);
+  private panning = false;
 
   private static readonly ZOOM_SCROLL_RATIO = 0.3;
 
@@ -367,7 +369,6 @@ export class RectsComponent implements OnInit, OnDestroy {
     @Inject(MatIconRegistry) private matIconRegistry: MatIconRegistry,
     @Inject(DomSanitizer) private domSanitizer: DomSanitizer,
   ) {
-    this.mapper3d = new Mapper3D();
     this.resizeObserver = new ResizeObserver((entries) => {
       this.drawLargeRectsAndLabels();
     });
@@ -386,7 +387,7 @@ export class RectsComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit() {
-    this.mapper3d.setAllowedShadingModes(this.shadingModes);
+    this.largeRectsMapper3d.setAllowedShadingModes(this.shadingModes);
 
     const canvasContainer: HTMLElement =
       this.elementRef.nativeElement.querySelector('.canvas-container');
@@ -417,7 +418,7 @@ export class RectsComponent implements OnInit, OnDestroy {
       this.internalDisplays.length > 0
         ? [this.getActiveDisplay(this.internalDisplays)]
         : [];
-    this.mapper3d.increaseZoomFactor(this.zoomFactor - 1);
+    this.largeRectsMapper3d.increaseZoomFactor(this.zoomFactor - 1);
     this.drawLargeRectsAndLabels();
 
     this.miniRectsCanvasElement = canvasContainer.querySelector(
@@ -428,6 +429,8 @@ export class RectsComponent implements OnInit, OnDestroy {
       undefined,
       isDarkMode,
     );
+    this.miniRectsMapper3d.setShadingMode(ShadingMode.GRADIENT);
+    this.miniRectsMapper3d.resetToOrthogonalState();
     if (this.miniRects && this.miniRects.length > 0) {
       this.internalMiniRects = this.miniRects;
       this.drawMiniRects();
@@ -459,13 +462,15 @@ export class RectsComponent implements OnInit, OnDestroy {
 
     let redrawRects = false;
     if (simpleChanges['pinnedItems']) {
-      this.mapper3d.setPinnedItems(this.pinnedItems);
+      this.largeRectsMapper3d.setPinnedItems(this.pinnedItems);
       redrawRects = true;
     }
     if (simpleChanges['highlightedItem']) {
       this.internalHighlightedItem =
         simpleChanges['highlightedItem'].currentValue;
-      this.mapper3d.setHighlightedRectId(this.internalHighlightedItem);
+      this.largeRectsMapper3d.setHighlightedRectId(
+        this.internalHighlightedItem,
+      );
       redrawRects = true;
     }
     if (simpleChanges['rects']) {
@@ -506,7 +511,7 @@ export class RectsComponent implements OnInit, OnDestroy {
       return;
     }
 
-    const currGroupIds = this.mapper3d.getCurrentGroupIds();
+    const currGroupIds = this.largeRectsMapper3d.getCurrentGroupIds();
     const displaysWithCurrentGroupId = this.internalDisplays.filter((display) =>
       currGroupIds.some((curr) => curr === display.groupId),
     );
@@ -529,7 +534,7 @@ export class RectsComponent implements OnInit, OnDestroy {
       this.storeKeyZSpacingFactor,
     );
     if (storedZSpacingFactor !== undefined) {
-      this.mapper3d.setZSpacingFactor(Number(storedZSpacingFactor));
+      this.largeRectsMapper3d.setZSpacingFactor(Number(storedZSpacingFactor));
     }
 
     const storedShadingMode = assertDefined(this.store).get(
@@ -539,7 +544,7 @@ export class RectsComponent implements OnInit, OnDestroy {
       storedShadingMode !== undefined &&
       this.shadingModes.includes(storedShadingMode as ShadingMode)
     ) {
-      this.mapper3d.setShadingMode(storedShadingMode as ShadingMode);
+      this.largeRectsMapper3d.setShadingMode(storedShadingMode as ShadingMode);
     }
   }
 
@@ -550,18 +555,18 @@ export class RectsComponent implements OnInit, OnDestroy {
       TRACE_INFO[this.dependencies[0]].name,
     );
     this.store?.add(this.storeKeyZSpacingFactor, `${factor}`);
-    this.mapper3d.setZSpacingFactor(factor);
+    this.largeRectsMapper3d.setZSpacingFactor(factor);
     this.drawLargeRectsAndLabels();
   }
 
   onRotationSliderChange(factor: number) {
-    this.mapper3d.setCameraRotationFactor(factor);
+    this.largeRectsMapper3d.setCameraRotationFactor(factor);
     this.drawLargeRectsAndLabels();
   }
 
   resetCamera() {
     Analytics.Navigation.logZoom('reset', 'rects');
-    this.mapper3d.resetCamera();
+    this.largeRectsMapper3d.resetCamera();
     this.drawLargeRectsAndLabels();
   }
 
@@ -584,8 +589,9 @@ export class RectsComponent implements OnInit, OnDestroy {
   }
 
   onMouseMove(event: MouseEvent) {
+    this.panning = true;
     const distance = new Distance(event.movementX, event.movementY);
-    this.mapper3d.addPanScreenDistance(distance);
+    this.largeRectsMapper3d.addPanScreenDistance(distance);
     this.drawLargeRectsAndLabels();
   }
 
@@ -620,6 +626,10 @@ export class RectsComponent implements OnInit, OnDestroy {
   }
 
   onRectClick(event: MouseEvent) {
+    if (this.panning) {
+      this.panning = false;
+      return;
+    }
     event.preventDefault();
 
     const id = this.findClickedRectId(event);
@@ -653,16 +663,16 @@ export class RectsComponent implements OnInit, OnDestroy {
   }
 
   getZSpacingFactor(): number {
-    return this.mapper3d.getZSpacingFactor();
+    return this.largeRectsMapper3d.getZSpacingFactor();
   }
 
   getShadingMode(): ShadingMode {
-    return this.mapper3d.getShadingMode();
+    return this.largeRectsMapper3d.getShadingMode();
   }
 
   onShadingModeButtonClicked() {
-    this.mapper3d.updateShadingMode();
-    const newMode = this.mapper3d.getShadingMode();
+    this.largeRectsMapper3d.updateShadingMode();
+    const newMode = this.largeRectsMapper3d.getShadingMode();
     Analytics.Navigation.logRectSettingsChanged(
       'shading mode',
       newMode,
@@ -695,7 +705,7 @@ export class RectsComponent implements OnInit, OnDestroy {
 
   private updateCurrentDisplays(displays: DisplayIdentifier[]) {
     this.currentDisplays = displays;
-    this.mapper3d.setCurrentGroupIds(displays.map((d) => d.groupId));
+    this.largeRectsMapper3d.setCurrentGroupIds(displays.map((d) => d.groupId));
     this.drawLargeRectsAndLabels();
   }
 
@@ -713,12 +723,12 @@ export class RectsComponent implements OnInit, OnDestroy {
   }
 
   private doZoomIn(ratio = 1) {
-    this.mapper3d.increaseZoomFactor(ratio);
+    this.largeRectsMapper3d.increaseZoomFactor(ratio);
     this.drawLargeRectsAndLabels();
   }
 
   private doZoomOut(ratio = 1) {
-    this.mapper3d.decreaseZoomFactor(ratio);
+    this.largeRectsMapper3d.decreaseZoomFactor(ratio);
     this.drawLargeRectsAndLabels();
   }
 
@@ -727,8 +737,8 @@ export class RectsComponent implements OnInit, OnDestroy {
     // (rotation, spacing, ...) we can just update the camera and/or update the mesh positions.
     // We'd probably need to get rid of the intermediate layer (Scene, Rect3D, ... types) and
     // work directly with three.js's meshes.
-    this.mapper3d.setRects(this.internalRects);
-    this.largeRectsCanvas?.draw(this.mapper3d.computeScene());
+    this.largeRectsMapper3d.setRects(this.internalRects);
+    this.largeRectsCanvas?.draw(this.largeRectsMapper3d.computeScene());
   }
 
   private drawMiniRects() {
@@ -737,30 +747,17 @@ export class RectsComponent implements OnInit, OnDestroy {
     // We'd probably need to get rid of the intermediate layer (Scene, Rect3D, ... types) and
     // work directly with three.js's meshes.
     if (this.internalMiniRects) {
-      const largeRectShadingMode = this.mapper3d.getShadingMode();
-      const largeRectGroupIds = this.mapper3d.getCurrentGroupIds();
-      const largeRectZSpacing = this.mapper3d.getZSpacingFactor();
-      const largeRectCameraRotation = this.mapper3d.getCameraRotationFactor();
-
-      this.mapper3d.setShadingMode(ShadingMode.GRADIENT);
-      this.mapper3d.setCurrentGroupIds([this.internalMiniRects[0]?.groupId]);
-      this.mapper3d.resetToOrthogonalState();
-
-      this.mapper3d.setRects(this.internalMiniRects);
-      this.mapper3d.decreaseZoomFactor(this.zoomFactor - 1);
-      this.miniRectsCanvas?.draw(this.mapper3d.computeScene());
-      this.mapper3d.increaseZoomFactor(this.zoomFactor - 1);
+      this.miniRectsMapper3d.setCurrentGroupIds([
+        this.internalMiniRects[0]?.groupId,
+      ]);
+      this.miniRectsMapper3d.setRects(this.internalMiniRects);
+      this.miniRectsCanvas?.draw(this.miniRectsMapper3d.computeScene());
 
       // Mapper internally sets these values to 100%. They need to be reset afterwards
       if (this.miniRectsCanvasElement) {
-        this.miniRectsCanvasElement.style.width = '25%';
-        this.miniRectsCanvasElement.style.height = '25%';
+        this.miniRectsCanvasElement.style.width = '30%';
+        this.miniRectsCanvasElement.style.height = '30%';
       }
-
-      this.mapper3d.setShadingMode(largeRectShadingMode);
-      this.mapper3d.setCurrentGroupIds(largeRectGroupIds);
-      this.mapper3d.setZSpacingFactor(largeRectZSpacing);
-      this.mapper3d.setCameraRotationFactor(largeRectCameraRotation);
     }
   }
 
