@@ -16,6 +16,7 @@
 
 package com.android.commands.monkey;
 
+import android.view.Display;
 import android.view.InputDevice;
 
 
@@ -24,7 +25,8 @@ import android.view.InputDevice;
  */
 public class MonkeyTouchEvent extends MonkeyMotionEvent {
     public MonkeyTouchEvent(int action) {
-        super(MonkeyEvent.EVENT_TYPE_TOUCH, InputDevice.SOURCE_TOUCHSCREEN, action);
+        super(MonkeyEvent.EVENT_TYPE_TOUCH, InputDevice.SOURCE_TOUCHSCREEN, action,
+                Display.DEFAULT_DISPLAY);
     }
 
     @Override
