@@ -47,7 +47,6 @@ use clap::Subcommand;
 use log::debug;
 use nix::fcntl::OFlag;
 use nix::unistd::pipe2;
-use once_cell::sync::Lazy;
 use std::collections::BTreeMap;
 use std::collections::VecDeque;
 use std::env;
@@ -56,6 +55,7 @@ use std::io::{Read, Write};
 use std::path::Path;
 use std::path::PathBuf;
 use std::process::{Command, Stdio};
+use std::sync::LazyLock;
 use tempfile::tempdir;
 
 // Major TODOs
@@ -63,7 +63,7 @@ use tempfile::tempdir;
 //  * handle warnings. put them in comments in the android.bp, some kind of report section
 
 /// Rust modules which shouldn't use the default generated names, to avoid conflicts or confusion.
-pub static RENAME_MAP: Lazy<BTreeMap<&str, &str>> = Lazy::new(|| {
+pub static RENAME_MAP: LazyLock<BTreeMap<&str, &str>> = LazyLock::new(|| {
     [
         ("libash", "libash_rust"),
         ("libatomic", "libatomic_rust"),
@@ -87,7 +87,7 @@ pub static RENAME_MAP: Lazy<BTreeMap<&str, &str>> = Lazy::new(|| {
 /// generated automatically by this script. Examples include compiler builtins
 /// and other foundational libraries. It also tracks the location of rules.mk
 /// build files for crates that are not under external/rust/crates.
-pub static RULESMK_RENAME_MAP: Lazy<BTreeMap<&str, &str>> = Lazy::new(|| {
+pub static RULESMK_RENAME_MAP: LazyLock<BTreeMap<&str, &str>> = LazyLock::new(|| {
     [
         ("liballoc", "trusty/user/base/lib/liballoc-rust"),
         ("libcompiler_builtins", "trusty/user/base/lib/libcompiler_builtins-rust"),
