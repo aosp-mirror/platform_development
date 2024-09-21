@@ -75,11 +75,8 @@ export class Canvas {
   private lastScene: SceneState = {
     isDarkMode: this.isDarkMode(),
     translatedPos: undefined,
-    rectIdToRectObjects: new Map<string, [UiRect3D, THREE.Mesh]>(),
-    rectIdToLabelObjects: new Map<
-      string,
-      [RectLabel, THREE.Mesh, THREE.Line, CSS2DObject]
-    >(),
+    rectIdToRectGraphics: new Map<string, RectGraphics>(),
+    rectIdToLabelGraphics: new Map<string, LabelGraphics>(),
   };
 
   constructor(
@@ -154,18 +151,22 @@ export class Canvas {
   }
 
   updateRects(rects: UiRect3D[]) {
-    for (const key of this.lastScene.rectIdToRectObjects.keys()) {
+    for (const key of this.lastScene.rectIdToRectGraphics.keys()) {
       if (!rects.some((rect) => rect.id === key)) {
-        this.lastScene.rectIdToRectObjects.delete(key);
+        this.lastScene.rectIdToRectGraphics.delete(key);
         this.scene.remove(assertDefined(this.scene.getObjectByName(key)));
       }
     }
     rects.forEach((rect) => {
-      const obj = this.lastScene.rectIdToRectObjects.get(rect.id);
-      const rectMesh = !obj
+      const existingGraphics = this.lastScene.rectIdToRectGraphics.get(rect.id);
+      const mesh = !existingGraphics
         ? this.makeAndAddRectMesh(rect)
-        : this.updateExistingRectMesh(rect, obj[0], obj[1]);
-      this.lastScene.rectIdToRectObjects.set(rect.id, [rect, rectMesh]);
+        : this.updateExistingRectMesh(
+            rect,
+            existingGraphics.rect,
+            existingGraphics.mesh,
+          );
+      this.lastScene.rectIdToRectGraphics.set(rect.id, {rect, mesh});
     });
   }
 
@@ -187,18 +188,14 @@ export class Canvas {
     return [this.scene, this.camera];
   }
 
-  isSceneInDarkMode(): boolean {
-    return this.lastScene.isDarkMode;
-  }
-
   getClickedRectId(x: number, y: number, z: number): undefined | string {
     const clickPosition = new THREE.Vector3(x, y, z);
     const raycaster = new THREE.Raycaster();
     raycaster.setFromCamera(clickPosition, assertDefined(this.camera));
     const intersected = raycaster.intersectObjects(
-      Array.from(this.lastScene.rectIdToRectObjects.values())
-        .filter((obj) => obj[0].isClickable)
-        .map((obj) => obj[1]),
+      Array.from(this.lastScene.rectIdToRectGraphics.values())
+        .filter((graphics) => graphics.rect.isClickable)
+        .map((graphics) => graphics.mesh),
     );
     if (intersected.length > 0) {
       return intersected[0].object.name;
@@ -655,25 +652,19 @@ export class Canvas {
   private updateLabelObjects(labels: RectLabel[]) {
     this.clearLabels(labels);
     labels.forEach((label) => {
-      let circleMesh: THREE.Mesh;
-      let line: THREE.Line;
-      let labelCss: CSS2DObject;
-      if (this.lastScene.rectIdToLabelObjects.get(label.rectId)) {
-        [circleMesh, line, labelCss] = this.updateExistingLabelObjects(label);
+      let graphics: LabelGraphics;
+      if (this.lastScene.rectIdToLabelGraphics.get(label.rectId)) {
+        graphics = this.updateExistingLabelObjects(label);
       } else {
-        circleMesh = this.makeLabelCircleMesh(label);
-        this.scene.add(circleMesh);
-        line = this.makeLabelLine(label);
+        const circle = this.makeLabelCircleMesh(label);
+        this.scene.add(circle);
+        const line = this.makeLabelLine(label);
         this.scene.add(line);
-        labelCss = this.makeLabelCssObject(label);
-        this.scene.add(labelCss);
+        const text = this.makeLabelCssObject(label);
+        this.scene.add(text);
+        graphics = {label, circle, line, text};
       }
-      this.lastScene.rectIdToLabelObjects.set(label.rectId, [
-        label,
-        circleMesh,
-        line,
-        labelCss,
-      ]);
+      this.lastScene.rectIdToLabelGraphics.set(label.rectId, graphics);
     });
   }
 
@@ -752,21 +743,21 @@ export class Canvas {
     return labelCss;
   }
 
-  private updateExistingLabelObjects(
-    newLabel: RectLabel,
-  ): [THREE.Mesh, THREE.Line, CSS2DObject] {
-    const [existingLabel, circleMesh, line, labelCss] = assertDefined(
-      this.lastScene.rectIdToLabelObjects.get(newLabel.rectId),
+  private updateExistingLabelObjects(newLabel: RectLabel): LabelGraphics {
+    const {
+      label: existingLabel,
+      circle,
+      line,
+      text,
+    } = assertDefined(
+      this.lastScene.rectIdToLabelGraphics.get(newLabel.rectId),
     );
 
     if (newLabel.circle.radius !== existingLabel.circle.radius) {
-      circleMesh.geometry = new THREE.CircleGeometry(
-        newLabel.circle.radius,
-        20,
-      );
+      circle.geometry = new THREE.CircleGeometry(newLabel.circle.radius, 20);
     }
     if (!newLabel.circle.center.isEqual(existingLabel.circle.center)) {
-      circleMesh.position.set(
+      circle.position.set(
         newLabel.circle.center.x,
         newLabel.circle.center.y,
         newLabel.circle.center.z,
@@ -778,9 +769,9 @@ export class Canvas {
       this.isDarkMode() !== this.lastScene.isDarkMode
     ) {
       const lineMaterial = this.makeLabelMaterial(newLabel);
-      circleMesh.material = lineMaterial;
+      circle.material = lineMaterial;
       line.material = lineMaterial;
-      labelCss.element.style.color = newLabel.isHighlighted ? '' : 'gray';
+      text.element.style.color = newLabel.isHighlighted ? '' : 'gray';
     }
 
     if (
@@ -792,14 +783,14 @@ export class Canvas {
     }
 
     if (!newLabel.textCenter.isEqual(existingLabel.textCenter)) {
-      labelCss.position.set(
+      text.position.set(
         newLabel.textCenter.x,
         newLabel.textCenter.y,
         newLabel.textCenter.z,
       );
     }
 
-    return [circleMesh, line, labelCss];
+    return {label: newLabel, circle, line, text};
   }
 
   private propagateUpdateHighlightedItem(event: MouseEvent, newId: string) {
@@ -818,12 +809,12 @@ export class Canvas {
     if (this.canvasLabels) {
       this.canvasLabels.innerHTML = '';
     }
-    for (const [rectId, objects] of this.lastScene.rectIdToLabelObjects) {
+    for (const [rectId, graphics] of this.lastScene.rectIdToLabelGraphics) {
       if (!labels.some((label) => label.rectId === rectId)) {
-        this.scene.remove(objects[1]);
-        this.scene.remove(objects[2]);
-        this.scene.remove(objects[3]);
-        this.lastScene.rectIdToLabelObjects.delete(rectId);
+        this.scene.remove(graphics.circle);
+        this.scene.remove(graphics.line);
+        this.scene.remove(graphics.text);
+        this.lastScene.rectIdToLabelGraphics.delete(rectId);
       }
     }
   }
@@ -832,9 +823,18 @@ export class Canvas {
 interface SceneState {
   isDarkMode: boolean;
   translatedPos?: Point3D | undefined;
-  rectIdToRectObjects: Map<string, [UiRect3D, THREE.Mesh]>;
-  rectIdToLabelObjects: Map<
-    string,
-    [RectLabel, THREE.Mesh, THREE.Line, CSS2DObject]
-  >;
+  rectIdToRectGraphics: Map<string, RectGraphics>;
+  rectIdToLabelGraphics: Map<string, LabelGraphics>;
+}
+
+interface RectGraphics {
+  rect: UiRect3D;
+  mesh: THREE.Mesh;
+}
+
+interface LabelGraphics {
+  label: RectLabel;
+  circle: THREE.Mesh;
+  line: THREE.Line;
+  text: CSS2DObject;
 }
