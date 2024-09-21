@@ -16,9 +16,9 @@ use std::{
     collections::BTreeMap,
     ffi::{OsStr, OsString},
     path::Path,
+    sync::LazyLock,
 };
 
-use lazy_static::lazy_static;
 use spdx::{LicenseReq, Licensee};
 
 pub(crate) fn classify_license_file_name(file: impl AsRef<Path>) -> Option<LicenseReq> {
@@ -39,8 +39,8 @@ pub(crate) fn classify_license_file_name(file: impl AsRef<Path>) -> Option<Licen
     None
 }
 
-lazy_static! {
-    static ref LICENSE_FILE_NAME_CLASSIFICATION: BTreeMap<OsString, LicenseReq> =
+static LICENSE_FILE_NAME_CLASSIFICATION: LazyLock<BTreeMap<OsString, LicenseReq>> = LazyLock::new(
+    ||
         // Filenames are case-insensitive.
         vec![
             ("LICENSE-MIT", "MIT"),
@@ -62,8 +62,8 @@ lazy_static! {
         ]
         .into_iter()
         .map(|(file, req)| (OsString::from(file.to_uppercase()), Licensee::parse(req).unwrap().into_req()))
-        .collect();
-}
+        .collect(),
+);
 
 #[cfg(test)]
 mod tests {
