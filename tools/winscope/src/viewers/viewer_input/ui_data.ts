@@ -50,6 +50,7 @@ export class UiData implements UiDataLog {
   highlightedRect = '';
   rectsUserOptions: UserOptions | undefined;
   displays: DisplayIdentifier[] = [];
+  isDarkMode = false;
 
   readonly dependencies: TraceType[] = [TraceType.INPUT_EVENT_MERGED];
 
