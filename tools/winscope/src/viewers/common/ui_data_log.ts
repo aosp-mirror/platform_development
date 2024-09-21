@@ -32,6 +32,7 @@ export interface UiDataLog {
   propertiesTree?: undefined | UiPropertyTreeNode;
   propertiesUserOptions?: UserOptions;
   propertiesFilter?: TextFilter;
+  isDarkMode?: boolean;
 }
 
 export interface LogFilter {
