@@ -40,6 +40,7 @@ export class UiData implements UiDataHierarchy {
   propertiesUserOptions: UserOptions = {};
   hierarchyTrees: UiHierarchyTreeNode[] | undefined;
   propertiesTree: UiPropertyTreeNode | undefined;
+  isDarkMode = false;
 
   constructor(
     public curatedProperties: SfCuratedProperties | undefined = undefined,

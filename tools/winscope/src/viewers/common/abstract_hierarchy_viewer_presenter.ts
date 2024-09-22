@@ -66,6 +66,7 @@ export abstract class AbstractHierarchyViewerPresenter<
     private readonly notifyViewCallback: NotifyHierarchyViewCallbackType<UiData>,
     protected readonly uiData: UiData,
   ) {
+    uiData.isDarkMode = storage.get('dark-mode') === 'true';
     this.copyUiDataAndNotifyView();
   }
 
@@ -214,6 +215,10 @@ export abstract class AbstractHierarchyViewerPresenter<
         this.saveConfigAsPreset(event.name);
       },
     );
+    await event.visit(WinscopeEventType.DARK_MODE_TOGGLED, async (event) => {
+      this.uiData.isDarkMode = event.isDarkMode;
+      this.copyUiDataAndNotifyView();
+    });
   }
 
   protected saveConfigAsPreset(storeKey: string) {

@@ -62,7 +62,16 @@ export const logComponentStyles = `
     text-align: center;
   }
 
-  .layer-or-display-id, .transaction-id {
+  .right-align {
+    text-align: end;
+  }
+
+  .layer-or-display-id {
+    flex: 0.75;
+    min-width: 85px;
+  }
+
+  .transaction-id {
     flex: 1;
     min-width: 85px;
   }
@@ -147,10 +156,6 @@ export const logComponentStyles = `
 
   .duration {
     flex: 2;
-  }
-
-  .duration, .status {
-    text-align: end;
   }
 
   .status {
