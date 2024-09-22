@@ -39,4 +39,5 @@ export class UiData implements UiDataHierarchy {
   propertiesUserOptions: UserOptions = {};
   hierarchyTrees: UiHierarchyTreeNode[] | undefined;
   propertiesTree: UiPropertyTreeNode | undefined;
+  isDarkMode = false;
 }

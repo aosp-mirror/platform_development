@@ -238,17 +238,21 @@ describe('ViewerMediaBasedComponent', () => {
     const initialMaxWidth = getContainerMaxWidth();
     const newWindowHeight = window.innerHeight / 2;
     spyOnProperty(window, 'innerHeight').and.returnValue(newWindowHeight);
-    window.dispatchEvent(new Event('resize'));
-    fixture.detectChanges();
-    await fixture.whenStable();
-    expect(getContainerMaxWidth()).not.toEqual(initialMaxWidth);
+    resizeWindow();
+    const maxWidthAfterNewWindowHeight = getContainerMaxWidth();
+    expect(maxWidthAfterNewWindowHeight < initialMaxWidth).toBeTrue();
+
+    const newWindowWidth = maxWidthAfterNewWindowHeight / 2;
+    spyOnProperty(window, 'innerWidth').and.returnValue(newWindowWidth);
+    resizeWindow();
+    expect(getContainerMaxWidth() < maxWidthAfterNewWindowHeight).toBeTrue();
   });
 
-  function getContainerMaxWidth() {
+  function getContainerMaxWidth(): number {
     const container = assertDefined(
       htmlElement.querySelector<HTMLElement>('.container'),
     );
-    return container.style.maxWidth;
+    return Number(container.style.maxWidth.slice(0, -2));
   }
 
   async function openSelect() {
@@ -257,6 +261,12 @@ describe('ViewerMediaBasedComponent', () => {
     );
     selectTrigger.click();
     fixture.detectChanges();
+  }
+
+  async function resizeWindow() {
+    window.dispatchEvent(new Event('resize'));
+    fixture.detectChanges();
+    await fixture.whenStable();
   }
 
   @Component({

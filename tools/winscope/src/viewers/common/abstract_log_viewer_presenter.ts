@@ -112,6 +112,10 @@ export abstract class AbstractLogViewerPresenter<UiData extends UiDataLog>
         await this.applyTracePositionUpdate(event);
       },
     );
+    await event.visit(WinscopeEventType.DARK_MODE_TOGGLED, async (event) => {
+      this.uiData.isDarkMode = event.isDarkMode;
+      this.notifyViewChanged();
+    });
   }
 
   async onFilterChange(type: LogFieldType, value: string[] | string) {

@@ -29,7 +29,6 @@ import {
   IncompleteFrameMapping,
   NoTraceTargetsSelected,
   NoValidFiles,
-  ProxyTracingErrors,
 } from 'messaging/user_warnings';
 import {
   ActiveTraceChanged,
@@ -157,11 +156,7 @@ export class Mediator {
             }
           });
           if (failedTraces.length > 0) {
-            UserNotifier.add(
-              new ProxyTracingErrors([
-                `Failed to find valid files for ${failedTraces.join(', ')}`,
-              ]),
-            );
+            UserNotifier.add(new NoValidFiles(failedTraces));
           }
           await this.loadViewers();
         } else {
@@ -273,6 +268,9 @@ export class Mediator {
 
     await event.visit(WinscopeEventType.DARK_MODE_TOGGLED, async (event) => {
       await this.timelineComponent?.onWinscopeEvent(event);
+      for (const viewer of this.viewers) {
+        await viewer.onWinscopeEvent(event);
+      }
     });
 
     await event.visit(

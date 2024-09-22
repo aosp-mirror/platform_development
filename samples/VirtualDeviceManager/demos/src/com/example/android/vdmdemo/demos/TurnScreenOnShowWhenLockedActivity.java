@@ -14,12 +14,21 @@
  * limitations under the License.
  */
 
-import {NotificationType, UserNotification} from './user_notification';
+package com.example.android.vdmdemo.demos;
 
-export abstract class UserWarning implements UserNotification {
-  getNotificationType(): NotificationType {
-    return NotificationType.WARNING;
-  }
-  abstract getDescriptor(): string;
-  abstract getMessage(): string;
+import android.os.Bundle;
+import android.widget.TextView;
+
+import androidx.appcompat.app.AppCompatActivity;
+
+/** Activity that has android:turnScreenOn and android:showWhenLocked. */
+public final class TurnScreenOnShowWhenLockedActivity extends AppCompatActivity {
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.text_demo_activity);
+        ((TextView) requireViewById(R.id.text))
+                .setText(R.string.turn_screen_on_show_when_locked_activity_text);
+    }
 }
