@@ -111,12 +111,14 @@ export class Presenter extends AbstractLogViewerPresenter<UiData> {
     traces: Traces,
     mergedInputEventTrace: Trace<PropertyTreeNode>,
     private readonly storage: Store,
-    private readonly notifyInputViewCallback: NotifyLogViewCallbackType<UiData>,
+    readonly notifyInputViewCallback: NotifyLogViewCallbackType<UiData>,
   ) {
+    const uiData = UiData.createEmpty();
+    uiData.isDarkMode = storage.get('dark-mode') === 'true';
     super(
       mergedInputEventTrace,
       (uiData) => notifyInputViewCallback(uiData as UiData),
-      UiData.createEmpty(),
+      uiData,
     );
     this.traces = traces;
     this.surfaceFlingerTrace = this.traces.getTrace(TraceType.SURFACE_FLINGER);
