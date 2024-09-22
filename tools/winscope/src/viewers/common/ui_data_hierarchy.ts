@@ -32,6 +32,7 @@ export interface UiDataHierarchy {
   highlightedProperty: string;
   hierarchyFilter: TextFilter;
   propertiesFilter: TextFilter;
+  isDarkMode?: boolean;
   rectsToDraw?: UiRect[];
   rectIdToShowState?: Map<string, RectShowState> | undefined;
   displays?: DisplayIdentifier[];

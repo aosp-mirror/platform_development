@@ -48,6 +48,7 @@ import {UiData} from './ui_data';
           [shadingModes]="shadingModes"
           [highlightedItem]="inputData?.highlightedRect ?? ''"
           [userOptions]="inputData?.rectsUserOptions ?? {}"
+          [isDarkMode]="inputData?.isDarkMode ?? false"
           (collapseButtonClicked)="sections.onCollapseStateChange(CollapsibleSectionType.RECTS, true)"></rects-view>
 
       <log-view

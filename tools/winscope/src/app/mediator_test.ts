@@ -29,7 +29,6 @@ import {
   InvalidLegacyTrace,
   NoTraceTargetsSelected,
   NoValidFiles,
-  ProxyTracingErrors,
   UnsupportedFileFormat,
 } from 'messaging/user_warnings';
 import {
@@ -327,9 +326,7 @@ describe('Mediator', () => {
     );
     expect(
       userNotifierChecker.expectNotified([
-        new ProxyTracingErrors([
-          'Failed to find valid files for Uncollected Trace',
-        ]),
+        new NoValidFiles(['Uncollected Trace']),
       ]),
     );
     expect(appComponent.onWinscopeEvent).toHaveBeenCalled();

@@ -14,12 +14,11 @@
  * limitations under the License.
  */
 
-import {NotificationType, UserNotification} from './user_notification';
+import {Distance} from 'common/geometry/distance';
 
-export abstract class UserWarning implements UserNotification {
-  getNotificationType(): NotificationType {
-    return NotificationType.WARNING;
-  }
-  abstract getDescriptor(): string;
-  abstract getMessage(): string;
+export interface Camera {
+  rotationAngleX: number;
+  rotationAngleY: number;
+  zoomFactor: number;
+  panScreenDistance: Distance;
 }
