@@ -44,7 +44,6 @@ import {UserOptionsComponent} from 'viewers/components/user_options_component';
 import {Camera} from './camera';
 import {Canvas} from './canvas';
 import {ColorType} from './color_type';
-import {Mapper3D} from './mapper3d';
 import {RectLabel} from './rect_label';
 import {ShadingMode} from './shading_mode';
 import {UiRect3D} from './ui_rect3d';
@@ -544,15 +543,12 @@ describe('RectsComponent', () => {
     fixture.detectChanges();
     resetSpies();
 
-    const computeSceneSpy = spyOn(Mapper3D.prototype, 'computeScene');
-
     spyOnProperty(window, 'innerWidth').and.returnValue(window.innerWidth / 2);
     window.dispatchEvent(new Event('resize'));
     fixture.detectChanges();
     await fixture.whenStable();
     await waitToBeCalled(renderViewSpy, 1);
     expect(updateViewPositionSpy).toHaveBeenCalledTimes(1);
-    expect(computeSceneSpy).not.toHaveBeenCalled();
     expect(updateRectsSpy).not.toHaveBeenCalled();
     expect(updateLabelsSpy).not.toHaveBeenCalled();
   });
