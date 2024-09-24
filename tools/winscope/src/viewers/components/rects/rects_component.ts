@@ -359,9 +359,7 @@ export class RectsComponent implements OnInit, OnDestroy {
   private largeRectsCanvas?: Canvas;
   private miniRectsCanvas?: Canvas;
   private resizeObserver = new ResizeObserver((entries) => {
-    const scene =
-      this.largeRectsMapper3d.getLastScene() ??
-      this.largeRectsMapper3d.computeScene();
+    const scene = this.largeRectsMapper3d.computeScene();
     this.largeRectsCanvas?.updateViewPosition(scene.camera, scene.boundingBox);
     this.largeRectsCanvas?.renderView();
   });
