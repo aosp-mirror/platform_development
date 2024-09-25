@@ -16,7 +16,10 @@
 
 import {assertDefined} from 'common/assert_utils';
 import {InMemoryStorage} from 'common/in_memory_storage';
-import {TracePositionUpdate} from 'messaging/winscope_event';
+import {
+  TabbedViewSwitchRequest,
+  TracePositionUpdate,
+} from 'messaging/winscope_event';
 import {Transform} from 'parsers/surface_flinger/transform_utils';
 import {HierarchyTreeBuilder} from 'test/unit/hierarchy_tree_builder';
 import {TimestampConverterUtils} from 'test/unit/timestamp_converter_utils';
@@ -33,11 +36,15 @@ import {HierarchyTreeNode} from 'trace/tree_node/hierarchy_tree_node';
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
 import {NotifyLogViewCallbackType} from 'viewers/common/abstract_log_viewer_presenter';
 import {AbstractLogViewerPresenterTest} from 'viewers/common/abstract_log_viewer_presenter_test';
+import {VISIBLE_CHIP} from 'viewers/common/chip';
+import {TextFilter} from 'viewers/common/text_filter';
 import {
   LogFieldType,
   LogFieldValue,
   UiDataLog,
 } from 'viewers/common/ui_data_log';
+import {UserOptions} from 'viewers/common/user_options';
+import {ViewerEvents} from 'viewers/common/viewer_events';
 import {Presenter} from './presenter';
 import {UiData} from './ui_data';
 
@@ -134,6 +141,9 @@ class PresenterInputTest extends AbstractLogViewerPresenterTest<UiData> {
   ];
   override readonly expectedCurrentIndexAfterFilterChange = 0;
   override readonly expectedCurrentIndexAfterSecondFilterChange = 0;
+  override readonly numberOfUnfilteredProperties = 15;
+  override readonly propertiesFilter = new TextFilter('axis', []);
+  override readonly numberOfFilteredProperties = 1;
 
   override async setUpTestEnvironment(): Promise<void> {
     const parser = (await UnitTestUtils.getTracesParser([
@@ -214,6 +224,7 @@ class PresenterInputTest extends AbstractLogViewerPresenterTest<UiData> {
     const uiData = uiDataLog as UiData;
     expect(uiData.highlightedProperty).toBeFalsy();
     expect(uiData.dispatchPropertiesTree).toBeUndefined();
+    expect(uiData.dispatchPropertiesFilter).toBeDefined();
   }
 
   override executePropertiesChecksAfterPositionUpdate(

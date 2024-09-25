@@ -21,8 +21,13 @@ import {
   ComponentFixtureAutoDetect,
   TestBed,
 } from '@angular/core/testing';
+import {FormsModule} from '@angular/forms';
+import {MatButtonModule} from '@angular/material/button';
 import {MatDividerModule} from '@angular/material/divider';
+import {MatFormFieldModule} from '@angular/material/form-field';
 import {MatIconModule} from '@angular/material/icon';
+import {MatInputModule} from '@angular/material/input';
+import {BrowserAnimationsModule} from '@angular/platform-browser/animations';
 import {assertDefined} from 'common/assert_utils';
 import {PropertyTreeBuilder} from 'test/unit/property_tree_builder';
 import {TimestampConverterUtils} from 'test/unit/timestamp_converter_utils';
@@ -36,6 +41,7 @@ import {CollapsedSectionsComponent} from 'viewers/components/collapsed_sections_
 import {CollapsibleSectionTitleComponent} from 'viewers/components/collapsible_section_title_component';
 import {PropertiesComponent} from 'viewers/components/properties_component';
 import {PropertyTreeNodeDataViewComponent} from 'viewers/components/property_tree_node_data_view_component';
+import {SearchBoxComponent} from 'viewers/components/search_box_component';
 import {TreeComponent} from 'viewers/components/tree_component';
 import {TreeNodeComponent} from 'viewers/components/tree_node_component';
 import {Presenter} from './presenter';
@@ -72,6 +78,11 @@ describe('ViewerTransitionsComponent', () => {
         ScrollingModule,
         MatIconModule,
         ClipboardModule,
+        MatFormFieldModule,
+        MatButtonModule,
+        MatInputModule,
+        BrowserAnimationsModule,
+        FormsModule,
       ],
       declarations: [
         ViewerTransitionsComponent,
@@ -82,6 +93,7 @@ describe('ViewerTransitionsComponent', () => {
         CollapsedSectionsComponent,
         CollapsibleSectionTitleComponent,
         LogComponent,
+        SearchBoxComponent,
       ],
       schemas: [],
     }).compileComponents();
@@ -112,7 +124,7 @@ describe('ViewerTransitionsComponent', () => {
     expect(
       htmlElement.querySelector('.properties-view .placeholder-text')
         ?.innerHTML,
-    ).toContain('No selected transition');
+    ).toContain('No current or selected transition');
   });
 
   it('creates collapsed sections with no buttons', () => {
