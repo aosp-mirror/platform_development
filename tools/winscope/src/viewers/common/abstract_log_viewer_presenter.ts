@@ -103,6 +103,13 @@ export abstract class AbstractLogViewerPresenter<UiData extends UiDataLog>
           (event as CustomEvent).detail.userOptions,
         ),
     );
+    htmlElement.addEventListener(
+      ViewerEvents.PropertiesFilterChange,
+      async (event) => {
+        const detail: TextFilter = (event as CustomEvent).detail;
+        await this.onPropertiesFilterChange(detail);
+      },
+    );
   }
 
   async onAppEvent(event: WinscopeEvent) {
@@ -153,6 +160,16 @@ export abstract class AbstractLogViewerPresenter<UiData extends UiDataLog>
     this.notifyViewChanged();
   }
 
+  async onPropertiesFilterChange(textFilter: TextFilter) {
+    if (!this.propertiesPresenter) {
+      return;
+    }
+    this.propertiesPresenter.applyPropertiesFilterChange(textFilter);
+    await this.updatePropertiesTree();
+    this.uiData.propertiesFilter = textFilter;
+    this.notifyViewChanged();
+  }
+
   async onLogTimestampClick(traceEntry: TraceEntry<PropertyTreeNode>) {
     await this.emitAppEvent(
       TracePositionUpdate.fromTraceEntry(traceEntry, true),
@@ -195,6 +212,7 @@ export abstract class AbstractLogViewerPresenter<UiData extends UiDataLog>
       this.uiData.propertiesTree = this.propertiesPresenter.getFormattedTree();
       this.uiData.propertiesUserOptions =
         this.propertiesPresenter.getUserOptions();
+      this.uiData.propertiesFilter = this.propertiesPresenter.getTextFilter();
     }
   }
 
