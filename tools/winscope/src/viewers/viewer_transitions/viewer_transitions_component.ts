@@ -48,11 +48,11 @@ import {UiData} from './ui_data';
       <properties-view
         class="properties-view"
         [title]="propertiesTitle"
-        [showFilter]="false"
         [propertiesTree]="inputData?.propertiesTree"
         [traceType]="${TraceType.TRANSITION}"
+        [textFilter]="inputData?.propertiesFilter"
         [isProtoDump]="false"
-        placeholderText="No selected transition."
+        placeholderText="No current or selected transition."
         (collapseButtonClicked)="sections.onCollapseStateChange(CollapsibleSectionType.PROPERTIES, true)"
         [class.collapsed]="sections.isSectionCollapsed(CollapsibleSectionType.PROPERTIES)"></properties-view>
     </div>
