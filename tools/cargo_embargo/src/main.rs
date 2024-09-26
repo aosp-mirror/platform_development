@@ -743,18 +743,37 @@ fn generate_android_bp_package_header(
 /// use.
 fn choose_license(license: &str) -> &str {
     match license {
+        // Variations on "MIT OR Apache-2.0"
         "MIT OR Apache-2.0" => "Apache-2.0",
         "Apache-2.0 OR MIT" => "Apache-2.0",
         "MIT/Apache-2.0" => "Apache-2.0",
         "Apache-2.0/MIT" => "Apache-2.0",
-        "Apache-2.0 or BSD-3-Clause" => "Apache-2.0",
-        "Zlib OR Apache-2.0 OR MIT" => "Apache-2.0",
-        "MIT OR LGPL-3.0-or-later" => "MIT",
         "Apache-2.0 / MIT" => "Apache-2.0",
-        "Unlicense OR MIT" => "MIT",
+
+        // Variations on "BSD-* OR Apache-2.0"
+        "Apache-2.0 OR BSD-3-Clause" => "Apache-2.0",
+        "BSD-3-Clause OR Apache-2.0" => "Apache-2.0",
+
+        // Variations on "BSD-* OR MIT OR Apache-2.0"
         "BSD-3-Clause OR MIT OR Apache-2.0" => "Apache-2.0",
         "BSD-2-Clause OR Apache-2.0 OR MIT" => "Apache-2.0",
+
+        // Variations on "Zlib OR MIT OR Apache-2.0"
+        "Zlib OR Apache-2.0 OR MIT" => "Apache-2.0",
+        "MIT OR Apache-2.0 OR Zlib" => "Apache-2.0",
+
+        // Variations on "Apache-2.0 OR *"
+        "Apache-2.0 OR BSL-1.0" => "Apache-2.0",
         "Apache-2.0 WITH LLVM-exception OR Apache-2.0 OR MIT" => "Apache-2.0",
+
+        // Variations on "Unlicense OR MIT"
+        "Unlicense OR MIT" => "MIT",
+        "Unlicense/MIT" => "MIT",
+
+        // Other cases.
+        "MIT OR LGPL-3.0-or-later" => "MIT",
+        "MIT/BSD-3-Clause" => "MIT",
+
         _ => license,
     }
 }

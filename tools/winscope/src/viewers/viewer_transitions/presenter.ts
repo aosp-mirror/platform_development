@@ -15,6 +15,8 @@
  */
 
 import {assertDefined} from 'common/assert_utils';
+import {PersistentStoreProxy} from 'common/persistent_store_proxy';
+import {Store} from 'common/store';
 import {CustomQueryType} from 'trace/custom_query';
 import {Trace} from 'trace/trace';
 import {Traces} from 'trace/traces';
@@ -27,6 +29,7 @@ import {
 } from 'viewers/common/abstract_log_viewer_presenter';
 import {LogPresenter} from 'viewers/common/log_presenter';
 import {PropertiesPresenter} from 'viewers/common/properties_presenter';
+import {TextFilter} from 'viewers/common/text_filter';
 import {LogField, LogFieldType} from 'viewers/common/ui_data_log';
 import {UpdateTransitionChangesNames} from './operations/update_transition_changes_names';
 import {TransitionsEntry, TransitionStatus, UiData} from './ui_data';
@@ -53,7 +56,11 @@ export class Presenter extends AbstractLogViewerPresenter<UiData> {
   protected override logPresenter = new LogPresenter<TransitionsEntry>(false);
   protected override propertiesPresenter = new PropertiesPresenter(
     {},
-    undefined,
+    PersistentStoreProxy.new<TextFilter>(
+      'TransitionsPropertiesFilter',
+      new TextFilter('', []),
+      this.storage,
+    ),
     [],
     [
       new UpdateTransitionChangesNames(
@@ -66,6 +73,7 @@ export class Presenter extends AbstractLogViewerPresenter<UiData> {
   constructor(
     trace: Trace<PropertyTreeNode>,
     traces: Traces,
+    readonly storage: Store,
     notifyViewCallback: NotifyLogViewCallbackType<UiData>,
   ) {
     super(trace, notifyViewCallback, UiData.createEmpty());
