@@ -21,7 +21,7 @@ use std::{
     path::{Path, PathBuf},
 };
 
-use anyhow::Result;
+use anyhow::{anyhow, Result};
 use semver::Version;
 use walkdir::WalkDir;
 
@@ -29,7 +29,7 @@ use crate::{Crate, CrateError};
 
 use std::collections::BTreeMap;
 
-#[derive(NameAndVersionMap)]
+#[derive(NameAndVersionMap, Debug)]
 pub struct CrateCollection {
     crates: BTreeMap<NameAndVersion, Crate>,
     repo_root: PathBuf,
@@ -45,7 +45,11 @@ impl CrateCollection {
             if entry.file_name() == "Cargo.toml" {
                 match Crate::from(RootedPath::new(
                     self.repo_root.clone(),
-                    entry.path().strip_prefix(&self.repo_root)?,
+                    entry
+                        .path()
+                        .parent()
+                        .ok_or(anyhow!("Failed to get parent of {}", entry.path().display()))?
+                        .strip_prefix(&self.repo_root)?,
                 )?) {
                     Ok(krate) => self.crates.insert_or_error(
                         NameAndVersion::new(krate.name().to_string(), krate.version().clone()),
