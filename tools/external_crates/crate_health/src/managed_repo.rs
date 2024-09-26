@@ -701,6 +701,7 @@ static IGNORED_FILES: &[&str] = &[
     ".codecov.yaml",
     ".codecov.yml",
     ".editorconfig",
+    ".envrc",
     ".gcloudignore",
     ".gdbinit",
     ".git",
