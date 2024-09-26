@@ -75,6 +75,7 @@ export abstract class AbstractLogViewerPresenterTest<UiData extends UiDataLog> {
         if (this.shouldExecutePropertiesTests) {
           expect(uiData.propertiesTree).toBeUndefined();
           expect(uiData.propertiesUserOptions).toBeDefined();
+          expect(uiData.propertiesFilter).toBeDefined();
           if (this.executePropertiesChecksForEmptyTrace) {
             this.executePropertiesChecksForEmptyTrace(uiData);
           }
@@ -153,6 +154,15 @@ export abstract class AbstractLogViewerPresenterTest<UiData extends UiDataLog> {
           }),
         );
         expect(spy).toHaveBeenCalledWith({});
+
+        spy = spyOn(presenter, 'onPropertiesFilterChange');
+        const filter = new TextFilter('', []);
+        element.dispatchEvent(
+          new CustomEvent(ViewerEvents.PropertiesFilterChange, {
+            detail: filter,
+          }),
+        );
+        expect(spy).toHaveBeenCalledWith(filter);
       });
 
       it('processes trace position updates', async () => {
@@ -373,6 +383,24 @@ export abstract class AbstractLogViewerPresenterTest<UiData extends UiDataLog> {
           await presenter.onPropertiesUserOptionsChange({});
           expect(uiData.propertiesUserOptions).toBeUndefined();
           expect(uiData.propertiesTree).toBeUndefined();
+
+          await presenter.onPropertiesFilterChange(new TextFilter('', []));
+          expect(uiData.propertiesUserOptions).toBeUndefined();
+          expect(uiData.propertiesTree).toBeUndefined();
+        });
+      } else {
+        it('filters properties tree', async () => {
+          await presenter.onAppEvent(this.getPositionUpdate());
+          await presenter.onLogEntryClick(this.logEntryClickIndex);
+          expect(
+            assertDefined(uiData.propertiesTree).getAllChildren().length,
+          ).toEqual(assertDefined(this.numberOfUnfilteredProperties));
+          await presenter.onPropertiesFilterChange(
+            assertDefined(this.propertiesFilter),
+          );
+          expect(
+            assertDefined(uiData.propertiesTree).getAllChildren().length,
+          ).toEqual(assertDefined(this.numberOfFilteredProperties));
         });
       }
     });
@@ -403,6 +431,7 @@ export abstract class AbstractLogViewerPresenterTest<UiData extends UiDataLog> {
     if (this.shouldExecutePropertiesTests) {
       expect(uiData.propertiesTree).toBeDefined();
       expect(uiData.propertiesUserOptions).toBeDefined();
+      expect(uiData.propertiesFilter).toBeDefined();
     }
   }
 
@@ -452,6 +481,9 @@ export abstract class AbstractLogViewerPresenterTest<UiData extends UiDataLog> {
   readonly expectedCurrentIndexAfterFilterChange?: number;
   readonly secondFilterChangeForCurrentIndexTest?: string[];
   readonly expectedCurrentIndexAfterSecondFilterChange?: number;
+  readonly numberOfUnfilteredProperties?: number;
+  readonly propertiesFilter?: TextFilter;
+  readonly numberOfFilteredProperties?: number;
 
   abstract setUpTestEnvironment(): Promise<void>;
   abstract createPresenter(

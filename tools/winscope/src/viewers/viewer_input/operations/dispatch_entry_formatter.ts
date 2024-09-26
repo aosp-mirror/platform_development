@@ -56,8 +56,8 @@ export class DispatchEntryFormatter implements Operation<UiPropertyTreeNode> {
     let formattedPointers = '';
     dispatchedPointerNode.getAllChildren()?.forEach((pointer) => {
       const axisValues = pointer.getChildByName('axisValueInWindow');
-      let x = '';
-      let y = '';
+      let x = '?';
+      let y = '?';
       axisValues?.getAllChildren()?.forEach((axisValue) => {
         const axis = Number(axisValue.getChildByName('axis')?.getValue());
         if (axis === DispatchEntryFormatter.AXIS_X) {
