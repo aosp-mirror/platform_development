@@ -42,14 +42,14 @@ import {UiData} from './ui_data';
       </log-view>
 
       <properties-view
-        *ngIf="inputData?.propertiesTree"
         class="properties-view"
         [title]="propertiesTitle"
-        [showFilter]="false"
         [userOptions]="inputData?.propertiesUserOptions"
         [propertiesTree]="inputData?.propertiesTree"
         [traceType]="${TraceType.TRANSACTIONS}"
         [isProtoDump]="false"
+        [textFilter]="inputData?.propertiesFilter"
+        placeholderText="No current or selected transaction."
         (collapseButtonClicked)="sections.onCollapseStateChange(CollapsibleSectionType.PROPERTIES, true)"
         [class.collapsed]="sections.isSectionCollapsed(CollapsibleSectionType.PROPERTIES)"></properties-view>
     </div>
