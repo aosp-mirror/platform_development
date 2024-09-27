@@ -62,12 +62,15 @@ describe('RectsComponent', () => {
   let updateLabelsSpy: jasmine.Spy<(labels: RectLabel[]) => void>;
   let renderViewSpy: jasmine.Spy<() => void>;
 
+  beforeAll(() => {
+    localStorage.clear();
+  });
+
   beforeEach(async () => {
     updateViewPositionSpy = spyOn(Canvas.prototype, 'updateViewPosition');
     updateRectsSpy = spyOn(Canvas.prototype, 'updateRects');
     updateLabelsSpy = spyOn(Canvas.prototype, 'updateLabels');
     renderViewSpy = spyOn(Canvas.prototype, 'renderView');
-    localStorage.clear();
 
     await TestBed.configureTestingModule({
       imports: [
@@ -94,6 +97,10 @@ describe('RectsComponent', () => {
     fixture = TestBed.createComponent(TestHostComponent);
     component = fixture.componentInstance;
     htmlElement = fixture.nativeElement;
+  });
+
+  afterEach(() => {
+    localStorage.clear();
   });
 
   it('can be created', () => {
@@ -186,15 +193,8 @@ describe('RectsComponent', () => {
     ];
     await checkSelectedDisplay([0]);
 
-    const trigger = assertDefined(
-      htmlElement.querySelector('.displays-section .mat-select-trigger'),
-    );
-    (trigger as HTMLElement).click();
-    fixture.detectChanges();
-
-    const options = document.querySelectorAll<HTMLElement>(
-      '.mat-select-panel .mat-option',
-    );
+    openDisplaysSelect();
+    const options = getDisplayOptions();
 
     options.item(1).click();
     await checkSelectedDisplay([0, 1]);
@@ -219,11 +219,7 @@ describe('RectsComponent', () => {
     ];
     await checkSelectedDisplay([0]);
 
-    const trigger = assertDefined(
-      htmlElement.querySelector('.displays-section .mat-select-trigger'),
-    );
-    (trigger as HTMLElement).click();
-    fixture.detectChanges();
+    openDisplaysSelect();
 
     const onlyButtons = document.querySelectorAll<HTMLElement>(
       '.mat-select-panel .mat-option .option-only-button',
@@ -341,6 +337,44 @@ describe('RectsComponent', () => {
     expect(newRectsComponent.getShadingMode()).toEqual(ShadingMode.WIRE_FRAME);
   });
 
+  it('uses stored selected displays if present in new trace', async () => {
+    component.rects = [rectGroup0, rectGroup1];
+    component.displays = [
+      {displayId: 10, groupId: 0, name: 'Display 0', isActive: true},
+      {displayId: 20, groupId: 1, name: 'Display 1', isActive: true},
+    ];
+    await checkSelectedDisplay([0]);
+
+    openDisplaysSelect();
+    const options = getDisplayOptions();
+    options.item(1).click();
+    await checkSelectedDisplay([0, 1]);
+
+    const fixtureWithSameDisplays = TestBed.createComponent(TestHostComponent);
+    const componentWithSameDisplays = fixtureWithSameDisplays.componentInstance;
+    componentWithSameDisplays.rects = component.rects;
+    componentWithSameDisplays.displays = component.displays;
+    await checkSelectedDisplay(
+      [0, 1],
+      undefined,
+      fixtureWithSameDisplays,
+      fixtureWithSameDisplays.nativeElement,
+    );
+
+    const fixtureWithDisplay1 = TestBed.createComponent(TestHostComponent);
+    const componentWithDisplay1 = fixtureWithDisplay1.componentInstance;
+    componentWithDisplay1.rects = [rectGroup1];
+    componentWithDisplay1.displays = [
+      {displayId: 20, groupId: 1, name: 'Display 1', isActive: true},
+    ];
+    await checkSelectedDisplay(
+      [1],
+      undefined,
+      fixtureWithDisplay1,
+      fixtureWithDisplay1.nativeElement,
+    );
+  });
+
   it('defaults initial selection to first active display with rects', async () => {
     component.rects = [rectGroup0, rectGroup1];
     component.displays = [
@@ -456,11 +490,7 @@ describe('RectsComponent', () => {
       assertDefined(component.rectsComponent).collapseButtonClicked,
       'emit',
     );
-    const collapseButton = assertDefined(
-      htmlElement.querySelector('collapsible-section-title button'),
-    ) as HTMLButtonElement;
-    collapseButton.click();
-    fixture.detectChanges();
+    findAndClickElement('collapsible-section-title button');
     expect(spy).toHaveBeenCalled();
   });
 
@@ -493,11 +523,7 @@ describe('RectsComponent', () => {
       id = (event as CustomEvent).detail.id;
     });
 
-    const canvas = assertDefined(
-      htmlElement.querySelector<HTMLElement>('.large-rects-canvas'),
-    );
-    canvas.click();
-    fixture.detectChanges();
+    clickLargeRectsCanvas();
     expect(id).toEqual(testString);
   });
 
@@ -526,15 +552,10 @@ describe('RectsComponent', () => {
     expect(cameraAfter.panScreenDistance.dx).toEqual(5);
     expect(cameraAfter.panScreenDistance.dy).toEqual(10);
 
-    const canvas = assertDefined(
-      htmlElement.querySelector<HTMLElement>('.large-rects-canvas'),
-    );
-    canvas.click();
-    fixture.detectChanges();
+    clickLargeRectsCanvas();
     expect(id).toBeUndefined();
 
-    canvas.click();
-    fixture.detectChanges();
+    clickLargeRectsCanvas();
     expect(id).toEqual(testString);
   });
 
@@ -580,11 +601,7 @@ describe('RectsComponent', () => {
       updateViewPositionSpy.calls.mostRecent().args[0].zoomFactor;
     resetSpies();
 
-    const zoomOutButton = assertDefined(
-      htmlElement.querySelector<HTMLElement>('.zoom-out-button'),
-    );
-    zoomOutButton.click();
-    fixture.detectChanges();
+    findAndClickElement('.zoom-out-button');
     checkZoomedOut(zoomedInFactor);
   });
 
@@ -631,11 +648,7 @@ describe('RectsComponent', () => {
     panView();
     resetSpies();
 
-    const resetButton = assertDefined(
-      htmlElement.querySelector<HTMLElement>('.reset-button'),
-    );
-    resetButton.click();
-    fixture.detectChanges();
+    findAndClickElement('.reset-button');
     checkAllSpiesCalled(1);
     const [newCamera, newBoundingBox] =
       updateViewPositionSpy.calls.mostRecent().args;
@@ -713,13 +726,13 @@ describe('RectsComponent', () => {
   async function checkSelectedDisplay(
     displayNumbers: number[],
     testIds?: number[],
+    f = fixture,
+    el = htmlElement,
   ) {
-    fixture.detectChanges();
-    await fixture.whenStable();
-    fixture.detectChanges();
-    const displaySelect = assertDefined(
-      htmlElement.querySelector('.displays-select'),
-    );
+    f.detectChanges();
+    await f.whenStable();
+    f.detectChanges();
+    const displaySelect = assertDefined(el.querySelector('.displays-select'));
     expect(displaySelect.textContent?.trim()).toEqual(
       displayNumbers
         .map((displayNumber) => `Display ${displayNumber}`)
@@ -736,9 +749,7 @@ describe('RectsComponent', () => {
   }
 
   function findAndClickElement(selector: string) {
-    const el = assertDefined(
-      htmlElement.querySelector(selector),
-    ) as HTMLElement;
+    const el = assertDefined(htmlElement.querySelector<HTMLElement>(selector));
     el.click();
     fixture.detectChanges();
   }
@@ -820,11 +831,11 @@ describe('RectsComponent', () => {
   }
 
   function clickZoomInButton() {
-    const zoomInButton = assertDefined(
-      htmlElement.querySelector<HTMLElement>('.zoom-in-button'),
-    );
-    zoomInButton.click();
-    fixture.detectChanges();
+    findAndClickElement('.zoom-in-button');
+  }
+
+  function clickLargeRectsCanvas() {
+    findAndClickElement('.large-rects-canvas');
   }
 
   function checkZoomedIn(oldZoomFactor: number) {
@@ -845,6 +856,16 @@ describe('RectsComponent', () => {
     expect(
       updateViewPositionSpy.calls.mostRecent().args[0].zoomFactor,
     ).toBeLessThan(oldZoomFactor);
+  }
+
+  function openDisplaysSelect() {
+    findAndClickElement('.displays-section .mat-select-trigger');
+  }
+
+  function getDisplayOptions() {
+    return document.querySelectorAll<HTMLElement>(
+      '.mat-select-panel .mat-option',
+    );
   }
 
   function checkAllSpiesCalled(times: number) {
