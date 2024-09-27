@@ -46,6 +46,7 @@ export abstract class AbstractLogViewerPresenter<UiData extends UiDataLog>
   implements WinscopeEventEmitter
 {
   protected emitAppEvent: EmitEvent = FunctionUtils.DO_NOTHING_ASYNC;
+  protected updateDefaultAllowlist?(tree: PropertyTreeNode | undefined): void;
   protected abstract logPresenter: LogPresenter<LogEntry>;
   protected propertiesPresenter?: PropertiesPresenter;
   protected keepCalculated?: boolean;
@@ -156,7 +157,7 @@ export abstract class AbstractLogViewerPresenter<UiData extends UiDataLog>
     this.propertiesPresenter.applyPropertiesUserOptionsChange(userOptions);
     this.uiData.propertiesUserOptions =
       this.propertiesPresenter.getUserOptions();
-    await this.updatePropertiesTree();
+    await this.updatePropertiesTree(false);
     this.notifyViewChanged();
   }
 
@@ -165,7 +166,7 @@ export abstract class AbstractLogViewerPresenter<UiData extends UiDataLog>
       return;
     }
     this.propertiesPresenter.applyPropertiesFilterChange(textFilter);
-    await this.updatePropertiesTree();
+    await this.updatePropertiesTree(false);
     this.uiData.propertiesFilter = textFilter;
     this.notifyViewChanged();
   }
@@ -236,10 +237,13 @@ export abstract class AbstractLogViewerPresenter<UiData extends UiDataLog>
     this.notifyViewChanged();
   }
 
-  protected async updatePropertiesTree() {
+  protected async updatePropertiesTree(updateDefaultAllowlist = true) {
     if (this.propertiesPresenter) {
       const tree = this.getPropertiesTree();
       this.propertiesPresenter.setPropertiesTree(tree);
+      if (updateDefaultAllowlist && this.updateDefaultAllowlist) {
+        this.updateDefaultAllowlist(tree);
+      }
       await this.propertiesPresenter.formatPropertiesTree(
         undefined,
         undefined,
