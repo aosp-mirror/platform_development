@@ -45,6 +45,8 @@ mod managed_repo;
 pub use self::managed_crate::ManagedCrate;
 mod managed_crate;
 
+mod patch;
+
 #[derive(Error, Debug)]
 pub enum CrateError {
     #[error("Virtual crate: {0}")]
