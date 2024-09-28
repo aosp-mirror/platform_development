@@ -95,11 +95,13 @@ fn main() -> Result<()> {
     match args.command {
         Cmd::MigrationHealth { crates, unpinned } => {
             for crate_name in &crates {
-                managed_repo.migration_health(
+                if let Err(e) = managed_repo.migration_health(
                     crate_name,
                     args.verbose,
                     unpinned.contains(crate_name),
-                )?;
+                ) {
+                    println!("Crate {} error: {}", crate_name, e);
+                }
             }
             Ok(())
         }
