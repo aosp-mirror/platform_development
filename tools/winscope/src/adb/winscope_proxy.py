@@ -1251,10 +1251,11 @@ class TraceThread(threading.Thread):
         time.sleep(0.2)
         for i in range(50):
             if call_adb(f"shell su root cat {WINSCOPE_STATUS}", device=self._device_id) == 'TRACE_OK\n':
-                log.debug("Trace {} finished successfully on {}".format(
+                log.debug("Trace {} finished on {}".format(
                     self.trace_name,
                     self._device_id))
                 if self.trace_name == "perfetto_trace":
+                    log.debug("Perfetto trace stderr output: {}".format(self.err.decode("utf-8")))
                     self._success = True
                 else:
                     self._success = len(self.err) == 0
