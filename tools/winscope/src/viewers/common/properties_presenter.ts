@@ -35,19 +35,15 @@ export class PropertiesPresenter {
 
   constructor(
     private userOptions: UserOptions,
-    private textFilter: TextFilter | undefined,
+    private textFilter: TextFilter,
     private propertiesDenylist: string[],
     private customOperations?: Array<Operation<UiPropertyTreeNode>>,
     private defaultAllowlist: string[] = [],
   ) {
-    if (this.textFilter) {
-      this.propertiesFilter = UiTreeUtils.makeNodeFilter(
-        this.textFilter.filterString,
-        this.textFilter.flags,
-      );
-    } else {
-      this.propertiesFilter = UiTreeUtils.makeNodeFilter('');
-    }
+    this.propertiesFilter = UiTreeUtils.makeNodeFilter(
+      this.textFilter.filterString,
+      this.textFilter.flags,
+    );
   }
 
   getUserOptions(): UserOptions {
