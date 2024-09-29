@@ -58,7 +58,6 @@ class Mapper3D {
   private shadingModeIndex = 0;
   private allowedShadingModes: ShadingMode[] = [ShadingMode.GRADIENT];
   private pinnedItems: UiHierarchyTreeNode[] = [];
-  private lastComputedScene: Scene | undefined;
 
   setRects(rects: UiRect[]) {
     this.rects = rects;
@@ -167,10 +166,6 @@ class Mapper3D {
     );
   }
 
-  getLastScene(): Scene | undefined {
-    return this.lastComputedScene;
-  }
-
   computeScene(): Scene {
     const rects3d: UiRect3D[] = [];
     const labels3d: RectLabel[] = [];
@@ -207,7 +202,6 @@ class Mapper3D {
       rects: rects3d,
       labels: labels3d,
     };
-    this.lastComputedScene = scene;
     return scene;
   }
 

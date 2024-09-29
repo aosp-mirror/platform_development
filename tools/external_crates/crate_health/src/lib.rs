@@ -22,22 +22,17 @@ use anyhow::{anyhow, Context, Result};
 use semver::Version;
 use thiserror::Error;
 
-pub use self::crate_type::{diff_android_bp, Crate};
+pub use self::crate_type::Crate;
 mod crate_type;
 
 pub use self::crate_collection::CrateCollection;
 mod crate_collection;
 
-mod migration;
-
 pub use self::pseudo_crate::PseudoCrate;
 mod pseudo_crate;
 
-pub use self::version_match::{CompatibleVersionPair, VersionMatch, VersionPair};
-mod version_match;
-
 pub use self::android_bp::{
-    build_cargo_embargo, cargo_embargo_autoconfig, generate_android_bps, maybe_build_cargo_embargo,
+    build_cargo_embargo, cargo_embargo_autoconfig, maybe_build_cargo_embargo, run_cargo_embargo,
 };
 mod android_bp;
 
@@ -46,6 +41,9 @@ mod license;
 
 pub use self::managed_repo::ManagedRepo;
 mod managed_repo;
+
+pub use self::managed_crate::ManagedCrate;
+mod managed_crate;
 
 #[derive(Error, Debug)]
 pub enum CrateError {

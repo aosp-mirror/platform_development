@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-import {assertDefined} from 'common/assert_utils';
 import {FixedStringFormatter} from 'trace/tree_node/formatters';
 import {Operation} from 'trace/tree_node/operations/operation';
 import {UiPropertyTreeNode} from 'viewers/common/ui_property_tree_node';
@@ -28,8 +27,9 @@ export class UpdateTransitionChangesNames
   ) {}
 
   apply(node: UiPropertyTreeNode): void {
-    assertDefined(node.getChildByName('wmData'))
-      .getChildByName('targets')
+    node
+      .getChildByName('wmData')
+      ?.getChildByName('targets')
       ?.getAllChildren()
       .forEach((target) => {
         const layerId = target.getChildByName('layerId');

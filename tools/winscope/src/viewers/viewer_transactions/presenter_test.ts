@@ -25,6 +25,7 @@ import {TraceType} from 'trace/trace_type';
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
 import {NotifyLogViewCallbackType} from 'viewers/common/abstract_log_viewer_presenter';
 import {AbstractLogViewerPresenterTest} from 'viewers/common/abstract_log_viewer_presenter_test';
+import {TextFilter} from 'viewers/common/text_filter';
 import {
   LogEntry,
   LogFieldType,
@@ -140,6 +141,9 @@ class PresenterTransactionsTest extends AbstractLogViewerPresenterTest<UiData> {
   override readonly secondFilterChangeForCurrentIndexTest = ['0', '515'];
   override readonly expectedCurrentIndexAfterFilterChange = 10;
   override readonly expectedCurrentIndexAfterSecondFilterChange = 11;
+  override readonly numberOfUnfilteredProperties = 6;
+  override readonly propertiesFilter = new TextFilter('layerId', []);
+  override readonly numberOfFilteredProperties = 1;
 
   override executeSpecializedTests() {
     describe('Specialized tests', () => {
