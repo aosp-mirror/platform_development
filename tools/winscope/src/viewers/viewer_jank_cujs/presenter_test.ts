@@ -15,6 +15,7 @@
  */
 
 import {assertDefined} from 'common/assert_utils';
+import {InMemoryStorage} from 'common/in_memory_storage';
 import {TracePositionUpdate} from 'messaging/winscope_event';
 import {TraceBuilder} from 'test/unit/trace_builder';
 import {UnitTestUtils} from 'test/unit/utils';
@@ -25,6 +26,7 @@ import {TraceType} from 'trace/trace_type';
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
 import {NotifyLogViewCallbackType} from 'viewers/common/abstract_log_viewer_presenter';
 import {AbstractLogViewerPresenterTest} from 'viewers/common/abstract_log_viewer_presenter_test';
+import {TextFilter} from 'viewers/common/text_filter';
 import {Presenter} from './presenter';
 import {UiData} from './ui_data';
 
@@ -41,6 +43,9 @@ class PresenterJankCujsTest extends AbstractLogViewerPresenterTest<UiData> {
   override readonly expectedIndexOfFirstPositionUpdate = 0;
   override readonly expectedIndexOfSecondPositionUpdate = 2;
   override readonly logEntryClickIndex = 3;
+  override readonly numberOfUnfilteredProperties = 4;
+  override readonly propertiesFilter = new TextFilter('launcher', []);
+  override readonly numberOfFilteredProperties = 1;
 
   override async setUpTestEnvironment(): Promise<void> {
     const parser = (await UnitTestUtils.getTracesParser([
@@ -67,7 +72,7 @@ class PresenterJankCujsTest extends AbstractLogViewerPresenterTest<UiData> {
       .setType(TraceType.CUJS)
       .setEntries([])
       .build();
-    return new Presenter(trace, callback);
+    return new Presenter(trace, new InMemoryStorage(), callback);
   }
 
   override async createPresenter(
@@ -77,7 +82,7 @@ class PresenterJankCujsTest extends AbstractLogViewerPresenterTest<UiData> {
     const traces = new Traces();
     traces.addTrace(trace);
 
-    const presenter = new Presenter(trace, callback);
+    const presenter = new Presenter(trace, new InMemoryStorage(), callback);
     await presenter.onAppEvent(this.getPositionUpdate()); // trigger initialization
     return presenter;
   }

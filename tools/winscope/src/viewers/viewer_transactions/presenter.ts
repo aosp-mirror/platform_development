@@ -25,6 +25,7 @@ import {
 } from 'viewers/common/abstract_log_viewer_presenter';
 import {LogPresenter} from 'viewers/common/log_presenter';
 import {PropertiesPresenter} from 'viewers/common/properties_presenter';
+import {TextFilter} from 'viewers/common/text_filter';
 import {LogField, LogFieldType, LogFilter} from 'viewers/common/ui_data_log';
 import {UserOptions} from 'viewers/common/user_options';
 import {SetRootDisplayNames} from './operations/set_root_display_name';
@@ -61,7 +62,11 @@ export class Presenter extends AbstractLogViewerPresenter<UiData> {
       },
       this.storage,
     ),
-    undefined,
+    PersistentStoreProxy.new<TextFilter>(
+      'TransactionsPropertiesFilter',
+      new TextFilter('', []),
+      this.storage,
+    ),
     [],
     [new SetRootDisplayNames()],
   );
