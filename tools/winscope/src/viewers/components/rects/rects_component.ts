@@ -454,11 +454,12 @@ export class RectsComponent implements OnInit, OnDestroy {
     let displayChange = false;
     if (simpleChanges['displays']) {
       const curr: DisplayIdentifier[] = simpleChanges['displays'].currentValue;
-      const prev: DisplayIdentifier[] | undefined =
-        simpleChanges['displays'].previousValue ?? undefined;
+      const prev: DisplayIdentifier[] =
+        simpleChanges['displays'].previousValue ?? [];
       displayChange =
-        curr.length > 0 &&
-        !curr.every((d, index) => d.displayId === prev?.at(index)?.displayId);
+        curr.length !== prev.length ||
+        (curr.length > 0 &&
+          !curr.every((d, index) => d.displayId === prev[index].displayId));
     }
 
     let redrawRects = false;
@@ -507,6 +508,7 @@ export class RectsComponent implements OnInit, OnDestroy {
     const activeDisplay = this.getActiveDisplay(this.internalDisplays);
 
     if (displays.length === 0) {
+      this.updateCurrentDisplays([], false);
       return;
     }
 

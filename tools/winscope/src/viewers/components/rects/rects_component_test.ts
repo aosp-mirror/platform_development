@@ -344,6 +344,8 @@ describe('RectsComponent', () => {
 
     expect(rectsOpacity[0].colorType).toEqual(ColorType.VISIBLE_WITH_OPACITY);
     expect(rectsOpacity[0].darkFactor).toEqual(0.5);
+
+    updateShadingMode(ShadingMode.OPACITY, ShadingMode.GRADIENT); // cycles back to original
   });
 
   it('uses stored rects view settings', () => {
@@ -428,7 +430,7 @@ describe('RectsComponent', () => {
     await checkSelectedDisplay([1], [1]);
   });
 
-  it('handles change from zero to one display', async () => {
+  it('handles change from zero to one display and back to zero', async () => {
     component.displays = [];
     component.rects = [];
     await checkSelectedDisplay([], []);
@@ -442,6 +444,24 @@ describe('RectsComponent', () => {
       {displayId: 10, groupId: 0, name: 'Display 0', isActive: false},
     ];
     await checkSelectedDisplay([0], [0], true);
+
+    component.displays = [];
+    component.rects = [];
+    await checkSelectedDisplay([], []);
+  });
+
+  it('handles current display group id no longer present', async () => {
+    component.rects = [rectGroup0];
+    component.displays = [
+      {displayId: 10, groupId: 0, name: 'Display 0', isActive: false},
+    ];
+    await checkSelectedDisplay([0], [0]);
+
+    component.rects = [rectGroup1];
+    component.displays = [
+      {displayId: 20, groupId: 1, name: 'Display 1', isActive: false},
+    ];
+    await checkSelectedDisplay([1], [1]);
   });
 
   it('draws mini rects with non-present group id', () => {
@@ -543,12 +563,17 @@ describe('RectsComponent', () => {
     fixture.detectChanges();
 
     const testString = 'test_id';
-    spyOn(Canvas.prototype, 'getClickedRectId').and.returnValue(testString);
     let id: string | undefined;
     htmlElement.addEventListener(ViewerEvents.HighlightedIdChange, (event) => {
       id = (event as CustomEvent).detail.id;
     });
 
+    const spy = spyOn(Canvas.prototype, 'getClickedRectId').and.returnValue(
+      undefined,
+    );
+    clickLargeRectsCanvas();
+    expect(id).toBeUndefined();
+    spy.and.returnValue(testString);
     clickLargeRectsCanvas();
     expect(id).toEqual(testString);
   });
@@ -722,7 +747,9 @@ describe('RectsComponent', () => {
     resetSpies();
 
     const testString = 'test_id';
-    spyOn(Canvas.prototype, 'getClickedRectId').and.returnValue(testString);
+    const spy = spyOn(Canvas.prototype, 'getClickedRectId').and.returnValue(
+      undefined,
+    );
     let detail: RectDblClickDetail | undefined;
     htmlElement.addEventListener(ViewerEvents.RectsDblClick, (event) => {
       detail = (event as CustomEvent).detail;
@@ -731,6 +758,11 @@ describe('RectsComponent', () => {
     const canvas = assertDefined(
       htmlElement.querySelector<HTMLElement>('.large-rects-canvas'),
     );
+    canvas.dispatchEvent(new MouseEvent('dblclick'));
+    fixture.detectChanges();
+    expect(detail).toBeUndefined();
+    spy.and.returnValue(testString);
+
     canvas.dispatchEvent(new MouseEvent('dblclick'));
     fixture.detectChanges();
     expect(detail).toEqual(new RectDblClickDetail(testString));
