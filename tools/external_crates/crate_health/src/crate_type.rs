@@ -24,7 +24,7 @@ use semver::Version;
 
 use crate::CrateError;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Crate {
     manifest: Manifest,
     path: RootedPath,
