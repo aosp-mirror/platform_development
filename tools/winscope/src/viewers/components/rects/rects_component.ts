@@ -351,6 +351,7 @@ export class RectsComponent implements OnInit, OnDestroy {
   private internalMiniRects?: UiRect[];
   private storeKeyZSpacingFactor = '';
   private storeKeyShadingMode = '';
+  private storeKeySelectedDisplays = '';
   private internalDisplays: DisplayIdentifier[] = [];
   private internalHighlightedItem = '';
   private currentDisplays: DisplayIdentifier[] = [];
@@ -416,15 +417,12 @@ export class RectsComponent implements OnInit, OnDestroy {
       this.onCanvasMouseDown(event),
     );
 
+    this.largeRectsMapper3d.increaseZoomFactor(this.zoomFactor - 1);
+
     if (this.store) {
       this.updateControlsFromStore();
     }
 
-    this.currentDisplays =
-      this.internalDisplays.length > 0
-        ? [this.getActiveDisplay(this.internalDisplays)]
-        : [];
-    this.largeRectsMapper3d.increaseZoomFactor(this.zoomFactor - 1);
     this.redrawLargeRectsAndLabels();
 
     this.miniRectsCanvasElement = canvasContainer.querySelector(
@@ -515,7 +513,7 @@ export class RectsComponent implements OnInit, OnDestroy {
     }
 
     if (change.firstChange) {
-      this.updateCurrentDisplays([activeDisplay]);
+      this.updateCurrentDisplays([activeDisplay], false);
       return;
     }
 
@@ -545,6 +543,7 @@ export class RectsComponent implements OnInit, OnDestroy {
   updateControlsFromStore() {
     this.storeKeyZSpacingFactor = `rectsView.${this.title}.zSpacingFactor`;
     this.storeKeyShadingMode = `rectsView.${this.title}.shadingMode`;
+    this.storeKeySelectedDisplays = `rectsView.${this.title}.selectedDisplayId`;
 
     const storedZSpacingFactor = assertDefined(this.store).get(
       this.storeKeyZSpacingFactor,
@@ -561,6 +560,24 @@ export class RectsComponent implements OnInit, OnDestroy {
       this.shadingModes.includes(storedShadingMode as ShadingMode)
     ) {
       this.largeRectsMapper3d.setShadingMode(storedShadingMode as ShadingMode);
+    }
+
+    const storedSelectedDisplays = assertDefined(this.store).get(
+      this.storeKeySelectedDisplays,
+    );
+    if (storedSelectedDisplays !== undefined) {
+      const storedIds: Array<number | string> = JSON.parse(
+        storedSelectedDisplays,
+      );
+      const displays = this.internalDisplays.filter((display) => {
+        return storedIds.some((id) => display.displayId === id);
+      });
+      if (displays.length > 0) {
+        this.currentDisplays = displays;
+        this.largeRectsMapper3d.setCurrentGroupIds(
+          displays.map((d) => d.groupId),
+        );
+      }
     }
   }
 
@@ -629,7 +646,7 @@ export class RectsComponent implements OnInit, OnDestroy {
   }
 
   onDisplaySelectChange(event: MatSelectChange) {
-    const selectedDisplays = event.value;
+    const selectedDisplays: DisplayIdentifier[] = event.value;
     this.updateCurrentDisplays(selectedDisplays);
   }
 
@@ -721,7 +738,16 @@ export class RectsComponent implements OnInit, OnDestroy {
     );
   }
 
-  private updateCurrentDisplays(displays: DisplayIdentifier[]) {
+  private updateCurrentDisplays(
+    displays: DisplayIdentifier[],
+    storeChange = true,
+  ) {
+    if (storeChange) {
+      this.store?.add(
+        this.storeKeySelectedDisplays,
+        JSON.stringify(displays.map((d) => d.displayId)),
+      );
+    }
     this.currentDisplays = displays;
     this.largeRectsMapper3d.setCurrentGroupIds(displays.map((d) => d.groupId));
     this.redrawLargeRectsAndLabels();
