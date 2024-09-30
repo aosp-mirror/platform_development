@@ -752,6 +752,7 @@ fn choose_license(license: &str) -> &str {
 
         // Variations on "BSD-* OR Apache-2.0"
         "Apache-2.0 OR BSD-3-Clause" => "Apache-2.0",
+        "Apache-2.0 or BSD-3-Clause" => "Apache-2.0",
         "BSD-3-Clause OR Apache-2.0" => "Apache-2.0",
 
         // Variations on "BSD-* OR MIT OR Apache-2.0"
