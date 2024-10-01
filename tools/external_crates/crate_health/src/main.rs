@@ -35,6 +35,10 @@ struct Cli {
     /// Print command output in case of error, and full diffs.
     #[arg(long, default_value_t = false)]
     verbose: bool,
+
+    /// Don't make network requests to crates.io. Only check the local cache.
+    #[arg(long, default_value_t = false)]
+    offline: bool,
 }
 
 #[derive(Subcommand)]
@@ -89,6 +93,8 @@ enum Cmd {
         #[arg(long, default_value_t = false)]
         all: bool,
     },
+    /// Find crates with a newer version on crates.io
+    UpdatableCrates {},
 }
 
 fn parse_crate_list(arg: &str) -> Result<BTreeSet<String>> {
@@ -100,8 +106,10 @@ fn main() -> Result<()> {
 
     maybe_build_cargo_embargo(&args.repo_root, args.rebuild_cargo_embargo)?;
 
-    let managed_repo =
-        ManagedRepo::new(RootedPath::new(args.repo_root, "external/rust/android-crates-io")?);
+    let managed_repo = ManagedRepo::new(
+        RootedPath::new(args.repo_root, "external/rust/android-crates-io")?,
+        args.offline,
+    )?;
 
     match args.command {
         Cmd::MigrationHealth { crates, unpinned } => {
@@ -132,5 +140,6 @@ fn main() -> Result<()> {
                 crates.into_iter()
             })
         }
+        Cmd::UpdatableCrates {} => managed_repo.updatable_crates(),
     }
 }

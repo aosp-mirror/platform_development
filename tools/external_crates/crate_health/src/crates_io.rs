@@ -1,0 +1,199 @@
+// Copyright (C) 2024 The Android Open Source Project
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//      http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+use anyhow::{anyhow, Result};
+use cfg_expr::{
+    targets::{Arch, Family, Os},
+    Predicate, TargetPredicate,
+};
+use crates_index::{http, Crate, Dependency, DependencyKind, SparseIndex, Version};
+use reqwest::blocking::Client;
+use semver::VersionReq;
+use std::{cell::RefCell, collections::HashSet};
+
+pub struct CratesIoIndex {
+    fetcher: Box<dyn CratesIoFetcher>,
+}
+
+impl CratesIoIndex {
+    #[allow(dead_code)]
+    pub fn new() -> Result<CratesIoIndex> {
+        Ok(CratesIoIndex {
+            fetcher: Box::new(OnlineFetcher {
+                index: crates_index::SparseIndex::new_cargo_default()?,
+                client: reqwest::blocking::ClientBuilder::new().gzip(true).build()?,
+                fetched: RefCell::new(HashSet::new()),
+            }),
+        })
+    }
+    pub fn new_offline() -> Result<CratesIoIndex> {
+        Ok(CratesIoIndex {
+            fetcher: Box::new(OfflineFetcher {
+                index: crates_index::SparseIndex::new_cargo_default()?,
+            }),
+        })
+    }
+    pub fn get_crate(&self, crate_name: impl AsRef<str>) -> Result<Crate> {
+        self.fetcher.fetch(crate_name.as_ref())
+    }
+}
+
+pub trait CratesIoFetcher {
+    fn fetch(&self, crate_name: &str) -> Result<Crate>;
+}
+
+pub struct OnlineFetcher {
+    index: SparseIndex,
+    client: Client,
+    // Keep track of crates we have fetched, to avoid fetching them multiple times.
+    fetched: RefCell<HashSet<String>>,
+}
+
+pub struct OfflineFetcher {
+    index: SparseIndex,
+}
+
+impl CratesIoFetcher for OnlineFetcher {
+    fn fetch(&self, crate_name: &str) -> Result<Crate> {
+        // Adapted from https://github.com/frewsxcv/rust-crates-index/blob/master/examples/sparse_http_reqwest.rs
+
+        let mut fetched = self.fetched.borrow_mut();
+        if fetched.contains(crate_name) {
+            return Ok(self.index.crate_from_cache(crate_name.as_ref())?);
+        }
+        let req = self.index.make_cache_request(crate_name)?.body(())?;
+        let req = http::Request::from_parts(req.into_parts().0, vec![]);
+        let req: reqwest::blocking::Request = req.try_into()?;
+        let res = self.client.execute(req)?;
+        let mut builder = http::Response::builder().status(res.status()).version(res.version());
+        builder
+            .headers_mut()
+            .ok_or(anyhow!("Failed to get headers"))?
+            .extend(res.headers().iter().map(|(k, v)| (k.clone(), v.clone())));
+        let body = res.bytes()?;
+        let res = builder.body(body.to_vec())?;
+        let res = self
+            .index
+            .parse_cache_response(crate_name, res, true)?
+            .ok_or(anyhow!("Crate not found"))?;
+        fetched.insert(crate_name.to_string());
+        Ok(res)
+    }
+}
+impl CratesIoFetcher for OfflineFetcher {
+    fn fetch(&self, crate_name: &str) -> Result<Crate> {
+        Ok(self.index.crate_from_cache(crate_name.as_ref())?)
+    }
+}
+
+/// Filter versions by those that are "safe", meaning not yanked or pre-release.
+pub trait SafeVersions {
+    // Versions of the crate that aren't yanked or pre-release.
+    fn safe_versions(&self) -> impl Iterator<Item = &Version>;
+    // Versions of the crate greater than 'version'.
+    fn versions_gt(&self, version: &semver::Version) -> impl Iterator<Item = &Version> {
+        self.safe_versions().filter(|v| {
+            semver::Version::parse(v.version()).map_or(false, |parsed| parsed.gt(version))
+        })
+    }
+    // Get a specific version of a crate.
+    #[allow(dead_code)]
+    fn get_version(&self, version: &semver::Version) -> Option<&Version> {
+        self.safe_versions().find(|v| {
+            semver::Version::parse(v.version()).map_or(false, |parsed| parsed.eq(version))
+        })
+    }
+}
+impl SafeVersions for Crate {
+    fn safe_versions(&self) -> impl Iterator<Item = &Version> {
+        self.versions().iter().filter(|v| {
+            !v.is_yanked()
+                && semver::Version::parse(v.version()).map_or(false, |parsed| parsed.pre.is_empty())
+        })
+    }
+}
+
+/// Filter dependencies for those likely to be relevant to Android.
+pub trait AndroidDependencies {
+    #[allow(dead_code)]
+    fn android_deps(&self) -> impl Iterator<Item = &Dependency>;
+    #[allow(dead_code)]
+    fn android_deps_with_version_reqs(&self) -> impl Iterator<Item = (&Dependency, VersionReq)> {
+        self.android_deps().filter_map(|dep| {
+            VersionReq::parse(dep.requirement()).map_or(None, |req| Some((dep, req)))
+        })
+    }
+}
+impl AndroidDependencies for Version {
+    fn android_deps(&self) -> impl Iterator<Item = &Dependency> {
+        self.dependencies().iter().filter(|dep| {
+            dep.kind() == DependencyKind::Normal && !dep.is_optional() && dep.is_android()
+        })
+    }
+}
+
+/// Dependencies that are likely to be relevant to Android.
+/// Unconditional dependencies (without a target cfg string) are always relevant.
+/// Conditional dependencies are relevant if they are for Unix, Android, or Linux, and for an architecture we care about (Arm, RISC-V, or X86)
+pub trait IsAndroid {
+    /// Returns true if this dependency is likely to be relevant to Android.
+    fn is_android(&self) -> bool;
+}
+impl IsAndroid for Dependency {
+    fn is_android(&self) -> bool {
+        self.target().map_or(true, is_android)
+    }
+}
+fn is_android(target: &str) -> bool {
+    let expr = cfg_expr::Expression::parse(target);
+    if expr.is_err() {
+        return false;
+    }
+    let expr = expr.unwrap();
+    expr.eval(|pred| match pred {
+        Predicate::Target(target_predicate) => match target_predicate {
+            TargetPredicate::Family(family) => *family == Family::unix,
+            TargetPredicate::Os(os) => *os == Os::android || *os == Os::linux,
+            TargetPredicate::Arch(arch) => {
+                [Arch::arm, Arch::aarch64, Arch::riscv32, Arch::riscv64, Arch::x86, Arch::x86_64]
+                    .contains(arch)
+            }
+            _ => true,
+        },
+        _ => true,
+    })
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    #[test]
+    fn test_android_cfgs() {
+        assert!(!is_android("asmjs-unknown-emscripten"), "Parse error");
+        assert!(!is_android("cfg(windows)"));
+        assert!(is_android("cfg(unix)"));
+        assert!(!is_android(r#"cfg(target_os = "redox")"#));
+        assert!(!is_android(r#"cfg(target_arch = "wasm32")"#));
+        assert!(is_android(r#"cfg(any(target_os = "linux", target_os = "android"))"#));
+        assert!(is_android(
+            r#"cfg(any(all(target_arch = "arm", target_pointer_width = "32"), target_arch = "mips", target_arch = "powerpc"))"#
+        ));
+        assert!(!is_android(
+            r#"cfg(all(target_arch = "wasm32", target_vendor = "unknown", target_os = "unknown"))"#
+        ));
+        assert!(is_android("cfg(tracing_unstable)"));
+        assert!(is_android(r#"cfg(any(unix, target_os = "wasi"))"#));
+        assert!(is_android(r#"cfg(not(all(target_arch = "arm", target_os = "none")))"#))
+    }
+}

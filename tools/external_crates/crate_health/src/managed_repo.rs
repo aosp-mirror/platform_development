@@ -36,6 +36,7 @@ use crate::{
     copy_dir,
     crate_collection::CrateCollection,
     crate_type::Crate,
+    crates_io::{CratesIoIndex, SafeVersions},
     license::{most_restrictive_type, update_module_license_files},
     managed_crate::ManagedCrate,
     pseudo_crate::{CargoVendorClean, CargoVendorDirty, PseudoCrate},
@@ -44,11 +45,15 @@ use crate::{
 
 pub struct ManagedRepo {
     path: RootedPath,
+    crates_io: CratesIoIndex,
 }
 
 impl ManagedRepo {
-    pub fn new(path: RootedPath) -> ManagedRepo {
-        ManagedRepo { path }
+    pub fn new(path: RootedPath, offline: bool) -> Result<ManagedRepo> {
+        Ok(ManagedRepo {
+            path,
+            crates_io: if offline { CratesIoIndex::new_offline()? } else { CratesIoIndex::new()? },
+        })
     }
     fn pseudo_crate(&self) -> PseudoCrate<CargoVendorDirty> {
         PseudoCrate::new(self.path.join("pseudo_crate").unwrap())
@@ -116,7 +121,7 @@ impl ManagedRepo {
             healthy_self_contained = false;
         }
 
-        let mc = ManagedCrate::new(Crate::from(self.legacy_dir_for(crate_name))?).as_legacy();
+        let mc = ManagedCrate::new(Crate::from(self.legacy_dir_for(crate_name))?).into_legacy();
         if !mc.android_bp().abs().exists() {
             println!("There is no Android.bp file in {}", krate.path());
             healthy_self_contained = false;
@@ -548,6 +553,30 @@ impl ManagedRepo {
         for crate_name in crates {
             let mc = self.managed_crate_for(crate_name.as_ref())?;
             mc.recontextualize_patches()?;
+        }
+        Ok(())
+    }
+    pub fn updatable_crates(&self) -> Result<()> {
+        let mut cc = self.new_cc();
+        cc.add_from(self.managed_dir().rel())?;
+
+        for krate in cc.map_field().values() {
+            let cio_crate = self.crates_io.get_crate(krate.name())?;
+            let upgrades =
+                cio_crate.versions_gt(krate.version()).map(|v| v.version()).collect::<Vec<_>>();
+            if !upgrades.is_empty() {
+                println!(
+                    "{} v{}:\n  {}",
+                    krate.name(),
+                    krate.version(),
+                    upgrades
+                        .iter()
+                        .chunks(10)
+                        .into_iter()
+                        .map(|mut c| { c.join(", ") })
+                        .join(",\n  ")
+                );
+            }
         }
         Ok(())
     }
