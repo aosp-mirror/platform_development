@@ -20,14 +20,16 @@ use cfg_expr::{
 use crates_index::{http, Crate, Dependency, DependencyKind, SparseIndex, Version};
 use reqwest::blocking::Client;
 use semver::VersionReq;
-use std::{cell::RefCell, collections::HashSet};
+use std::{
+    cell::RefCell,
+    collections::{HashMap, HashSet},
+};
 
 pub struct CratesIoIndex {
     fetcher: Box<dyn CratesIoFetcher>,
 }
 
 impl CratesIoIndex {
-    #[allow(dead_code)]
     pub fn new() -> Result<CratesIoIndex> {
         Ok(CratesIoIndex {
             fetcher: Box::new(OnlineFetcher {
@@ -108,7 +110,6 @@ pub trait SafeVersions {
         })
     }
     // Get a specific version of a crate.
-    #[allow(dead_code)]
     fn get_version(&self, version: &semver::Version) -> Option<&Version> {
         self.safe_versions().find(|v| {
             semver::Version::parse(v.version()).map_or(false, |parsed| parsed.eq(version))
@@ -126,9 +127,10 @@ impl SafeVersions for Crate {
 
 /// Filter dependencies for those likely to be relevant to Android.
 pub trait AndroidDependencies {
-    #[allow(dead_code)]
     fn android_deps(&self) -> impl Iterator<Item = &Dependency>;
-    #[allow(dead_code)]
+    fn android_version_reqs_by_name(&self) -> HashMap<&str, &str> {
+        self.android_deps().map(|dep| (dep.crate_name(), dep.requirement())).collect()
+    }
     fn android_deps_with_version_reqs(&self) -> impl Iterator<Item = (&Dependency, VersionReq)> {
         self.android_deps().filter_map(|dep| {
             VersionReq::parse(dep.requirement()).map_or(None, |req| Some((dep, req)))
@@ -173,6 +175,22 @@ fn is_android(target: &str) -> bool {
         },
         _ => true,
     })
+}
+
+pub trait DependencyChanges {
+    fn is_new_dep(&self, base_deps: &HashMap<&str, &str>) -> bool;
+    fn is_changed_dep(&self, base_deps: &HashMap<&str, &str>) -> bool;
+}
+
+impl DependencyChanges for Dependency {
+    fn is_new_dep(&self, base_deps: &HashMap<&str, &str>) -> bool {
+        !base_deps.contains_key(self.crate_name())
+    }
+
+    fn is_changed_dep(&self, base_deps: &HashMap<&str, &str>) -> bool {
+        let base_dep = base_deps.get(self.crate_name());
+        base_dep.is_none() || base_dep.is_some_and(|base_req| *base_req != self.requirement())
+    }
 }
 
 #[cfg(test)]

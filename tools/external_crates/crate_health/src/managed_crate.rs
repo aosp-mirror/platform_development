@@ -100,7 +100,7 @@ impl<State: ManagedCrateState> ManagedCrate<State> {
     fn patch_dir(&self) -> RootedPath {
         self.android_crate_path().join("patches").unwrap()
     }
-    fn patches(&self) -> Result<Vec<PathBuf>> {
+    pub fn patches(&self) -> Result<Vec<PathBuf>> {
         let mut patches = Vec::new();
         let patch_dir = self.patch_dir();
         if patch_dir.abs().exists() {

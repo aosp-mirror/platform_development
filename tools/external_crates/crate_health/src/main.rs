@@ -95,6 +95,8 @@ enum Cmd {
     },
     /// Find crates with a newer version on crates.io
     UpdatableCrates {},
+    /// Analyze possible updates for a crate and try to identify potential problems.
+    AnalyzeUpdates { crate_name: String },
 }
 
 fn parse_crate_list(arg: &str) -> Result<BTreeSet<String>> {
@@ -141,5 +143,6 @@ fn main() -> Result<()> {
             })
         }
         Cmd::UpdatableCrates {} => managed_repo.updatable_crates(),
+        Cmd::AnalyzeUpdates { crate_name } => managed_repo.analyze_updates(crate_name),
     }
 }

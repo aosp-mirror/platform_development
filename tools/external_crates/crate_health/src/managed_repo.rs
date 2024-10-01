@@ -36,10 +36,11 @@ use crate::{
     copy_dir,
     crate_collection::CrateCollection,
     crate_type::Crate,
-    crates_io::{CratesIoIndex, SafeVersions},
+    crates_io::{AndroidDependencies, CratesIoIndex, DependencyChanges, SafeVersions},
     license::{most_restrictive_type, update_module_license_files},
     managed_crate::ManagedCrate,
     pseudo_crate::{CargoVendorClean, CargoVendorDirty, PseudoCrate},
+    upgradable::{IsUpgradableTo, MatchesRelaxed},
     SuccessOrError,
 };
 
@@ -69,6 +70,11 @@ impl ManagedRepo {
     }
     fn legacy_dir_for(&self, crate_name: &str) -> RootedPath {
         self.path.with_same_root("external/rust/crates").unwrap().join(crate_name).unwrap()
+    }
+    fn legacy_crates(&self) -> Result<CrateCollection> {
+        let mut cc = self.new_cc();
+        cc.add_from("external/rust/crates")?;
+        Ok(cc)
     }
     fn new_cc(&self) -> CrateCollection {
         CrateCollection::new(self.path.root())
@@ -578,6 +584,85 @@ impl ManagedRepo {
                 );
             }
         }
+        Ok(())
+    }
+    pub fn analyze_updates(&self, crate_name: impl AsRef<str>) -> Result<()> {
+        let mut managed_crates = self.new_cc();
+        managed_crates.add_from(self.managed_dir().rel())?;
+        let legacy_crates = self.legacy_crates()?;
+
+        let krate = self.managed_crate_for(crate_name.as_ref())?;
+        println!("Analyzing updates to {} v{}", krate.name(), krate.android_version());
+        let patches = krate.patches()?;
+        if !patches.is_empty() {
+            println!("This crate has patches, so expect a fun time trying to update it:");
+            for patch in patches {
+                println!(
+                    "  {}",
+                    Path::new(patch.file_name().ok_or(anyhow!("No file name"))?).display()
+                );
+            }
+        }
+
+        let cio_crate = self.crates_io.get_crate(crate_name)?;
+
+        let base_version = cio_crate.get_version(krate.android_version()).ok_or(anyhow!(
+            "{} v{} not found in crates.io",
+            krate.name(),
+            krate.android_version()
+        ))?;
+        let base_deps = base_version.android_version_reqs_by_name();
+
+        for version in cio_crate.versions_gt(krate.android_version()) {
+            println!("Version {}", version.version());
+            let parsed_version = semver::Version::parse(version.version())?;
+            if !krate.android_version().is_upgradable_to(&parsed_version) {
+                if !krate.android_version().is_upgradable_to_relaxed(&parsed_version) {
+                    println!("  Not semver-compatible, even by relaxed standards");
+                } else {
+                    println!("  Semver-compatible, but only by relaxed standards since major version is 0");
+                }
+            }
+            // Check to see if the update has any missing dependencies.
+            // We try to be a little clever about this in the following ways:
+            // * Only consider deps that are likely to be relevant to Android. For example, ignore Windows-only deps.
+            // * If a dep is missing, but the same dep exists for the current version of the crate, it's probably not actually necessary.
+            // * Use relaxed version requirements, treating 0.x and 0.y as compatible, even though they aren't according to semver rules.
+            for (dep, req) in version.android_deps_with_version_reqs() {
+                let cc = if managed_crates.contains_name(dep.crate_name()) {
+                    &managed_crates
+                } else {
+                    &legacy_crates
+                };
+                if !cc.contains_name(dep.crate_name()) {
+                    println!(
+                        "  Dep {} {} has not been imported to Android",
+                        dep.crate_name(),
+                        dep.requirement()
+                    );
+                    if !dep.is_new_dep(&base_deps) {
+                        println!("    But the current version has the same dependency, and it seems to work");
+                    } else {
+                        continue;
+                    }
+                }
+                for (_, dep_crate) in cc.get_versions(dep.crate_name()) {
+                    if !req.matches_relaxed(dep_crate.version()) {
+                        println!(
+                            "  Dep {} {} is not satisfied by v{} at {}",
+                            dep.crate_name(),
+                            dep.requirement(),
+                            dep_crate.version(),
+                            dep_crate.path()
+                        );
+                        if !dep.is_changed_dep(&base_deps) {
+                            println!("    But the current version has the same dependency and it seems to work.")
+                        }
+                    }
+                }
+            }
+        }
+
         Ok(())
     }
 }
