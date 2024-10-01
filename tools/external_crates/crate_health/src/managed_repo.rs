@@ -66,12 +66,8 @@ impl ManagedRepo {
     fn managed_crate_for(
         &self,
         crate_name: &str,
-        pseudo_crate: &PseudoCrate<CargoVendorClean>,
     ) -> Result<ManagedCrate<crate::managed_crate::New>> {
-        Ok(ManagedCrate::new(
-            Crate::from(self.managed_dir_for(crate_name))?,
-            Crate::from(pseudo_crate.vendored_dir_for(crate_name)?.clone())?,
-        ))
+        Ok(ManagedCrate::new(Crate::from(self.managed_dir_for(crate_name))?))
     }
     pub fn all_crate_names(&self) -> Result<Vec<String>> {
         let mut managed_dirs = Vec::new();
@@ -115,10 +111,7 @@ impl ManagedRepo {
             healthy_self_contained = false;
         }
 
-        let mc = ManagedCrate::new(
-            Crate::from(self.legacy_dir_for(crate_name))?,
-            Crate::from(self.legacy_dir_for(crate_name))?,
-        );
+        let mc = ManagedCrate::new(Crate::from(self.legacy_dir_for(crate_name))?).as_legacy();
         if !mc.android_bp().abs().exists() {
             println!("There is no Android.bp file in {}", krate.path());
             healthy_self_contained = false;
@@ -164,11 +157,8 @@ impl ManagedRepo {
         }
         let pseudo_crate = pseudo_crate.vendor()?;
 
-        let mc = ManagedCrate::new(
-            Crate::from(self.legacy_dir_for(crate_name))?,
-            Crate::from(pseudo_crate.vendored_dir_for(crate_name)?.clone())?,
-        )
-        .stage()?;
+        let mc = ManagedCrate::new(Crate::from(self.legacy_dir_for(crate_name))?)
+            .stage(&pseudo_crate)?;
 
         pseudo_crate.remove(krate.name())?;
 
@@ -427,9 +417,9 @@ impl ManagedRepo {
     ) -> Result<()> {
         let pseudo_crate = self.pseudo_crate().vendor()?;
         for crate_name in crates {
-            let mc = self.managed_crate_for(crate_name.as_ref(), &pseudo_crate)?;
+            let mc = self.managed_crate_for(crate_name.as_ref())?;
             // TODO: Don't give up if there's a failure.
-            mc.regenerate(update_metadata)?;
+            mc.regenerate(update_metadata, &pseudo_crate)?;
         }
 
         pseudo_crate.regenerate_crate_list()?;
@@ -439,7 +429,7 @@ impl ManagedRepo {
     pub fn stage<T: AsRef<str>>(&self, crates: impl Iterator<Item = T>) -> Result<()> {
         let pseudo_crate = self.pseudo_crate().vendor()?;
         for crate_name in crates {
-            let mc = self.managed_crate_for(crate_name.as_ref(), &pseudo_crate)?.stage()?;
+            let mc = self.managed_crate_for(crate_name.as_ref())?.stage(&pseudo_crate)?;
             // TODO: Don't give up if there's a failure.
             mc.check_staged()?;
         }
@@ -477,7 +467,7 @@ impl ManagedRepo {
 
         for crate_name in changed_android_crates {
             println!("Checking {}", crate_name);
-            let mc = self.managed_crate_for(&crate_name, &pseudo_crate)?.stage()?;
+            let mc = self.managed_crate_for(&crate_name)?.stage(&pseudo_crate)?;
             mc.diff_staged()?;
         }
         Ok(())
@@ -555,9 +545,8 @@ impl ManagedRepo {
         &self,
         crates: impl Iterator<Item = T>,
     ) -> Result<()> {
-        let pseudo_crate = self.pseudo_crate().vendor()?;
         for crate_name in crates {
-            let mc = self.managed_crate_for(crate_name.as_ref(), &pseudo_crate)?;
+            let mc = self.managed_crate_for(crate_name.as_ref())?;
             mc.recontextualize_patches()?;
         }
         Ok(())
