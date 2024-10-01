@@ -21,7 +21,7 @@ use std::{
     str::from_utf8,
 };
 
-use anyhow::{anyhow, Result};
+use anyhow::{anyhow, Context, Result};
 use glob::glob;
 use google_metadata::GoogleMetadata;
 use itertools::Itertools;
@@ -32,9 +32,14 @@ use semver::Version;
 use spdx::Licensee;
 
 use crate::{
-    cargo_embargo_autoconfig, copy_dir, most_restrictive_type,
-    pseudo_crate::{CargoVendorClean, CargoVendorDirty},
-    update_module_license_files, Crate, CrateCollection, ManagedCrate, PseudoCrate,
+    android_bp::cargo_embargo_autoconfig,
+    copy_dir,
+    crate_collection::CrateCollection,
+    crate_type::Crate,
+    license::{most_restrictive_type, update_module_license_files},
+    managed_crate::ManagedCrate,
+    pseudo_crate::{CargoVendorClean, CargoVendorDirty, PseudoCrate},
+    SuccessOrError,
 };
 
 pub struct ManagedRepo {
@@ -321,19 +326,14 @@ impl ManagedRepo {
             copy_dir(vendored_dir, &managed_dir)?;
 
             // TODO: Copy to a temp dir, because otherwise we might run cargo and create/modify Cargo.lock.
-            let output = cargo_embargo_autoconfig(&managed_dir)?;
-            if !output.status.success() {
-                // TODO: Maybe just write a default cargo_embargo.json if cargo_embargo fails horribly.
-                // There is one pathological crate out there (unarray) where the version published
-                // to crates.io doesn't compile, and cargo_embargo relies on at least being
-                // able to compile successfully. In such case, we may need to do:
-                //  write(managed_dir.abs().join("cargo_embargo.json"), "{}")?;
-                return Err(anyhow!(
-                    "Failed to generate cargo_embargo.json:\nSTDOUT:\n{}\nSTDERR:\n{}",
-                    from_utf8(&output.stdout)?,
-                    from_utf8(&output.stderr)?
-                ));
-            }
+            // TODO: Maybe just write a default cargo_embargo.json if cargo_embargo fails horribly.
+            // There is one pathological crate out there (unarray) where the version published
+            // to crates.io doesn't compile, and cargo_embargo relies on at least being
+            // able to compile successfully. In such case, we may need to do:
+            //  write(managed_dir.abs().join("cargo_embargo.json"), "{}")?;
+            cargo_embargo_autoconfig(&managed_dir)?
+                .success_or_error()
+                .context("Failed to generate cargo_embargo.json")?;
 
             let krate = Crate::from(managed_dir.clone())?;
 
