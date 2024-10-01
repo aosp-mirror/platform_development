@@ -15,7 +15,7 @@
 use std::env::current_dir;
 use std::fs::{create_dir_all, remove_dir_all};
 use std::path::{Path, PathBuf};
-use std::process::{Command, Output};
+use std::process::{Command, ExitStatus, Output};
 use std::str::from_utf8;
 
 use anyhow::{anyhow, Context, Result};
@@ -81,21 +81,52 @@ pub trait RunQuiet {
 }
 impl RunQuiet for Command {
     fn run_quiet_and_expect_success(&mut self) -> Result<Output> {
-        let output = self.output().context(format!("Failed to run {:?}", self))?;
-        if !output.status.success() {
-            return Err(anyhow!(
-                "Exit status {} for {:?}\nSTDOUT:\n{}\nSTDERR:\n{}",
-                output
-                    .status
-                    .code()
-                    .map(|code| { format!("{}", code) })
-                    .unwrap_or("(unknown)".to_string()),
-                self,
-                from_utf8(&output.stdout)?,
-                from_utf8(&output.stderr)?
-            ));
+        self.output()
+            .context(format!("Failed to run {:?}", self))?
+            .success_or_error()
+            .context(format!("Failed to run {:?}", self))
+    }
+}
+
+pub trait SuccessOrError {
+    fn success_or_error(self) -> Result<Self>
+    where
+        Self: std::marker::Sized;
+}
+impl SuccessOrError for ExitStatus {
+    fn success_or_error(self) -> Result<Self> {
+        if !self.success() {
+            let exit_code =
+                self.code().map(|code| format!("{}", code)).unwrap_or("(unknown)".to_string());
+            Err(anyhow!("Process failed with exit code {}", exit_code))
+        } else {
+            Ok(self)
         }
-        Ok(output)
+    }
+}
+impl SuccessOrError for Output {
+    fn success_or_error(self) -> Result<Self> {
+        (&self).success_or_error()?;
+        Ok(self)
+    }
+}
+impl SuccessOrError for &Output {
+    fn success_or_error(self) -> Result<Self> {
+        if !self.status.success() {
+            let exit_code = self
+                .status
+                .code()
+                .map(|code| format!("{}", code))
+                .unwrap_or("(unknown)".to_string());
+            Err(anyhow!(
+                "Process failed with exit code {}\nstdout:\n{}\nstderr:\n{}",
+                exit_code,
+                from_utf8(&self.stdout)?,
+                from_utf8(&self.stderr)?
+            ))
+        } else {
+            Ok(self)
+        }
     }
 }
 

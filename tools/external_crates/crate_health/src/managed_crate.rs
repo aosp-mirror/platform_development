@@ -29,7 +29,7 @@ use semver::Version;
 
 use crate::{
     copy_dir, ensure_exists_and_empty, patch::Patch, pseudo_crate::CargoVendorClean,
-    run_cargo_embargo, Crate, PseudoCrate,
+    run_cargo_embargo, Crate, PseudoCrate, SuccessOrError,
 };
 
 #[derive(Debug)]
@@ -119,8 +119,9 @@ impl<State: ManagedCrateState> ManagedCrate<State> {
         let output = Command::new("git")
             .args(["status", "--porcelain", "."])
             .current_dir(self.android_crate_path())
-            .output()?;
-        if !output.status.success() || !output.stdout.is_empty() {
+            .output()?
+            .success_or_error()?;
+        if !output.stdout.is_empty() {
             return Err(anyhow!(
                 "Crate directory {} has uncommitted changes",
                 self.android_crate_path()
@@ -137,12 +138,14 @@ impl<State: ManagedCrateState> ManagedCrate<State> {
                 .arg(&patch)
                 .current_dir(self.android_crate_path())
                 .spawn()?
-                .wait()?;
+                .wait()?
+                .success_or_error()?;
             Command::new("git")
                 .args(["add", "."])
                 .current_dir(self.android_crate_path())
                 .spawn()?
-                .wait()?;
+                .wait()?
+                .success_or_error()?;
             let output = Command::new("git")
                 .args([
                     "diff",
@@ -154,22 +157,26 @@ impl<State: ManagedCrateState> ManagedCrate<State> {
                     ".",
                 ])
                 .current_dir(self.android_crate_path())
-                .output()?;
+                .output()?
+                .success_or_error()?;
             Command::new("git")
                 .args(["restore", "--staged", "."])
                 .current_dir(self.android_crate_path())
                 .spawn()?
-                .wait()?;
+                .wait()?
+                .success_or_error()?;
             Command::new("git")
                 .args(["restore", "."])
                 .current_dir(self.android_crate_path())
                 .spawn()?
-                .wait()?;
+                .wait()?
+                .success_or_error()?;
             Command::new("git")
                 .args(["clean", "-f", "."])
                 .current_dir(self.android_crate_path())
                 .spawn()?
-                .wait()?;
+                .wait()?
+                .success_or_error()?;
             let patch_contents = read_to_string(&patch)?;
             let parsed = Patch::parse(&patch_contents);
             new_patch_contents.push((patch, parsed.reassemble(&output.stdout)));
@@ -395,15 +402,9 @@ impl ManagedCrate<Staged> {
                 }
             }
         }
-        if !self.cargo_embargo_success() {
-            let output = self.cargo_embargo_output();
-            return Err(anyhow!(
-                "cargo_embargo execution failed for {}:\nstdout:\n{}\nstderr:\n:{}",
-                self.name(),
-                from_utf8(&output.stdout)?,
-                from_utf8(&output.stderr)?
-            ));
-        }
+        self.cargo_embargo_output()
+            .success_or_error()
+            .context(format!("cargo_embargo execution failed for {}", self.name()))?;
 
         Ok(())
     }
