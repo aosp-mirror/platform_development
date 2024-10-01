@@ -18,6 +18,7 @@ package com.android.compose.animation.scene.demo
 
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -172,6 +173,8 @@ fun SceneScope.QuickSettings(
                 onPowerButtonClicked,
                 Modifier.align(Alignment.BottomCenter)
                     .element(QuickSettings.Elements.FooterActions)
+                    // Intercepts touches, prevents the scrollable container behind from scrolling.
+                    .clickable(interactionSource = null, indication = null) { /* do nothing */ }
                     .background(Color.Black, QuickSettings.Shapes.FooterActionsBackground)
                     .padding(
                         top = QuickSettings.Dimensions.FooterActionsPadding,
