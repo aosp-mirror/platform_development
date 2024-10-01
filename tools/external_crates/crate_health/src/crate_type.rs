@@ -69,9 +69,6 @@ impl Crate {
     pub fn license(&self) -> Option<&str> {
         self.manifest.metadata().license.as_deref()
     }
-    pub fn license_file(&self) -> Option<&str> {
-        self.manifest.metadata().license_file.as_deref()
-    }
     pub fn repository(&self) -> Option<&str> {
         self.manifest.metadata().repository.as_deref()
     }

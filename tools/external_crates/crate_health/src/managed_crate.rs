@@ -28,8 +28,13 @@ use rooted_path::RootedPath;
 use semver::Version;
 
 use crate::{
-    copy_dir, ensure_exists_and_empty, patch::Patch, pseudo_crate::CargoVendorClean,
-    run_cargo_embargo, Crate, PseudoCrate, SuccessOrError,
+    android_bp::run_cargo_embargo,
+    copy_dir,
+    crate_type::Crate,
+    ensure_exists_and_empty,
+    patch::Patch,
+    pseudo_crate::{CargoVendorClean, PseudoCrate},
+    SuccessOrError,
 };
 
 #[derive(Debug)]

@@ -32,9 +32,14 @@ use semver::Version;
 use spdx::Licensee;
 
 use crate::{
-    cargo_embargo_autoconfig, copy_dir, most_restrictive_type,
-    pseudo_crate::{CargoVendorClean, CargoVendorDirty},
-    update_module_license_files, Crate, CrateCollection, ManagedCrate, PseudoCrate, SuccessOrError,
+    android_bp::cargo_embargo_autoconfig,
+    copy_dir,
+    crate_collection::CrateCollection,
+    crate_type::Crate,
+    license::{most_restrictive_type, update_module_license_files},
+    managed_crate::ManagedCrate,
+    pseudo_crate::{CargoVendorClean, CargoVendorDirty, PseudoCrate},
+    SuccessOrError,
 };
 
 pub struct ManagedRepo {
