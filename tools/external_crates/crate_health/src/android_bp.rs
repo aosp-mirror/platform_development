@@ -20,8 +20,10 @@ use std::{
     process::{Command, Output},
 };
 
-use anyhow::{anyhow, Context, Result};
+use anyhow::{Context, Result};
 use rooted_path::RootedPath;
+
+use crate::SuccessOrError;
 
 fn add_bpfmt_to_path(repo_root: impl AsRef<Path>) -> Result<OsString> {
     let host_bin = repo_root.as_ref().join("prebuilts/build-tools/linux-x86/bin");
@@ -91,14 +93,12 @@ pub fn maybe_build_cargo_embargo(repo_root: &impl AsRef<Path>, force_rebuild: bo
 }
 
 pub fn build_cargo_embargo(repo_root: &impl AsRef<Path>) -> Result<()> {
-    let status = Command::new("/usr/bin/bash")
+    Command::new("/usr/bin/bash")
         .args(["-c", "source build/envsetup.sh && lunch aosp_cf_x86_64_phone-trunk_staging-eng && m cargo_embargo"])
-        .env_remove("OUT_DIR").current_dir(repo_root).spawn().context("Failed to spawn build of cargo embargo")?.wait().context("Failed to wait on child process building cargo embargo")?;
-    match status.success() {
-        true => Ok(()),
-        false => Err(anyhow!(
-            "Building cargo embargo failed with exit code {}",
-            status.code().map(|code| { format!("{}", code) }).unwrap_or("(unknown)".to_string())
-        )),
-    }
+        .env_remove("OUT_DIR")
+        .current_dir(repo_root)
+        .spawn().context("Failed to spawn build of cargo embargo")?
+        .wait().context("Failed to wait on child process building cargo embargo")?
+        .success_or_error().context("Failed to build_cargo_emargo")?;
+    Ok(())
 }
