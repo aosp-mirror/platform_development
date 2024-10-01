@@ -73,6 +73,20 @@ impl ManagedRepo {
             Crate::from(pseudo_crate.vendored_dir_for(crate_name)?.clone())?,
         ))
     }
+    pub fn all_crate_names(&self) -> Result<Vec<String>> {
+        let mut managed_dirs = Vec::new();
+        for entry in read_dir(self.managed_dir())? {
+            let entry = entry?;
+            if entry.path().is_dir() {
+                managed_dirs.push(
+                    entry.file_name().into_string().map_err(|e| {
+                        anyhow!("Failed to convert {} to string", e.to_string_lossy())
+                    })?,
+                );
+            }
+        }
+        Ok(managed_dirs)
+    }
     pub fn migration_health(
         &self,
         crate_name: &str,
@@ -422,12 +436,6 @@ impl ManagedRepo {
 
         Ok(())
     }
-    pub fn regenerate_all(&self, update_metadata: bool) -> Result<()> {
-        self.regenerate(
-            self.pseudo_crate().vendor()?.deps().keys().map(|k| k.as_str()),
-            update_metadata,
-        )
-    }
     pub fn stage<T: AsRef<str>>(&self, crates: impl Iterator<Item = T>) -> Result<()> {
         let pseudo_crate = self.pseudo_crate().vendor()?;
         for crate_name in crates {
@@ -441,17 +449,7 @@ impl ManagedRepo {
         let pseudo_crate = self.pseudo_crate().vendor()?;
         let deps = pseudo_crate.deps().keys().cloned().collect::<BTreeSet<_>>();
 
-        let mut managed_dirs = BTreeSet::new();
-        for entry in read_dir(self.managed_dir())? {
-            let entry = entry?;
-            if entry.path().is_dir() {
-                managed_dirs.insert(
-                    entry.file_name().into_string().map_err(|e| {
-                        anyhow!("Failed to convert {} to string", e.to_string_lossy())
-                    })?,
-                );
-            }
-        }
+        let managed_dirs = self.all_crate_names()?.into_iter().collect();
 
         if deps != managed_dirs {
             return Err(anyhow!("Deps in pseudo_crate/Cargo.toml don't match directories in {}\nDirectories not in Cargo.toml: {}\nCargo.toml deps with no directory: {}",
@@ -551,6 +549,17 @@ impl ManagedRepo {
             metadata.write()?;
         }
 
+        Ok(())
+    }
+    pub fn recontextualize_patches<T: AsRef<str>>(
+        &self,
+        crates: impl Iterator<Item = T>,
+    ) -> Result<()> {
+        let pseudo_crate = self.pseudo_crate().vendor()?;
+        for crate_name in crates {
+            let mc = self.managed_crate_for(crate_name.as_ref(), &pseudo_crate)?;
+            mc.recontextualize_patches()?;
+        }
         Ok(())
     }
 }
