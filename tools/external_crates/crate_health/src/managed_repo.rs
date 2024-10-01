@@ -665,6 +665,69 @@ impl ManagedRepo {
 
         Ok(())
     }
+    pub fn suggest_updates(&self, consider_patched_crates: bool) -> Result<()> {
+        let mut managed_crates = self.new_cc();
+        managed_crates.add_from(self.managed_dir().rel())?;
+        let legacy_crates = self.legacy_crates()?;
+
+        for krate in managed_crates.map_field().values() {
+            let cio_crate = self.crates_io.get_crate(krate.name())?;
+
+            let base_version = cio_crate.get_version(krate.version());
+            if base_version.is_none() {
+                println!(
+                    "Skipping crate {} v{} because it was not found in crates.io",
+                    krate.name(),
+                    krate.version()
+                );
+                continue;
+            }
+            let base_version = base_version.unwrap();
+            let base_deps = base_version.android_version_reqs_by_name();
+
+            let patch_dir = krate.path().join("patches").unwrap();
+            if patch_dir.abs().exists() && !consider_patched_crates {
+                println!(
+                    "Skipping crate {} v{} because it has patches",
+                    krate.name(),
+                    krate.version()
+                );
+                continue;
+            }
+
+            for version in cio_crate.versions_gt(krate.version()).rev() {
+                let parsed_version = semver::Version::parse(version.version())?;
+                if !krate.version().is_upgradable_to_relaxed(&parsed_version) {
+                    continue;
+                }
+                if !version.android_deps_with_version_reqs().any(|(dep, req)| {
+                    if !dep.is_changed_dep(&base_deps) {
+                        return false;
+                    }
+                    let cc = if managed_crates.contains_name(dep.crate_name()) {
+                        &managed_crates
+                    } else {
+                        &legacy_crates
+                    };
+                    for (_, dep_crate) in cc.get_versions(dep.crate_name()) {
+                        if req.matches_relaxed(dep_crate.version()) {
+                            return false;
+                        }
+                    }
+                    true
+                }) {
+                    println!(
+                        "Upgrade crate {} v{} to {}",
+                        krate.name(),
+                        krate.version(),
+                        version.version()
+                    );
+                    break;
+                }
+            }
+        }
+        Ok(())
+    }
 }
 
 // Files that are ignored when migrating a crate to the monorepo.
