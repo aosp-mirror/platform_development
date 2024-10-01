@@ -774,6 +774,7 @@ fn choose_license(license: &str) -> &str {
         "MIT OR LGPL-3.0-or-later" => "MIT",
         "MIT/BSD-3-Clause" => "MIT",
 
+        "LGPL-2.1-only OR BSD-2-Clause" => "BSD-2-Clause",
         _ => license,
     }
 }
