@@ -13,46 +13,17 @@
 // limitations under the License.
 
 use std::{
-    collections::BTreeMap,
     env,
     ffi::OsString,
     fs::{copy, remove_file, rename},
     path::Path,
     process::{Command, Output},
-    sync::mpsc::channel,
 };
 
-use anyhow::{anyhow, Context, Result};
-use name_and_version::{NameAndVersion, NameAndVersionMap, NamedAndVersioned};
+use anyhow::{Context, Result};
 use rooted_path::RootedPath;
-use threadpool::ThreadPool;
 
-use crate::Crate;
-
-pub fn generate_android_bps<'a, T: Iterator<Item = &'a Crate>>(
-    crates: T,
-) -> Result<BTreeMap<NameAndVersion, Output>> {
-    let pool = ThreadPool::new(std::cmp::max(num_cpus::get(), 32));
-    let (tx, rx) = channel();
-
-    let mut num_crates = 0;
-    for krate in crates {
-        num_crates += 1;
-        let tx = tx.clone();
-        let crate_name = krate.name().to_string();
-        let crate_version = krate.version().clone();
-        let staging_path = krate.staging_path();
-        pool.execute(move || {
-            tx.send((crate_name, crate_version, run_cargo_embargo(&staging_path)))
-                .expect("Failed to send");
-        });
-    }
-    let mut results = BTreeMap::new();
-    for (crate_name, crate_version, result) in rx.iter().take(num_crates) {
-        results.insert_or_error(NameAndVersion::new(crate_name, crate_version), result?)?;
-    }
-    Ok(results)
-}
+use crate::SuccessOrError;
 
 fn add_bpfmt_to_path(repo_root: impl AsRef<Path>) -> Result<OsString> {
     let host_bin = repo_root.as_ref().join("prebuilts/build-tools/linux-x86/bin");
@@ -67,7 +38,7 @@ fn add_bpfmt_to_path(repo_root: impl AsRef<Path>) -> Result<OsString> {
     Ok(new_path)
 }
 
-fn run_cargo_embargo(staging_path: &RootedPath) -> Result<Output> {
+pub fn run_cargo_embargo(staging_path: &RootedPath) -> Result<Output> {
     maybe_build_cargo_embargo(&staging_path.root(), false)?;
     let new_path = add_bpfmt_to_path(staging_path.root())?;
 
@@ -122,14 +93,12 @@ pub fn maybe_build_cargo_embargo(repo_root: &impl AsRef<Path>, force_rebuild: bo
 }
 
 pub fn build_cargo_embargo(repo_root: &impl AsRef<Path>) -> Result<()> {
-    let status = Command::new("/usr/bin/bash")
+    Command::new("/usr/bin/bash")
         .args(["-c", "source build/envsetup.sh && lunch aosp_cf_x86_64_phone-trunk_staging-eng && m cargo_embargo"])
-        .env_remove("OUT_DIR").current_dir(repo_root).spawn().context("Failed to spawn build of cargo embargo")?.wait().context("Failed to wait on child process building cargo embargo")?;
-    match status.success() {
-        true => Ok(()),
-        false => Err(anyhow!(
-            "Building cargo embargo failed with exit code {}",
-            status.code().map(|code| { format!("{}", code) }).unwrap_or("(unknown)".to_string())
-        )),
-    }
+        .env_remove("OUT_DIR")
+        .current_dir(repo_root)
+        .spawn().context("Failed to spawn build of cargo embargo")?
+        .wait().context("Failed to wait on child process building cargo embargo")?
+        .success_or_error().context("Failed to build_cargo_emargo")?;
+    Ok(())
 }
