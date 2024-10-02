@@ -752,6 +752,7 @@ fn choose_license(license: &str) -> &str {
 
         // Variations on "BSD-* OR Apache-2.0"
         "Apache-2.0 OR BSD-3-Clause" => "Apache-2.0",
+        "Apache-2.0 or BSD-3-Clause" => "Apache-2.0",
         "BSD-3-Clause OR Apache-2.0" => "Apache-2.0",
 
         // Variations on "BSD-* OR MIT OR Apache-2.0"
@@ -774,6 +775,7 @@ fn choose_license(license: &str) -> &str {
         "MIT OR LGPL-3.0-or-later" => "MIT",
         "MIT/BSD-3-Clause" => "MIT",
 
+        "LGPL-2.1-only OR BSD-2-Clause" => "BSD-2-Clause",
         _ => license,
     }
 }
