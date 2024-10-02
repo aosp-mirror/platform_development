@@ -728,6 +728,15 @@ impl ManagedRepo {
         }
         Ok(())
     }
+    pub fn update(&self, crate_name: impl AsRef<str>, version: impl AsRef<str>) -> Result<()> {
+        let pseudo_crate = self.pseudo_crate();
+        let version = Version::parse(version.as_ref())?;
+        let nv = NameAndVersionRef::new(crate_name.as_ref(), &version);
+        pseudo_crate.remove(&crate_name)?;
+        pseudo_crate.cargo_add(&nv)?;
+        self.regenerate([&crate_name].iter(), true)?;
+        Ok(())
+    }
 }
 
 // Files that are ignored when migrating a crate to the monorepo.

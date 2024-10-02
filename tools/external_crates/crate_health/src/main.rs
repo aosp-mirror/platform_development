@@ -103,6 +103,14 @@ enum Cmd {
         #[arg(long, default_value_t = false)]
         patches: bool,
     },
+    /// Update a crate to the specified version.
+    Update {
+        /// The crate name.
+        crate_name: String,
+
+        /// The crate version.
+        version: String,
+    },
 }
 
 fn parse_crate_list(arg: &str) -> Result<BTreeSet<String>> {
@@ -151,5 +159,6 @@ fn main() -> Result<()> {
         Cmd::UpdatableCrates {} => managed_repo.updatable_crates(),
         Cmd::AnalyzeUpdates { crate_name } => managed_repo.analyze_updates(crate_name),
         Cmd::SuggestUpdates { patches } => managed_repo.suggest_updates(patches),
+        Cmd::Update { crate_name, version } => managed_repo.update(crate_name, version),
     }
 }
