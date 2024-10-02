@@ -29,7 +29,7 @@ use semver::Version;
 use serde::Serialize;
 use tinytemplate::TinyTemplate;
 
-use crate::{ensure_exists_and_empty, CrateCollection, RunQuiet};
+use crate::{crate_collection::CrateCollection, ensure_exists_and_empty, RunQuiet};
 
 static CARGO_TOML_TEMPLATE: &str = include_str!("templates/Cargo.toml.template");
 
@@ -142,6 +142,7 @@ impl PseudoCrate<CargoVendorClean> {
     fn mark_dirty(self) -> PseudoCrate<CargoVendorDirty> {
         PseudoCrate { path: self.path, extra: CargoVendorDirty {} }
     }
+    #[allow(dead_code)]
     pub fn cargo_add(
         self,
         krate: &impl NamedAndVersioned,
@@ -150,6 +151,7 @@ impl PseudoCrate<CargoVendorClean> {
         dirty.cargo_add(krate)?;
         Ok(dirty)
     }
+    #[allow(dead_code)]
     pub fn cargo_add_unpinned(
         self,
         krate: &impl NamedAndVersioned,
@@ -158,6 +160,7 @@ impl PseudoCrate<CargoVendorClean> {
         dirty.cargo_add_unpinned(krate)?;
         Ok(dirty)
     }
+    #[allow(dead_code)]
     pub fn cargo_add_unversioned(self, crate_name: &str) -> Result<PseudoCrate<CargoVendorDirty>> {
         let dirty: PseudoCrate<CargoVendorDirty> = self.mark_dirty();
         dirty.cargo_add_unversioned(crate_name)?;
@@ -174,6 +177,7 @@ impl PseudoCrate<CargoVendorDirty> {
     pub fn new(path: RootedPath) -> Self {
         PseudoCrate { path, extra: CargoVendorDirty {} }
     }
+    #[allow(dead_code)]
     pub fn init<'a>(
         &self,
         crates: impl Iterator<Item = &'a (impl NamedAndVersioned + 'a)>,
