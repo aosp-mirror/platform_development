@@ -21,7 +21,7 @@ use std::{
     str::from_utf8,
 };
 
-use anyhow::{anyhow, Result};
+use anyhow::{anyhow, Context, Result};
 use glob::glob;
 use google_metadata::GoogleMetadata;
 use itertools::Itertools;
@@ -32,9 +32,14 @@ use semver::Version;
 use spdx::Licensee;
 
 use crate::{
-    cargo_embargo_autoconfig, copy_dir, most_restrictive_type,
-    pseudo_crate::{CargoVendorClean, CargoVendorDirty},
-    update_module_license_files, Crate, CrateCollection, ManagedCrate, PseudoCrate,
+    android_bp::cargo_embargo_autoconfig,
+    copy_dir,
+    crate_collection::CrateCollection,
+    crate_type::Crate,
+    license::{most_restrictive_type, update_module_license_files},
+    managed_crate::ManagedCrate,
+    pseudo_crate::{CargoVendorClean, CargoVendorDirty, PseudoCrate},
+    SuccessOrError,
 };
 
 pub struct ManagedRepo {
@@ -66,12 +71,22 @@ impl ManagedRepo {
     fn managed_crate_for(
         &self,
         crate_name: &str,
-        pseudo_crate: &PseudoCrate<CargoVendorClean>,
     ) -> Result<ManagedCrate<crate::managed_crate::New>> {
-        Ok(ManagedCrate::new(
-            Crate::from(self.managed_dir_for(crate_name))?,
-            Crate::from(pseudo_crate.vendored_dir_for(crate_name)?.clone())?,
-        ))
+        Ok(ManagedCrate::new(Crate::from(self.managed_dir_for(crate_name))?))
+    }
+    pub fn all_crate_names(&self) -> Result<Vec<String>> {
+        let mut managed_dirs = Vec::new();
+        for entry in read_dir(self.managed_dir())? {
+            let entry = entry?;
+            if entry.path().is_dir() {
+                managed_dirs.push(
+                    entry.file_name().into_string().map_err(|e| {
+                        anyhow!("Failed to convert {} to string", e.to_string_lossy())
+                    })?,
+                );
+            }
+        }
+        Ok(managed_dirs)
     }
     pub fn migration_health(
         &self,
@@ -101,10 +116,7 @@ impl ManagedRepo {
             healthy_self_contained = false;
         }
 
-        let mc = ManagedCrate::new(
-            Crate::from(self.legacy_dir_for(crate_name))?,
-            Crate::from(self.legacy_dir_for(crate_name))?,
-        );
+        let mc = ManagedCrate::new(Crate::from(self.legacy_dir_for(crate_name))?).as_legacy();
         if !mc.android_bp().abs().exists() {
             println!("There is no Android.bp file in {}", krate.path());
             healthy_self_contained = false;
@@ -150,11 +162,8 @@ impl ManagedRepo {
         }
         let pseudo_crate = pseudo_crate.vendor()?;
 
-        let mc = ManagedCrate::new(
-            Crate::from(self.legacy_dir_for(crate_name))?,
-            Crate::from(pseudo_crate.vendored_dir_for(crate_name)?.clone())?,
-        )
-        .stage()?;
+        let mc = ManagedCrate::new(Crate::from(self.legacy_dir_for(crate_name))?)
+            .stage(&pseudo_crate)?;
 
         pseudo_crate.remove(krate.name())?;
 
@@ -317,19 +326,14 @@ impl ManagedRepo {
             copy_dir(vendored_dir, &managed_dir)?;
 
             // TODO: Copy to a temp dir, because otherwise we might run cargo and create/modify Cargo.lock.
-            let output = cargo_embargo_autoconfig(&managed_dir)?;
-            if !output.status.success() {
-                // TODO: Maybe just write a default cargo_embargo.json if cargo_embargo fails horribly.
-                // There is one pathological crate out there (unarray) where the version published
-                // to crates.io doesn't compile, and cargo_embargo relies on at least being
-                // able to compile successfully. In such case, we may need to do:
-                //  write(managed_dir.abs().join("cargo_embargo.json"), "{}")?;
-                return Err(anyhow!(
-                    "Failed to generate cargo_embargo.json:\nSTDOUT:\n{}\nSTDERR:\n{}",
-                    from_utf8(&output.stdout)?,
-                    from_utf8(&output.stderr)?
-                ));
-            }
+            // TODO: Maybe just write a default cargo_embargo.json if cargo_embargo fails horribly.
+            // There is one pathological crate out there (unarray) where the version published
+            // to crates.io doesn't compile, and cargo_embargo relies on at least being
+            // able to compile successfully. In such case, we may need to do:
+            //  write(managed_dir.abs().join("cargo_embargo.json"), "{}")?;
+            cargo_embargo_autoconfig(&managed_dir)?
+                .success_or_error()
+                .context("Failed to generate cargo_embargo.json")?;
 
             let krate = Crate::from(managed_dir.clone())?;
 
@@ -413,25 +417,19 @@ impl ManagedRepo {
     ) -> Result<()> {
         let pseudo_crate = self.pseudo_crate().vendor()?;
         for crate_name in crates {
-            let mc = self.managed_crate_for(crate_name.as_ref(), &pseudo_crate)?;
+            let mc = self.managed_crate_for(crate_name.as_ref())?;
             // TODO: Don't give up if there's a failure.
-            mc.regenerate(update_metadata)?;
+            mc.regenerate(update_metadata, &pseudo_crate)?;
         }
 
         pseudo_crate.regenerate_crate_list()?;
 
         Ok(())
     }
-    pub fn regenerate_all(&self, update_metadata: bool) -> Result<()> {
-        self.regenerate(
-            self.pseudo_crate().vendor()?.deps().keys().map(|k| k.as_str()),
-            update_metadata,
-        )
-    }
     pub fn stage<T: AsRef<str>>(&self, crates: impl Iterator<Item = T>) -> Result<()> {
         let pseudo_crate = self.pseudo_crate().vendor()?;
         for crate_name in crates {
-            let mc = self.managed_crate_for(crate_name.as_ref(), &pseudo_crate)?.stage()?;
+            let mc = self.managed_crate_for(crate_name.as_ref())?.stage(&pseudo_crate)?;
             // TODO: Don't give up if there's a failure.
             mc.check_staged()?;
         }
@@ -441,17 +439,7 @@ impl ManagedRepo {
         let pseudo_crate = self.pseudo_crate().vendor()?;
         let deps = pseudo_crate.deps().keys().cloned().collect::<BTreeSet<_>>();
 
-        let mut managed_dirs = BTreeSet::new();
-        for entry in read_dir(self.managed_dir())? {
-            let entry = entry?;
-            if entry.path().is_dir() {
-                managed_dirs.insert(
-                    entry.file_name().into_string().map_err(|e| {
-                        anyhow!("Failed to convert {} to string", e.to_string_lossy())
-                    })?,
-                );
-            }
-        }
+        let managed_dirs = self.all_crate_names()?.into_iter().collect();
 
         if deps != managed_dirs {
             return Err(anyhow!("Deps in pseudo_crate/Cargo.toml don't match directories in {}\nDirectories not in Cargo.toml: {}\nCargo.toml deps with no directory: {}",
@@ -479,7 +467,7 @@ impl ManagedRepo {
 
         for crate_name in changed_android_crates {
             println!("Checking {}", crate_name);
-            let mc = self.managed_crate_for(&crate_name, &pseudo_crate)?.stage()?;
+            let mc = self.managed_crate_for(&crate_name)?.stage(&pseudo_crate)?;
             mc.diff_staged()?;
         }
         Ok(())
@@ -551,6 +539,16 @@ impl ManagedRepo {
             metadata.write()?;
         }
 
+        Ok(())
+    }
+    pub fn recontextualize_patches<T: AsRef<str>>(
+        &self,
+        crates: impl Iterator<Item = T>,
+    ) -> Result<()> {
+        for crate_name in crates {
+            let mc = self.managed_crate_for(crate_name.as_ref())?;
+            mc.recontextualize_patches()?;
+        }
         Ok(())
     }
 }
