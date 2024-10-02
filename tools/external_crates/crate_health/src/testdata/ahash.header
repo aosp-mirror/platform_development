@@ -1,0 +1,17 @@
+From fff15380539c659ccdb03fcc192eb95578b1feb5 Mon Sep 17 00:00:00 2001
+From: Jeff Vander Stoep <jeffv@google.com>
+Date: Thu, 1 Dec 2022 11:29:41 +0100
+Subject: [PATCH] Use /dev/urandom instead of getrandom()
+
+To generate the ahash crate's default hash keys, use /dev/urandom
+instead of getrandom() to avoid blocking boot on systems where the
+entropy pool isn't initialized in time and where the use case of this
+crate doesn't actually require cryptographic randomness.
+
+If opening or reading from /dev/urandom fails, fall back to getrandom().
+
+Note that std::collections::HashMap doesn't block for randomness either,
+for the same reason.  So this change just makes ahash work like HashMap.
+
+Bug: 185934601
+Change-Id: Ieaf4bcfde5664d0b5d845234d0c2139d89c4153c
