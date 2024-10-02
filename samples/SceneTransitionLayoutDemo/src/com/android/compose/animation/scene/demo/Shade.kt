@@ -454,32 +454,34 @@ fun SceneScope.ShadeTime(scale: Float, modifier: Modifier = Modifier) {
         val layoutResult = remember(measurer, style) { measurer.measure("10:36", style = style) }
         val layoutDirection = LocalLayoutDirection.current
 
-        Spacer(
-            Modifier.layout { measurable, _ ->
-                    // Layout this element with the *target* size/scale of the element in this
-                    // scene.
-                    val width = ceil(layoutResult.size.width * scale).roundToInt()
-                    val height = ceil(layoutResult.size.height * scale).roundToInt()
-                    measurable.measure(Constraints.fixed(width, height)).run {
-                        layout(width, height) { place(0, 0) }
+        Box {
+            Spacer(
+                Modifier.layout { measurable, _ ->
+                        // Layout this element with the *target* size/scale of the element in this
+                        // scene.
+                        val width = ceil(layoutResult.size.width * scale).roundToInt()
+                        val height = ceil(layoutResult.size.height * scale).roundToInt()
+                        measurable.measure(Constraints.fixed(width, height)).run {
+                            layout(width, height) { place(0, 0) }
+                        }
                     }
-                }
-                .drawBehind {
-                    val topLeft: Offset
-                    val pivot: Offset
-                    if (layoutDirection == LayoutDirection.Ltr) {
-                        topLeft = Offset.Zero
-                        pivot = Offset.Zero
-                    } else {
-                        topLeft = Offset(size.width - layoutResult.size.width, 0f)
-                        pivot = Offset(size.width, 0f)
-                    }
+                    .drawBehind {
+                        val topLeft: Offset
+                        val pivot: Offset
+                        if (layoutDirection == LayoutDirection.Ltr) {
+                            topLeft = Offset.Zero
+                            pivot = Offset.Zero
+                        } else {
+                            topLeft = Offset(size.width - layoutResult.size.width, 0f)
+                            pivot = Offset(size.width, 0f)
+                        }
 
-                    scale(animatedScale, pivot = pivot) {
-                        drawText(layoutResult, color = color, topLeft = topLeft)
+                        scale(animatedScale, pivot = pivot) {
+                            drawText(layoutResult, color = color, topLeft = topLeft)
+                        }
                     }
-                }
-        )
+            )
+        }
     }
 }
 
