@@ -192,6 +192,13 @@ impl ManagedRepo {
         }
         if !mc.cargo_embargo_success() {
             println!("cargo_embargo execution did not succeed for the migrated crate");
+            if verbose {
+                println!(
+                    "stdout:\n{}\nstderr:\n{}",
+                    from_utf8(&mc.cargo_embargo_output().stdout)?,
+                    from_utf8(&mc.cargo_embargo_output().stderr)?,
+                );
+            }
         } else if !mc.android_bp_unchanged() {
             println!("Running cargo_embargo for the migrated crate produced changes to the Android.bp file");
             if verbose {
