@@ -24,4 +24,5 @@ export interface Scene {
   camera: Camera;
   rects: UiRect3D[];
   labels: RectLabel[];
+  zDepth: number;
 }
