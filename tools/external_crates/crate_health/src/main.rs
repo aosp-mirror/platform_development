@@ -111,6 +111,12 @@ enum Cmd {
         /// The crate version.
         version: String,
     },
+    /// Try suggested crate updates and see which ones succeed.
+    ///
+    /// Take about 15 minutes per crate, so suggested use is to tee to a file and let it run overnight:
+    ///
+    /// ./android_cargo.py run --bin crate_health -- try-updates | tee crate-updates
+    TryUpdates {},
 }
 
 fn parse_crate_list(arg: &str) -> Result<BTreeSet<String>> {
@@ -158,7 +164,8 @@ fn main() -> Result<()> {
         }
         Cmd::UpdatableCrates {} => managed_repo.updatable_crates(),
         Cmd::AnalyzeUpdates { crate_name } => managed_repo.analyze_updates(crate_name),
-        Cmd::SuggestUpdates { patches } => managed_repo.suggest_updates(patches),
+        Cmd::SuggestUpdates { patches } => managed_repo.suggest_updates(patches).map(|_x| ()),
         Cmd::Update { crate_name, version } => managed_repo.update(crate_name, version),
+        Cmd::TryUpdates {} => managed_repo.try_updates(),
     }
 }

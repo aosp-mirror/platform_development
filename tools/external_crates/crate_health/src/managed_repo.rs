@@ -665,7 +665,8 @@ impl ManagedRepo {
 
         Ok(())
     }
-    pub fn suggest_updates(&self, consider_patched_crates: bool) -> Result<()> {
+    pub fn suggest_updates(&self, consider_patched_crates: bool) -> Result<Vec<(String, String)>> {
+        let mut suggestions = Vec::new();
         let mut managed_crates = self.new_cc();
         managed_crates.add_from(self.managed_dir().rel())?;
         let legacy_crates = self.legacy_crates()?;
@@ -722,11 +723,12 @@ impl ManagedRepo {
                         krate.version(),
                         version.version()
                     );
+                    suggestions.push((krate.name().to_string(), version.version().to_string()));
                     break;
                 }
             }
         }
-        Ok(())
+        Ok(suggestions)
     }
     pub fn update(&self, crate_name: impl AsRef<str>, version: impl AsRef<str>) -> Result<()> {
         let pseudo_crate = self.pseudo_crate();
@@ -735,6 +737,47 @@ impl ManagedRepo {
         pseudo_crate.remove(&crate_name)?;
         pseudo_crate.cargo_add(&nv)?;
         self.regenerate([&crate_name].iter(), true)?;
+        Ok(())
+    }
+    pub fn try_updates(&self) -> Result<()> {
+        let output = Command::new("git")
+            .args(["status", "--porcelain", "."])
+            .current_dir(&self.path)
+            .output()?
+            .success_or_error()?;
+        if !output.stdout.is_empty() {
+            return Err(anyhow!("Crate repo {} has uncommitted changes", self.path));
+        }
+
+        for (crate_name, version) in self.suggest_updates(true)? {
+            println!("Trying to update {} to {}", crate_name, version);
+            Command::new("git")
+                .args(["restore", "."])
+                .current_dir(&self.path)
+                .output()?
+                .success_or_error()?;
+            Command::new("git")
+                .args(["clean", "-f", "."])
+                .current_dir(&self.path)
+                .output()?
+                .success_or_error()?;
+            if let Err(e) = self.update(&crate_name, &version) {
+                println!("Updating {} to {} failed: {}", crate_name, version, e);
+                continue;
+            }
+            let build_result = Command::new("/usr/bin/bash")
+                .args(["-c", "source build/envsetup.sh && lunch aosp_husky-trunk_staging-eng && cd external/rust && mm"])
+                .env_remove("OUT_DIR")
+                .current_dir(self.path.root())
+                .spawn().context("Failed to spawn mm")?
+                .wait().context("Failed to wait on mm")?
+                .success_or_error();
+            if let Err(e) = build_result {
+                println!("Faild to build {} {}: {}", crate_name, version, e);
+                continue;
+            }
+            println!("Update {} to {} succeeded", crate_name, version);
+        }
         Ok(())
     }
 }
