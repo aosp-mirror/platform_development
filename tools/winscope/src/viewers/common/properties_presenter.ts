@@ -90,6 +90,10 @@ export class PropertiesPresenter {
     this.userOptions = userOptions;
   }
 
+  updateDefaultAllowList(value: string[]) {
+    this.defaultAllowlist = value;
+  }
+
   async formatPropertiesTree(
     previousHierarchyTree: HierarchyTreeNode | undefined,
     displayName: string | undefined,
