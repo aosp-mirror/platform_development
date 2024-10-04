@@ -124,15 +124,23 @@ describe('RectsComponent', () => {
 
   it('draws scene when input data changes', async () => {
     fixture.detectChanges();
+    const boundingBox = updateViewPositionSpy.calls.mostRecent().args[1];
     resetSpies();
 
     checkAllSpiesCalled(0);
     component.rects = [rectGroup0];
     fixture.detectChanges();
     checkAllSpiesCalled(1);
+    expect(updateViewPositionSpy.calls.mostRecent().args[1]).toEqual(
+      boundingBox,
+    );
+
     component.rects = [rectGroup0];
     fixture.detectChanges();
     checkAllSpiesCalled(2);
+    expect(updateViewPositionSpy.calls.mostRecent().args[1]).toEqual(
+      boundingBox,
+    );
   });
 
   it('draws scene when rotation slider changes', () => {
@@ -181,7 +189,7 @@ describe('RectsComponent', () => {
       {displayId: 1, groupId: 1, name: 'Display 1', isActive: false},
       {displayId: 2, groupId: 2, name: 'Display 2', isActive: false},
     ];
-    await checkSelectedDisplay([0]);
+    await checkSelectedDisplay([0], [0]);
   });
 
   it('handles display change by checkbox', async () => {
@@ -191,19 +199,23 @@ describe('RectsComponent', () => {
       {displayId: 1, groupId: 1, name: 'Display 1', isActive: false},
       {displayId: 2, groupId: 2, name: 'Display 2', isActive: false},
     ];
-    await checkSelectedDisplay([0]);
+    await checkSelectedDisplay([0], [0]);
+    const boundingBox = updateViewPositionSpy.calls.mostRecent().args[1];
 
     openDisplaysSelect();
     const options = getDisplayOptions();
 
     options.item(1).click();
-    await checkSelectedDisplay([0, 1]);
+    await checkSelectedDisplay([0, 1], [0, 1], true);
+    expect(updateViewPositionSpy.calls.mostRecent().args[1]).not.toEqual(
+      boundingBox,
+    );
 
     options.item(0).click();
-    await checkSelectedDisplay([1]);
+    await checkSelectedDisplay([1], [1], true);
 
     options.item(1).click();
-    await checkSelectedDisplay([]);
+    await checkSelectedDisplay([], [], true);
     const placeholder = assertDefined(
       htmlElement.querySelector('.placeholder-text'),
     );
@@ -217,7 +229,7 @@ describe('RectsComponent', () => {
       {displayId: 1, groupId: 1, name: 'Display 1', isActive: false},
       {displayId: 2, groupId: 2, name: 'Display 2', isActive: false},
     ];
-    await checkSelectedDisplay([0]);
+    await checkSelectedDisplay([0], [0]);
 
     openDisplaysSelect();
 
@@ -230,15 +242,15 @@ describe('RectsComponent', () => {
 
     // no change
     display0Button.click();
-    await checkSelectedDisplay([0]);
+    await checkSelectedDisplay([0], [0]);
 
     display1Button.click();
-    await checkSelectedDisplay([1]);
+    await checkSelectedDisplay([1], [1]);
 
     assertDefined(display0Button.parentElement).click();
-    await checkSelectedDisplay([0, 1]);
+    await checkSelectedDisplay([0, 1], [0, 1], true);
     display0Button.click();
-    await checkSelectedDisplay([0]);
+    await checkSelectedDisplay([0], [0], true);
   });
 
   it('tracks selected display', async () => {
@@ -247,21 +259,25 @@ describe('RectsComponent', () => {
       {displayId: 20, groupId: 1, name: 'Display 1', isActive: false},
     ];
     component.rects = [rectGroup0, rectGroup1];
-    await checkSelectedDisplay([0]);
+    await checkSelectedDisplay([0], [0]);
 
     component.displays = [
       {displayId: 20, groupId: 2, name: 'Display 1', isActive: false},
       {displayId: 10, groupId: 1, name: 'Display 0', isActive: false},
     ];
-    await checkSelectedDisplay([0], [1]);
+    await checkSelectedDisplay([0], [1], false);
   });
 
   it('updates scene on separation slider change', () => {
     component.rects = [rectGroup0, rectGroup0];
     fixture.detectChanges();
+    const boundingBox = updateViewPositionSpy.calls.mostRecent().args[1];
     updateSeparationSlider();
 
     checkAllSpiesCalled(2);
+    expect(updateViewPositionSpy.calls.mostRecent().args[1]).toEqual(
+      boundingBox,
+    );
     const rectsBefore = assertDefined(updateRectsSpy.calls.first().args[0]);
     const rectsAfter = assertDefined(updateRectsSpy.calls.mostRecent().args[0]);
 
@@ -272,12 +288,16 @@ describe('RectsComponent', () => {
   it('updates scene on rotation slider change', () => {
     component.rects = [rectGroup0];
     fixture.detectChanges();
+    const boundingBox = updateViewPositionSpy.calls.mostRecent().args[1];
     updateRotationSlider();
 
     expect(updateViewPositionSpy).toHaveBeenCalledTimes(2);
     expect(updateRectsSpy).toHaveBeenCalledTimes(1);
     expect(updateLabelsSpy).toHaveBeenCalledTimes(2);
     expect(renderViewSpy).toHaveBeenCalledTimes(2);
+    expect(updateViewPositionSpy.calls.mostRecent().args[1]).toEqual(
+      boundingBox,
+    );
 
     const cameraBefore = assertDefined(
       updateViewPositionSpy.calls.first().args[0],
@@ -297,6 +317,7 @@ describe('RectsComponent', () => {
   it('updates scene on shading mode change', () => {
     component.rects = [rectGroup0];
     fixture.detectChanges();
+    const boundingBox = updateViewPositionSpy.calls.mostRecent().args[1];
 
     updateShadingMode(ShadingMode.GRADIENT, ShadingMode.WIRE_FRAME);
     updateShadingMode(ShadingMode.WIRE_FRAME, ShadingMode.OPACITY);
@@ -305,6 +326,9 @@ describe('RectsComponent', () => {
     expect(updateRectsSpy).toHaveBeenCalledTimes(3);
     expect(updateLabelsSpy).toHaveBeenCalledTimes(1);
     expect(renderViewSpy).toHaveBeenCalledTimes(3);
+    expect(updateViewPositionSpy.calls.mostRecent().args[1]).toEqual(
+      boundingBox,
+    );
 
     const rectsGradient = assertDefined(updateRectsSpy.calls.first().args[0]);
     const rectsWireFrame = assertDefined(updateRectsSpy.calls.argsFor(1).at(0));
@@ -320,6 +344,8 @@ describe('RectsComponent', () => {
 
     expect(rectsOpacity[0].colorType).toEqual(ColorType.VISIBLE_WITH_OPACITY);
     expect(rectsOpacity[0].darkFactor).toEqual(0.5);
+
+    updateShadingMode(ShadingMode.OPACITY, ShadingMode.GRADIENT); // cycles back to original
   });
 
   it('uses stored rects view settings', () => {
@@ -343,12 +369,12 @@ describe('RectsComponent', () => {
       {displayId: 10, groupId: 0, name: 'Display 0', isActive: true},
       {displayId: 20, groupId: 1, name: 'Display 1', isActive: true},
     ];
-    await checkSelectedDisplay([0]);
+    await checkSelectedDisplay([0], [0]);
 
     openDisplaysSelect();
     const options = getDisplayOptions();
     options.item(1).click();
-    await checkSelectedDisplay([0, 1]);
+    await checkSelectedDisplay([0, 1], [0, 1]);
 
     const fixtureWithSameDisplays = TestBed.createComponent(TestHostComponent);
     const componentWithSameDisplays = fixtureWithSameDisplays.componentInstance;
@@ -356,7 +382,8 @@ describe('RectsComponent', () => {
     componentWithSameDisplays.displays = component.displays;
     await checkSelectedDisplay(
       [0, 1],
-      undefined,
+      [0, 1],
+      false,
       fixtureWithSameDisplays,
       fixtureWithSameDisplays.nativeElement,
     );
@@ -369,7 +396,8 @@ describe('RectsComponent', () => {
     ];
     await checkSelectedDisplay(
       [1],
-      undefined,
+      [1],
+      false,
       fixtureWithDisplay1,
       fixtureWithDisplay1.nativeElement,
     );
@@ -399,13 +427,13 @@ describe('RectsComponent', () => {
       {displayId: 20, groupId: 1, name: 'Display 1', isActive: false},
     ];
     component.rects = [rectGroup1];
-    await checkSelectedDisplay([1]);
+    await checkSelectedDisplay([1], [1]);
   });
 
-  it('handles change from zero to one display', async () => {
+  it('handles change from zero to one display and back to zero', async () => {
     component.displays = [];
     component.rects = [];
-    await checkSelectedDisplay([]);
+    await checkSelectedDisplay([], []);
     const placeholder = assertDefined(
       htmlElement.querySelector('.placeholder-text'),
     );
@@ -415,7 +443,25 @@ describe('RectsComponent', () => {
     component.displays = [
       {displayId: 10, groupId: 0, name: 'Display 0', isActive: false},
     ];
-    await checkSelectedDisplay([0]);
+    await checkSelectedDisplay([0], [0], true);
+
+    component.displays = [];
+    component.rects = [];
+    await checkSelectedDisplay([], []);
+  });
+
+  it('handles current display group id no longer present', async () => {
+    component.rects = [rectGroup0];
+    component.displays = [
+      {displayId: 10, groupId: 0, name: 'Display 0', isActive: false},
+    ];
+    await checkSelectedDisplay([0], [0]);
+
+    component.rects = [rectGroup1];
+    component.displays = [
+      {displayId: 20, groupId: 1, name: 'Display 1', isActive: false},
+    ];
+    await checkSelectedDisplay([1], [1]);
   });
 
   it('draws mini rects with non-present group id', () => {
@@ -517,12 +563,17 @@ describe('RectsComponent', () => {
     fixture.detectChanges();
 
     const testString = 'test_id';
-    spyOn(Canvas.prototype, 'getClickedRectId').and.returnValue(testString);
     let id: string | undefined;
     htmlElement.addEventListener(ViewerEvents.HighlightedIdChange, (event) => {
       id = (event as CustomEvent).detail.id;
     });
 
+    const spy = spyOn(Canvas.prototype, 'getClickedRectId').and.returnValue(
+      undefined,
+    );
+    clickLargeRectsCanvas();
+    expect(id).toBeUndefined();
+    spy.and.returnValue(testString);
     clickLargeRectsCanvas();
     expect(id).toEqual(testString);
   });
@@ -533,6 +584,7 @@ describe('RectsComponent', () => {
     const cameraBefore = updateViewPositionSpy.calls.mostRecent().args[0];
     expect(cameraBefore.panScreenDistance.dx).toEqual(0);
     expect(cameraBefore.panScreenDistance.dy).toEqual(0);
+    const boundingBoxBefore = updateViewPositionSpy.calls.mostRecent().args[1];
     resetSpies();
 
     const testString = 'test_id';
@@ -548,9 +600,11 @@ describe('RectsComponent', () => {
     expect(updateLabelsSpy).not.toHaveBeenCalled();
     expect(renderViewSpy).toHaveBeenCalled();
 
-    const cameraAfter = updateViewPositionSpy.calls.mostRecent().args[0];
+    const [cameraAfter, boundingBoxAfter] =
+      updateViewPositionSpy.calls.mostRecent().args;
     expect(cameraAfter.panScreenDistance.dx).toEqual(5);
     expect(cameraAfter.panScreenDistance.dy).toEqual(10);
+    expect(boundingBoxAfter).toEqual(boundingBoxBefore);
 
     clickLargeRectsCanvas();
     expect(id).toBeUndefined();
@@ -562,6 +616,7 @@ describe('RectsComponent', () => {
   it('handles window resize', async () => {
     component.rects = [rectGroup0];
     fixture.detectChanges();
+    const boundingBox = updateViewPositionSpy.calls.mostRecent().args[1];
     resetSpies();
 
     spyOnProperty(window, 'innerWidth').and.returnValue(window.innerWidth / 2);
@@ -572,6 +627,9 @@ describe('RectsComponent', () => {
     expect(updateViewPositionSpy).toHaveBeenCalledTimes(1);
     expect(updateRectsSpy).not.toHaveBeenCalled();
     expect(updateLabelsSpy).not.toHaveBeenCalled();
+    expect(updateViewPositionSpy.calls.mostRecent().args[1]).toEqual(
+      boundingBox,
+    );
   });
 
   it('handles change in dark mode', async () => {
@@ -591,6 +649,7 @@ describe('RectsComponent', () => {
   it('handles zoom button clicks', () => {
     component.rects = [rectGroup0];
     fixture.detectChanges();
+    const boundingBox = updateViewPositionSpy.calls.mostRecent().args[1];
     const zoomFactor =
       updateViewPositionSpy.calls.mostRecent().args[0].zoomFactor;
     resetSpies();
@@ -599,10 +658,16 @@ describe('RectsComponent', () => {
     checkZoomedIn(zoomFactor);
     const zoomedInFactor =
       updateViewPositionSpy.calls.mostRecent().args[0].zoomFactor;
+    expect(updateViewPositionSpy.calls.mostRecent().args[1]).toEqual(
+      boundingBox,
+    );
     resetSpies();
 
     findAndClickElement('.zoom-out-button');
     checkZoomedOut(zoomedInFactor);
+    expect(updateViewPositionSpy.calls.mostRecent().args[1]).toEqual(
+      boundingBox,
+    );
   });
 
   it('handles zoom change via scroll event', () => {
@@ -682,7 +747,9 @@ describe('RectsComponent', () => {
     resetSpies();
 
     const testString = 'test_id';
-    spyOn(Canvas.prototype, 'getClickedRectId').and.returnValue(testString);
+    const spy = spyOn(Canvas.prototype, 'getClickedRectId').and.returnValue(
+      undefined,
+    );
     let detail: RectDblClickDetail | undefined;
     htmlElement.addEventListener(ViewerEvents.RectsDblClick, (event) => {
       detail = (event as CustomEvent).detail;
@@ -691,6 +758,11 @@ describe('RectsComponent', () => {
     const canvas = assertDefined(
       htmlElement.querySelector<HTMLElement>('.large-rects-canvas'),
     );
+    canvas.dispatchEvent(new MouseEvent('dblclick'));
+    fixture.detectChanges();
+    expect(detail).toBeUndefined();
+    spy.and.returnValue(testString);
+
     canvas.dispatchEvent(new MouseEvent('dblclick'));
     fixture.detectChanges();
     expect(detail).toEqual(new RectDblClickDetail(testString));
@@ -714,6 +786,44 @@ describe('RectsComponent', () => {
     expect(miniRectDoubleClick).toBeTrue();
   });
 
+  it('does not render more that selected label if over 30 rects', () => {
+    component.rects = Array.from({length: 30}, () => rectGroup0);
+    fixture.detectChanges();
+    expect(updateLabelsSpy.calls.mostRecent().args[0].length).toEqual(30);
+
+    const newRect = makeRectWithGroupId(0, true, 'new rect');
+    component.rects = component.rects.concat([newRect]);
+    fixture.detectChanges();
+    expect(updateLabelsSpy.calls.mostRecent().args[0].length).toEqual(0);
+
+    component.highlightedItem = newRect.id;
+    fixture.detectChanges();
+    expect(updateLabelsSpy.calls.mostRecent().args[0].length).toEqual(1);
+  });
+
+  it('does not render more that selected label if multiple group ids', async () => {
+    component.rects = [rectGroup0];
+    component.displays = [
+      {displayId: 0, groupId: 0, name: 'Display 0', isActive: false},
+      {displayId: 1, groupId: 1, name: 'Display 1', isActive: false},
+    ];
+    fixture.detectChanges();
+    await checkSelectedDisplay([0], [0]);
+    expect(updateLabelsSpy.calls.mostRecent().args[0].length).toEqual(1);
+
+    component.rects = component.rects.concat([rectGroup1]);
+    fixture.detectChanges();
+    openDisplaysSelect();
+    getDisplayOptions().item(1).click();
+    await checkSelectedDisplay([0, 1], [0, 1], true);
+
+    expect(updateLabelsSpy.calls.mostRecent().args[0].length).toEqual(0);
+
+    component.highlightedItem = rectGroup0.id;
+    fixture.detectChanges();
+    expect(updateLabelsSpy.calls.mostRecent().args[0].length).toEqual(1);
+  });
+
   function resetSpies() {
     [
       updateViewPositionSpy,
@@ -725,7 +835,8 @@ describe('RectsComponent', () => {
 
   async function checkSelectedDisplay(
     displayNumbers: number[],
-    testIds?: number[],
+    testIds: number[],
+    changeInBoundingBox?: boolean,
     f = fixture,
     el = htmlElement,
   ) {
@@ -741,11 +852,16 @@ describe('RectsComponent', () => {
     const drawnRects = updateRectsSpy.calls.mostRecent().args[0];
     expect(drawnRects.length).toEqual(displayNumbers.length);
     drawnRects.forEach((rect, index) => {
-      expect(rect.id).toEqual(
-        `test-id ${testIds ? testIds[index] : displayNumbers[index]}`,
-      );
+      expect(rect.id).toEqual(`test-id ${testIds[index]}`);
       if (index > 0) expect(rect.transform.ty).toBeGreaterThan(0);
     });
+    if (changeInBoundingBox) {
+      expect(updateViewPositionSpy.calls.mostRecent().args[1]).not.toEqual(
+        updateViewPositionSpy.calls.argsFor(
+          updateViewPositionSpy.calls.count() - 2,
+        )[1],
+      );
+    }
   }
 
   function findAndClickElement(selector: string) {
@@ -788,7 +904,11 @@ describe('RectsComponent', () => {
     expect(rectsComponent.getShadingMode()).toEqual(after);
   }
 
-  function makeRectWithGroupId(groupId: number, isVisible = true): UiRect {
+  function makeRectWithGroupId(
+    groupId: number,
+    isVisible = true,
+    id?: string,
+  ): UiRect {
     return new UiRectBuilder()
       .setX(0)
       .setY(0)
@@ -808,7 +928,7 @@ describe('RectsComponent', () => {
       .setIsVisible(isVisible)
       .setIsDisplay(false)
       .setIsActiveDisplay(false)
-      .setId('test-id ' + groupId)
+      .setId(id ?? 'test-id ' + groupId)
       .setGroupId(groupId)
       .setIsClickable(true)
       .setCornerRadius(0)

@@ -141,7 +141,7 @@ class PresenterTransactionsTest extends AbstractLogViewerPresenterTest<UiData> {
   override readonly secondFilterChangeForCurrentIndexTest = ['0', '515'];
   override readonly expectedCurrentIndexAfterFilterChange = 10;
   override readonly expectedCurrentIndexAfterSecondFilterChange = 11;
-  override readonly numberOfUnfilteredProperties = 6;
+  override readonly numberOfUnfilteredProperties = 8;
   override readonly propertiesFilter = new TextFilter('layerId', []);
   override readonly numberOfFilteredProperties = 1;
 
@@ -197,13 +197,59 @@ class PresenterTransactionsTest extends AbstractLogViewerPresenterTest<UiData> {
         await presenter.onLogEntryClick(this.logEntryClickIndex);
         expect(
           assertDefined(uiData.propertiesTree).getAllChildren().length,
-        ).toEqual(6);
+        ).toEqual(8);
 
         await presenter.onPropertiesUserOptionsChange(userOptions);
         expect(uiData.propertiesUserOptions).toEqual(userOptions);
         expect(
           assertDefined(uiData.propertiesTree).getAllChildren().length,
         ).toEqual(42);
+      });
+
+      it('keeps properties related to what has changed regardless of hide defaults', async () => {
+        await presenter.onAppEvent(this.getPositionUpdate());
+        await presenter.onLogEntryClick(this.logEntryClickIndex);
+        expect(
+          assertDefined(uiData.propertiesTree).getAllChildren().length,
+        ).toEqual(8);
+        expect(
+          uiData.propertiesTree?.getChildByName('transformToDisplayInverse'),
+        ).toBeDefined();
+        expect(
+          uiData.propertiesTree?.getChildByName('destinationFrame'),
+        ).toBeDefined();
+        expect(
+          uiData.propertiesTree?.getChildByName('autoRefresh'),
+        ).toBeDefined();
+
+        await presenter.onLogEntryClick(279);
+        expect(uiData.propertiesTree?.getChildByName('flags')).toBeDefined();
+        expect(uiData.propertiesTree?.getChildByName('parentId')).toBeDefined();
+        expect(
+          uiData.propertiesTree?.getChildByName('relativeParentId'),
+        ).toBeDefined();
+        expect(
+          uiData.propertiesTree?.getChildByName('transformToDisplayInverse'),
+        ).toBeUndefined();
+        expect(
+          uiData.propertiesTree?.getChildByName('destinationFrame'),
+        ).toBeUndefined();
+        expect(
+          uiData.propertiesTree?.getChildByName('autoRefresh'),
+        ).toBeUndefined();
+
+        await presenter.onLogEntryClick(584);
+        expect(uiData.propertiesTree?.getChildByName('flags')).toBeDefined();
+        expect(uiData.propertiesTree?.getChildByName('layerId')).toBeDefined();
+        expect(uiData.propertiesTree?.getChildByName('x')).toBeDefined();
+        expect(uiData.propertiesTree?.getChildByName('y')).toBeDefined();
+        expect(uiData.propertiesTree?.getChildByName('z')).toBeDefined();
+        expect(
+          uiData.propertiesTree?.getChildByName('parentId'),
+        ).toBeUndefined();
+        expect(
+          uiData.propertiesTree?.getChildByName('relativeParentId'),
+        ).toBeUndefined();
       });
 
       function getFieldValue(entry: LogEntry, logFieldName: LogFieldType) {
