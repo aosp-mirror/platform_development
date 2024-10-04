@@ -894,6 +894,7 @@ fn generate_rules_mk(
 fn apply_patch_file(output_path: &Path, patch_path: &Path) -> Result<()> {
     let patch_output = Command::new("patch")
         .arg("-s")
+        .arg("--no-backup-if-mismatch")
         .arg(output_path)
         .arg(patch_path)
         .output()
