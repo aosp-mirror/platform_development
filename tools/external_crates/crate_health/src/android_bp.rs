@@ -15,7 +15,7 @@
 use std::{
     env,
     ffi::OsString,
-    fs::{copy, remove_file, rename},
+    fs::{remove_file, rename},
     path::Path,
     process::{Command, Output},
 };
@@ -45,7 +45,7 @@ pub fn run_cargo_embargo(staging_path: &RootedPath) -> Result<Output> {
     let cargo_lock = staging_path.join("Cargo.lock")?;
     let saved_cargo_lock = staging_path.join("Cargo.lock.saved")?;
     if cargo_lock.abs().exists() {
-        copy(&cargo_lock, &saved_cargo_lock)?;
+        rename(&cargo_lock, &saved_cargo_lock)?;
     }
 
     let mut cmd =
