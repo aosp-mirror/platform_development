@@ -1,0 +1,55 @@
+From fff15380539c659ccdb03fcc192eb95578b1feb5 Mon Sep 17 00:00:00 2001
+From: Jeff Vander Stoep <jeffv@google.com>
+Date: Thu, 1 Dec 2022 11:29:41 +0100
+Subject: [PATCH] Use /dev/urandom instead of getrandom()
+
+To generate the ahash crate's default hash keys, use /dev/urandom
+instead of getrandom() to avoid blocking boot on systems where the
+entropy pool isn't initialized in time and where the use case of this
+crate doesn't actually require cryptographic randomness.
+
+If opening or reading from /dev/urandom fails, fall back to getrandom().
+
+Note that std::collections::HashMap doesn't block for randomness either,
+for the same reason.  So this change just makes ahash work like HashMap.
+
+Bug: 185934601
+Change-Id: Ieaf4bcfde5664d0b5d845234d0c2139d89c4153c
+---
+ src/random_state.rs | 13 ++++++++++++-
+ 1 file changed, 12 insertions(+), 1 deletion(-)
+
+diff --git a/src/random_state.rs b/src/random_state.rs
+index e885fa4..5b85726 100644
+--- a/src/random_state.rs
++++ b/src/random_state.rs
+@@ -48,6 +48,15 @@ pub(crate) const PI2: [u64; 4] = [
+     0x3f84_d5b5_b547_0917,
+ ];
+ 
++#[cfg(all(feature = "runtime-rng", not(all(feature = "compile-time-rng", test))))]
++fn read_urandom(dest: &mut [u8]) -> Result<(), std::io::Error> {
++    use std::fs::File;
++    use std::io::Read;
++
++    let mut f = File::open("/dev/urandom")?;
++    f.read_exact(dest)
++}
++
+ cfg_if::cfg_if! {
+     if #[cfg(all(feature = "compile-time-rng", any(test, fuzzing)))] {
+         #[inline]
+@@ -78,7 +87,9 @@ cfg_if::cfg_if! {
+ 
+             SEEDS.get_or_init(|| {
+                 let mut result: [u8; 64] = [0; 64];
+-                getrandom::getrandom(&mut result).expect("getrandom::getrandom() failed.");
++                if read_urandom(&mut result).is_err() {
++                    getrandom::getrandom(&mut result).expect("getrandom::getrandom() failed.");
++                }
+                 Box::new(result.convert())
+             })
+         }
+-- 
+2.38.1.584.g0f3c55d4c2-goog
+
