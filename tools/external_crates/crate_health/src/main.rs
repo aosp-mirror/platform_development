@@ -62,13 +62,15 @@ enum Cmd {
         /// The crate name.
         crate_name: String,
     },
-    /// Regenerate a crate directory.
+    /// Regenerate crates from vendored code by applying patches, running cargo_embargo, etc.
     Regenerate {
         /// The crate names.
         crates: Vec<String>,
+
+        /// Regenerate all crates.
+        #[arg(long, default_value_t = false)]
+        all: bool,
     },
-    /// Regenerate all crates
-    RegenerateAll {},
     /// Run pre-upload checks.
     PreuploadCheck {
         /// List of changed files
@@ -76,8 +78,17 @@ enum Cmd {
     },
     /// Try to fix problems with license files.
     FixLicenses {},
-    /// Fix up METADATA files
+    /// Fix up METADATA files.
     FixMetadata {},
+    /// Recontextualize patch files.
+    RecontextualizePatches {
+        /// The crate names. Also the directory names in external/rust/android-crates-io/crates.
+        crates: Vec<String>,
+
+        /// Recontextualize patches for all crates.
+        #[arg(long, default_value_t = false)]
+        all: bool,
+    },
 }
 
 fn parse_crate_list(arg: &str) -> Result<BTreeSet<String>> {
@@ -106,11 +117,20 @@ fn main() -> Result<()> {
             Ok(())
         }
         Cmd::Migrate { crates, unpinned } => managed_repo.migrate(crates, args.verbose, &unpinned),
-        Cmd::Regenerate { crates } => managed_repo.regenerate(crates.iter(), true),
-        Cmd::RegenerateAll {} => managed_repo.regenerate_all(true),
+        Cmd::Regenerate { crates, all } => managed_repo.regenerate(
+            if all { managed_repo.all_crate_names()?.into_iter() } else { crates.into_iter() },
+            true,
+        ),
         Cmd::PreuploadCheck { files } => managed_repo.preupload_check(&files),
         Cmd::Import { crate_name } => managed_repo.import(&crate_name),
         Cmd::FixLicenses {} => managed_repo.fix_licenses(),
         Cmd::FixMetadata {} => managed_repo.fix_metadata(),
+        Cmd::RecontextualizePatches { crates, all } => {
+            managed_repo.recontextualize_patches(if all {
+                managed_repo.all_crate_names()?.into_iter()
+            } else {
+                crates.into_iter()
+            })
+        }
     }
 }
