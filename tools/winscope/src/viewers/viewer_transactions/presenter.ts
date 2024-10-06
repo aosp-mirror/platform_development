@@ -121,6 +121,31 @@ export class Presenter extends AbstractLogViewerPresenter<UiData> {
     this.isInitialized = true;
   }
 
+  protected override updateDefaultAllowlist(
+    tree: PropertyTreeNode | undefined,
+  ): void {
+    if (!tree) {
+      return;
+    }
+    const allowlist: string[] = [];
+    tree
+      .getChildByName('what')
+      ?.formattedValue()
+      .split(' | ')
+      .forEach((flag) => {
+        const properties = layerChangeFlagToPropertiesMap.get(flag);
+        if (properties !== undefined) {
+          allowlist.push(...properties);
+        } else if (flag.startsWith('e')) {
+          const candidateProperty = flag.split('Changed')[0].slice(1);
+          allowlist.push(
+            candidateProperty[0].toLowerCase() + candidateProperty.slice(1),
+          );
+        }
+      });
+    this.propertiesPresenter.updateDefaultAllowList(allowlist);
+  }
+
   private async makeUiDataEntries(): Promise<TransactionsEntry[]> {
     const entries: TransactionsEntry[] = [];
 
@@ -390,3 +415,10 @@ export class Presenter extends AbstractLogViewerPresenter<UiData> {
     return result;
   }
 }
+
+const layerChangeFlagToPropertiesMap = new Map([
+  ['eReparent', ['parentId']],
+  ['eRelativeLayerChanged', ['relativeParentId']],
+  ['eLayerChanged', ['layerId']],
+  ['ePositionChanged', ['x', 'y', 'z']],
+]);

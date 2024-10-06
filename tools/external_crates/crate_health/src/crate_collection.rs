@@ -25,7 +25,7 @@ use anyhow::{anyhow, Result};
 use semver::Version;
 use walkdir::WalkDir;
 
-use crate::{Crate, CrateError};
+use crate::{crate_type::Crate, CrateError};
 
 use std::collections::BTreeMap;
 

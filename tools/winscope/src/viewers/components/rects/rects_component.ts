@@ -351,6 +351,7 @@ export class RectsComponent implements OnInit, OnDestroy {
   private internalMiniRects?: UiRect[];
   private storeKeyZSpacingFactor = '';
   private storeKeyShadingMode = '';
+  private storeKeySelectedDisplays = '';
   private internalDisplays: DisplayIdentifier[] = [];
   private internalHighlightedItem = '';
   private currentDisplays: DisplayIdentifier[] = [];
@@ -359,9 +360,7 @@ export class RectsComponent implements OnInit, OnDestroy {
   private largeRectsCanvas?: Canvas;
   private miniRectsCanvas?: Canvas;
   private resizeObserver = new ResizeObserver((entries) => {
-    const scene = this.largeRectsMapper3d.computeScene();
-    this.largeRectsCanvas?.updateViewPosition(scene.camera, scene.boundingBox);
-    this.largeRectsCanvas?.renderView();
+    this.updateLargeRectsPosition();
   });
   private largeRectsCanvasElement?: HTMLCanvasElement;
   private miniRectsCanvasElement?: HTMLCanvasElement;
@@ -416,15 +415,12 @@ export class RectsComponent implements OnInit, OnDestroy {
       this.onCanvasMouseDown(event),
     );
 
+    this.largeRectsMapper3d.increaseZoomFactor(this.zoomFactor - 1);
+
     if (this.store) {
       this.updateControlsFromStore();
     }
 
-    this.currentDisplays =
-      this.internalDisplays.length > 0
-        ? [this.getActiveDisplay(this.internalDisplays)]
-        : [];
-    this.largeRectsMapper3d.increaseZoomFactor(this.zoomFactor - 1);
     this.redrawLargeRectsAndLabels();
 
     this.miniRectsCanvasElement = canvasContainer.querySelector(
@@ -458,11 +454,12 @@ export class RectsComponent implements OnInit, OnDestroy {
     let displayChange = false;
     if (simpleChanges['displays']) {
       const curr: DisplayIdentifier[] = simpleChanges['displays'].currentValue;
-      const prev: DisplayIdentifier[] | undefined =
-        simpleChanges['displays'].previousValue ?? undefined;
+      const prev: DisplayIdentifier[] =
+        simpleChanges['displays'].previousValue ?? [];
       displayChange =
-        curr.length > 0 &&
-        !curr.every((d, index) => d.displayId === prev?.at(index)?.displayId);
+        curr.length !== prev.length ||
+        (curr.length > 0 &&
+          !curr.every((d, index) => d.displayId === prev[index].displayId));
     }
 
     let redrawRects = false;
@@ -511,11 +508,12 @@ export class RectsComponent implements OnInit, OnDestroy {
     const activeDisplay = this.getActiveDisplay(this.internalDisplays);
 
     if (displays.length === 0) {
+      this.updateCurrentDisplays([], false);
       return;
     }
 
     if (change.firstChange) {
-      this.updateCurrentDisplays([activeDisplay]);
+      this.updateCurrentDisplays([activeDisplay], false);
       return;
     }
 
@@ -545,6 +543,7 @@ export class RectsComponent implements OnInit, OnDestroy {
   updateControlsFromStore() {
     this.storeKeyZSpacingFactor = `rectsView.${this.title}.zSpacingFactor`;
     this.storeKeyShadingMode = `rectsView.${this.title}.shadingMode`;
+    this.storeKeySelectedDisplays = `rectsView.${this.title}.selectedDisplayId`;
 
     const storedZSpacingFactor = assertDefined(this.store).get(
       this.storeKeyZSpacingFactor,
@@ -561,6 +560,24 @@ export class RectsComponent implements OnInit, OnDestroy {
       this.shadingModes.includes(storedShadingMode as ShadingMode)
     ) {
       this.largeRectsMapper3d.setShadingMode(storedShadingMode as ShadingMode);
+    }
+
+    const storedSelectedDisplays = assertDefined(this.store).get(
+      this.storeKeySelectedDisplays,
+    );
+    if (storedSelectedDisplays !== undefined) {
+      const storedIds: Array<number | string> = JSON.parse(
+        storedSelectedDisplays,
+      );
+      const displays = this.internalDisplays.filter((display) => {
+        return storedIds.some((id) => display.displayId === id);
+      });
+      if (displays.length > 0) {
+        this.currentDisplays = displays;
+        this.largeRectsMapper3d.setCurrentGroupIds(
+          displays.map((d) => d.groupId),
+        );
+      }
     }
   }
 
@@ -583,7 +600,7 @@ export class RectsComponent implements OnInit, OnDestroy {
   resetCamera() {
     Analytics.Navigation.logZoom('reset', 'rects');
     this.largeRectsMapper3d.resetCamera();
-    this.redrawLargeRectsAndLabels();
+    this.redrawLargeRectsAndLabels(true);
   }
 
   @HostListener('wheel', ['$event'])
@@ -608,9 +625,7 @@ export class RectsComponent implements OnInit, OnDestroy {
     this.panning = true;
     const distance = new Distance(event.movementX, event.movementY);
     this.largeRectsMapper3d.addPanScreenDistance(distance);
-    const scene = this.largeRectsMapper3d.computeScene();
-    this.largeRectsCanvas?.updateViewPosition(scene.camera, scene.boundingBox);
-    this.largeRectsCanvas?.renderView();
+    this.updateLargeRectsPosition();
   }
 
   onMouseUp(event: MouseEvent) {
@@ -629,7 +644,7 @@ export class RectsComponent implements OnInit, OnDestroy {
   }
 
   onDisplaySelectChange(event: MatSelectChange) {
-    const selectedDisplays = event.value;
+    const selectedDisplays: DisplayIdentifier[] = event.value;
     this.updateCurrentDisplays(selectedDisplays);
   }
 
@@ -721,10 +736,19 @@ export class RectsComponent implements OnInit, OnDestroy {
     );
   }
 
-  private updateCurrentDisplays(displays: DisplayIdentifier[]) {
+  private updateCurrentDisplays(
+    displays: DisplayIdentifier[],
+    storeChange = true,
+  ) {
+    if (storeChange) {
+      this.store?.add(
+        this.storeKeySelectedDisplays,
+        JSON.stringify(displays.map((d) => d.displayId)),
+      );
+    }
     this.currentDisplays = displays;
     this.largeRectsMapper3d.setCurrentGroupIds(displays.map((d) => d.groupId));
-    this.redrawLargeRectsAndLabels();
+    this.redrawLargeRectsAndLabels(true);
   }
 
   private findClickedRectId(event: MouseEvent): string | undefined {
@@ -750,30 +774,48 @@ export class RectsComponent implements OnInit, OnDestroy {
     this.updateLargeRectsPositionAndLabels();
   }
 
-  private redrawLargeRectsAndLabels() {
+  private redrawLargeRectsAndLabels(updateBoundingBox = false) {
     this.largeRectsMapper3d.setRects(this.internalRects);
-    const scene = this.largeRectsMapper3d.computeScene();
-    this.largeRectsCanvas?.updateViewPosition(scene.camera, scene.boundingBox);
+    const scene = this.largeRectsMapper3d.computeScene(updateBoundingBox);
+    this.largeRectsCanvas?.updateViewPosition(
+      scene.camera,
+      scene.boundingBox,
+      scene.zDepth,
+    );
     this.largeRectsCanvas?.updateRects(scene.rects);
     this.largeRectsCanvas?.updateLabels(scene.labels);
     this.largeRectsCanvas?.renderView();
   }
 
+  private updateLargeRectsPosition() {
+    const scene = this.largeRectsMapper3d.computeScene(false);
+    this.largeRectsCanvas?.updateViewPosition(
+      scene.camera,
+      scene.boundingBox,
+      scene.zDepth,
+    );
+    this.largeRectsCanvas?.renderView();
+  }
+
   private updateLargeRectsPositionAndLabels() {
-    const scene = this.largeRectsMapper3d.computeScene();
-    this.largeRectsCanvas?.updateViewPosition(scene.camera, scene.boundingBox);
+    const scene = this.largeRectsMapper3d.computeScene(false);
+    this.largeRectsCanvas?.updateViewPosition(
+      scene.camera,
+      scene.boundingBox,
+      scene.zDepth,
+    );
     this.largeRectsCanvas?.updateLabels(scene.labels);
     this.largeRectsCanvas?.renderView();
   }
 
   private updateLargeRectsColors() {
-    const scene = this.largeRectsMapper3d.computeScene();
+    const scene = this.largeRectsMapper3d.computeScene(false);
     this.largeRectsCanvas?.updateRects(scene.rects);
     this.largeRectsCanvas?.renderView();
   }
 
   private updateLargeRectsAndLabelsColors() {
-    const scene = this.largeRectsMapper3d.computeScene();
+    const scene = this.largeRectsMapper3d.computeScene(false);
     this.largeRectsCanvas?.updateRects(scene.rects);
     this.largeRectsCanvas?.updateLabels(scene.labels);
     this.largeRectsCanvas?.renderView();
@@ -788,8 +830,12 @@ export class RectsComponent implements OnInit, OnDestroy {
       this.miniRectsMapper3d.resetToOrthogonalState();
       this.miniRectsMapper3d.setRects(this.internalMiniRects);
 
-      const scene = this.miniRectsMapper3d.computeScene();
-      this.miniRectsCanvas.updateViewPosition(scene.camera, scene.boundingBox);
+      const scene = this.miniRectsMapper3d.computeScene(true);
+      this.miniRectsCanvas.updateViewPosition(
+        scene.camera,
+        scene.boundingBox,
+        scene.zDepth,
+      );
       this.miniRectsCanvas.updateRects(scene.rects);
       this.miniRectsCanvas.updateLabels(scene.labels);
       this.miniRectsCanvas.renderView();
