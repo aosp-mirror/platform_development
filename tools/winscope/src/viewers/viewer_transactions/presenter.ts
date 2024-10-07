@@ -16,6 +16,7 @@
 
 import {assertDefined} from 'common/assert_utils';
 import {PersistentStoreProxy} from 'common/persistent_store_proxy';
+import {Store} from 'common/store';
 import {Trace} from 'trace/trace';
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
 import {
@@ -24,6 +25,7 @@ import {
 } from 'viewers/common/abstract_log_viewer_presenter';
 import {LogPresenter} from 'viewers/common/log_presenter';
 import {PropertiesPresenter} from 'viewers/common/properties_presenter';
+import {TextFilter} from 'viewers/common/text_filter';
 import {LogField, LogFieldType, LogFilter} from 'viewers/common/ui_data_log';
 import {UserOptions} from 'viewers/common/user_options';
 import {SetRootDisplayNames} from './operations/set_root_display_name';
@@ -43,7 +45,7 @@ export class Presenter extends AbstractLogViewerPresenter<UiData> {
   private isInitialized = false;
 
   protected override keepCalculated = true;
-  protected override logPresenter = new LogPresenter<TransactionsEntry>(true);
+  protected override logPresenter = new LogPresenter<TransactionsEntry>();
   protected override propertiesPresenter = new PropertiesPresenter(
     PersistentStoreProxy.new<UserOptions>(
       'TransactionsPropertyOptions',
@@ -60,13 +62,18 @@ export class Presenter extends AbstractLogViewerPresenter<UiData> {
       },
       this.storage,
     ),
+    PersistentStoreProxy.new<TextFilter>(
+      'TransactionsPropertiesFilter',
+      new TextFilter('', []),
+      this.storage,
+    ),
     [],
     [new SetRootDisplayNames()],
   );
 
   constructor(
     trace: Trace<PropertyTreeNode>,
-    readonly storage: Storage,
+    readonly storage: Store,
     notifyViewCallback: NotifyLogViewCallbackType<UiData>,
   ) {
     super(trace, notifyViewCallback, UiData.createEmpty());
@@ -112,6 +119,31 @@ export class Presenter extends AbstractLogViewerPresenter<UiData> {
     this.logPresenter.setFilters(filters);
     this.refreshUiData();
     this.isInitialized = true;
+  }
+
+  protected override updateDefaultAllowlist(
+    tree: PropertyTreeNode | undefined,
+  ): void {
+    if (!tree) {
+      return;
+    }
+    const allowlist: string[] = [];
+    tree
+      .getChildByName('what')
+      ?.formattedValue()
+      .split(' | ')
+      .forEach((flag) => {
+        const properties = layerChangeFlagToPropertiesMap.get(flag);
+        if (properties !== undefined) {
+          allowlist.push(...properties);
+        } else if (flag.startsWith('e')) {
+          const candidateProperty = flag.split('Changed')[0].slice(1);
+          allowlist.push(
+            candidateProperty[0].toLowerCase() + candidateProperty.slice(1),
+          );
+        }
+      });
+    this.propertiesPresenter.updateDefaultAllowList(allowlist);
   }
 
   private async makeUiDataEntries(): Promise<TransactionsEntry[]> {
@@ -383,3 +415,10 @@ export class Presenter extends AbstractLogViewerPresenter<UiData> {
     return result;
   }
 }
+
+const layerChangeFlagToPropertiesMap = new Map([
+  ['eReparent', ['parentId']],
+  ['eRelativeLayerChanged', ['relativeParentId']],
+  ['eLayerChanged', ['layerId']],
+  ['ePositionChanged', ['x', 'y', 'z']],
+]);

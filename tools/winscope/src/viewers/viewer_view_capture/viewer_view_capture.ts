@@ -15,6 +15,7 @@
  */
 
 import {FunctionUtils} from 'common/function_utils';
+import {Store} from 'common/store';
 import {WinscopeEvent} from 'messaging/winscope_event';
 import {EmitEvent} from 'messaging/winscope_event_emitter';
 import {Trace} from 'trace/trace';
@@ -36,7 +37,7 @@ export class ViewerViewCapture implements Viewer {
   private readonly view: View;
   private emitAppEvent: EmitEvent = FunctionUtils.DO_NOTHING_ASYNC;
 
-  constructor(traces: Traces, storage: Storage) {
+  constructor(traces: Traces, storage: Store) {
     this.traces = traces;
     this.htmlElement = document.createElement('viewer-view-capture');
     const notifyViewCallback = (uiData: UiData) => {

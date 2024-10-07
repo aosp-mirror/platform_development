@@ -1,0 +1,246 @@
+{
+ "array_types" : [],
+ "builtin_types" :
+ [
+  {
+   "alignment" : 4,
+   "is_integral" : true,
+   "linker_set_key" : "_ZTIi",
+   "name" : "int",
+   "size" : 4
+  },
+  {
+   "alignment" : 4,
+   "is_integral" : true,
+   "is_unsigned" : true,
+   "linker_set_key" : "_ZTIj",
+   "name" : "unsigned int",
+   "size" : 4
+  }
+ ],
+ "elf_functions" :
+ [
+  {
+   "name" : "func"
+  },
+  {
+   "name" : "ignored_func"
+  }
+ ],
+ "elf_objects" :
+ [
+  {
+   "name" : "ignored_var"
+  },
+  {
+   "name" : "var"
+  }
+ ],
+ "enum_types" :
+ [
+  {
+   "alignment" : 4,
+   "availability_attrs" :
+   [
+    {
+     "introduced_major" : 35
+    }
+   ],
+   "enum_fields" :
+   [
+    {
+     "availability_attrs" :
+     [
+      {
+       "introduced_major" : 36
+      }
+     ],
+     "enum_field_value" : 0,
+     "name" : "ALPHABETICALLY_SMALLEST_IGNORED_FIELD"
+    },
+    {
+     "availability_attrs" :
+     [
+      {
+       "deprecated_major" : 35
+      }
+     ],
+     "enum_field_value" : 1,
+     "name" : "DEPRECATED"
+    },
+    {
+     "enum_field_value" : 2,
+     "name" : "FIELD"
+    },
+    {
+     "availability_attrs" :
+     [
+      {
+       "obsoleted_major" : 35
+      }
+     ],
+     "enum_field_value" : 3,
+     "name" : "OBSOLETED"
+    },
+    {
+     "availability_attrs" :
+     [
+      {
+       "unavailable" : true
+      }
+     ],
+     "enum_field_value" : 4,
+     "name" : "UNAVAILABLE"
+    }
+   ],
+   "linker_set_key" : "_ZTI38$ALPHABETICALLY_SMALLEST_IGNORED_FIELD",
+   "name" : "(unnamed)",
+   "size" : 4,
+   "source_file" : "development/vndk/tools/header-checker/tests/integration/availability/include/base.h",
+   "underlying_type" : "_ZTIj"
+  }
+ ],
+ "function_types" : [],
+ "functions" :
+ [
+  {
+   "availability_attrs" :
+   [
+    {
+     "introduced_major" : 35
+    }
+   ],
+   "function_name" : "func",
+   "linker_set_key" : "func",
+   "parameters" :
+   [
+    {
+     "referenced_type" : "_ZTIP6Struct"
+    },
+    {
+     "referenced_type" : "_ZTIP13IgnoredStruct"
+    }
+   ],
+   "return_type" : "_ZTIi",
+   "source_file" : "development/vndk/tools/header-checker/tests/integration/availability/include/base.h"
+  },
+  {
+   "availability_attrs" :
+   [
+    {
+     "introduced_major" : 36
+    }
+   ],
+   "function_name" : "ignored_func",
+   "linker_set_key" : "ignored_func",
+   "return_type" : "_ZTIi",
+   "source_file" : "development/vndk/tools/header-checker/tests/integration/availability/include/base.h"
+  }
+ ],
+ "global_vars" :
+ [
+  {
+   "availability_attrs" :
+   [
+    {
+     "introduced_major" : 36
+    }
+   ],
+   "linker_set_key" : "ignored_var",
+   "name" : "ignored_var",
+   "referenced_type" : "_ZTIi",
+   "source_file" : "development/vndk/tools/header-checker/tests/integration/availability/include/base.h"
+  },
+  {
+   "availability_attrs" :
+   [
+    {
+     "introduced_major" : 35
+    },
+    {
+     "obsoleted_major" : 36
+    }
+   ],
+   "linker_set_key" : "var",
+   "name" : "var",
+   "referenced_type" : "_ZTIi",
+   "source_file" : "development/vndk/tools/header-checker/tests/integration/availability/include/base.h"
+  }
+ ],
+ "lvalue_reference_types" : [],
+ "pointer_types" :
+ [
+  {
+   "alignment" : 8,
+   "linker_set_key" : "_ZTIP13IgnoredStruct",
+   "name" : "IgnoredStruct *",
+   "referenced_type" : "_ZTI13IgnoredStruct",
+   "size" : 8,
+   "source_file" : "development/vndk/tools/header-checker/tests/integration/availability/include/base.h"
+  },
+  {
+   "alignment" : 8,
+   "linker_set_key" : "_ZTIP6Struct",
+   "name" : "Struct *",
+   "referenced_type" : "_ZTI6Struct",
+   "size" : 8,
+   "source_file" : "development/vndk/tools/header-checker/tests/integration/availability/include/base.h"
+  }
+ ],
+ "qualified_types" : [],
+ "record_types" :
+ [
+  {
+   "alignment" : 4,
+   "availability_attrs" :
+   [
+    {
+     "introduced_major" : 36
+    }
+   ],
+   "fields" :
+   [
+    {
+     "field_name" : "field",
+     "referenced_type" : "_ZTIi"
+    }
+   ],
+   "linker_set_key" : "_ZTI13IgnoredStruct",
+   "name" : "IgnoredStruct",
+   "size" : 4,
+   "source_file" : "development/vndk/tools/header-checker/tests/integration/availability/include/base.h"
+  },
+  {
+   "alignment" : 4,
+   "availability_attrs" :
+   [
+    {
+     "introduced_major" : 35
+    }
+   ],
+   "fields" :
+   [
+    {
+     "availability_attrs" :
+     [
+      {
+       "introduced_major" : 36
+      }
+     ],
+     "field_name" : "ignored_field",
+     "referenced_type" : "_ZTIi"
+    },
+    {
+     "field_name" : "field",
+     "field_offset" : 32,
+     "referenced_type" : "_ZTIi"
+    }
+   ],
+   "linker_set_key" : "_ZTI6Struct",
+   "name" : "Struct",
+   "size" : 8,
+   "source_file" : "development/vndk/tools/header-checker/tests/integration/availability/include/base.h"
+  }
+ ],
+ "rvalue_reference_types" : []
+}

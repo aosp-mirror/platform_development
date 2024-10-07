@@ -40,7 +40,7 @@ import {assertDefined} from 'common/assert_utils';
 import {FunctionUtils} from 'common/function_utils';
 import {PersistentStore} from 'common/persistent_store';
 import {StringUtils} from 'common/string_utils';
-import {TimeRange, Timestamp} from 'common/time';
+import {TimeRange, Timestamp, TimestampFormatType} from 'common/time';
 import {TimestampUtils} from 'common/timestamp_utils';
 import {Analytics} from 'logging/analytics';
 import {
@@ -213,7 +213,7 @@ import {MiniTimelineComponent} from './mini-timeline/mini_timeline_component';
                       class="trace-icon"
                       *ngFor="let selectedTrace of getSelectedTracesToShow()"
                       [style]="{color: TRACE_INFO[selectedTrace.type].color}"
-                      [matTooltip]="TRACE_INFO[selectedTrace.type].name"
+                      [matTooltip]="getTraceTooltip(selectedTrace)"
                       #tooltip="matTooltip"
                       (mouseenter)="tooltip.disabled = false"
                       (mouseleave)="tooltip.disabled = true">
@@ -923,6 +923,13 @@ export class TimelineComponent
     this.changeDetectorRef.detectChanges();
   }
 
+  getTraceTooltip(trace: Trace<object>) {
+    if (trace.type === TraceType.SCREEN_RECORDING) {
+      return trace.getDescriptors()[0].split('.')[0];
+    }
+    return TRACE_INFO[trace.type].name;
+  }
+
   private updateSelectedTraces(trace: Trace<object> | undefined) {
     if (!trace) {
       return;
@@ -940,16 +947,11 @@ export class TimelineComponent
       this.getCurrentTracePosition().timestamp.getValueNs();
     const timelineData = assertDefined(this.timelineData);
 
-    let formattedCurrentTimestamp = assertDefined(
+    const formattedCurrentTimestamp = assertDefined(
       timelineData.getTimestampConverter(),
     )
       .makeTimestampFromNs(currentTimestampNs)
-      .format();
-    if (TimestampUtils.isHumanRealTimestampFormat(formattedCurrentTimestamp)) {
-      formattedCurrentTimestamp = assertDefined(
-        TimestampUtils.extractTimeFromHumanTimestamp(formattedCurrentTimestamp),
-      );
-    }
+      .format(TimestampFormatType.DROP_DATE);
     this.selectedTimeFormControl.setValue(formattedCurrentTimestamp);
     this.selectedNsFormControl.setValue(`${currentTimestampNs} ns`);
   }

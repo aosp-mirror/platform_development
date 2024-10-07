@@ -20,7 +20,11 @@ import {Distance} from 'common/geometry/distance';
 import {Point3D} from 'common/geometry/point3d';
 import {Rect3D} from 'common/geometry/rect3d';
 import {Size} from 'common/geometry/size';
-import {IDENTITY_MATRIX} from 'common/geometry/transform_matrix';
+import {
+  IDENTITY_MATRIX,
+  TransformMatrix,
+} from 'common/geometry/transform_matrix';
+import {UiHierarchyTreeNode} from 'viewers/common/ui_hierarchy_tree_node';
 import {UiRect} from 'viewers/components/rects/ui_rect';
 import {ColorType} from './color_type';
 import {RectLabel} from './rect_label';
@@ -56,9 +60,15 @@ class Mapper3D {
   private currentGroupIds = [0]; // default stack id is usually 0
   private shadingModeIndex = 0;
   private allowedShadingModes: ShadingMode[] = [ShadingMode.GRADIENT];
+  private pinnedItems: UiHierarchyTreeNode[] = [];
+  private previousBoundingBox: Box3D | undefined;
 
   setRects(rects: UiRect[]) {
     this.rects = rects;
+  }
+
+  setPinnedItems(value: UiHierarchyTreeNode[]) {
+    this.pinnedItems = value;
   }
 
   setHighlightedRectId(id: string) {
@@ -81,12 +91,12 @@ class Mapper3D {
     this.zSpacingFactor = Math.min(Math.max(factor, 0), 1);
   }
 
-  increaseZoomFactor(ratio = 1) {
+  increaseZoomFactor(ratio: number) {
     this.zoomFactor += Mapper3D.ZOOM_FACTOR_STEP * ratio;
     this.zoomFactor = Math.min(this.zoomFactor, Mapper3D.ZOOM_FACTOR_MAX);
   }
 
-  decreaseZoomFactor(ratio = 1) {
+  decreaseZoomFactor(ratio: number) {
     this.zoomFactor -= Mapper3D.ZOOM_FACTOR_STEP * ratio;
     this.zoomFactor = Math.max(this.zoomFactor, Mapper3D.ZOOM_FACTOR_MIN);
   }
@@ -160,7 +170,7 @@ class Mapper3D {
     );
   }
 
-  computeScene(): Scene {
+  computeScene(updateBoundingBox: boolean): Scene {
     const rects3d: UiRect3D[] = [];
     const labels3d: RectLabel[] = [];
     let clusterYOffset = 0;
@@ -184,9 +194,15 @@ class Mapper3D {
       clusterYOffset += boundingBox.height + Mapper3D.DISPLAY_CLUSTER_SPACING;
     }
 
+    const newBoundingBox =
+      boundingBox ?? this.computeBoundingBox(rects3d, labels3d);
+    if (!this.previousBoundingBox || updateBoundingBox) {
+      this.previousBoundingBox = newBoundingBox;
+    }
+
     const angleX = this.getCameraXAxisAngle();
     const scene: Scene = {
-      boundingBox: boundingBox ?? this.computeBoundingBox(rects3d, labels3d),
+      boundingBox: this.previousBoundingBox,
       camera: {
         rotationAngleX: angleX,
         rotationAngleY: angleX * Mapper3D.Y_AXIS_ROTATION_FACTOR,
@@ -195,8 +211,8 @@ class Mapper3D {
       },
       rects: rects3d,
       labels: labels3d,
+      zDepth: newBoundingBox.depth,
     };
-
     return scene;
   }
 
@@ -263,25 +279,17 @@ class Mapper3D {
       if (rect2d.fillRegion) {
         fillRegion = rect2d.fillRegion.rects.map((r) => {
           return {
-            topLeft: {x: r.x, y: r.y, z},
-            bottomRight: {x: r.x + r.w, y: r.y + r.h, z},
+            topLeft: new Point3D(r.x, r.y, z),
+            bottomRight: new Point3D(r.x + r.w, r.y + r.h, z),
           };
         });
       }
       const transform = rect2d.transform ?? IDENTITY_MATRIX;
 
-      const rect = {
+      const rect: UiRect3D = {
         id: rect2d.id,
-        topLeft: {
-          x: rect2d.x,
-          y: rect2d.y,
-          z,
-        },
-        bottomRight: {
-          x: rect2d.x + rect2d.w,
-          y: rect2d.y + rect2d.h,
-          z,
-        },
+        topLeft: new Point3D(rect2d.x, rect2d.y, z),
+        bottomRight: new Point3D(rect2d.x + rect2d.w, rect2d.y + rect2d.h, z),
         isOversized: false,
         cornerRadius: rect2d.cornerRadius,
         darkFactor,
@@ -289,6 +297,7 @@ class Mapper3D {
         isClickable: rect2d.isClickable,
         transform: clusterYOffset ? transform.addTy(clusterYOffset) : transform,
         fillRegion,
+        isPinned: this.pinnedItems.some((node) => node.id === rect2d.id),
       };
       return this.cropOversizedRect(rect, maxDisplaySize);
     });
@@ -374,13 +383,16 @@ class Mapper3D {
     const cameraTiltFactor =
       Math.sin(this.getCameraXAxisAngle()) / Mapper3D.Y_AXIS_ROTATION_FACTOR;
     const labelTextYSpacing = Math.max(
-      (rects2d.length * Mapper3D.LABEL_SPACING_MIN) /
+      ((this.onlyRenderSelectedLabel(rects2d) ? rects2d.length : 1) *
+        Mapper3D.LABEL_SPACING_MIN) /
         Mapper3D.LABEL_SPACING_PER_RECT_FACTOR,
       lowestYPoint / Mapper3D.LABEL_SPACING_INIT_FACTOR,
     );
-    const scaleFactor =
-      Math.min(this.zoomFactor, Math.max(1, Math.sqrt(rects2d.length)) / 2) **
-      2;
+
+    const scaleFactor = Math.max(
+      Math.min(this.zoomFactor ** 2, 1 + (8 - rects2d.length) * 0.05),
+      0.5,
+    );
 
     let labelY = lowestYPoint + Mapper3D.LABEL_FIRST_Y_OFFSET / scaleFactor;
     let lastDepth: number | undefined;
@@ -410,16 +422,16 @@ class Mapper3D {
 
       const rect3d = rects3d[index];
 
-      const bottomLeft: Point3D = {
-        x: rect3d.topLeft.x,
-        y: rect3d.topLeft.y,
-        z: rect3d.topLeft.z,
-      };
-      const topRight: Point3D = {
-        x: rect3d.bottomRight.x,
-        y: rect3d.bottomRight.y,
-        z: rect3d.bottomRight.z,
-      };
+      const bottomLeft = new Point3D(
+        rect3d.topLeft.x,
+        rect3d.topLeft.y,
+        rect3d.topLeft.z,
+      );
+      const topRight = new Point3D(
+        rect3d.bottomRight.x,
+        rect3d.bottomRight.y,
+        rect3d.bottomRight.z,
+      );
       const lineStarts = [
         rect3d.transform.transformPoint3D(rect3d.topLeft),
         rect3d.transform.transformPoint3D(rect3d.bottomRight),
@@ -438,22 +450,18 @@ class Mapper3D {
 
       lineStart.x += Mapper3D.LABEL_CIRCLE_RADIUS / 2;
 
-      const lineEnd: Point3D = {
-        x: lineStart.x,
-        y: labelY + xDiff * cameraTiltFactor,
-        z: lineStart.z,
-      };
+      const lineEnd = new Point3D(
+        lineStart.x,
+        labelY + xDiff * cameraTiltFactor,
+        lineStart.z,
+      );
 
       const isHighlighted = this.isHighlighted(rect2d);
 
       const RectLabel: RectLabel = {
         circle: {
           radius: Mapper3D.LABEL_CIRCLE_RADIUS,
-          center: {
-            x: lineStart.x,
-            y: lineStart.y,
-            z: lineStart.z + 0.5,
-          },
+          center: new Point3D(lineStart.x, lineStart.y, lineStart.z + 0.5),
         },
         linePoints: [lineStart, lineEnd],
         textCenter: lineEnd,
@@ -473,7 +481,7 @@ class Mapper3D {
         width: 1,
         height: 1,
         depth: 1,
-        center: {x: 0, y: 0, z: 0},
+        center: new Point3D(0, 0, 0),
         diagonal: Math.sqrt(3),
       };
     }
@@ -485,13 +493,17 @@ class Mapper3D {
     let minZ = Number.MAX_VALUE;
     let maxZ = Number.MIN_VALUE;
 
-    const updateMinMaxCoordinates = (point: Point3D) => {
-      minX = Math.min(minX, point.x);
-      maxX = Math.max(maxX, point.x);
-      minY = Math.min(minY, point.y);
-      maxY = Math.max(maxY, point.y);
-      minZ = Math.min(minZ, point.z);
-      maxZ = Math.max(maxZ, point.z);
+    const updateMinMaxCoordinates = (
+      point: Point3D,
+      transform?: TransformMatrix,
+    ) => {
+      const transformedPoint = transform?.transformPoint3D(point) ?? point;
+      minX = Math.min(minX, transformedPoint.x);
+      maxX = Math.max(maxX, transformedPoint.x);
+      minY = Math.min(minY, transformedPoint.y);
+      maxY = Math.max(maxY, transformedPoint.y);
+      minZ = Math.min(minZ, transformedPoint.z);
+      maxZ = Math.max(maxZ, transformedPoint.z);
     };
 
     rects.forEach((rect) => {
@@ -505,28 +517,28 @@ class Mapper3D {
         y: rect.center.y - rect.height / 2,
         z: rect.center.z
       };*/
-      updateMinMaxCoordinates(rect.topLeft);
-      updateMinMaxCoordinates(rect.bottomRight);
+      updateMinMaxCoordinates(rect.topLeft, rect.transform);
+      updateMinMaxCoordinates(rect.bottomRight, rect.transform);
     });
 
-    // if only selected rect label rendered, do not include in bounding box
+    // if multiple labels rendered, include first 10 in bounding box
     if (!this.onlyRenderSelectedLabel(rects)) {
-      labels.forEach((label) => {
+      labels.slice(0, 10).forEach((label) => {
         label.linePoints.forEach((point) => {
           updateMinMaxCoordinates(point);
         });
       });
     }
 
-    const center: Point3D = {
-      x: (minX + maxX) / 2,
-      y: (minY + maxY) / 2,
-      z: (minZ + maxZ) / 2,
-    };
+    const center = new Point3D(
+      (minX + maxX) / 2,
+      (minY + maxY) / 2,
+      (minZ + maxZ) / 2,
+    );
 
-    const width = maxX - minX;
-    const height = maxY - minY;
-    const depth = maxZ - minZ;
+    const width = (maxX - minX) * 1.1;
+    const height = (maxY - minY) * 1.1;
+    const depth = (maxZ - minZ) * 1.1;
 
     return {
       width,

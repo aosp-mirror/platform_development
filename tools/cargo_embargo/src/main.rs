@@ -47,7 +47,6 @@ use clap::Subcommand;
 use log::debug;
 use nix::fcntl::OFlag;
 use nix::unistd::pipe2;
-use once_cell::sync::Lazy;
 use std::collections::BTreeMap;
 use std::collections::VecDeque;
 use std::env;
@@ -56,6 +55,7 @@ use std::io::{Read, Write};
 use std::path::Path;
 use std::path::PathBuf;
 use std::process::{Command, Stdio};
+use std::sync::LazyLock;
 use tempfile::tempdir;
 
 // Major TODOs
@@ -63,7 +63,7 @@ use tempfile::tempdir;
 //  * handle warnings. put them in comments in the android.bp, some kind of report section
 
 /// Rust modules which shouldn't use the default generated names, to avoid conflicts or confusion.
-pub static RENAME_MAP: Lazy<BTreeMap<&str, &str>> = Lazy::new(|| {
+pub static RENAME_MAP: LazyLock<BTreeMap<&str, &str>> = LazyLock::new(|| {
     [
         ("libash", "libash_rust"),
         ("libatomic", "libatomic_rust"),
@@ -87,7 +87,7 @@ pub static RENAME_MAP: Lazy<BTreeMap<&str, &str>> = Lazy::new(|| {
 /// generated automatically by this script. Examples include compiler builtins
 /// and other foundational libraries. It also tracks the location of rules.mk
 /// build files for crates that are not under external/rust/crates.
-pub static RULESMK_RENAME_MAP: Lazy<BTreeMap<&str, &str>> = Lazy::new(|| {
+pub static RULESMK_RENAME_MAP: LazyLock<BTreeMap<&str, &str>> = LazyLock::new(|| {
     [
         ("liballoc", "trusty/user/base/lib/liballoc-rust"),
         ("libcompiler_builtins", "trusty/user/base/lib/libcompiler_builtins-rust"),
@@ -743,12 +743,39 @@ fn generate_android_bp_package_header(
 /// use.
 fn choose_license(license: &str) -> &str {
     match license {
+        // Variations on "MIT OR Apache-2.0"
         "MIT OR Apache-2.0" => "Apache-2.0",
         "Apache-2.0 OR MIT" => "Apache-2.0",
         "MIT/Apache-2.0" => "Apache-2.0",
         "Apache-2.0/MIT" => "Apache-2.0",
+        "Apache-2.0 / MIT" => "Apache-2.0",
+
+        // Variations on "BSD-* OR Apache-2.0"
+        "Apache-2.0 OR BSD-3-Clause" => "Apache-2.0",
         "Apache-2.0 or BSD-3-Clause" => "Apache-2.0",
+        "BSD-3-Clause OR Apache-2.0" => "Apache-2.0",
+
+        // Variations on "BSD-* OR MIT OR Apache-2.0"
+        "BSD-3-Clause OR MIT OR Apache-2.0" => "Apache-2.0",
+        "BSD-2-Clause OR Apache-2.0 OR MIT" => "Apache-2.0",
+
+        // Variations on "Zlib OR MIT OR Apache-2.0"
+        "Zlib OR Apache-2.0 OR MIT" => "Apache-2.0",
+        "MIT OR Apache-2.0 OR Zlib" => "Apache-2.0",
+
+        // Variations on "Apache-2.0 OR *"
+        "Apache-2.0 OR BSL-1.0" => "Apache-2.0",
+        "Apache-2.0 WITH LLVM-exception OR Apache-2.0 OR MIT" => "Apache-2.0",
+
+        // Variations on "Unlicense OR MIT"
         "Unlicense OR MIT" => "MIT",
+        "Unlicense/MIT" => "MIT",
+
+        // Other cases.
+        "MIT OR LGPL-3.0-or-later" => "MIT",
+        "MIT/BSD-3-Clause" => "MIT",
+
+        "LGPL-2.1-only OR BSD-2-Clause" => "BSD-2-Clause",
         _ => license,
     }
 }
@@ -867,6 +894,7 @@ fn generate_rules_mk(
 fn apply_patch_file(output_path: &Path, patch_path: &Path) -> Result<()> {
     let patch_output = Command::new("patch")
         .arg("-s")
+        .arg("--no-backup-if-mismatch")
         .arg(output_path)
         .arg(patch_path)
         .output()
@@ -1249,9 +1277,10 @@ fn crate_to_rulesmk(
             )
         })
         .map(|dep| {
-            // Rewrite dependency name to module path for Trusty build system
+            // Rewrite dependency name so it is passed to the FIND_CRATE macro
+            // which will expand to the module path when building Trusty.
             if let Some(dep) = dep.strip_prefix("lib") {
-                format!("external/rust/crates/{dep}")
+                format!("$(call FIND_CRATE,{dep})")
             } else {
                 dep
             }

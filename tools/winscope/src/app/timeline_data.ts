@@ -78,7 +78,7 @@ export class TimelineData {
         }),
       );
       if (someCorrupted) {
-        UserNotifier.add(new CannotParseAllTransitions()).notify();
+        UserNotifier.add(new CannotParseAllTransitions());
       }
     }
 
@@ -141,6 +141,30 @@ export class TimelineData {
         'Attempted to set position on traces with no timestamps/entries...',
       );
       return;
+    }
+
+    if (this.firstEntry && position) {
+      if (
+        this.firstEntry.getTimestamp().getValueNs() >
+        position.timestamp.getValueNs()
+      ) {
+        this.explicitlySetPosition = TracePosition.fromTraceEntry(
+          this.firstEntry,
+        );
+        return;
+      }
+    }
+
+    if (this.lastEntry && position) {
+      if (
+        this.lastEntry.getTimestamp().getValueNs() <
+        position.timestamp.getValueNs()
+      ) {
+        this.explicitlySetPosition = TracePosition.fromTraceEntry(
+          this.lastEntry,
+        );
+        return;
+      }
     }
 
     this.explicitlySetPosition = position;

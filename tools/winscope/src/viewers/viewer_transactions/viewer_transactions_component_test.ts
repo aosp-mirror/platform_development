@@ -27,6 +27,7 @@ import {
 import {FormsModule} from '@angular/forms';
 import {MatDividerModule} from '@angular/material/divider';
 import {MatFormFieldModule} from '@angular/material/form-field';
+import {MatIconModule} from '@angular/material/icon';
 import {MatInputModule} from '@angular/material/input';
 import {MatSelectModule} from '@angular/material/select';
 import {BrowserAnimationsModule} from '@angular/platform-browser/animations';
@@ -37,7 +38,7 @@ import {TraceBuilder} from 'test/unit/trace_builder';
 import {UnitTestUtils} from 'test/unit/utils';
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
 import {LogComponent} from 'viewers/common/log_component';
-import {executeScrollComponentTests} from 'viewers/common/scroll_component_test_utils';
+import {executeScrollComponentTests} from 'viewers/common/scroll_component_tests';
 import {LogFieldType} from 'viewers/common/ui_data_log';
 import {UiPropertyTreeNode} from 'viewers/common/ui_property_tree_node';
 import {CollapsedSectionsComponent} from 'viewers/components/collapsed_sections_component';
@@ -65,6 +66,7 @@ describe('ViewerTransactionsComponent', () => {
           BrowserAnimationsModule,
           MatSelectModule,
           MatDividerModule,
+          MatIconModule,
         ],
         declarations: [
           ViewerTransactionsComponent,
@@ -120,6 +122,15 @@ describe('ViewerTransactionsComponent', () => {
 
     it('renders properties', () => {
       expect(htmlElement.querySelector('.properties-view')).toBeTruthy();
+    });
+
+    it('shows message when no transaction is selected', () => {
+      assertDefined(component.inputData).propertiesTree = undefined;
+      fixture.detectChanges();
+      expect(
+        htmlElement.querySelector('.properties-view .placeholder-text')
+          ?.innerHTML,
+      ).toContain('No current or selected transaction');
     });
 
     it('creates collapsed sections with no buttons', () => {

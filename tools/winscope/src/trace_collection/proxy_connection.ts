@@ -15,7 +15,7 @@
  */
 
 import {assertDefined} from 'common/assert_utils';
-import {FunctionUtils, OnProgressUpdateType} from 'common/function_utils';
+import {FunctionUtils} from 'common/function_utils';
 import {
   HttpRequest,
   HttpRequestHeaderType,
@@ -34,8 +34,10 @@ import {ProxyEndpoint} from './proxy_endpoint';
 import {TraceRequest} from './trace_request';
 
 export class ProxyConnection extends AdbConnection {
-  static readonly VERSION = '3.0.0';
+  static readonly VERSION = '4.0.0';
   static readonly WINSCOPE_PROXY_URL = 'http://localhost:5544';
+
+  private static readonly MULTI_DISPLAY_SCREENRECORD_VERSION = '1.4';
 
   private readonly store = new PersistentStore();
   private readonly storeKeySecurityToken = 'adb.proxyKey';
@@ -51,18 +53,19 @@ export class ProxyConnection extends AdbConnection {
   private refreshDevicesWorker: number | undefined;
   private detectStateChangeInUi: () => Promise<void> =
     FunctionUtils.DO_NOTHING_ASYNC;
-  private progressCallback: OnProgressUpdateType = FunctionUtils.DO_NOTHING;
   private availableTracesChangeCallback: (traces: string[]) => void =
+    FunctionUtils.DO_NOTHING;
+  private devicesChangeCallback: (devices: AdbDevice[]) => void =
     FunctionUtils.DO_NOTHING;
 
   async initialize(
     detectStateChangeInUi: () => Promise<void>,
-    progressCallback: OnProgressUpdateType,
     availableTracesChangeCallback: (traces: string[]) => void,
+    devicesChangeCallback: (devices: AdbDevice[]) => void,
   ): Promise<void> {
     this.detectStateChangeInUi = detectStateChangeInUi;
-    this.progressCallback = progressCallback;
     this.availableTracesChangeCallback = availableTracesChangeCallback;
+    this.devicesChangeCallback = devicesChangeCallback;
 
     const urlParams = new URLSearchParams(window.location.search);
     if (urlParams.has('token')) {
@@ -110,6 +113,7 @@ export class ProxyConnection extends AdbConnection {
     if (requestedTraces.length === 0) {
       throw new Error('No traces requested');
     }
+    this.updateMediaBasedConfig(requestedTraces);
     this.selectedDevice = device;
     this.requestedTraces = requestedTraces;
     await this.setState(ConnectionState.STARTING_TRACE);
@@ -131,8 +135,29 @@ export class ProxyConnection extends AdbConnection {
       throw new Error('No dumps requested');
     }
     this.selectedDevice = device;
+    this.updateMediaBasedConfig(requestedDumps);
     this.requestedTraces = requestedDumps;
     await this.setState(ConnectionState.DUMPING_STATE);
+  }
+
+  private updateMediaBasedConfig(requestedConfig: TraceRequest[]) {
+    requestedConfig.forEach((req) => {
+      const displayConfig = req.config.find((c) => c.key === 'displays');
+      if (displayConfig?.value) {
+        if (Array.isArray(displayConfig.value)) {
+          displayConfig.value = displayConfig.value.map((display) => {
+            if (display[0] === '"') {
+              return display.split('"')[2].trim();
+            }
+            return display;
+          });
+        } else {
+          if (displayConfig.value[0] === '"') {
+            displayConfig.value = displayConfig.value.split('"')[2].trim();
+          }
+        }
+      }
+    });
   }
 
   async fetchLastTracingSessionData(device: AdbDevice): Promise<File[]> {
@@ -206,9 +231,7 @@ export class ProxyConnection extends AdbConnection {
                   );
                 return processed;
               });
-              UserNotifier.add(
-                new ProxyTracingErrors(processedErrors),
-              ).notify();
+              UserNotifier.add(new ProxyTracingErrors(processedErrors));
             }
           },
         );
@@ -218,7 +241,7 @@ export class ProxyConnection extends AdbConnection {
         await this.postToProxy(
           `${ProxyEndpoint.DUMP}${assertDefined(this.selectedDevice).id}/`,
           FunctionUtils.DO_NOTHING,
-          this.requestedTraces.map((t) => t.name),
+          this.requestedTraces,
         );
         return;
 
@@ -310,8 +333,30 @@ export class ProxyConnection extends AdbConnection {
           id: deviceId,
           authorized: devices[deviceId].authorized,
           model: devices[deviceId].model,
+          displays: devices[deviceId].displays.map((display: string) => {
+            const parts = display.split(' ').slice(1);
+            const displayNameStartIndex = parts.findIndex((part) =>
+              part.includes('displayName'),
+            );
+            if (displayNameStartIndex !== -1) {
+              const displayName = parts
+                .slice(displayNameStartIndex)
+                .join(' ')
+                .slice(12);
+              if (displayName.length > 2) {
+                return [displayName]
+                  .concat(parts.slice(0, displayNameStartIndex))
+                  .join(' ');
+              }
+            }
+            return parts.join(' ');
+          }),
+          multiDisplayScreenRecordingAvailable:
+            devices[deviceId].screenrecord_version >=
+            ProxyConnection.MULTI_DISPLAY_SCREENRECORD_VERSION,
         };
       });
+      this.devicesChangeCallback(this.devices);
       if (this.refreshDevicesWorker === undefined) {
         this.refreshDevicesWorker = window.setInterval(
           () => this.requestDevices(),
@@ -371,7 +416,7 @@ export class ProxyConnection extends AdbConnection {
 
   private async getFromProxy(
     path: string,
-    onSuccess: OnRequestSuccessCallback = FunctionUtils.DO_NOTHING,
+    onSuccess: OnRequestSuccessCallback,
     type?: XMLHttpRequest['responseType'],
   ) {
     const response = await HttpRequest.get(
@@ -384,7 +429,7 @@ export class ProxyConnection extends AdbConnection {
 
   private async postToProxy(
     path: string,
-    onSuccess: OnRequestSuccessCallback = FunctionUtils.DO_NOTHING,
+    onSuccess: OnRequestSuccessCallback,
     jsonRequest?: object,
   ) {
     const response = await HttpRequest.post(
@@ -397,7 +442,7 @@ export class ProxyConnection extends AdbConnection {
 
   private async processProxyResponse(
     response: HttpResponse,
-    onSuccess: OnRequestSuccessCallback = FunctionUtils.DO_NOTHING,
+    onSuccess: OnRequestSuccessCallback,
   ) {
     if (
       response.status === HttpRequestStatus.SUCCESS &&

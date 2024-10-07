@@ -36,7 +36,7 @@ import com.android.compose.animation.scene.inScene
 
 fun SceneTransitionsBuilder.shadeTransitions(
     qsPagerState: PagerState,
-    configuration: DemoConfiguration
+    configuration: DemoConfiguration,
 ) {
     // The distance when swiping the Shade from/to a scene (except QuickSettings).
     val swipeDistance =
@@ -88,7 +88,7 @@ fun SceneTransitionsBuilder.shadeTransitions(
         object : UserActionDistance {
             override fun UserActionDistanceScope.absoluteDistance(
                 fromSceneSize: IntSize,
-                orientation: Orientation
+                orientation: Orientation,
             ): Float {
                 val scrimOffsetInShade =
                     Shade.Elements.Scrim.targetOffset(Scenes.Shade) ?: return 0f
@@ -118,11 +118,11 @@ fun SceneTransitionsBuilder.shadeTransitions(
         anchoredTranslate(Shade.Elements.Date, Shade.Elements.Time)
         anchoredTranslate(
             QuickSettings.Elements.BrightnessSlider,
-            QuickSettingsGrid.Elements.GridAnchor
+            QuickSettingsGrid.Elements.GridAnchor,
         )
         anchoredTranslate(
             QuickSettings.Elements.ExpandedGrid,
-            QuickSettingsGrid.Elements.GridAnchor
+            QuickSettingsGrid.Elements.GridAnchor,
         )
         anchoredTranslate(Shade.Elements.CollapsedGrid, QuickSettingsGrid.Elements.GridAnchor)
         anchoredSize(
@@ -158,7 +158,6 @@ fun SceneTransitionsBuilder.shadeTransitions(
 
     if (configuration.useOverscrollSpec) {
         overscroll(Scenes.Shade, Orientation.Vertical) {
-            progressConverter = configuration.overscrollProgress::convert
             translate(Shade.Elements.Scrim, y = { absoluteDistance })
         }
     }
@@ -179,11 +178,7 @@ private fun TransitionBuilder.toShadeTransformations() {
 
     fractionRange(end = ToShadeScrimFadeEndFraction) {
         fade(Shade.Elements.ScrimBackground)
-        translate(
-            Shade.Elements.CollapsedGrid,
-            Edge.Top,
-            startsOutsideLayoutBounds = false,
-        )
+        translate(Shade.Elements.CollapsedGrid, Edge.Top, startsOutsideLayoutBounds = false)
     }
 
     fractionRange(start = ToShadeScrimFadeEndFraction) {

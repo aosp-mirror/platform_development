@@ -25,17 +25,18 @@ import {timeButtonStyle} from './styles/clickable_property.styles';
 @Component({
   selector: 'property-tree-node-data-view',
   template: `
-    <div class="mat-body-1 node-property" *ngIf="node">
-      <span class="property-key"> {{ getKey(node) }} </span>
+    <div class="node-property" *ngIf="node">
+      <span class=" mat-body-1 property-key"> {{ getKey(node) }} </span>
       <div *ngIf="node?.formattedValue()" class="property-value" [class]="[timeClass()]">
         <button
           *ngIf="isTimestamp()"
+          class="time-button"
           mat-button
           color="primary"
           (click)="onTimestampClicked(node)">
           {{ node.formattedValue() }}
         </button>
-        <a *ngIf="!isTimestamp()" [class]="[valueClass()]" class="value new">{{ node.formattedValue() }}</a>
+        <a *ngIf="!isTimestamp()" [class]="[valueClass()]" class="mat-body-2 value new">{{ node.formattedValue() }}</a>
         <s *ngIf="isModified()" class="old-value">{{ node.getOldValue() }}</s>
       </div>
     </div>

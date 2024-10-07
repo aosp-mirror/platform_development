@@ -39,6 +39,7 @@ fun systemUiTransitions(
             dampingRatio = springConfiguration.dampingRatio,
             visibilityThreshold = 0.5f,
         )
+    defaultOverscrollProgressConverter = configuration.overscrollProgressConverter
 
     alwaysOnDisplayTransitions()
     shadeTransitions(qsPagerState, configuration)
@@ -47,11 +48,13 @@ fun systemUiTransitions(
     lockscreenTransitions(configuration)
     bouncerTransitions(configuration)
     launcherTransitions()
+    notificationShadeTransitions()
+    quickSettingsShadeTransitions()
 }
 
 object DemoInterruptionHandler : InterruptionHandler {
     override fun onInterruption(
-        interrupted: TransitionState.Transition,
+        interrupted: TransitionState.Transition.ChangeScene,
         newTargetScene: SceneKey,
     ): InterruptionResult? {
         return handleLauncherDuringLockscreenToBouncer(interrupted, newTargetScene)
@@ -95,8 +98,9 @@ object DemoInterruptionHandler : InterruptionHandler {
 
     private fun handleAod(transition: TransitionState.Transition): InterruptionResult? {
         if (
-            !transition.isTransitioning(from = Scenes.AlwaysOnDisplay) &&
-                !transition.isTransitioning(to = Scenes.AlwaysOnDisplay)
+            transition !is TransitionState.Transition.ChangeScene ||
+                (!transition.isTransitioning(from = Scenes.AlwaysOnDisplay) &&
+                    !transition.isTransitioning(to = Scenes.AlwaysOnDisplay))
         ) {
             return null
         }

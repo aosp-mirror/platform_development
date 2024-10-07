@@ -300,6 +300,11 @@ class UnitTestUtils {
     return [entries, secondEntries];
   }
 
+  static async getTraceEntry<T>(filename: string, index = 0) {
+    const parser = (await UnitTestUtils.getParser(filename)) as Parser<T>;
+    return parser.getEntry(index);
+  }
+
   static timestampEqualityTester(first: any, second: any): boolean | undefined {
     if (first instanceof Timestamp && second instanceof Timestamp) {
       return UnitTestUtils.testTimestamps(first, second);
@@ -350,11 +355,6 @@ class UnitTestUtils {
       return false;
     }
     return true;
-  }
-
-  private static async getTraceEntry<T>(filename: string, index = 0) {
-    const parser = (await UnitTestUtils.getParser(filename)) as Parser<T>;
-    return parser.getEntry(index);
   }
 }
 

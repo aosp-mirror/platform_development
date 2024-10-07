@@ -26,10 +26,13 @@ import {
   ViewChild,
 } from '@angular/core';
 import {MatSelectChange} from '@angular/material/select';
-import {Timestamp} from 'common/time';
+
+import {Timestamp, TimestampFormatType} from 'common/time';
+import {TimeUtils} from 'common/time_utils';
 import {TraceType} from 'trace/trace_type';
 import {
   LogFilterChangeDetail,
+  LogTextFilterChangeDetail,
   TimestampClickDetail,
   ViewerEvents,
 } from 'viewers/common/viewer_events';
@@ -44,6 +47,7 @@ import {
   viewerCardInnerStyle,
   viewerCardStyle,
 } from 'viewers/components/styles/viewer_card.styles';
+import {TextFilter} from './text_filter';
 import {
   LogEntry,
   LogField,
@@ -80,14 +84,23 @@ import {
     </div>
 
     <div class="entries">
-      <div class="headers" *ngIf="headers.length > 0">
-        <div *ngFor="let header of headers" class="mat-body-2" [class]="getLogFieldClass(header)">{{getLogFieldName(header)}}</div>
+      <div class="headers table-header" *ngIf="headers.length > 0">
+        <div *ngFor="let header of headers" class="mat-body-2" [class]="getLogFieldClass(header)" [class.with-date]="areMultipleDatesPresent()">{{getLogFieldName(header)}}</div>
       </div>
 
-      <div class="filters" *ngIf="!showFiltersInTitle && filters.length > 0">
-        <div *ngIf="showTraceEntryTimes" class="time"></div>
+      <div class="filters table-header" *ngIf="!showFiltersInTitle && filters.length > 0">
+        <div *ngIf="showTraceEntryTimes" class="time" [class.with-date]="areMultipleDatesPresent()">
+          <button
+              color="primary"
+              mat-stroked-button
+              class="go-to-current-time"
+              *ngIf="showCurrentTimeButton"
+              (click)="onGoToCurrentTimeClick()">
+            Go to Current Time
+          </button>
+        </div>
 
-        <div class="filter" *ngFor="let filter of filters" [class]="getLogFieldClass(filter.type)">
+        <div class="filter" *ngFor="let filter of filters" [class]="getLogFieldClass(filter.type)" [class.with-date]="areMultipleDatesPresent()">
           <select-with-filter
               *ngIf="filter.options?.length > 0"
               [label]="getLogFieldName(filter.type)"
@@ -97,24 +110,16 @@ import {
               (selectChange)="onFilterChange($event, filter.type)">
           </select-with-filter>
 
-          <mat-form-field *ngIf="filter.options === undefined" appearance="fill" (keydown.enter)="$event.target.blur()">
-            <mat-label>{{filter.type}}</mat-label>
-            <input
-                matInput
-                [name]="getLogFieldName(filter.type)"
-                [ngModel]="emptyFilterValue"
-                (ngModelChange)="onFilterChange($event, filter.type)" />
-          </mat-form-field>
+          <search-box
+            *ngIf="filter.textFilter"
+            appearance="fill"
+            [textFilter]="filter.textFilter"
+            [fontSize]="12"
+            [wideField]="true"
+            [label]="getLogFieldName(filter.type)"
+            [filterName]="getLogFieldName(filter.type)"
+            (filterChange)="onSearchBoxChange($event, filter.type)"></search-box>
         </div>
-
-        <button
-            color="primary"
-            mat-stroked-button
-            class="go-to-current-time"
-            *ngIf="showCurrentTimeButton"
-            (click)="onGoToCurrentTimeClick()">
-          Go to Current Time
-        </button>
       </div>
 
       <div class="placeholder-text mat-body-1" *ngIf="entries.length === 0"> No entries found. </div>
@@ -158,21 +163,23 @@ import {
             [class.current]="isCurrentEntry(i)"
             [class.selected]="isSelectedEntry(i)"
             (click)="onEntryClicked(i)">
-          <div *ngIf="showTraceEntryTimes" class="time">
+          <div *ngIf="showTraceEntryTimes" class="time" [class.with-date]="areMultipleDatesPresent()">
             <button
                 mat-button
+                class="time-button"
                 color="primary"
                 (click)="onTraceEntryTimestampClick($event, entry)"
                 [disabled]="!entry.traceEntry.hasValidTimestamp()">
-              {{ entry.traceEntry.getTimestamp().format() }}
+              {{ formatTimestamp(entry.traceEntry.getTimestamp()) }}
             </button>
           </div>
 
-          <div [class]="getLogFieldClass(field.type)" *ngFor="let field of entry.fields; index as i">
+          <div [class]="getLogFieldClass(field.type)" [class.with-date]="areMultipleDatesPresent()" *ngFor="let field of entry.fields; index as i">
             <span class="mat-body-1" *ngIf="!showFieldButton(field)">{{ field.value }}</span>
             <button
                 *ngIf="showFieldButton(field)"
                 mat-button
+                class="time-button"
                 color="primary"
                 (click)="onFieldButtonClick($event, entry, field)">
               {{ formatFieldButton(field) }}
@@ -188,12 +195,12 @@ import {
   `,
   styles: [
     `
-        .view-header {
-          display: flex;
-          flex-direction: column;
-          flex: 0 0 auto
-        }
-      `,
+      .view-header {
+        display: flex;
+        flex-direction: column;
+        flex: 0 0 auto
+      }
+    `,
     selectedElementStyle,
     currentElementStyle,
     timeButtonStyle,
@@ -224,7 +231,9 @@ export class LogComponent {
   @ViewChild(CdkVirtualScrollViewport)
   scrollComponent?: CdkVirtualScrollViewport;
 
-  constructor(@Inject(ElementRef) private elementRef: ElementRef) {}
+  constructor(
+    @Inject(ElementRef) private elementRef: ElementRef<HTMLElement>,
+  ) {}
 
   showFieldButton(field: LogField) {
     return (
@@ -234,8 +243,22 @@ export class LogComponent {
 
   formatFieldButton(field: LogField): string | number {
     return field.value instanceof Timestamp
-      ? field.value.format()
+      ? this.formatTimestamp(field.value)
       : field.value;
+  }
+
+  areMultipleDatesPresent(): boolean {
+    return (
+      this.entries.at(0)?.traceEntry.getFullTrace().spansMultipleDates() ??
+      false
+    );
+  }
+
+  formatTimestamp(timestamp: Timestamp) {
+    if (!this.areMultipleDatesPresent()) {
+      return timestamp.format(TimestampFormatType.DROP_DATE);
+    }
+    return timestamp.format();
   }
 
   getLogFieldClass(fieldType: LogFieldType) {
@@ -250,17 +273,33 @@ export class LogComponent {
     if (
       this.scrollToIndex !== undefined &&
       this.lastClickedTimestamp !==
-        this.entries[this.scrollToIndex].traceEntry.getTimestamp()
+        this.entries.at(this.scrollToIndex)?.traceEntry.getTimestamp()
     ) {
       this.scrollComponent?.scrollToIndex(Math.max(0, this.scrollToIndex - 1));
     }
   }
 
-  onFilterChange(event: MatSelectChange | string, filterType: LogFieldType) {
-    const value = event instanceof MatSelectChange ? event.value : event;
+  async ngAfterContentInit() {
+    await TimeUtils.sleepMs(10);
+    this.updateTableMarginEnd();
+  }
+
+  @HostListener('window:resize', ['$event'])
+  onResize(event: Event) {
+    this.updateTableMarginEnd();
+  }
+
+  onFilterChange(event: MatSelectChange, filterType: LogFieldType) {
     this.emitEvent(
       ViewerEvents.LogFilterChange,
-      new LogFilterChangeDetail(filterType, value),
+      new LogFilterChangeDetail(filterType, event.value),
+    );
+  }
+
+  onSearchBoxChange(detail: TextFilter, filterType: LogFieldType) {
+    this.emitEvent(
+      ViewerEvents.LogTextFilterChange,
+      new LogTextFilterChangeDetail(filterType, detail),
     );
   }
 
@@ -324,24 +363,10 @@ export class LogComponent {
 
   getOuterFilterWidth(type: LogFieldType): string | undefined {
     switch (type) {
-      case LogFieldType.TRANSACTION_ID:
-        return '125';
-      case LogFieldType.VSYNC_ID:
-        return '110';
-      case LogFieldType.LAYER_OR_DISPLAY_ID:
-        return '125';
-      case LogFieldType.FLAGS:
-        return '250';
-      case LogFieldType.LOG_LEVEL:
-        return '100';
-      case LogFieldType.TAG:
-        return '100';
-      case LogFieldType.SOURCE_FILE:
-        return '300';
       case LogFieldType.INPUT_DISPATCH_WINDOWS:
-        return `300`;
+        return '300px';
       default:
-        return '75';
+        return '100%';
     }
   }
 
@@ -378,6 +403,21 @@ export class LogComponent {
 
   isFixedSizeScrollViewport() {
     return !(this.isTransactions() || this.isProtolog());
+  }
+
+  updateTableMarginEnd() {
+    const tableHeader =
+      this.elementRef.nativeElement.querySelector<HTMLElement>('.table-header');
+    if (!tableHeader) {
+      return;
+    }
+    const el = this.scrollComponent?.elementRef.nativeElement;
+    if (el && el.scrollHeight > el.offsetHeight) {
+      tableHeader.style.marginInlineEnd =
+        el.offsetWidth - el.scrollWidth + 'px';
+    } else {
+      tableHeader.style.marginInlineEnd = '';
+    }
   }
 
   private onRawTimestampClick(value: Timestamp) {

@@ -15,6 +15,7 @@
  */
 
 import {assertDefined} from 'common/assert_utils';
+import {InMemoryStorage} from 'common/in_memory_storage';
 import {TracePositionUpdate} from 'messaging/winscope_event';
 import {ParserBuilder} from 'test/unit/parser_builder';
 import {PropertyTreeBuilder} from 'test/unit/property_tree_builder';
@@ -28,6 +29,7 @@ import {TraceType} from 'trace/trace_type';
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
 import {NotifyLogViewCallbackType} from 'viewers/common/abstract_log_viewer_presenter';
 import {AbstractLogViewerPresenterTest} from 'viewers/common/abstract_log_viewer_presenter_test';
+import {TextFilter} from 'viewers/common/text_filter';
 import {UiDataLog} from 'viewers/common/ui_data_log';
 import {Presenter} from './presenter';
 import {UiData} from './ui_data';
@@ -39,13 +41,15 @@ class PresenterTransitionsTest extends AbstractLogViewerPresenterTest<UiData> {
 
   override readonly shouldExecuteHeaderTests = true;
   override readonly shouldExecuteFilterTests = false;
-  override readonly shouldExecuteCurrentIndexTests = false;
   override readonly shouldExecutePropertiesTests = true;
 
   override readonly totalOutputEntries = 4;
   override readonly expectedIndexOfFirstPositionUpdate = 3;
   override readonly expectedIndexOfSecondPositionUpdate = 1;
   override readonly logEntryClickIndex = 2;
+  override readonly numberOfUnfilteredProperties = 2;
+  override readonly propertiesFilter = new TextFilter('shellData', []);
+  override readonly numberOfFilteredProperties = 1;
 
   override async setUpTestEnvironment(): Promise<void> {
     const parser = await UnitTestUtils.getPerfettoParser(
@@ -66,14 +70,14 @@ class PresenterTransitionsTest extends AbstractLogViewerPresenterTest<UiData> {
     );
   }
 
-  override createPresenterWithEmptyTrace(
+  override async createPresenterWithEmptyTrace(
     callback: NotifyLogViewCallbackType<UiData>,
-  ): Presenter {
+  ): Promise<Presenter> {
     const traces = new TracesBuilder()
       .setEntries(TraceType.TRANSITION, [])
       .build();
     const trace = assertDefined(traces.getTrace(TraceType.TRANSITION));
-    return new Presenter(trace, traces, callback);
+    return new Presenter(trace, traces, new InMemoryStorage(), callback);
   }
 
   override async createPresenter(
@@ -85,7 +89,12 @@ class PresenterTransitionsTest extends AbstractLogViewerPresenterTest<UiData> {
     const traces = new Traces();
     traces.addTrace(transitionTrace);
 
-    const presenter = new Presenter(transitionTrace, traces, callback);
+    const presenter = new Presenter(
+      transitionTrace,
+      traces,
+      new InMemoryStorage(),
+      callback,
+    );
     await presenter.onAppEvent(positionUpdate); // trigger initialization
     return presenter;
   }

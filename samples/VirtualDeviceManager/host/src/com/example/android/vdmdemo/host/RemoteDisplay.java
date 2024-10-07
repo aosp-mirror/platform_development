@@ -58,6 +58,7 @@ import android.view.Surface;
 import androidx.annotation.IntDef;
 
 import com.example.android.vdmdemo.common.RemoteEventProto;
+import com.example.android.vdmdemo.common.RemoteEventProto.DeviceState;
 import com.example.android.vdmdemo.common.RemoteEventProto.DisplayCapabilities;
 import com.example.android.vdmdemo.common.RemoteEventProto.DisplayRotation;
 import com.example.android.vdmdemo.common.RemoteEventProto.RemoteEvent;
@@ -104,6 +105,7 @@ class RemoteDisplay implements AutoCloseable {
     private final VirtualDevice mVirtualDevice;
     private final @DisplayType int mDisplayType;
     private final AtomicBoolean mClosed = new AtomicBoolean(false);
+    private StatusBar mStatusBar;
     private int mRotation;
     private int mWidth;
     private int mHeight;
@@ -116,6 +118,31 @@ class RemoteDisplay implements AutoCloseable {
     private VirtualKeyboard mKeyboard;
     private VirtualStylus mStylus;
     private VirtualRotaryEncoder mRotary;
+
+    // DisplayManager.DisplayListener#onDisplayChanged along with Display#getState() can also be
+    // used to detect power events instead of using VirtualDisplay.Callback.
+    private final VirtualDisplay.Callback mVirtualDisplayCallback = new VirtualDisplay.Callback() {
+        @Override
+        public void onPaused() {
+            Log.v(TAG, "VirtualDisplay paused");
+            mRemoteIo.sendMessage(RemoteEvent.newBuilder()
+                    .setDeviceState(DeviceState.newBuilder().setPowerOn(false))
+                    .build());
+        }
+
+        @Override
+        public void onResumed() {
+            Log.v(TAG, "VirtualDisplay resumed");
+            mRemoteIo.sendMessage(RemoteEvent.newBuilder()
+                    .setDeviceState(DeviceState.newBuilder().setPowerOn(true))
+                    .build());
+        }
+
+        @Override
+        public void onStopped() {
+            Log.v(TAG, "VirtualDisplay stopped");
+        }
+    };
 
     @SuppressLint("WrongConstant")
     RemoteDisplay(
@@ -162,8 +189,8 @@ class RemoteDisplay implements AutoCloseable {
         mVirtualDisplay =
                 virtualDevice.createVirtualDisplay(
                         virtualDisplayBuilder.build(),
-                        /* executor= */ Runnable::run,
-                        /* callback= */ null);
+                        Runnable::run,
+                        mVirtualDisplayCallback);
 
         VdmCompat.setDisplayImePolicy(
                 mVirtualDevice,
@@ -205,6 +232,20 @@ class RemoteDisplay implements AutoCloseable {
         mVirtualDisplay.setSurface(surface);
 
         mRotation = mVirtualDisplay.getDisplay().getRotation();
+
+        if (mPreferenceController.getBoolean(R.string.pref_enable_custom_status_bar)
+                && mDisplayType != DISPLAY_TYPE_MIRROR) {
+            // Custom status bar cannot be shown on mirror displays. Also, it needs to be recreated
+            // whenever the dimensions of the display change.
+            final Context displayContext =
+                    mContext.createDisplayContext(mVirtualDisplay.getDisplay());
+            mContext.getMainExecutor().execute(() -> {
+                if (mStatusBar != null) {
+                    mStatusBar.destroy(displayContext);
+                }
+                mStatusBar = StatusBar.create(displayContext);
+            });
+        }
 
         if (mTouchscreen != null) {
             mTouchscreen.close();

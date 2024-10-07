@@ -20,7 +20,7 @@ import {UserNotifier} from 'common/user_notifier';
 import {MonotonicScreenRecording} from 'messaging/user_warnings';
 import {AbstractParser} from 'parsers/legacy/abstract_parser';
 import {CoarseVersion} from 'trace/coarse_version';
-import {ScreenRecordingTraceEntry} from 'trace/screen_recording';
+import {MediaBasedTraceEntry} from 'trace/media_based_trace_entry';
 import {ScreenRecordingUtils} from 'trace/screen_recording_utils';
 import {TraceType} from 'trace/trace_type';
 
@@ -95,13 +95,13 @@ class ParserScreenRecording extends AbstractParser {
   override processDecodedEntry(
     index: number,
     entry: bigint,
-  ): ScreenRecordingTraceEntry {
+  ): MediaBasedTraceEntry {
     const videoTimeSeconds = ScreenRecordingUtils.timestampToVideoTimeSeconds(
       this.decodedEntries[0],
       entry,
     );
     const videoData = this.traceFile.file;
-    return new ScreenRecordingTraceEntry(videoTimeSeconds, videoData);
+    return new MediaBasedTraceEntry(videoTimeSeconds, videoData);
   }
 
   private searchMagicString(videoData: Uint8Array): number {

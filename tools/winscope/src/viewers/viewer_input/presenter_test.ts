@@ -16,7 +16,10 @@
 
 import {assertDefined} from 'common/assert_utils';
 import {InMemoryStorage} from 'common/in_memory_storage';
-import {TracePositionUpdate} from 'messaging/winscope_event';
+import {
+  TabbedViewSwitchRequest,
+  TracePositionUpdate,
+} from 'messaging/winscope_event';
 import {Transform} from 'parsers/surface_flinger/transform_utils';
 import {HierarchyTreeBuilder} from 'test/unit/hierarchy_tree_builder';
 import {TimestampConverterUtils} from 'test/unit/timestamp_converter_utils';
@@ -33,11 +36,15 @@ import {HierarchyTreeNode} from 'trace/tree_node/hierarchy_tree_node';
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
 import {NotifyLogViewCallbackType} from 'viewers/common/abstract_log_viewer_presenter';
 import {AbstractLogViewerPresenterTest} from 'viewers/common/abstract_log_viewer_presenter_test';
+import {VISIBLE_CHIP} from 'viewers/common/chip';
+import {TextFilter} from 'viewers/common/text_filter';
 import {
   LogFieldType,
   LogFieldValue,
   UiDataLog,
 } from 'viewers/common/ui_data_log';
+import {UserOptions} from 'viewers/common/user_options';
+import {ViewerEvents} from 'viewers/common/viewer_events';
 import {Presenter} from './presenter';
 import {UiData} from './ui_data';
 
@@ -57,7 +64,6 @@ class PresenterInputTest extends AbstractLogViewerPresenterTest<UiData> {
 
   override readonly shouldExecuteHeaderTests = true;
   override readonly shouldExecuteFilterTests = true;
-  override readonly shouldExecuteCurrentIndexTests = true;
   override readonly shouldExecutePropertiesTests = true;
 
   override readonly totalOutputEntries = 8;
@@ -135,6 +141,9 @@ class PresenterInputTest extends AbstractLogViewerPresenterTest<UiData> {
   ];
   override readonly expectedCurrentIndexAfterFilterChange = 0;
   override readonly expectedCurrentIndexAfterSecondFilterChange = 0;
+  override readonly numberOfUnfilteredProperties = 15;
+  override readonly propertiesFilter = new TextFilter('axis', []);
+  override readonly numberOfFilteredProperties = 1;
 
   override async setUpTestEnvironment(): Promise<void> {
     const parser = (await UnitTestUtils.getTracesParser([
@@ -163,9 +172,9 @@ class PresenterInputTest extends AbstractLogViewerPresenterTest<UiData> {
     );
   }
 
-  override createPresenterWithEmptyTrace(
+  override async createPresenterWithEmptyTrace(
     callback: NotifyLogViewCallbackType<UiData>,
-  ): Presenter {
+  ): Promise<Presenter> {
     const traces = new TracesBuilder()
       .setEntries(TraceType.INPUT_EVENT_MERGED, [])
       .build();
@@ -215,6 +224,7 @@ class PresenterInputTest extends AbstractLogViewerPresenterTest<UiData> {
     const uiData = uiDataLog as UiData;
     expect(uiData.highlightedProperty).toBeFalsy();
     expect(uiData.dispatchPropertiesTree).toBeUndefined();
+    expect(uiData.dispatchPropertiesFilter).toBeDefined();
   }
 
   override executePropertiesChecksAfterPositionUpdate(
@@ -295,7 +305,7 @@ class PresenterInputTest extends AbstractLogViewerPresenterTest<UiData> {
   }
 
   override executeSpecializedTests() {
-    describe('Specialized tests', async () => {
+    describe('Specialized tests', () => {
       const time0 = TimestampConverterUtils.makeRealTimestamp(0n);
       const time10 = TimestampConverterUtils.makeRealTimestamp(10n);
       const time19 = TimestampConverterUtils.makeRealTimestamp(19n);
@@ -400,6 +410,54 @@ class PresenterInputTest extends AbstractLogViewerPresenterTest<UiData> {
       beforeEach(async () => {
         uiData = UiData.createEmpty();
         await this.setUpTestEnvironment();
+      });
+
+      it('adds events listeners', async () => {
+        const element = document.createElement('div');
+        const presenter = await this.createPresenter(
+          (uiDataLog) => (uiData = uiDataLog as UiData),
+        );
+        presenter.addEventListeners(element);
+
+        const testId = 'testId';
+
+        let spy: jasmine.Spy = spyOn(presenter, 'onHighlightedPropertyChange');
+        element.dispatchEvent(
+          new CustomEvent(ViewerEvents.HighlightedPropertyChange, {
+            detail: {id: testId},
+          }),
+        );
+        expect(spy).toHaveBeenCalledWith(testId);
+
+        spy = spyOn(presenter, 'onHighlightedIdChange');
+        element.dispatchEvent(
+          new CustomEvent(ViewerEvents.HighlightedIdChange, {
+            detail: {id: testId},
+          }),
+        );
+        expect(spy).toHaveBeenCalledWith(testId);
+
+        spy = spyOn(presenter, 'onRectsUserOptionsChange');
+        const userOptions = {};
+        element.dispatchEvent(
+          new CustomEvent(ViewerEvents.RectsUserOptionsChange, {
+            detail: {userOptions},
+          }),
+        );
+        expect(spy).toHaveBeenCalledWith(userOptions);
+
+        spy = spyOn(presenter, 'onRectDoubleClick');
+        element.dispatchEvent(new CustomEvent(ViewerEvents.RectsDblClick));
+        expect(spy).toHaveBeenCalled();
+
+        spy = spyOn(presenter, 'onDispatchPropertiesFilterChange');
+        const filter = new TextFilter('', []);
+        element.dispatchEvent(
+          new CustomEvent(ViewerEvents.DispatchPropertiesFilterChange, {
+            detail: filter,
+          }),
+        );
+        expect(spy).toHaveBeenCalledWith(filter);
       });
 
       it('updates selected entry', async () => {
@@ -571,40 +629,10 @@ class PresenterInputTest extends AbstractLogViewerPresenterTest<UiData> {
 
       it('extracts corresponding input rects from SF trace', async () => {
         const parser = assertDefined(this.trace).getParser();
-        const traces = new Traces();
-
-        // FRAME:         0     1   2   3
-        // INPUT(index):  0   1,2   -   3
-        // SF(index):     -     0   1   2
-        const trace = new TraceBuilder<PropertyTreeNode>()
-          .setType(TraceType.INPUT_EVENT_MERGED)
-          .setEntries([
-            await parser.getEntry(0),
-            await parser.getEntry(1),
-            await parser.getEntry(2),
-            await parser.getEntry(3),
-          ])
-          .setTimestamps([time10, time20, time25, time30])
-          .setFrame(0, 0)
-          .setFrame(1, 1)
-          .setFrame(2, 1)
-          .setFrame(3, 3)
-          .build();
-        traces.addTrace(trace);
-
-        const sfTrace = new TraceBuilder<HierarchyTreeNode>()
-          .setType(TraceType.SURFACE_FLINGER)
-          .setEntries([sfEntry0, sfEntry1, sfEntry2])
-          .setTimestamps([time0, time19, time35])
-          .setFrame(0, 1)
-          .setFrame(1, 2)
-          .setFrame(2, 3)
-          .setParserCustomQueryResult(
-            CustomQueryType.SF_LAYERS_ID_AND_NAME,
-            this.layerIdToName,
-          )
-          .build();
-        traces.addTrace(sfTrace);
+        const traces = await getTracesWithSf(parser, this.layerIdToName);
+        const trace = assertDefined(
+          traces.getTrace(TraceType.INPUT_EVENT_MERGED),
+        );
 
         const presenter = PresenterInputTest.createPresenterWithTraces(
           traces,
@@ -636,6 +664,150 @@ class PresenterInputTest extends AbstractLogViewerPresenterTest<UiData> {
           expect(rect.id).toEqual('inputRect'),
         );
       });
+
+      it('filters dispatch properties tree', async () => {
+        const presenter = await this.createPresenter(
+          (uiDataLog) => (uiData = uiDataLog as UiData),
+        );
+        await presenter.onAppEvent(this.getPositionUpdate());
+        await presenter.onLogEntryClick(this.logEntryClickIndex);
+        expect(
+          assertDefined(uiData.dispatchPropertiesTree).getAllChildren().length,
+        ).toEqual(5);
+        await presenter.onDispatchPropertiesFilterChange(
+          new TextFilter('212', []),
+        );
+        expect(
+          assertDefined(uiData.dispatchPropertiesTree).getAllChildren().length,
+        ).toEqual(1);
+      });
+
+      it('updates highlighted property', async () => {
+        const presenter = await this.createPresenter(
+          (uiDataLog) => (uiData = uiDataLog as UiData),
+        );
+        expect(uiData.highlightedProperty).toEqual('');
+        const id = '4';
+        presenter.onHighlightedPropertyChange(id);
+        expect(uiData.highlightedProperty).toEqual(id);
+        presenter.onHighlightedPropertyChange(id);
+        expect(uiData.highlightedProperty).toEqual('');
+      });
+
+      it('updates highlighted rect', async () => {
+        const parser = assertDefined(this.trace).getParser();
+        const traces = await getTracesWithSf(parser, this.layerIdToName);
+        const trace = assertDefined(
+          traces.getTrace(TraceType.INPUT_EVENT_MERGED),
+        );
+        const presenter = PresenterInputTest.createPresenterWithTraces(
+          traces,
+          (uiDataLog) => (uiData = uiDataLog as UiData),
+        );
+        await presenter.onAppEvent(
+          TracePositionUpdate.fromTraceEntry(trace.getEntry(1)),
+        );
+        expect(uiData.rectsToDraw).toHaveSize(1);
+
+        const rect = assertDefined(uiData.rectsToDraw)[0];
+        await presenter.onHighlightedIdChange(rect.id);
+        expect(uiData.highlightedRect).toEqual(rect.id);
+        await presenter.onHighlightedIdChange(rect.id);
+        expect(uiData.highlightedRect).toEqual('');
+      });
+
+      it('filters rects by having content or visibility', async () => {
+        const userOptions: UserOptions = {
+          showOnlyVisible: {
+            name: 'Show only',
+            chip: VISIBLE_CHIP,
+            enabled: false,
+          },
+          showOnlyWithContent: {
+            name: 'Has input',
+            icon: 'pan_tool_alt',
+            enabled: true,
+          },
+        };
+        const parser = assertDefined(this.trace).getParser();
+        const traces = await getTracesWithSf(parser, this.layerIdToName);
+        const trace = assertDefined(
+          traces.getTrace(TraceType.INPUT_EVENT_MERGED),
+        );
+        const presenter = PresenterInputTest.createPresenterWithTraces(
+          traces,
+          (uiDataLog) => (uiData = uiDataLog as UiData),
+        );
+        await presenter.onAppEvent(
+          TracePositionUpdate.fromTraceEntry(trace.getEntry(1)),
+        );
+        expect(uiData.rectsToDraw).toHaveSize(1);
+
+        await presenter.onRectsUserOptionsChange(userOptions);
+        expect(uiData.rectsUserOptions).toEqual(userOptions);
+        expect(uiData.rectsToDraw).toHaveSize(0);
+
+        userOptions['showOnlyVisible'].enabled = true;
+        userOptions['showOnlyWithContent'].enabled = false;
+        await presenter.onRectsUserOptionsChange(userOptions);
+        expect(uiData.rectsToDraw).toHaveSize(1);
+      });
+
+      it('emits event on rect double click', async () => {
+        const presenter = await this.createPresenter(
+          (uiDataLog) => (uiData = uiDataLog as UiData),
+        );
+        const spy = jasmine.createSpy();
+        presenter.setEmitEvent(spy);
+        await presenter.onRectDoubleClick();
+        expect(spy).toHaveBeenCalledWith(
+          new TabbedViewSwitchRequest(assertDefined(this.surfaceFlingerTrace)),
+        );
+      });
+
+      async function getTracesWithSf(
+        parser: Parser<PropertyTreeNode>,
+        layerIdToName: Array<{
+          id: number;
+          name: string;
+        }>,
+      ) {
+        const traces = new Traces();
+
+        // FRAME:         0     1   2   3
+        // INPUT(index):  0   1,2   -   3
+        // SF(index):     -     0   1   2
+        const trace = new TraceBuilder<PropertyTreeNode>()
+          .setType(TraceType.INPUT_EVENT_MERGED)
+          .setEntries([
+            await parser.getEntry(0),
+            await parser.getEntry(1),
+            await parser.getEntry(2),
+            await parser.getEntry(3),
+          ])
+          .setTimestamps([time10, time20, time25, time30])
+          .setFrame(0, 0)
+          .setFrame(1, 1)
+          .setFrame(2, 1)
+          .setFrame(3, 3)
+          .build();
+        traces.addTrace(trace);
+
+        const sfTrace = new TraceBuilder<HierarchyTreeNode>()
+          .setType(TraceType.SURFACE_FLINGER)
+          .setEntries([sfEntry0, sfEntry1, sfEntry2])
+          .setTimestamps([time0, time19, time35])
+          .setFrame(0, 1)
+          .setFrame(1, 2)
+          .setFrame(2, 3)
+          .setParserCustomQueryResult(
+            CustomQueryType.SF_LAYERS_ID_AND_NAME,
+            layerIdToName,
+          )
+          .build();
+        traces.addTrace(sfTrace);
+        return traces;
+      }
     });
   }
 }

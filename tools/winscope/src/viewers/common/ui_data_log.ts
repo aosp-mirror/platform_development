@@ -18,6 +18,7 @@ import {Timestamp} from 'common/time';
 import {TraceEntry} from 'trace/trace';
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
 import {UserOptions} from 'viewers/common/user_options';
+import {TextFilter} from './text_filter';
 import {UiPropertyTreeNode} from './ui_property_tree_node';
 
 export interface UiDataLog {
@@ -30,11 +31,14 @@ export interface UiDataLog {
   currentIndex?: undefined | number;
   propertiesTree?: undefined | UiPropertyTreeNode;
   propertiesUserOptions?: UserOptions;
+  propertiesFilter?: TextFilter;
+  isDarkMode?: boolean;
 }
 
 export interface LogFilter {
   type: LogFieldType;
   options?: string[];
+  textFilter?: TextFilter;
 }
 
 export interface LogEntry {
@@ -113,31 +117,31 @@ export const LogFieldNames: ReadonlyMap<LogFieldType, string> = new Map([
 ]);
 
 export const LogFieldClassNames: ReadonlyMap<LogFieldType, string> = new Map([
-  [LogFieldType.TRANSACTION_ID, 'transaction-id'],
-  [LogFieldType.VSYNC_ID, 'vsyncid'],
-  [LogFieldType.PID, 'pid'],
-  [LogFieldType.UID, 'uid'],
+  [LogFieldType.TRANSACTION_ID, 'transaction-id right-align'],
+  [LogFieldType.VSYNC_ID, 'vsyncid right-align'],
+  [LogFieldType.PID, 'pid right-align'],
+  [LogFieldType.UID, 'uid right-align'],
   [LogFieldType.TRANSACTION_TYPE, 'transaction-type'],
-  [LogFieldType.LAYER_OR_DISPLAY_ID, 'layer-or-display-id'],
+  [LogFieldType.LAYER_OR_DISPLAY_ID, 'layer-or-display-id right-align'],
   [LogFieldType.FLAGS, 'flags'],
   [LogFieldType.LOG_LEVEL, 'log-level'],
   [LogFieldType.TAG, 'tag'],
   [LogFieldType.SOURCE_FILE, 'source-file'],
   [LogFieldType.TEXT, 'text'],
-  [LogFieldType.TRANSITION_ID, 'transition-id'],
+  [LogFieldType.TRANSITION_ID, 'transition-id right-align'],
   [LogFieldType.TRANSITION_TYPE, 'transition-type'],
   [LogFieldType.CUJ_TYPE, 'jank_cuj-type'],
   [LogFieldType.SEND_TIME, 'send-time time'],
   [LogFieldType.DISPATCH_TIME, 'dispatch-time time'],
   [LogFieldType.START_TIME, 'start-time time'],
   [LogFieldType.END_TIME, 'end-time time'],
-  [LogFieldType.DURATION, 'duration'],
-  [LogFieldType.STATUS, 'status'],
+  [LogFieldType.DURATION, 'duration right-align'],
+  [LogFieldType.STATUS, 'status right-align'],
   [LogFieldType.INPUT_TYPE, 'input-type inline'],
   [LogFieldType.INPUT_SOURCE, 'input-source'],
   [LogFieldType.INPUT_ACTION, 'input-action'],
-  [LogFieldType.INPUT_DEVICE_ID, 'input-device-id'],
-  [LogFieldType.INPUT_DISPLAY_ID, 'input-display-id'],
+  [LogFieldType.INPUT_DEVICE_ID, 'input-device-id right-align'],
+  [LogFieldType.INPUT_DISPLAY_ID, 'input-display-id right-align'],
   [LogFieldType.INPUT_EVENT_DETAILS, 'input-details'],
   [LogFieldType.INPUT_DISPATCH_WINDOWS, 'input-windows'],
 ]);

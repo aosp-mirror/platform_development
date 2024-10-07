@@ -17,9 +17,11 @@
 import {assertDefined} from 'common/assert_utils';
 import {Rect} from 'common/geometry/rect';
 import {InMemoryStorage} from 'common/in_memory_storage';
+import {Store} from 'common/store';
 import {TracePositionUpdate} from 'messaging/winscope_event';
 import {HierarchyTreeBuilder} from 'test/unit/hierarchy_tree_builder';
 import {TraceBuilder} from 'test/unit/trace_builder';
+import {UserNotifierChecker} from 'test/unit/user_notifier_checker';
 import {UnitTestUtils} from 'test/unit/utils';
 import {CustomQueryType} from 'trace/custom_query';
 import {Trace} from 'trace/trace';
@@ -30,6 +32,7 @@ import {HierarchyTreeNode} from 'trace/tree_node/hierarchy_tree_node';
 import {NotifyHierarchyViewCallbackType} from 'viewers/common/abstract_hierarchy_viewer_presenter';
 import {AbstractHierarchyViewerPresenterTest} from 'viewers/common/abstract_hierarchy_viewer_presenter_test';
 import {DiffType} from 'viewers/common/diff_type';
+import {TextFilter} from 'viewers/common/text_filter';
 import {UiDataHierarchy} from 'viewers/common/ui_data_hierarchy';
 import {UiHierarchyTreeNode} from 'viewers/common/ui_hierarchy_tree_node';
 import {UiTreeUtils} from 'viewers/common/ui_tree_utils';
@@ -54,7 +57,7 @@ class PresenterSurfaceFlingerTest extends AbstractHierarchyViewerPresenterTest<U
   override readonly numberOfDefaultProperties = 32;
   override readonly numberOfNonDefaultProperties = 24;
   override readonly expectedFirstRect = new Rect(0, 0, 1080, 2400);
-  override readonly propertiesFilterString = 'bound';
+  override readonly propertiesFilter = new TextFilter('bound', []);
   override readonly expectedTotalRects = 11;
   override readonly expectedVisibleRects = 6;
   override readonly treeNodeLongName =
@@ -62,7 +65,7 @@ class PresenterSurfaceFlingerTest extends AbstractHierarchyViewerPresenterTest<U
   override readonly treeNodeShortName =
     'ActivityRecord{64953af u0 com.google.(...).NexusLauncherActivity#96';
   override readonly numberOfFilteredProperties = 3;
-  override readonly hierarchyFilterString = 'Wallpaper';
+  override readonly hierarchyFilter = new TextFilter('Wallpaper', []);
   override readonly expectedHierarchyChildrenAfterStringFilter = 4;
   override readonly propertyWithDiff = 'bounds';
   override readonly expectedPropertyDiffType = DiffType.ADDED;
@@ -78,6 +81,14 @@ class PresenterSurfaceFlingerTest extends AbstractHierarchyViewerPresenterTest<U
         await UnitTestUtils.getLayerTraceEntry(0),
         await UnitTestUtils.getMultiDisplayLayerTraceEntry(),
         await UnitTestUtils.getLayerTraceEntry(1),
+        await UnitTestUtils.getTraceEntry<HierarchyTreeNode>(
+          'traces/elapsed_and_real_timestamp/SurfaceFlinger.pb',
+          5,
+        ),
+        await UnitTestUtils.getTraceEntry<HierarchyTreeNode>(
+          'traces/elapsed_and_real_timestamp/SurfaceFlinger.pb',
+          6,
+        ),
       ])
       .build();
 
@@ -131,13 +142,27 @@ class PresenterSurfaceFlingerTest extends AbstractHierarchyViewerPresenterTest<U
     return new Presenter(trace, traces, new InMemoryStorage(), callback);
   }
 
+  override createPresenterWithCorruptedTrace(
+    callback: NotifyHierarchyViewCallbackType<UiData>,
+  ): Presenter {
+    const trace = new TraceBuilder<HierarchyTreeNode>()
+      .setType(TraceType.SURFACE_FLINGER)
+      .setEntries([assertDefined(this.selectedTree)])
+      .setIsCorrupted(true)
+      .build();
+    const traces = new Traces();
+    traces.addTrace(trace);
+    return new Presenter(trace, traces, new InMemoryStorage(), callback);
+  }
+
   override createPresenter(
     callback: NotifyHierarchyViewCallbackType<UiData>,
+    storage: Store,
   ): Presenter {
     const traces = new Traces();
     const traceSf = assertDefined(this.traceSf);
     traces.addTrace(traceSf);
-    return new Presenter(traceSf, traces, new InMemoryStorage(), callback);
+    return new Presenter(traceSf, traces, storage, callback);
   }
 
   override getPositionUpdate(): TracePositionUpdate {
@@ -263,8 +288,10 @@ class PresenterSurfaceFlingerTest extends AbstractHierarchyViewerPresenterTest<U
     describe('Specialized tests', () => {
       let presenter: Presenter;
       let uiData: UiData;
+      let userNotifierChecker: UserNotifierChecker;
 
       beforeAll(async () => {
+        userNotifierChecker = new UserNotifierChecker();
         await this.setUpTestEnvironment();
       });
 
@@ -274,7 +301,13 @@ class PresenterSurfaceFlingerTest extends AbstractHierarchyViewerPresenterTest<U
         };
         presenter = this.createPresenter(
           notifyViewCallback as NotifyHierarchyViewCallbackType<UiData>,
+          new InMemoryStorage(),
         );
+      });
+
+      afterEach(() => {
+        userNotifierChecker.expectNone();
+        userNotifierChecker.reset();
       });
 
       it('handles displays with no visible layers', async () => {
@@ -414,6 +447,61 @@ class PresenterSurfaceFlingerTest extends AbstractHierarchyViewerPresenterTest<U
           treeForAlphaCheck,
           treeForTransformCheck,
         );
+      });
+
+      it('clears curated properties on position update if no properties tree found', async () => {
+        const trace = assertDefined(this.traceSf);
+        await presenter.onAppEvent(
+          TracePositionUpdate.fromTraceEntry(trace.getEntry(3)),
+        );
+
+        const nodeName =
+          '101 Surface(name=Task=1)/@0x47f46c9 - animation-leash of app_transition#101';
+
+        await presenter.onHighlightedIdChange(nodeName);
+        expect(uiData.propertiesTree).toBeDefined();
+        expect(uiData.curatedProperties).toBeDefined();
+
+        await presenter.onAppEvent(
+          TracePositionUpdate.fromTraceEntry(trace.getEntry(4)),
+        );
+        expect(uiData.propertiesTree).toBeUndefined();
+        expect(uiData.curatedProperties).toBeUndefined();
+      });
+
+      it('updates zOrderRelativeOf formatter and rel-z curated properties correctly', async () => {
+        await presenter.onAppEvent(this.getPositionUpdate());
+
+        const nodeWithRelZChild = assertDefined(
+          assertDefined(uiData.hierarchyTrees)[0].findDfs(
+            UiTreeUtils.makeNodeFilter(
+              '98 2c99222 com.google.android.apps.nexuslauncher/com.google.android.apps.nexuslauncher.NexusLauncherActivity#98',
+            ),
+          ),
+        );
+        const nodeWithRelZParent = assertDefined(
+          assertDefined(uiData.hierarchyTrees)[0].findDfs(
+            UiTreeUtils.makeNodeFilter('13 ImeContainer#13'),
+          ),
+        );
+
+        await presenter.onHighlightedNodeChange(nodeWithRelZChild);
+        expect(uiData.curatedProperties?.relativeParent).toEqual('none');
+        expect(uiData.curatedProperties?.relativeChildren).toEqual([
+          {
+            layerId: '13',
+            nodeId: nodeWithRelZParent.id,
+            name: nodeWithRelZParent.name,
+          },
+        ]);
+
+        await presenter.onHighlightedNodeChange(nodeWithRelZParent);
+        expect(uiData.curatedProperties?.relativeParent).toEqual({
+          layerId: '98',
+          nodeId: nodeWithRelZChild.id,
+          name: nodeWithRelZChild.name,
+        });
+        expect(uiData.curatedProperties?.relativeChildren).toEqual([]);
       });
 
       async function checkColorAndTransformProperties(

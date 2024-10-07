@@ -1,0 +1,7 @@
+Add license files not present in the downloaded crates
+
+The Apache-2.0 and MIT licenses found here are from:
+
+https://github.com/awslabs/mls-rs/blob/main/LICENSE-apache
+https://github.com/awslabs/mls-rs/blob/main/LICENSE-mit
+

@@ -15,6 +15,8 @@
  */
 
 import {assertDefined} from 'common/assert_utils';
+import {PersistentStoreProxy} from 'common/persistent_store_proxy';
+import {Store} from 'common/store';
 import {TimeDuration} from 'common/time_duration';
 import {Trace} from 'trace/trace';
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
@@ -24,6 +26,7 @@ import {
 } from 'viewers/common/abstract_log_viewer_presenter';
 import {LogPresenter} from 'viewers/common/log_presenter';
 import {PropertiesPresenter} from 'viewers/common/properties_presenter';
+import {TextFilter} from 'viewers/common/text_filter';
 import {LogField, LogFieldType} from 'viewers/common/ui_data_log';
 import {CujEntry, CujStatus, UiData} from './ui_data';
 
@@ -40,11 +43,21 @@ export class Presenter extends AbstractLogViewerPresenter<UiData> {
   private isInitialized = false;
   private transitionTrace: Trace<PropertyTreeNode>;
 
-  protected override logPresenter = new LogPresenter<CujEntry>(false);
-  protected override propertiesPresenter = new PropertiesPresenter({}, [], []);
+  protected override logPresenter = new LogPresenter<CujEntry>();
+  protected override propertiesPresenter = new PropertiesPresenter(
+    {},
+    PersistentStoreProxy.new<TextFilter>(
+      'CujsPropertiesFilter',
+      new TextFilter('', []),
+      this.storage,
+    ),
+    [],
+    [],
+  );
 
   constructor(
     trace: Trace<PropertyTreeNode>,
+    private readonly storage: Store,
     notifyViewCallback: NotifyLogViewCallbackType<UiData>,
   ) {
     super(trace, notifyViewCallback, UiData.createEmpty());

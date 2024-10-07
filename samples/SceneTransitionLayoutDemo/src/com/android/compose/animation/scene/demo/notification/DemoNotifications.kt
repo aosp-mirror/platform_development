@@ -25,7 +25,8 @@ import com.android.compose.animation.scene.MutableSceneTransitionLayoutState
 import com.android.compose.animation.scene.SceneScope
 import com.android.compose.animation.scene.SceneTransitions
 import com.android.compose.animation.scene.StaticElementContentPicker
-import com.android.compose.animation.scene.content.state.ContentState
+import com.android.compose.animation.scene.content.state.TransitionState
+import com.android.compose.animation.scene.demo.Overlays
 import com.android.compose.animation.scene.demo.Scenes
 import com.android.compose.animation.scene.demo.SpringConfiguration
 import com.android.compose.animation.scene.demo.transitions.ToShadeScrimFadeEndFraction
@@ -71,13 +72,19 @@ private fun notification(
 
 private object NotificationContentPicker : StaticElementContentPicker {
     override val contents =
-        setOf(Scenes.Lockscreen, Scenes.Shade, Scenes.SplitLockscreen, Scenes.SplitShade)
+        setOf(
+            Scenes.Lockscreen,
+            Scenes.Shade,
+            Scenes.SplitLockscreen,
+            Scenes.SplitShade,
+            Overlays.Notifications,
+        )
 
     override fun contentDuringTransition(
         element: ElementKey,
-        transition: ContentState.Transition<*>,
+        transition: TransitionState.Transition,
         fromContentZIndex: Float,
-        toContentZIndex: Float
+        toContentZIndex: Float,
     ): ContentKey {
         return when {
             transition.isTransitioning(from = Scenes.Lockscreen, to = Scenes.Shade) -> Scenes.Shade
@@ -100,6 +107,7 @@ private object NotificationContentPicker : StaticElementContentPicker {
                     Scenes.SplitLockscreen
                 }
             }
+            transition.isTransitioningFromOrTo(Overlays.Notifications) -> Overlays.Notifications
             else -> pickSingleContentIn(contents, transition, element)
         }
     }

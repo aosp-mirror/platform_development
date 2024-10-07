@@ -38,9 +38,9 @@ public class MainActivity extends AppCompatActivity {
                     new Intent(this, ActivityPolicyDemoActivity.class));
             case R.id.home_demo -> startActivity(new Intent(this, HomeDemoActivity.class));
             case R.id.sensor_demo -> startActivity(new Intent(this, SensorDemoActivity.class));
+            case R.id.display_power_demo -> startActivity(
+                    new Intent(this, DisplayPowerDemoActivity.class));
             case R.id.rotation_demo -> startActivity(new Intent(this, RotationDemoActivity.class));
-            case R.id.secure_window_demo -> startActivity(
-                    new Intent(this, SecureWindowDemoActivity.class));
             case R.id.permissions_demo -> startActivity(
                     new Intent(this, PermissionsDemoActivity.class));
             case R.id.latency_demo -> startActivity(new Intent(this, LatencyDemoActivity.class));

@@ -29,7 +29,7 @@ export interface TraceConfigurationMap {
   [key: string]: TraceConfiguration;
 }
 
-interface ConfigurationOptions {
+export interface ConfigurationOptions {
   enableConfigs: EnableConfiguration[];
   selectionConfigs: SelectionConfiguration[];
 }
@@ -44,7 +44,10 @@ export interface SelectionConfiguration {
   key: string;
   name: string;
   options: string[];
-  value: string;
+  value: string | string[];
+  desc?: string;
+  optional?: boolean;
+  wideField?: boolean;
 }
 
 export interface ConfigMap {
@@ -113,6 +116,33 @@ const sfTraceSelectionConfigs: SelectionConfiguration[] = [
     value: '32000',
   },
 ];
+const screenshotConfigs: SelectionConfiguration[] = [
+  {
+    key: 'displays',
+    name: 'displays',
+    options: [],
+    value: [],
+    desc: 'Leave empty to capture active display',
+    wideField: true,
+  },
+];
+
+export function makeScreenRecordingConfigs(
+  options: string[],
+  initialValue: string | string[],
+): SelectionConfiguration[] {
+  return [
+    {
+      key: 'displays',
+      name: 'displays',
+      options,
+      value: initialValue,
+      optional: true,
+      desc: 'Leave empty to capture active display',
+      wideField: true,
+    },
+  ];
+}
 
 const traceDefaultConfig: TraceConfigurationMap = {
   layers_trace: {
@@ -138,7 +168,10 @@ const traceDefaultConfig: TraceConfigurationMap = {
   screen_recording: {
     name: TRACE_INFO[TraceType.SCREEN_RECORDING].name,
     enabled: true,
-    config: undefined,
+    config: {
+      enableConfigs: [],
+      selectionConfigs: makeScreenRecordingConfigs([], ''),
+    },
     available: true,
     types: [TraceType.SCREEN_RECORDING],
   },
@@ -247,7 +280,10 @@ export function makeDefaultDumpConfigMap(): TraceConfigurationMap {
     screenshot: {
       name: 'Screenshot',
       enabled: true,
-      config: undefined,
+      config: {
+        enableConfigs: [],
+        selectionConfigs: screenshotConfigs,
+      },
       available: true,
       types: [TraceType.SCREENSHOT],
     },

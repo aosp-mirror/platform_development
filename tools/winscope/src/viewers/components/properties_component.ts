@@ -20,17 +20,19 @@ import {
   Inject,
   Input,
   Output,
+  ViewChild,
 } from '@angular/core';
 import {PersistentStore} from 'common/persistent_store';
 import {Analytics} from 'logging/analytics';
 import {TraceType} from 'trace/trace_type';
 import {CollapsibleSectionType} from 'viewers/common/collapsible_section_type';
 import {CuratedProperties} from 'viewers/common/curated_properties';
+import {TextFilter} from 'viewers/common/text_filter';
 import {UiPropertyTreeNode} from 'viewers/common/ui_property_tree_node';
 import {UserOptions} from 'viewers/common/user_options';
 import {ViewerEvents} from 'viewers/common/viewer_events';
 import {nodeStyles} from 'viewers/components/styles/node.styles';
-import {searchBoxStyle} from './styles/search_box.styles';
+import {SearchBoxComponent} from './search_box_component';
 import {viewerCardInnerStyle} from './styles/viewer_card.styles';
 
 @Component({
@@ -43,12 +45,9 @@ import {viewerCardInnerStyle} from './styles/viewer_card.styles';
           [class.padded-title]="!hasUserOptions()"
           [title]="title"
           (collapseButtonClicked)="collapseButtonClicked.emit()"></collapsible-section-title>
-
-        <mat-form-field *ngIf="showFilter" class="search-box" (keydown.enter)="$event.target.blur()">
-          <mat-label>Search</mat-label>
-
-          <input matInput [(ngModel)]="filterString" (ngModelChange)="filterTree()" name="filter" />
-        </mat-form-field>
+        <search-box
+          [textFilter]="textFilter"
+          (filterChange)="onFilterChange($event)"></search-box>
       </div>
 
       <user-options
@@ -108,18 +107,15 @@ import {viewerCardInnerStyle} from './styles/viewer_card.styles';
       }
     `,
     nodeStyles,
-    searchBoxStyle,
     viewerCardInnerStyle,
   ],
 })
 export class PropertiesComponent {
   Analytics = Analytics;
   CollapsibleSectionType = CollapsibleSectionType;
-  filterString = '';
   ViewerEvents = ViewerEvents;
 
   @Input() title = 'PROPERTIES';
-  @Input() showFilter = true;
   @Input() userOptions: UserOptions = {};
   @Input() placeholderText = '';
   @Input() propertiesTree: UiPropertyTreeNode | undefined;
@@ -129,15 +125,19 @@ export class PropertiesComponent {
   @Input() isProtoDump = false;
   @Input() traceType: TraceType | undefined;
   @Input() store: PersistentStore | undefined;
+  @Input() textFilter: TextFilter | undefined;
+  @Input() filterEventName = ViewerEvents.PropertiesFilterChange;
 
   @Output() collapseButtonClicked = new EventEmitter();
 
+  @ViewChild(SearchBoxComponent) searchBox: SearchBoxComponent | undefined;
+
   constructor(@Inject(ElementRef) private elementRef: ElementRef) {}
 
-  filterTree() {
-    const event = new CustomEvent(ViewerEvents.PropertiesFilterChange, {
+  onFilterChange(detail: TextFilter) {
+    const event = new CustomEvent(this.filterEventName, {
       bubbles: true,
-      detail: {filterString: this.filterString},
+      detail,
     });
     this.elementRef.nativeElement.dispatchEvent(event);
   }
@@ -157,7 +157,7 @@ export class PropertiesComponent {
   showViewCaptureFormat(): boolean {
     return (
       this.traceType === TraceType.VIEW_CAPTURE &&
-      this.filterString === '' &&
+      this.textFilter?.filterString === '' &&
       // Todo: Highlight Inline in formatted ViewCapture Properties Component.
       !this.userOptions['showDiff']?.enabled &&
       this.curatedProperties !== undefined

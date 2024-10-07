@@ -15,6 +15,7 @@
  */
 
 import {assertDefined} from 'common/assert_utils';
+import {Store} from 'common/store';
 import {Timestamp} from 'common/time';
 import {TimeUtils} from 'common/time_utils';
 import {UserNotifier} from 'common/user_notifier';
@@ -28,7 +29,6 @@ import {
   IncompleteFrameMapping,
   NoTraceTargetsSelected,
   NoValidFiles,
-  ProxyTracingErrors,
 } from 'messaging/user_warnings';
 import {
   ActiveTraceChanged,
@@ -44,6 +44,7 @@ import {WinscopeEventListener} from 'messaging/winscope_event_listener';
 import {TraceEntry} from 'trace/trace';
 import {TRACE_INFO} from 'trace/trace_info';
 import {TracePosition} from 'trace/trace_position';
+import {TraceType} from 'trace/trace_type';
 import {RequestedTraceTypes} from 'trace_collection/adb_files';
 import {View, Viewer, ViewType} from 'viewers/viewer';
 import {ViewerFactory} from 'viewers/viewer_factory';
@@ -62,7 +63,7 @@ export class Mediator {
   private traceViewComponent?: WinscopeEventEmitter & WinscopeEventListener;
   private timelineComponent?: WinscopeEventEmitter & WinscopeEventListener;
   private appComponent: WinscopeEventListener;
-  private storage: Storage;
+  private storage: Store;
 
   private tracePipeline: TracePipeline;
   private timelineData: TimelineData;
@@ -78,7 +79,7 @@ export class Mediator {
     abtChromeExtensionProtocol: WinscopeEventEmitter & WinscopeEventListener,
     crossToolProtocol: CrossToolProtocol,
     appComponent: WinscopeEventListener,
-    storage: Storage,
+    storage: Store,
   ) {
     this.tracePipeline = tracePipeline;
     this.timelineData = timelineData;
@@ -137,6 +138,7 @@ export class Mediator {
     await event.visit(WinscopeEventType.APP_FILES_UPLOADED, async (event) => {
       this.currentProgressListener = this.uploadTracesComponent;
       await this.loadFiles(event.files, FilesSource.UPLOADED);
+      UserNotifier.notify();
     });
 
     await event.visit(WinscopeEventType.APP_FILES_COLLECTED, async (event) => {
@@ -154,19 +156,16 @@ export class Mediator {
             }
           });
           if (failedTraces.length > 0) {
-            UserNotifier.add(
-              new ProxyTracingErrors([
-                `Failed to find valid files for ${failedTraces.join(', ')}`,
-              ]),
-            ).notify();
+            UserNotifier.add(new NoValidFiles(failedTraces));
           }
           await this.loadViewers();
         } else {
           this.currentProgressListener?.onOperationFinished(false);
         }
       } else {
-        UserNotifier.add(new NoValidFiles()).notify();
+        UserNotifier.add(new NoValidFiles());
       }
+      UserNotifier.notify();
     });
 
     await event.visit(WinscopeEventType.APP_RESET_REQUEST, async () => {
@@ -183,6 +182,7 @@ export class Mediator {
 
     await event.visit(WinscopeEventType.APP_TRACE_VIEW_REQUEST, async () => {
       await this.loadViewers();
+      UserNotifier.notify();
     });
 
     await event.visit(
@@ -240,6 +240,7 @@ export class Mediator {
         this.timelineData.getCurrentPosition(),
         false,
       );
+      UserNotifier.notify();
     });
 
     await event.visit(
@@ -249,6 +250,7 @@ export class Mediator {
           this.timelineData.setPosition(event.position);
         }
         await this.propagateTracePosition(event.position, false);
+        UserNotifier.notify();
       },
     );
 
@@ -266,12 +268,29 @@ export class Mediator {
 
     await event.visit(WinscopeEventType.DARK_MODE_TOGGLED, async (event) => {
       await this.timelineComponent?.onWinscopeEvent(event);
+      for (const viewer of this.viewers) {
+        await viewer.onWinscopeEvent(event);
+      }
     });
 
     await event.visit(
       WinscopeEventType.NO_TRACE_TARGETS_SELECTED,
       async (event) => {
         UserNotifier.add(new NoTraceTargetsSelected()).notify();
+      },
+    );
+
+    await event.visit(
+      WinscopeEventType.FILTER_PRESET_SAVE_REQUEST,
+      async (event) => {
+        await this.findViewerByType(event.traceType)?.onWinscopeEvent(event);
+      },
+    );
+
+    await event.visit(
+      WinscopeEventType.FILTER_PRESET_APPLY_REQUEST,
+      async (event) => {
+        await this.findViewerByType(event.traceType)?.onWinscopeEvent(event);
       },
     );
   }
@@ -282,7 +301,6 @@ export class Mediator {
       source,
       this.currentProgressListener,
     );
-    UserNotifier.notify();
   }
 
   private async propagateTracePosition(
@@ -322,7 +340,7 @@ export class Mediator {
     }
 
     if (warnings.length > 0) {
-      warnings.forEach((w) => UserNotifier.add(w).notify());
+      warnings.forEach((w) => UserNotifier.add(w));
     }
   }
 
@@ -366,12 +384,14 @@ export class Mediator {
       this.timelineData.getCurrentPosition(),
       true,
     );
+    UserNotifier.notify();
   }
 
   private async processRemoteFilesReceived(files: File[], source: FilesSource) {
     await this.resetAppToInitialState();
     this.currentProgressListener = this.uploadTracesComponent;
     await this.loadFiles(files, source);
+    UserNotifier.notify();
   }
 
   private async loadViewers() {
@@ -394,9 +414,7 @@ export class Mediator {
       await this.tracePipeline.buildTraces();
       this.currentProgressListener?.onOperationFinished(true);
     } catch (e) {
-      UserNotifier.add(
-        new IncompleteFrameMapping((e as Error).message),
-      ).notify();
+      UserNotifier.add(new IncompleteFrameMapping((e as Error).message));
       this.currentProgressListener?.onOperationFinished(false);
     }
 
@@ -417,7 +435,7 @@ export class Mediator {
       );
     } catch {
       this.currentProgressListener?.onOperationFinished(false);
-      UserNotifier.add(new FailedToInitializeTimelineData()).notify();
+      UserNotifier.add(new FailedToInitializeTimelineData());
       return;
     }
 
@@ -517,5 +535,9 @@ export class Mediator {
     for (const overlay of overlayViewers) {
       await overlay.onWinscopeEvent(event);
     }
+  }
+
+  private findViewerByType(type: TraceType): Viewer | undefined {
+    return this.viewers.find((viewer) => viewer.getTraces()[0].type === type);
   }
 }

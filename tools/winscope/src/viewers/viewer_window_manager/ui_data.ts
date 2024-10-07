@@ -13,9 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 import {TraceType} from 'trace/trace_type';
 import {DisplayIdentifier} from 'viewers/common/display_identifier';
 import {RectShowState} from 'viewers/common/rect_show_state';
+import {TextFilter} from 'viewers/common/text_filter';
 import {UiDataHierarchy} from 'viewers/common/ui_data_hierarchy';
 import {UiHierarchyTreeNode} from 'viewers/common/ui_hierarchy_tree_node';
 import {UiPropertyTreeNode} from 'viewers/common/ui_property_tree_node';
@@ -29,10 +31,13 @@ export class UiData implements UiDataHierarchy {
   displays: DisplayIdentifier[] = [];
   highlightedItem = '';
   highlightedProperty = '';
+  hierarchyFilter = new TextFilter('', []);
+  propertiesFilter = new TextFilter('', []);
   pinnedItems: UiHierarchyTreeNode[] = [];
   rectsUserOptions: UserOptions = {};
   hierarchyUserOptions: UserOptions = {};
   propertiesUserOptions: UserOptions = {};
   hierarchyTrees: UiHierarchyTreeNode[] | undefined;
   propertiesTree: UiPropertyTreeNode | undefined;
+  isDarkMode = false;
 }

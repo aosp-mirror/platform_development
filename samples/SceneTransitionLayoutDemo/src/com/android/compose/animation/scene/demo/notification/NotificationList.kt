@@ -94,7 +94,7 @@ fun SceneScope.NotificationList(
 
 @Composable
 private fun SceneScope.ExpandFirstNotificationWhenSwipingFromLockscreenToShade(
-    notifications: List<NotificationViewModel>,
+    notifications: List<NotificationViewModel>
 ) {
     val firstNotification = notifications.firstOrNull() ?: return
     val coroutineScope = rememberCoroutineScope()
@@ -120,7 +120,7 @@ private suspend fun expandFirstNotificationWhenSwipingFromLockscreenToShade(
     // Shade.
     layoutState
         .observableTransitionState()
-        .filterIsInstance<ObservableTransitionState.Transition>()
+        .filterIsInstance<ObservableTransitionState.Transition.ChangeScene>()
         .filter {
             it.isInitiatedByUserInput &&
                 it.isTransitioning(from = Scenes.Lockscreen, to = Scenes.Shade)

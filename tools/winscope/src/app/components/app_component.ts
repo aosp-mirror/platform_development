@@ -31,10 +31,12 @@ import {AbtChromeExtensionProtocol} from 'abt_chrome_extension/abt_chrome_extens
 import {Mediator} from 'app/mediator';
 import {TimelineData} from 'app/timeline_data';
 import {TracePipeline} from 'app/trace_pipeline';
+import {Download} from 'common/download';
 import {FileUtils} from 'common/file_utils';
 import {globalConfig} from 'common/global_config';
 import {InMemoryStorage} from 'common/in_memory_storage';
 import {PersistentStore} from 'common/persistent_store';
+import {Store} from 'common/store';
 import {Timestamp} from 'common/time';
 import {UrlUtils} from 'common/url_utils';
 import {UserNotifier} from 'common/user_notifier';
@@ -61,8 +63,8 @@ import {ViewerInputMethodComponent} from 'viewers/components/viewer_input_method
 import {Viewer} from 'viewers/viewer';
 import {ViewerInputComponent} from 'viewers/viewer_input/viewer_input_component';
 import {ViewerJankCujsComponent} from 'viewers/viewer_jank_cujs/viewer_jank_cujs_component';
+import {ViewerMediaBasedComponent} from 'viewers/viewer_media_based/viewer_media_based_component';
 import {ViewerProtologComponent} from 'viewers/viewer_protolog/viewer_protolog_component';
-import {ViewerScreenRecordingComponent} from 'viewers/viewer_screen_recording/viewer_screen_recording_component';
 import {ViewerSurfaceFlingerComponent} from 'viewers/viewer_surface_flinger/viewer_surface_flinger_component';
 import {ViewerTransactionsComponent} from 'viewers/viewer_transactions/viewer_transactions_component';
 import {ViewerTransitionsComponent} from 'viewers/viewer_transitions/viewer_transitions_component';
@@ -264,7 +266,7 @@ import {UploadTracesComponent} from './upload_traces_component';
         flex-direction: column;
         flex: 1;
         overflow: auto;
-        height: 820px;
+        height: 870px;
       }
       .horizontal-align {
         justify-content: center;
@@ -360,7 +362,7 @@ export class AppComponent implements WinscopeEventListener {
     ]),
   );
   adbConnection: AdbConnection = new ProxyConnection();
-  traceConfigStorage: Storage;
+  traceConfigStorage: Store;
   downloadProgress: number | undefined;
 
   @ViewChild(UploadTracesComponent)
@@ -390,7 +392,7 @@ export class AppComponent implements WinscopeEventListener {
       this.abtChromeExtensionProtocol,
       this.crossToolProtocol,
       this,
-      localStorage,
+      new PersistentStore(),
     );
 
     const storeDarkMode = this.store.get('dark-mode');
@@ -413,10 +415,10 @@ export class AppComponent implements WinscopeEventListener {
         createCustomElement(ViewerProtologComponent, {injector}),
       );
     }
-    if (!customElements.get('viewer-screen-recording')) {
+    if (!customElements.get('viewer-media-based')) {
       customElements.define(
-        'viewer-screen-recording',
-        createCustomElement(ViewerScreenRecordingComponent, {injector}),
+        'viewer-media-based',
+        createCustomElement(ViewerMediaBasedComponent, {injector}),
       );
     }
     if (!customElements.get('viewer-surface-flinger')) {
@@ -463,7 +465,9 @@ export class AppComponent implements WinscopeEventListener {
     }
 
     this.traceConfigStorage =
-      globalConfig.MODE === 'PROD' ? localStorage : new InMemoryStorage();
+      globalConfig.MODE === 'PROD'
+        ? new PersistentStore()
+        : new InMemoryStorage();
 
     window.onunhandledrejection = (evt) => {
       Analytics.Error.logGlobalException(evt.reason);
@@ -527,7 +531,7 @@ export class AppComponent implements WinscopeEventListener {
         ? this.filenameFormControl.value
         : this.tracePipeline.getDownloadArchiveFilename()
     }.zip`;
-    await this.downloadTraces(archiveBlob, archiveFilename);
+    this.downloadTraces(archiveBlob, archiveFilename);
     progressListener.onOperationFinished(true);
   }
 
@@ -565,15 +569,9 @@ export class AppComponent implements WinscopeEventListener {
     });
   }
 
-  async downloadTraces(blob: Blob, filename: string) {
-    const a = document.createElement('a');
-    document.body.appendChild(a);
+  downloadTraces(blob: Blob, filename: string) {
     const url = window.URL.createObjectURL(blob);
-    a.href = url;
-    a.download = filename;
-    a.click();
-    window.URL.revokeObjectURL(url);
-    document.body.removeChild(a);
+    Download.fromUrl(url, filename);
   }
 
   async onWinscopeEvent(event: WinscopeEvent) {

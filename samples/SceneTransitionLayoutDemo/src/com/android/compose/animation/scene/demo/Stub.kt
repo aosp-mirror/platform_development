@@ -32,16 +32,10 @@ import com.android.compose.animation.scene.Swipe
 
 object Stub {
     fun startUserActions(lockscreenScene: SceneKey) =
-        mapOf(
-            Back to lockscreenScene,
-            Swipe.Start to lockscreenScene,
-        )
+        mapOf(Back to lockscreenScene, Swipe.Start to lockscreenScene)
 
     fun endUserActions(lockscreenScene: SceneKey) =
-        mapOf(
-            Back to lockscreenScene,
-            Swipe.End to lockscreenScene,
-        )
+        mapOf(Back to lockscreenScene, Swipe.End to lockscreenScene)
 
     object Elements {
         val SceneStart = ElementKey("StubSceneStart")
@@ -66,7 +60,7 @@ fun SceneScope.Stub(
             text,
             modifier = modifier.element(textKey),
             style = MaterialTheme.typography.titleLarge,
-            color = MaterialTheme.colorScheme.onBackground
+            color = MaterialTheme.colorScheme.onBackground,
         )
     }
 }

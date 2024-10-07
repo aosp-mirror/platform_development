@@ -63,6 +63,21 @@ run
 The interactive script will prompt you which apps to install to which of the
 available devices, build the APKs and install them.
 
+### Using adevice on the host device
+
+1.  Track the required modules.
+
+    ```shell
+    adevice track VdmHost
+    adevice track VdmDemos
+    ```
+
+1.  Update the device
+
+    ```shell
+    adevice update
+    ```
+
 ### Manually
 
 1.  Source `build/envsetup.sh` and run `lunch` or set
@@ -156,14 +171,7 @@ show a launcher-like list of installed apps on the host device.
 
 -   The Host app has a **CREATE MIRROR DISPLAY** button, clicking it will create
     a new virtual display, mirror the default host display there and start
-    streaming the display contents to the client. Run the commands below to
-    enable this functionality.
-
-    ```shell
-    adb shell device_config put virtual_devices android.companion.virtual.flags.consistent_display_flags true
-    adb shell device_config put virtual_devices android.companion.virtual.flags.interactive_screen_mirror true
-    adb shell am force-stop com.example.android.vdmdemo.host
-    ```
+    streaming the display contents to the client.
 
 ### Settings
 
@@ -270,15 +278,9 @@ Each input screen has a "Back", "Home" and "Forward" buttons.
     automatically rotate the relevant display upon such request. Disabling this
     simulates a fixed orientation display that cannot physically rotate. Then
     any streamed apps on that display will be letterboxed/pillarboxed if they
-    request orientation change. Run the commands below to enable this
-    functionality. \
+    request orientation change. \
     *This can be changed dynamically but only applies to newly created
     displays.*
-
-    ```shell
-    adb shell device_config put virtual_devices android.companion.virtual.flags.consistent_display_flags true
-    adb shell am force-stop com.example.android.vdmdemo.host
-    ```
 
 -   **Display category**: Whether to specify a custom display category for the
     virtual displays. This means that only activities that have explicitly set
@@ -302,6 +304,17 @@ Each input screen has a "Back", "Home" and "Forward" buttons.
 
     ```shell
     adb shell device_config put virtual_devices android.companion.virtual.flags.vdm_custom_home true
+    adb shell am force-stop com.example.android.vdmdemo.host
+    ```
+
+-   **Custom status bar**: Whether to add a custom status bar view on the
+    non-mirror virtual displays. Run the commands below to enable this
+    functionality. \
+    *This can be changed dynamically but only applies to newly created
+    displays.*
+
+    ```shell
+    adb shell device_config put virtual_devices android.companion.virtualdevice.flags.status_bar_and_insets true
     adb shell am force-stop com.example.android.vdmdemo.host
     ```
 
@@ -377,6 +390,17 @@ keyboard** are forwarded to the activity streamed on the focused display.
 **Externally connected mouse** events are also forwarded to the relevant
 display, if the mouse pointer is currently positioned on a streamed display.
 
+### Power
+
+The power menu button acts as a "virtual power button". It will toggle the state
+of the virtual device and all its displays between ON and OFF.
+Run the commands below on the host device to enable this functionality.
+
+```shell
+adb shell device_config put virtual_devices android.companion.virtual.flags.device_aware_display_power true
+adb shell am force-stop com.example.android.vdmdemo.host
+```
+
 <!-- LINT.ThenChange(README.md) -->
 <!-- LINT.IfChange(demos) -->
 
@@ -390,6 +414,10 @@ display, if the mouse pointer is currently positioned on a streamed display.
 -   **Sensors**: A simple activity balancing a beam on the screen based on the
     accelerometer events, which allows for selecting which device's sensor to
     use. By default, will use the sensors of the device it's shown on.
+
+-   **Display Power**: A simple activity showcasing the behavior of proximity
+    locks, screen brightness override and requesting the screen to be kept on
+    or turned on.
 
 -   **Rotation**: A simple activity that is in landscape by default and can send
     orientation change requests on demand. Showcases the display rotation on the
@@ -427,6 +455,10 @@ which showcases implicit intent handling.
 ## SDK Version
 
 ### Beyond Android 15
+
+-   Added support for custom power management.
+
+-   Added support for custom system windows (like status bar) and insets.
 
 -   Added support for per-display activity policies.
 
