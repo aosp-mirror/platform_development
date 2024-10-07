@@ -67,6 +67,7 @@ import androidx.annotation.Nullable;
 import androidx.core.os.BuildCompat;
 
 import com.example.android.vdmdemo.common.ConnectionManager;
+import com.example.android.vdmdemo.common.RemoteEventProto;
 import com.example.android.vdmdemo.common.RemoteEventProto.DeviceCapabilities;
 import com.example.android.vdmdemo.common.RemoteEventProto.DisplayChangeEvent;
 import com.example.android.vdmdemo.common.RemoteEventProto.RemoteEvent;
@@ -397,6 +398,13 @@ public final class VdmService extends Hilt_VdmService {
             mDisplayRepository.removeDisplayByRemoteId(event.getDisplayId());
         } else if (event.hasDisplayChangeEvent() && event.getDisplayChangeEvent().getFocused()) {
             mInputController.setFocusedRemoteDisplayId(event.getDisplayId());
+        } else if (event.hasDeviceState() && Flags.deviceAwareDisplayPower()
+                && mVirtualDevice != null) {
+            if (event.getDeviceState().getPowerOn()) {
+                mVirtualDevice.wakeUp();
+            } else {
+                mVirtualDevice.goToSleep();
+            }
         }
     }
 
@@ -587,6 +595,9 @@ public final class VdmService extends Hilt_VdmService {
         if (mLocalVirtualDeviceLifecycleListener != null) {
             mLocalVirtualDeviceLifecycleListener.accept(true);
         }
+        mRemoteIo.sendMessage(RemoteEvent.newBuilder()
+                .setDeviceState(RemoteEventProto.DeviceState.newBuilder().setPowerOn(true))
+                .build());
     }
 
     private void lockdown() {
