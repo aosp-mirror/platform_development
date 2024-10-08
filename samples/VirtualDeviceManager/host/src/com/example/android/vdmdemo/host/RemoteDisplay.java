@@ -58,6 +58,7 @@ import android.view.Surface;
 import androidx.annotation.IntDef;
 
 import com.example.android.vdmdemo.common.RemoteEventProto;
+import com.example.android.vdmdemo.common.RemoteEventProto.DeviceState;
 import com.example.android.vdmdemo.common.RemoteEventProto.DisplayCapabilities;
 import com.example.android.vdmdemo.common.RemoteEventProto.DisplayRotation;
 import com.example.android.vdmdemo.common.RemoteEventProto.RemoteEvent;
@@ -118,6 +119,31 @@ class RemoteDisplay implements AutoCloseable {
     private VirtualStylus mStylus;
     private VirtualRotaryEncoder mRotary;
 
+    // DisplayManager.DisplayListener#onDisplayChanged along with Display#getState() can also be
+    // used to detect power events instead of using VirtualDisplay.Callback.
+    private final VirtualDisplay.Callback mVirtualDisplayCallback = new VirtualDisplay.Callback() {
+        @Override
+        public void onPaused() {
+            Log.v(TAG, "VirtualDisplay paused");
+            mRemoteIo.sendMessage(RemoteEvent.newBuilder()
+                    .setDeviceState(DeviceState.newBuilder().setPowerOn(false))
+                    .build());
+        }
+
+        @Override
+        public void onResumed() {
+            Log.v(TAG, "VirtualDisplay resumed");
+            mRemoteIo.sendMessage(RemoteEvent.newBuilder()
+                    .setDeviceState(DeviceState.newBuilder().setPowerOn(true))
+                    .build());
+        }
+
+        @Override
+        public void onStopped() {
+            Log.v(TAG, "VirtualDisplay stopped");
+        }
+    };
+
     @SuppressLint("WrongConstant")
     RemoteDisplay(
             Context context,
@@ -163,8 +189,8 @@ class RemoteDisplay implements AutoCloseable {
         mVirtualDisplay =
                 virtualDevice.createVirtualDisplay(
                         virtualDisplayBuilder.build(),
-                        /* executor= */ Runnable::run,
-                        /* callback= */ null);
+                        Runnable::run,
+                        mVirtualDisplayCallback);
 
         VdmCompat.setDisplayImePolicy(
                 mVirtualDevice,
