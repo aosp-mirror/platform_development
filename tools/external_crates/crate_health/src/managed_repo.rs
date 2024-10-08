@@ -36,19 +36,25 @@ use crate::{
     copy_dir,
     crate_collection::CrateCollection,
     crate_type::Crate,
+    crates_io::{AndroidDependencies, CratesIoIndex, DependencyChanges, SafeVersions},
     license::{most_restrictive_type, update_module_license_files},
     managed_crate::ManagedCrate,
     pseudo_crate::{CargoVendorClean, CargoVendorDirty, PseudoCrate},
+    upgradable::{IsUpgradableTo, MatchesRelaxed},
     SuccessOrError,
 };
 
 pub struct ManagedRepo {
     path: RootedPath,
+    crates_io: CratesIoIndex,
 }
 
 impl ManagedRepo {
-    pub fn new(path: RootedPath) -> ManagedRepo {
-        ManagedRepo { path }
+    pub fn new(path: RootedPath, offline: bool) -> Result<ManagedRepo> {
+        Ok(ManagedRepo {
+            path,
+            crates_io: if offline { CratesIoIndex::new_offline()? } else { CratesIoIndex::new()? },
+        })
     }
     fn pseudo_crate(&self) -> PseudoCrate<CargoVendorDirty> {
         PseudoCrate::new(self.path.join("pseudo_crate").unwrap())
@@ -64,6 +70,11 @@ impl ManagedRepo {
     }
     fn legacy_dir_for(&self, crate_name: &str) -> RootedPath {
         self.path.with_same_root("external/rust/crates").unwrap().join(crate_name).unwrap()
+    }
+    fn legacy_crates(&self) -> Result<CrateCollection> {
+        let mut cc = self.new_cc();
+        cc.add_from("external/rust/crates")?;
+        Ok(cc)
     }
     fn new_cc(&self) -> CrateCollection {
         CrateCollection::new(self.path.root())
@@ -116,7 +127,7 @@ impl ManagedRepo {
             healthy_self_contained = false;
         }
 
-        let mc = ManagedCrate::new(Crate::from(self.legacy_dir_for(crate_name))?).as_legacy();
+        let mc = ManagedCrate::new(Crate::from(self.legacy_dir_for(crate_name))?).into_legacy();
         if !mc.android_bp().abs().exists() {
             println!("There is no Android.bp file in {}", krate.path());
             healthy_self_contained = false;
@@ -555,6 +566,224 @@ impl ManagedRepo {
         for crate_name in crates {
             let mc = self.managed_crate_for(crate_name.as_ref())?;
             mc.recontextualize_patches()?;
+        }
+        Ok(())
+    }
+    pub fn updatable_crates(&self) -> Result<()> {
+        let mut cc = self.new_cc();
+        cc.add_from(self.managed_dir().rel())?;
+
+        for krate in cc.map_field().values() {
+            let cio_crate = self.crates_io.get_crate(krate.name())?;
+            let upgrades =
+                cio_crate.versions_gt(krate.version()).map(|v| v.version()).collect::<Vec<_>>();
+            if !upgrades.is_empty() {
+                println!(
+                    "{} v{}:\n  {}",
+                    krate.name(),
+                    krate.version(),
+                    upgrades
+                        .iter()
+                        .chunks(10)
+                        .into_iter()
+                        .map(|mut c| { c.join(", ") })
+                        .join(",\n  ")
+                );
+            }
+        }
+        Ok(())
+    }
+    pub fn analyze_updates(&self, crate_name: impl AsRef<str>) -> Result<()> {
+        let mut managed_crates = self.new_cc();
+        managed_crates.add_from(self.managed_dir().rel())?;
+        let legacy_crates = self.legacy_crates()?;
+
+        let krate = self.managed_crate_for(crate_name.as_ref())?;
+        println!("Analyzing updates to {} v{}", krate.name(), krate.android_version());
+        let patches = krate.patches()?;
+        if !patches.is_empty() {
+            println!("This crate has patches, so expect a fun time trying to update it:");
+            for patch in patches {
+                println!(
+                    "  {}",
+                    Path::new(patch.file_name().ok_or(anyhow!("No file name"))?).display()
+                );
+            }
+        }
+
+        let cio_crate = self.crates_io.get_crate(crate_name)?;
+
+        let base_version = cio_crate.get_version(krate.android_version()).ok_or(anyhow!(
+            "{} v{} not found in crates.io",
+            krate.name(),
+            krate.android_version()
+        ))?;
+        let base_deps = base_version.android_version_reqs_by_name();
+
+        for version in cio_crate.versions_gt(krate.android_version()) {
+            println!("Version {}", version.version());
+            let parsed_version = semver::Version::parse(version.version())?;
+            if !krate.android_version().is_upgradable_to(&parsed_version) {
+                if !krate.android_version().is_upgradable_to_relaxed(&parsed_version) {
+                    println!("  Not semver-compatible, even by relaxed standards");
+                } else {
+                    println!("  Semver-compatible, but only by relaxed standards since major version is 0");
+                }
+            }
+            // Check to see if the update has any missing dependencies.
+            // We try to be a little clever about this in the following ways:
+            // * Only consider deps that are likely to be relevant to Android. For example, ignore Windows-only deps.
+            // * If a dep is missing, but the same dep exists for the current version of the crate, it's probably not actually necessary.
+            // * Use relaxed version requirements, treating 0.x and 0.y as compatible, even though they aren't according to semver rules.
+            for (dep, req) in version.android_deps_with_version_reqs() {
+                let cc = if managed_crates.contains_name(dep.crate_name()) {
+                    &managed_crates
+                } else {
+                    &legacy_crates
+                };
+                if !cc.contains_name(dep.crate_name()) {
+                    println!(
+                        "  Dep {} {} has not been imported to Android",
+                        dep.crate_name(),
+                        dep.requirement()
+                    );
+                    if !dep.is_new_dep(&base_deps) {
+                        println!("    But the current version has the same dependency, and it seems to work");
+                    } else {
+                        continue;
+                    }
+                }
+                for (_, dep_crate) in cc.get_versions(dep.crate_name()) {
+                    if !req.matches_relaxed(dep_crate.version()) {
+                        println!(
+                            "  Dep {} {} is not satisfied by v{} at {}",
+                            dep.crate_name(),
+                            dep.requirement(),
+                            dep_crate.version(),
+                            dep_crate.path()
+                        );
+                        if !dep.is_changed_dep(&base_deps) {
+                            println!("    But the current version has the same dependency and it seems to work.")
+                        }
+                    }
+                }
+            }
+        }
+
+        Ok(())
+    }
+    pub fn suggest_updates(&self, consider_patched_crates: bool) -> Result<Vec<(String, String)>> {
+        let mut suggestions = Vec::new();
+        let mut managed_crates = self.new_cc();
+        managed_crates.add_from(self.managed_dir().rel())?;
+        let legacy_crates = self.legacy_crates()?;
+
+        for krate in managed_crates.map_field().values() {
+            let cio_crate = self.crates_io.get_crate(krate.name())?;
+
+            let base_version = cio_crate.get_version(krate.version());
+            if base_version.is_none() {
+                println!(
+                    "Skipping crate {} v{} because it was not found in crates.io",
+                    krate.name(),
+                    krate.version()
+                );
+                continue;
+            }
+            let base_version = base_version.unwrap();
+            let base_deps = base_version.android_version_reqs_by_name();
+
+            let patch_dir = krate.path().join("patches").unwrap();
+            if patch_dir.abs().exists() && !consider_patched_crates {
+                println!(
+                    "Skipping crate {} v{} because it has patches",
+                    krate.name(),
+                    krate.version()
+                );
+                continue;
+            }
+
+            for version in cio_crate.versions_gt(krate.version()).rev() {
+                let parsed_version = semver::Version::parse(version.version())?;
+                if !krate.version().is_upgradable_to_relaxed(&parsed_version) {
+                    continue;
+                }
+                if !version.android_deps_with_version_reqs().any(|(dep, req)| {
+                    if !dep.is_changed_dep(&base_deps) {
+                        return false;
+                    }
+                    let cc = if managed_crates.contains_name(dep.crate_name()) {
+                        &managed_crates
+                    } else {
+                        &legacy_crates
+                    };
+                    for (_, dep_crate) in cc.get_versions(dep.crate_name()) {
+                        if req.matches_relaxed(dep_crate.version()) {
+                            return false;
+                        }
+                    }
+                    true
+                }) {
+                    println!(
+                        "Upgrade crate {} v{} to {}",
+                        krate.name(),
+                        krate.version(),
+                        version.version()
+                    );
+                    suggestions.push((krate.name().to_string(), version.version().to_string()));
+                    break;
+                }
+            }
+        }
+        Ok(suggestions)
+    }
+    pub fn update(&self, crate_name: impl AsRef<str>, version: impl AsRef<str>) -> Result<()> {
+        let pseudo_crate = self.pseudo_crate();
+        let version = Version::parse(version.as_ref())?;
+        let nv = NameAndVersionRef::new(crate_name.as_ref(), &version);
+        pseudo_crate.remove(&crate_name)?;
+        pseudo_crate.cargo_add(&nv)?;
+        self.regenerate([&crate_name].iter(), true)?;
+        Ok(())
+    }
+    pub fn try_updates(&self) -> Result<()> {
+        let output = Command::new("git")
+            .args(["status", "--porcelain", "."])
+            .current_dir(&self.path)
+            .output()?
+            .success_or_error()?;
+        if !output.stdout.is_empty() {
+            return Err(anyhow!("Crate repo {} has uncommitted changes", self.path));
+        }
+
+        for (crate_name, version) in self.suggest_updates(true)? {
+            println!("Trying to update {} to {}", crate_name, version);
+            Command::new("git")
+                .args(["restore", "."])
+                .current_dir(&self.path)
+                .output()?
+                .success_or_error()?;
+            Command::new("git")
+                .args(["clean", "-f", "."])
+                .current_dir(&self.path)
+                .output()?
+                .success_or_error()?;
+            if let Err(e) = self.update(&crate_name, &version) {
+                println!("Updating {} to {} failed: {}", crate_name, version, e);
+                continue;
+            }
+            let build_result = Command::new("/usr/bin/bash")
+                .args(["-c", "source build/envsetup.sh && lunch aosp_husky-trunk_staging-eng && cd external/rust && mm"])
+                .env_remove("OUT_DIR")
+                .current_dir(self.path.root())
+                .spawn().context("Failed to spawn mm")?
+                .wait().context("Failed to wait on mm")?
+                .success_or_error();
+            if let Err(e) = build_result {
+                println!("Faild to build {} {}: {}", crate_name, version, e);
+                continue;
+            }
+            println!("Update {} to {} succeeded", crate_name, version);
         }
         Ok(())
     }
