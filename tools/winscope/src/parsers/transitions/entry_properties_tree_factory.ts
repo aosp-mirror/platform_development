@@ -23,6 +23,7 @@ import {
   MakeTimestampStrategyType,
   TransformToTimestamp,
 } from 'parsers/operations/transform_to_timestamp';
+import {TranslateIntDef} from 'parsers/operations/translate_intdef';
 import {TamperedMessageType} from 'parsers/tampered_message_type';
 import {perfetto} from 'protos/transitions/latest/static';
 import root from 'protos/transitions/udc/json';
@@ -51,7 +52,7 @@ interface TransitionInfo {
   handlerMapping?: {[key: number]: string};
 }
 
-export class ParserTransitionsUtils {
+export class EntryPropertiesTreeFactory {
   static readonly TRANSITION_OPERATIONS = [
     new AddDuration(),
     new AddStatus(),
@@ -62,10 +63,13 @@ export class ParserTransitionsUtils {
     root.lookupType('com.android.server.wm.shell.TransitionTraceProto'),
   );
   private static readonly TransitionField =
-    ParserTransitionsUtils.TransitionTraceProto.fields['transitions'];
+    EntryPropertiesTreeFactory.TransitionTraceProto.fields['transitions'];
   private static readonly WM_ADD_DEFAULTS_OPERATION = new AddDefaults(
-    ParserTransitionsUtils.TransitionField,
+    EntryPropertiesTreeFactory.TransitionField,
     ['type', 'targets'],
+  );
+  private static WM_INTDEF_OPERATION = new TranslateIntDef(
+    EntryPropertiesTreeFactory.TransitionField,
   );
   private static readonly SET_FORMATTERS_OPERATION = new SetFormatters();
   private static readonly PERFETTO_TRANSITION_OPERATIONS = [
@@ -92,7 +96,7 @@ export class ParserTransitionsUtils {
     transitionTree.addOrReplaceChild(
       assertDefined(wmEntryTree.getChildByName('wmData')),
     );
-    ParserTransitionsUtils.TRANSITION_OPERATIONS.forEach((operation) =>
+    EntryPropertiesTreeFactory.TRANSITION_OPERATIONS.forEach((operation) =>
       operation.apply(transitionTree),
     );
     return transitionTree;
@@ -111,12 +115,12 @@ export class ParserTransitionsUtils {
       .build();
 
     if (!info) {
-      ParserTransitionsUtils.SET_FORMATTERS_OPERATION.apply(tree);
+      EntryPropertiesTreeFactory.SET_FORMATTERS_OPERATION.apply(tree);
       return tree;
     }
 
     if (denylistProperties.length > 0) {
-      ParserTransitionsUtils.PERFETTO_TRANSITION_OPERATIONS.forEach(
+      EntryPropertiesTreeFactory.PERFETTO_TRANSITION_OPERATIONS.forEach(
         (operation) => operation.apply(tree),
       );
     }
@@ -134,7 +138,7 @@ export class ParserTransitionsUtils {
     new AddRealToBootTimeOffsetTimestamp(realToBootTimeOffsetTimestamp).apply(
       wmDataNode,
     );
-    ParserTransitionsUtils.WM_ADD_DEFAULTS_OPERATION.apply(wmDataNode);
+    EntryPropertiesTreeFactory.WM_ADD_DEFAULTS_OPERATION.apply(wmDataNode);
     new TransformToTimestamp(
       [
         'abortTimeNs',
@@ -143,12 +147,12 @@ export class ParserTransitionsUtils {
         'finishTimeNs',
         'startingWindowRemoveTimeNs',
       ],
-      ParserTransitionsUtils.makeTimestampStrategy(info.timestampConverter),
+      EntryPropertiesTreeFactory.makeTimestampStrategy(info.timestampConverter),
     ).apply(wmDataNode);
 
     const customFormatters = new Map<string, PropertyFormatter>([
-      ['type', ParserTransitionsUtils.TRANSITION_TYPE_FORMATTER],
-      ['mode', ParserTransitionsUtils.TRANSITION_TYPE_FORMATTER],
+      ['type', EntryPropertiesTreeFactory.TRANSITION_TYPE_FORMATTER],
+      ['mode', EntryPropertiesTreeFactory.TRANSITION_TYPE_FORMATTER],
       ['abortTimeNs', TIMESTAMP_NODE_FORMATTER],
       ['createTimeNs', TIMESTAMP_NODE_FORMATTER],
       ['sendTimeNs', TIMESTAMP_NODE_FORMATTER],
@@ -157,6 +161,8 @@ export class ParserTransitionsUtils {
     ]);
 
     new SetFormatters(undefined, customFormatters).apply(tree);
+
+    EntryPropertiesTreeFactory.WM_INTDEF_OPERATION.apply(tree);
     return tree;
   }
 
@@ -173,12 +179,12 @@ export class ParserTransitionsUtils {
       .build();
 
     if (!info) {
-      ParserTransitionsUtils.SET_FORMATTERS_OPERATION.apply(tree);
+      EntryPropertiesTreeFactory.SET_FORMATTERS_OPERATION.apply(tree);
       return tree;
     }
 
     if (denylistProperties.length > 0) {
-      ParserTransitionsUtils.PERFETTO_TRANSITION_OPERATIONS.forEach(
+      EntryPropertiesTreeFactory.PERFETTO_TRANSITION_OPERATIONS.forEach(
         (operation) => operation.apply(tree),
       );
     }
@@ -197,12 +203,12 @@ export class ParserTransitionsUtils {
     );
     new TransformToTimestamp(
       ['dispatchTimeNs', 'mergeRequestTimeNs', 'mergeTimeNs', 'abortTimeNs'],
-      ParserTransitionsUtils.makeTimestampStrategy(info.timestampConverter),
+      EntryPropertiesTreeFactory.makeTimestampStrategy(info.timestampConverter),
     ).apply(shellDataNode);
 
     const customFormatters = new Map<string, PropertyFormatter>([
-      ['type', ParserTransitionsUtils.TRANSITION_TYPE_FORMATTER],
-      ['mode', ParserTransitionsUtils.TRANSITION_TYPE_FORMATTER],
+      ['type', EntryPropertiesTreeFactory.TRANSITION_TYPE_FORMATTER],
+      ['mode', EntryPropertiesTreeFactory.TRANSITION_TYPE_FORMATTER],
       ['dispatchTimeNs', TIMESTAMP_NODE_FORMATTER],
       ['mergeRequestTimeNs', TIMESTAMP_NODE_FORMATTER],
       ['mergeTimeNs', TIMESTAMP_NODE_FORMATTER],
