@@ -25,11 +25,13 @@ use thiserror::Error;
 mod android_bp;
 mod crate_collection;
 mod crate_type;
+mod crates_io;
 mod license;
 mod managed_crate;
 mod managed_repo;
 mod patch;
 mod pseudo_crate;
+mod upgradable;
 
 pub use self::android_bp::maybe_build_cargo_embargo;
 pub use self::managed_repo::ManagedRepo;
