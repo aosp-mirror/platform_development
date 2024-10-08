@@ -14,17 +14,18 @@
  * limitations under the License.
  */
 
+import {ClipboardModule} from '@angular/cdk/clipboard';
 import {
   CdkVirtualScrollViewport,
   ScrollingModule,
 } from '@angular/cdk/scrolling';
-import {CUSTOM_ELEMENTS_SCHEMA} from '@angular/core';
 import {
   ComponentFixture,
   ComponentFixtureAutoDetect,
   TestBed,
 } from '@angular/core/testing';
 import {FormsModule} from '@angular/forms';
+import {MatButtonModule} from '@angular/material/button';
 import {MatDividerModule} from '@angular/material/divider';
 import {MatFormFieldModule} from '@angular/material/form-field';
 import {MatIconModule} from '@angular/material/icon';
@@ -44,48 +45,23 @@ import {UiPropertyTreeNode} from 'viewers/common/ui_property_tree_node';
 import {CollapsedSectionsComponent} from 'viewers/components/collapsed_sections_component';
 import {CollapsibleSectionTitleComponent} from 'viewers/components/collapsible_section_title_component';
 import {PropertiesComponent} from 'viewers/components/properties_component';
+import {PropertyTreeNodeDataViewComponent} from 'viewers/components/property_tree_node_data_view_component';
+import {SearchBoxComponent} from 'viewers/components/search_box_component';
 import {SelectWithFilterComponent} from 'viewers/components/select_with_filter_component';
+import {TreeComponent} from 'viewers/components/tree_component';
+import {TreeNodeComponent} from 'viewers/components/tree_node_component';
 import {TransactionsScrollDirective} from './scroll_strategy/transactions_scroll_directive';
 import {TransactionsEntry, UiData} from './ui_data';
 import {ViewerTransactionsComponent} from './viewer_transactions_component';
 
 describe('ViewerTransactionsComponent', () => {
+  let fixture: ComponentFixture<ViewerTransactionsComponent>;
+  let component: ViewerTransactionsComponent;
+  let htmlElement: HTMLElement;
+
   describe('Main component', () => {
-    let fixture: ComponentFixture<ViewerTransactionsComponent>;
-    let component: ViewerTransactionsComponent;
-    let htmlElement: HTMLElement;
-
     beforeEach(async () => {
-      await TestBed.configureTestingModule({
-        providers: [{provide: ComponentFixtureAutoDetect, useValue: true}],
-        imports: [
-          ScrollingModule,
-          MatFormFieldModule,
-          FormsModule,
-          MatInputModule,
-          BrowserAnimationsModule,
-          MatSelectModule,
-          MatDividerModule,
-          MatIconModule,
-        ],
-        declarations: [
-          ViewerTransactionsComponent,
-          TransactionsScrollDirective,
-          SelectWithFilterComponent,
-          CollapsedSectionsComponent,
-          CollapsibleSectionTitleComponent,
-          PropertiesComponent,
-          LogComponent,
-        ],
-        schemas: [CUSTOM_ELEMENTS_SCHEMA],
-      }).compileComponents();
-
-      fixture = TestBed.createComponent(ViewerTransactionsComponent);
-      component = fixture.componentInstance;
-      htmlElement = fixture.nativeElement;
-
-      component.inputData = makeUiData(0);
-      fixture.detectChanges();
+      await setUpTestEnvironment(() => makeUiData(0));
     });
 
     it('can be created', () => {
@@ -111,13 +87,13 @@ describe('ViewerTransactionsComponent', () => {
       expect(htmlElement.querySelector('.scroll')).toBeTruthy();
 
       const entry = assertDefined(htmlElement.querySelector('.scroll .entry'));
-      expect(entry.innerHTML).toContain('1ns');
-      expect(entry.innerHTML).toContain('-111');
-      expect(entry.innerHTML).toContain('PID_VALUE');
-      expect(entry.innerHTML).toContain('UID_VALUE');
-      expect(entry.innerHTML).toContain('TYPE_VALUE');
-      expect(entry.innerHTML).toContain('ID_VALUE');
-      expect(entry.innerHTML).toContain('flag1 | flag2');
+      expect(entry.textContent).toContain('1ns');
+      expect(entry.textContent).toContain('-111');
+      expect(entry.textContent).toContain('PID_VALUE');
+      expect(entry.textContent).toContain('UID_VALUE');
+      expect(entry.textContent).toContain('TYPE_VALUE');
+      expect(entry.textContent).toContain('ID_VALUE');
+      expect(entry.textContent).toContain('flag1 | flag2');
     });
 
     it('renders properties', () => {
@@ -129,7 +105,7 @@ describe('ViewerTransactionsComponent', () => {
       fixture.detectChanges();
       expect(
         htmlElement.querySelector('.properties-view .placeholder-text')
-          ?.innerHTML,
+          ?.textContent,
       ).toContain('No current or selected transaction');
     });
 
@@ -229,7 +205,9 @@ describe('ViewerTransactionsComponent', () => {
   });
 
   describe('Scroll component', () => {
-    executeScrollComponentTests(setUpTestEnvironment);
+    executeScrollComponentTests(() =>
+      setUpTestEnvironment(makeUiDataForScroll),
+    );
 
     function makeUiDataForScroll(): UiData {
       const propertiesTree = new PropertyTreeBuilder()
@@ -283,33 +261,53 @@ describe('ViewerTransactionsComponent', () => {
       }
       return uiData;
     }
-
-    async function setUpTestEnvironment(): Promise<
-      [
-        ComponentFixture<ViewerTransactionsComponent>,
-        HTMLElement,
-        CdkVirtualScrollViewport,
-      ]
-    > {
-      await TestBed.configureTestingModule({
-        providers: [{provide: ComponentFixtureAutoDetect, useValue: true}],
-        imports: [ScrollingModule],
-        declarations: [
-          ViewerTransactionsComponent,
-          LogComponent,
-          TransactionsScrollDirective,
-        ],
-        schemas: [CUSTOM_ELEMENTS_SCHEMA],
-      }).compileComponents();
-      const fixture = TestBed.createComponent(ViewerTransactionsComponent);
-      const transactionsComponent = fixture.componentInstance;
-      const htmlElement = fixture.nativeElement;
-      transactionsComponent.inputData = makeUiDataForScroll();
-      fixture.detectChanges();
-      const viewport = assertDefined(
-        transactionsComponent.logComponent?.scrollComponent,
-      );
-      return [fixture, htmlElement, viewport];
-    }
   });
+
+  async function setUpTestEnvironment(
+    makeUiData: () => UiData,
+  ): Promise<
+    [
+      ComponentFixture<ViewerTransactionsComponent>,
+      HTMLElement,
+      CdkVirtualScrollViewport,
+    ]
+  > {
+    await TestBed.configureTestingModule({
+      providers: [{provide: ComponentFixtureAutoDetect, useValue: true}],
+      imports: [
+        MatDividerModule,
+        ScrollingModule,
+        MatIconModule,
+        ClipboardModule,
+        MatFormFieldModule,
+        MatButtonModule,
+        MatInputModule,
+        BrowserAnimationsModule,
+        FormsModule,
+        MatSelectModule,
+      ],
+      declarations: [
+        ViewerTransactionsComponent,
+        TransactionsScrollDirective,
+        SelectWithFilterComponent,
+        CollapsedSectionsComponent,
+        CollapsibleSectionTitleComponent,
+        PropertiesComponent,
+        TreeComponent,
+        TreeNodeComponent,
+        PropertyTreeNodeDataViewComponent,
+        SearchBoxComponent,
+        LogComponent,
+      ],
+    }).compileComponents();
+
+    fixture = TestBed.createComponent(ViewerTransactionsComponent);
+    component = fixture.componentInstance;
+    htmlElement = fixture.nativeElement;
+
+    component.inputData = makeUiData();
+    fixture.detectChanges();
+    const viewport = assertDefined(component.logComponent?.scrollComponent);
+    return [fixture, htmlElement, viewport];
+  }
 });
