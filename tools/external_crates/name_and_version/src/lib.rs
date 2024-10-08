@@ -17,9 +17,7 @@
 use semver::Version;
 use thiserror::Error;
 
-pub use self::name_and_version::{
-    IsUpgradableTo, NameAndVersion, NameAndVersionRef, NamedAndVersioned,
-};
+pub use self::name_and_version::{NameAndVersion, NameAndVersionRef, NamedAndVersioned};
 mod name_and_version;
 
 pub use self::name_and_version_map::{

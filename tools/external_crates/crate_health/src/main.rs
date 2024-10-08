@@ -35,6 +35,10 @@ struct Cli {
     /// Print command output in case of error, and full diffs.
     #[arg(long, default_value_t = false)]
     verbose: bool,
+
+    /// Don't make network requests to crates.io. Only check the local cache.
+    #[arg(long, default_value_t = false)]
+    offline: bool,
 }
 
 #[derive(Subcommand)]
@@ -89,6 +93,30 @@ enum Cmd {
         #[arg(long, default_value_t = false)]
         all: bool,
     },
+    /// Find crates with a newer version on crates.io
+    UpdatableCrates {},
+    /// Analyze possible updates for a crate and try to identify potential problems.
+    AnalyzeUpdates { crate_name: String },
+    /// Suggest crate updates.
+    SuggestUpdates {
+        /// Don't exclude crates that have patches.
+        #[arg(long, default_value_t = false)]
+        patches: bool,
+    },
+    /// Update a crate to the specified version.
+    Update {
+        /// The crate name.
+        crate_name: String,
+
+        /// The crate version.
+        version: String,
+    },
+    /// Try suggested crate updates and see which ones succeed.
+    ///
+    /// Take about 15 minutes per crate, so suggested use is to tee to a file and let it run overnight:
+    ///
+    /// ./android_cargo.py run --bin crate_health -- try-updates | tee crate-updates
+    TryUpdates {},
 }
 
 fn parse_crate_list(arg: &str) -> Result<BTreeSet<String>> {
@@ -100,8 +128,10 @@ fn main() -> Result<()> {
 
     maybe_build_cargo_embargo(&args.repo_root, args.rebuild_cargo_embargo)?;
 
-    let managed_repo =
-        ManagedRepo::new(RootedPath::new(args.repo_root, "external/rust/android-crates-io")?);
+    let managed_repo = ManagedRepo::new(
+        RootedPath::new(args.repo_root, "external/rust/android-crates-io")?,
+        args.offline,
+    )?;
 
     match args.command {
         Cmd::MigrationHealth { crates, unpinned } => {
@@ -132,5 +162,10 @@ fn main() -> Result<()> {
                 crates.into_iter()
             })
         }
+        Cmd::UpdatableCrates {} => managed_repo.updatable_crates(),
+        Cmd::AnalyzeUpdates { crate_name } => managed_repo.analyze_updates(crate_name),
+        Cmd::SuggestUpdates { patches } => managed_repo.suggest_updates(patches).map(|_x| ()),
+        Cmd::Update { crate_name, version } => managed_repo.update(crate_name, version),
+        Cmd::TryUpdates {} => managed_repo.try_updates(),
     }
 }

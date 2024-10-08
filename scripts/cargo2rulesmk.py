@@ -718,48 +718,55 @@ class Runner(object):
                 sys.exit("ERROR: cannot find cargo in " + self.args.cargo_bin)
             print("INFO: using cargo in " + self.args.cargo_bin)
             return
-        # TODO(perlarsen): try getting cargo from $RUST_BINDIR set in envsetup.sh
+
         # We have only tested this on Linux.
         if platform.system() != "Linux":
             sys.exit(
                 "ERROR: this script has only been tested on Linux with cargo."
             )
+
         # Assuming that this script is in development/scripts
-        linux_dir = os.path.join(
-            TOP_DIR, "prebuilts", "rust", "linux-x86"
+        env_setup_sh = os.path.join(
+            TOP_DIR, "trusty/vendor/google/aosp/scripts/envsetup.sh"
         )
-        if not os.path.isdir(linux_dir):
-            sys.exit("ERROR: cannot find directory " + linux_dir)
-        rust_version = self.find_rust_version(linux_dir)
-        if self.args.verbose:
-            print(f"### INFO: using prebuilt rust version {rust_version}")
-        cargo_bin = os.path.join(linux_dir, rust_version, "bin")
-        self.cargo_path = os.path.join(cargo_bin, "cargo")
+        if not os.path.exists(env_setup_sh):
+            sys.exit("ERROR: missing " + env_setup_sh)
+        rust_version = self.find_rust_version(env_setup_sh)
+        self.cargo_path =  os.path.join(
+            TOP_DIR, f"prebuilts/rust/linux-x86/{rust_version}/bin/cargo"
+        )
+
         if not os.path.isfile(self.cargo_path):
             sys.exit(
-                "ERROR: cannot find cargo in "
-                + cargo_bin
-                + "; please try --cargo_bin= flag."
+                "ERROR: no cargo at "
+                + self.cargo_path
+                + "; consider using the --cargo_bin= flag."
             )
-        return
 
-    def find_rust_version(self, linux_dir):
-        """find newest prebuilt rust version."""
-        # find the newest (largest) version number in linux_dir.
-        rust_version = (0, 0, 0)  # the prebuilt version to use
-        version_pat = re.compile(r"([0-9]+)\.([0-9]+)\.([0-9]+)$")
-        for dir_name in os.listdir(linux_dir):
-            result = version_pat.match(dir_name)
-            if not result:
-                continue
-            version = (
-                int(result.group(1)),
-                int(result.group(2)),
-                int(result.group(3)),
-            )
-            if version > rust_version:
-                rust_version = version
-        return ".".join(str(ver) for ver in rust_version)
+        if self.args.verbose:
+            print(f"### INFO: using cargo from {self.cargo_path}")
+
+    def find_rust_version(self, env_setup_sh):
+        """find the Rust version used by Trusty from envsetup.sh"""
+
+        version_pat = re.compile(r"prebuilts/rust/linux-x86/([0-9]+\.[0-9]+\..+)/bin")
+
+        with open(env_setup_sh) as fh:
+            for line in fh.readlines():
+                if line.lstrip().startswith("export RUST_BINDIR"):
+                    if not (result := version_pat.search(line)):
+                        sys.exit("ERROR: failed to parse rust version "
+                                 + "from RUST_BINDIR in envsetup.sh: "
+                                 + line
+                        )
+                    version = result.group(1)
+
+                    if self.args.verbose:
+                        print(f"### INFO: using rust version {version}")
+
+                    return version
+
+        sys.exit("ERROR: failed to parse {env_setup_sh}; is RUST_BINDIR exported?")
 
     def find_out_files(self):
         # list1 has build.rs output for normal crates
