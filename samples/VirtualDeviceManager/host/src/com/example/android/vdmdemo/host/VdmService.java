@@ -67,6 +67,7 @@ import androidx.annotation.Nullable;
 import androidx.core.os.BuildCompat;
 
 import com.example.android.vdmdemo.common.ConnectionManager;
+import com.example.android.vdmdemo.common.RemoteEventProto;
 import com.example.android.vdmdemo.common.RemoteEventProto.DeviceCapabilities;
 import com.example.android.vdmdemo.common.RemoteEventProto.DisplayChangeEvent;
 import com.example.android.vdmdemo.common.RemoteEventProto.RemoteEvent;
@@ -100,8 +101,6 @@ public final class VdmService extends Hilt_VdmService {
 
     private static final String ACTION_STOP = "com.example.android.vdmdemo.host.VdmService.STOP";
 
-    public static final String ACTION_LOCKDOWN =
-            "com.example.android.vdmdemo.host.VdmService.LOCKDOWN";
     private int mRecordingAudioSessionId;
     private int mPlaybackAudioSessionId;
 
@@ -284,11 +283,6 @@ public final class VdmService extends Hilt_VdmService {
             return START_NOT_STICKY;
         }
 
-        if (intent != null && ACTION_LOCKDOWN.equals(intent.getAction())) {
-            lockdown();
-            return START_STICKY;
-        }
-
         NotificationChannel notificationChannel =
                 new NotificationChannel(
                         CHANNEL_ID, "VDM Service Channel", NotificationManager.IMPORTANCE_LOW);
@@ -397,6 +391,13 @@ public final class VdmService extends Hilt_VdmService {
             mDisplayRepository.removeDisplayByRemoteId(event.getDisplayId());
         } else if (event.hasDisplayChangeEvent() && event.getDisplayChangeEvent().getFocused()) {
             mInputController.setFocusedRemoteDisplayId(event.getDisplayId());
+        } else if (event.hasDeviceState() && Flags.deviceAwareDisplayPower()
+                && mVirtualDevice != null) {
+            if (event.getDeviceState().getPowerOn()) {
+                mVirtualDevice.wakeUp();
+            } else {
+                mVirtualDevice.goToSleep();
+            }
         }
     }
 
@@ -587,11 +588,9 @@ public final class VdmService extends Hilt_VdmService {
         if (mLocalVirtualDeviceLifecycleListener != null) {
             mLocalVirtualDeviceLifecycleListener.accept(true);
         }
-    }
-
-    private void lockdown() {
-        Log.i(TAG, "Initiating Lockdown.");
-        mDisplayRepository.clear();
+        mRemoteIo.sendMessage(RemoteEvent.newBuilder()
+                .setDeviceState(RemoteEventProto.DeviceState.newBuilder().setPowerOn(true))
+                .build());
     }
 
     private synchronized void closeVirtualDevice() {
