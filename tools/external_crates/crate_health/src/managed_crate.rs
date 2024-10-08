@@ -69,6 +69,7 @@ static CUSTOMIZATIONS: &[&str] = &[
     "METADATA",
     "TEST_MAPPING",
     "MODULE_LICENSE_*",
+    "README.android",
 ];
 
 static SYMLINKS: &[&str] = &["LICENSE", "NOTICE"];
