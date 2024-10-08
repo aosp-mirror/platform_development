@@ -63,12 +63,14 @@ impl ManagedCrateState for Staged {}
 
 static CUSTOMIZATIONS: &[&str] = &[
     "*.bp",
+    "*.bp.fragment",
     "*.mk",
     "cargo_embargo.json",
     "patches",
     "METADATA",
     "TEST_MAPPING",
     "MODULE_LICENSE_*",
+    "README.android",
 ];
 
 static SYMLINKS: &[&str] = &["LICENSE", "NOTICE"];
@@ -100,7 +102,7 @@ impl<State: ManagedCrateState> ManagedCrate<State> {
     fn patch_dir(&self) -> RootedPath {
         self.android_crate_path().join("patches").unwrap()
     }
-    fn patches(&self) -> Result<Vec<PathBuf>> {
+    pub fn patches(&self) -> Result<Vec<PathBuf>> {
         let mut patches = Vec::new();
         let patch_dir = self.patch_dir();
         if patch_dir.abs().exists() {
@@ -197,13 +199,13 @@ impl ManagedCrate<New> {
     pub fn new(android_crate: Crate) -> Self {
         ManagedCrate { android_crate, extra: New {} }
     }
-    pub fn as_legacy(self) -> ManagedCrate<Vendored> {
+    pub fn into_legacy(self) -> ManagedCrate<Vendored> {
         ManagedCrate {
             android_crate: self.android_crate.clone(),
             extra: Vendored { vendored_crate: self.android_crate },
         }
     }
-    fn to_staging(
+    fn into_vendored(
         self,
         pseudo_crate: &PseudoCrate<CargoVendorClean>,
     ) -> Result<ManagedCrate<Vendored>> {
@@ -215,14 +217,14 @@ impl ManagedCrate<New> {
         self,
         pseudo_crate: &PseudoCrate<CargoVendorClean>,
     ) -> Result<ManagedCrate<Staged>> {
-        self.to_staging(pseudo_crate)?.stage()
+        self.into_vendored(pseudo_crate)?.stage()
     }
     pub fn regenerate(
         self,
         update_metadata: bool,
         pseudo_crate: &PseudoCrate<CargoVendorClean>,
     ) -> Result<ManagedCrate<Staged>> {
-        self.to_staging(pseudo_crate)?.regenerate(update_metadata)
+        self.into_vendored(pseudo_crate)?.regenerate(update_metadata)
     }
 }
 
