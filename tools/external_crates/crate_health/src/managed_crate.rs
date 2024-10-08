@@ -63,6 +63,7 @@ impl ManagedCrateState for Staged {}
 
 static CUSTOMIZATIONS: &[&str] = &[
     "*.bp",
+    "*.bp.fragment",
     "*.mk",
     "cargo_embargo.json",
     "patches",
