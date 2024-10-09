@@ -39,7 +39,7 @@ import {UnitTestUtils} from 'test/unit/utils';
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
 import {LogComponent} from 'viewers/common/log_component';
 import {executeScrollComponentTests} from 'viewers/common/scroll_component_tests';
-import {LogFieldType} from 'viewers/common/ui_data_log';
+import {LogFieldType, LogFilter} from 'viewers/common/ui_data_log';
 import {UiPropertyTreeNode} from 'viewers/common/ui_property_tree_node';
 import {CollapsedSectionsComponent} from 'viewers/components/collapsed_sections_component';
 import {CollapsibleSectionTitleComponent} from 'viewers/components/collapsible_section_title_component';
@@ -196,28 +196,27 @@ describe('ViewerTransactionsComponent', () => {
 
       return new UiData(
         [
-          {type: LogFieldType.VSYNC_ID, options: ['-111', '-222']},
-          {type: LogFieldType.PID, options: ['PID_VALUE', 'PID_VALUE_2']},
-          {type: LogFieldType.UID, options: ['UID_VALUE', 'UID_VALUE_2']},
-          {
-            type: LogFieldType.TRANSACTION_TYPE,
-            options: ['TYPE_VALUE', 'TYPE_VALUE_2'],
-          },
-          {
-            type: LogFieldType.LAYER_OR_DISPLAY_ID,
-            options: [
-              'LAYER_OR_DISPLAY_ID_VALUE',
-              'LAYER_OR_DISPLAY_ID_VALUE_2',
-            ],
-          },
-          {
-            type: LogFieldType.TRANSACTION_ID,
-            options: ['TRANSACTION_ID_VALUE', 'TRANSACTION_ID_VALUE_2'],
-          },
-          {
-            type: LogFieldType.FLAGS,
-            options: ['flag1', 'flag2', 'flag3', 'flag4'],
-          },
+          new LogFilter(LogFieldType.VSYNC_ID, ['-111', '-222']),
+          new LogFilter(LogFieldType.PID, ['PID_VALUE', 'PID_VALUE_2']),
+          new LogFilter(LogFieldType.UID, ['UID_VALUE', 'UID_VALUE_2']),
+          new LogFilter(LogFieldType.TRANSACTION_TYPE, [
+            'TYPE_VALUE',
+            'TYPE_VALUE_2',
+          ]),
+          new LogFilter(LogFieldType.LAYER_OR_DISPLAY_ID, [
+            'LAYER_OR_DISPLAY_ID_VALUE',
+            'LAYER_OR_DISPLAY_ID_VALUE_2',
+          ]),
+          new LogFilter(LogFieldType.TRANSACTION_ID, [
+            'TRANSACTION_ID_VALUE',
+            'TRANSACTION_ID_VALUE_2',
+          ]),
+          new LogFilter(LogFieldType.FLAGS, [
+            'flag1',
+            'flag2',
+            'flag3',
+            'flag4',
+          ]),
         ],
         [entry1, entry2],
         1,

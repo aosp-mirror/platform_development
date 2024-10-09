@@ -36,7 +36,8 @@ import {TraceBuilder} from 'test/unit/trace_builder';
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
 import {LogComponent} from 'viewers/common/log_component';
 import {executeScrollComponentTests} from 'viewers/common/scroll_component_tests';
-import {LogFieldType} from 'viewers/common/ui_data_log';
+import {TextFilter} from 'viewers/common/text_filter';
+import {LogFieldType, LogFilter} from 'viewers/common/ui_data_log';
 import {SelectWithFilterComponent} from 'viewers/components/select_with_filter_component';
 import {ProtologScrollDirective} from './scroll_strategy/protolog_scroll_directive';
 import {ProtologEntry, UiData} from './ui_data';
@@ -175,10 +176,10 @@ describe('ViewerProtologComponent', () => {
     }
     return new UiData(
       [
-        {type: LogFieldType.LOG_LEVEL, options: allLogLevels},
-        {type: LogFieldType.TAG, options: allTags},
-        {type: LogFieldType.SOURCE_FILE, options: allSourceFiles},
-        {type: LogFieldType.TEXT},
+        new LogFilter(LogFieldType.LOG_LEVEL, [allLogLevels[0]]),
+        new LogFilter(LogFieldType.TAG, [allTags[0]]),
+        new LogFilter(LogFieldType.SOURCE_FILE, [allSourceFiles[1]]),
+        new LogFilter(LogFieldType.TEXT, undefined, new TextFilter('', [])),
       ],
       messages,
       150,
