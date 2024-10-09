@@ -243,9 +243,9 @@ impl PseudoCrate<CargoVendorDirty> {
     pub fn cargo_add_unversioned(&self, crate_name: &str) -> Result<()> {
         self.add_internal(crate_name, crate_name)
     }
-    pub fn remove(&self, crate_name: &str) -> Result<()> {
+    pub fn remove(&self, crate_name: impl AsRef<str>) -> Result<()> {
         Command::new("cargo")
-            .args(["remove", crate_name])
+            .args(["remove", crate_name.as_ref()])
             .current_dir(&self.path)
             .run_quiet_and_expect_success()?;
         Ok(())
