@@ -16,7 +16,7 @@ use std::{collections::BTreeSet, path::PathBuf};
 
 use anyhow::Result;
 use clap::{Parser, Subcommand};
-use crate_health::{default_repo_root, maybe_build_cargo_embargo, ManagedRepo};
+use crate_tool::{default_repo_root, maybe_build_cargo_embargo, ManagedRepo};
 use rooted_path::RootedPath;
 
 #[derive(Parser)]
@@ -115,7 +115,7 @@ enum Cmd {
     ///
     /// Take about 15 minutes per crate, so suggested use is to tee to a file and let it run overnight:
     ///
-    /// ./android_cargo.py run --bin crate_health -- try-updates | tee crate-updates
+    /// ./android_cargo.py run --bin crate_tool -- try-updates | tee crate-updates
     TryUpdates {},
 }
 
