@@ -58,11 +58,15 @@ describe('ViewerProtologComponent', () => {
       expect(component).toBeTruthy();
     });
 
-    it('creates message filters', () => {
-      expect(htmlElement.querySelector('.filters .log-level')).toBeTruthy();
-      expect(htmlElement.querySelector('.filters .tag')).toBeTruthy();
-      expect(htmlElement.querySelector('.filters .source-file')).toBeTruthy();
-      expect(htmlElement.querySelector('.filters .text')).toBeTruthy();
+    it('renders headers with filters', () => {
+      expect(
+        htmlElement.querySelector('.headers .filter.log-level'),
+      ).toBeTruthy();
+      expect(htmlElement.querySelector('.headers .filter.tag')).toBeTruthy();
+      expect(
+        htmlElement.querySelector('.headers .filter.source-file'),
+      ).toBeTruthy();
+      expect(htmlElement.querySelector('.headers .filter.text')).toBeTruthy();
     });
 
     it('renders log messages', () => {

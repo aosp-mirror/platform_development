@@ -22,7 +22,13 @@ import {
   NotifyLogViewCallbackType,
 } from './abstract_log_viewer_presenter';
 import {TextFilter} from './text_filter';
-import {LogEntry, LogFieldType, LogFieldValue, UiDataLog} from './ui_data_log';
+import {
+  LogEntry,
+  LogFieldType,
+  LogFieldValue,
+  LogFilter,
+  UiDataLog,
+} from './ui_data_log';
 import {
   LogFilterChangeDetail,
   LogTextFilterChangeDetail,
@@ -65,7 +71,7 @@ export abstract class AbstractLogViewerPresenterTest<UiData extends UiDataLog> {
         expect(uiData.currentIndex).toBeUndefined();
 
         if (this.shouldExecuteFilterTests) {
-          expect(uiData.filters?.length).toBeGreaterThan(0);
+          expect(this.getFilters(uiData).length).toBeGreaterThan(0);
         }
 
         if (this.shouldExecuteHeaderTests) {
@@ -191,13 +197,13 @@ export abstract class AbstractLogViewerPresenterTest<UiData extends UiDataLog> {
           for (const [logFieldType, expectedOptions] of assertDefined(
             this.expectedInitialFilterOptions,
           )) {
-            const options = assertDefined(
-              uiData.filters?.find((f) => f.type === logFieldType)?.options,
-            );
+            const options = this.getFilters(uiData).find(
+              (f) => f.type === logFieldType,
+            )?.options;
             if (Array.isArray(expectedOptions)) {
               expect(options).toEqual(expectedOptions);
             } else {
-              expect(options.length).toEqual(expectedOptions);
+              expect(options?.length).toEqual(expectedOptions);
             }
           }
         }
@@ -410,6 +416,11 @@ export abstract class AbstractLogViewerPresenterTest<UiData extends UiDataLog> {
     }
   }
 
+  getFilters(uiData: UiDataLog): LogFilter[] {
+    return (uiData.headers?.filter((header) => header instanceof LogFilter) ??
+      []) as LogFilter[];
+  }
+
   checkInitialTracePositionUpdate(uiData: UiDataLog) {
     expect(uiData.entries.length).toEqual(this.totalOutputEntries);
     expect(uiData.scrollToIndex).toEqual(
@@ -421,7 +432,7 @@ export abstract class AbstractLogViewerPresenterTest<UiData extends UiDataLog> {
     expect(uiData.selectedIndex).toBeUndefined();
 
     if (this.shouldExecuteFilterTests) {
-      expect(uiData.filters?.length).toBeGreaterThan(0);
+      expect(this.getFilters(uiData).length).toBeGreaterThan(0);
     }
 
     if (this.shouldExecuteHeaderTests) {
