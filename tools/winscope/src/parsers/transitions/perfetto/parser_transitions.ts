@@ -16,7 +16,7 @@
 import {assertDefined} from 'common/assert_utils';
 import {AbstractParser} from 'parsers/perfetto/abstract_parser';
 import {FakeProtoBuilder} from 'parsers/perfetto/fake_proto_builder';
-import {ParserTransitionsUtils} from 'parsers/transitions/parser_transitions_utils';
+import {EntryPropertiesTreeFactory} from 'parsers/transitions/entry_properties_tree_factory';
 import {perfetto} from 'protos/transitions/latest/static';
 import {TraceType} from 'trace/trace_type';
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
@@ -89,7 +89,7 @@ export class ParserTransitions extends AbstractParser<PropertyTreeNode> {
       timestampConverter: this.timestampConverter,
     };
 
-    const shellEntryTree = ParserTransitionsUtils.makeShellPropertiesTree(
+    const shellEntryTree = EntryPropertiesTreeFactory.makeShellPropertiesTree(
       perfettoTransitionInfo,
       [
         'createTimeNs',
@@ -104,7 +104,7 @@ export class ParserTransitions extends AbstractParser<PropertyTreeNode> {
         'startingWindowRemoveTimeNs',
       ],
     );
-    const wmEntryTree = ParserTransitionsUtils.makeWmPropertiesTree(
+    const wmEntryTree = EntryPropertiesTreeFactory.makeWmPropertiesTree(
       perfettoTransitionInfo,
       [
         'dispatchTimeNs',
@@ -116,7 +116,7 @@ export class ParserTransitions extends AbstractParser<PropertyTreeNode> {
       ],
     );
 
-    return ParserTransitionsUtils.makeTransitionPropertiesTree(
+    return EntryPropertiesTreeFactory.makeTransitionPropertiesTree(
       shellEntryTree,
       wmEntryTree,
     );

@@ -63,7 +63,7 @@ def create_argument_parser() -> argparse.ArgumentParser:
     return parser
 
 # Keep in sync with ProxyConnection#VERSION in Winscope
-VERSION = '4.0.0'
+VERSION = '4.0.1'
 
 PERFETTO_TRACE_CONFIG_FILE = '/data/misc/perfetto-configs/winscope-proxy-trace.conf'
 PERFETTO_DUMP_CONFIG_FILE = '/data/misc/perfetto-configs/winscope-proxy-dump.conf'
@@ -755,6 +755,14 @@ file_write_period_ms: 999999999
 write_into_file: true
 unique_session_name: "{PERFETTO_UNIQUE_SESSION_NAME}"
 EOF
+
+function is_perfetto_tracing_session_running {{
+    if perfetto --query | grep "{PERFETTO_UNIQUE_SESSION_NAME}" 2>&1 >/dev/null; then
+        return 0
+    else
+        return 1
+    fi
+}}
 
 if is_perfetto_tracing_session_running; then
     perfetto --attach=WINSCOPE-PROXY-TRACING-SESSION --stop

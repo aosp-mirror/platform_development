@@ -21,7 +21,7 @@ use std::{
     hash::{Hash, Hasher},
 };
 
-use semver::{BuildMetadata, Prerelease, Version, VersionReq};
+use semver::{BuildMetadata, Prerelease, Version};
 
 static MIN_VERSION: Version =
     Version { major: 0, minor: 0, patch: 0, pre: Prerelease::EMPTY, build: BuildMetadata::EMPTY };
@@ -133,19 +133,6 @@ impl<'a> Hash for (dyn NamedAndVersioned + 'a) {
     }
 }
 
-/// A trait for determining semver compatibility.
-pub trait IsUpgradableTo: NamedAndVersioned {
-    /// Returns true if the object version is semver-compatible with 'other'.
-    fn is_upgradable_to(&self, other: &impl NamedAndVersioned) -> bool {
-        self.name() == other.name()
-            && VersionReq::parse(&self.version().to_string())
-                .is_ok_and(|req| req.matches(other.version()))
-    }
-}
-
-impl IsUpgradableTo for NameAndVersion {}
-impl<'a> IsUpgradableTo for NameAndVersionRef<'a> {}
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -153,48 +140,18 @@ mod tests {
     #[test]
     fn test_name_version_ref() -> Result<(), semver::Error> {
         let version = Version::parse("2.3.4")?;
-        let compat1 = Version::parse("2.3.5")?;
-        let compat2 = Version::parse("2.4.0")?;
-        let incompat = Version::parse("3.0.0")?;
-        let older = Version::parse("2.3.3")?;
         let nvp = NameAndVersionRef::new("foo", &version);
         assert_eq!(nvp.name(), "foo");
         assert_eq!(nvp.version().to_string(), "2.3.4");
-        assert!(nvp.is_upgradable_to(&NameAndVersionRef::new("foo", &compat1)), "Patch update");
-        assert!(
-            nvp.is_upgradable_to(&NameAndVersionRef::new("foo", &compat2)),
-            "Minor version update"
-        );
-        assert!(
-            !nvp.is_upgradable_to(&NameAndVersionRef::new("foo", &incompat)),
-            "Incompatible (major version) update"
-        );
-        assert!(!nvp.is_upgradable_to(&NameAndVersionRef::new("foo", &older)), "Downgrade");
-        assert!(!nvp.is_upgradable_to(&NameAndVersionRef::new("bar", &compat1)), "Different name");
         Ok(())
     }
 
     #[test]
     fn test_name_and_version() -> Result<(), semver::Error> {
         let version = Version::parse("2.3.4")?;
-        let compat1 = Version::parse("2.3.5")?;
-        let compat2 = Version::parse("2.4.0")?;
-        let incompat = Version::parse("3.0.0")?;
-        let older = Version::parse("2.3.3")?;
         let nvp = NameAndVersion::new("foo".to_string(), version);
         assert_eq!(nvp.name(), "foo");
         assert_eq!(nvp.version().to_string(), "2.3.4");
-        assert!(nvp.is_upgradable_to(&NameAndVersionRef::new("foo", &compat1)), "Patch update");
-        assert!(
-            nvp.is_upgradable_to(&NameAndVersionRef::new("foo", &compat2)),
-            "Minor version update"
-        );
-        assert!(
-            !nvp.is_upgradable_to(&NameAndVersionRef::new("foo", &incompat)),
-            "Incompatible (major version) update"
-        );
-        assert!(!nvp.is_upgradable_to(&NameAndVersionRef::new("foo", &older)), "Downgrade");
-        assert!(!nvp.is_upgradable_to(&NameAndVersionRef::new("bar", &compat1)), "Different name");
         Ok(())
     }
 }

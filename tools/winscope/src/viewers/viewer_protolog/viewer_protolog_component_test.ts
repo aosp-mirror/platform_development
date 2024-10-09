@@ -18,14 +18,15 @@ import {
   CdkVirtualScrollViewport,
   ScrollingModule,
 } from '@angular/cdk/scrolling';
-import {CUSTOM_ELEMENTS_SCHEMA} from '@angular/core';
 import {
   ComponentFixture,
   ComponentFixtureAutoDetect,
   TestBed,
 } from '@angular/core/testing';
 import {FormsModule} from '@angular/forms';
+import {MatButtonModule} from '@angular/material/button';
 import {MatFormFieldModule} from '@angular/material/form-field';
+import {MatIconModule} from '@angular/material/icon';
 import {MatInputModule} from '@angular/material/input';
 import {MatSelectModule} from '@angular/material/select';
 import {BrowserAnimationsModule} from '@angular/platform-browser/animations';
@@ -36,43 +37,21 @@ import {TraceBuilder} from 'test/unit/trace_builder';
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
 import {LogComponent} from 'viewers/common/log_component';
 import {executeScrollComponentTests} from 'viewers/common/scroll_component_tests';
-import {LogFieldType} from 'viewers/common/ui_data_log';
+import {TextFilter} from 'viewers/common/text_filter';
+import {LogFieldType, LogFilter} from 'viewers/common/ui_data_log';
+import {SearchBoxComponent} from 'viewers/components/search_box_component';
 import {SelectWithFilterComponent} from 'viewers/components/select_with_filter_component';
 import {ProtologScrollDirective} from './scroll_strategy/protolog_scroll_directive';
 import {ProtologEntry, UiData} from './ui_data';
 import {ViewerProtologComponent} from './viewer_protolog_component';
 
 describe('ViewerProtologComponent', () => {
+  let fixture: ComponentFixture<ViewerProtologComponent>;
+  let component: ViewerProtologComponent;
+  let htmlElement: HTMLElement;
   describe('Main component', () => {
-    let fixture: ComponentFixture<ViewerProtologComponent>;
-    let component: ViewerProtologComponent;
-    let htmlElement: HTMLElement;
-
     beforeEach(async () => {
-      await TestBed.configureTestingModule({
-        providers: [{provide: ComponentFixtureAutoDetect, useValue: true}],
-        imports: [
-          ScrollingModule,
-          MatFormFieldModule,
-          FormsModule,
-          MatInputModule,
-          BrowserAnimationsModule,
-          MatSelectModule,
-        ],
-        declarations: [
-          ViewerProtologComponent,
-          SelectWithFilterComponent,
-          LogComponent,
-          ProtologScrollDirective,
-        ],
-        schemas: [CUSTOM_ELEMENTS_SCHEMA],
-      }).compileComponents();
-      fixture = TestBed.createComponent(ViewerProtologComponent);
-      component = fixture.componentInstance;
-      htmlElement = fixture.nativeElement;
-
-      component.inputData = makeUiData();
-      fixture.detectChanges();
+      await setUpTestEnvironment();
     });
 
     it('can be created', () => {
@@ -98,41 +77,44 @@ describe('ViewerProtologComponent', () => {
 
   describe('Scroll component', () => {
     executeScrollComponentTests(setUpTestEnvironment);
-    async function setUpTestEnvironment(): Promise<
-      [
-        ComponentFixture<ViewerProtologComponent>,
-        HTMLElement,
-        CdkVirtualScrollViewport,
-      ]
-    > {
-      await TestBed.configureTestingModule({
-        providers: [{provide: ComponentFixtureAutoDetect, useValue: true}],
-        imports: [
-          ScrollingModule,
-          MatFormFieldModule,
-          FormsModule,
-          MatInputModule,
-          BrowserAnimationsModule,
-          MatSelectModule,
-        ],
-        declarations: [
-          ViewerProtologComponent,
-          LogComponent,
-          ProtologScrollDirective,
-        ],
-        schemas: [CUSTOM_ELEMENTS_SCHEMA],
-      }).compileComponents();
-      const fixture = TestBed.createComponent(ViewerProtologComponent);
-      const protologComponent = fixture.componentInstance;
-      const htmlElement = fixture.nativeElement;
-      protologComponent.inputData = makeUiData();
-      fixture.detectChanges();
-      const viewport = assertDefined(
-        protologComponent.logComponent?.scrollComponent,
-      );
-      return [fixture, htmlElement, viewport];
-    }
   });
+
+  async function setUpTestEnvironment(): Promise<
+    [
+      ComponentFixture<ViewerProtologComponent>,
+      HTMLElement,
+      CdkVirtualScrollViewport,
+    ]
+  > {
+    await TestBed.configureTestingModule({
+      providers: [{provide: ComponentFixtureAutoDetect, useValue: true}],
+      imports: [
+        ScrollingModule,
+        MatFormFieldModule,
+        FormsModule,
+        MatInputModule,
+        BrowserAnimationsModule,
+        MatSelectModule,
+        MatButtonModule,
+        MatIconModule,
+      ],
+      declarations: [
+        ViewerProtologComponent,
+        SelectWithFilterComponent,
+        LogComponent,
+        ProtologScrollDirective,
+        SearchBoxComponent,
+      ],
+    }).compileComponents();
+    fixture = TestBed.createComponent(ViewerProtologComponent);
+    component = fixture.componentInstance;
+    htmlElement = fixture.nativeElement;
+
+    component.inputData = makeUiData();
+    fixture.detectChanges();
+    const viewport = assertDefined(component.logComponent?.scrollComponent);
+    return [fixture, htmlElement, viewport];
+  }
 
   function makeUiData(): UiData {
     const allLogLevels = ['INFO', 'ERROR'];
@@ -175,10 +157,10 @@ describe('ViewerProtologComponent', () => {
     }
     return new UiData(
       [
-        {type: LogFieldType.LOG_LEVEL, options: allLogLevels},
-        {type: LogFieldType.TAG, options: allTags},
-        {type: LogFieldType.SOURCE_FILE, options: allSourceFiles},
-        {type: LogFieldType.TEXT},
+        new LogFilter(LogFieldType.LOG_LEVEL, [allLogLevels[0]]),
+        new LogFilter(LogFieldType.TAG, [allTags[0]]),
+        new LogFilter(LogFieldType.SOURCE_FILE, [allSourceFiles[1]]),
+        new LogFilter(LogFieldType.TEXT, undefined, new TextFilter('', [])),
       ],
       messages,
       150,
