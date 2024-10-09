@@ -1,5 +1,5 @@
 [package]
-name = "crate_health"
+name = "crate_tool"
 version = "0.1.0"
 edition = "2021"
 
