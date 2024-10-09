@@ -72,7 +72,6 @@ data class DemoConfiguration(
     val springConfigurations: DemoSpringConfigurations = DemoSpringConfigurations.presets[1],
     val useOverscrollSpec: Boolean = true,
     val overscrollProgressConverter: DemoOverscrollProgress = Tanh(maxProgress = 0.2f, tilt = 3f),
-    val enableInterruptions: Boolean = true,
     val lsToShadeRequiresFullSwipe: ToggleableState = ToggleableState.Indeterminate,
     val enableOverlays: Boolean = false,
 ) {
@@ -88,7 +87,6 @@ data class DemoConfiguration(
             val springConfigurationsKey = "springConfigurations"
             val useOverscrollSpec = "useOverscrollSpec"
             val overscrollProgress = "overscrollProgress"
-            val enableInterruptions = "enableInterruptions"
             val lsToShadeRequiresFullSwipe = "lsToShadeRequiresFullSwipe"
 
             mapSaver(
@@ -104,7 +102,6 @@ data class DemoConfiguration(
                         springConfigurationsKey to it.springConfigurations.save(),
                         useOverscrollSpec to it.useOverscrollSpec,
                         overscrollProgress to it.overscrollProgressConverter.save(),
-                        enableInterruptions to it.enableInterruptions,
                         lsToShadeRequiresFullSwipe to it.lsToShadeRequiresFullSwipe,
                     )
                 },
@@ -123,7 +120,6 @@ data class DemoConfiguration(
                         useOverscrollSpec = it[useOverscrollSpec] as Boolean,
                         overscrollProgressConverter =
                             it[overscrollProgress].restoreOverscrollProgress(),
-                        enableInterruptions = it[enableInterruptions] as Boolean,
                         lsToShadeRequiresFullSwipe =
                             it[lsToShadeRequiresFullSwipe] as ToggleableState,
                     )
@@ -332,19 +328,6 @@ fun DemoConfigurationDialog(
                     onCheckedChange = {
                         onConfigurationChange(
                             configuration.copy(isFullscreen = !configuration.isFullscreen)
-                        )
-                    },
-                )
-
-                // Interruptions.
-                Checkbox(
-                    label = "Interruptions",
-                    checked = configuration.enableInterruptions,
-                    onCheckedChange = {
-                        onConfigurationChange(
-                            configuration.copy(
-                                enableInterruptions = !configuration.enableInterruptions
-                            )
                         )
                     },
                 )
