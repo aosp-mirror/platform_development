@@ -169,7 +169,6 @@ class MutableSceneTransitionLayoutSaver(
     private val sceneSaver: Scenes.SceneSaver,
     private val transitions: SceneTransitions,
     private val canChangeScene: (SceneKey) -> Boolean,
-    private val enableInterruptions: Boolean,
 ) : Saver<MutableSceneTransitionLayoutState, String> {
     override fun SaverScope.save(state: MutableSceneTransitionLayoutState): String {
         val currentScene = state.transitionState.currentScene
@@ -182,7 +181,6 @@ class MutableSceneTransitionLayoutSaver(
             currentScene,
             transitions,
             canChangeScene = canChangeScene,
-            enableInterruptions = enableInterruptions,
         )
     }
 }
@@ -277,7 +275,6 @@ fun SystemUi(
         remember(quickSettingsPagerState, springConfiguration, configuration) {
             systemUiTransitions(quickSettingsPagerState, springConfiguration, configuration)
         }
-    val enableInterruptions = configuration.enableInterruptions
 
     val sceneSaver =
         remember(lockscreenScene, shadeScene) { Scenes.SceneSaver(lockscreenScene, shadeScene) }
@@ -303,22 +300,11 @@ fun SystemUi(
         }
 
     val stateSaver =
-        remember(sceneSaver, transitions, canChangeScene, enableInterruptions) {
-            MutableSceneTransitionLayoutSaver(
-                sceneSaver,
-                transitions,
-                canChangeScene,
-                enableInterruptions,
-            )
+        remember(sceneSaver, transitions, canChangeScene) {
+            MutableSceneTransitionLayoutSaver(sceneSaver, transitions, canChangeScene)
         }
     val layoutState =
-        rememberSaveable(
-            transitions,
-            canChangeScene,
-            enableInterruptions,
-            configuration,
-            saver = stateSaver,
-        ) {
+        rememberSaveable(transitions, canChangeScene, configuration, saver = stateSaver) {
             val initialScene =
                 initialScene?.let {
                     Scenes.ensureCorrectScene(
@@ -335,7 +321,6 @@ fun SystemUi(
                 canShowOverlay = { configuration.canChangeSceneOrOverlays },
                 canHideOverlay = { configuration.canChangeSceneOrOverlays },
                 canReplaceOverlay = { _, _ -> configuration.canChangeSceneOrOverlays },
-                enableInterruptions = enableInterruptions,
             )
         }
 
