@@ -526,37 +526,16 @@ impl ManagedRepo {
         }
         Ok((added_deps, self.pseudo_crate().vendor()?))
     }
-    pub fn fix_licenses(&self) -> Result<()> {
-        let mut cc = self.new_cc();
-        cc.add_from(self.managed_dir().rel())?;
-
-        for krate in cc.map_field().values() {
-            println!("{} = \"={}\"", krate.name(), krate.version());
-            let state = find_licenses(krate.path().abs(), krate.name(), krate.license())?;
-            if !state.unsatisfied.is_empty() {
-                println!("{:?}", state);
-            } else {
-                // For now, just update MODULE_LICENSE_*
-                update_module_license_files(&krate.path().abs(), &state)?;
-            }
+    pub fn fix_licenses<T: AsRef<str>>(&self, crates: impl Iterator<Item = T>) -> Result<()> {
+        for crate_name in crates {
+            self.managed_crate_for(crate_name.as_ref())?.fix_licenses()?;
         }
-
         Ok(())
     }
-    pub fn fix_metadata(&self) -> Result<()> {
-        let mut cc = self.new_cc();
-        cc.add_from(self.managed_dir().rel())?;
-
-        for krate in cc.map_field().values() {
-            println!("{} = \"={}\"", krate.name(), krate.version());
-            let mut metadata = GoogleMetadata::try_from(krate.path().join("METADATA")?)?;
-            metadata.set_version_and_urls(krate.name(), krate.version().to_string())?;
-            metadata.migrate_archive();
-            metadata.migrate_homepage();
-            metadata.remove_deprecated_url();
-            metadata.write()?;
+    pub fn fix_metadata<T: AsRef<str>>(&self, crates: impl Iterator<Item = T>) -> Result<()> {
+        for crate_name in crates {
+            self.managed_crate_for(crate_name.as_ref())?.fix_metadata()?;
         }
-
         Ok(())
     }
     pub fn recontextualize_patches<T: AsRef<str>>(
