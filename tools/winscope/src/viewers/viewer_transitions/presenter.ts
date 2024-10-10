@@ -51,6 +51,10 @@ export class Presenter extends AbstractLogViewerPresenter<UiData> {
   private windowManagerTrace: Trace<HierarchyTreeNode> | undefined;
   private layerIdToName = new Map<number, string>();
   private windowTokenToTitle = new Map<string, string>();
+  private updateTransitionChangesNames = new UpdateTransitionChangesNames(
+    this.layerIdToName,
+    this.windowTokenToTitle,
+  );
 
   protected override keepCalculated = false;
   protected override logPresenter = new LogPresenter<TransitionsEntry>(false);
@@ -62,12 +66,6 @@ export class Presenter extends AbstractLogViewerPresenter<UiData> {
       this.storage,
     ),
     [],
-    [
-      new UpdateTransitionChangesNames(
-        this.layerIdToName,
-        this.windowTokenToTitle,
-      ),
-    ],
   );
 
   constructor(
@@ -148,6 +146,7 @@ export class Presenter extends AbstractLogViewerPresenter<UiData> {
       const shellDataNode = assertDefined(
         transitionNode.getChildByName('shellData'),
       );
+      this.updateTransitionChangesNames.apply(transitionNode);
 
       let status: TransitionStatus | undefined;
       let statusIcon: string | undefined;

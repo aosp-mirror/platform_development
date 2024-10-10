@@ -83,8 +83,7 @@ class RectSfFactory {
       const existingNameCount = nameCounts.get(displayName);
       if (existingNameCount !== undefined) {
         nameCounts.set(displayName, existingNameCount + 1);
-        const qualifier = displayName === 'Unknown Display' ? '' : 'Mirror ';
-        displayName += ` (${qualifier}${existingNameCount + 1})`;
+        displayName += ` (${existingNameCount + 1})`;
       } else {
         nameCounts.set(displayName, 1);
       }

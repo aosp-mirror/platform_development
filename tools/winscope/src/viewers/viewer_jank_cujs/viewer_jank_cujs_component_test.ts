@@ -85,7 +85,6 @@ describe('ViewerJankCujsComponent', () => {
         CollapsibleSectionTitleComponent,
         LogComponent,
       ],
-      schemas: [],
     }).compileComponents();
 
     fixture = TestBed.createComponent(ViewerJankCujsComponent);
