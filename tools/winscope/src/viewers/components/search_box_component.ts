@@ -22,7 +22,13 @@ import {TextFilter} from 'viewers/common/text_filter';
 @Component({
   selector: 'search-box',
   template: `
-    <mat-form-field class="search-box" [class.wide-field]="wideField" [appearance]="appearance" [style.font-size]="fontSize + 'px'" (keydown.enter)="$event.target.blur()">
+    <mat-form-field
+      *ngIf="textFilter"
+      class="search-box"
+      [class.wide-field]="wideField"
+      [appearance]="appearance"
+      [style.font-size]="fontSize + 'px'"
+      (keydown.enter)="$event.target.blur()">
       <mat-label>{{ label }}</mat-label>
       <input
         matInput

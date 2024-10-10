@@ -73,6 +73,7 @@ import {ViewerProtologComponent} from 'viewers/viewer_protolog/viewer_protolog_c
 import {ViewerSurfaceFlingerComponent} from 'viewers/viewer_surface_flinger/viewer_surface_flinger_component';
 import {TransactionsScrollDirective} from 'viewers/viewer_transactions/scroll_strategy/transactions_scroll_directive';
 import {ViewerTransactionsComponent} from 'viewers/viewer_transactions/viewer_transactions_component';
+import {TransitionsScrollDirective} from 'viewers/viewer_transitions/scroll_strategy/transitions_scroll_directive';
 import {ViewerTransitionsComponent} from 'viewers/viewer_transitions/viewer_transitions_component';
 import {ViewerViewCaptureComponent} from 'viewers/viewer_view_capture/viewer_view_capture_component';
 import {ViewerWindowManagerComponent} from 'viewers/viewer_window_manager/viewer_window_manager_component';
@@ -144,6 +145,7 @@ import {GlobalErrorHandler} from './global_error_handler';
     SliderComponent,
     ProtologScrollDirective,
     TransactionsScrollDirective,
+    TransitionsScrollDirective,
     ViewCapturePropertyGroupsComponent,
     SelectWithFilterComponent,
     ShortcutsComponent,

@@ -146,7 +146,7 @@ export const logComponentStyles = `
     flex: 3;
   }
 
-  .jank_cuj-type {
+  .jank-cuj-type {
     flex: 8;
   }
 
