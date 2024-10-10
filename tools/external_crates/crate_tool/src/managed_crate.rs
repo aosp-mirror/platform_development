@@ -23,6 +23,7 @@ use std::{
 use anyhow::{anyhow, Context, Result};
 use glob::glob;
 use google_metadata::GoogleMetadata;
+use license_checker::find_licenses;
 use name_and_version::NamedAndVersioned;
 use rooted_path::RootedPath;
 use semver::Version;
@@ -32,6 +33,7 @@ use crate::{
     copy_dir,
     crate_type::Crate,
     ensure_exists_and_empty,
+    license::update_module_license_files,
     patch::Patch,
     pseudo_crate::{CargoVendorClean, PseudoCrate},
     SuccessOrError,
@@ -191,6 +193,28 @@ impl<State: ManagedCrateState> ManagedCrate<State> {
         for (path, contents) in new_patch_contents {
             write(path, contents)?;
         }
+        Ok(())
+    }
+    pub fn fix_licenses(&self) -> Result<()> {
+        println!("{} = \"={}\"", self.name(), self.android_version());
+        let state =
+            find_licenses(self.android_crate_path(), self.name(), self.android_crate.license())?;
+        if !state.unsatisfied.is_empty() {
+            println!("{:?}", state);
+        } else {
+            // For now, just update MODULE_LICENSE_*
+            update_module_license_files(self.android_crate_path(), &state)?;
+        }
+        Ok(())
+    }
+    pub fn fix_metadata(&self) -> Result<()> {
+        println!("{} = \"={}\"", self.name(), self.android_version());
+        let mut metadata = GoogleMetadata::try_from(self.android_crate_path().join("METADATA")?)?;
+        metadata.set_version_and_urls(self.name(), self.android_version().to_string())?;
+        metadata.migrate_archive();
+        metadata.migrate_homepage();
+        metadata.remove_deprecated_url();
+        metadata.write()?;
         Ok(())
     }
 }
