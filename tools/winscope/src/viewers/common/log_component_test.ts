@@ -49,7 +49,7 @@ import {SearchBoxComponent} from 'viewers/components/search_box_component';
 import {SelectWithFilterComponent} from 'viewers/components/select_with_filter_component';
 import {LogComponent} from './log_component';
 import {TextFilter} from './text_filter';
-import {LogEntry, LogFieldType} from './ui_data_log';
+import {LogEntry, LogFieldType, LogFilter} from './ui_data_log';
 
 describe('LogComponent', () => {
   let fixture: ComponentFixture<LogComponent>;
@@ -340,8 +340,8 @@ describe('LogComponent', () => {
     const entries = [entry1, entry2];
 
     const filters = [
-      {type: LogFieldType.TAG, options: ['Test tag 1', 'Test tag 2']},
-      {type: LogFieldType.VSYNC_ID, textFilter: new TextFilter('', [])},
+      new LogFilter(LogFieldType.TAG, ['Test tag 1', 'Test tag 2']),
+      new LogFilter(LogFieldType.VSYNC_ID, undefined, new TextFilter('', [])),
     ];
 
     component.entries = entries;

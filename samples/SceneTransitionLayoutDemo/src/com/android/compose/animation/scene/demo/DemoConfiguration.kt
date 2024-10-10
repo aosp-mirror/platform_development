@@ -88,6 +88,7 @@ data class DemoConfiguration(
             val useOverscrollSpec = "useOverscrollSpec"
             val overscrollProgress = "overscrollProgress"
             val lsToShadeRequiresFullSwipe = "lsToShadeRequiresFullSwipe"
+            val enableOverlays = "enableOverlays"
 
             mapSaver(
                 save = {
@@ -103,6 +104,7 @@ data class DemoConfiguration(
                         useOverscrollSpec to it.useOverscrollSpec,
                         overscrollProgress to it.overscrollProgressConverter.save(),
                         lsToShadeRequiresFullSwipe to it.lsToShadeRequiresFullSwipe,
+                        enableOverlays to it.enableOverlays,
                     )
                 },
                 restore = {
@@ -122,6 +124,7 @@ data class DemoConfiguration(
                             it[overscrollProgress].restoreOverscrollProgress(),
                         lsToShadeRequiresFullSwipe =
                             it[lsToShadeRequiresFullSwipe] as ToggleableState,
+                        enableOverlays = it[enableOverlays] as Boolean,
                     )
                 },
             )
