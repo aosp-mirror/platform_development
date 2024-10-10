@@ -147,6 +147,17 @@ import {
       </cdk-virtual-scroll-viewport>
 
       <cdk-virtual-scroll-viewport
+          *ngIf="isTransitions()"
+          transitionsVirtualScroll
+          class="scroll"
+          [scrollItems]="entries">
+        <ng-container
+            *cdkVirtualFor="let entry of entries; let i = index"
+            [ngTemplateOutlet]="content"
+            [ngTemplateOutletContext]="{entry: entry, i: i}"> </ng-container>
+      </cdk-virtual-scroll-viewport>
+
+      <cdk-virtual-scroll-viewport
           *ngIf="isFixedSizeScrollViewport()"
           itemSize="36"
           class="scroll">
@@ -401,8 +412,16 @@ export class LogComponent {
     return this.traceType === TraceType.PROTO_LOG;
   }
 
+  isTransitions() {
+    return this.traceType === TraceType.TRANSITION;
+  }
+
   isFixedSizeScrollViewport() {
-    return !(this.isTransactions() || this.isProtolog());
+    return !(
+      this.isTransactions() ||
+      this.isProtolog() ||
+      this.isTransitions()
+    );
   }
 
   updateTableMarginEnd() {
