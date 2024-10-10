@@ -16,11 +16,14 @@
 
 package com.example.android.vdmdemo.host;
 
+import static android.Manifest.permission.ADD_TRUSTED_DISPLAY;
+
 import android.annotation.SuppressLint;
 import android.app.ActivityOptions;
 import android.companion.virtual.VirtualDeviceManager.VirtualDevice;
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.graphics.Point;
 import android.graphics.PointF;
 import android.hardware.display.DisplayManager;
@@ -167,6 +170,10 @@ class RemoteDisplay implements AutoCloseable {
         }
         if (mDisplayType == DISPLAY_TYPE_MIRROR) {
             flags &= ~DisplayManager.VIRTUAL_DISPLAY_FLAG_OWN_CONTENT_ONLY;
+        }
+        if (mContext.checkCallingOrSelfPermission(ADD_TRUSTED_DISPLAY)
+                == PackageManager.PERMISSION_DENIED) {
+            flags &= ~DisplayManager.VIRTUAL_DISPLAY_FLAG_TRUSTED;
         }
 
         Set<String> displayCategories;
@@ -364,11 +371,10 @@ class RemoteDisplay implements AutoCloseable {
                 break;
             case DEVICE_TYPE_ROTARY_ENCODER:
                 processRotaryEvent(remoteEventToVirtualRotaryEncoderEvent(inputEvent));
+                break;
             default:
-                Log.e(
-                        TAG,
-                        "processInputEvent got an invalid input device type: "
-                                + inputEvent.getDeviceType().getNumber());
+                Log.e(TAG, "processInputEvent got an invalid input device type: "
+                        + inputEvent.getDeviceType().getNumber());
                 break;
         }
     }
@@ -388,10 +394,8 @@ class RemoteDisplay implements AutoCloseable {
                 processRotaryEvent(motionEventToVirtualRotaryEncoderEvent((MotionEvent) event));
                 break;
             default:
-                Log.e(
-                        TAG,
-                        "processInputEvent got an invalid input device type: "
-                                + deviceType.getNumber());
+                Log.e(TAG, "processInputEvent got an invalid input device type: "
+                        + deviceType.getNumber());
                 break;
         }
     }
