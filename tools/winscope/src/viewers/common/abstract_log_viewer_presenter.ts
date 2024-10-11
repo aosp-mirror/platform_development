@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import {DOMUtils} from 'common/dom_utils';
 import {FunctionUtils} from 'common/function_utils';
 import {Timestamp} from 'common/time';
 import {
@@ -27,6 +28,7 @@ import {
 } from 'messaging/winscope_event_emitter';
 import {Trace, TraceEntry} from 'trace/trace';
 import {TraceEntryFinder} from 'trace/trace_entry_finder';
+import {TracePosition} from 'trace/trace_position';
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
 import {PropertiesPresenter} from 'viewers/common/properties_presenter';
 import {UserOptions} from 'viewers/common/user_options';
@@ -50,6 +52,7 @@ export abstract class AbstractLogViewerPresenter<UiData extends UiDataLog>
   protected abstract logPresenter: LogPresenter<LogEntry>;
   protected propertiesPresenter?: PropertiesPresenter;
   protected keepCalculated?: boolean;
+  private activeTrace?: Trace<object>;
 
   protected constructor(
     protected readonly trace: Trace<PropertyTreeNode>,
@@ -111,6 +114,16 @@ export abstract class AbstractLogViewerPresenter<UiData extends UiDataLog>
         await this.onPropertiesFilterChange(detail);
       },
     );
+
+    document.addEventListener('keydown', async (event: KeyboardEvent) => {
+      const isViewerVisible = DOMUtils.isElementVisible(htmlElement);
+      const isPositionChange =
+        event.key === 'ArrowRight' || event.key === 'ArrowLeft';
+      if (!isViewerVisible || !isPositionChange) {
+        return;
+      }
+      await this.onPositionChangeByKeyPress(event);
+    });
   }
 
   async onAppEvent(event: WinscopeEvent) {
@@ -123,6 +136,9 @@ export abstract class AbstractLogViewerPresenter<UiData extends UiDataLog>
     await event.visit(WinscopeEventType.DARK_MODE_TOGGLED, async (event) => {
       this.uiData.isDarkMode = event.isDarkMode;
       this.notifyViewChanged();
+    });
+    await event.visit(WinscopeEventType.ACTIVE_TRACE_CHANGED, async (event) => {
+      this.activeTrace = event.trace;
     });
   }
 
@@ -202,6 +218,42 @@ export abstract class AbstractLogViewerPresenter<UiData extends UiDataLog>
     this.notifyViewChanged();
   }
 
+  async onPositionChangeByKeyPress(event: KeyboardEvent) {
+    const currIndex = this.uiData.currentIndex;
+    if (this.activeTrace === this.trace && currIndex !== undefined) {
+      if (event.key === 'ArrowRight') {
+        event.stopImmediatePropagation();
+        if (currIndex < this.uiData.entries.length - 1) {
+          const currTimestamp =
+            this.uiData.entries[currIndex].traceEntry.getTimestamp();
+          const nextEntry = this.uiData.entries
+            .slice(currIndex + 1)
+            .find((entry) => entry.traceEntry.getTimestamp() > currTimestamp);
+          if (nextEntry) {
+            return this.emitAppEvent(
+              new TracePositionUpdate(
+                TracePosition.fromTraceEntry(nextEntry.traceEntry),
+                true,
+              ),
+            );
+          }
+        }
+      } else {
+        event.stopImmediatePropagation();
+        if (currIndex > 0) {
+          return this.emitAppEvent(
+            new TracePositionUpdate(
+              TracePosition.fromTraceEntry(
+                this.uiData.entries[currIndex - 1].traceEntry,
+              ),
+              true,
+            ),
+          );
+        }
+      }
+    }
+  }
+
   protected refreshUiData() {
     this.uiData.headers = this.logPresenter.getHeaders();
     this.uiData.entries = this.logPresenter.getFilteredEntries();
@@ -218,10 +270,15 @@ export abstract class AbstractLogViewerPresenter<UiData extends UiDataLog>
 
   protected async applyTracePositionUpdate(event: TracePositionUpdate) {
     await this.initializeIfNeeded();
-    const entry = TraceEntryFinder.findCorrespondingEntry(
-      this.trace,
-      event.position,
-    );
+    let entry: TraceEntry<PropertyTreeNode> | undefined;
+    if (event.position.entry?.getFullTrace() === this.trace) {
+      entry = event.position.entry as TraceEntry<PropertyTreeNode>;
+    } else {
+      entry = TraceEntryFinder.findCorrespondingEntry(
+        this.trace,
+        event.position,
+      );
+    }
     this.logPresenter.applyTracePositionUpdate(entry);
 
     this.uiData.selectedIndex = this.logPresenter.getSelectedIndex();
