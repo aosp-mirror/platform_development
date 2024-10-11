@@ -105,6 +105,12 @@ final class PreferenceController {
                     android.companion.virtualdevice.flags.Flags::statusBarAndInsets)
                     .withRequiredPermissions(ADD_TRUSTED_DISPLAY),
 
+            // TODO: update to post-V once available
+            new StringRule(R.string.pref_display_timeout, VANILLA_ICE_CREAM,
+                    android.companion.virtualdevice.flags.Flags::deviceAwareDisplayPower,
+                    android.companion.virtualdevice.flags.Flags::displayPowerManagerApis)
+                    .withDefaultValue(String.valueOf(0)),
+
             new StringRule(R.string.pref_display_ime_policy, VANILLA_ICE_CREAM, Flags::vdmCustomIme)
                     .withRequiredPermissions(ADD_TRUSTED_DISPLAY)
                     .withDefaultValue(String.valueOf(0)),
