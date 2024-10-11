@@ -67,8 +67,8 @@ import {
             [title]="title"
             (collapseButtonClicked)="collapseButtonClicked.emit()"></collapsible-section-title>
 
-        <div class="filters" *ngIf="showFiltersInTitle && filters.length > 0">
-          <div class="filter" *ngFor="let filter of filters"
+        <div class="filters" *ngIf="showFiltersInTitle && getFilters().length > 0">
+          <div class="filter" *ngFor="let filter of getFilters()"
                [class]="getLogFieldClass(filter.type)">
             <select-with-filter
                 *ngIf="filter.options?.length > 0"
@@ -76,6 +76,7 @@ import {
                 [options]="filter.options"
                 [outerFilterWidth]="getOuterFilterWidth(filter.type)"
                 [innerFilterWidth]="getInnerFilterWidth(filter.type)"
+                formFieldClass="no-border-top-field"
                 (selectChange)="onFilterChange($event, filter.type)">
             </select-with-filter>
           </div>
@@ -85,41 +86,54 @@ import {
 
     <div class="entries">
       <div class="headers table-header" *ngIf="headers.length > 0">
-        <div *ngFor="let header of headers" class="mat-body-2" [class]="getLogFieldClass(header)" [class.with-date]="areMultipleDatesPresent()">{{getLogFieldName(header)}}</div>
-      </div>
-
-      <div class="filters table-header" *ngIf="!showFiltersInTitle && filters.length > 0">
-        <div *ngIf="showTraceEntryTimes" class="time" [class.with-date]="areMultipleDatesPresent()">
+        <div *ngIf="showTraceEntryTimes" class="time">
           <button
               color="primary"
-              mat-stroked-button
-              class="go-to-current-time"
+              mat-button
+              class="time-button go-to-current-time"
               *ngIf="showCurrentTimeButton"
               (click)="onGoToCurrentTimeClick()">
             Go to Current Time
           </button>
         </div>
 
-        <div class="filter" *ngFor="let filter of filters" [class]="getLogFieldClass(filter.type)" [class.with-date]="areMultipleDatesPresent()">
-          <select-with-filter
-              *ngIf="filter.options?.length > 0"
-              [label]="getLogFieldName(filter.type)"
-              [options]="filter.options"
-              [outerFilterWidth]="getOuterFilterWidth(filter.type)"
-              [innerFilterWidth]="getInnerFilterWidth(filter.type)"
-              (selectChange)="onFilterChange($event, filter.type)">
-          </select-with-filter>
+        <ng-container *ngFor="let header of headers">
+          <div
+            *ngIf="!isFilter(header)"
+            class="mat-body-2 header"
+            [class]="getLogFieldClass(header)">
+          {{getLogFieldName(header)}}</div>
 
-          <search-box
-            *ngIf="filter.textFilter"
-            appearance="fill"
-            [textFilter]="filter.textFilter"
-            [fontSize]="12"
-            [wideField]="true"
-            [label]="getLogFieldName(filter.type)"
-            [filterName]="getLogFieldName(filter.type)"
-            (filterChange)="onSearchBoxChange($event, filter.type)"></search-box>
-        </div>
+          <div
+            *ngIf="isFilter(header) && !showFiltersInTitle"
+            class="filter mat-body-2"
+            [class]="getLogFieldClass(header.type)">
+            <select-with-filter
+                *ngIf="header.options?.length > 0"
+                [label]="getLogFieldName(header.type)"
+                [options]="header.options"
+                [outerFilterWidth]="getOuterFilterWidth(header.type)"
+                [innerFilterWidth]="getInnerFilterWidth(header.type)"
+                appearance="none"
+                formFieldClass="no-padding-field"
+                (selectChange)="onFilterChange($event, header.type)">
+            </select-with-filter>
+
+            <search-box
+              *ngIf="header.textFilter"
+              [textFilter]="header.textFilter"
+              [label]="getLogFieldName(header.type)"
+              [filterName]="getLogFieldName(header.type)"
+              appearance="none"
+              [formFieldClass]="
+                'wide-field no-padding-field center-field '
+                 + getLogFieldClass(header.type)
+                 + (header.textFilter.filterString?.length === 0 ? ' mat-body-2' : '')
+              "
+              height="fit-content"
+              (filterChange)="onSearchBoxChange($event, header.type)"></search-box>
+          </div>
+        </ng-container>
       </div>
 
       <div class="placeholder-text mat-body-1" *ngIf="entries.length === 0"> No entries found. </div>
@@ -174,7 +188,7 @@ import {
             [class.current]="isCurrentEntry(i)"
             [class.selected]="isSelectedEntry(i)"
             (click)="onEntryClicked(i)">
-          <div *ngIf="showTraceEntryTimes" class="time" [class.with-date]="areMultipleDatesPresent()">
+          <div *ngIf="showTraceEntryTimes" class="time">
             <button
                 mat-button
                 class="time-button"
@@ -185,7 +199,7 @@ import {
             </button>
           </div>
 
-          <div [class]="getLogFieldClass(field.type)" [class.with-date]="areMultipleDatesPresent()" *ngFor="let field of entry.fields; index as i">
+          <div [class]="getLogFieldClass(field.type)" *ngFor="let field of entry.fields; index as i">
             <span class="mat-body-1" *ngIf="!showFieldButton(field)">{{ field.value }}</span>
             <button
                 *ngIf="showFieldButton(field)"
@@ -229,8 +243,7 @@ export class LogComponent {
   @Input() selectedIndex: number | undefined;
   @Input() scrollToIndex: number | undefined;
   @Input() currentIndex: number | undefined;
-  @Input() headers: LogFieldType[] = [];
-  @Input() filters: LogFilter[] = [];
+  @Input() headers: Array<LogFieldType | LogFilter> = [];
   @Input() entries: LogEntry[] = [];
   @Input() showCurrentTimeButton = true;
   @Input() traceType: TraceType | undefined;
@@ -245,6 +258,14 @@ export class LogComponent {
   constructor(
     @Inject(ElementRef) private elementRef: ElementRef<HTMLElement>,
   ) {}
+
+  getFilters() {
+    return this.headers.filter((header) => this.isFilter(header));
+  }
+
+  isFilter(header: LogFieldType | LogFilter): boolean {
+    return header instanceof LogFilter;
+  }
 
   showFieldButton(field: LogField) {
     return (
@@ -347,9 +368,8 @@ export class LogComponent {
 
   @HostListener('document:keydown', ['$event'])
   async handleKeyboardEvent(event: KeyboardEvent) {
-    const logComponentRect = (
-      this.elementRef.nativeElement as HTMLElement
-    ).getBoundingClientRect();
+    const logComponentRect =
+      this.elementRef.nativeElement.getBoundingClientRect();
     const logComponentVisible =
       logComponentRect.height > 0 && logComponentRect.width > 0;
     if (event.key === 'ArrowDown' && logComponentVisible) {
@@ -383,20 +403,20 @@ export class LogComponent {
 
   getInnerFilterWidth(type: LogFieldType): string | undefined {
     switch (type) {
-      case LogFieldType.TRANSACTION_ID:
-        return '125';
       case LogFieldType.VSYNC_ID:
         return '90';
-      case LogFieldType.TRANSACTION_TYPE:
-        return '175';
-      case LogFieldType.LAYER_OR_DISPLAY_ID:
-        return '100';
-      case LogFieldType.FLAGS:
-        return '250';
+      case LogFieldType.TRANSACTION_ID:
+        return '125';
       case LogFieldType.TAG:
         return '150';
+      case LogFieldType.TRANSACTION_TYPE:
+      case LogFieldType.TRANSITION_TYPE:
+        return '175';
+      case LogFieldType.FLAGS:
+      case LogFieldType.HANDLER:
+      case LogFieldType.PARTICIPANTS:
+        return '250';
       case LogFieldType.SOURCE_FILE:
-        return '300';
       case LogFieldType.INPUT_DISPATCH_WINDOWS:
         return '300';
       default:

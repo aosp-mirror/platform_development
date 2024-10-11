@@ -293,7 +293,7 @@ class E2eTestUtils {
   ) {
     const selectFilter = element(
       by.css(
-        `${viewerSelector} .filters ${filterSelector} .mat-select-trigger`,
+        `${viewerSelector} .headers ${filterSelector} .mat-select-trigger`,
       ),
     );
     await selectFilter.click();

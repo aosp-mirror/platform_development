@@ -204,7 +204,6 @@ export abstract class AbstractLogViewerPresenter<UiData extends UiDataLog>
 
   protected refreshUiData() {
     this.uiData.headers = this.logPresenter.getHeaders();
-    this.uiData.filters = this.logPresenter.getFilters();
     this.uiData.entries = this.logPresenter.getFilteredEntries();
     this.uiData.selectedIndex = this.logPresenter.getSelectedIndex();
     this.uiData.scrollToIndex = this.logPresenter.getScrollToIndex();
