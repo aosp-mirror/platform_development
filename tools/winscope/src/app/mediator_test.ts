@@ -628,15 +628,41 @@ describe('Mediator', () => {
     await mediator.onWinscopeEvent(
       new TabbedViewSwitched(viewerStub1.getViews()[0]),
     );
-    checkTracePositionUpdateEvents(
-      [viewerStub1, viewerOverlay, timelineComponent, crossToolProtocol],
-      [],
-      undefined,
-      undefined,
-      true,
+    userNotifierChecker.expectNone();
+    const tracePositionUpdate = makeExpectedTracePositionUpdate(undefined);
+    const activeTraceChanged = new ActiveTraceChanged(
+      viewerStub1.getViews()[0].traces[0],
+    );
+    expect(viewerStub0.onWinscopeEvent).toHaveBeenCalledOnceWith(
+      activeTraceChanged,
+    );
+    expect(viewerDump.onWinscopeEvent).toHaveBeenCalledOnceWith(
+      activeTraceChanged,
+    );
+
+    expect(viewerStub1.onWinscopeEvent).toHaveBeenCalledWith(
+      tracePositionUpdate,
+    );
+    expect(viewerStub1.onWinscopeEvent).toHaveBeenCalledWith(
+      activeTraceChanged,
+    );
+
+    expect(viewerOverlay.onWinscopeEvent).toHaveBeenCalledWith(
+      tracePositionUpdate,
+    );
+    expect(viewerOverlay.onWinscopeEvent).toHaveBeenCalledWith(
+      activeTraceChanged,
+    );
+
+    expect(timelineComponent.onWinscopeEvent).toHaveBeenCalledWith(
+      tracePositionUpdate,
     );
     expect(timelineComponent.onWinscopeEvent).toHaveBeenCalledWith(
-      new ActiveTraceChanged(viewerStub1.getViews()[0].traces[0]),
+      activeTraceChanged,
+    );
+
+    expect(crossToolProtocol.onWinscopeEvent).toHaveBeenCalledOnceWith(
+      tracePositionUpdate,
     );
 
     // Position update -> update only visible viewers
@@ -655,12 +681,20 @@ describe('Mediator', () => {
     expect(timelineComponent.onWinscopeEvent).toHaveBeenCalledOnceWith(event);
   });
 
-  it('notifies timeline of active trace change', async () => {
-    expect(timelineComponent.onWinscopeEvent).not.toHaveBeenCalled();
+  it('notifies timeline and viewers of active trace change', async () => {
+    await loadFiles();
+    await loadTraceView();
+    resetSpyCalls();
 
-    await mediator.onWinscopeEvent(new ActiveTraceChanged(traceWm));
+    const activeTraceChanged = new ActiveTraceChanged(traceWm);
+    await mediator.onWinscopeEvent(activeTraceChanged);
     expect(timelineComponent.onWinscopeEvent).toHaveBeenCalledOnceWith(
-      new ActiveTraceChanged(traceWm),
+      activeTraceChanged,
+    );
+    viewers.forEach((viewer) =>
+      expect(viewer.onWinscopeEvent).toHaveBeenCalledOnceWith(
+        activeTraceChanged,
+      ),
     );
   });
 
@@ -752,7 +786,6 @@ describe('Mediator', () => {
     userNotifications: UserWarning[],
     position?: TracePosition,
     crossToolProtocolPosition = position,
-    multipleTimelineEvents = false,
   ) {
     userNotifierChecker.expectNotified(userNotifications);
     const event = makeExpectedTracePositionUpdate(position);
@@ -765,11 +798,7 @@ describe('Mediator', () => {
       if (isVisible) {
         const expected =
           listener === crossToolProtocol ? crossToolProtocolEvent : event;
-        if (multipleTimelineEvents && listener === timelineComponent) {
-          expect(listener.onWinscopeEvent).toHaveBeenCalledWith(expected);
-        } else {
-          expect(listener.onWinscopeEvent).toHaveBeenCalledOnceWith(expected);
-        }
+        expect(listener.onWinscopeEvent).toHaveBeenCalledOnceWith(expected);
       } else {
         expect(listener.onWinscopeEvent).not.toHaveBeenCalled();
       }
