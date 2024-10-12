@@ -46,6 +46,7 @@ class PresenterJankCujsTest extends AbstractLogViewerPresenterTest<UiData> {
   override readonly numberOfUnfilteredProperties = 4;
   override readonly propertiesFilter = new TextFilter('launcher', []);
   override readonly numberOfFilteredProperties = 1;
+  override positionUpdateEarliestEntry: TracePositionUpdate | undefined;
 
   override async setUpTestEnvironment(): Promise<void> {
     const parser = (await UnitTestUtils.getTracesParser([
@@ -63,6 +64,7 @@ class PresenterJankCujsTest extends AbstractLogViewerPresenterTest<UiData> {
     this.secondPositionUpdate = TracePositionUpdate.fromTraceEntry(
       this.trace.getEntry(2),
     );
+    this.positionUpdateEarliestEntry = this.positionUpdate;
   }
 
   override async createPresenterWithEmptyTrace(

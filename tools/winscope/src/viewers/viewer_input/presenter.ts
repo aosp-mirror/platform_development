@@ -155,15 +155,15 @@ export class Presenter extends AbstractLogViewerPresenter<UiData> {
     this.allEntries = await this.makeInputEntries();
 
     this.logPresenter.setAllEntries(this.allEntries);
-    this.logPresenter.setHeaders(Presenter.FIELD_TYPES);
-    this.logPresenter.setFilters([
+    const filters: Array<LogFilter | LogFieldType> = [
       new LogFilter(
         LogFieldType.INPUT_DISPATCH_WINDOWS,
         [...this.allInputLayerIds.values()].map((layerId) => {
           return this.getLayerDisplayName(layerId);
         }),
       ),
-    ]);
+    ];
+    this.logPresenter.setHeaders(filters.concat(Presenter.FIELD_TYPES));
 
     this.refreshUiData();
   }
