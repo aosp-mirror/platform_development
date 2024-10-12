@@ -89,34 +89,38 @@ export class Presenter extends AbstractLogViewerPresenter<UiData> {
 
     for (const type of Presenter.FIELD_TYPES) {
       if (type === LogFieldType.FLAGS) {
-        filters.push({
-          type,
-          options: this.getUniqueUiDataEntryValues(
-            allEntries,
-            (entry: TransactionsEntry) =>
-              assertDefined(
-                entry.fields.find((f) => f.type === type)?.value as string,
-              )
-                .split('|')
-                .map((flag) => flag.trim()),
+        filters.push(
+          new LogFilter(
+            type,
+            this.getUniqueUiDataEntryValues(
+              allEntries,
+              (entry: TransactionsEntry) =>
+                assertDefined(
+                  entry.fields.find((f) => f.type === type)?.value as string,
+                )
+                  .split('|')
+                  .map((flag) => flag.trim()),
+            ),
           ),
-        });
+        );
       } else {
-        filters.push({
-          type,
-          options: this.getUniqueUiDataEntryValues(
-            allEntries,
-            (entry: TransactionsEntry) =>
-              assertDefined(
-                entry.fields.find((f) => f.type === type),
-              ).value.toString(),
+        filters.push(
+          new LogFilter(
+            type,
+            this.getUniqueUiDataEntryValues(
+              allEntries,
+              (entry: TransactionsEntry) =>
+                assertDefined(
+                  entry.fields.find((f) => f.type === type),
+                ).value.toString(),
+            ),
           ),
-        });
+        );
       }
     }
 
     this.logPresenter.setAllEntries(allEntries);
-    this.logPresenter.setFilters(filters);
+    this.logPresenter.setHeaders(filters);
     this.refreshUiData();
     this.isInitialized = true;
   }

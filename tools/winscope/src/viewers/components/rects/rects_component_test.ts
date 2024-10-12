@@ -91,7 +91,6 @@ describe('RectsComponent', () => {
         CollapsibleSectionTitleComponent,
         UserOptionsComponent,
       ],
-      schemas: [],
     }).compileComponents();
 
     fixture = TestBed.createComponent(TestHostComponent);
