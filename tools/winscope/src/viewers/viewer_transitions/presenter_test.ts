@@ -30,7 +30,11 @@ import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
 import {NotifyLogViewCallbackType} from 'viewers/common/abstract_log_viewer_presenter';
 import {AbstractLogViewerPresenterTest} from 'viewers/common/abstract_log_viewer_presenter_test';
 import {TextFilter} from 'viewers/common/text_filter';
-import {UiDataLog} from 'viewers/common/ui_data_log';
+import {
+  LogFieldType,
+  LogFieldValue,
+  UiDataLog,
+} from 'viewers/common/ui_data_log';
 import {Presenter} from './presenter';
 import {UiData} from './ui_data';
 
@@ -40,16 +44,109 @@ class PresenterTransitionsTest extends AbstractLogViewerPresenterTest<UiData> {
   private secondPositionUpdate: TracePositionUpdate | undefined;
 
   override readonly shouldExecuteHeaderTests = true;
-  override readonly shouldExecuteFilterTests = false;
+  override readonly shouldExecuteFilterTests = true;
   override readonly shouldExecutePropertiesTests = true;
 
   override readonly totalOutputEntries = 4;
   override readonly expectedIndexOfFirstPositionUpdate = 3;
   override readonly expectedIndexOfSecondPositionUpdate = 1;
+  override readonly expectedInitialFilterOptions = new Map<
+    LogFieldType,
+    string[] | number
+  >([
+    [LogFieldType.TRANSITION_TYPE, ['OPEN', 'TO_FRONT']],
+    [
+      LogFieldType.HANDLER,
+      [
+        'N/A',
+        'com.android.wm.shell.recents.RecentsTransitionHandler',
+        'com.android.wm.shell.transition.DefaultMixedHandler',
+      ],
+    ],
+    [
+      LogFieldType.PARTICIPANTS,
+      [
+        '47',
+        '67',
+        '398',
+        '471',
+        '472',
+        '489',
+        '0xc3df4d',
+        '0x5ba3da0',
+        '0x97b5518',
+        '0xa884527',
+        '0xb887160',
+        '0xc5f6ee4',
+      ],
+    ],
+    [LogFieldType.FLAGS, ['TRANSIT_FLAG_IS_RECENTS', '0']],
+    [LogFieldType.STATUS, ['MERGED', 'N/A', 'PLAYED']],
+  ]);
+  override readonly filterValuesToSet = new Map<
+    LogFieldType,
+    Array<string | string[]>
+  >([
+    [LogFieldType.TRANSITION_TYPE, [[], ['CLOSE'], ['OPEN']]],
+    [LogFieldType.HANDLER, [[], ['N/A']]],
+    [LogFieldType.PARTICIPANTS, [[], ['0x5ba3da0']]],
+    [LogFieldType.FLAGS, [[], ['TRANSIT_FLAG_IS_RECENTS']]],
+    [LogFieldType.STATUS, [[], ['MERGED', 'PLAYED']]],
+  ]);
+  override readonly expectedFieldValuesAfterFilter = new Map<
+    LogFieldType,
+    Array<LogFieldValue[] | number>
+  >([
+    [LogFieldType.TRANSITION_TYPE, [['OPEN', 'TO_FRONT'], [], ['OPEN']]],
+    [
+      LogFieldType.HANDLER,
+      [
+        [
+          'N/A',
+          'com.android.wm.shell.recents.RecentsTransitionHandler',
+          'com.android.wm.shell.transition.DefaultMixedHandler',
+        ],
+        ['N/A'],
+      ],
+    ],
+    [
+      LogFieldType.PARTICIPANTS,
+      [
+        [
+          'Layers: 398, 47\nWindows: 0xb887160, 0x97b5518',
+          'Layers: 47, 398, 67\nWindows: 0x97b5518, 0xb887160, 0xa884527',
+          'Layers: 471, 47\nWindows: 0xc3df4d, 0x97b5518',
+          'Layers: 489, 472\nWindows: 0x5ba3da0, 0xc5f6ee4',
+        ],
+        ['Layers: 489, 472\nWindows: 0x5ba3da0, 0xc5f6ee4'],
+      ],
+    ],
+    [
+      LogFieldType.FLAGS,
+      [['TRANSIT_FLAG_IS_RECENTS', '0'], ['TRANSIT_FLAG_IS_RECENTS']],
+    ],
+    [
+      LogFieldType.STATUS,
+      [
+        ['MERGED', 'N/A', 'PLAYED'],
+        ['MERGED', 'PLAYED'],
+      ],
+    ],
+  ]);
   override readonly logEntryClickIndex = 2;
+  override readonly filterNameForCurrentIndexTest =
+    LogFieldType.TRANSITION_TYPE;
+  override readonly filterChangeForCurrentIndexTest = ['OPEN'];
+  override readonly secondFilterChangeForCurrentIndexTest = [
+    'OPEN',
+    'TO_FRONT',
+  ];
+  override readonly expectedCurrentIndexAfterFilterChange = 2;
+  override readonly expectedCurrentIndexAfterSecondFilterChange = 1;
   override readonly numberOfUnfilteredProperties = 2;
   override readonly propertiesFilter = new TextFilter('shellData', []);
   override readonly numberOfFilteredProperties = 1;
+  override positionUpdateEarliestEntry: TracePositionUpdate | undefined;
 
   override async setUpTestEnvironment(): Promise<void> {
     const parser = await UnitTestUtils.getPerfettoParser(
@@ -67,6 +164,9 @@ class PresenterTransitionsTest extends AbstractLogViewerPresenterTest<UiData> {
     );
     this.secondPositionUpdate = TracePositionUpdate.fromTraceEntry(
       this.trace.getEntry(2),
+    );
+    this.positionUpdateEarliestEntry = TracePositionUpdate.fromTraceEntry(
+      this.trace.getEntry(1),
     );
   }
 

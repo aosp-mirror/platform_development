@@ -153,3 +153,5 @@ for file in "${FILES[@]}"; do
   echo
   [[ "$yn" == [nNqQ] ]] && exit "$exit_code"
 done
+
+exit 0
