@@ -19,14 +19,19 @@ import {MatSelectChange} from '@angular/material/select';
 @Component({
   selector: 'select-with-filter',
   template: `
-    <mat-form-field appearance="fill" [style]="getOuterFormFieldStyle()">
+    <mat-form-field
+      [style]="getOuterFormFieldStyle()"
+      [style.text-align]="'unset'"
+      [appearance]="appearance"
+      [class]="formFieldClass"
+      [class.mat-body-2]="!select.value || select.value.length === 0">
       <mat-label>{{ label }}</mat-label>
       <mat-select
         (opened)="filter.focus()"
         (closed)="onSelectClosed()"
         (selectionChange)="onSelectChange($event)"
-        [multiple]="multiple"
-        [value]="value">
+        [multiple]="true"
+        #select>
         <mat-form-field class="select-filter" [style]="getInnerFormFieldStyle()">
           <mat-label>Filter options</mat-label>
           <input matInput #filter [(ngModel)]="filterString" />
@@ -44,7 +49,6 @@ import {MatSelectChange} from '@angular/material/select';
     `
       mat-form-field {
         width: 100%;
-        font-size: 12px;
       }
 
       .hidden-option {
@@ -59,8 +63,8 @@ export class SelectWithFilterComponent {
   @Input() outerFilterWidth = '100px';
   @Input() innerFilterWidth = '100';
   @Input() flex = 'none';
-  @Input() multiple = true;
-  @Input() value?: string | string[] | undefined;
+  @Input() appearance = '';
+  @Input() formFieldClass = '';
 
   @Output() readonly selectChange = new EventEmitter<MatSelectChange>();
 

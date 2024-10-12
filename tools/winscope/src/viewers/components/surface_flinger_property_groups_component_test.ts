@@ -46,7 +46,6 @@ describe('SurfaceFlingerPropertyGroupsComponent', () => {
         TransformMatrixComponent,
         CollapsibleSectionTitleComponent,
       ],
-      schemas: [],
     }).compileComponents();
     fixture = TestBed.createComponent(TestHostComponent);
     component = fixture.componentInstance;

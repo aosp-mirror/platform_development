@@ -37,7 +37,7 @@ import {UiData} from './ui_data';
         [scrollToIndex]="inputData?.scrollToIndex"
         [currentIndex]="inputData?.currentIndex"
         [entries]="inputData?.entries"
-        [filters]="inputData?.filters"
+        [headers]="inputData?.headers"
         [traceType]="${TraceType.TRANSACTIONS}">
       </log-view>
 
