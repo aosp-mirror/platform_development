@@ -16,17 +16,17 @@
 
 import {FixedStringFormatter} from 'trace/tree_node/formatters';
 import {Operation} from 'trace/tree_node/operations/operation';
-import {UiPropertyTreeNode} from 'viewers/common/ui_property_tree_node';
+import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
 
 export class UpdateTransitionChangesNames
-  implements Operation<UiPropertyTreeNode>
+  implements Operation<PropertyTreeNode>
 {
   constructor(
     private readonly layerIdToName: Map<number, string>,
     private readonly windowTokenToTitle: Map<string, string>,
   ) {}
 
-  apply(node: UiPropertyTreeNode): void {
+  apply(node: PropertyTreeNode): void {
     node
       .getChildByName('wmData')
       ?.getChildByName('targets')
@@ -38,7 +38,7 @@ export class UpdateTransitionChangesNames
           const layerName = this.layerIdToName.get(layerIdValue);
           if (layerName) {
             layerId.setFormatter(
-              new FixedStringFormatter(`${layerIdValue} ${layerName}`),
+              new FixedStringFormatter(`${layerIdValue} (${layerName})`),
             );
           }
         }

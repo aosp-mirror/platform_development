@@ -35,8 +35,8 @@ import {UiRect} from 'viewers/components/rects/ui_rect';
 export class UiData implements UiDataLog {
   constructor(
     public headers: LogFieldType[],
+    public titleFilters: LogFilter[],
     public entries: LogEntry[],
-    public filters: LogFilter[],
     public selectedIndex: undefined | number,
     public scrollToIndex: undefined | number,
     public currentIndex: undefined | number,

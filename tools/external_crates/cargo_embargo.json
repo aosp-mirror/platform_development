@@ -18,7 +18,7 @@
   "tests": true,
   "workspace": true,
   "workspace_excludes": [
-    "crate_health",
+    "crate_tool",
     "license_checker"
   ]
 }

@@ -16,9 +16,7 @@
 
 import {ClipboardModule} from '@angular/cdk/clipboard';
 import {ScrollingModule} from '@angular/cdk/scrolling';
-import {CommonModule} from '@angular/common';
 import {HttpClientModule} from '@angular/common/http';
-import {CUSTOM_ELEMENTS_SCHEMA} from '@angular/core';
 import {
   ComponentFixture,
   ComponentFixtureAutoDetect,
@@ -26,7 +24,6 @@ import {
 } from '@angular/core/testing';
 import {FormsModule} from '@angular/forms';
 import {MatButtonModule} from '@angular/material/button';
-import {MatCheckboxModule} from '@angular/material/checkbox';
 import {MatDividerModule} from '@angular/material/divider';
 import {MatFormFieldModule} from '@angular/material/form-field';
 import {MatIconModule} from '@angular/material/icon';
@@ -49,8 +46,11 @@ import {CollapsibleSectionTitleComponent} from 'viewers/components/collapsible_s
 import {PropertiesComponent} from 'viewers/components/properties_component';
 import {PropertyTreeNodeDataViewComponent} from 'viewers/components/property_tree_node_data_view_component';
 import {RectsComponent} from 'viewers/components/rects/rects_component';
+import {SearchBoxComponent} from 'viewers/components/search_box_component';
+import {SelectWithFilterComponent} from 'viewers/components/select_with_filter_component';
 import {TreeComponent} from 'viewers/components/tree_component';
 import {TreeNodeComponent} from 'viewers/components/tree_node_component';
+import {UserOptionsComponent} from 'viewers/components/user_options_component';
 import {Presenter} from './presenter';
 import {InputEntry, UiData} from './ui_data';
 import {ViewerInputComponent} from './viewer_input_component';
@@ -81,21 +81,19 @@ describe('ViewerInputComponent', () => {
     await TestBed.configureTestingModule({
       providers: [{provide: ComponentFixtureAutoDetect, useValue: true}],
       imports: [
-        CommonModule,
-        MatIconModule,
-        MatDividerModule,
-        HttpClientModule,
-        MatCheckboxModule,
         MatSliderModule,
+        MatTooltipModule,
+        MatDividerModule,
+        ScrollingModule,
+        MatIconModule,
+        ClipboardModule,
         MatFormFieldModule,
+        MatButtonModule,
         MatInputModule,
         BrowserAnimationsModule,
         FormsModule,
-        MatTooltipModule,
-        MatButtonModule,
         MatSelectModule,
-        ScrollingModule,
-        ClipboardModule,
+        HttpClientModule,
       ],
       declarations: [
         ViewerInputComponent,
@@ -107,8 +105,10 @@ describe('ViewerInputComponent', () => {
         CollapsibleSectionTitleComponent,
         LogComponent,
         RectsComponent,
+        SelectWithFilterComponent,
+        SearchBoxComponent,
+        UserOptionsComponent,
       ],
-      schemas: [CUSTOM_ELEMENTS_SCHEMA],
     }).compileComponents();
 
     fixture = TestBed.createComponent(ViewerInputComponent);
