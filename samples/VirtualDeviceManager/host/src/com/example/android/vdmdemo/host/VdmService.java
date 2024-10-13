@@ -78,6 +78,7 @@ import com.google.common.util.concurrent.MoreExecutors;
 
 import dagger.hilt.android.AndroidEntryPoint;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
@@ -141,7 +142,7 @@ public final class VdmService extends Hilt_VdmService {
     private DisplayManager mDisplayManager;
     private KeyguardManager mKeyguardManager;
     private VirtualDeviceManager mVirtualDeviceManager;
-    private Consumer<Boolean> mLocalVirtualDeviceLifecycleListener;
+    private ArrayList<Consumer<Boolean>> mLocalVirtualDeviceLifecycleListeners = new ArrayList<>();
 
     private VirtualDeviceManager.VirtualDeviceListener mVirtualDeviceListener;
 
@@ -363,8 +364,12 @@ public final class VdmService extends Hilt_VdmService {
         mAudioInjector.stop();
     }
 
-    void setVirtualDeviceListener(Consumer<Boolean> listener) {
-        mLocalVirtualDeviceLifecycleListener = listener;
+    void addVirtualDeviceListener(Consumer<Boolean> listener) {
+        mLocalVirtualDeviceLifecycleListeners.add(listener);
+    }
+
+    void removeVirtualDeviceListener(Consumer<Boolean> listener) {
+        mLocalVirtualDeviceLifecycleListeners.remove(listener);
     }
 
     private void processRemoteEvent(RemoteEvent event) {
@@ -422,23 +427,26 @@ public final class VdmService extends Hilt_VdmService {
                 Objects.requireNonNull(getSystemService(CompanionDeviceManager.class));
         RoleManager rm = Objects.requireNonNull(getSystemService(RoleManager.class));
         final String deviceProfile = mPreferenceController.getString(R.string.pref_device_profile);
+        AssociationInfo existingAssociation = null;
         for (AssociationInfo associationInfo : cdm.getMyAssociations()) {
-            if (!Objects.equals(associationInfo.getDeviceProfile(), deviceProfile)
-                    || !Objects.equals(associationInfo.getPackageName(), getPackageName())
-                    || associationInfo.getDisplayName() == null
-                    || !Objects.equals(
-                    associationInfo.getDisplayName().toString(),
-                    mDeviceCapabilities.getDeviceName())) {
-                continue;
-            }
-            // It is possible that the role was revoked but the CDM association remained.
-            if (!rm.isRoleHeld(deviceProfile)) {
-                cdm.disassociate(associationInfo.getId());
-                break;
+            if (rm.isRoleHeld(deviceProfile)
+                    && Objects.equals(associationInfo.getPackageName(), getPackageName())
+                    && Objects.equals(associationInfo.getDeviceProfile(), deviceProfile)
+                    && associationInfo.getDisplayName() != null
+                    && Objects.equals(associationInfo.getDisplayName().toString(),
+                            mDeviceCapabilities.getDeviceName())) {
+                Log.d(TAG, "Reusing association " + associationInfo.getDisplayName() + " for "
+                        + deviceProfile);
+                existingAssociation = associationInfo;
             } else {
-                createVirtualDevice(associationInfo);
-                return;
+                Log.d(TAG, "Removing association " + associationInfo.getDisplayName() + " / "
+                        + associationInfo.getDeviceProfile());
+                cdm.disassociate(associationInfo.getId());
             }
+        }
+        if (existingAssociation != null) {
+            createVirtualDevice(existingAssociation);
+            return;
         }
 
         @SuppressLint("MissingPermission")
@@ -485,6 +493,7 @@ public final class VdmService extends Hilt_VdmService {
         AudioManager audioManager = getSystemService(AudioManager.class);
         mPlaybackAudioSessionId = audioManager.generateAudioSessionId();
         mRecordingAudioSessionId = audioManager.generateAudioSessionId();
+        mPreferenceController.evaluate();
 
         if (mPreferenceController.getBoolean(R.string.pref_enable_client_audio)) {
             virtualDeviceBuilder.setDevicePolicy(POLICY_TYPE_AUDIO, DEVICE_POLICY_CUSTOM)
@@ -585,8 +594,8 @@ public final class VdmService extends Hilt_VdmService {
         }
 
         Log.i(TAG, "Created virtual device");
-        if (mLocalVirtualDeviceLifecycleListener != null) {
-            mLocalVirtualDeviceLifecycleListener.accept(true);
+        for (Consumer<Boolean> listener : mLocalVirtualDeviceLifecycleListeners) {
+            listener.accept(true);
         }
         mRemoteIo.sendMessage(RemoteEvent.newBuilder()
                 .setDeviceState(RemoteEventProto.DeviceState.newBuilder().setPowerOn(true))
@@ -594,8 +603,8 @@ public final class VdmService extends Hilt_VdmService {
     }
 
     private synchronized void closeVirtualDevice() {
-        if (mLocalVirtualDeviceLifecycleListener != null) {
-            mLocalVirtualDeviceLifecycleListener.accept(false);
+        for (Consumer<Boolean> listener : mLocalVirtualDeviceLifecycleListeners) {
+            listener.accept(false);
         }
         if (mRemoteSensorManager != null) {
             mRemoteSensorManager.close();

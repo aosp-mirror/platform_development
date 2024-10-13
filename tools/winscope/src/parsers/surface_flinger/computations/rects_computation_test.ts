@@ -340,7 +340,7 @@ describe('SurfaceFlinger RectsComputation', () => {
         .setWidth(10)
         .setHeight(5)
         .setId('Display - 3')
-        .setName('Test Display (Mirror 2)')
+        .setName('Test Display (2)')
         .setCornerRadius(0)
         .setTransform(Transform.EMPTY.matrix)
         .setDepth(2)

@@ -18,7 +18,7 @@ use cargo::{
     util::toml::read_manifest,
     Config,
 };
-use name_and_version::{IsUpgradableTo, NameAndVersionRef, NamedAndVersioned};
+use name_and_version::{NameAndVersionRef, NamedAndVersioned};
 use rooted_path::RootedPath;
 use semver::Version;
 
@@ -41,8 +41,6 @@ impl NamedAndVersioned for Crate {
         NameAndVersionRef::new(self.name(), self.version())
     }
 }
-
-impl IsUpgradableTo for Crate {}
 
 impl Crate {
     pub fn new(manifest: Manifest, path: RootedPath) -> Crate {

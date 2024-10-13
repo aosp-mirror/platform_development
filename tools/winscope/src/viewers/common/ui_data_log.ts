@@ -26,8 +26,7 @@ export interface UiDataLog {
   selectedIndex: undefined | number;
   scrollToIndex: undefined | number;
 
-  filters?: LogFilter[];
-  headers?: LogFieldType[];
+  headers: Array<LogFieldType | LogFilter>;
   currentIndex?: undefined | number;
   propertiesTree?: undefined | UiPropertyTreeNode;
   propertiesUserOptions?: UserOptions;
@@ -35,10 +34,12 @@ export interface UiDataLog {
   isDarkMode?: boolean;
 }
 
-export interface LogFilter {
-  type: LogFieldType;
-  options?: string[];
-  textFilter?: TextFilter;
+export class LogFilter {
+  constructor(
+    public type: LogFieldType,
+    public options?: string[],
+    public textFilter?: TextFilter,
+  ) {}
 }
 
 export interface LogEntry {
@@ -73,6 +74,8 @@ export enum LogFieldType {
   SEND_TIME,
   DISPATCH_TIME,
   DURATION,
+  HANDLER,
+  PARTICIPANTS,
   STATUS,
   CUJ_TYPE,
   START_TIME,
@@ -103,6 +106,8 @@ export const LogFieldNames: ReadonlyMap<LogFieldType, string> = new Map([
   [LogFieldType.SEND_TIME, 'Send Time'],
   [LogFieldType.DISPATCH_TIME, 'Dispatch Time'],
   [LogFieldType.DURATION, 'Duration'],
+  [LogFieldType.HANDLER, 'Handler'],
+  [LogFieldType.PARTICIPANTS, 'Participants'],
   [LogFieldType.STATUS, 'Status'],
   [LogFieldType.CUJ_TYPE, 'Type'],
   [LogFieldType.START_TIME, 'Start Time'],
@@ -130,12 +135,14 @@ export const LogFieldClassNames: ReadonlyMap<LogFieldType, string> = new Map([
   [LogFieldType.TEXT, 'text'],
   [LogFieldType.TRANSITION_ID, 'transition-id right-align'],
   [LogFieldType.TRANSITION_TYPE, 'transition-type'],
-  [LogFieldType.CUJ_TYPE, 'jank_cuj-type'],
+  [LogFieldType.CUJ_TYPE, 'jank-cuj-type'],
   [LogFieldType.SEND_TIME, 'send-time time'],
   [LogFieldType.DISPATCH_TIME, 'dispatch-time time'],
   [LogFieldType.START_TIME, 'start-time time'],
   [LogFieldType.END_TIME, 'end-time time'],
   [LogFieldType.DURATION, 'duration right-align'],
+  [LogFieldType.HANDLER, 'handler'],
+  [LogFieldType.PARTICIPANTS, 'participants'],
   [LogFieldType.STATUS, 'status right-align'],
   [LogFieldType.INPUT_TYPE, 'input-type inline'],
   [LogFieldType.INPUT_SOURCE, 'input-source'],
