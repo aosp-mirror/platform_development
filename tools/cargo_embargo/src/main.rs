@@ -696,7 +696,8 @@ fn generate_android_bp_package_header(
         if let Some(license) = first.license.as_ref() {
             if crates.iter().all(|c| c.license.as_ref() == Some(license)) {
                 let mut modules = Vec::new();
-                let license = choose_license(license);
+                let license = choose_license(license)?;
+
                 let license_name = format!("external_rust_crates_{}_license", package_name);
 
                 let mut package_module = BpModule::new("package".to_string());
@@ -741,8 +742,8 @@ fn generate_android_bp_package_header(
 
 /// Given an SPDX license expression that may offer a choice between several licenses, choose one to
 /// use.
-fn choose_license(license: &str) -> &str {
-    match license {
+fn choose_license(license: &str) -> Result<&str> {
+    Ok(match license {
         // Variations on "MIT OR Apache-2.0"
         "MIT OR Apache-2.0" => "Apache-2.0",
         "Apache-2.0 OR MIT" => "Apache-2.0",
@@ -776,8 +777,14 @@ fn choose_license(license: &str) -> &str {
         "MIT/BSD-3-Clause" => "MIT",
 
         "LGPL-2.1-only OR BSD-2-Clause" => "BSD-2-Clause",
-        _ => license,
-    }
+        _ => {
+            // If there is whitespace, it is probably an SPDX expression.
+            if license.contains(char::is_whitespace) {
+                bail!("Unrecognized license: {license}");
+            }
+            license
+        }
+    })
 }
 
 /// Generates and returns a Soong Blueprint for the given set of crates, for a single variant of a
@@ -894,6 +901,7 @@ fn generate_rules_mk(
 fn apply_patch_file(output_path: &Path, patch_path: &Path) -> Result<()> {
     let patch_output = Command::new("patch")
         .arg("-s")
+        .arg("--no-backup-if-mismatch")
         .arg(output_path)
         .arg(patch_path)
         .output()
