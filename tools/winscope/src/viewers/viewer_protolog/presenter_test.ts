@@ -21,6 +21,7 @@ import {PropertyTreeBuilder} from 'test/unit/property_tree_builder';
 import {TimestampConverterUtils} from 'test/unit/timestamp_converter_utils';
 import {TraceBuilder} from 'test/unit/trace_builder';
 import {Trace} from 'trace/trace';
+import {TracePosition} from 'trace/trace_position';
 import {TraceType} from 'trace/trace_type';
 import {
   DEFAULT_PROPERTY_FORMATTER,
@@ -105,6 +106,7 @@ class PresenterProtologTest extends AbstractLogViewerPresenterTest<UiData> {
     'level1',
   ];
   override readonly expectedCurrentIndexAfterSecondFilterChange = 1;
+  override positionUpdateEarliestEntry: TracePositionUpdate | undefined;
 
   override executeSpecializedTests() {
     describe('Specialized tests', () => {
@@ -228,8 +230,14 @@ class PresenterProtologTest extends AbstractLogViewerPresenterTest<UiData> {
       .setTimestamps([time10, time11, time12])
       .build();
 
-    this.positionUpdate = TracePositionUpdate.fromTimestamp(time10);
+    this.positionUpdate = TracePositionUpdate.fromTraceEntry(
+      this.trace.getEntry(0),
+    );
     this.secondPositionUpdate = TracePositionUpdate.fromTimestamp(time11);
+    this.positionUpdateEarliestEntry = new TracePositionUpdate(
+      TracePosition.fromTraceEntry(this.trace.getEntry(0)),
+      false,
+    );
   }
 
   override async createPresenterWithEmptyTrace(

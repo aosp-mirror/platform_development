@@ -61,30 +61,33 @@ export class Presenter extends AbstractLogViewerPresenter<UiData> {
 
     for (const type of Presenter.FIELD_TYPES) {
       if (type === LogFieldType.TEXT) {
-        filters.push({
-          type,
-          textFilter: PersistentStoreProxy.new(
-            'ProtoLog' + type,
-            new TextFilter('', []),
-            this.storage,
+        filters.push(
+          new LogFilter(
+            type,
+            undefined,
+            PersistentStoreProxy.new(
+              'ProtoLog' + type,
+              new TextFilter('', []),
+              this.storage,
+            ),
           ),
-        });
+        );
       } else {
-        filters.push({
-          type,
-          options: this.getUniqueMessageValues(
-            allEntries,
-            (entry: ProtologEntry) =>
+        filters.push(
+          new LogFilter(
+            type,
+            this.getUniqueMessageValues(allEntries, (entry: ProtologEntry) =>
               assertDefined(
                 entry.fields.find((f) => f.type === type),
               ).value.toString(),
+            ),
           ),
-        });
+        );
       }
     }
 
     this.logPresenter.setAllEntries(allEntries);
-    this.logPresenter.setFilters(filters);
+    this.logPresenter.setHeaders(filters);
 
     this.refreshUiData();
     this.isInitialized = true;

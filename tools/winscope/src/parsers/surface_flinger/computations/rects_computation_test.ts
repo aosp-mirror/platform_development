@@ -108,21 +108,6 @@ describe('SurfaceFlinger RectsComputation', () => {
           ],
         },
         {
-          id: 3,
-          name: 'layer3',
-          properties: {
-            id: 3,
-            name: 'layer3',
-            cornerRadius: 2,
-            layerStack: 0,
-            bounds: {left: 0, top: 0, right: 2, bottom: 2},
-            screenBounds: {left: 0, top: 0, right: 2, bottom: 2},
-            zOrderPath: [0],
-            isComputedVisible: false,
-            transform: Transform.EMPTY,
-          } as android.surfaceflinger.ILayerProto,
-        },
-        {
           id: 4,
           name: 'layerRelativeZ',
           properties: {
@@ -133,22 +118,6 @@ describe('SurfaceFlinger RectsComputation', () => {
             bounds: {left: 0, top: 0, right: 5, bottom: 5},
             screenBounds: {left: 0, top: 0, right: 5, bottom: 5},
             zOrderPath: [0, 2],
-            isComputedVisible: true,
-            color: {r: 0, g: 0, b: 0, a: 1},
-            transform: Transform.EMPTY,
-          } as android.surfaceflinger.ILayerProto,
-        },
-        {
-          id: 5,
-          name: 'layerNegativeZ',
-          properties: {
-            id: 5,
-            name: 'layerNegativeZ',
-            cornerRadius: 0,
-            layerStack: 0,
-            bounds: {left: 0, top: 0, right: 5, bottom: 5},
-            screenBounds: {left: 0, top: 0, right: 5, bottom: 5},
-            zOrderPath: [-5],
             isComputedVisible: true,
             color: {r: 0, g: 0, b: 0, a: 1},
             transform: Transform.EMPTY,
@@ -167,7 +136,7 @@ describe('SurfaceFlinger RectsComputation', () => {
         .setName('layer1')
         .setCornerRadius(0)
         .setTransform(Transform.EMPTY.matrix)
-        .setDepth(1)
+        .setDepth(0)
         .setGroupId(0)
         .setIsVisible(true)
         .setOpacity(0)
@@ -184,23 +153,7 @@ describe('SurfaceFlinger RectsComputation', () => {
         .setName('layer2')
         .setCornerRadius(2)
         .setTransform(Transform.EMPTY.matrix)
-        .setDepth(2)
-        .setGroupId(0)
-        .setIsVisible(false)
-        .setIsDisplay(false)
-        .setIsSpy(false)
-        .build(),
-
-      new TraceRectBuilder()
-        .setX(0)
-        .setY(0)
-        .setWidth(2)
-        .setHeight(2)
-        .setId('3 layer3')
-        .setName('layer3')
-        .setCornerRadius(2)
-        .setTransform(Transform.EMPTY.matrix)
-        .setDepth(3)
+        .setDepth(1)
         .setGroupId(0)
         .setIsVisible(false)
         .setIsDisplay(false)
@@ -216,24 +169,7 @@ describe('SurfaceFlinger RectsComputation', () => {
         .setName('layerRelativeZ')
         .setCornerRadius(0)
         .setTransform(Transform.EMPTY.matrix)
-        .setDepth(4)
-        .setGroupId(0)
-        .setIsVisible(true)
-        .setOpacity(1)
-        .setIsDisplay(false)
-        .setIsSpy(false)
-        .build(),
-
-      new TraceRectBuilder()
-        .setX(0)
-        .setY(0)
-        .setWidth(5)
-        .setHeight(5)
-        .setId('5 layerNegativeZ')
-        .setName('layerNegativeZ')
-        .setCornerRadius(0)
-        .setTransform(Transform.EMPTY.matrix)
-        .setDepth(0)
+        .setDepth(2)
         .setGroupId(0)
         .setIsVisible(true)
         .setOpacity(1)
@@ -404,7 +340,7 @@ describe('SurfaceFlinger RectsComputation', () => {
         .setWidth(10)
         .setHeight(5)
         .setId('Display - 3')
-        .setName('Test Display (Mirror 2)')
+        .setName('Test Display (2)')
         .setCornerRadius(0)
         .setTransform(Transform.EMPTY.matrix)
         .setDepth(2)
@@ -480,166 +416,6 @@ describe('SurfaceFlinger RectsComputation', () => {
 
     computation.setRoot(hierarchyRoot).executeInPlace();
     expect(hierarchyRoot.getRects()).toEqual(expectedDisplayRects);
-  });
-
-  it('handles z-order paths with different lengths', () => {
-    const hierarchyRoot = new HierarchyTreeBuilder()
-      .setId('LayerTraceEntry')
-      .setName('root')
-      .setChildren([
-        {
-          id: 1,
-          name: 'layer1',
-          properties: {
-            id: 1,
-            name: 'layer1',
-            cornerRadius: 0,
-            layerStack: 0,
-            bounds: {left: 0, top: 0, right: 1, bottom: 1},
-            screenBounds: {left: 0, top: 0, right: 1, bottom: 1},
-            zOrderPath: [0, 1],
-            isComputedVisible: true,
-            color: {r: 0, g: 0, b: 0, a: 1},
-            transform: Transform.EMPTY,
-          } as android.surfaceflinger.ILayerProto,
-        },
-        {
-          id: 2,
-          name: 'layer2',
-          properties: {
-            id: 2,
-            name: 'layer2',
-            cornerRadius: 0,
-            layerStack: 0,
-            bounds: {left: 0, top: 0, right: 2, bottom: 2},
-            screenBounds: {left: 0, top: 0, right: 2, bottom: 2},
-            zOrderPath: [0, 0, 0],
-            isComputedVisible: true,
-            color: {r: 0, g: 0, b: 0, a: 1},
-            transform: Transform.EMPTY,
-          } as android.surfaceflinger.ILayerProto,
-        },
-      ])
-      .build();
-
-    const expectedRects: TraceRect[] = [
-      new TraceRectBuilder()
-        .setX(0)
-        .setY(0)
-        .setWidth(1)
-        .setHeight(1)
-        .setId('1 layer1')
-        .setName('layer1')
-        .setCornerRadius(0)
-        .setTransform(Transform.EMPTY.matrix)
-        .setDepth(1)
-        .setGroupId(0)
-        .setIsVisible(true)
-        .setOpacity(1)
-        .setIsDisplay(false)
-        .setIsSpy(false)
-        .build(),
-
-      new TraceRectBuilder()
-        .setX(0)
-        .setY(0)
-        .setWidth(2)
-        .setHeight(2)
-        .setId('2 layer2')
-        .setName('layer2')
-        .setCornerRadius(0)
-        .setTransform(Transform.EMPTY.matrix)
-        .setDepth(0)
-        .setGroupId(0)
-        .setIsVisible(true)
-        .setOpacity(1)
-        .setIsDisplay(false)
-        .setIsSpy(false)
-        .build(),
-    ];
-
-    computation.setRoot(hierarchyRoot).executeInPlace();
-    checkLayerRects(hierarchyRoot, expectedRects);
-  });
-
-  it('handles z-order paths with equal values (fall back to Layer ID comparison)', () => {
-    const hierarchyRoot = new HierarchyTreeBuilder()
-      .setId('LayerTraceEntry')
-      .setName('root')
-      .setChildren([
-        {
-          id: 1,
-          name: 'layer1',
-          properties: {
-            id: 1,
-            name: 'layer1',
-            cornerRadius: 0,
-            layerStack: 0,
-            bounds: {left: 0, top: 0, right: 1, bottom: 1},
-            screenBounds: {left: 0, top: 0, right: 1, bottom: 1},
-            zOrderPath: [0, 1],
-            isComputedVisible: true,
-            color: {r: 0, g: 0, b: 0, a: 1},
-            transform: Transform.EMPTY,
-          } as android.surfaceflinger.ILayerProto,
-        },
-        {
-          id: 2,
-          name: 'layer2',
-          properties: {
-            id: 2,
-            name: 'layer2',
-            cornerRadius: 0,
-            layerStack: 0,
-            bounds: {left: 0, top: 0, right: 2, bottom: 2},
-            screenBounds: {left: 0, top: 0, right: 2, bottom: 2},
-            zOrderPath: [0, 1, 0],
-            isComputedVisible: true,
-            color: {r: 0, g: 0, b: 0, a: 1},
-            transform: Transform.EMPTY,
-          } as android.surfaceflinger.ILayerProto,
-        },
-      ])
-      .build();
-
-    const expectedRects: TraceRect[] = [
-      new TraceRectBuilder()
-        .setX(0)
-        .setY(0)
-        .setWidth(1)
-        .setHeight(1)
-        .setId('1 layer1')
-        .setName('layer1')
-        .setCornerRadius(0)
-        .setTransform(Transform.EMPTY.matrix)
-        .setDepth(0)
-        .setGroupId(0)
-        .setIsVisible(true)
-        .setOpacity(1)
-        .setIsDisplay(false)
-        .setIsSpy(false)
-        .build(),
-
-      new TraceRectBuilder()
-        .setX(0)
-        .setY(0)
-        .setWidth(2)
-        .setHeight(2)
-        .setId('2 layer2')
-        .setName('layer2')
-        .setCornerRadius(0)
-        .setTransform(Transform.EMPTY.matrix)
-        .setDepth(1)
-        .setGroupId(0)
-        .setIsVisible(true)
-        .setOpacity(1)
-        .setIsDisplay(false)
-        .setIsSpy(false)
-        .build(),
-    ];
-
-    computation.setRoot(hierarchyRoot).executeInPlace();
-    checkLayerRects(hierarchyRoot, expectedRects);
   });
 
   it('does not make non-visible rects with missing or invalid screen bounds', () => {

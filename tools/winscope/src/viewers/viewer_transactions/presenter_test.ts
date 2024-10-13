@@ -144,6 +144,7 @@ class PresenterTransactionsTest extends AbstractLogViewerPresenterTest<UiData> {
   override readonly numberOfUnfilteredProperties = 8;
   override readonly propertiesFilter = new TextFilter('layerId', []);
   override readonly numberOfFilteredProperties = 1;
+  override positionUpdateEarliestEntry: TracePositionUpdate | undefined;
 
   override executeSpecializedTests() {
     describe('Specialized tests', () => {
@@ -262,12 +263,18 @@ class PresenterTransactionsTest extends AbstractLogViewerPresenterTest<UiData> {
     const parser = (await UnitTestUtils.getParser(
       'traces/elapsed_and_real_timestamp/Transactions.pb',
     )) as Parser<PropertyTreeNode>;
-    this.trace = new TraceBuilder<PropertyTreeNode>().setParser(parser).build();
+    this.trace = new TraceBuilder<PropertyTreeNode>()
+      .setType(TraceType.TRANSACTIONS)
+      .setParser(parser)
+      .build();
     this.positionUpdate = TracePositionUpdate.fromTraceEntry(
       this.trace.getEntry(0),
     );
     this.secondPositionUpdate = TracePositionUpdate.fromTraceEntry(
       this.trace.getEntry(10),
+    );
+    this.positionUpdateEarliestEntry = TracePositionUpdate.fromTraceEntry(
+      this.trace.getEntry(0),
     );
   }
 

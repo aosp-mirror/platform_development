@@ -14,21 +14,9 @@
  * limitations under the License.
  */
 
-export const timeButtonStyle = `
-    .time-button {
-      padding: 0px;
-      line-height: normal;
-      text-align: left;
-      white-space: normal;
-    }
-`;
-
-export const inlineButtonStyle = `
-    .inline button {
-      padding: 0px;
-      min-width: fit-content;
-      width: fit-content;
-      line-height: normal;
-      text-align: left;
-    }
-`;
+export class DOMUtils {
+  static isElementVisible(element: HTMLElement) {
+    const rect = element.getBoundingClientRect();
+    return rect.height > 0 && rect.width > 0;
+  }
+}

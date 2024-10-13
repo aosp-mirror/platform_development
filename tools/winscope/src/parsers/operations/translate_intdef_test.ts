@@ -114,4 +114,22 @@ describe('TranslateIntDef', () => {
       assertDefined(params.getChildByName('behavior')).formattedValue(),
     ).toEqual('BEHAVIOR_DEFAULT');
   });
+
+  it('translates BigInt', () => {
+    propertyRoot = new PropertyTreeBuilder()
+      .setIsRoot(true)
+      .setRootId('test')
+      .setName('node')
+      .setChildren([{name: 'layoutParamsFlags', value: 1n}])
+      .build();
+
+    const field = rootType.fields['intdefMappingEntry'];
+    operation = new TranslateIntDef(field);
+    operation.apply(propertyRoot);
+    expect(
+      assertDefined(
+        propertyRoot.getChildByName('layoutParamsFlags'),
+      ).formattedValue(),
+    ).toEqual('FLAG_ALLOW_LOCK_WHILE_SCREEN_ON');
+  });
 });
