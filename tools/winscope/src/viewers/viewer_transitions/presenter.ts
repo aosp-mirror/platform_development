@@ -30,7 +30,7 @@ import {
 import {LogPresenter} from 'viewers/common/log_presenter';
 import {PropertiesPresenter} from 'viewers/common/properties_presenter';
 import {TextFilter} from 'viewers/common/text_filter';
-import {LogField, LogFieldType} from 'viewers/common/ui_data_log';
+import {LogField, LogFieldType, LogFilter} from 'viewers/common/ui_data_log';
 import {UpdateTransitionChangesNames} from './operations/update_transition_changes_names';
 import {TransitionsEntry, TransitionStatus, UiData} from './ui_data';
 
@@ -41,6 +41,16 @@ export class Presenter extends AbstractLogViewerPresenter<UiData> {
     LogFieldType.SEND_TIME,
     LogFieldType.DISPATCH_TIME,
     LogFieldType.DURATION,
+    LogFieldType.HANDLER,
+    LogFieldType.PARTICIPANTS,
+    LogFieldType.FLAGS,
+    LogFieldType.STATUS,
+  ];
+  static readonly FILTER_TYPES = [
+    LogFieldType.TRANSITION_TYPE,
+    LogFieldType.HANDLER,
+    LogFieldType.PARTICIPANTS,
+    LogFieldType.FLAGS,
     LogFieldType.STATUS,
   ];
   private static readonly VALUE_NA = 'N/A';
@@ -51,6 +61,11 @@ export class Presenter extends AbstractLogViewerPresenter<UiData> {
   private windowManagerTrace: Trace<HierarchyTreeNode> | undefined;
   private layerIdToName = new Map<number, string>();
   private windowTokenToTitle = new Map<string, string>();
+  private updateTransitionChangesNames = new UpdateTransitionChangesNames(
+    this.layerIdToName,
+    this.windowTokenToTitle,
+  );
+  private uniqueFieldValues = new Map<LogFieldType, Set<string>>();
 
   protected override keepCalculated = false;
   protected override logPresenter = new LogPresenter<TransitionsEntry>(false);
@@ -62,12 +77,6 @@ export class Presenter extends AbstractLogViewerPresenter<UiData> {
       this.storage,
     ),
     [],
-    [
-      new UpdateTransitionChangesNames(
-        this.layerIdToName,
-        this.windowTokenToTitle,
-      ),
-    ],
   );
 
   constructor(
@@ -106,16 +115,67 @@ export class Presenter extends AbstractLogViewerPresenter<UiData> {
     }
 
     const allEntries = await this.makeUiDataEntries();
+    const filters = this.makeFilters(allEntries);
 
     this.logPresenter.setAllEntries(allEntries);
-    this.logPresenter.setHeaders(Presenter.FIELD_TYPES);
+    this.logPresenter.setHeaders(
+      Presenter.FIELD_TYPES.map((type) => {
+        return filters.get(type) ?? type;
+      }),
+    );
     this.refreshUiData();
     this.isInitialized = true;
+  }
+
+  private makeFilters(
+    allEntries: TransitionsEntry[],
+  ): Map<LogFieldType, LogFilter> {
+    const filters = new Map<LogFieldType, LogFilter>();
+    for (const type of Presenter.FILTER_TYPES) {
+      filters.set(
+        type,
+        new LogFilter(type, this.getUniqueUiDataEntryValues(type)),
+      );
+    }
+    return filters;
+  }
+
+  private getUniqueUiDataEntryValues(
+    type: LogFieldType,
+  ): string[] {
+    const result = [...assertDefined(this.uniqueFieldValues.get(type))];
+
+    result.sort((a, b) => {
+      const aIsNumber = !isNaN(Number(a));
+      const bIsNumber = !isNaN(Number(b));
+
+      if (aIsNumber && bIsNumber) {
+        return Number(a) - Number(b);
+      } else if (aIsNumber) {
+        return 1; // place number after strings in the result
+      } else if (bIsNumber) {
+        return -1; // place number after strings in the result
+      }
+
+      // a and b are both strings
+      if (a < b) {
+        return -1;
+      } else if (a > b) {
+        return 1;
+      } else {
+        return 0;
+      }
+    });
+
+    return result;
   }
 
   private async makeUiDataEntries(): Promise<TransitionsEntry[]> {
     // TODO(b/339191691): Ideally we should refactor the parsers to
     // keep a map of time -> rowId, instead of relying on table order
+    Presenter.FILTER_TYPES.forEach((filterType) =>
+      this.uniqueFieldValues.set(filterType, new Set()),
+    );
     const transitions = await this.makeTransitions();
     this.sortTransitions(transitions);
     return transitions;
@@ -148,27 +208,14 @@ export class Presenter extends AbstractLogViewerPresenter<UiData> {
       const shellDataNode = assertDefined(
         transitionNode.getChildByName('shellData'),
       );
+      this.updateTransitionChangesNames.apply(transitionNode);
 
-      let status: TransitionStatus | undefined;
-      let statusIcon: string | undefined;
-      let statusIconColor: string | undefined;
-      if (assertDefined(transitionNode.getChildByName('merged')).getValue()) {
-        status = TransitionStatus.MERGED;
-        statusIcon = 'merge';
-        statusIconColor = 'gray';
-      } else if (
-        assertDefined(transitionNode.getChildByName('aborted')).getValue()
-      ) {
-        status = TransitionStatus.ABORTED;
-        statusIcon = 'close';
-        statusIconColor = 'red';
-      } else if (
-        assertDefined(transitionNode.getChildByName('played')).getValue()
-      ) {
-        status = TransitionStatus.PLAYED;
-        statusIcon = 'check';
-        statusIconColor = 'green';
-      }
+      const transitionType = this.extractAndFormatTransitionType(wmDataNode);
+      const handler = this.extractAndFormatHandler(shellDataNode);
+      const flags = this.extractAndFormatFlags(wmDataNode);
+      const participants = this.extractAndFormatParticipants(wmDataNode);
+      const [status, statusIcon, statusIconColor] =
+        this.extractAndFormatStatus(transitionNode);
 
       const fields: LogField[] = [
         {
@@ -177,7 +224,7 @@ export class Presenter extends AbstractLogViewerPresenter<UiData> {
         },
         {
           type: LogFieldType.TRANSITION_TYPE,
-          value: wmDataNode.getChildByName('type')?.formattedValue() ?? 'NONE',
+          value: transitionType,
         },
         {
           type: LogFieldType.SEND_TIME,
@@ -198,8 +245,20 @@ export class Presenter extends AbstractLogViewerPresenter<UiData> {
             Presenter.VALUE_NA,
         },
         {
+          type: LogFieldType.HANDLER,
+          value: handler,
+        },
+        {
+          type: LogFieldType.PARTICIPANTS,
+          value: participants,
+        },
+        {
+          type: LogFieldType.FLAGS,
+          value: flags,
+        },
+        {
           type: LogFieldType.STATUS,
-          value: status ?? Presenter.VALUE_NA,
+          value: status,
           icon: statusIcon,
           iconColor: statusIconColor,
         },
@@ -208,5 +267,92 @@ export class Presenter extends AbstractLogViewerPresenter<UiData> {
     }
 
     return transitions;
+  }
+
+  private extractAndFormatTransitionType(wmDataNode: PropertyTreeNode): string {
+    const transitionType =
+      wmDataNode.getChildByName('type')?.formattedValue() ?? 'NONE';
+    assertDefined(this.uniqueFieldValues.get(LogFieldType.TRANSITION_TYPE)).add(
+      transitionType,
+    );
+    return transitionType;
+  }
+
+  private extractAndFormatHandler(shellDataNode: PropertyTreeNode): string {
+    const handler =
+      shellDataNode.getChildByName('handler')?.formattedValue() ??
+      Presenter.VALUE_NA;
+    assertDefined(this.uniqueFieldValues.get(LogFieldType.HANDLER)).add(
+      handler,
+    );
+    return handler;
+  }
+
+  private extractAndFormatFlags(wmDataNode: PropertyTreeNode): string {
+    const flags =
+      wmDataNode.getChildByName('flags')?.formattedValue() ??
+      Presenter.VALUE_NA;
+
+    const uniqueFlags = assertDefined(
+      this.uniqueFieldValues.get(LogFieldType.FLAGS),
+    );
+    flags
+      .split('|')
+      .map((flag) => flag.trim())
+      .forEach((flag) => uniqueFlags.add(flag));
+
+    return flags;
+  }
+
+  private extractAndFormatParticipants(wmDataNode: PropertyTreeNode): string {
+    const targets = wmDataNode.getChildByName('targets')?.getAllChildren();
+    if (!targets) return Presenter.VALUE_NA;
+
+    const layers = new Set<string>();
+    const windows = new Set<string>();
+    targets.forEach((target) => {
+      const layerId = target.getChildByName('layerId');
+      if (layerId) layers.add(layerId.formattedValue());
+      const windowId = target.getChildByName('windowId');
+      if (windowId) windows.add(windowId.formattedValue());
+    });
+    const uniqueParticipants = assertDefined(
+      this.uniqueFieldValues.get(LogFieldType.PARTICIPANTS),
+    );
+    layers.forEach((layer) => uniqueParticipants.add(layer));
+    windows.forEach((window) => uniqueParticipants.add(window));
+
+    return `Layers: ${
+      layers.size > 0 ? [...layers].join(', ') : Presenter.VALUE_NA
+    }\nWindows: ${
+      windows.size > 0 ? [...windows].join(', ') : Presenter.VALUE_NA
+    }`;
+  }
+
+  private extractAndFormatStatus(
+    transitionNode: PropertyTreeNode,
+  ): [string, string | undefined, string | undefined] {
+    let status = Presenter.VALUE_NA;
+    let statusIcon: string | undefined;
+    let statusIconColor: string | undefined;
+    if (assertDefined(transitionNode.getChildByName('merged')).getValue()) {
+      status = TransitionStatus.MERGED;
+      statusIcon = 'merge';
+      statusIconColor = 'gray';
+    } else if (
+      assertDefined(transitionNode.getChildByName('aborted')).getValue()
+    ) {
+      status = TransitionStatus.ABORTED;
+      statusIcon = 'close';
+      statusIconColor = 'red';
+    } else if (
+      assertDefined(transitionNode.getChildByName('played')).getValue()
+    ) {
+      status = TransitionStatus.PLAYED;
+      statusIcon = 'check';
+      statusIconColor = 'green';
+    }
+    assertDefined(this.uniqueFieldValues.get(LogFieldType.STATUS)).add(status);
+    return [status, statusIcon, statusIconColor];
   }
 }

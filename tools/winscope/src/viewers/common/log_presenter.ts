@@ -30,8 +30,7 @@ import {LogEntry, LogFieldType, LogFilter} from './ui_data_log';
 export class LogPresenter<Entry extends LogEntry> {
   private allEntries: Entry[] = [];
   private filteredEntries: Entry[] = [];
-  private filters: LogFilter[] = [];
-  private headers: LogFieldType[] = [];
+  private headers: Array<LogFieldType | LogFilter> = [];
   private filterPredicates = new Map<LogFieldType, StringFilterPredicate>();
   private currentEntry: TraceEntry<PropertyTreeNode> | undefined;
   private selectedIndex: number | undefined;
@@ -46,18 +45,11 @@ export class LogPresenter<Entry extends LogEntry> {
     this.updateFilteredEntries();
   }
 
-  setHeaders(headers: LogFieldType[]) {
+  setHeaders(headers: Array<LogFieldType | LogFilter>) {
     this.headers = headers;
-  }
 
-  getHeaders(): LogFieldType[] {
-    return this.headers;
-  }
-
-  setFilters(filters: LogFilter[]) {
-    this.filters = filters;
     this.filterPredicates = new Map<LogFieldType, StringFilterPredicate>();
-    this.filters.forEach((filter) => {
+    this.getFilters().forEach((filter) => {
       if (
         filter.textFilter &&
         (filter.textFilter.filterString || filter.textFilter.flags.length > 0)
@@ -76,8 +68,8 @@ export class LogPresenter<Entry extends LogEntry> {
     this.resetIndices();
   }
 
-  getFilters(): LogFilter[] {
-    return this.filters;
+  getHeaders(): Array<LogFieldType | LogFilter> {
+    return this.headers;
   }
 
   getFilteredEntries(): Entry[] {
@@ -134,7 +126,7 @@ export class LogPresenter<Entry extends LogEntry> {
 
   applyTextFilterChange(type: LogFieldType, value: TextFilter) {
     assertDefined(
-      this.filters.find((filter) => filter.type === type),
+      this.getFilters().find((filter) => filter.type === type),
     ).textFilter = value;
     if (value.filterString.length > 0) {
       this.filterPredicates.set(
@@ -157,6 +149,12 @@ export class LogPresenter<Entry extends LogEntry> {
       this.filterPredicates.delete(type);
     }
     this.updateEntriesAfterFilterChange();
+  }
+
+  private getFilters(): LogFilter[] {
+    return this.headers.filter(
+      (header) => header instanceof LogFilter,
+    ) as LogFilter[];
   }
 
   private updateEntriesAfterFilterChange() {
@@ -189,6 +187,7 @@ export class LogPresenter<Entry extends LogEntry> {
     switch (type) {
       case LogFieldType.FLAGS:
       case LogFieldType.INPUT_DISPATCH_WINDOWS:
+      case LogFieldType.PARTICIPANTS:
         return true;
       default:
         return false;

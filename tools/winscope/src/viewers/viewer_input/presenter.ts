@@ -33,7 +33,7 @@ import {LogPresenter} from 'viewers/common/log_presenter';
 import {PropertiesPresenter} from 'viewers/common/properties_presenter';
 import {RectsPresenter} from 'viewers/common/rects_presenter';
 import {TextFilter} from 'viewers/common/text_filter';
-import {LogField, LogFieldType} from 'viewers/common/ui_data_log';
+import {LogField, LogFieldType, LogFilter} from 'viewers/common/ui_data_log';
 import {UI_RECT_FACTORY} from 'viewers/common/ui_rect_factory';
 import {UserOptions} from 'viewers/common/user_options';
 import {ViewerEvents} from 'viewers/common/viewer_events';
@@ -155,15 +155,15 @@ export class Presenter extends AbstractLogViewerPresenter<UiData> {
     this.allEntries = await this.makeInputEntries();
 
     this.logPresenter.setAllEntries(this.allEntries);
-    this.logPresenter.setHeaders(Presenter.FIELD_TYPES);
-    this.logPresenter.setFilters([
-      {
-        type: LogFieldType.INPUT_DISPATCH_WINDOWS,
-        options: [...this.allInputLayerIds.values()].map((layerId) => {
+    const filters: Array<LogFilter | LogFieldType> = [
+      new LogFilter(
+        LogFieldType.INPUT_DISPATCH_WINDOWS,
+        [...this.allInputLayerIds.values()].map((layerId) => {
           return this.getLayerDisplayName(layerId);
         }),
-      },
-    ]);
+      ),
+    ];
+    this.logPresenter.setHeaders(filters.concat(Presenter.FIELD_TYPES));
 
     this.refreshUiData();
   }

@@ -13,9 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 import {ClipboardModule} from '@angular/cdk/clipboard';
-import {ScrollingModule} from '@angular/cdk/scrolling';
+import {
+  CdkVirtualScrollViewport,
+  ScrollingModule,
+} from '@angular/cdk/scrolling';
 import {
   ComponentFixture,
   ComponentFixtureAutoDetect,
@@ -27,6 +29,7 @@ import {MatDividerModule} from '@angular/material/divider';
 import {MatFormFieldModule} from '@angular/material/form-field';
 import {MatIconModule} from '@angular/material/icon';
 import {MatInputModule} from '@angular/material/input';
+import {MatSelectModule} from '@angular/material/select';
 import {BrowserAnimationsModule} from '@angular/platform-browser/animations';
 import {assertDefined} from 'common/assert_utils';
 import {PropertyTreeBuilder} from 'test/unit/property_tree_builder';
@@ -36,26 +39,28 @@ import {UnitTestUtils} from 'test/unit/utils';
 import {Trace, TraceEntry} from 'trace/trace';
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
 import {LogComponent} from 'viewers/common/log_component';
-import {LogField, LogFieldType} from 'viewers/common/ui_data_log';
+import {executeScrollComponentTests} from 'viewers/common/scroll_component_tests';
+import {LogField, LogFieldType, LogFilter} from 'viewers/common/ui_data_log';
 import {CollapsedSectionsComponent} from 'viewers/components/collapsed_sections_component';
 import {CollapsibleSectionTitleComponent} from 'viewers/components/collapsible_section_title_component';
 import {PropertiesComponent} from 'viewers/components/properties_component';
 import {PropertyTreeNodeDataViewComponent} from 'viewers/components/property_tree_node_data_view_component';
 import {SearchBoxComponent} from 'viewers/components/search_box_component';
+import {SelectWithFilterComponent} from 'viewers/components/select_with_filter_component';
 import {TreeComponent} from 'viewers/components/tree_component';
 import {TreeNodeComponent} from 'viewers/components/tree_node_component';
 import {Presenter} from './presenter';
+import {TransitionsScrollDirective} from './scroll_strategy/transitions_scroll_directive';
 import {TransitionsEntry, TransitionStatus, UiData} from './ui_data';
 import {ViewerTransitionsComponent} from './viewer_transitions_component';
 
 describe('ViewerTransitionsComponent', () => {
-  let fixture: ComponentFixture<ViewerTransitionsComponent>;
-  let component: ViewerTransitionsComponent;
-  let htmlElement: HTMLElement;
-
   let transitionTree: PropertyTreeNode;
   let trace: Trace<PropertyTreeNode>;
   let entry: TraceEntry<PropertyTreeNode>;
+  let fixture: ComponentFixture<ViewerTransitionsComponent>;
+  let component: ViewerTransitionsComponent;
+  let htmlElement: HTMLElement;
 
   beforeAll(() => {
     transitionTree = new PropertyTreeBuilder()
@@ -70,7 +75,87 @@ describe('ViewerTransitionsComponent', () => {
     entry = trace.getEntry(0);
   });
 
-  beforeEach(async () => {
+  describe('Main component', () => {
+    beforeEach(async () => {
+      await setUpTestEnvironment();
+    });
+
+    it('can be created', () => {
+      expect(component).toBeTruthy();
+    });
+
+    it('renders headers with plain titles and filters', () => {
+      expect(
+        htmlElement.querySelector('.headers .header.transition-id'),
+      ).toBeTruthy();
+      expect(
+        htmlElement.querySelector('.headers .filter.transition-type'),
+      ).toBeTruthy();
+      expect(
+        htmlElement.querySelector('.headers .header.send-time'),
+      ).toBeTruthy();
+      expect(
+        htmlElement.querySelector('.headers .header.dispatch-time'),
+      ).toBeTruthy();
+      expect(
+        htmlElement.querySelector('.headers .header.duration'),
+      ).toBeTruthy();
+      expect(
+        htmlElement.querySelector('.headers .filter.handler'),
+      ).toBeTruthy();
+      expect(
+        htmlElement.querySelector('.headers .filter.participants'),
+      ).toBeTruthy();
+      expect(htmlElement.querySelector('.headers .filter.flags')).toBeTruthy();
+      expect(htmlElement.querySelector('.headers .filter.status')).toBeTruthy();
+    });
+
+    it('renders entries', () => {
+      expect(htmlElement.querySelector('.scroll')).toBeTruthy();
+
+      const entry = assertDefined(htmlElement.querySelector('.scroll .entry'));
+      expect(entry.textContent).toContain('TO_FRONT');
+      expect(entry.textContent).toContain('1ns');
+      expect(entry.textContent).toContain('testHandler');
+      expect(entry.textContent).toContain('FLAG | OTHER_FLAG');
+      expect(entry.textContent).toContain('Layers: 1\nWindows: 0x423jf43');
+      expect(entry.textContent).toContain('PLAYED');
+    });
+
+    it('shows message when no transition is selected', () => {
+      assertDefined(component.inputData).propertiesTree = undefined;
+      fixture.detectChanges();
+      expect(
+        htmlElement.querySelector('.properties-view .placeholder-text')
+          ?.innerHTML,
+      ).toContain('No current or selected transition');
+    });
+
+    it('creates collapsed sections with no buttons', () => {
+      UnitTestUtils.checkNoCollapsedSectionButtons(htmlElement);
+    });
+
+    it('handles properties section collapse/expand', () => {
+      UnitTestUtils.checkSectionCollapseAndExpand(
+        htmlElement,
+        fixture,
+        '.properties-view',
+        'SELECTED TRANSITION',
+      );
+    });
+  });
+
+  describe('Scroll component', () => {
+    executeScrollComponentTests(setUpTestEnvironment);
+  });
+
+  async function setUpTestEnvironment(): Promise<
+    [
+      ComponentFixture<ViewerTransitionsComponent>,
+      HTMLElement,
+      CdkVirtualScrollViewport,
+    ]
+  > {
     await TestBed.configureTestingModule({
       providers: [{provide: ComponentFixtureAutoDetect, useValue: true}],
       imports: [
@@ -83,6 +168,7 @@ describe('ViewerTransitionsComponent', () => {
         MatInputModule,
         BrowserAnimationsModule,
         FormsModule,
+        MatSelectModule,
       ],
       declarations: [
         ViewerTransitionsComponent,
@@ -94,78 +180,33 @@ describe('ViewerTransitionsComponent', () => {
         CollapsibleSectionTitleComponent,
         LogComponent,
         SearchBoxComponent,
+        TransitionsScrollDirective,
+        SelectWithFilterComponent,
       ],
-      schemas: [],
     }).compileComponents();
-
     fixture = TestBed.createComponent(ViewerTransitionsComponent);
     component = fixture.componentInstance;
     htmlElement = fixture.nativeElement;
-
     component.inputData = makeUiData();
     fixture.detectChanges();
-  });
-
-  it('can be created', () => {
-    expect(component).toBeTruthy();
-  });
-
-  it('renders entries', () => {
-    expect(htmlElement.querySelector('.scroll')).toBeTruthy();
-
-    const entry = assertDefined(htmlElement.querySelector('.scroll .entry'));
-    expect(entry.innerHTML).toContain('TO_FRONT');
-    expect(entry.innerHTML).toContain('10ns');
-  });
-
-  it('shows message when no transition is selected', () => {
-    assertDefined(component.inputData).propertiesTree = undefined;
-    fixture.detectChanges();
-    expect(
-      htmlElement.querySelector('.properties-view .placeholder-text')
-        ?.innerHTML,
-    ).toContain('No current or selected transition');
-  });
-
-  it('creates collapsed sections with no buttons', () => {
-    UnitTestUtils.checkNoCollapsedSectionButtons(htmlElement);
-  });
-
-  it('handles properties section collapse/expand', () => {
-    UnitTestUtils.checkSectionCollapseAndExpand(
-      htmlElement,
-      fixture,
-      '.properties-view',
-      'SELECTED TRANSITION',
-    );
-  });
+    const viewport = assertDefined(component.logComponent?.scrollComponent);
+    return [fixture, htmlElement, viewport];
+  }
 
   function makeUiData(): UiData {
-    let mockTransitionIdCounter = 0;
-
-    const transitions = [
-      createMockTransition(entry, 20, 30, mockTransitionIdCounter++),
-      createMockTransition(
-        entry,
-        42,
-        50,
-        mockTransitionIdCounter++,
-        TransitionStatus.MERGED,
-      ),
-      createMockTransition(entry, 46, 49, mockTransitionIdCounter++),
-      createMockTransition(
-        entry,
-        58,
-        70,
-        mockTransitionIdCounter++,
-        TransitionStatus.ABORTED,
-      ),
-    ];
-
+    const transitions = [];
+    for (let i = 0; i < 200; i++) {
+      transitions.push(createMockTransition(entry, i + 1, i + 2, i));
+    }
     const uiData = UiData.createEmpty();
     uiData.entries = transitions;
     uiData.selectedIndex = 0;
-    uiData.headers = Presenter.FIELD_TYPES;
+    uiData.headers = Presenter.FIELD_TYPES.map((type) => {
+      if (Presenter.FILTER_TYPES.includes(type)) {
+        return new LogFilter(type, ['test']);
+      }
+      return type;
+    });
     return uiData;
   }
 
@@ -200,6 +241,18 @@ describe('ViewerTransitionsComponent', () => {
       {
         type: LogFieldType.DURATION,
         value: (finishTimeNanos - sendTimeNanos).toString() + 'ns',
+      },
+      {
+        type: LogFieldType.HANDLER,
+        value: 'testHandler',
+      },
+      {
+        type: LogFieldType.PARTICIPANTS,
+        value: 'Layers: 1\nWindows: 0x423jf43',
+      },
+      {
+        type: LogFieldType.FLAGS,
+        value: 'FLAG | OTHER_FLAG',
       },
       {
         type: LogFieldType.STATUS,

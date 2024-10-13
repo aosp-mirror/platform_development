@@ -40,7 +40,6 @@ describe('ViewCapturePropertyGroupsComponent', () => {
         ViewCapturePropertyGroupsComponent,
         TransformMatrixComponent,
       ],
-      schemas: [],
     }).compileComponents();
     fixture = TestBed.createComponent(TestHostComponent);
     component = fixture.componentInstance;

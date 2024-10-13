@@ -15,7 +15,6 @@
  */
 
 import {ScrollingModule} from '@angular/cdk/scrolling';
-import {CUSTOM_ELEMENTS_SCHEMA} from '@angular/core';
 import {
   ComponentFixture,
   ComponentFixtureAutoDetect,
@@ -49,7 +48,7 @@ import {SearchBoxComponent} from 'viewers/components/search_box_component';
 import {SelectWithFilterComponent} from 'viewers/components/select_with_filter_component';
 import {LogComponent} from './log_component';
 import {TextFilter} from './text_filter';
-import {LogEntry, LogFieldType} from './ui_data_log';
+import {LogEntry, LogFieldType, LogFilter} from './ui_data_log';
 
 describe('LogComponent', () => {
   let fixture: ComponentFixture<LogComponent>;
@@ -78,7 +77,6 @@ describe('LogComponent', () => {
         PropertiesComponent,
         SearchBoxComponent,
       ],
-      schemas: [CUSTOM_ELEMENTS_SCHEMA],
     }).compileComponents();
 
     fixture = TestBed.createComponent(LogComponent);
@@ -112,8 +110,8 @@ describe('LogComponent', () => {
     component.currentIndex = 1;
     fixture.detectChanges();
     const goToCurrentTimeButton = assertDefined(
-      htmlElement.querySelector('.go-to-current-time'),
-    ) as HTMLButtonElement;
+      htmlElement.querySelector<HTMLElement>('.go-to-current-time'),
+    );
     const spy = spyOn(
       assertDefined(component.scrollComponent),
       'scrollToIndex',
@@ -142,14 +140,16 @@ describe('LogComponent', () => {
     });
     expect(htmlElement.querySelectorAll('.entry').length).toEqual(2);
     const filterTrigger = assertDefined(
-      htmlElement.querySelector(`.filters .tag .mat-select-trigger`),
-    ) as HTMLInputElement;
+      htmlElement.querySelector<HTMLElement>(
+        '.headers .tag .mat-select-trigger',
+      ),
+    );
     filterTrigger.click();
     await fixture.whenStable();
 
     const firstOption = assertDefined(
-      document.querySelector('.mat-select-panel .mat-option'),
-    ) as HTMLElement;
+      document.querySelector<HTMLElement>('.mat-select-panel .mat-option'),
+    );
     firstOption.click();
     fixture.detectChanges();
     expect(htmlElement.querySelectorAll('.entry').length).toEqual(1);
@@ -177,7 +177,7 @@ describe('LogComponent', () => {
     expect(htmlElement.querySelectorAll('.entry').length).toEqual(2);
 
     const inputEl = assertDefined(
-      htmlElement.querySelector<HTMLInputElement>(`.filters .vsyncid input`),
+      htmlElement.querySelector<HTMLInputElement>(`.headers .vsyncid input`),
     );
 
     inputEl.value = '123';
@@ -231,7 +231,7 @@ describe('LogComponent', () => {
       entry = detail.entry;
     });
     const logTimestampButton = assertDefined(
-      htmlElement.querySelector<HTMLElement>('.time-button'),
+      htmlElement.querySelectorAll<HTMLElement>('.time-button').item(1),
     );
     logTimestampButton.click();
 
@@ -245,8 +245,8 @@ describe('LogComponent', () => {
       timestamp = detail.timestamp;
     });
     const logTimestampButton = assertDefined(
-      htmlElement.querySelector('.send-time button'),
-    ) as HTMLButtonElement;
+      htmlElement.querySelector<HTMLElement>('.send-time button'),
+    );
     logTimestampButton.click();
 
     expect(timestamp).toBeDefined();
@@ -260,8 +260,8 @@ describe('LogComponent', () => {
     });
 
     const entry = assertDefined(
-      htmlElement.querySelector('.entry[item-id="1"]'),
-    ) as HTMLButtonElement;
+      htmlElement.querySelector<HTMLElement>('.entry[item-id="1"]'),
+    );
     expect(entry.className).not.toContain('selected');
     const spy = spyOn(
       assertDefined(component.scrollComponent),
@@ -340,12 +340,12 @@ describe('LogComponent', () => {
     const entries = [entry1, entry2];
 
     const filters = [
-      {type: LogFieldType.TAG, options: ['Test tag 1', 'Test tag 2']},
-      {type: LogFieldType.VSYNC_ID, textFilter: new TextFilter('', [])},
+      new LogFilter(LogFieldType.TAG, ['Test tag 1', 'Test tag 2']),
+      new LogFilter(LogFieldType.VSYNC_ID, undefined, new TextFilter('', [])),
     ];
 
     component.entries = entries;
-    component.filters = filters;
+    component.headers = filters;
     component.selectedIndex = 0;
     component.traceType = TraceType.CUJS;
   }
