@@ -431,6 +431,8 @@ impl Crate {
                 _ if arg.starts_with("--deny=") => {}
                 _ if arg.starts_with("-W") => {}
                 _ if arg.starts_with("--warn=") => {}
+                _ if arg.starts_with("--allow=deprecated") => {}
+                _ if arg.starts_with("--allow=unexpected_cfgs") => {}
 
                 arg => bail!("unsupported rustc argument: {arg:?}"),
             }
