@@ -52,9 +52,13 @@ fun SceneTransitionsBuilder.notificationShadeTransitions() {
     }
 }
 
+val ToNotificationShadeStartFadeProgress = 0.5f
+
 private fun TransitionBuilder.toNotificationShade() {
     translate(NotificationShade.Elements.Root, Edge.Top)
-    fractionRange(start = 0.5f) { fade(NotificationList.Elements.Notifications) }
+    fractionRange(start = ToNotificationShadeStartFadeProgress) {
+        fade(NotificationList.Elements.Notifications)
+    }
 
     // Let STL know that the size of the shared background is not expected to change during this
     // transition. This allows better handling of the size during interruptions. See
