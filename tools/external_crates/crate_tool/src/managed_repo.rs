@@ -167,10 +167,13 @@ impl ManagedRepo {
 
         let pseudo_crate = self.pseudo_crate();
         if unpinned {
-            pseudo_crate.cargo_add_unpinned(krate)?;
+            pseudo_crate.cargo_add_unpinned(krate)
         } else {
-            pseudo_crate.cargo_add(krate)?;
+            pseudo_crate.cargo_add(krate)
         }
+        .inspect_err(|_e| {
+            let _ = pseudo_crate.remove(krate.name());
+        })?;
         let pseudo_crate = pseudo_crate.vendor()?;
 
         let mc = ManagedCrate::new(Crate::from(self.legacy_dir_for(crate_name))?)
