@@ -28,7 +28,6 @@ describe('TransformMatrixComponent', () => {
     await TestBed.configureTestingModule({
       providers: [{provide: ComponentFixtureAutoDetect, useValue: true}],
       declarations: [TransformMatrixComponent],
-      schemas: [],
     }).compileComponents();
   });
 

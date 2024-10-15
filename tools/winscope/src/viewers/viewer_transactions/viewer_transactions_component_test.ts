@@ -72,14 +72,14 @@ describe('ViewerTransactionsComponent', () => {
       expect(htmlElement.querySelector('.log-view')).toBeTruthy();
     });
 
-    it('renders filters', () => {
-      expect(htmlElement.querySelector('.filters .pid')).toBeTruthy();
-      expect(htmlElement.querySelector('.filters .uid')).toBeTruthy();
+    it('renders headers as filters', () => {
+      expect(htmlElement.querySelector('.headers .filter.pid')).toBeTruthy();
+      expect(htmlElement.querySelector('.headers .filter.uid')).toBeTruthy();
       expect(
-        htmlElement.querySelector('.filters .transaction-type'),
+        htmlElement.querySelector('.headers .filter.transaction-type'),
       ).toBeTruthy();
       expect(
-        htmlElement.querySelector('.filters .transaction-id'),
+        htmlElement.querySelector('.headers .filter.transaction-id'),
       ).toBeTruthy();
     });
 

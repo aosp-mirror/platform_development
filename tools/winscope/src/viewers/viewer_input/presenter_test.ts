@@ -144,6 +144,7 @@ class PresenterInputTest extends AbstractLogViewerPresenterTest<UiData> {
   override readonly numberOfUnfilteredProperties = 15;
   override readonly propertiesFilter = new TextFilter('axis', []);
   override readonly numberOfFilteredProperties = 1;
+  override positionUpdateEarliestEntry: TracePositionUpdate | undefined;
 
   override async setUpTestEnvironment(): Promise<void> {
     const parser = (await UnitTestUtils.getTracesParser([
@@ -170,6 +171,7 @@ class PresenterInputTest extends AbstractLogViewerPresenterTest<UiData> {
     this.secondPositionUpdate = TracePositionUpdate.fromTraceEntry(
       this.trace.getEntry(2),
     );
+    this.positionUpdateEarliestEntry = this.positionUpdate;
   }
 
   override async createPresenterWithEmptyTrace(

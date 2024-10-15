@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2010 The Android Open Source Project
+ * Copyright (C) 2024 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,23 +14,9 @@
  * limitations under the License.
  */
 
-package com.android.commands.monkey;
-
-import android.view.Display;
-import android.view.InputDevice;
-
-
-/**
- * monkey touch event
- */
-public class MonkeyTouchEvent extends MonkeyMotionEvent {
-    public MonkeyTouchEvent(int action) {
-        super(MonkeyEvent.EVENT_TYPE_TOUCH, InputDevice.SOURCE_TOUCHSCREEN, action,
-                Display.DEFAULT_DISPLAY);
-    }
-
-    @Override
-    protected String getTypeLabel() {
-        return "Touch";
-    }
+export class DOMUtils {
+  static isElementVisible(element: HTMLElement) {
+    const rect = element.getBoundingClientRect();
+    return rect.height > 0 && rect.width > 0;
+  }
 }

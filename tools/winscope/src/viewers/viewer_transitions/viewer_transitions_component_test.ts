@@ -40,7 +40,7 @@ import {Trace, TraceEntry} from 'trace/trace';
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
 import {LogComponent} from 'viewers/common/log_component';
 import {executeScrollComponentTests} from 'viewers/common/scroll_component_tests';
-import {LogField, LogFieldType} from 'viewers/common/ui_data_log';
+import {LogField, LogFieldType, LogFilter} from 'viewers/common/ui_data_log';
 import {CollapsedSectionsComponent} from 'viewers/components/collapsed_sections_component';
 import {CollapsibleSectionTitleComponent} from 'viewers/components/collapsible_section_title_component';
 import {PropertiesComponent} from 'viewers/components/properties_component';
@@ -84,12 +84,41 @@ describe('ViewerTransitionsComponent', () => {
       expect(component).toBeTruthy();
     });
 
+    it('renders headers with plain titles and filters', () => {
+      expect(
+        htmlElement.querySelector('.headers .header.transition-id'),
+      ).toBeTruthy();
+      expect(
+        htmlElement.querySelector('.headers .filter.transition-type'),
+      ).toBeTruthy();
+      expect(
+        htmlElement.querySelector('.headers .header.send-time'),
+      ).toBeTruthy();
+      expect(
+        htmlElement.querySelector('.headers .header.dispatch-time'),
+      ).toBeTruthy();
+      expect(
+        htmlElement.querySelector('.headers .header.duration'),
+      ).toBeTruthy();
+      expect(
+        htmlElement.querySelector('.headers .filter.handler'),
+      ).toBeTruthy();
+      expect(
+        htmlElement.querySelector('.headers .filter.participants'),
+      ).toBeTruthy();
+      expect(htmlElement.querySelector('.headers .filter.flags')).toBeTruthy();
+      expect(htmlElement.querySelector('.headers .filter.status')).toBeTruthy();
+    });
+
     it('renders entries', () => {
       expect(htmlElement.querySelector('.scroll')).toBeTruthy();
 
       const entry = assertDefined(htmlElement.querySelector('.scroll .entry'));
       expect(entry.textContent).toContain('TO_FRONT');
       expect(entry.textContent).toContain('1ns');
+      expect(entry.textContent).toContain('testHandler');
+      expect(entry.textContent).toContain('FLAG | OTHER_FLAG');
+      expect(entry.textContent).toContain('Layers: 1\nWindows: 0x423jf43');
       expect(entry.textContent).toContain('PLAYED');
     });
 
@@ -172,7 +201,12 @@ describe('ViewerTransitionsComponent', () => {
     const uiData = UiData.createEmpty();
     uiData.entries = transitions;
     uiData.selectedIndex = 0;
-    uiData.headers = Presenter.FIELD_TYPES;
+    uiData.headers = Presenter.FIELD_TYPES.map((type) => {
+      if (Presenter.FILTER_TYPES.includes(type)) {
+        return new LogFilter(type, ['test']);
+      }
+      return type;
+    });
     return uiData;
   }
 
@@ -209,8 +243,16 @@ describe('ViewerTransitionsComponent', () => {
         value: (finishTimeNanos - sendTimeNanos).toString() + 'ns',
       },
       {
+        type: LogFieldType.HANDLER,
+        value: 'testHandler',
+      },
+      {
         type: LogFieldType.PARTICIPANTS,
         value: 'Layers: 1\nWindows: 0x423jf43',
+      },
+      {
+        type: LogFieldType.FLAGS,
+        value: 'FLAG | OTHER_FLAG',
       },
       {
         type: LogFieldType.STATUS,
