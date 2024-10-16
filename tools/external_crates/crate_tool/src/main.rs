@@ -26,7 +26,11 @@ struct Cli {
 
     // The path to the Android source repo.
     #[arg(long, default_value_os_t=default_repo_root().unwrap_or(PathBuf::from(".")))]
-    repo_root: PathBuf,
+    android_root: PathBuf,
+
+    // The path to the crate monorepo, relative to the Android source repo.
+    #[arg(long, default_value_os_t=PathBuf::from("external/rust/android-crates-io"))]
+    managed_repo_path: PathBuf,
 
     /// Rebuild cargo_embargo and bpfmt, even if they are already present in the out directory.
     #[arg(long, default_value_t = false)]
@@ -153,10 +157,10 @@ fn parse_crate_list(arg: &str) -> Result<BTreeSet<String>> {
 fn main() -> Result<()> {
     let args = Cli::parse();
 
-    maybe_build_cargo_embargo(&args.repo_root, args.rebuild_cargo_embargo)?;
+    maybe_build_cargo_embargo(&args.android_root, args.rebuild_cargo_embargo)?;
 
     let managed_repo = ManagedRepo::new(
-        RootedPath::new(args.repo_root, "external/rust/android-crates-io")?,
+        RootedPath::new(args.android_root, args.managed_repo_path)?,
         args.offline,
     )?;
 
