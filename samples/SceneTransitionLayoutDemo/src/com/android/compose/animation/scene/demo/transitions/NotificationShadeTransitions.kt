@@ -18,6 +18,7 @@ package com.android.compose.animation.scene.demo.transitions
 
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.gestures.Orientation
+import com.android.compose.animation.scene.BaseTransitionBuilder
 import com.android.compose.animation.scene.Edge
 import com.android.compose.animation.scene.SceneTransitionsBuilder
 import com.android.compose.animation.scene.TransitionBuilder
@@ -39,10 +40,14 @@ fun SceneTransitionsBuilder.notificationShadeTransitions() {
     }
 
     overscroll(Overlays.Notifications, Orientation.Vertical) {
+        notifyStlThatShadeDoesNotResizeDuringThisTransition()
+
         translate(NotificationShade.Elements.Root, y = { absoluteDistance })
     }
 
     overscroll(Overlays.Notifications, Orientation.Horizontal) {
+        notifyStlThatShadeDoesNotResizeDuringThisTransition()
+
         translate(NotificationShade.Elements.Root, x = { absoluteDistance })
     }
 }
@@ -51,6 +56,13 @@ private fun TransitionBuilder.toNotificationShade() {
     translate(NotificationShade.Elements.Root, Edge.Top)
     fractionRange(start = 0.5f) { fade(NotificationList.Elements.Notifications) }
 
+    // Let STL know that the size of the shared background is not expected to change during this
+    // transition. This allows better handling of the size during interruptions. See
+    // b/290930950#comment22 for details.
+    scaleSize(PartialShade.Elements.Background, width = 1f, height = 1f)
+}
+
+fun BaseTransitionBuilder.notifyStlThatShadeDoesNotResizeDuringThisTransition() {
     // Let STL know that the size of the shared background is not expected to change during this
     // transition. This allows better handling of the size during interruptions. See
     // b/290930950#comment22 for details.
