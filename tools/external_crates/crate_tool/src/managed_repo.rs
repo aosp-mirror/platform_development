@@ -14,7 +14,7 @@
 
 use std::{
     collections::BTreeSet,
-    fs::{create_dir, read_dir, remove_file, write},
+    fs::{create_dir, create_dir_all, read_dir, remove_file, write},
     os::unix::fs::symlink,
     path::Path,
     process::Command,
@@ -778,6 +778,16 @@ impl ManagedRepo {
             }
             println!("Update {} to {} succeeded", crate_name, version);
         }
+        Ok(())
+    }
+    pub fn init(&self) -> Result<()> {
+        if self.path.abs().exists() {
+            return Err(anyhow!("{} already exists", self.path));
+        }
+        create_dir_all(&self.path).context(format!("Failed to create {}", self.path))?;
+        let crates_dir = self.path.join("crates")?;
+        create_dir_all(&crates_dir).context(format!("Failed to create {}", crates_dir))?;
+        self.pseudo_crate().init()?;
         Ok(())
     }
 }

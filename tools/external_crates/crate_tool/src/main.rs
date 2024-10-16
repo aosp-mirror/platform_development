@@ -120,6 +120,8 @@ enum Cmd {
     ///
     /// ./android_cargo.py run --bin crate_tool -- try-updates | tee crate-updates
     TryUpdates {},
+    /// Initialize a new managed repo.
+    Init {},
 }
 
 #[derive(Args)]
@@ -197,5 +199,6 @@ fn main() -> Result<()> {
         Cmd::SuggestUpdates { patches } => managed_repo.suggest_updates(patches).map(|_x| ()),
         Cmd::Update { crate_name, version } => managed_repo.update(crate_name, version),
         Cmd::TryUpdates {} => managed_repo.try_updates(),
+        Cmd::Init {} => managed_repo.init(),
     }
 }
