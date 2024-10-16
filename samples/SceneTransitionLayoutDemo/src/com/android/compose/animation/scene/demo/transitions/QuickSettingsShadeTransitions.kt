@@ -31,7 +31,13 @@ import com.android.compose.animation.scene.demo.notification.NotificationList
 fun SceneTransitionsBuilder.quickSettingsShadeTransitions() {
     to(Overlays.QuickSettings) {
         spec = tween(500)
+
         translate(QuickSettingsShade.Elements.Root, Edge.Top)
+
+        // Let STL know that the size of the shared background is not expected to change during this
+        // transition. This allows better handling of the size during interruptions. See
+        // b/290930950#comment22 for details.
+        scaleSize(PartialShade.Elements.Background, width = 1f, height = 1f)
     }
 
     from(Overlays.QuickSettings, to = Overlays.Notifications) {
