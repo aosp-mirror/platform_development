@@ -251,12 +251,17 @@ impl ManagedRepo {
                 .wait()?;
         }
 
-        if !mc.patch_success() || !mc.cargo_embargo_success() || !mc.android_bp_unchanged() {
+        // Patching and running cargo_embargo *must* succeed. But if we are migrating with a version change,
+        // there could be some changes to the Android.bp.
+        if !mc.patch_success()
+            || !mc.cargo_embargo_success()
+            || (!mc.android_bp_unchanged() && !unpinned)
+        {
             println!("Crate {} is UNHEALTHY", crate_name);
             return Err(anyhow!("Crate {} is unhealthy", crate_name));
         }
 
-        if diff_status.success() {
+        if diff_status.success() && mc.android_bp_unchanged() {
             println!("Crate {} is healthy", crate_name);
             return Ok(version);
         }
