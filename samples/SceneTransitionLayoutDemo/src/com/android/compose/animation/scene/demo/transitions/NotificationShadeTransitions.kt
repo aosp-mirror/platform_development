@@ -23,6 +23,7 @@ import com.android.compose.animation.scene.SceneTransitionsBuilder
 import com.android.compose.animation.scene.TransitionBuilder
 import com.android.compose.animation.scene.demo.NotificationShade
 import com.android.compose.animation.scene.demo.Overlays
+import com.android.compose.animation.scene.demo.PartialShade
 import com.android.compose.animation.scene.demo.notification.NotificationList
 
 fun SceneTransitionsBuilder.notificationShadeTransitions() {
@@ -49,4 +50,9 @@ fun SceneTransitionsBuilder.notificationShadeTransitions() {
 private fun TransitionBuilder.toNotificationShade() {
     translate(NotificationShade.Elements.Root, Edge.Top)
     fractionRange(start = 0.5f) { fade(NotificationList.Elements.Notifications) }
+
+    // Let STL know that the size of the shared background is not expected to change during this
+    // transition. This allows better handling of the size during interruptions. See
+    // b/290930950#comment22 for details.
+    scaleSize(PartialShade.Elements.Background, width = 1f, height = 1f)
 }
