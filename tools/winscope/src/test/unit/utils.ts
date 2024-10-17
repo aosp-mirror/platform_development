@@ -29,6 +29,7 @@ import {TraceFile} from 'trace/trace_file';
 import {TraceEntryTypeMap, TraceType} from 'trace/trace_type';
 import {HierarchyTreeNode} from 'trace/tree_node/hierarchy_tree_node';
 import {QueryResult, Row, RowIterator} from 'trace_processor/query_result';
+import {TraceProcessorFactory} from 'trace_processor/trace_processor_factory';
 import {TimestampConverterUtils} from './timestamp_converter_utils';
 import {TraceBuilder} from './trace_builder';
 
@@ -386,6 +387,11 @@ class UnitTestUtils {
     spyQueryResult.iter.and.returnValue(spyIter);
 
     return [spyQueryResult, spyIter];
+  }
+
+  static async runQueryAndGetResult(query: string): Promise<QueryResult> {
+    const tp = await TraceProcessorFactory.getSingleInstance();
+    return tp.query(query).waitAllRows();
   }
 
   private static testTimestamps(
