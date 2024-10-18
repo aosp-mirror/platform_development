@@ -23,7 +23,6 @@ serde_json = "1"
 spdx = "0.10"
 thiserror = "1"
 threadpool = "1"
-tinytemplate = "1.2"
 walkdir = "2"
 whoami = "1"
 google_metadata = { path = "../google_metadata"}
