@@ -16,10 +16,16 @@
 
 package com.android.compose.animation.scene.demo
 
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.zIndex
 import com.android.compose.animation.scene.Back
 import com.android.compose.animation.scene.ElementKey
 import com.android.compose.animation.scene.SceneScope
@@ -42,15 +48,26 @@ object QuickSettingsShade {
 
 @Composable
 fun SceneScope.QuickSettingsShade(
+    qsPager: @Composable SceneScope.() -> Unit,
     mediaPlayer: @Composable (SceneScope.() -> Unit)?,
     modifier: Modifier = Modifier,
 ) {
-    PartialShade(modifier.element(QuickSettingsShade.Elements.Root)) {
+    PartialShade(
+        modifier.element(QuickSettingsShade.Elements.Root),
+        innerPadding = PaddingValues(),
+    ) {
         Column(Modifier.element(QuickSettingsShade.Elements.Content)) {
-            Clock(MaterialTheme.colorScheme.onSurfaceVariant)
+            val horizontalPaddingModifier = Modifier.padding(horizontal = 16.dp)
+
+            Clock(MaterialTheme.colorScheme.onSurfaceVariant, horizontalPaddingModifier)
+
             if (mediaPlayer != null) {
-                mediaPlayer()
+                // Ensure that the media player is above the QS tiles when they fade in.
+                Box(horizontalPaddingModifier.zIndex(1f)) { mediaPlayer() }
             }
+
+            Spacer(Modifier.padding(top = 16.dp))
+            qsPager()
         }
     }
 }
