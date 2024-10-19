@@ -99,6 +99,6 @@ pub fn build_cargo_embargo(repo_root: &impl AsRef<Path>) -> Result<()> {
         .current_dir(repo_root)
         .spawn().context("Failed to spawn build of cargo embargo")?
         .wait().context("Failed to wait on child process building cargo embargo")?
-        .success_or_error().context("Failed to build_cargo_emargo")?;
+        .success_or_error().context("Failed to build_cargo_embargo")?;
     Ok(())
 }

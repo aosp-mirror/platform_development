@@ -14,7 +14,7 @@
 
 use std::{
     collections::BTreeSet,
-    fs::{create_dir, read_dir, remove_file, write},
+    fs::{create_dir, create_dir_all, read_dir, remove_file, write},
     os::unix::fs::symlink,
     path::Path,
     process::Command,
@@ -251,12 +251,17 @@ impl ManagedRepo {
                 .wait()?;
         }
 
-        if !mc.patch_success() || !mc.cargo_embargo_success() || !mc.android_bp_unchanged() {
+        // Patching and running cargo_embargo *must* succeed. But if we are migrating with a version change,
+        // there could be some changes to the Android.bp.
+        if !mc.patch_success()
+            || !mc.cargo_embargo_success()
+            || (!mc.android_bp_unchanged() && !unpinned)
+        {
             println!("Crate {} is UNHEALTHY", crate_name);
             return Err(anyhow!("Crate {} is unhealthy", crate_name));
         }
 
-        if diff_status.success() {
+        if diff_status.success() && mc.android_bp_unchanged() {
             println!("Crate {} is healthy", crate_name);
             return Ok(version);
         }
@@ -778,6 +783,16 @@ impl ManagedRepo {
             }
             println!("Update {} to {} succeeded", crate_name, version);
         }
+        Ok(())
+    }
+    pub fn init(&self) -> Result<()> {
+        if self.path.abs().exists() {
+            return Err(anyhow!("{} already exists", self.path));
+        }
+        create_dir_all(&self.path).context(format!("Failed to create {}", self.path))?;
+        let crates_dir = self.path.join("crates")?;
+        create_dir_all(&crates_dir).context(format!("Failed to create {}", crates_dir))?;
+        self.pseudo_crate().init()?;
         Ok(())
     }
 }
