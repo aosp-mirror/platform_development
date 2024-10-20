@@ -648,6 +648,10 @@ fn write_build_files(
             )?;
         }
     }
+    if !mk_contents.is_empty() {
+        // If rules.mk is generated, then make it accessible via dirgroup.
+        bp_contents += &generate_android_bp_for_rules_mk(package_name)?;
+    }
 
     let def = PackageConfig::default();
     let package_cfg = cfg.package.get(package_name).unwrap_or(&def);
@@ -893,6 +897,21 @@ fn generate_rules_mk(
             crate_.name, crate_.package_name
         )
     })
+}
+
+/// Generates and returns a Soong Blueprint for a Trusty rules.mk
+fn generate_android_bp_for_rules_mk(package_name: &str) -> Result<String> {
+    let mut bp_contents = String::new();
+
+    let mut m = BpModule::new("dirgroup".to_string());
+    m.props.set("name", format!("trusty_dirgroup_external_rust_crates_{}", package_name));
+    m.props.set("dirs", vec!["."]);
+    m.props.set("visibility", vec!["//trusty/vendor/google/aosp/scripts"]);
+
+    m.write(&mut bp_contents)?;
+    bp_contents += "\n";
+
+    Ok(bp_contents)
 }
 
 /// Apply patch from `patch_path` to file `output_path`.
