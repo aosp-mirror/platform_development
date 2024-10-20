@@ -167,10 +167,13 @@ impl ManagedRepo {
 
         let pseudo_crate = self.pseudo_crate();
         if unpinned {
-            pseudo_crate.cargo_add_unpinned(krate)?;
+            pseudo_crate.cargo_add_unpinned(krate)
         } else {
-            pseudo_crate.cargo_add(krate)?;
+            pseudo_crate.cargo_add(krate)
         }
+        .inspect_err(|_e| {
+            let _ = pseudo_crate.remove(krate.name());
+        })?;
         let pseudo_crate = pseudo_crate.vendor()?;
 
         let mc = ManagedCrate::new(Crate::from(self.legacy_dir_for(crate_name))?)
@@ -248,12 +251,17 @@ impl ManagedRepo {
                 .wait()?;
         }
 
-        if !mc.patch_success() || !mc.cargo_embargo_success() || !mc.android_bp_unchanged() {
+        // Patching and running cargo_embargo *must* succeed. But if we are migrating with a version change,
+        // there could be some changes to the Android.bp.
+        if !mc.patch_success()
+            || !mc.cargo_embargo_success()
+            || (!mc.android_bp_unchanged() && !unpinned)
+        {
             println!("Crate {} is UNHEALTHY", crate_name);
             return Err(anyhow!("Crate {} is unhealthy", crate_name));
         }
 
-        if diff_status.success() {
+        if diff_status.success() && mc.android_bp_unchanged() {
             println!("Crate {} is healthy", crate_name);
             return Ok(version);
         }
