@@ -180,6 +180,7 @@ license = "Apache-2.0"
 [dependencies]
 "#,
         )?;
+        write(self.path.join("crate-list.txt")?, "")?;
 
         ensure_exists_and_empty(&self.path.join("src")?)?;
         write(self.path.join("src/lib.rs")?, "// Nothing")
