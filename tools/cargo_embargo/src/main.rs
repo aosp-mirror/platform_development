@@ -667,6 +667,7 @@ fn write_build_files(
             package_cfg,
             read_license_header(&output_path)?.trim(),
             crates,
+            &cfg.variants.first().unwrap().module_name_overrides,
         )?;
         let bp_contents = package_header + &bp_contents;
         write_format_android_bp(&output_path, &bp_contents, package_cfg.patch.as_deref())?;
@@ -694,6 +695,7 @@ fn generate_android_bp_package_header(
     package_cfg: &PackageConfig,
     license_header: &str,
     crates: &[Vec<Crate>],
+    module_name_overrides: &BTreeMap<String, String>,
 ) -> Result<String> {
     let crates = crates.iter().flatten().collect::<Vec<_>>();
     if let Some(first) = crates.first() {
@@ -702,7 +704,17 @@ fn generate_android_bp_package_header(
                 let mut modules = Vec::new();
                 let license = choose_license(license)?;
 
-                let license_name = format!("external_rust_crates_{}_license", package_name);
+                let default_license_name = format!("external_rust_crates_{}_license", package_name);
+
+                let license_name = match override_module_name(
+                    &default_license_name,
+                    &[],
+                    module_name_overrides,
+                    &RENAME_MAP,
+                ) {
+                    Some(x) => x,
+                    None => default_license_name,
+                };
 
                 let mut package_module = BpModule::new("package".to_string());
                 package_module.props.set("default_team", "trendy_team_android_rust");
@@ -1394,8 +1406,14 @@ mod tests {
             let package_name = &crates[0][0].package_name;
             let def = PackageConfig::default();
             let package_cfg = cfg.package.get(package_name).unwrap_or(&def);
-            let mut output =
-                generate_android_bp_package_header(package_name, package_cfg, "", &crates).unwrap();
+            let mut output = generate_android_bp_package_header(
+                package_name,
+                package_cfg,
+                "",
+                &crates,
+                &cfg.variants.first().unwrap().module_name_overrides,
+            )
+            .unwrap();
             for (variant_index, variant_cfg) in cfg.variants.iter().enumerate() {
                 let variant_crates = &crates[variant_index];
                 let package_name = &variant_crates[0].package_name;
