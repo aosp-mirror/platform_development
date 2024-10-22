@@ -181,6 +181,7 @@ license = "Apache-2.0"
 "#,
         )?;
         write(self.path.join("crate-list.txt")?, "")?;
+        write(self.path.join(".gitignore")?, "target/\nvendor/\n")?;
 
         ensure_exists_and_empty(&self.path.join("src")?)?;
         write(self.path.join("src/lib.rs")?, "// Nothing")
