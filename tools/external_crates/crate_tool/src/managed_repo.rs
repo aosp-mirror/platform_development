@@ -13,7 +13,8 @@
 // limitations under the License.
 
 use std::{
-    collections::BTreeSet,
+    collections::{BTreeMap, BTreeSet},
+    env,
     fs::{create_dir, create_dir_all, read_dir, remove_file, write},
     os::unix::fs::symlink,
     path::Path,
@@ -68,8 +69,27 @@ impl ManagedRepo {
     fn managed_dir_for(&self, crate_name: &str) -> RootedPath {
         self.managed_dir().join(crate_name).unwrap()
     }
-    fn legacy_dir_for(&self, crate_name: &str) -> RootedPath {
-        self.path.with_same_root("external/rust/crates").unwrap().join(crate_name).unwrap()
+    fn legacy_dir_for(&self, crate_name: &str, version: Option<&Version>) -> Result<RootedPath> {
+        match version {
+            Some(v) => {
+                let cc = self.legacy_crates_for(crate_name)?;
+                let nv = NameAndVersionRef::new(crate_name, v);
+                Ok(cc
+                    .map_field()
+                    .get(&nv as &dyn NamedAndVersioned)
+                    .ok_or(anyhow!("Failed to find crate {} v{}", crate_name, v))?
+                    .path()
+                    .clone())
+            }
+            None => {
+                Ok(self.path.with_same_root("external/rust/crates").unwrap().join(crate_name)?)
+            }
+        }
+    }
+    fn legacy_crates_for(&self, crate_name: &str) -> Result<CrateCollection> {
+        let mut cc = self.new_cc();
+        cc.add_from(format!("external/rust/crates/{}", crate_name))?;
+        Ok(cc)
     }
     fn legacy_crates(&self) -> Result<CrateCollection> {
         let mut cc = self.new_cc();
@@ -104,21 +124,35 @@ impl ManagedRepo {
         crate_name: &str,
         verbose: bool,
         unpinned: bool,
+        version: Option<&Version>,
     ) -> Result<Version> {
         if self.contains(crate_name) {
             return Err(anyhow!("Crate {} already exists in {}/crates", crate_name, self.path));
         }
 
-        let mut cc = self.new_cc();
-        cc.add_from(self.legacy_dir_for(crate_name).rel())?;
-        if cc.map_field().len() != 1 {
-            return Err(anyhow!(
-                "Expected a single crate version for {}, but found {}. Crates with multiple versions are not supported yet.",
-                crate_name,
-                cc.map_field().len()
-            ));
-        }
-        let krate = cc.map_field().values().next().unwrap();
+        let cc = self.legacy_crates_for(crate_name)?;
+        let krate = match version {
+            Some(v) => {
+                let nv = NameAndVersionRef::new(crate_name, v);
+                match cc.map_field().get(&nv as &dyn NamedAndVersioned) {
+                    Some(k) => k,
+                    None => {
+                        return Err(anyhow!("Did not find crate {} v{}", crate_name, v));
+                    }
+                }
+            }
+            None => {
+                if cc.map_field().len() != 1 {
+                    return Err(anyhow!(
+                        "Expected a single crate version for {}, but found {}. Specify a version with --versions={}=<version>",
+                        crate_name,
+                        cc.get_versions(crate_name).map(|(nv, _)| nv.version()).join(", "),
+                        crate_name
+                    ));
+                }
+                cc.map_field().values().next().unwrap()
+            }
+        };
         println!("Found {} v{} in {}", krate.name(), krate.version(), krate.path());
 
         let mut healthy_self_contained = true;
@@ -127,7 +161,7 @@ impl ManagedRepo {
             healthy_self_contained = false;
         }
 
-        let mc = ManagedCrate::new(Crate::from(self.legacy_dir_for(crate_name))?).into_legacy();
+        let mc = ManagedCrate::new(Crate::from(krate.path().clone())?).into_legacy();
         if !mc.android_bp().abs().exists() {
             println!("There is no Android.bp file in {}", krate.path());
             healthy_self_contained = false;
@@ -176,8 +210,7 @@ impl ManagedRepo {
         })?;
         let pseudo_crate = pseudo_crate.vendor()?;
 
-        let mc = ManagedCrate::new(Crate::from(self.legacy_dir_for(crate_name))?)
-            .stage(&pseudo_crate)?;
+        let mc = ManagedCrate::new(Crate::from(krate.path().clone())?).stage(&pseudo_crate)?;
 
         pseudo_crate.remove(krate.name())?;
 
@@ -279,13 +312,18 @@ impl ManagedRepo {
         crates: Vec<T>,
         verbose: bool,
         unpinned: &BTreeSet<String>,
+        versions: &BTreeMap<String, Version>,
     ) -> Result<()> {
         let pseudo_crate = self.pseudo_crate();
         for crate_name in &crates {
             let crate_name = crate_name.as_ref();
-            let version =
-                self.migration_health(crate_name, verbose, unpinned.contains(crate_name))?;
-            let src_dir = self.legacy_dir_for(crate_name);
+            let version = self.migration_health(
+                crate_name,
+                verbose,
+                unpinned.contains(crate_name),
+                versions.get(crate_name),
+            )?;
+            let src_dir = self.legacy_dir_for(crate_name, Some(&version))?;
 
             let monorepo_crate_dir = self.managed_dir();
             if !monorepo_crate_dir.abs().exists() {
@@ -303,7 +341,7 @@ impl ManagedRepo {
 
         for crate_name in &crates {
             let crate_name = crate_name.as_ref();
-            let src_dir = self.legacy_dir_for(crate_name);
+            let src_dir = self.legacy_dir_for(crate_name, versions.get(crate_name))?;
             for entry in glob(
                 src_dir
                     .abs()
@@ -339,11 +377,11 @@ impl ManagedRepo {
                     self.managed_dir_for(dep)
                 ));
             }
-            if self.legacy_dir_for(dep).abs().exists() {
+            if self.legacy_dir_for(dep, None)?.abs().exists() {
                 return Err(anyhow!(
                     "Legacy crate {} already exists at {}",
                     dep,
-                    self.legacy_dir_for(dep)
+                    self.legacy_dir_for(dep, None)?
                 ));
             }
 
@@ -478,10 +516,14 @@ impl ManagedRepo {
                 deps.iter().join(", "), crate_list.iter().join(", ")));
         }
 
+        // Per https://android.googlesource.com/platform/tools/repohooks/,
+        // the REPO_PATH environment variable is the path of the git repo relative to the
+        // root of the Android source tree.
+        let prefix = self.path.rel().strip_prefix(env::var("REPO_PATH")?)?;
         let changed_android_crates = files
             .iter()
-            .filter_map(|file| {
-                let path = Path::new(file);
+            .filter_map(|file| Path::new(file).strip_prefix(prefix).ok())
+            .filter_map(|path| {
                 let components = path.components().collect::<Vec<_>>();
                 if path.starts_with("crates/") && components.len() > 2 {
                     Some(components[1].as_os_str().to_string_lossy().to_string())
