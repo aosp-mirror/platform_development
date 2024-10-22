@@ -14,8 +14,4 @@
  * limitations under the License.
  */
 
-export enum FilterFlag {
-  MATCH_CASE,
-  MATCH_WORD,
-  USE_REGEX,
-}
+export type StringFilterPredicate = (value: string) => boolean;
