@@ -20,43 +20,60 @@ import androidx.compose.animation.core.tween
 import androidx.compose.foundation.gestures.Orientation
 import com.android.compose.animation.scene.Edge
 import com.android.compose.animation.scene.SceneTransitionsBuilder
+import com.android.compose.animation.scene.and
 import com.android.compose.animation.scene.demo.Overlays
-import com.android.compose.animation.scene.demo.PartialShade
 import com.android.compose.animation.scene.demo.QuickSettings
 import com.android.compose.animation.scene.demo.QuickSettingsGrid
 import com.android.compose.animation.scene.demo.QuickSettingsShade
+import com.android.compose.animation.scene.demo.Scenes
 import com.android.compose.animation.scene.demo.notification.NotificationList
+import com.android.compose.animation.scene.inContent
+import com.android.compose.animation.scene.or
+
+val QuickSettingsToNotificationShadeFadeProgress = 0.5f
 
 fun SceneTransitionsBuilder.quickSettingsShadeTransitions() {
     to(Overlays.QuickSettings) {
         spec = tween(500)
+
+        notifyStlThatShadeDoesNotResizeDuringThisTransition()
 
         translate(QuickSettingsShade.Elements.Root, Edge.Top)
         fractionRange(start = 0.5f) {
             fade(QuickSettingsGrid.Elements.Tiles)
             fade(QuickSettings.Elements.PagerIndicators)
         }
-
-        // Let STL know that the size of the shared background is not expected to change during this
-        // transition. This allows better handling of the size during interruptions. See
-        // b/290930950#comment22 for details.
-        scaleSize(PartialShade.Elements.Background, width = 1f, height = 1f)
     }
 
     from(Overlays.QuickSettings, to = Overlays.Notifications) {
         spec = tween(500)
-        fractionRange(end = 0.5f) {
+
+        // Don't share the notifications with lockscreen when replacing the notification shade with
+        // the QS one.
+        sharedElement(NotificationList.Elements.Notifications, enabled = false)
+
+        fractionRange(end = QuickSettingsToNotificationShadeFadeProgress) {
             fade(QuickSettingsGrid.Elements.Tiles)
             fade(QuickSettings.Elements.PagerIndicators)
+            fade(
+                NotificationList.Elements.Notifications and
+                    (inContent(Scenes.Lockscreen) or inContent(Scenes.SplitLockscreen))
+            )
         }
-        fractionRange(start = 0.5f) { fade(NotificationList.Elements.Notifications) }
+        fractionRange(start = QuickSettingsToNotificationShadeFadeProgress) {
+            fade(NotificationList.Elements.Notifications and inContent(Overlays.Notifications))
+        }
     }
 
     overscroll(Overlays.QuickSettings, Orientation.Vertical) {
+        notifyStlThatShadeDoesNotResizeDuringThisTransition()
+
         translate(QuickSettingsShade.Elements.Root, y = { absoluteDistance })
     }
 
     overscroll(Overlays.QuickSettings, Orientation.Horizontal) {
+        notifyStlThatShadeDoesNotResizeDuringThisTransition()
+
         translate(QuickSettingsShade.Elements.Root, x = { absoluteDistance })
     }
 }
