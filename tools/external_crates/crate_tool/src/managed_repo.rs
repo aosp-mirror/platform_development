@@ -69,8 +69,27 @@ impl ManagedRepo {
     fn managed_dir_for(&self, crate_name: &str) -> RootedPath {
         self.managed_dir().join(crate_name).unwrap()
     }
-    fn legacy_dir_for(&self, crate_name: &str) -> RootedPath {
-        self.path.with_same_root("external/rust/crates").unwrap().join(crate_name).unwrap()
+    fn legacy_dir_for(&self, crate_name: &str, version: Option<&Version>) -> Result<RootedPath> {
+        match version {
+            Some(v) => {
+                let cc = self.legacy_crates_for(crate_name)?;
+                let nv = NameAndVersionRef::new(crate_name, v);
+                Ok(cc
+                    .map_field()
+                    .get(&nv as &dyn NamedAndVersioned)
+                    .ok_or(anyhow!("Failed to find crate {} v{}", crate_name, v))?
+                    .path()
+                    .clone())
+            }
+            None => {
+                Ok(self.path.with_same_root("external/rust/crates").unwrap().join(crate_name)?)
+            }
+        }
+    }
+    fn legacy_crates_for(&self, crate_name: &str) -> Result<CrateCollection> {
+        let mut cc = self.new_cc();
+        cc.add_from(format!("external/rust/crates/{}", crate_name))?;
+        Ok(cc)
     }
     fn legacy_crates(&self) -> Result<CrateCollection> {
         let mut cc = self.new_cc();
@@ -111,8 +130,7 @@ impl ManagedRepo {
             return Err(anyhow!("Crate {} already exists in {}/crates", crate_name, self.path));
         }
 
-        let mut cc = self.new_cc();
-        cc.add_from(self.legacy_dir_for(crate_name).rel())?;
+        let cc = self.legacy_crates_for(crate_name)?;
         let krate = match version {
             Some(v) => {
                 let nv = NameAndVersionRef::new(crate_name, v);
@@ -192,8 +210,7 @@ impl ManagedRepo {
         })?;
         let pseudo_crate = pseudo_crate.vendor()?;
 
-        let mc = ManagedCrate::new(Crate::from(self.legacy_dir_for(crate_name))?)
-            .stage(&pseudo_crate)?;
+        let mc = ManagedCrate::new(Crate::from(krate.path().clone())?).stage(&pseudo_crate)?;
 
         pseudo_crate.remove(krate.name())?;
 
@@ -306,7 +323,7 @@ impl ManagedRepo {
                 unpinned.contains(crate_name),
                 versions.get(crate_name),
             )?;
-            let src_dir = self.legacy_dir_for(crate_name);
+            let src_dir = self.legacy_dir_for(crate_name, Some(&version))?;
 
             let monorepo_crate_dir = self.managed_dir();
             if !monorepo_crate_dir.abs().exists() {
@@ -324,7 +341,7 @@ impl ManagedRepo {
 
         for crate_name in &crates {
             let crate_name = crate_name.as_ref();
-            let src_dir = self.legacy_dir_for(crate_name);
+            let src_dir = self.legacy_dir_for(crate_name, versions.get(crate_name))?;
             for entry in glob(
                 src_dir
                     .abs()
@@ -360,11 +377,11 @@ impl ManagedRepo {
                     self.managed_dir_for(dep)
                 ));
             }
-            if self.legacy_dir_for(dep).abs().exists() {
+            if self.legacy_dir_for(dep, None)?.abs().exists() {
                 return Err(anyhow!(
                     "Legacy crate {} already exists at {}",
                     dep,
-                    self.legacy_dir_for(dep)
+                    self.legacy_dir_for(dep, None)?
                 ));
             }
 
