@@ -14,6 +14,7 @@
 
 use std::{
     collections::{BTreeMap, BTreeSet},
+    env,
     fs::{create_dir, create_dir_all, read_dir, remove_file, write},
     os::unix::fs::symlink,
     path::Path,
@@ -498,10 +499,14 @@ impl ManagedRepo {
                 deps.iter().join(", "), crate_list.iter().join(", ")));
         }
 
+        // Per https://android.googlesource.com/platform/tools/repohooks/,
+        // the REPO_PATH environment variable is the path of the git repo relative to the
+        // root of the Android source tree.
+        let prefix = self.path.rel().strip_prefix(env::var("REPO_PATH")?)?;
         let changed_android_crates = files
             .iter()
-            .filter_map(|file| {
-                let path = Path::new(file);
+            .filter_map(|file| Path::new(file).strip_prefix(prefix).ok())
+            .filter_map(|path| {
                 let components = path.components().collect::<Vec<_>>();
                 if path.starts_with("crates/") && components.len() > 2 {
                     Some(components[1].as_os_str().to_string_lossy().to_string())
