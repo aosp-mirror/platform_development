@@ -23,7 +23,7 @@ import {
   AbstractLogViewerPresenter,
   NotifyLogViewCallbackType,
 } from 'viewers/common/abstract_log_viewer_presenter';
-import {LogFilter, LogSelectFilter} from 'viewers/common/log_filters';
+import {LogSelectFilter} from 'viewers/common/log_filters';
 import {LogPresenter} from 'viewers/common/log_presenter';
 import {PropertiesPresenter} from 'viewers/common/properties_presenter';
 import {TextFilter, TextFilterValues} from 'viewers/common/text_filter';

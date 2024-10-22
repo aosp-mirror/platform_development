@@ -20,21 +20,21 @@ import {TextFilter} from 'viewers/common/text_filter';
 import {
   LogEntry,
   LogField,
-  LogFieldType,
+  LogHeader,
   UiDataLog,
 } from 'viewers/common/ui_data_log';
 import {UiPropertyTreeNode} from 'viewers/common/ui_property_tree_node';
 
 export class UiData implements UiDataLog {
   constructor(
-    public headers: LogFieldType[],
+    public headers: LogHeader[],
     public entries: LogEntry[],
     public selectedIndex: undefined | number,
     public scrollToIndex: undefined | number,
     public propertiesTree: undefined | UiPropertyTreeNode,
   ) {}
 
-  propertiesFilter = new TextFilter('', []);
+  propertiesFilter = new TextFilter();
 
   static createEmpty() {
     return new UiData([], [], undefined, undefined, undefined);
