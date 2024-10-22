@@ -13,7 +13,7 @@
 // limitations under the License.
 
 use std::{
-    collections::BTreeSet,
+    collections::{BTreeMap, BTreeSet},
     fs::{create_dir, create_dir_all, read_dir, remove_file, write},
     os::unix::fs::symlink,
     path::Path,
@@ -104,6 +104,7 @@ impl ManagedRepo {
         crate_name: &str,
         verbose: bool,
         unpinned: bool,
+        version: Option<&Version>,
     ) -> Result<Version> {
         if self.contains(crate_name) {
             return Err(anyhow!("Crate {} already exists in {}/crates", crate_name, self.path));
@@ -111,14 +112,28 @@ impl ManagedRepo {
 
         let mut cc = self.new_cc();
         cc.add_from(self.legacy_dir_for(crate_name).rel())?;
-        if cc.map_field().len() != 1 {
-            return Err(anyhow!(
-                "Expected a single crate version for {}, but found {}. Crates with multiple versions are not supported yet.",
-                crate_name,
-                cc.map_field().len()
-            ));
-        }
-        let krate = cc.map_field().values().next().unwrap();
+        let krate = match version {
+            Some(v) => {
+                let nv = NameAndVersionRef::new(crate_name, v);
+                match cc.map_field().get(&nv as &dyn NamedAndVersioned) {
+                    Some(k) => k,
+                    None => {
+                        return Err(anyhow!("Did not find crate {} v{}", crate_name, v));
+                    }
+                }
+            }
+            None => {
+                if cc.map_field().len() != 1 {
+                    return Err(anyhow!(
+                        "Expected a single crate version for {}, but found {}. Specify a version with --versions={}=<version>",
+                        crate_name,
+                        cc.get_versions(crate_name).map(|(nv, _)| nv.version()).join(", "),
+                        crate_name
+                    ));
+                }
+                cc.map_field().values().next().unwrap()
+            }
+        };
         println!("Found {} v{} in {}", krate.name(), krate.version(), krate.path());
 
         let mut healthy_self_contained = true;
@@ -127,7 +142,7 @@ impl ManagedRepo {
             healthy_self_contained = false;
         }
 
-        let mc = ManagedCrate::new(Crate::from(self.legacy_dir_for(crate_name))?).into_legacy();
+        let mc = ManagedCrate::new(Crate::from(krate.path().clone())?).into_legacy();
         if !mc.android_bp().abs().exists() {
             println!("There is no Android.bp file in {}", krate.path());
             healthy_self_contained = false;
@@ -279,12 +294,17 @@ impl ManagedRepo {
         crates: Vec<T>,
         verbose: bool,
         unpinned: &BTreeSet<String>,
+        versions: &BTreeMap<String, Version>,
     ) -> Result<()> {
         let pseudo_crate = self.pseudo_crate();
         for crate_name in &crates {
             let crate_name = crate_name.as_ref();
-            let version =
-                self.migration_health(crate_name, verbose, unpinned.contains(crate_name))?;
+            let version = self.migration_health(
+                crate_name,
+                verbose,
+                unpinned.contains(crate_name),
+                versions.get(crate_name),
+            )?;
             let src_dir = self.legacy_dir_for(crate_name);
 
             let monorepo_crate_dir = self.managed_dir();
