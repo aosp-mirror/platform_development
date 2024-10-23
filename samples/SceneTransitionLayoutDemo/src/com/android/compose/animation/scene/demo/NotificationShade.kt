@@ -17,10 +17,8 @@
 package com.android.compose.animation.scene.demo
 
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
 import com.android.compose.animation.scene.Back
 import com.android.compose.animation.scene.ElementKey
 import com.android.compose.animation.scene.SceneScope
@@ -29,7 +27,6 @@ import com.android.compose.animation.scene.UserActionResult
 
 object NotificationShade {
     object Elements {
-        val Root = ElementKey("NotificationShadeRoot")
         val Content = ElementKey("NotificationShadeContent")
     }
 
@@ -46,12 +43,7 @@ fun SceneScope.NotificationShade(
     notificationList: @Composable SceneScope.() -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    PartialShade(
-        modifier.element(NotificationShade.Elements.Root),
-
-        // The notification list already applies some padding.
-        innerPadding = PaddingValues(0.dp),
-    ) {
+    PartialShade(modifier) {
         Column(Modifier.element(NotificationShade.Elements.Content)) { notificationList() }
     }
 }
