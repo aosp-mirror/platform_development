@@ -107,14 +107,14 @@ impl ManagedRepo {
     }
     pub fn all_crate_names(&self) -> Result<Vec<String>> {
         let mut managed_dirs = Vec::new();
-        for entry in read_dir(self.managed_dir())? {
-            let entry = entry?;
-            if entry.path().is_dir() {
-                managed_dirs.push(
-                    entry.file_name().into_string().map_err(|e| {
+        if self.managed_dir().abs().exists() {
+            for entry in read_dir(self.managed_dir())? {
+                let entry = entry?;
+                if entry.path().is_dir() {
+                    managed_dirs.push(entry.file_name().into_string().map_err(|e| {
                         anyhow!("Failed to convert {} to string", e.to_string_lossy())
-                    })?,
-                );
+                    })?);
+                }
             }
         }
         Ok(managed_dirs)
