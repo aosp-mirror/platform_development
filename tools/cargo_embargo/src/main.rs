@@ -332,7 +332,7 @@ fn run_embargo(args: &Args, config_filename: &Path, intermediates_dir: &Path) ->
         .to_str()
         .ok_or(anyhow!("Failed to convert intermediate dir path to string"))?
         .to_string()
-        + "target.tmp/**/build/*/out/*";
+        + "/target.tmp/**/build/*/out/*";
 
     let cfg = Config::from_file(config_filename)?;
     let crates = make_all_crates(args, &cfg, intermediates_dir)?;
