@@ -85,6 +85,8 @@ These options may all be specified at the top level of the config file, or overr
 | `module_blocklist`         | list of strings           | `[]`                                                        | Modules in this list will not be generated.                                                                                                                                 |
 | `module_visibility`        | string => list of strings | `{}`                                                        | Modules name => Soong "visibility" property.                                                                                                                                |
 | `run_cargo`                | boolean                   | `true`                                                      | Whether to run the cargo build and parse its output, rather than just figuring things out from the cargo metadata.                                                          |
+| `generate_androidbp`       | boolean                   | `true`                                                      | Whether to generate Android build rules in an `Android.bp` file.                                                                                                            |
+| `generate_rulesmk`         | boolean                   | `false`                                                     | Whether to generate Trusty build rules in `rules.mk` and `Android.bp` files.                                                                                                |
 
 Of particular note, it is preferable to set `run_cargo` to `false` where possible as it is
 significantly faster. However, this may miss important details in more complicated cases, such as
@@ -100,6 +102,8 @@ specified outside of a package.
 | ----------------------- | ------------------------- | ------- | ----------- | ------------------------------------------------------------------------------------------------------------------ |
 | `add_toplevel_block`    | path                      | -       | no          | File with content to append to the end of the generated Android.bp.                                                |
 | `patch`                 | path                      | -       | no          | Patch file to apply after Android.bp is generated.                                                                 |
+| `rulesmk_patch`         | path                      | -       | no          | Patch file to apply after rules.mk is generated.                                                                   |
+| `license_text`          | list of paths             | -       | no          | Files to use for `license_text` in `license` module.                                                               |
 | `alloc`                 | boolean                   | `false` | yes         | Link against `alloc`. Only valid if `no_std` is also true.                                                         |
 | `device_supported`      | boolean                   | `true`  | yes         | Whether to compile for device. Defaults to true.                                                                   |
 | `host_supported`        | boolean                   | `true`  | yes         | Whether to compile for host. Defaults to true.                                                                     |
