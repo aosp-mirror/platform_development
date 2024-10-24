@@ -793,6 +793,9 @@ fn choose_licenses(license: &str) -> Result<Vec<&str>> {
         // Multiple licenses.
         "(MIT OR Apache-2.0) AND Unicode-DFS-2016" => vec!["Apache-2.0", "Unicode-DFS-2016"],
         "MIT AND BSD-3-Clause" => vec!["BSD-3-Clause", "MIT"],
+        // Usually we interpret "/" as "OR", but in the case of libfuzzer-sys, closer
+        // inspection of the terms indicates the correct interpretation is "(MIT OR APACHE) AND NCSA".
+        "MIT/Apache-2.0/NCSA" => vec!["Apache-2.0", "NCSA"],
 
         // Other cases.
         "MIT OR LGPL-3.0-or-later" => vec!["MIT"],
