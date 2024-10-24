@@ -217,8 +217,8 @@ fun SystemUi(
         launcherColumns = 4
     }
 
-    val notificationCount =
-        max(configuration.notificationsInLockscreen, configuration.notificationsInShade)
+    val notificationCountInLockscreen = configuration.notificationsInLockscreen
+    val notificationCount = max(notificationCountInLockscreen, configuration.notificationsInShade)
     val interactiveNotifications = configuration.interactiveNotifications
     val notificationSprings = configuration.springConfigurations.notificationSprings
     val notificationTextMeasurer = rememberTextMeasurer(cacheSize = notificationCount * 2)
@@ -226,12 +226,14 @@ fun SystemUi(
         remember(
             interactiveNotifications,
             notificationCount,
+            notificationCountInLockscreen,
             notificationSprings,
             notificationTextMeasurer,
         ) {
             notifications(
                 interactiveNotifications,
                 notificationCount,
+                notificationCountInLockscreen,
                 notificationSprings,
                 notificationTextMeasurer,
             )
@@ -359,8 +361,8 @@ fun SystemUi(
     }
 
     @Composable
-    fun SceneScope.NotificationList(maxNotificationCount: Int) {
-        NotificationList(notifications, maxNotificationCount, configuration)
+    fun SceneScope.NotificationList(maxNotificationCount: Int, isScrollable: Boolean = true) {
+        NotificationList(notifications, maxNotificationCount, configuration, isScrollable)
     }
 
     if (showConfigurationDialog) {
@@ -601,7 +603,8 @@ fun SystemUi(
                             NotificationShade(
                                 notificationList = {
                                     NotificationList(
-                                        maxNotificationCount = configuration.notificationsInShade
+                                        maxNotificationCount = configuration.notificationsInShade,
+                                        isScrollable = false,
                                     )
                                 }
                             )
