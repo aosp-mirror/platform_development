@@ -27,6 +27,10 @@ describe('ZOrderPathsComputation', () => {
     computation = new ZOrderPathsComputation();
   });
 
+  it('throws error if root not set', () => {
+    expect(() => computation.executeInPlace()).toThrowError();
+  });
+
   it('calculates zOrderPath for tree without rel z parent', () => {
     const hierarchyRoot = new HierarchyTreeBuilder()
       .setId('LayerTraceEntry')
@@ -200,21 +204,13 @@ describe('ZOrderPathsComputation', () => {
       getZOrderPathArray(layer5WithPath.getEagerPropertyByName('zOrderPath')),
     ).toEqual([0, 1, 2]);
 
-    expect(
-      layer1WithPath.getEagerPropertyByName('relZChildren'),
-    ).toBeUndefined();
-    expect(
-      layer2WithPath
-        .getEagerPropertyByName('relZChildren')
-        ?.getAllChildren()
-        .map((c) => c.getValue()),
-    ).toEqual([layer4WithPath.id, layer5WithPath.id]);
-    expect(
-      layer4WithPath.getEagerPropertyByName('relZChildren'),
-    ).toBeUndefined();
-    expect(
-      layer5WithPath.getEagerPropertyByName('relZChildren'),
-    ).toBeUndefined();
+    expect(layer1WithPath.getRelativeChildren()).toEqual([]);
+    expect(layer2WithPath.getRelativeChildren()).toEqual([
+      layer4WithPath,
+      layer5WithPath,
+    ]);
+    expect(layer4WithPath.getRelativeChildren()).toEqual([]);
+    expect(layer5WithPath.getRelativeChildren()).toEqual([]);
   });
 
   it('adds isMissingZParent chip', () => {

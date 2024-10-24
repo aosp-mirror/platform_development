@@ -15,13 +15,31 @@
  */
 
 import {assertDefined} from 'common/assert_utils';
-import {TracePositionUpdate} from 'messaging/winscope_event';
+import {
+  ActiveTraceChanged,
+  TracePositionUpdate,
+} from 'messaging/winscope_event';
 import {TimestampConverterUtils} from 'test/unit/timestamp_converter_utils';
+import {TraceBuilder} from 'test/unit/trace_builder';
+import {TracePosition} from 'trace/trace_position';
 import {
   AbstractLogViewerPresenter,
   NotifyLogViewCallbackType,
 } from './abstract_log_viewer_presenter';
-import {LogEntry, LogFieldType, LogFieldValue, UiDataLog} from './ui_data_log';
+import {TextFilter} from './text_filter';
+import {
+  LogEntry,
+  LogFieldType,
+  LogFieldValue,
+  LogFilter,
+  UiDataLog,
+} from './ui_data_log';
+import {
+  LogFilterChangeDetail,
+  LogTextFilterChangeDetail,
+  TimestampClickDetail,
+  ViewerEvents,
+} from './viewer_events';
 
 export abstract class AbstractLogViewerPresenterTest<UiData extends UiDataLog> {
   execute() {
@@ -42,8 +60,9 @@ export abstract class AbstractLogViewerPresenterTest<UiData extends UiDataLog> {
         const notifyViewCallback = (newData: UiData) => {
           uiData = newData;
         };
-        const presenter =
-          this.createPresenterWithEmptyTrace(notifyViewCallback);
+        const presenter = await this.createPresenterWithEmptyTrace(
+          notifyViewCallback,
+        );
 
         const positionUpdateWithoutTraceEntry =
           TracePositionUpdate.fromTimestamp(
@@ -57,7 +76,7 @@ export abstract class AbstractLogViewerPresenterTest<UiData extends UiDataLog> {
         expect(uiData.currentIndex).toBeUndefined();
 
         if (this.shouldExecuteFilterTests) {
-          expect(uiData.filters?.length).toBeGreaterThan(0);
+          expect(this.getFilters(uiData).length).toBeGreaterThan(0);
         }
 
         if (this.shouldExecuteHeaderTests) {
@@ -67,10 +86,110 @@ export abstract class AbstractLogViewerPresenterTest<UiData extends UiDataLog> {
         if (this.shouldExecutePropertiesTests) {
           expect(uiData.propertiesTree).toBeUndefined();
           expect(uiData.propertiesUserOptions).toBeDefined();
+          expect(uiData.propertiesFilter).toBeDefined();
           if (this.executePropertiesChecksForEmptyTrace) {
             this.executePropertiesChecksForEmptyTrace(uiData);
           }
         }
+      });
+
+      it('adds events listeners', async () => {
+        const element = makeElement();
+        presenter.addEventListeners(element);
+
+        let spy: jasmine.Spy = spyOn(presenter, 'onFilterChange');
+        const filterDetail = new LogFilterChangeDetail(
+          LogFieldType.CUJ_TYPE,
+          '',
+        );
+        element.dispatchEvent(
+          new CustomEvent(ViewerEvents.LogFilterChange, {
+            detail: filterDetail,
+          }),
+        );
+        expect(spy).toHaveBeenCalledWith(filterDetail.type, filterDetail.value);
+
+        spy = spyOn(presenter, 'onTextFilterChange');
+        const textFilterDetail = new LogTextFilterChangeDetail(
+          LogFieldType.CUJ_TYPE,
+          new TextFilter('', []),
+        );
+        element.dispatchEvent(
+          new CustomEvent(ViewerEvents.LogTextFilterChange, {
+            detail: textFilterDetail,
+          }),
+        );
+        expect(spy).toHaveBeenCalledWith(
+          textFilterDetail.type,
+          textFilterDetail.filter,
+        );
+
+        spy = spyOn(presenter, 'onLogEntryClick');
+        element.dispatchEvent(
+          new CustomEvent(ViewerEvents.LogEntryClick, {
+            detail: 0,
+          }),
+        );
+        expect(spy).toHaveBeenCalledWith(0);
+
+        spy = spyOn(presenter, 'onArrowDownPress');
+        element.dispatchEvent(new CustomEvent(ViewerEvents.ArrowDownPress));
+        expect(spy).toHaveBeenCalled();
+
+        spy = spyOn(presenter, 'onArrowUpPress');
+        element.dispatchEvent(new CustomEvent(ViewerEvents.ArrowUpPress));
+        expect(spy).toHaveBeenCalled();
+
+        await presenter.onAppEvent(this.getPositionUpdate());
+        spy = spyOn(presenter, 'onLogTimestampClick');
+        element.dispatchEvent(
+          new CustomEvent(ViewerEvents.TimestampClick, {
+            detail: new TimestampClickDetail(uiData.entries[0].traceEntry),
+          }),
+        );
+        expect(spy).toHaveBeenCalledWith(uiData.entries[0].traceEntry);
+
+        spy = spyOn(presenter, 'onRawTimestampClick');
+        const ts = TimestampConverterUtils.makeZeroTimestamp();
+        element.dispatchEvent(
+          new CustomEvent(ViewerEvents.TimestampClick, {
+            detail: new TimestampClickDetail(undefined, ts),
+          }),
+        );
+        expect(spy).toHaveBeenCalledWith(ts);
+
+        spy = spyOn(presenter, 'onPropertiesUserOptionsChange');
+        element.dispatchEvent(
+          new CustomEvent(ViewerEvents.PropertiesUserOptionsChange, {
+            detail: {userOptions: {}},
+          }),
+        );
+        expect(spy).toHaveBeenCalledWith({});
+
+        spy = spyOn(presenter, 'onPropertiesFilterChange');
+        const filter = new TextFilter('', []);
+        element.dispatchEvent(
+          new CustomEvent(ViewerEvents.PropertiesFilterChange, {
+            detail: filter,
+          }),
+        );
+        expect(spy).toHaveBeenCalledWith(filter);
+
+        spy = spyOn(presenter, 'onPositionChangeByKeyPress');
+        document.dispatchEvent(
+          new KeyboardEvent('keydown', {key: 'ArrowLeft'}),
+        );
+        pressRightArrowKey();
+        document.dispatchEvent(new KeyboardEvent('keydown', {key: 'ArrowUp'}));
+        expect(spy).not.toHaveBeenCalled();
+
+        document.body.append(element);
+        document.dispatchEvent(
+          new KeyboardEvent('keydown', {key: 'ArrowLeft'}),
+        );
+        pressRightArrowKey();
+        document.dispatchEvent(new KeyboardEvent('keydown', {key: 'ArrowUp'}));
+        expect(spy).toHaveBeenCalledTimes(2);
       });
 
       it('processes trace position updates', async () => {
@@ -99,13 +218,13 @@ export abstract class AbstractLogViewerPresenterTest<UiData extends UiDataLog> {
           for (const [logFieldType, expectedOptions] of assertDefined(
             this.expectedInitialFilterOptions,
           )) {
-            const options = assertDefined(
-              uiData.filters?.find((f) => f.type === logFieldType)?.options,
-            );
+            const options = this.getFilters(uiData).find(
+              (f) => f.type === logFieldType,
+            )?.options;
             if (Array.isArray(expectedOptions)) {
               expect(options).toEqual(expectedOptions);
             } else {
-              expect(options.length).toEqual(expectedOptions);
+              expect(options?.length).toEqual(expectedOptions);
             }
           }
         }
@@ -131,6 +250,128 @@ export abstract class AbstractLogViewerPresenterTest<UiData extends UiDataLog> {
         }
       });
 
+      it('allows arrow keydown event to propagate if presenter trace not active or current index not defined', async () => {
+        const element = makeElement();
+        document.body.append(element);
+        presenter.addEventListeners(element);
+        const listenerSpy = jasmine.createSpy();
+        document.addEventListener('keydown', listenerSpy);
+
+        await presenter.onAppEvent(
+          new TracePositionUpdate(
+            TracePosition.fromTimestamp(
+              TimestampConverterUtils.makeElapsedTimestamp(-1n),
+            ),
+          ),
+        );
+        expect(uiData.currentIndex).toBeUndefined();
+
+        pressRightArrowKey();
+        expect(listenerSpy).toHaveBeenCalledTimes(1);
+
+        const update = assertDefined(this.getPositionUpdate());
+        await presenter.onAppEvent(
+          new ActiveTraceChanged(
+            assertDefined(update.position.entry).getFullTrace(),
+          ),
+        );
+        pressRightArrowKey();
+        expect(listenerSpy).toHaveBeenCalledTimes(2);
+
+        await presenter.onAppEvent(update);
+        pressRightArrowKey();
+        expect(listenerSpy).toHaveBeenCalledTimes(2);
+
+        await presenter.onAppEvent(
+          new ActiveTraceChanged(
+            new TraceBuilder<object>().setEntries([]).build(),
+          ),
+        );
+        pressRightArrowKey();
+        expect(listenerSpy).toHaveBeenCalledTimes(3);
+
+        document.removeEventListener('keydown', listenerSpy);
+      });
+
+      it('propagates position with next trace entry of different timestamp on right arrow key press', async () => {
+        const update = assertDefined(this.positionUpdateEarliestEntry);
+        const trace = assertDefined(update.position.entry).getFullTrace();
+        await presenter.onAppEvent(new ActiveTraceChanged(trace));
+
+        const emitEventSpy = jasmine.createSpy();
+        presenter.setEmitEvent(emitEventSpy);
+        await presenter.onAppEvent(update);
+
+        await presenter.onPositionChangeByKeyPress(
+          new KeyboardEvent('keydown', {key: 'ArrowRight'}),
+        );
+        const nextEntry = assertDefined(
+          uiData.entries.find(
+            (entry) =>
+              entry.traceEntry.getTimestamp() >
+              assertDefined(update.position.entry).getTimestamp(),
+          ),
+        );
+        expect(emitEventSpy).toHaveBeenCalledWith(
+          new TracePositionUpdate(
+            TracePosition.fromTraceEntry(nextEntry.traceEntry),
+            true,
+          ),
+        );
+      });
+
+      it('does not propagate any position on right arrow key press if on last entry', async () => {
+        const update = makePositionUpdateFromLastEntry();
+        const trace = assertDefined(update.position.entry).getFullTrace();
+        await presenter.onAppEvent(new ActiveTraceChanged(trace));
+
+        const emitEventSpy = jasmine.createSpy();
+        presenter.setEmitEvent(emitEventSpy);
+        await presenter.onAppEvent(update);
+
+        await presenter.onPositionChangeByKeyPress(
+          new KeyboardEvent('keydown', {key: 'ArrowRight'}),
+        );
+        expect(emitEventSpy).not.toHaveBeenCalled();
+      });
+
+      it('propagates position with prev trace entry on left arrow key press', async () => {
+        const update = makePositionUpdateFromLastEntry();
+        const trace = assertDefined(update.position.entry).getFullTrace();
+        await presenter.onAppEvent(new ActiveTraceChanged(trace));
+
+        const emitEventSpy = jasmine.createSpy();
+        presenter.setEmitEvent(emitEventSpy);
+        await presenter.onAppEvent(update);
+
+        await presenter.onPositionChangeByKeyPress(
+          new KeyboardEvent('keydown', {key: 'ArrowLeft'}),
+        );
+        expect(emitEventSpy).toHaveBeenCalledWith(
+          new TracePositionUpdate(
+            TracePosition.fromTraceEntry(
+              uiData.entries[assertDefined(uiData.currentIndex) - 1].traceEntry,
+            ),
+            true,
+          ),
+        );
+      });
+
+      it('does not propagate any position on left arrow key press if on first entry', async () => {
+        const update = assertDefined(this.positionUpdateEarliestEntry);
+        const trace = assertDefined(update.position.entry).getFullTrace();
+        await presenter.onAppEvent(new ActiveTraceChanged(trace));
+
+        const emitEventSpy = jasmine.createSpy();
+        presenter.setEmitEvent(emitEventSpy);
+        await presenter.onAppEvent(update);
+
+        await presenter.onPositionChangeByKeyPress(
+          new KeyboardEvent('keydown', {key: 'ArrowLeft'}),
+        );
+        expect(emitEventSpy).not.toHaveBeenCalled();
+      });
+
       if (this.shouldExecuteFilterTests) {
         it('filters entries', async () => {
           for (const [type, valuesToSet] of assertDefined(
@@ -143,7 +384,7 @@ export abstract class AbstractLogViewerPresenterTest<UiData extends UiDataLog> {
               const filterValues = valuesToSet[i];
               const expectedFieldValues = expected[i];
 
-              await presenter.onFilterChange(type, filterValues, []);
+              await presenter.onFilterChange(type, filterValues);
               const fieldValues = uiData.entries.map((entry) =>
                 assertDefined(this.getFieldValue(entry, type)),
               );
@@ -154,7 +395,7 @@ export abstract class AbstractLogViewerPresenterTest<UiData extends UiDataLog> {
               } else {
                 expect(fieldValues.length).toEqual(expectedFieldValues);
               }
-              await presenter.onFilterChange(type, [], []);
+              await presenter.onFilterChange(type, []);
             }
           }
         });
@@ -162,7 +403,7 @@ export abstract class AbstractLogViewerPresenterTest<UiData extends UiDataLog> {
         it('updates indices when filters change', async () => {
           await presenter.onAppEvent(this.getSecondPositionUpdate());
           const filterName = assertDefined(this.filterNameForCurrentIndexTest);
-          await presenter.onFilterChange(filterName, [], []);
+          await presenter.onFilterChange(filterName, []);
           expect(uiData.currentIndex).toEqual(
             this.expectedIndexOfSecondPositionUpdate,
           );
@@ -178,7 +419,6 @@ export abstract class AbstractLogViewerPresenterTest<UiData extends UiDataLog> {
           await presenter.onFilterChange(
             filterName,
             assertDefined(this.filterChangeForCurrentIndexTest),
-            [],
           );
           expect(uiData.currentIndex).toEqual(
             this.expectedCurrentIndexAfterFilterChange,
@@ -196,7 +436,6 @@ export abstract class AbstractLogViewerPresenterTest<UiData extends UiDataLog> {
           await presenter.onFilterChange(
             filterName,
             assertDefined(this.secondFilterChangeForCurrentIndexTest),
-            [],
           );
           expect(uiData.currentIndex).toEqual(
             this.expectedCurrentIndexAfterSecondFilterChange,
@@ -260,11 +499,88 @@ export abstract class AbstractLogViewerPresenterTest<UiData extends UiDataLog> {
           this.expectedIndexOfSecondPositionUpdate,
         );
       });
+
+      it('emits event on log timestamp click', async () => {
+        const spy = jasmine.createSpy();
+        presenter.setEmitEvent(spy);
+
+        await presenter.onLogTimestampClick(uiData.entries[0].traceEntry);
+        expect(spy).toHaveBeenCalledWith(
+          TracePositionUpdate.fromTraceEntry(
+            uiData.entries[0].traceEntry,
+            true,
+          ),
+        );
+      });
+
+      it('emits event on raw timestamp click', async () => {
+        const spy = jasmine.createSpy();
+        presenter.setEmitEvent(spy);
+
+        const ts = TimestampConverterUtils.makeZeroTimestamp();
+        await presenter.onRawTimestampClick(ts);
+        expect(spy).toHaveBeenCalledWith(
+          TracePositionUpdate.fromTimestamp(ts, true),
+        );
+      });
+
+      if (!this.shouldExecutePropertiesTests) {
+        it('is robust to attempts to change properties', async () => {
+          await presenter.onAppEvent(this.getPositionUpdate());
+          await presenter.onLogEntryClick(this.logEntryClickIndex);
+
+          await presenter.onPropertiesUserOptionsChange({});
+          expect(uiData.propertiesUserOptions).toBeUndefined();
+          expect(uiData.propertiesTree).toBeUndefined();
+
+          await presenter.onPropertiesFilterChange(new TextFilter('', []));
+          expect(uiData.propertiesUserOptions).toBeUndefined();
+          expect(uiData.propertiesTree).toBeUndefined();
+        });
+      } else {
+        it('filters properties tree', async () => {
+          await presenter.onAppEvent(this.getPositionUpdate());
+          await presenter.onLogEntryClick(this.logEntryClickIndex);
+          expect(
+            assertDefined(uiData.propertiesTree).getAllChildren().length,
+          ).toEqual(assertDefined(this.numberOfUnfilteredProperties));
+          await presenter.onPropertiesFilterChange(
+            assertDefined(this.propertiesFilter),
+          );
+          expect(
+            assertDefined(uiData.propertiesTree).getAllChildren().length,
+          ).toEqual(assertDefined(this.numberOfFilteredProperties));
+        });
+      }
+
+      function pressRightArrowKey() {
+        document.dispatchEvent(
+          new KeyboardEvent('keydown', {key: 'ArrowRight'}),
+        );
+      }
+
+      function makeElement(): HTMLElement {
+        const element = document.createElement('div');
+        element.style.height = '5px';
+        element.style.width = '5px';
+        return element;
+      }
+
+      function makePositionUpdateFromLastEntry(): TracePositionUpdate {
+        return TracePositionUpdate.fromTraceEntry(
+          uiData.entries[uiData.entries.length - 1].traceEntry,
+        );
+      }
     });
 
     if (this.executeSpecializedTests) {
       this.executeSpecializedTests();
     }
+  }
+
+  getFilters(uiData: UiDataLog): LogFilter[] {
+    return (uiData.headers?.filter((header) => header instanceof LogFilter) ??
+      []) as LogFilter[];
   }
 
   checkInitialTracePositionUpdate(uiData: UiDataLog) {
@@ -278,7 +594,7 @@ export abstract class AbstractLogViewerPresenterTest<UiData extends UiDataLog> {
     expect(uiData.selectedIndex).toBeUndefined();
 
     if (this.shouldExecuteFilterTests) {
-      expect(uiData.filters?.length).toBeGreaterThan(0);
+      expect(this.getFilters(uiData).length).toBeGreaterThan(0);
     }
 
     if (this.shouldExecuteHeaderTests) {
@@ -288,6 +604,7 @@ export abstract class AbstractLogViewerPresenterTest<UiData extends UiDataLog> {
     if (this.shouldExecutePropertiesTests) {
       expect(uiData.propertiesTree).toBeDefined();
       expect(uiData.propertiesUserOptions).toBeDefined();
+      expect(uiData.propertiesFilter).toBeDefined();
     }
   }
 
@@ -337,6 +654,10 @@ export abstract class AbstractLogViewerPresenterTest<UiData extends UiDataLog> {
   readonly expectedCurrentIndexAfterFilterChange?: number;
   readonly secondFilterChangeForCurrentIndexTest?: string[];
   readonly expectedCurrentIndexAfterSecondFilterChange?: number;
+  readonly numberOfUnfilteredProperties?: number;
+  readonly propertiesFilter?: TextFilter;
+  readonly numberOfFilteredProperties?: number;
+  positionUpdateEarliestEntry?: TracePositionUpdate;
 
   abstract setUpTestEnvironment(): Promise<void>;
   abstract createPresenter(
@@ -344,7 +665,7 @@ export abstract class AbstractLogViewerPresenterTest<UiData extends UiDataLog> {
   ): Promise<AbstractLogViewerPresenter<UiData>>;
   abstract createPresenterWithEmptyTrace(
     callback: NotifyLogViewCallbackType<UiData>,
-  ): AbstractLogViewerPresenter<UiData>;
+  ): Promise<AbstractLogViewerPresenter<UiData>>;
   abstract getPositionUpdate(): TracePositionUpdate;
   abstract getSecondPositionUpdate(): TracePositionUpdate;
 

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-const FIRST_CUSTOM = 1000;
+const FRST_CUSTOM = 1000;
 
 export enum TransitionType {
   UNDEFINED = -1,
@@ -31,8 +31,10 @@ export enum TransitionType {
   PIP = 10,
   WAKE = 11,
   SLEEP = 12,
+  PREPARE_BACK_NAVIGATION = 13,
+  CLOSE_PREPARE_BACK_NAVIGATION = 14,
 
-  FRST_CUSTOM = FIRST_CUSTOM,
+  FIRST_CUSTOM = FRST_CUSTOM,
   EXIT_PIP = FIRST_CUSTOM + 1,
   EXIT_PIP_TO_SPLIT = FIRST_CUSTOM + 2,
   REMOVE_PIP = FIRST_CUSTOM + 3,

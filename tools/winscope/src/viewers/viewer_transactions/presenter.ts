@@ -25,6 +25,7 @@ import {
 } from 'viewers/common/abstract_log_viewer_presenter';
 import {LogPresenter} from 'viewers/common/log_presenter';
 import {PropertiesPresenter} from 'viewers/common/properties_presenter';
+import {TextFilter} from 'viewers/common/text_filter';
 import {LogField, LogFieldType, LogFilter} from 'viewers/common/ui_data_log';
 import {UserOptions} from 'viewers/common/user_options';
 import {SetRootDisplayNames} from './operations/set_root_display_name';
@@ -61,6 +62,11 @@ export class Presenter extends AbstractLogViewerPresenter<UiData> {
       },
       this.storage,
     ),
+    PersistentStoreProxy.new<TextFilter>(
+      'TransactionsPropertiesFilter',
+      new TextFilter('', []),
+      this.storage,
+    ),
     [],
     [new SetRootDisplayNames()],
   );
@@ -83,36 +89,65 @@ export class Presenter extends AbstractLogViewerPresenter<UiData> {
 
     for (const type of Presenter.FIELD_TYPES) {
       if (type === LogFieldType.FLAGS) {
-        filters.push({
-          type,
-          options: this.getUniqueUiDataEntryValues(
-            allEntries,
-            (entry: TransactionsEntry) =>
-              assertDefined(
-                entry.fields.find((f) => f.type === type)?.value as string,
-              )
-                .split('|')
-                .map((flag) => flag.trim()),
+        filters.push(
+          new LogFilter(
+            type,
+            this.getUniqueUiDataEntryValues(
+              allEntries,
+              (entry: TransactionsEntry) =>
+                assertDefined(
+                  entry.fields.find((f) => f.type === type)?.value as string,
+                )
+                  .split('|')
+                  .map((flag) => flag.trim()),
+            ),
           ),
-        });
+        );
       } else {
-        filters.push({
-          type,
-          options: this.getUniqueUiDataEntryValues(
-            allEntries,
-            (entry: TransactionsEntry) =>
-              assertDefined(
-                entry.fields.find((f) => f.type === type),
-              ).value.toString(),
+        filters.push(
+          new LogFilter(
+            type,
+            this.getUniqueUiDataEntryValues(
+              allEntries,
+              (entry: TransactionsEntry) =>
+                assertDefined(
+                  entry.fields.find((f) => f.type === type),
+                ).value.toString(),
+            ),
           ),
-        });
+        );
       }
     }
 
     this.logPresenter.setAllEntries(allEntries);
-    this.logPresenter.setFilters(filters);
+    this.logPresenter.setHeaders(filters);
     this.refreshUiData();
     this.isInitialized = true;
+  }
+
+  protected override updateDefaultAllowlist(
+    tree: PropertyTreeNode | undefined,
+  ): void {
+    if (!tree) {
+      return;
+    }
+    const allowlist: string[] = [];
+    tree
+      .getChildByName('what')
+      ?.formattedValue()
+      .split(' | ')
+      .forEach((flag) => {
+        const properties = layerChangeFlagToPropertiesMap.get(flag);
+        if (properties !== undefined) {
+          allowlist.push(...properties);
+        } else if (flag.startsWith('e')) {
+          const candidateProperty = flag.split('Changed')[0].slice(1);
+          allowlist.push(
+            candidateProperty[0].toLowerCase() + candidateProperty.slice(1),
+          );
+        }
+      });
+    this.propertiesPresenter.updateDefaultAllowList(allowlist);
   }
 
   private async makeUiDataEntries(): Promise<TransactionsEntry[]> {
@@ -384,3 +419,10 @@ export class Presenter extends AbstractLogViewerPresenter<UiData> {
     return result;
   }
 }
+
+const layerChangeFlagToPropertiesMap = new Map([
+  ['eReparent', ['parentId']],
+  ['eRelativeLayerChanged', ['relativeParentId']],
+  ['eLayerChanged', ['layerId']],
+  ['ePositionChanged', ['x', 'y', 'z']],
+]);

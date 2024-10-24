@@ -60,9 +60,9 @@ describe('Perfetto ParserTransitions', () => {
       expect(entry.getChildByName('id')?.getValue()).toEqual(32n);
       expect(
         wmDataNode.getChildByName('createTimeNs')?.formattedValue(),
-      ).toEqual('2023-11-21, 13:30:25.428');
+      ).toEqual('2023-11-21, 13:30:25.429');
       expect(wmDataNode.getChildByName('sendTimeNs')?.formattedValue()).toEqual(
-        '2023-11-21, 13:30:25.441',
+        '2023-11-21, 13:30:25.442',
       );
       expect(
         wmDataNode.getChildByName('finishTimeNs')?.formattedValue(),
@@ -106,6 +106,12 @@ describe('Perfetto ParserTransitions', () => {
       expect(
         assertDefined(targets[1].getChildByName('mode')).formattedValue(),
       ).toEqual('TO_BACK');
+      expect(
+        assertDefined(targets[0].getChildByName('flags')).formattedValue(),
+      ).toEqual('FLAG_MOVED_TO_TOP');
+      expect(
+        assertDefined(targets[1].getChildByName('flags')).formattedValue(),
+      ).toEqual('FLAG_SHOW_WALLPAPER');
 
       expect(
         assertDefined(
@@ -119,6 +125,14 @@ describe('Perfetto ParserTransitions', () => {
       expect(
         assertDefined(shellDataNode.getChildByName('handler')).formattedValue(),
       ).toEqual('com.android.wm.shell.transition.DefaultMixedHandler');
+
+      const entryWithFlags = await parser.getEntry(2);
+      const wmDataWithFlags = assertDefined(
+        entryWithFlags.getChildByName('wmData'),
+      );
+      expect(
+        assertDefined(wmDataWithFlags.getChildByName('flags')).formattedValue(),
+      ).toEqual('TRANSIT_FLAG_IS_RECENTS');
     });
   });
 });

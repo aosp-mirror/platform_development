@@ -43,6 +43,7 @@ import {UiData} from './ui_data';
         [dependencies]="inputData?.dependencies ?? []"
         [userOptions]="inputData?.rectsUserOptions ?? {}"
         [pinnedItems]="inputData?.pinnedItems ?? []"
+        [isDarkMode]="inputData?.isDarkMode ?? false"
         (collapseButtonClicked)="sections.onCollapseStateChange(CollapsibleSectionType.RECTS, true)"></rects-view>
       <hierarchy-view
         class="hierarchy-view"
@@ -51,6 +52,7 @@ import {UiData} from './ui_data';
         [dependencies]="inputData?.dependencies ?? []"
         [highlightedItem]="inputData?.highlightedItem ?? ''"
         [pinnedItems]="inputData?.pinnedItems ?? []"
+        [textFilter]="inputData?.hierarchyFilter"
         [store]="store"
         [userOptions]="inputData?.hierarchyUserOptions ?? {}"
         [rectIdToShowState]="inputData?.rectIdToShowState"
@@ -61,6 +63,7 @@ import {UiData} from './ui_data';
         [userOptions]="inputData?.propertiesUserOptions ?? {}"
         [propertiesTree]="inputData?.propertiesTree"
         [traceType]="${TraceType.WINDOW_MANAGER}"
+        [textFilter]="inputData?.propertiesFilter"
         [highlightedProperty]="inputData?.highlightedProperty ?? ''"
         [store]="store"
         [isProtoDump]="false"

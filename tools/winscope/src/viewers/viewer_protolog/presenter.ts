@@ -15,6 +15,8 @@
  */
 
 import {assertDefined} from 'common/assert_utils';
+import {PersistentStoreProxy} from 'common/persistent_store_proxy';
+import {Store} from 'common/store';
 import {Trace} from 'trace/trace';
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
 import {
@@ -22,6 +24,7 @@ import {
   NotifyLogViewCallbackType,
 } from 'viewers/common/abstract_log_viewer_presenter';
 import {LogPresenter} from 'viewers/common/log_presenter';
+import {TextFilter} from 'viewers/common/text_filter';
 import {
   LogEntry,
   LogField,
@@ -44,6 +47,7 @@ export class Presenter extends AbstractLogViewerPresenter<UiData> {
   constructor(
     trace: Trace<PropertyTreeNode>,
     notifyViewCallback: NotifyLogViewCallbackType<UiData>,
+    private storage: Store,
   ) {
     super(trace, notifyViewCallback, UiData.createEmpty());
   }
@@ -57,25 +61,34 @@ export class Presenter extends AbstractLogViewerPresenter<UiData> {
 
     for (const type of Presenter.FIELD_TYPES) {
       if (type === LogFieldType.TEXT) {
-        filters.push({
-          type,
-        });
+        filters.push(
+          new LogFilter(
+            type,
+            undefined,
+            PersistentStoreProxy.new(
+              'ProtoLog' + type,
+              new TextFilter('', []),
+              this.storage,
+            ),
+          ),
+        );
       } else {
-        filters.push({
-          type,
-          options: this.getUniqueMessageValues(
-            allEntries,
-            (entry: ProtologEntry) =>
+        filters.push(
+          new LogFilter(
+            type,
+            this.getUniqueMessageValues(allEntries, (entry: ProtologEntry) =>
               assertDefined(
                 entry.fields.find((f) => f.type === type),
               ).value.toString(),
+            ),
           ),
-        });
+        );
       }
     }
 
     this.logPresenter.setAllEntries(allEntries);
-    this.logPresenter.setFilters(filters);
+    this.logPresenter.setHeaders(filters);
+
     this.refreshUiData();
     this.isInitialized = true;
   }

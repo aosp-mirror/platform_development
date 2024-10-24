@@ -83,8 +83,7 @@ class RectSfFactory {
       const existingNameCount = nameCounts.get(displayName);
       if (existingNameCount !== undefined) {
         nameCounts.set(displayName, existingNameCount + 1);
-        const qualifier = displayName === 'Unknown Display' ? '' : 'Mirror ';
-        displayName += ` (${qualifier}${existingNameCount + 1})`;
+        displayName += ` (${existingNameCount + 1})`;
       } else {
         nameCounts.set(displayName, 1);
       }
@@ -143,7 +142,7 @@ class RectSfFactory {
       )
       .setName(name)
       .setCornerRadius(
-        layer.getEagerPropertyByName('cornerRadius')?.getValue() ?? 0,
+        assertDefined(layer.getEagerPropertyByName('cornerRadius')).getValue(),
       )
       .setTransform(
         Transform.from(assertDefined(layer.getEagerPropertyByName('transform')))

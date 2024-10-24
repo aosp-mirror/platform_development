@@ -19,7 +19,6 @@ import {TraceType} from 'trace/trace_type';
 import {CollapsibleSections} from 'viewers/common/collapsible_sections';
 import {CollapsibleSectionType} from 'viewers/common/collapsible_section_type';
 import {LogComponent} from 'viewers/common/log_component';
-import {timeButtonStyle} from 'viewers/components/styles/clickable_property.styles';
 import {selectedElementStyle} from 'viewers/components/styles/selected_element.styles';
 import {viewerCardStyle} from 'viewers/components/styles/viewer_card.styles';
 import {UiData} from './ui_data';
@@ -49,11 +48,11 @@ import {UiData} from './ui_data';
       <properties-view
         class="properties-view"
         [title]="propertiesTitle"
-        [showFilter]="false"
         [propertiesTree]="inputData?.propertiesTree"
         [traceType]="${TraceType.TRANSITION}"
+        [textFilter]="inputData?.propertiesFilter"
         [isProtoDump]="false"
-        placeholderText="No selected transition."
+        placeholderText="No current or selected transition."
         (collapseButtonClicked)="sections.onCollapseStateChange(CollapsibleSectionType.PROPERTIES, true)"
         [class.collapsed]="sections.isSectionCollapsed(CollapsibleSectionType.PROPERTIES)"></properties-view>
     </div>
@@ -65,7 +64,6 @@ import {UiData} from './ui_data';
       }
     `,
     selectedElementStyle,
-    timeButtonStyle,
     viewerCardStyle,
   ],
 })

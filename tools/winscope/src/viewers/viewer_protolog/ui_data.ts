@@ -25,7 +25,7 @@ import {
 
 export class UiData implements UiDataLog {
   constructor(
-    public filters: LogFilter[],
+    public headers: LogFilter[],
     public entries: LogEntry[],
     public currentIndex: undefined | number,
     public selectedIndex: undefined | number,

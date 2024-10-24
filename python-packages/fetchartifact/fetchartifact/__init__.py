@@ -23,6 +23,7 @@ from typing import cast
 from aiohttp import ClientSession
 
 _DEFAULT_QUERY_URL_BASE = "https://androidbuildinternal.googleapis.com"
+DEFAULT_CHUNK_SIZE = 16 * 1024 * 1024
 
 
 def _logger() -> Logger:
@@ -87,7 +88,7 @@ async def fetch_artifact_chunked(
     build_id: str,
     artifact_name: str,
     session: ClientSession,
-    chunk_size: int = 16 * 1024 * 1024,
+    chunk_size: int = DEFAULT_CHUNK_SIZE,
     query_url_base: str = _DEFAULT_QUERY_URL_BASE,
 ) -> AsyncIterable[bytes]:
     """Fetches an artifact from the build server.
@@ -104,9 +105,78 @@ async def fetch_artifact_chunked(
     Returns:
         Async iterable bytes of the artifact contents.
     """
-    download_url = _make_download_url(target, build_id, artifact_name, query_url_base)
-    _logger().debug("Beginning download from %s", download_url)
-    async with session.get(download_url) as response:
-        response.raise_for_status()
-        async for chunk in response.content.iter_chunked(chunk_size):
-            yield chunk
+    downloader = ArtifactDownloader(target, build_id, artifact_name, query_url_base)
+    async for chunk in downloader.download(session, chunk_size):
+        yield chunk
+
+
+class ArtifactDownloader:
+    """Similar to fetch_artifact_chunked but can be subclassed to report progress."""
+
+    def __init__(
+        self,
+        target: str,
+        build_id: str,
+        artifact_name: str,
+        query_url_base: str = _DEFAULT_QUERY_URL_BASE,
+    ) -> None:
+        self.target = target
+        self.build_id = build_id
+        self.artifact_name = artifact_name
+        self.query_url_base = query_url_base
+
+    async def download(
+        self, session: ClientSession, chunk_size: int = DEFAULT_CHUNK_SIZE
+    ) -> AsyncIterable[bytes]:
+        """Fetches an artifact from the build server.
+
+        Once the Content-Length of the artifact is known, on_artifact_size will be
+        called. If no Content-Length header is present, on_artifact_size will not be
+        called.
+
+        After each chunk is yielded, after_chunk will be called.
+
+        Args:
+            session: The aiohttp ClientSession to use. If omitted, one will be created
+                and destroyed for every call.
+            chunk_size: The number of bytes to attempt to download before yielding and
+                reporting progress.
+
+        Returns:
+            Async iterable bytes of the artifact contents.
+        """
+        download_url = _make_download_url(
+            self.target, self.build_id, self.artifact_name, self.query_url_base
+        )
+        _logger().debug("Beginning download from %s", download_url)
+        async with session.get(download_url) as response:
+            response.raise_for_status()
+            try:
+                self.on_artifact_size(int(response.headers["Content-Length"]))
+            except KeyError:
+                pass
+
+            async for chunk in response.content.iter_chunked(chunk_size):
+                yield chunk
+                self.after_chunk(len(chunk))
+
+    def on_artifact_size(self, size: int) -> None:
+        """Called once the artifact's Content-Length is known.
+
+        This can be overridden in a subclass to enable progress reporting.
+
+        If the artifact headers do not report the Content-Length, this function will not
+        be called.
+
+        Args:
+            size: The Content-Length of the artifact.
+        """
+
+    def after_chunk(self, size: int) -> None:
+        """Called after each chunk is yielded.
+
+        This can be overridden in a subclass to enable progress reporting.
+
+        Args:
+            size: The size of the chunk.
+        """

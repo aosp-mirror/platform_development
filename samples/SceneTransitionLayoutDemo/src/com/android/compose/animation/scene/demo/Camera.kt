@@ -95,9 +95,7 @@ fun SceneScope.CameraButton(
             ) {
                 CameraButtonIcon(
                     iconColor = iconColor,
-                    Modifier.element(Camera.Elements.ButtonIcon)
-                        .size(24.dp)
-                        .align(Alignment.Center),
+                    Modifier.element(Camera.Elements.ButtonIcon).size(24.dp).align(Alignment.Center),
                 )
             }
         }

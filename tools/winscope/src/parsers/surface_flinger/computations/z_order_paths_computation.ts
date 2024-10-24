@@ -74,26 +74,7 @@ export class ZOrderPathsComputation implements Computation {
         }
         node.setZParent(zParent);
 
-        // add rel-z children to zParent
-        const existingRelZChildren =
-          zParent.getEagerPropertyByName('relZChildren');
-        if (existingRelZChildren) {
-          existingRelZChildren.addOrReplaceChild(
-            DEFAULT_PROPERTY_TREE_NODE_FACTORY.makeCalculatedProperty(
-              existingRelZChildren.id,
-              `${existingRelZChildren.getAllChildren().length}`,
-              node.id,
-            ),
-          );
-        } else {
-          zParent.addEagerProperty(
-            DEFAULT_PROPERTY_TREE_NODE_FACTORY.makeCalculatedProperty(
-              zParent.id,
-              'relZChildren',
-              [node.id],
-            ),
-          );
-        }
+        zParent.addRelativeChild(node);
       }
     });
   }

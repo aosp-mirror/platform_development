@@ -20,6 +20,7 @@ import {HierarchyTreeNode} from 'trace/tree_node/hierarchy_tree_node';
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
 import {DisplayIdentifier} from 'viewers/common/display_identifier';
 import {RectShowState} from 'viewers/common/rect_show_state';
+import {TextFilter} from 'viewers/common/text_filter';
 import {
   LogEntry,
   LogField,
@@ -34,8 +35,8 @@ import {UiRect} from 'viewers/components/rects/ui_rect';
 export class UiData implements UiDataLog {
   constructor(
     public headers: LogFieldType[],
+    public titleFilters: LogFilter[],
     public entries: LogEntry[],
-    public filters: LogFilter[],
     public selectedIndex: undefined | number,
     public scrollToIndex: undefined | number,
     public currentIndex: undefined | number,
@@ -50,6 +51,9 @@ export class UiData implements UiDataLog {
   highlightedRect = '';
   rectsUserOptions: UserOptions | undefined;
   displays: DisplayIdentifier[] = [];
+  isDarkMode = false;
+  propertiesFilter = new TextFilter('', []);
+  dispatchPropertiesFilter = new TextFilter('', []);
 
   readonly dependencies: TraceType[] = [TraceType.INPUT_EVENT_MERGED];
 

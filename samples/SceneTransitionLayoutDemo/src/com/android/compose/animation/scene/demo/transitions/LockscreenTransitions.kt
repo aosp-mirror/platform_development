@@ -69,7 +69,7 @@ fun SceneTransitionsBuilder.commonLockscreenTransitions(lockscreenScene: SceneKe
                 scaleDraw(Bouncer.Elements.Content, scaleY = 0.8f, scaleX = 0.8f)
             }
         },
-        key = TransitionKey.PredictiveBack
+        key = TransitionKey.PredictiveBack,
     ) {
         bouncerToLockscreenTransition()
     }

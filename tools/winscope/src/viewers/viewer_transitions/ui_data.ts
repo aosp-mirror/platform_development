@@ -16,23 +16,27 @@
 
 import {TraceEntry} from 'trace/trace';
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
+import {TextFilter} from 'viewers/common/text_filter';
 import {
   LogEntry,
   LogField,
   LogFieldType,
+  LogFilter,
   UiDataLog,
 } from 'viewers/common/ui_data_log';
 import {UiPropertyTreeNode} from 'viewers/common/ui_property_tree_node';
 
 export class UiData implements UiDataLog {
   constructor(
-    public headers: LogFieldType[],
+    public headers: Array<LogFieldType | LogFilter>,
     public entries: LogEntry[],
     public currentIndex: undefined | number,
     public selectedIndex: undefined | number,
     public scrollToIndex: undefined | number,
     public propertiesTree: undefined | UiPropertyTreeNode,
   ) {}
+
+  propertiesFilter = new TextFilter('', []);
 
   static createEmpty(): UiData {
     return new UiData([], [], undefined, undefined, undefined, undefined);

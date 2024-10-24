@@ -40,9 +40,10 @@ export class TranslateIntDef implements Operation<PropertyTreeNode> {
         this.apply(value, field);
       });
     } else {
-      if (typeof value.getValue() === 'number' && value.getValue() !== -1) {
+      const propertyValue = Number(value.getValue());
+      if (!Number.isNaN(propertyValue) && propertyValue !== -1) {
         const translation = this.translateIntDefToStringIfNeeded(
-          value.getValue(),
+          propertyValue,
           field,
         );
         if (typeof translation === 'string') {
@@ -169,5 +170,7 @@ export class TranslateIntDef implements Operation<PropertyTreeNode> {
       'android.view.WindowInsets.Type.InsetsType',
     'WindowStateProto.requestedVisibleTypes':
       'android.view.WindowInsets.Type.InsetsType',
+    'Target.flags': 'android.window.TransitionInfo.ChangeFlags',
+    'Transition.flags': 'android.view.WindowManager.TransitionFlags',
   };
 }

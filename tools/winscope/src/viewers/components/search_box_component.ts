@@ -14,27 +14,24 @@
  * limitations under the License.
  */
 
-import {
-  Component,
-  ElementRef,
-  EventEmitter,
-  Inject,
-  Input,
-  Output,
-} from '@angular/core';
+import {Component, EventEmitter, Input, Output} from '@angular/core';
+import {assertDefined} from 'common/assert_utils';
 import {FilterFlag} from 'common/filter_flag';
-import {PersistentStoreProxy} from 'common/persistent_store_proxy';
-import {Store} from 'common/store';
-import {TextFilterDetail} from 'viewers/common/viewer_events';
+import {TextFilter} from 'viewers/common/text_filter';
 
 @Component({
   selector: 'search-box',
   template: `
-    <mat-form-field class="search-box" [class.wide-field]="wideField" [appearance]="appearance" [style.font-size]="fontSize + 'px'" (keydown.enter)="$event.target.blur()">
+    <mat-form-field
+      *ngIf="textFilter"
+      [class]="'search-box ' + formFieldClass"
+      [appearance]="appearance"
+      [style.height]="height"
+      (keydown.enter)="$event.target.blur()">
       <mat-label>{{ label }}</mat-label>
       <input
         matInput
-        [(ngModel)]="filterString"
+        [(ngModel)]="textFilter.filterString"
         (ngModelChange)="onFilterChange()"
         [name]="filterName" />
       <div class="field-suffix" matSuffix>
@@ -65,70 +62,45 @@ import {TextFilterDetail} from 'viewers/common/viewer_events';
   styles: [
     `
     .search-box {
-      height: 48px;
-    }
-    .wide-field {
-      width: 80%;
+      font-size: 14px;
     }
     .search-box .mat-icon {
       font-size: 18px;
+    }
+    .wide-field {
+      width: 100%;
     }
   `,
   ],
 })
 export class SearchBoxComponent {
   FilterFlag = FilterFlag;
-  filterString = '';
 
-  @Input() store: Store | undefined;
-  @Input() storeKey: string | undefined;
+  @Input() textFilter: TextFilter | undefined = new TextFilter('', []);
   @Input() label = 'Search';
   @Input() filterName = 'filter';
-  @Input() appearance: string | undefined;
-  @Input() fontSize = 14;
-  @Input() wideField = false;
+  @Input() appearance = '';
+  @Input() formFieldClass = '';
+  @Input() height = '48px';
 
-  @Output() readonly filterChange = new EventEmitter<TextFilterDetail>();
-
-  private filterFlags: FilterFlags = {
-    flags: [],
-  };
-
-  constructor(@Inject(ElementRef) private elementRef: ElementRef) {}
-
-  ngOnInit() {
-    if (this.store && this.storeKey) {
-      this.filterFlags = PersistentStoreProxy.new<FilterFlags>(
-        this.storeKey,
-        this.filterFlags,
-        this.store,
-      );
-    }
-  }
+  @Output() readonly filterChange = new EventEmitter<TextFilter>();
 
   hasFlag(flag: FilterFlag): boolean {
-    return this.filterFlags.flags.includes(flag);
+    return assertDefined(this.textFilter).flags.includes(flag) ?? false;
   }
 
   onFilterFlagClick(event: MouseEvent, flag: FilterFlag) {
     event.stopPropagation();
+    const filter = assertDefined(this.textFilter);
     if (this.hasFlag(flag)) {
-      this.filterFlags.flags = this.filterFlags.flags.filter((f) => f !== flag);
+      filter.flags = filter.flags.filter((f) => f !== flag);
     } else {
-      this.filterFlags.flags = this.filterFlags.flags.concat(flag);
+      filter.flags = filter.flags.concat(flag);
     }
     this.onFilterChange();
   }
 
   onFilterChange() {
-    const detail = new TextFilterDetail(
-      this.filterString,
-      this.filterFlags.flags,
-    );
-    this.filterChange.emit(detail);
+    this.filterChange.emit(this.textFilter);
   }
-}
-
-interface FilterFlags {
-  flags: FilterFlag[];
 }

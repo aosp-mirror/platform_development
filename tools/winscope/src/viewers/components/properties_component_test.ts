@@ -29,9 +29,11 @@ import {MatInputModule} from '@angular/material/input';
 import {MatTooltipModule} from '@angular/material/tooltip';
 import {BrowserAnimationsModule} from '@angular/platform-browser/animations';
 import {assertDefined} from 'common/assert_utils';
+import {FilterFlag} from 'common/filter_flag';
 import {PersistentStore} from 'common/persistent_store';
 import {PropertyTreeBuilder} from 'test/unit/property_tree_builder';
 import {TraceType} from 'trace/trace_type';
+import {TextFilter} from 'viewers/common/text_filter';
 import {UiPropertyTreeNode} from 'viewers/common/ui_property_tree_node';
 import {ViewerEvents} from 'viewers/common/viewer_events';
 import {CollapsibleSectionTitleComponent} from './collapsible_section_title_component';
@@ -88,6 +90,7 @@ describe('PropertiesComponent', () => {
         isUnavailable: false,
       },
     };
+    component.textFilter = new TextFilter('', []);
     component.traceType = TraceType.SURFACE_FLINGER;
 
     fixture.detectChanges();
@@ -158,21 +161,26 @@ describe('PropertiesComponent', () => {
   });
 
   it('handles change in filter', () => {
-    let filterString: string | undefined;
+    let textFilter: TextFilter | undefined;
     htmlElement.addEventListener(
       ViewerEvents.PropertiesFilterChange,
       (event) => {
-        filterString = (event as CustomEvent).detail.filterString;
+        textFilter = (event as CustomEvent).detail;
       },
     );
     const inputEl = assertDefined(
-      htmlElement.querySelector('.title-section input'),
-    ) as HTMLInputElement;
+      htmlElement.querySelector<HTMLInputElement>('.title-section input'),
+    );
+    const flagButton = assertDefined(
+      htmlElement.querySelector<HTMLElement>('.search-box button'),
+    );
+    flagButton.click();
+    fixture.detectChanges();
 
     inputEl.value = 'Root';
     inputEl.dispatchEvent(new Event('input'));
     fixture.detectChanges();
-    expect(filterString).toBe('Root');
+    expect(textFilter).toEqual(new TextFilter('Root', [FilterFlag.MATCH_CASE]));
   });
 
   it('handles collapse button click', () => {

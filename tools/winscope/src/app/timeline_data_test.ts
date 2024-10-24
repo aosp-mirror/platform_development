@@ -139,7 +139,7 @@ describe('TimelineData', () => {
     expect(timelineData.getCurrentPosition()).toEqual(position10);
   });
 
-  it('uses explicit position if set', () => {
+  it('uses explicit position if set and valid within time range', () => {
     timelineData.initialize(
       traces,
       undefined,
@@ -147,14 +147,35 @@ describe('TimelineData', () => {
     );
     expect(timelineData.getCurrentPosition()).toEqual(position10);
 
-    timelineData.setPosition(position1000);
-    expect(timelineData.getCurrentPosition()).toEqual(position1000);
+    timelineData.setPosition(position11);
+    expect(timelineData.getCurrentPosition()).toEqual(position11);
 
     timelineData.trySetActiveTrace(traceSf);
-    expect(timelineData.getCurrentPosition()).toEqual(position1000);
+    expect(timelineData.getCurrentPosition()).toEqual(position11);
 
     timelineData.trySetActiveTrace(traceWm);
-    expect(timelineData.getCurrentPosition()).toEqual(position1000);
+    expect(timelineData.getCurrentPosition()).toEqual(position11);
+
+    timelineData.setPosition(position1000);
+    expect(timelineData.getCurrentPosition()).not.toEqual(position1000);
+  });
+
+  it('crops explicit position to within timeline range', () => {
+    timelineData.initialize(
+      traces,
+      undefined,
+      TimestampConverterUtils.TIMESTAMP_CONVERTER,
+    );
+
+    timelineData.setPosition(TracePosition.fromTimestamp(timestamp0));
+    expect(timelineData.getCurrentPosition()).toEqual(
+      TracePosition.fromTraceEntry(
+        assertDefined(traces.getTrace(TraceType.PROTO_LOG)).getEntry(0),
+      ),
+    );
+
+    timelineData.setPosition(position1000);
+    expect(timelineData.getCurrentPosition()).toEqual(position11);
   });
 
   it('sets active trace and update current position accordingly', () => {
@@ -402,7 +423,7 @@ describe('TimelineData', () => {
       undefined,
       TimestampConverterUtils.TIMESTAMP_CONVERTER,
     );
-    userNotifierChecker.expectNotified([new CannotParseAllTransitions()]);
+    userNotifierChecker.expectAdded([new CannotParseAllTransitions()]);
     expect(timelineData.getTransitionEntries()).toEqual([undefined]);
   });
 });

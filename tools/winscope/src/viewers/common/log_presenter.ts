@@ -15,6 +15,7 @@
  */
 
 import {ArrayUtils} from 'common/array_utils';
+import {assertDefined} from 'common/assert_utils';
 import {
   FilterFlag,
   makeFilterPredicate,
@@ -23,13 +24,13 @@ import {
 import {Timestamp} from 'common/time';
 import {TraceEntry} from 'trace/trace';
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
+import {TextFilter} from './text_filter';
 import {LogEntry, LogFieldType, LogFilter} from './ui_data_log';
 
 export class LogPresenter<Entry extends LogEntry> {
   private allEntries: Entry[] = [];
   private filteredEntries: Entry[] = [];
-  private filters: LogFilter[] = [];
-  private headers: LogFieldType[] = [];
+  private headers: Array<LogFieldType | LogFilter> = [];
   private filterPredicates = new Map<LogFieldType, StringFilterPredicate>();
   private currentEntry: TraceEntry<PropertyTreeNode> | undefined;
   private selectedIndex: number | undefined;
@@ -44,23 +45,31 @@ export class LogPresenter<Entry extends LogEntry> {
     this.updateFilteredEntries();
   }
 
-  setHeaders(headers: LogFieldType[]) {
+  setHeaders(headers: Array<LogFieldType | LogFilter>) {
     this.headers = headers;
-  }
 
-  getHeaders(): LogFieldType[] {
-    return this.headers;
-  }
-
-  setFilters(filters: LogFilter[]) {
-    this.filters = filters;
     this.filterPredicates = new Map<LogFieldType, StringFilterPredicate>();
+    this.getFilters().forEach((filter) => {
+      if (
+        filter.textFilter &&
+        (filter.textFilter.filterString || filter.textFilter.flags.length > 0)
+      ) {
+        this.filterPredicates.set(
+          filter.type,
+          this.makeLogFilterPredicate(
+            filter.type,
+            filter.textFilter.filterString,
+            filter.textFilter.flags,
+          ),
+        );
+      }
+    });
     this.updateFilteredEntries();
     this.resetIndices();
   }
 
-  getFilters(): LogFilter[] {
-    return this.filters;
+  getHeaders(): Array<LogFieldType | LogFilter> {
+    return this.headers;
   }
 
   getFilteredEntries(): Entry[] {
@@ -115,19 +124,40 @@ export class LogPresenter<Entry extends LogEntry> {
     this.resetIndices();
   }
 
-  applyFilterChange(
-    type: LogFieldType,
-    value: string[] | string,
-    flags: FilterFlag[],
-  ) {
-    if (value.length > 0) {
+  applyTextFilterChange(type: LogFieldType, value: TextFilter) {
+    assertDefined(
+      this.getFilters().find((filter) => filter.type === type),
+    ).textFilter = value;
+    if (value.filterString.length > 0) {
       this.filterPredicates.set(
         type,
-        this.makeLogFilterPredicate(type, value, flags),
+        this.makeLogFilterPredicate(type, value.filterString, value.flags),
       );
     } else {
       this.filterPredicates.delete(type);
     }
+    this.updateEntriesAfterFilterChange();
+  }
+
+  applyFilterChange(type: LogFieldType, value: string[] | string) {
+    if (value.length > 0) {
+      this.filterPredicates.set(
+        type,
+        this.makeLogFilterPredicate(type, value, []),
+      );
+    } else {
+      this.filterPredicates.delete(type);
+    }
+    this.updateEntriesAfterFilterChange();
+  }
+
+  private getFilters(): LogFilter[] {
+    return this.headers.filter(
+      (header) => header instanceof LogFilter,
+    ) as LogFilter[];
+  }
+
+  private updateEntriesAfterFilterChange() {
     this.updateFilteredEntries();
     this.currentIndex = this.getCurrentTracePositionIndex();
     if (
@@ -157,6 +187,7 @@ export class LogPresenter<Entry extends LogEntry> {
     switch (type) {
       case LogFieldType.FLAGS:
       case LogFieldType.INPUT_DISPATCH_WINDOWS:
+      case LogFieldType.PARTICIPANTS:
         return true;
       default:
         return false;

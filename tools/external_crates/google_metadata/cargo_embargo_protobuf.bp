@@ -1,0 +1,7 @@
+rust_protobuf {
+    name: "libgoogle_metadata_proto",
+    crate_name: "google_metadata_proto",
+    host_supported: true,
+    protos: ["src/protos/metadata.proto"],
+    source_stem: "google_metadata",
+}

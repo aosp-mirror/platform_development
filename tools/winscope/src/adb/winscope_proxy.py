@@ -63,7 +63,7 @@ def create_argument_parser() -> argparse.ArgumentParser:
     return parser
 
 # Keep in sync with ProxyConnection#VERSION in Winscope
-VERSION = '3.2.0'
+VERSION = '4.0.1'
 
 PERFETTO_TRACE_CONFIG_FILE = '/data/misc/perfetto-configs/winscope-proxy-trace.conf'
 PERFETTO_DUMP_CONFIG_FILE = '/data/misc/perfetto-configs/winscope-proxy-dump.conf'
@@ -756,6 +756,14 @@ write_into_file: true
 unique_session_name: "{PERFETTO_UNIQUE_SESSION_NAME}"
 EOF
 
+function is_perfetto_tracing_session_running {{
+    if perfetto --query | grep "{PERFETTO_UNIQUE_SESSION_NAME}" 2>&1 >/dev/null; then
+        return 0
+    else
+        return 1
+    fi
+}}
+
 if is_perfetto_tracing_session_running; then
     perfetto --attach=WINSCOPE-PROXY-TRACING-SESSION --stop
     echo 'Stopped already-running winscope perfetto session.'
@@ -1251,10 +1259,11 @@ class TraceThread(threading.Thread):
         time.sleep(0.2)
         for i in range(50):
             if call_adb(f"shell su root cat {WINSCOPE_STATUS}", device=self._device_id) == 'TRACE_OK\n':
-                log.debug("Trace {} finished successfully on {}".format(
+                log.debug("Trace {} finished on {}".format(
                     self.trace_name,
                     self._device_id))
                 if self.trace_name == "perfetto_trace":
+                    log.debug("Perfetto trace stderr output: {}".format(self.err.decode("utf-8")))
                     self._success = True
                 else:
                     self._success = len(self.err) == 0

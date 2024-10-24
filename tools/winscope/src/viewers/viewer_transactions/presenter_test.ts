@@ -21,14 +21,17 @@ import {TraceBuilder} from 'test/unit/trace_builder';
 import {UnitTestUtils} from 'test/unit/utils';
 import {Parser} from 'trace/parser';
 import {Trace} from 'trace/trace';
+import {TraceType} from 'trace/trace_type';
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
 import {NotifyLogViewCallbackType} from 'viewers/common/abstract_log_viewer_presenter';
 import {AbstractLogViewerPresenterTest} from 'viewers/common/abstract_log_viewer_presenter_test';
+import {TextFilter} from 'viewers/common/text_filter';
 import {
   LogEntry,
   LogFieldType,
   LogFieldValue,
 } from 'viewers/common/ui_data_log';
+import {UserOptions} from 'viewers/common/user_options';
 import {Presenter} from './presenter';
 import {TransactionsEntryType, UiData} from './ui_data';
 
@@ -138,6 +141,10 @@ class PresenterTransactionsTest extends AbstractLogViewerPresenterTest<UiData> {
   override readonly secondFilterChangeForCurrentIndexTest = ['0', '515'];
   override readonly expectedCurrentIndexAfterFilterChange = 10;
   override readonly expectedCurrentIndexAfterSecondFilterChange = 11;
+  override readonly numberOfUnfilteredProperties = 8;
+  override readonly propertiesFilter = new TextFilter('layerId', []);
+  override readonly numberOfFilteredProperties = 1;
+  override positionUpdateEarliestEntry: TracePositionUpdate | undefined;
 
   override executeSpecializedTests() {
     describe('Specialized tests', () => {
@@ -156,11 +163,9 @@ class PresenterTransactionsTest extends AbstractLogViewerPresenterTest<UiData> {
       });
 
       it('includes no op transitions', async () => {
-        await presenter.onFilterChange(
-          LogFieldType.TRANSACTION_TYPE,
-          [TransactionsEntryType.NO_OP],
-          [],
-        );
+        await presenter.onFilterChange(LogFieldType.TRANSACTION_TYPE, [
+          TransactionsEntryType.NO_OP,
+        ]);
         const fieldValues = assertDefined(uiData).entries.map((entry) =>
           getFieldValue(entry, LogFieldType.TRANSACTION_TYPE),
         );
@@ -177,6 +182,77 @@ class PresenterTransactionsTest extends AbstractLogViewerPresenterTest<UiData> {
         }
       });
 
+      it('shows/hides defaults', async () => {
+        const userOptions: UserOptions = {
+          showDiff: {
+            name: 'Show diff',
+            enabled: true,
+          },
+          showDefaults: {
+            name: 'Show defaults',
+            enabled: true,
+          },
+        };
+
+        await presenter.onAppEvent(this.getPositionUpdate());
+        await presenter.onLogEntryClick(this.logEntryClickIndex);
+        expect(
+          assertDefined(uiData.propertiesTree).getAllChildren().length,
+        ).toEqual(8);
+
+        await presenter.onPropertiesUserOptionsChange(userOptions);
+        expect(uiData.propertiesUserOptions).toEqual(userOptions);
+        expect(
+          assertDefined(uiData.propertiesTree).getAllChildren().length,
+        ).toEqual(42);
+      });
+
+      it('keeps properties related to what has changed regardless of hide defaults', async () => {
+        await presenter.onAppEvent(this.getPositionUpdate());
+        await presenter.onLogEntryClick(this.logEntryClickIndex);
+        expect(
+          assertDefined(uiData.propertiesTree).getAllChildren().length,
+        ).toEqual(8);
+        expect(
+          uiData.propertiesTree?.getChildByName('transformToDisplayInverse'),
+        ).toBeDefined();
+        expect(
+          uiData.propertiesTree?.getChildByName('destinationFrame'),
+        ).toBeDefined();
+        expect(
+          uiData.propertiesTree?.getChildByName('autoRefresh'),
+        ).toBeDefined();
+
+        await presenter.onLogEntryClick(279);
+        expect(uiData.propertiesTree?.getChildByName('flags')).toBeDefined();
+        expect(uiData.propertiesTree?.getChildByName('parentId')).toBeDefined();
+        expect(
+          uiData.propertiesTree?.getChildByName('relativeParentId'),
+        ).toBeDefined();
+        expect(
+          uiData.propertiesTree?.getChildByName('transformToDisplayInverse'),
+        ).toBeUndefined();
+        expect(
+          uiData.propertiesTree?.getChildByName('destinationFrame'),
+        ).toBeUndefined();
+        expect(
+          uiData.propertiesTree?.getChildByName('autoRefresh'),
+        ).toBeUndefined();
+
+        await presenter.onLogEntryClick(584);
+        expect(uiData.propertiesTree?.getChildByName('flags')).toBeDefined();
+        expect(uiData.propertiesTree?.getChildByName('layerId')).toBeDefined();
+        expect(uiData.propertiesTree?.getChildByName('x')).toBeDefined();
+        expect(uiData.propertiesTree?.getChildByName('y')).toBeDefined();
+        expect(uiData.propertiesTree?.getChildByName('z')).toBeDefined();
+        expect(
+          uiData.propertiesTree?.getChildByName('parentId'),
+        ).toBeUndefined();
+        expect(
+          uiData.propertiesTree?.getChildByName('relativeParentId'),
+        ).toBeUndefined();
+      });
+
       function getFieldValue(entry: LogEntry, logFieldName: LogFieldType) {
         return entry.fields.find((f) => f.type === logFieldName)?.value;
       }
@@ -187,19 +263,26 @@ class PresenterTransactionsTest extends AbstractLogViewerPresenterTest<UiData> {
     const parser = (await UnitTestUtils.getParser(
       'traces/elapsed_and_real_timestamp/Transactions.pb',
     )) as Parser<PropertyTreeNode>;
-    this.trace = new TraceBuilder<PropertyTreeNode>().setParser(parser).build();
+    this.trace = new TraceBuilder<PropertyTreeNode>()
+      .setType(TraceType.TRANSACTIONS)
+      .setParser(parser)
+      .build();
     this.positionUpdate = TracePositionUpdate.fromTraceEntry(
       this.trace.getEntry(0),
     );
     this.secondPositionUpdate = TracePositionUpdate.fromTraceEntry(
       this.trace.getEntry(10),
     );
+    this.positionUpdateEarliestEntry = TracePositionUpdate.fromTraceEntry(
+      this.trace.getEntry(0),
+    );
   }
 
-  override createPresenterWithEmptyTrace(
+  override async createPresenterWithEmptyTrace(
     callback: NotifyLogViewCallbackType<UiData>,
-  ): Presenter {
+  ): Promise<Presenter> {
     const emptyTrace = new TraceBuilder<PropertyTreeNode>()
+      .setType(TraceType.TRANSACTIONS)
       .setEntries([])
       .build();
     return new Presenter(emptyTrace, new InMemoryStorage(), callback);

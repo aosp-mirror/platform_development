@@ -32,6 +32,10 @@ app-root {
     margin: 0;
 }
 
+.mat-body-2 {
+    font: 500 14px / 20px 'Roboto', sans-serif;
+}
+
 .mat-button, .mat-icon-button, .mat-stroked-button, .mat-flat-button {
     user-select: auto !important;
 }
@@ -60,6 +64,7 @@ rects-view .displays-select .mat-form-field-flex {
 
 .mat-select-panel:has(>.select-filter) {
     max-height: 75vh;
+    max-width: unset;
 }
 
 body.dark-mode button.mat-raised-button.mat-primary,
@@ -102,4 +107,29 @@ body.dark-mode button.mat-flat-button.mat-primary {
 
 .mat-tooltip {
     word-break: break-word;
+}
+
+.outline-field .mat-form-field-wrapper {
+    padding-bottom: 0px;
+}
+
+.outline-field .mat-form-field-infix {
+    padding: 6px 0 10px 0;
+    border-top: 8px solid transparent;
+}
+
+.no-padding-field .mat-form-field-wrapper {
+    padding-bottom: 0px;
+}
+
+.no-padding-field .mat-form-field-infix, .no-border-top-field .mat-form-field-infix  {
+    border-top: 0px;
+}
+
+.center-field .mat-form-field-flex {
+    align-items: center;
+}
+
+log-view .headers .mat-form-field-infix {
+    width: 100%;
 }
