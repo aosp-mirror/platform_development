@@ -379,7 +379,7 @@ pub struct PackageConfig {
     /// `license_text` to use for `license` module, overriding the `license_file` given by the
     /// package or the default "LICENSE".
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub license_text: Option<String>,
+    pub license_text: Option<Vec<String>>,
 }
 
 impl PackageConfig {
