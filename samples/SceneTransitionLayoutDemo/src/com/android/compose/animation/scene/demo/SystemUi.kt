@@ -361,8 +361,8 @@ fun SystemUi(
     }
 
     @Composable
-    fun SceneScope.NotificationList(maxNotificationCount: Int) {
-        NotificationList(notifications, maxNotificationCount, configuration)
+    fun SceneScope.NotificationList(maxNotificationCount: Int, isScrollable: Boolean = true) {
+        NotificationList(notifications, maxNotificationCount, configuration, isScrollable)
     }
 
     if (showConfigurationDialog) {
@@ -603,7 +603,8 @@ fun SystemUi(
                             NotificationShade(
                                 notificationList = {
                                     NotificationList(
-                                        maxNotificationCount = configuration.notificationsInShade
+                                        maxNotificationCount = configuration.notificationsInShade,
+                                        isScrollable = false,
                                     )
                                 }
                             )

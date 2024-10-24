@@ -21,10 +21,12 @@ import androidx.compose.foundation.gestures.Orientation
 import com.android.compose.animation.scene.Edge
 import com.android.compose.animation.scene.SceneTransitionsBuilder
 import com.android.compose.animation.scene.and
+import com.android.compose.animation.scene.demo.Clock
+import com.android.compose.animation.scene.demo.MediaPlayer
 import com.android.compose.animation.scene.demo.Overlays
+import com.android.compose.animation.scene.demo.PartialShade
 import com.android.compose.animation.scene.demo.QuickSettings
 import com.android.compose.animation.scene.demo.QuickSettingsGrid
-import com.android.compose.animation.scene.demo.QuickSettingsShade
 import com.android.compose.animation.scene.demo.Scenes
 import com.android.compose.animation.scene.demo.notification.NotificationList
 import com.android.compose.animation.scene.inContent
@@ -38,7 +40,10 @@ fun SceneTransitionsBuilder.quickSettingsShadeTransitions() {
 
         notifyStlThatShadeDoesNotResizeDuringThisTransition()
 
-        translate(QuickSettingsShade.Elements.Root, Edge.Top)
+        sharedElement(MediaPlayer.Elements.MediaPlayer, elevateInContent = Overlays.QuickSettings)
+        sharedElement(Clock.Elements.Clock, elevateInContent = Overlays.QuickSettings)
+
+        translate(PartialShade.Elements.Root, Edge.Top)
         fractionRange(start = 0.5f) {
             fade(QuickSettingsGrid.Elements.Tiles)
             fade(QuickSettings.Elements.PagerIndicators)
@@ -52,7 +57,14 @@ fun SceneTransitionsBuilder.quickSettingsShadeTransitions() {
         // the QS one.
         sharedElement(NotificationList.Elements.Notifications, enabled = false)
 
+        // Elevate the media player so that they are not clipped when shared with the split
+        // lockscreen.
+        sharedElement(MediaPlayer.Elements.MediaPlayer, elevateInContent = Overlays.QuickSettings)
+        sharedElement(Clock.Elements.Clock, elevateInContent = Overlays.QuickSettings)
+
         fractionRange(end = QuickSettingsToNotificationShadeFadeProgress) {
+            fade(MediaPlayer.Elements.MediaPlayer)
+            fade(Clock.Elements.Clock)
             fade(QuickSettingsGrid.Elements.Tiles)
             fade(QuickSettings.Elements.PagerIndicators)
             fade(
@@ -68,12 +80,12 @@ fun SceneTransitionsBuilder.quickSettingsShadeTransitions() {
     overscroll(Overlays.QuickSettings, Orientation.Vertical) {
         notifyStlThatShadeDoesNotResizeDuringThisTransition()
 
-        translate(QuickSettingsShade.Elements.Root, y = { absoluteDistance })
+        translate(PartialShade.Elements.Root, y = { absoluteDistance })
     }
 
     overscroll(Overlays.QuickSettings, Orientation.Horizontal) {
         notifyStlThatShadeDoesNotResizeDuringThisTransition()
 
-        translate(QuickSettingsShade.Elements.Root, x = { absoluteDistance })
+        translate(PartialShade.Elements.Root, x = { absoluteDistance })
     }
 }
