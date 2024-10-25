@@ -34,10 +34,10 @@ import {
 import {VISIBLE_CHIP} from 'viewers/common/chip';
 import {DiffType} from 'viewers/common/diff_type';
 import {RectShowState} from 'viewers/common/rect_show_state';
+import {TextFilter, TextFilterValues} from 'viewers/common/text_filter';
 import {UiHierarchyTreeNode} from 'viewers/common/ui_hierarchy_tree_node';
 import {UiTreeUtils} from 'viewers/common/ui_tree_utils';
 import {UserOptions} from 'viewers/common/user_options';
-import {TextFilter} from './text_filter';
 import {UiDataHierarchy} from './ui_data_hierarchy';
 import {ViewerEvents} from './viewer_events';
 
@@ -169,7 +169,7 @@ export abstract class AbstractHierarchyViewerPresenterTest<
         expect(spy).toHaveBeenCalledWith({});
 
         spy = spyOn(presenter, 'onHierarchyFilterChange');
-        const filter = new TextFilter('', []);
+        const filter = new TextFilter();
         element.dispatchEvent(
           new CustomEvent(ViewerEvents.HierarchyFilterChange, {detail: filter}),
         );
@@ -416,10 +416,13 @@ export abstract class AbstractHierarchyViewerPresenterTest<
           };
 
           await presenter.onAppEvent(this.getPositionUpdate());
+          const longNameFilter = UiTreeUtils.makeNodeFilter(
+            new TextFilter(
+              new TextFilterValues(longName, []),
+            ).getFilterPredicate(),
+          );
           let nodeWithLongName = assertDefined(
-            assertDefined(uiData.hierarchyTrees)[0].findDfs(
-              UiTreeUtils.makeNodeFilter(longName),
-            ),
+            assertDefined(uiData.hierarchyTrees)[0].findDfs(longNameFilter),
           );
           expect(nodeWithLongName.getDisplayName()).toEqual(shortName);
           pinNode(nodeWithLongName);
@@ -428,9 +431,7 @@ export abstract class AbstractHierarchyViewerPresenterTest<
           await presenter.onHierarchyUserOptionsChange(userOptions);
           expect(uiData.hierarchyUserOptions).toEqual(userOptions);
           nodeWithLongName = assertDefined(
-            assertDefined(uiData.hierarchyTrees)[0].findDfs(
-              UiTreeUtils.makeNodeFilter(longName),
-            ),
+            assertDefined(uiData.hierarchyTrees)[0].findDfs(longNameFilter),
           );
           expect(longName).toContain(nodeWithLongName.getDisplayName());
           expect(uiData.pinnedItems).toEqual([nodeWithLongName]);
@@ -469,7 +470,7 @@ export abstract class AbstractHierarchyViewerPresenterTest<
             ?.findDfs(
               (node) =>
                 !node.isRoot() &&
-                !node.id.includes(this.hierarchyFilter.filterString),
+                !node.id.includes(this.hierarchyFilter.values.filterString),
             ),
         );
         pinNode(nonMatchNode);
@@ -749,12 +750,12 @@ export abstract class AbstractHierarchyViewerPresenterTest<
         expect(storage.get(saveEvent.name)).toBeDefined();
 
         await presenter.onHierarchyFilterChange(
-          new TextFilter('Test Filter', []),
+          new TextFilter(new TextFilterValues('Test Filter', [])),
         );
         await presenter.onHierarchyUserOptionsChange({});
         await presenter.onPropertiesUserOptionsChange({});
         await presenter.onPropertiesFilterChange(
-          new TextFilter('Test Filter', []),
+          new TextFilter(new TextFilterValues('Test Filter', [])),
         );
 
         if (this.shouldExecuteRectTests) {

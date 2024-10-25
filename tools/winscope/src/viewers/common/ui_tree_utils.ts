@@ -14,12 +14,12 @@
  * limitations under the License.
  */
 
-import {FilterFlag, makeFilterPredicate} from 'common/filter_flag';
 import {
   PropertySource,
   PropertyTreeNode,
 } from 'trace/tree_node/property_tree_node';
 import {TreeNode} from 'trace/tree_node/tree_node';
+import {StringFilterPredicate} from 'viewers/common/string_filter_predicate';
 import {DiffType} from './diff_type';
 import {UiHierarchyTreeNode} from './ui_hierarchy_tree_node';
 import {UiPropertyTreeNode} from './ui_property_tree_node';
@@ -55,11 +55,7 @@ export class UiTreeUtils {
     );
   };
 
-  static makeNodeFilter(
-    filterString: string,
-    flags: FilterFlag[] = [],
-  ): TreeNodeFilter {
-    const predicate = makeFilterPredicate(filterString, flags);
+  static makeNodeFilter(predicate: StringFilterPredicate): TreeNodeFilter {
     return (node: TreeNode) => {
       return (
         predicate(node.id) ||
