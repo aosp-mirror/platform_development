@@ -24,7 +24,7 @@ import {MatTooltipModule} from '@angular/material/tooltip';
 import {BrowserAnimationsModule} from '@angular/platform-browser/animations';
 import {assertDefined} from 'common/assert_utils';
 import {FilterFlag} from 'common/filter_flag';
-import {TextFilter} from 'viewers/common/text_filter';
+import {TextFilter, TextFilterValues} from 'viewers/common/text_filter';
 import {SearchBoxComponent} from './search_box_component';
 
 describe('SearchBoxComponent', () => {
@@ -48,7 +48,7 @@ describe('SearchBoxComponent', () => {
     fixture = TestBed.createComponent(SearchBoxComponent);
     component = fixture.componentInstance;
     htmlElement = fixture.nativeElement;
-    component.textFilter = new TextFilter('', []);
+    component.textFilter = new TextFilter();
     fixture.detectChanges();
   });
 
@@ -67,10 +67,12 @@ describe('SearchBoxComponent', () => {
 
   it('handles change in filter', () => {
     const spy = spyOn(component.filterChange, 'emit');
-    expect(component.textFilter?.filterString).toEqual('');
+    expect(component.textFilter?.values.filterString).toEqual('');
     changeFilterString('Test');
-    expect(component.textFilter?.filterString).toEqual('Test');
-    expect(spy).toHaveBeenCalledWith(new TextFilter('Test', []));
+    expect(component.textFilter?.values.filterString).toEqual('Test');
+    expect(spy).toHaveBeenCalledWith(
+      new TextFilter(new TextFilterValues('Test', [])),
+    );
   });
 
   it('handles change in flags', () => {
@@ -82,23 +84,25 @@ describe('SearchBoxComponent', () => {
     buttons.item(0).click();
     fixture.detectChanges();
     expect(spy).toHaveBeenCalledWith(
-      new TextFilter('', [FilterFlag.MATCH_CASE]),
+      new TextFilter(new TextFilterValues('', [FilterFlag.MATCH_CASE])),
     );
 
     buttons.item(0).click();
     fixture.detectChanges();
-    expect(spy).toHaveBeenCalledWith(new TextFilter('', []));
+    expect(spy).toHaveBeenCalledWith(new TextFilter());
 
     buttons.item(2).click();
     fixture.detectChanges();
     expect(spy).toHaveBeenCalledWith(
-      new TextFilter('', [FilterFlag.USE_REGEX]),
+      new TextFilter(new TextFilterValues('', [FilterFlag.USE_REGEX])),
     );
 
     buttons.item(1).click();
     fixture.detectChanges();
     expect(spy).toHaveBeenCalledWith(
-      new TextFilter('', [FilterFlag.USE_REGEX, FilterFlag.MATCH_WORD]),
+      new TextFilter(
+        new TextFilterValues('', [FilterFlag.USE_REGEX, FilterFlag.MATCH_WORD]),
+      ),
     );
   });
 

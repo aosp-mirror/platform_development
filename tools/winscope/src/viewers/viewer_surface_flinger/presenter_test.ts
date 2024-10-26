@@ -32,7 +32,7 @@ import {HierarchyTreeNode} from 'trace/tree_node/hierarchy_tree_node';
 import {NotifyHierarchyViewCallbackType} from 'viewers/common/abstract_hierarchy_viewer_presenter';
 import {AbstractHierarchyViewerPresenterTest} from 'viewers/common/abstract_hierarchy_viewer_presenter_test';
 import {DiffType} from 'viewers/common/diff_type';
-import {TextFilter} from 'viewers/common/text_filter';
+import {TextFilter, TextFilterValues} from 'viewers/common/text_filter';
 import {UiDataHierarchy} from 'viewers/common/ui_data_hierarchy';
 import {UiHierarchyTreeNode} from 'viewers/common/ui_hierarchy_tree_node';
 import {UiTreeUtils} from 'viewers/common/ui_tree_utils';
@@ -57,7 +57,9 @@ class PresenterSurfaceFlingerTest extends AbstractHierarchyViewerPresenterTest<U
   override readonly numberOfDefaultProperties = 32;
   override readonly numberOfNonDefaultProperties = 24;
   override readonly expectedFirstRect = new Rect(0, 0, 1080, 2400);
-  override readonly propertiesFilter = new TextFilter('bound', []);
+  override readonly propertiesFilter = new TextFilter(
+    new TextFilterValues('bound', []),
+  );
   override readonly expectedTotalRects = 11;
   override readonly expectedVisibleRects = 6;
   override readonly treeNodeLongName =
@@ -65,7 +67,9 @@ class PresenterSurfaceFlingerTest extends AbstractHierarchyViewerPresenterTest<U
   override readonly treeNodeShortName =
     'ActivityRecord{64953af u0 com.google.(...).NexusLauncherActivity#96';
   override readonly numberOfFilteredProperties = 3;
-  override readonly hierarchyFilter = new TextFilter('Wallpaper', []);
+  override readonly hierarchyFilter = new TextFilter(
+    new TextFilterValues('Wallpaper', []),
+  );
   override readonly expectedHierarchyChildrenAfterStringFilter = 4;
   override readonly propertyWithDiff = 'bounds';
   override readonly expectedPropertyDiffType = DiffType.ADDED;
@@ -475,13 +479,22 @@ class PresenterSurfaceFlingerTest extends AbstractHierarchyViewerPresenterTest<U
         const nodeWithRelZChild = assertDefined(
           assertDefined(uiData.hierarchyTrees)[0].findDfs(
             UiTreeUtils.makeNodeFilter(
-              '98 2c99222 com.google.android.apps.nexuslauncher/com.google.android.apps.nexuslauncher.NexusLauncherActivity#98',
+              new TextFilter(
+                new TextFilterValues(
+                  '98 2c99222 com.google.android.apps.nexuslauncher/com.google.android.apps.nexuslauncher.NexusLauncherActivity#98',
+                  [],
+                ),
+              ).getFilterPredicate(),
             ),
           ),
         );
         const nodeWithRelZParent = assertDefined(
           assertDefined(uiData.hierarchyTrees)[0].findDfs(
-            UiTreeUtils.makeNodeFilter('13 ImeContainer#13'),
+            UiTreeUtils.makeNodeFilter(
+              new TextFilter(
+                new TextFilterValues('13 ImeContainer#13', []),
+              ).getFilterPredicate(),
+            ),
           ),
         );
 
