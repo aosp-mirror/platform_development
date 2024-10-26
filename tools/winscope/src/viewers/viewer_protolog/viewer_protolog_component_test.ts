@@ -35,10 +35,10 @@ import {PropertyTreeBuilder} from 'test/unit/property_tree_builder';
 import {TimestampConverterUtils} from 'test/unit/timestamp_converter_utils';
 import {TraceBuilder} from 'test/unit/trace_builder';
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
-import {LogComponent} from 'viewers/common/log_component';
+import {LogSelectFilter} from 'viewers/common/log_filters';
 import {executeScrollComponentTests} from 'viewers/common/scroll_component_tests';
-import {TextFilter} from 'viewers/common/text_filter';
-import {LogFieldType, LogFilter} from 'viewers/common/ui_data_log';
+import {LogHeader} from 'viewers/common/ui_data_log';
+import {LogComponent} from 'viewers/components/log_component';
 import {SearchBoxComponent} from 'viewers/components/search_box_component';
 import {SelectWithFilterComponent} from 'viewers/components/select_with_filter_component';
 import {ProtologScrollDirective} from './scroll_strategy/protolog_scroll_directive';
@@ -46,9 +46,12 @@ import {ProtologEntry, UiData} from './ui_data';
 import {ViewerProtologComponent} from './viewer_protolog_component';
 
 describe('ViewerProtologComponent', () => {
+  const testSpec = {name: 'Test Column', cssClass: 'test-class'};
+  const testField = {spec: testSpec, value: 'VALUE'};
   let fixture: ComponentFixture<ViewerProtologComponent>;
   let component: ViewerProtologComponent;
   let htmlElement: HTMLElement;
+
   describe('Main component', () => {
     beforeEach(async () => {
       await setUpTestEnvironment();
@@ -58,24 +61,31 @@ describe('ViewerProtologComponent', () => {
       expect(component).toBeTruthy();
     });
 
-    it('renders headers with filters', () => {
+    it('render headers as filters', () => {
       expect(
-        htmlElement.querySelector('.headers .filter.log-level'),
+        htmlElement.querySelector(
+          `.headers .filter.${testSpec.cssClass.split(' ')[0]}`,
+        ),
       ).toBeTruthy();
-      expect(htmlElement.querySelector('.headers .filter.tag')).toBeTruthy();
-      expect(
-        htmlElement.querySelector('.headers .filter.source-file'),
-      ).toBeTruthy();
-      expect(htmlElement.querySelector('.headers .filter.text')).toBeTruthy();
     });
 
-    it('renders log messages', () => {
+    it('renders entries with field values and no trace timestamp', () => {
       expect(htmlElement.querySelector('.scroll')).toBeTruthy();
-      const entry = assertDefined(htmlElement.querySelector('.scroll .entry'));
-      expect(entry.innerHTML).toContain('INFO');
-      expect(entry.innerHTML).toContain('WindowManager');
-      expect(entry.innerHTML).toContain('test_source_file.java');
-      expect(entry.innerHTML).toContain('test information about message');
+      const entry = assertDefined(
+        htmlElement.querySelector(
+          `.scroll .entry .${testSpec.cssClass.split(' ')[0]}`,
+        ),
+      );
+      expect(entry.textContent).toContain('VALUE');
+
+      const entryTimestamp = assertDefined(
+        htmlElement.querySelector('.scroll .entry .time'),
+      );
+      expect(entryTimestamp.textContent?.trim()).toEqual('10ns');
+    });
+
+    it('shows go to current time button', () => {
+      expect(htmlElement.querySelector('.go-to-current-time')).toBeTruthy();
     });
   });
 
@@ -121,12 +131,6 @@ describe('ViewerProtologComponent', () => {
   }
 
   function makeUiData(): UiData {
-    const allLogLevels = ['INFO', 'ERROR'];
-    const allTags = ['WindowManager', 'INVALID'];
-    const allSourceFiles = [
-      'test_source_file.java',
-      'other_test_source_file.java',
-    ];
     const propertiesTree = new PropertyTreeBuilder()
       .setRootId('Protolog')
       .setName('tree')
@@ -141,31 +145,22 @@ describe('ViewerProtologComponent', () => {
     const messages: ProtologEntry[] = [];
     const shortMessage = 'test information about message';
     const longMessage = shortMessage.repeat(10) + 'keep';
+    const traceEntry = trace.getEntry(0);
     for (let i = 0; i < 200; i++) {
-      const message = new ProtologEntry(trace.getEntry(0), [
-        {
-          type: LogFieldType.LOG_LEVEL,
-          value: i % 2 === 0 ? allLogLevels[0] : allLogLevels[1],
-        },
-        {type: LogFieldType.TAG, value: i % 2 === 0 ? allTags[0] : allTags[1]},
-        {
-          type: LogFieldType.SOURCE_FILE,
-          value: i % 2 === 0 ? allSourceFiles[0] : allSourceFiles[1],
-        },
-        {
-          type: LogFieldType.TEXT,
-          value: i % 2 === 0 ? shortMessage : longMessage,
-        },
-      ]);
-      messages.push(message);
+      messages.push(
+        new ProtologEntry(traceEntry, [
+          testField,
+          testField,
+          testField,
+          {
+            spec: {name: 'Test Column Text', cssClass: 'test-class-text'},
+            value: i % 2 === 0 ? shortMessage : longMessage,
+          },
+        ]),
+      );
     }
     return new UiData(
-      [
-        new LogFilter(LogFieldType.LOG_LEVEL, [allLogLevels[0]]),
-        new LogFilter(LogFieldType.TAG, [allTags[0]]),
-        new LogFilter(LogFieldType.SOURCE_FILE, [allSourceFiles[1]]),
-        new LogFilter(LogFieldType.TEXT, undefined, new TextFilter('', [])),
-      ],
+      [new LogHeader(testSpec, new LogSelectFilter([]))],
       messages,
       150,
       undefined,

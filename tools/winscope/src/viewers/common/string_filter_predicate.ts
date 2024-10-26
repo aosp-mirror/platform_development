@@ -14,15 +14,4 @@
  * limitations under the License.
  */
 
-import {TextFilterValues} from 'viewers/common/text_filter';
-import {UserOptions} from 'viewers/common/user_options';
-import {RectShowState} from './rect_show_state';
-
-export interface PresetHierarchy {
-  hierarchyUserOptions: UserOptions;
-  hierarchyFilter: TextFilterValues;
-  propertiesUserOptions: UserOptions;
-  propertiesFilter: TextFilterValues;
-  rectsUserOptions?: UserOptions;
-  rectIdToShowState?: Map<string, RectShowState> | undefined;
-}
+export type StringFilterPredicate = (value: string) => boolean;

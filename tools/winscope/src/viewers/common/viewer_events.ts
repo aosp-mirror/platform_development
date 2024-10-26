@@ -17,8 +17,8 @@
 import {Timestamp} from 'common/time';
 import {TraceEntry} from 'trace/trace';
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
-import {TextFilter} from './text_filter';
-import {LogFieldType} from './ui_data_log';
+import {TextFilter} from 'viewers/common/text_filter';
+import {LogHeader} from './ui_data_log';
 
 export enum ViewerEvents {
   HighlightedNodeChange = 'HighlightedNodeChange',
@@ -60,9 +60,9 @@ export class TimestampClickDetail {
 }
 
 export class LogFilterChangeDetail {
-  constructor(public type: LogFieldType, public value: string[] | string) {}
+  constructor(public header: LogHeader, public value: string[]) {}
 }
 
 export class LogTextFilterChangeDetail {
-  constructor(public type: LogFieldType, public filter: TextFilter) {}
+  constructor(public header: LogHeader, public filter: TextFilter) {}
 }
