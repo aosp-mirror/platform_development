@@ -35,12 +35,12 @@ import {HierarchyTreeNode} from 'trace/tree_node/hierarchy_tree_node';
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
 import {PropertiesPresenter} from 'viewers/common/properties_presenter';
 import {RectsPresenter} from 'viewers/common/rects_presenter';
+import {TextFilter} from 'viewers/common/text_filter';
 import {UiHierarchyTreeNode} from 'viewers/common/ui_hierarchy_tree_node';
 import {UserOptions} from 'viewers/common/user_options';
 import {HierarchyPresenter} from './hierarchy_presenter';
 import {PresetHierarchy} from './preset_hierarchy';
 import {RectShowState} from './rect_show_state';
-import {TextFilter} from './text_filter';
 import {UiDataHierarchy} from './ui_data_hierarchy';
 import {ViewerEvents} from './viewer_events';
 
@@ -224,9 +224,9 @@ export abstract class AbstractHierarchyViewerPresenter<
   protected saveConfigAsPreset(storeKey: string) {
     const preset: PresetHierarchy = {
       hierarchyUserOptions: this.uiData.hierarchyUserOptions,
-      hierarchyFilter: this.uiData.hierarchyFilter,
+      hierarchyFilter: this.uiData.hierarchyFilter.values,
       propertiesUserOptions: this.uiData.propertiesUserOptions,
-      propertiesFilter: this.uiData.propertiesFilter,
+      propertiesFilter: this.uiData.propertiesFilter.values,
       rectsUserOptions: this.uiData.rectsUserOptions,
       rectIdToShowState: this.uiData.rectIdToShowState,
     };
@@ -241,14 +241,14 @@ export abstract class AbstractHierarchyViewerPresenter<
         parsedPreset.hierarchyUserOptions,
       );
       await this.hierarchyPresenter.applyHierarchyFilterChange(
-        parsedPreset.hierarchyFilter,
+        new TextFilter(parsedPreset.hierarchyFilter),
       );
 
       this.propertiesPresenter.applyPropertiesUserOptionsChange(
         parsedPreset.propertiesUserOptions,
       );
       this.propertiesPresenter.applyPropertiesFilterChange(
-        parsedPreset.propertiesFilter,
+        new TextFilter(parsedPreset.propertiesFilter),
       );
       await this.updatePropertiesTree();
 

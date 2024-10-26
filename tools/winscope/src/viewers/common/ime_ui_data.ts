@@ -17,8 +17,8 @@
 import {ImeTraceType} from 'trace/trace_type';
 import {ImeAdditionalProperties} from 'viewers/common/ime_additional_properties';
 import {TableProperties} from 'viewers/common/table_properties';
+import {TextFilter} from 'viewers/common/text_filter';
 import {UserOptions} from 'viewers/common/user_options';
-import {TextFilter} from './text_filter';
 import {UiDataHierarchy} from './ui_data_hierarchy';
 import {UiHierarchyTreeNode} from './ui_hierarchy_tree_node';
 import {UiPropertyTreeNode} from './ui_property_tree_node';
@@ -31,8 +31,8 @@ export class ImeUiData implements UiDataHierarchy {
   propertiesUserOptions: UserOptions = {};
   propertiesTree: UiPropertyTreeNode | undefined;
   highlightedProperty = '';
-  hierarchyFilter = new TextFilter('', []);
-  propertiesFilter = new TextFilter('', []);
+  hierarchyFilter = new TextFilter();
+  propertiesFilter = new TextFilter();
 
   constructor(
     readonly traceType: ImeTraceType,

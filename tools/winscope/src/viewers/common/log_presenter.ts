@@ -16,22 +16,17 @@
 
 import {ArrayUtils} from 'common/array_utils';
 import {assertDefined} from 'common/assert_utils';
-import {
-  FilterFlag,
-  makeFilterPredicate,
-  StringFilterPredicate,
-} from 'common/filter_flag';
-import {Timestamp} from 'common/time';
 import {TraceEntry} from 'trace/trace';
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
-import {TextFilter} from './text_filter';
-import {LogEntry, LogFieldType, LogFilter} from './ui_data_log';
+import {StringFilterPredicate} from 'viewers/common/string_filter_predicate';
+import {TextFilter} from 'viewers/common/text_filter';
+import {ColumnSpec, LogEntry, LogHeader} from './ui_data_log';
 
 export class LogPresenter<Entry extends LogEntry> {
   private allEntries: Entry[] = [];
   private filteredEntries: Entry[] = [];
-  private headers: Array<LogFieldType | LogFilter> = [];
-  private filterPredicates = new Map<LogFieldType, StringFilterPredicate>();
+  private headers: LogHeader[] = [];
+  private filterPredicates = new Map<ColumnSpec, StringFilterPredicate>();
   private currentEntry: TraceEntry<PropertyTreeNode> | undefined;
   private selectedIndex: number | undefined;
   private scrollToIndex: number | undefined;
@@ -45,30 +40,22 @@ export class LogPresenter<Entry extends LogEntry> {
     this.updateFilteredEntries();
   }
 
-  setHeaders(headers: Array<LogFieldType | LogFilter>) {
+  setHeaders(headers: LogHeader[]) {
     this.headers = headers;
 
-    this.filterPredicates = new Map<LogFieldType, StringFilterPredicate>();
-    this.getFilters().forEach((filter) => {
-      if (
-        filter.textFilter &&
-        (filter.textFilter.filterString || filter.textFilter.flags.length > 0)
-      ) {
-        this.filterPredicates.set(
-          filter.type,
-          this.makeLogFilterPredicate(
-            filter.type,
-            filter.textFilter.filterString,
-            filter.textFilter.flags,
-          ),
-        );
-      }
+    this.filterPredicates = new Map<ColumnSpec, StringFilterPredicate>();
+    this.headers.forEach((header) => {
+      if (!header.filter) return;
+      this.filterPredicates.set(
+        header.spec,
+        header.filter.getFilterPredicate(),
+      );
     });
     this.updateFilteredEntries();
     this.resetIndices();
   }
 
-  getHeaders(): Array<LogFieldType | LogFilter> {
+  getHeaders(): LogHeader[] {
     return this.headers;
   }
 
@@ -124,37 +111,30 @@ export class LogPresenter<Entry extends LogEntry> {
     this.resetIndices();
   }
 
-  applyTextFilterChange(type: LogFieldType, value: TextFilter) {
-    assertDefined(
-      this.getFilters().find((filter) => filter.type === type),
-    ).textFilter = value;
-    if (value.filterString.length > 0) {
-      this.filterPredicates.set(
-        type,
-        this.makeLogFilterPredicate(type, value.filterString, value.flags),
-      );
+  applyTextFilterChange(header: LogHeader, value: TextFilter) {
+    const filter = assertDefined(header.filter);
+    const filterString = value.values.filterString;
+    filter.updateFilterValue([filterString]);
+    if (filterString.length > 0) {
+      this.filterPredicates.set(header.spec, filter.getFilterPredicate());
     } else {
-      this.filterPredicates.delete(type);
+      this.filterPredicates.delete(header.spec);
     }
     this.updateEntriesAfterFilterChange();
   }
 
-  applyFilterChange(type: LogFieldType, value: string[] | string) {
+  applySelectFilterChange(header: LogHeader, value: string[]) {
+    const filter = assertDefined(header.filter);
+    filter.updateFilterValue(value);
     if (value.length > 0) {
       this.filterPredicates.set(
-        type,
-        this.makeLogFilterPredicate(type, value, []),
+        header.spec,
+        assertDefined(header.filter).getFilterPredicate(),
       );
     } else {
-      this.filterPredicates.delete(type);
+      this.filterPredicates.delete(header.spec);
     }
     this.updateEntriesAfterFilterChange();
-  }
-
-  private getFilters(): LogFilter[] {
-    return this.headers.filter(
-      (header) => header instanceof LogFilter,
-    ) as LogFilter[];
   }
 
   private updateEntriesAfterFilterChange() {
@@ -183,43 +163,12 @@ export class LogPresenter<Entry extends LogEntry> {
     this.scrollToIndex = this.currentIndex;
   }
 
-  private static shouldFilterBySubstring(type: LogFieldType): boolean {
-    switch (type) {
-      case LogFieldType.FLAGS:
-      case LogFieldType.INPUT_DISPATCH_WINDOWS:
-      case LogFieldType.PARTICIPANTS:
-        return true;
-      default:
-        return false;
-    }
-  }
-
-  private makeLogFilterPredicate(
-    type: LogFieldType,
-    filterValue: string | string[],
-    flags: FilterFlag[],
-  ): StringFilterPredicate {
-    if (
-      Array.isArray(filterValue) &&
-      LogPresenter.shouldFilterBySubstring(type)
-    ) {
-      return (entryString) =>
-        filterValue.some((val) => entryString.includes(val));
-    } else if (Array.isArray(filterValue)) {
-      return (entryString) => filterValue.includes(entryString);
-    } else {
-      return makeFilterPredicate(filterValue, flags);
-    }
-  }
-
   private updateFilteredEntries() {
     this.filteredEntries = this.allEntries.filter((entry) => {
-      for (const [filterType, predicate] of this.filterPredicates) {
-        const entryValue = entry.fields.find(
-          (f) => f.type === filterType,
-        )?.value;
+      for (const [spec, predicate] of this.filterPredicates) {
+        const entryValue = entry.fields.find((f) => f.spec === spec)?.value;
 
-        if (entryValue === undefined || entryValue instanceof Timestamp) {
+        if (entryValue === undefined) {
           continue;
         }
 
@@ -232,6 +181,7 @@ export class LogPresenter<Entry extends LogEntry> {
     if (this.filteredEntries.length === 0) {
       this.currentIndex = undefined;
       this.selectedIndex = undefined;
+      this.scrollToIndex = undefined;
     }
     this.originalIndicesOfAllEntries = this.filteredEntries.map((entry) =>
       entry.traceEntry.getIndex(),
