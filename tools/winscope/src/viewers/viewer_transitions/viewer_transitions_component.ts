@@ -18,7 +18,7 @@ import {Component, Input, ViewChild} from '@angular/core';
 import {TraceType} from 'trace/trace_type';
 import {CollapsibleSections} from 'viewers/common/collapsible_sections';
 import {CollapsibleSectionType} from 'viewers/common/collapsible_section_type';
-import {LogComponent} from 'viewers/common/log_component';
+import {LogComponent} from 'viewers/components/log_component';
 import {selectedElementStyle} from 'viewers/components/styles/selected_element.styles';
 import {viewerCardStyle} from 'viewers/components/styles/viewer_card.styles';
 import {UiData} from './ui_data';

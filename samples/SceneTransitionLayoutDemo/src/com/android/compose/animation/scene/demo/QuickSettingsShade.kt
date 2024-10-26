@@ -18,7 +18,6 @@ package com.android.compose.animation.scene.demo
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
@@ -34,7 +33,6 @@ import com.android.compose.animation.scene.UserActionResult
 
 object QuickSettingsShade {
     object Elements {
-        val Root = ElementKey("QuickSettingsShadeContentRoot")
         val Content = ElementKey("QuickSettingsShadeContent")
     }
 
@@ -52,10 +50,7 @@ fun SceneScope.QuickSettingsShade(
     mediaPlayer: @Composable (SceneScope.() -> Unit)?,
     modifier: Modifier = Modifier,
 ) {
-    PartialShade(
-        modifier.element(QuickSettingsShade.Elements.Root),
-        innerPadding = PaddingValues(),
-    ) {
+    PartialShade(modifier) {
         Column(Modifier.element(QuickSettingsShade.Elements.Content)) {
             val horizontalPaddingModifier = Modifier.padding(horizontal = 16.dp)
 

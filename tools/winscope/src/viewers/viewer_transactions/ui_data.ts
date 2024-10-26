@@ -19,7 +19,7 @@ import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
 import {
   LogEntry,
   LogField,
-  LogFilter,
+  LogHeader,
   UiDataLog,
 } from 'viewers/common/ui_data_log';
 import {UiPropertyTreeNode} from 'viewers/common/ui_property_tree_node';
@@ -27,8 +27,8 @@ import {UserOptions} from 'viewers/common/user_options';
 
 export class UiData implements UiDataLog {
   constructor(
-    public headers: LogFilter[],
-    public entries: LogEntry[],
+    public headers: LogHeader[],
+    public entries: TransactionsEntry[],
     public currentIndex: undefined | number,
     public selectedIndex: undefined | number,
     public scrollToIndex: undefined | number,
