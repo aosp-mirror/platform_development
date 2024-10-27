@@ -24,8 +24,7 @@ import {TextFilter} from 'viewers/common/text_filter';
 import {
   LogEntry,
   LogField,
-  LogFieldType,
-  LogFilter,
+  LogHeader,
   UiDataLog,
 } from 'viewers/common/ui_data_log';
 import {UiPropertyTreeNode} from 'viewers/common/ui_property_tree_node';
@@ -34,8 +33,7 @@ import {UiRect} from 'viewers/components/rects/ui_rect';
 
 export class UiData implements UiDataLog {
   constructor(
-    public headers: LogFieldType[],
-    public titleFilters: LogFilter[],
+    public headers: LogHeader[],
     public entries: LogEntry[],
     public selectedIndex: undefined | number,
     public scrollToIndex: undefined | number,
@@ -52,13 +50,13 @@ export class UiData implements UiDataLog {
   rectsUserOptions: UserOptions | undefined;
   displays: DisplayIdentifier[] = [];
   isDarkMode = false;
-  propertiesFilter = new TextFilter('', []);
-  dispatchPropertiesFilter = new TextFilter('', []);
+  propertiesFilter = new TextFilter();
+  dispatchPropertiesFilter = new TextFilter();
 
   readonly dependencies: TraceType[] = [TraceType.INPUT_EVENT_MERGED];
 
   static createEmpty(): UiData {
-    return new UiData([], [], [], undefined, undefined, undefined, undefined);
+    return new UiData([], [], undefined, undefined, undefined, undefined);
   }
 }
 
