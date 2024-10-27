@@ -18,10 +18,10 @@ import {HierarchyTreeNode} from 'trace/tree_node/hierarchy_tree_node';
 import {Operation} from 'trace/tree_node/operations/operation';
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
 import {TreeNode} from 'trace/tree_node/tree_node';
+import {TextFilter} from 'viewers/common/text_filter';
 import {IsModifiedCallbackType} from './add_diffs';
 import {AddDiffsPropertiesTree} from './add_diffs_properties_tree';
 import {Filter} from './operations/filter';
-import {TextFilter} from './text_filter';
 import {UiPropertyTreeNode} from './ui_property_tree_node';
 import {UiTreeFormatter} from './ui_tree_formatter';
 import {TreeNodeFilter, UiTreeUtils} from './ui_tree_utils';
@@ -41,8 +41,7 @@ export class PropertiesPresenter {
     private defaultAllowlist: string[] = [],
   ) {
     this.propertiesFilter = UiTreeUtils.makeNodeFilter(
-      this.textFilter.filterString,
-      this.textFilter.flags,
+      this.textFilter.getFilterPredicate(),
     );
   }
 
@@ -81,8 +80,7 @@ export class PropertiesPresenter {
   applyPropertiesFilterChange(textFilter: TextFilter) {
     this.textFilter = textFilter;
     this.propertiesFilter = UiTreeUtils.makeNodeFilter(
-      textFilter.filterString,
-      textFilter.flags,
+      textFilter.getFilterPredicate(),
     );
   }
 
