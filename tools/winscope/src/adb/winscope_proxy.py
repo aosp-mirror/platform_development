@@ -1372,15 +1372,13 @@ class EndTraceEndpoint(DeviceRequestEndpoint):
                 thread.end_trace()
             success = thread.success()
             signal_handler_log = call_adb(f"shell su root cat {SIGNAL_HANDLER_LOG}", device=device_id).encode('utf-8')
-            out = b"### Shell script's stdout - start\n" + \
-                thread.out + \
-                b"### Shell script's stdout - end\n" + \
-                b"### Shell script's stderr - start\n" + \
-                thread.err + \
-                b"### Shell script's stderr - end\n" + \
-                b"### Signal handler log - start\n" + \
-                signal_handler_log + \
-                b"### Signal handler log - end\n"
+            out = b"### Shell script's stdout ###\n" + \
+                (thread.out if thread.out else b'<no stdout>') + \
+                b"\n### Shell script's stderr ###\n" + \
+                (thread.err if thread.err else b'<no stderr>') + \
+                b"\n### Signal handler log:\n" + \
+                (signal_handler_log if signal_handler_log else b'<no signal handler logs>') + \
+                b"\n"
             if not success:
                 log.error(
                     "Error ending trace {} on the device\n### Output ###\n".format(thread.trace_name) + out.decode(
