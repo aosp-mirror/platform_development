@@ -34,7 +34,7 @@ import {ProxyEndpoint} from './proxy_endpoint';
 import {TraceRequest} from './trace_request';
 
 export class ProxyConnection extends AdbConnection {
-  static readonly VERSION = '4.0.1';
+  static readonly VERSION = '4.0.2';
   static readonly WINSCOPE_PROXY_URL = 'http://localhost:5544';
 
   private static readonly MULTI_DISPLAY_SCREENRECORD_VERSION = '1.4';
