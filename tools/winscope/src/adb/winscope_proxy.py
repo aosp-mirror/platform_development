@@ -93,6 +93,10 @@ WINSCOPE_STATUS = "/data/local/tmp/winscope_status"
 # Max interval between the client keep-alive requests in seconds
 KEEP_ALIVE_INTERVAL_S = 5
 
+# Perfetto's default timeout for getting an ACK from producer processes is 5s
+# We need to be sure that the timeout is longer than that with a good margin.
+COMMAND_TIMEOUT_S = 15
+
 class File:
     def __init__(self, file, filetype) -> None:
         self.file = file
@@ -1244,7 +1248,7 @@ class TraceThread(threading.Thread):
             log.debug("Waiting for {} trace shell to exit for {}".format(
                 self.trace_name,
                 self._device_id))
-            self.process.wait(timeout=5)
+            self.process.wait(timeout=COMMAND_TIMEOUT_S)
         except TimeoutError:
             log.debug(
                 "TIMEOUT - sending SIGKILL to the {} trace process on {}".format(self.trace_name, self._device_id))
@@ -1252,12 +1256,13 @@ class TraceThread(threading.Thread):
         self.join()
 
     def run(self):
+        retry_interval = 0.1
         log.debug("Trace {} started on {}".format(self.trace_name, self._device_id))
         self.reset_timer()
         self.out, self.err = self.process.communicate(self.trace_command)
         log.debug("Trace {} ended on {}, waiting for cleanup".format(self.trace_name, self._device_id))
         time.sleep(0.2)
-        for i in range(50):
+        for i in range(COMMAND_TIMEOUT_S / retry_interval):
             if call_adb(f"shell su root cat {WINSCOPE_STATUS}", device=self._device_id) == 'TRACE_OK\n':
                 log.debug("Trace {} finished on {}".format(
                     self.trace_name,
@@ -1269,7 +1274,9 @@ class TraceThread(threading.Thread):
                     self._success = len(self.err) == 0
                 break
             log.debug("Still waiting for cleanup on {} for {}".format(self._device_id, self.trace_name))
-            time.sleep(0.1)
+            time.sleep(retry_interval)
+
+        self._command_timed_out = True
 
     def success(self):
         return self._success
