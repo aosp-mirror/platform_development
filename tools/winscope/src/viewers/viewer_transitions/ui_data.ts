@@ -20,15 +20,14 @@ import {TextFilter} from 'viewers/common/text_filter';
 import {
   LogEntry,
   LogField,
-  LogFieldType,
-  LogFilter,
+  LogHeader,
   UiDataLog,
 } from 'viewers/common/ui_data_log';
 import {UiPropertyTreeNode} from 'viewers/common/ui_property_tree_node';
 
 export class UiData implements UiDataLog {
   constructor(
-    public headers: Array<LogFieldType | LogFilter>,
+    public headers: LogHeader[],
     public entries: LogEntry[],
     public currentIndex: undefined | number,
     public selectedIndex: undefined | number,
@@ -36,7 +35,7 @@ export class UiData implements UiDataLog {
     public propertiesTree: undefined | UiPropertyTreeNode,
   ) {}
 
-  propertiesFilter = new TextFilter('', []);
+  propertiesFilter = new TextFilter();
 
   static createEmpty(): UiData {
     return new UiData([], [], undefined, undefined, undefined, undefined);

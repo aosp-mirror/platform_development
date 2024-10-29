@@ -31,7 +31,7 @@ import {TextFilter} from 'viewers/common/text_filter';
       <mat-label>{{ label }}</mat-label>
       <input
         matInput
-        [(ngModel)]="textFilter.filterString"
+        [(ngModel)]="textFilter.values.filterString"
         (ngModelChange)="onFilterChange()"
         [name]="filterName" />
       <div class="field-suffix" matSuffix>
@@ -76,7 +76,7 @@ import {TextFilter} from 'viewers/common/text_filter';
 export class SearchBoxComponent {
   FilterFlag = FilterFlag;
 
-  @Input() textFilter: TextFilter | undefined = new TextFilter('', []);
+  @Input() textFilter: TextFilter | undefined = new TextFilter();
   @Input() label = 'Search';
   @Input() filterName = 'filter';
   @Input() appearance = '';
@@ -86,16 +86,16 @@ export class SearchBoxComponent {
   @Output() readonly filterChange = new EventEmitter<TextFilter>();
 
   hasFlag(flag: FilterFlag): boolean {
-    return assertDefined(this.textFilter).flags.includes(flag) ?? false;
+    return assertDefined(this.textFilter).values.flags.includes(flag) ?? false;
   }
 
   onFilterFlagClick(event: MouseEvent, flag: FilterFlag) {
     event.stopPropagation();
     const filter = assertDefined(this.textFilter);
     if (this.hasFlag(flag)) {
-      filter.flags = filter.flags.filter((f) => f !== flag);
+      filter.values.flags = filter.values.flags.filter((f) => f !== flag);
     } else {
-      filter.flags = filter.flags.concat(flag);
+      filter.values.flags = filter.values.flags.concat(flag);
     }
     this.onFilterChange();
   }
