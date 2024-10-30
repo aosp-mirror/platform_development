@@ -14,8 +14,6 @@
  * limitations under the License.
  */
 
-import {assertDefined} from 'common/assert_utils';
-import {Transform} from 'parsers/surface_flinger/transform_utils';
 import {android} from 'protos/surfaceflinger/udc/static';
 import {HierarchyTreeBuilder} from 'test/unit/hierarchy_tree_builder';
 import {HierarchyTreeNode} from 'trace/tree_node/hierarchy_tree_node';
@@ -23,7 +21,7 @@ import {LayerExtractor} from './layer_extractor';
 import {ZOrderPathsComputation} from './z_order_paths_computation';
 
 describe('LayerExtractor', () => {
-  it('sorts according to single-value z-order paths', () => {
+  it('sorts according to z', () => {
     const hierarchyRoot = new HierarchyTreeBuilder()
       .setId('LayerTraceEntry')
       .setName('root')
@@ -33,7 +31,7 @@ describe('LayerExtractor', () => {
           name: 'layer1',
           properties: {
             id: 1,
-            zOrderPath: [1],
+            z: 1,
           } as android.surfaceflinger.ILayerProto,
         },
         {
@@ -41,7 +39,7 @@ describe('LayerExtractor', () => {
           name: 'layer2',
           properties: {
             id: 2,
-            zOrderPath: [2],
+            z: 2,
           } as android.surfaceflinger.ILayerProto,
         },
         {
@@ -49,79 +47,13 @@ describe('LayerExtractor', () => {
           name: 'layer3',
           properties: {
             id: 3,
-            zOrderPath: [0],
+            z: 0,
           } as android.surfaceflinger.ILayerProto,
         },
       ])
       .build();
-
-    const layers = LayerExtractor.extractLayersSortedByZ(hierarchyRoot);
+    const layers = LayerExtractor.extractLayersTopToBottom(hierarchyRoot);
     checkLayerOrder(layers, [2, 1, 3]);
-  });
-
-  it('sorts according to multiple-value z-order paths', () => {
-    const hierarchyRoot = new HierarchyTreeBuilder()
-      .setId('LayerTraceEntry')
-      .setName('root')
-      .setChildren([
-        {
-          id: 1,
-          name: 'layer1',
-          properties: {
-            id: 1,
-            zOrderPath: [1, 1],
-          } as android.surfaceflinger.ILayerProto,
-        },
-        {
-          id: 2,
-          name: 'layer2',
-          properties: {
-            id: 2,
-            zOrderPath: [2, 1],
-          } as android.surfaceflinger.ILayerProto,
-        },
-        {
-          id: 3,
-          name: 'layer3',
-          properties: {
-            id: 3,
-            zOrderPath: [1, 2],
-          } as android.surfaceflinger.ILayerProto,
-        },
-      ])
-      .build();
-
-    const layers = LayerExtractor.extractLayersSortedByZ(hierarchyRoot);
-    checkLayerOrder(layers, [2, 3, 1]);
-  });
-
-  it('handles z-order paths with different lengths', () => {
-    const hierarchyRoot = new HierarchyTreeBuilder()
-      .setId('LayerTraceEntry')
-      .setName('root')
-      .setChildren([
-        {
-          id: 1,
-          name: 'layer1',
-          properties: {
-            id: 1,
-            zOrderPath: [0, 1],
-            transform: Transform.EMPTY,
-          } as android.surfaceflinger.ILayerProto,
-        },
-        {
-          id: 2,
-          name: 'layer2',
-          properties: {
-            id: 2,
-            zOrderPath: [0, 0, 0],
-          } as android.surfaceflinger.ILayerProto,
-        },
-      ])
-      .build();
-
-    const layers = LayerExtractor.extractLayersSortedByZ(hierarchyRoot);
-    checkLayerOrder(layers, [1, 2]);
   });
 
   it('handles relative layers', () => {
@@ -134,7 +66,7 @@ describe('LayerExtractor', () => {
           name: 'layer1',
           properties: {
             id: 1,
-            zOrderPath: [0],
+            z: 1,
           } as android.surfaceflinger.ILayerProto,
           children: [
             {
@@ -142,7 +74,7 @@ describe('LayerExtractor', () => {
               name: 'layer2',
               properties: {
                 id: 2,
-                zOrderPath: [0, 1],
+                z: 1,
               } as android.surfaceflinger.ILayerProto,
             },
           ],
@@ -152,7 +84,7 @@ describe('LayerExtractor', () => {
           name: 'layer3',
           properties: {
             id: 3,
-            zOrderPath: [0],
+            z: 1,
           } as android.surfaceflinger.ILayerProto,
         },
         {
@@ -160,22 +92,19 @@ describe('LayerExtractor', () => {
           name: 'layer4',
           properties: {
             id: 4,
-            zOrderPath: [0, 0],
+            z: 0,
+            zOrderRelativeOf: 1,
           } as android.surfaceflinger.ILayerProto,
         },
       ])
       .build();
+    computeZOrderPaths(hierarchyRoot);
 
-    const layer1 = assertDefined(hierarchyRoot.getChildByName('layer1'));
-    const layer4 = assertDefined(hierarchyRoot.getChildByName('layer4'));
-    layer1.addRelativeChild(layer4);
-    layer4.setZParent(layer1);
-
-    const layers = LayerExtractor.extractLayersSortedByZ(hierarchyRoot);
-    checkLayerOrder(layers, [3, 2, 4, 1]);
+    const layers = LayerExtractor.extractLayersTopToBottom(hierarchyRoot);
+    checkLayerOrder(layers, [3, 2, 1, 4]);
   });
 
-  it('handles negative z values in z-order path', () => {
+  it('handles negative z values', () => {
     const hierarchyRoot = new HierarchyTreeBuilder()
       .setId('LayerTraceEntry')
       .setName('root')
@@ -185,7 +114,7 @@ describe('LayerExtractor', () => {
           name: 'layer1',
           properties: {
             id: 1,
-            zOrderPath: [0],
+            z: 1,
           } as android.surfaceflinger.ILayerProto,
           children: [
             {
@@ -193,7 +122,7 @@ describe('LayerExtractor', () => {
               name: 'layer2',
               properties: {
                 id: 2,
-                zOrderPath: [0, 1],
+                z: 0,
               } as android.surfaceflinger.ILayerProto,
             },
           ],
@@ -203,17 +132,18 @@ describe('LayerExtractor', () => {
           name: 'layer5',
           properties: {
             id: 5,
-            zOrderPath: [-5],
+            z: -5,
           } as android.surfaceflinger.ILayerProto,
         },
       ])
       .build();
+    computeZOrderPaths(hierarchyRoot);
 
-    const layers = LayerExtractor.extractLayersSortedByZ(hierarchyRoot);
-    checkLayerOrder(layers, [2, 1, 5]);
+    const layers = LayerExtractor.extractLayersTopToBottom(hierarchyRoot);
+    checkLayerOrder(layers, [1, 2, 5]);
   });
 
-  it('handles z-order paths with equal values (fall back to layer id comparison)', () => {
+  it('falls back to layer id comparison for equal z values', () => {
     const hierarchyRoot = new HierarchyTreeBuilder()
       .setId('LayerTraceEntry')
       .setName('root')
@@ -223,7 +153,7 @@ describe('LayerExtractor', () => {
           name: 'layer1',
           properties: {
             id: 1,
-            zOrderPath: [0, 1],
+            z: 0,
           } as android.surfaceflinger.ILayerProto,
         },
         {
@@ -231,14 +161,44 @@ describe('LayerExtractor', () => {
           name: 'layer',
           properties: {
             id: 2,
-            zOrderPath: [0, 1, 0],
+            z: 0,
           } as android.surfaceflinger.ILayerProto,
         },
       ])
       .build();
 
-    const layers = LayerExtractor.extractLayersSortedByZ(hierarchyRoot);
+    const layers = LayerExtractor.extractLayersTopToBottom(hierarchyRoot);
     checkLayerOrder(layers, [2, 1]);
+  });
+
+  it('only falls back to layer id comparison for siblings', () => {
+    const hierarchyRoot = new HierarchyTreeBuilder()
+      .setId('LayerTraceEntry')
+      .setName('root')
+      .setChildren([
+        {
+          id: 2,
+          name: 'layer',
+          properties: {
+            id: 2,
+            z: 0,
+          } as android.surfaceflinger.ILayerProto,
+          children: [
+            {
+              id: 1,
+              name: 'layer',
+              properties: {
+                id: 1,
+                z: 0,
+              } as android.surfaceflinger.ILayerProto,
+            },
+          ],
+        },
+      ])
+      .build();
+
+    const layers = LayerExtractor.extractLayersTopToBottom(hierarchyRoot);
+    checkLayerOrder(layers, [1, 2]);
   });
 
   it('restricts z-order sorting to each level of hierarchy', () => {
@@ -251,7 +211,7 @@ describe('LayerExtractor', () => {
           name: 'layer1',
           properties: {
             id: 1,
-            zOrderPath: [0, 3],
+            z: 0,
           } as android.surfaceflinger.ILayerProto,
         },
         {
@@ -259,7 +219,7 @@ describe('LayerExtractor', () => {
           name: 'layer2',
           properties: {
             id: 2,
-            zOrderPath: [0],
+            z: 0,
           } as android.surfaceflinger.ILayerProto,
           children: [
             {
@@ -267,7 +227,7 @@ describe('LayerExtractor', () => {
               name: 'layer3',
               properties: {
                 id: 3,
-                zOrderPath: [0, 2],
+                z: 2,
               } as android.surfaceflinger.ILayerProto,
             },
             {
@@ -275,7 +235,7 @@ describe('LayerExtractor', () => {
               name: 'layer4',
               properties: {
                 id: 4,
-                zOrderPath: [0, 1],
+                z: 1,
               } as android.surfaceflinger.ILayerProto,
             },
           ],
@@ -283,11 +243,11 @@ describe('LayerExtractor', () => {
       ])
       .build();
 
-    const layers = LayerExtractor.extractLayersSortedByZ(hierarchyRoot);
+    const layers = LayerExtractor.extractLayersTopToBottom(hierarchyRoot);
     checkLayerOrder(layers, [3, 4, 2, 1]);
   });
 
-  function computeZOrder(root: HierarchyTreeNode) {
+  function computeZOrderPaths(root: HierarchyTreeNode) {
     new ZOrderPathsComputation().setRoot(root).executeInPlace();
   }
 
