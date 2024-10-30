@@ -63,7 +63,7 @@ def create_argument_parser() -> argparse.ArgumentParser:
     return parser
 
 # Keep in sync with ProxyConnection#VERSION in Winscope
-VERSION = '4.0.3'
+VERSION = '4.0.4'
 
 PERFETTO_TRACE_CONFIG_FILE = '/data/misc/perfetto-configs/winscope-proxy-trace.conf'
 PERFETTO_DUMP_CONFIG_FILE = '/data/misc/perfetto-configs/winscope-proxy-dump.conf'
@@ -1219,6 +1219,7 @@ class TraceThread(threading.Thread):
         self._keep_alive_timer = None
         self.out = None,
         self.err = None,
+        self._command_timed_out = False
         self._success = False
         try:
             shell = get_shell_args(self._device_id, "trace")
@@ -1269,7 +1270,7 @@ class TraceThread(threading.Thread):
         self.out, self.err = self.process.communicate(self.trace_command)
         log.debug("Trace {} ended on {}, waiting for cleanup".format(self.trace_name, self._device_id))
         time.sleep(0.2)
-        for i in range(COMMAND_TIMEOUT_S / retry_interval):
+        for i in range(int(COMMAND_TIMEOUT_S / retry_interval)):
             if call_adb(f"shell su root cat {WINSCOPE_STATUS}", device=self._device_id) == 'TRACE_OK\n':
                 log.debug("Trace {} finished on {}".format(
                     self.trace_name,
@@ -1279,7 +1280,7 @@ class TraceThread(threading.Thread):
                     self._success = True
                 else:
                     self._success = len(self.err) == 0
-                break
+                return
             log.debug("Still waiting for cleanup on {} for {}".format(self._device_id, self.trace_name))
             time.sleep(retry_interval)
 
@@ -1288,6 +1289,8 @@ class TraceThread(threading.Thread):
     def success(self):
         return self._success
 
+    def timed_out(self):
+        return self._command_timed_out
 
 class StartTraceEndpoint(DeviceRequestEndpoint):
     TRACE_COMMAND = """
@@ -1393,6 +1396,10 @@ class EndTraceEndpoint(DeviceRequestEndpoint):
                 b"\n### Signal handler log:\n" + \
                 (signal_handler_log if signal_handler_log else b'<no signal handler logs>') + \
                 b"\n"
+            if (thread.timed_out()):
+                timeout_message = "Trace {} timed out during cleanup".format(thread.trace_name)
+                errors.append(timeout_message)
+                log.error(timeout_message)
             if not success:
                 log.error(
                     "Error ending trace {} on the device\n### Output ###\n".format(thread.trace_name) + out.decode(
