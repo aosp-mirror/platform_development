@@ -634,9 +634,9 @@ describe('SurfaceFlinger RectsComputation', () => {
           {
             id: 2,
             layerStack: 1,
-            layerStackSpaceRect: {left: 0, top: 0, right: 5, bottom: 5},
+            layerStackSpaceRect: {left: 0, top: 0, right: 6, bottom: 7},
             name: 'Test Display 2',
-            size: {w: 5, h: 5},
+            size: {w: 6, h: 7},
           },
         ],
       })
@@ -656,6 +656,7 @@ describe('SurfaceFlinger RectsComputation', () => {
             transform: Transform.EMPTY,
             inputWindowInfo: {
               inputConfig: InputConfig.SPY,
+              frame: {left: 0, top: 0, right: 1, bottom: 1},
               visible: true,
             },
           } as android.surfaceflinger.ILayerProto,
@@ -676,6 +677,7 @@ describe('SurfaceFlinger RectsComputation', () => {
                 transform: Transform.EMPTY,
                 inputWindowInfo: {
                   inputConfig: 0,
+                  frame: {left: 0, top: 0, right: 2, bottom: 2},
                   visible: false,
                 },
               } as android.surfaceflinger.ILayerProto,
@@ -697,6 +699,7 @@ describe('SurfaceFlinger RectsComputation', () => {
             transform: Transform.EMPTY,
             inputWindowInfo: {
               inputConfig: InputConfig.IS_WALLPAPER,
+              frame: {left: -999, top: -999, right: 999, bottom: 999},
               visible: true,
             },
           } as android.surfaceflinger.ILayerProto,
@@ -717,6 +720,7 @@ describe('SurfaceFlinger RectsComputation', () => {
             transform: Transform.EMPTY,
             inputWindowInfo: {
               inputConfig: 0,
+              frame: {left: 0, top: 0, right: 5, bottom: 5},
             },
           } as android.surfaceflinger.ILayerProto,
         },
@@ -753,6 +757,7 @@ describe('SurfaceFlinger RectsComputation', () => {
             transform: Transform.EMPTY,
             inputWindowInfo: {
               inputConfig: InputConfig.NOT_TOUCHABLE,
+              frame: {left: 0, top: 0, right: 5, bottom: 5},
             },
           } as android.surfaceflinger.ILayerProto,
         },
@@ -772,6 +777,7 @@ describe('SurfaceFlinger RectsComputation', () => {
             transform: Transform.EMPTY,
             inputWindowInfo: {
               inputConfig: 0,
+              frame: {left: 0, top: 0, right: 5, bottom: 5},
               touchableRegion: {
                 rect: [
                   {
@@ -801,6 +807,7 @@ describe('SurfaceFlinger RectsComputation', () => {
             transform: Transform.EMPTY,
             inputWindowInfo: {
               inputConfig: 0,
+              frame: {left: 0, top: 0, right: 5, bottom: 5},
               touchableRegion: {
                 rect: [
                   {
@@ -808,6 +815,36 @@ describe('SurfaceFlinger RectsComputation', () => {
                     top: 0,
                     right: 2,
                     bottom: 2,
+                  },
+                ],
+              },
+            },
+          } as android.surfaceflinger.ILayerProto,
+        },
+        {
+          id: 9,
+          name: 'touchableLayerWithNoFrame',
+          properties: {
+            id: 9,
+            name: 'touchableLayerWithNoFrame',
+            cornerRadius: 0,
+            layerStack: 1,
+            bounds: {left: 0, top: 0, right: 5, bottom: 5},
+            screenBounds: {left: 0, top: 0, right: 5, bottom: 5},
+            zOrderPath: [0, 2],
+            isComputedVisible: true,
+            color: {r: 0, g: 0, b: 0, a: 1},
+            transform: Transform.EMPTY,
+            inputWindowInfo: {
+              inputConfig: 0,
+              frame: {},
+              touchableRegion: {
+                rect: [
+                  {
+                    left: -999,
+                    top: -999,
+                    right: 999,
+                    bottom: 999,
                   },
                 ],
               },
@@ -933,6 +970,23 @@ describe('SurfaceFlinger RectsComputation', () => {
         .setIsSpy(false)
         .setFillRegion(new Region([new Rect(0, 0, 2, 2)]))
         .build(),
+
+      new TraceRectBuilder()
+        .setX(0)
+        .setY(0)
+        .setWidth(0)
+        .setHeight(0)
+        .setId('9')
+        .setName('touchableLayerWithNoFrame')
+        .setCornerRadius(0)
+        .setTransform(Transform.EMPTY.matrix)
+        .setDepth(2)
+        .setGroupId(1)
+        .setIsVisible(true)
+        .setIsDisplay(false)
+        .setIsSpy(false)
+        .setFillRegion(new Region([new Rect(0, 0, 6, 7)]))
+        .build(),
     ];
 
     const expectedDisplayRects = [
@@ -955,8 +1009,8 @@ describe('SurfaceFlinger RectsComputation', () => {
       new TraceRectBuilder()
         .setX(0)
         .setY(0)
-        .setWidth(5)
-        .setHeight(5)
+        .setWidth(6)
+        .setHeight(7)
         .setId('Display - 2')
         .setName('Test Display 2')
         .setCornerRadius(0)
