@@ -132,4 +132,22 @@ describe('TranslateIntDef', () => {
       ).formattedValue(),
     ).toEqual('FLAG_ALLOW_LOCK_WHILE_SCREEN_ON');
   });
+
+  it('formats leftover', () => {
+    propertyRoot = new PropertyTreeBuilder()
+      .setIsRoot(true)
+      .setRootId('test')
+      .setName('node')
+      .setChildren([{name: 'inputConfig', value: 3}])
+      .build();
+
+    const field = rootType.fields['intdefMappingEntry'];
+    operation = new TranslateIntDef(field);
+    operation.apply(propertyRoot);
+    expect(
+      assertDefined(
+        propertyRoot.getChildByName('inputConfig'),
+      ).formattedValue(),
+    ).toEqual('NO_INPUT_CHANNEL | 2');
+  });
 });
