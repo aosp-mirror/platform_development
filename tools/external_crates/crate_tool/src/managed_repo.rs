@@ -105,13 +105,13 @@ impl ManagedRepo {
     ) -> Result<ManagedCrate<crate::managed_crate::New>> {
         Ok(ManagedCrate::new(Crate::from(self.managed_dir_for(crate_name))?))
     }
-    pub fn all_crate_names(&self) -> Result<Vec<String>> {
-        let mut managed_dirs = Vec::new();
+    pub fn all_crate_names(&self) -> Result<BTreeSet<String>> {
+        let mut managed_dirs = BTreeSet::new();
         if self.managed_dir().abs().exists() {
             for entry in read_dir(self.managed_dir())? {
                 let entry = entry?;
                 if entry.path().is_dir() {
-                    managed_dirs.push(entry.file_name().into_string().map_err(|e| {
+                    managed_dirs.insert(entry.file_name().into_string().map_err(|e| {
                         anyhow!("Failed to convert {} to string", e.to_string_lossy())
                     })?);
                 }
@@ -503,7 +503,7 @@ impl ManagedRepo {
         let pseudo_crate = self.pseudo_crate().vendor()?;
         let deps = pseudo_crate.deps().keys().cloned().collect::<BTreeSet<_>>();
 
-        let managed_dirs = self.all_crate_names()?.into_iter().collect();
+        let managed_dirs = self.all_crate_names()?;
 
         if deps != managed_dirs {
             return Err(anyhow!("Deps in pseudo_crate/Cargo.toml don't match directories in {}\nDirectories not in Cargo.toml: {}\nCargo.toml deps with no directory: {}",
@@ -835,6 +835,13 @@ impl ManagedRepo {
         let crates_dir = self.path.join("crates")?;
         create_dir_all(&crates_dir).context(format!("Failed to create {}", crates_dir))?;
         self.pseudo_crate().init()?;
+        Ok(())
+    }
+    pub fn fix_test_mapping<T: AsRef<str>>(&self, crates: impl Iterator<Item = T>) -> Result<()> {
+        for crate_name in crates {
+            let mc = self.managed_crate_for(crate_name.as_ref())?;
+            mc.fix_test_mapping()?;
+        }
         Ok(())
     }
 }

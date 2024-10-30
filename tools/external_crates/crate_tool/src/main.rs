@@ -118,6 +118,12 @@ enum Cmd {
     TryUpdates {},
     /// Initialize a new managed repo.
     Init {},
+    /// Update TEST_MAPPING files.
+    #[command(hide = true)]
+    TestMapping {
+        #[command(flatten)]
+        crates: CrateList,
+    },
 }
 
 #[derive(Args)]
@@ -137,11 +143,7 @@ struct CrateList {
 impl CrateList {
     fn to_list(&self, managed_repo: &ManagedRepo) -> Result<Vec<String>> {
         Ok(if self.all {
-            managed_repo
-                .all_crate_names()?
-                .into_iter()
-                .filter(|crate_name| !self.exclude.contains(crate_name))
-                .collect::<Vec<_>>()
+            managed_repo.all_crate_names()?.difference(&self.exclude).cloned().collect::<Vec<_>>()
         } else {
             self.crates.clone()
         })
@@ -225,5 +227,8 @@ fn main() -> Result<()> {
         Cmd::Update { crate_name, version } => managed_repo.update(crate_name, version),
         Cmd::TryUpdates {} => managed_repo.try_updates(),
         Cmd::Init {} => managed_repo.init(),
+        Cmd::TestMapping { crates } => {
+            managed_repo.fix_test_mapping(crates.to_list(&managed_repo)?.into_iter())
+        }
     }
 }
