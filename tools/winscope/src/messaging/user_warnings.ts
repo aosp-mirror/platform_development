@@ -236,6 +236,20 @@ export class ProxyTraceTimeout extends UserWarning {
   }
 }
 
+export class ProxyTracingWarnings extends UserWarning {
+  constructor(private readonly warnings: string[]) {
+    super();
+  }
+
+  getDescriptor(): string {
+    return 'proxy tracing warnings';
+  }
+
+  getMessage(): string {
+    return `Trace collection warning: ${this.warnings.join(', ')}`;
+  }
+}
+
 export class ProxyTracingErrors extends UserWarning {
   constructor(private readonly errorMessages: string[]) {
     super();
