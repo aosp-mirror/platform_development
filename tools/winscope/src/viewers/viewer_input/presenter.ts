@@ -278,8 +278,8 @@ export class Presenter extends AbstractLogViewerPresenter<UiData> {
           spec: Presenter.COLUMNS.details,
           value:
             type === InputEventType.KEY
-              ? Presenter.extractKeyDetails(eventTree)
-              : Presenter.extractMotionDetails(eventTree),
+              ? Presenter.extractKeyDetails(eventTree, dispatchTree)
+              : Presenter.extractDispatchDetails(dispatchTree),
         },
         {
           spec: Presenter.COLUMNS.dispatchWindows,
@@ -308,40 +308,32 @@ export class Presenter extends AbstractLogViewerPresenter<UiData> {
     }\u{200C}`;
   }
 
-  private static extractKeyDetails(eventTree: PropertyTreeNode): string {
-    return (
+  private static extractKeyDetails(
+    eventTree: PropertyTreeNode,
+    dispatchTree: PropertyTreeNode,
+  ): string {
+    const keyDetails =
       'Keycode: ' + eventTree.getChildByName('keyCode')?.formattedValue() ??
-      'not present'
-    );
+      '<?>';
+    return keyDetails + ' ' + Presenter.extractDispatchDetails(dispatchTree);
   }
 
-  private static extractMotionDetails(eventTree: PropertyTreeNode): string {
+  private static extractDispatchDetails(
+    dispatchTree: PropertyTreeNode,
+  ): string {
     let details = '';
-    const pointers =
-      eventTree.getChildByName('pointer')?.getAllChildren() ?? [];
-    pointers.forEach((pointer) => {
-      const id = pointer.getChildByName('pointerId')?.formattedValue() ?? '?';
-      let x = '?';
-      let y = '?';
-      const axisValues =
-        pointer.getChildByName('axisValue')?.getAllChildren() ?? [];
-      axisValues.forEach((axisValue) => {
-        if (axisValue.getChildByName('axis')?.formattedValue() === 'AXIS_X') {
-          x = axisValue.getChildByName('value')?.getValue();
-          return;
-        }
-        if (axisValue.getChildByName('axis')?.formattedValue() === 'AXIS_Y') {
-          y = axisValue.getChildByName('value')?.getValue();
-          return;
-        }
-      });
-
-      if (details.length !== 0) {
-        details += ', ';
+    dispatchTree.getAllChildren().forEach((dispatchEntry) => {
+      const windowIdNode = dispatchEntry.getChildByName('windowId');
+      if (windowIdNode === undefined) {
+        return;
       }
-      details += '[' + id + ': (' + x + ', ' + y + ')]';
+      if (windowIdNode.formattedValue() === '0') {
+        // Skip showing windowId 0, which is an omnipresent system window.
+        return;
+      }
+      details += windowIdNode.getValue() + ', ';
     });
-    return details;
+    return '[' + details.slice(0, -2) + ']';
   }
 
   protected override async updatePropertiesTree() {
