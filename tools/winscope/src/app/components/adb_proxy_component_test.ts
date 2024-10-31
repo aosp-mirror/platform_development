@@ -23,6 +23,7 @@ import {MatIconModule} from '@angular/material/icon';
 import {MatInputModule} from '@angular/material/input';
 import {BrowserAnimationsModule} from '@angular/platform-browser/animations';
 import {assertDefined} from 'common/assert_utils';
+import {Download} from 'common/download';
 import {ConnectionState} from 'trace_collection/connection_state';
 import {AdbProxyComponent} from './adb_proxy_component';
 
@@ -88,13 +89,16 @@ describe('AdbProxyComponent', () => {
   it('download proxy button downloads proxy', () => {
     component.state = ConnectionState.NOT_FOUND;
     fixture.detectChanges();
-    const spy = spyOn(window, 'open');
+    const spy = spyOn(Download, 'fromUrl');
     const button = assertDefined(
       htmlElement.querySelector<HTMLButtonElement>('.download-proxy-btn'),
     );
     button.click();
     fixture.detectChanges();
-    expect(spy).toHaveBeenCalledWith(component.downloadProxyUrl, '_blank');
+    expect(spy).toHaveBeenCalledWith(
+      component.downloadProxyUrl,
+      'winscope_proxy.py',
+    );
   });
 
   it('retry button emits event', () => {

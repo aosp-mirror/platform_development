@@ -96,7 +96,16 @@ public final class DisplayPowerDemoActivity extends AppCompatActivity {
 
     /** Launches an activity with android:turnScreenOn */
     public void onLaunchTurnScreenOnActivity(View v) {
-        Intent intent = new Intent(this, TurnScreenOnActivity.class);
+        chooseDisplayAndStartActivity(TurnScreenOnActivity.class);
+    }
+
+    /** Launches an activity with android:turnScreenOn and android:showWhenLocked */
+    public void onLaunchTurnScreenOnShowWhenLockedActivity(View v) {
+        chooseDisplayAndStartActivity(TurnScreenOnShowWhenLockedActivity.class);
+    }
+
+    private void chooseDisplayAndStartActivity(Class<?> cls) {
+        Intent intent = new Intent(this, cls);
 
         DisplayManager displayManager = getSystemService(DisplayManager.class);
         Display[] displays = displayManager.getDisplays();

@@ -65,7 +65,7 @@ fun CachedText(
                         ?: localColor
                         ?: error("localColor should not be null when color is null")
                 drawText(textLayoutResult, color)
-            },
+            }
     ) { _, constraints ->
         val layoutResult =
             textMeasurer.measure(text, style, overflow, softWrap, maxLines, constraints).also {

@@ -22,7 +22,7 @@ import {Parser} from 'trace/parser';
 import {TraceType} from 'trace/trace_type';
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
 
-describe('WmFileParserTransitions', () => {
+describe('ParserTransitionsWm', () => {
   let parser: Parser<PropertyTreeNode>;
 
   beforeAll(async () => {
@@ -35,6 +35,7 @@ describe('WmFileParserTransitions', () => {
   it('has expected trace type', () => {
     expect(parser.getTraceType()).toEqual(TraceType.WM_TRANSITION);
   });
+
   it('has expected coarse version', () => {
     expect(parser.getCoarseVersion()).toEqual(CoarseVersion.LEGACY);
   });
@@ -44,5 +45,20 @@ describe('WmFileParserTransitions', () => {
     expect(timestamps.length).toEqual(8);
     const expected = TimestampConverterUtils.makeZeroTimestamp();
     timestamps.forEach((timestamp) => expect(timestamp).toEqual(expected));
+  });
+
+  it('translates flags', async () => {
+    const entry = await parser.getEntry(4);
+    expect(
+      entry.getChildByName('wmData')?.getChildByName('flags')?.formattedValue(),
+    ).toEqual('TRANSIT_FLAG_IS_RECENTS');
+
+    const targets = entry.getChildByName('wmData')?.getChildByName('targets');
+    expect(
+      targets?.getChildByName('0')?.getChildByName('flags')?.formattedValue(),
+    ).toEqual('FLAG_MOVED_TO_TOP | FLAG_SHOW_WALLPAPER');
+    expect(
+      targets?.getChildByName('1')?.getChildByName('flags')?.formattedValue(),
+    ).toEqual('FLAG_NONE');
   });
 });

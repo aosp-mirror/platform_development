@@ -555,6 +555,8 @@ class HeaderCheckerTest(unittest.TestCase):
     def test_availability(self):
         self.prepare_and_absolute_diff_all_archs(
             "libavailability", "libavailability")
+        self.prepare_and_absolute_diff_all_archs(
+            "libavailability_35", "libavailability_35")
 
 
 if __name__ == '__main__':
