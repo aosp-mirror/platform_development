@@ -20,12 +20,12 @@ use anyhow::bail;
 use anyhow::Context;
 use anyhow::Result;
 use log::debug;
-use once_cell::sync::Lazy;
 use regex::Regex;
 use std::collections::BTreeMap;
 use std::env;
 use std::path::Path;
 use std::path::PathBuf;
+use std::sync::LazyLock;
 
 /// Reads the given `cargo.out` and `cargo.metadata` files, and generates a list of crates based on
 /// the rustc invocations.
@@ -189,16 +189,16 @@ impl CargoOut {
             }
 
             // Cargo -v output of a call to rustc.
-            static RUSTC_REGEX: Lazy<Regex> =
-                Lazy::new(|| Regex::new(r"^ +Running `rustc (.*)`$").unwrap());
+            static RUSTC_REGEX: LazyLock<Regex> =
+                LazyLock::new(|| Regex::new(r"^ +Running `(?:/[^\s]*/)?rustc (.*)`$").unwrap());
             if let Some(args) = match1(&RUSTC_REGEX, line) {
                 result.rustc_invocations.push(args);
                 continue;
             }
             // Cargo -vv output of a call to rustc could be split into multiple lines.
             // Assume that the first line will contain some CARGO_* env definition.
-            static RUSTC_VV_REGEX: Lazy<Regex> =
-                Lazy::new(|| Regex::new(r"^ +Running `.*CARGO_.*=.*$").unwrap());
+            static RUSTC_VV_REGEX: LazyLock<Regex> =
+                LazyLock::new(|| Regex::new(r"^ +Running `.*CARGO_.*=.*$").unwrap());
             if RUSTC_VV_REGEX.is_match(line) {
                 // cargo build -vv output can have multiple lines for a rustc command due to
                 // '\n' in strings for environment variables.
@@ -215,8 +215,9 @@ impl CargoOut {
                     break;
                 }
                 // The combined -vv output rustc command line pattern.
-                static RUSTC_VV_CMD_ARGS: Lazy<Regex> =
-                    Lazy::new(|| Regex::new(r"^ *Running `.*CARGO_.*=.* rustc (.*)`$").unwrap());
+                static RUSTC_VV_CMD_ARGS: LazyLock<Regex> = LazyLock::new(|| {
+                    Regex::new(r"^ *Running `.*CARGO_.*=.* (?:/[^\s]*/)?rustc (.*)`$").unwrap()
+                });
                 if let Some(args) = match1(&RUSTC_VV_CMD_ARGS, &line) {
                     result.rustc_invocations.push(args);
                 } else {
@@ -225,8 +226,8 @@ impl CargoOut {
                 continue;
             }
             // Cargo -vv output of a "cc" or "ar" command; all in one line.
-            static CC_AR_VV_REGEX: Lazy<Regex> = Lazy::new(|| {
-                Regex::new(r#"^\[([^ ]*)[^\]]*\] running:? "(cc|ar)" (.*)$"#).unwrap()
+            static CC_AR_VV_REGEX: LazyLock<Regex> = LazyLock::new(|| {
+                Regex::new(r#"^\[([^ ]*)[^\]]*\] running:? "(?:/[^\s]*/)?(cc|ar)" (.*)$"#).unwrap()
             });
             if let Some((pkg, cmd, args)) = match3(&CC_AR_VV_REGEX, line) {
                 match cmd.as_str() {
@@ -237,8 +238,8 @@ impl CargoOut {
                 continue;
             }
             // Rustc output of file location path pattern for a warning message.
-            static WARNING_FILE_REGEX: Lazy<Regex> =
-                Lazy::new(|| Regex::new(r"^ *--> ([^:]*):[0-9]+").unwrap());
+            static WARNING_FILE_REGEX: LazyLock<Regex> =
+                LazyLock::new(|| Regex::new(r"^ *--> ([^:]*):[0-9]+").unwrap());
             if result.warning_lines.contains_key(&n.saturating_sub(1)) {
                 if let Some(fpath) = match1(&WARNING_FILE_REGEX, line) {
                     result.warning_files.push(fpath);
@@ -253,8 +254,8 @@ impl CargoOut {
                 }
                 continue;
             }
-            static CARGO2ANDROID_RUNNING_REGEX: Lazy<Regex> =
-                Lazy::new(|| Regex::new(r"^### Running: .*$").unwrap());
+            static CARGO2ANDROID_RUNNING_REGEX: LazyLock<Regex> =
+                LazyLock::new(|| Regex::new(r"^### Running: .*$").unwrap());
             if CARGO2ANDROID_RUNNING_REGEX.is_match(line) {
                 in_tests = line.contains("cargo test") && line.contains("--list");
                 continue;
@@ -262,10 +263,11 @@ impl CargoOut {
 
             // `cargo test -- --list` output
             // Example: Running unittests src/lib.rs (target.tmp/x86_64-unknown-linux-gnu/debug/deps/aarch64-58b675be7dc09833)
-            static CARGO_TEST_LIST_START_PAT: Lazy<Regex> =
-                Lazy::new(|| Regex::new(r"^\s*Running (?:unittests )?(.*) \(.*/(.*)\)$").unwrap());
-            static CARGO_TEST_LIST_END_PAT: Lazy<Regex> =
-                Lazy::new(|| Regex::new(r"^(\d+) tests?, (\d+) benchmarks$").unwrap());
+            static CARGO_TEST_LIST_START_PAT: LazyLock<Regex> = LazyLock::new(|| {
+                Regex::new(r"^\s*Running (?:unittests )?(.*) \(.*/(.*)\)$").unwrap()
+            });
+            static CARGO_TEST_LIST_END_PAT: LazyLock<Regex> =
+                LazyLock::new(|| Regex::new(r"^(\d+) tests?, (\d+) benchmarks$").unwrap());
             if let Some(captures) = CARGO_TEST_LIST_START_PAT.captures(line) {
                 cur_test_key =
                     Some((captures.get(2).unwrap().as_str(), captures.get(1).unwrap().as_str()));
@@ -328,7 +330,7 @@ impl Crate {
                         let filename = path.split('/').last().unwrap();
 
                         // Example filename: "libgetrandom-fd8800939535fc59.rmeta" or "libmls_rs_uniffi.rlib".
-                        static REGEX: Lazy<Regex> = Lazy::new(|| {
+                        static REGEX: LazyLock<Regex> = LazyLock::new(|| {
                             Regex::new(r"^lib([^-]*)(?:-[0-9a-f]*)?.(rlib|so|rmeta)$").unwrap()
                         });
 
@@ -429,6 +431,8 @@ impl Crate {
                 _ if arg.starts_with("--deny=") => {}
                 _ if arg.starts_with("-W") => {}
                 _ if arg.starts_with("--warn=") => {}
+                _ if arg.starts_with("--allow=deprecated") => {}
+                _ if arg.starts_with("--allow=unexpected_cfgs") => {}
 
                 arg => bail!("unsupported rustc argument: {arg:?}"),
             }

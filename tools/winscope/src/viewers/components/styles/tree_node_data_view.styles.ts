@@ -34,7 +34,6 @@ export const propertyTreeNodeDataViewStyles = `
     .node-property {
         display: flex;
         flex-direction: row;
-        align-items: center;
     }
     .property-key {
         position: relative;

@@ -29,7 +29,7 @@ pub enum RootedPathError {
 }
 
 /// A path relative to a root.
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Debug, PartialEq, Eq, Clone)]
 pub struct RootedPath {
     root: PathBuf,
     path: PathBuf,

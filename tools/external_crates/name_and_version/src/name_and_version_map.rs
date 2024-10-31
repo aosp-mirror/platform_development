@@ -19,7 +19,7 @@ use std::collections::{BTreeMap, HashSet};
 use itertools::Itertools;
 use semver::Version;
 
-use crate::{Error, IsUpgradableTo, NameAndVersion, NamedAndVersioned};
+use crate::{Error, NameAndVersion, NamedAndVersioned};
 
 /// A mapping from crate names and versions to some associated data.
 pub trait NameAndVersionMap {
@@ -48,20 +48,6 @@ pub trait NameAndVersionMap {
         &'a mut self,
         name: &'b str,
     ) -> Box<dyn Iterator<Item = (&'a NameAndVersion, &'a mut Self::Value)> + 'a>;
-    /// Get the highest version in the map that is semver-compatible with
-    /// a given crate and version.
-    fn get_version_upgradable_from<T: NamedAndVersioned + IsUpgradableTo>(
-        &self,
-        other: &T,
-    ) -> Option<&NameAndVersion> {
-        let mut best_version = None;
-        for (nv, _val) in self.get_versions(other.name()) {
-            if other.is_upgradable_to(nv) {
-                best_version.replace(nv);
-            }
-        }
-        best_version
-    }
     /// Returns an iterator over the map, filtered according to a predicate that acts on
     /// all the available versions for a crate.
     fn filter_versions<
@@ -253,12 +239,6 @@ mod tests {
         assert!(test_map.get_mut(&wrong_name).is_none());
         assert!(test_map.get_mut(&wrong_version).is_none());
 
-        assert_eq!(
-            test_map.get_version_upgradable_from(&NameAndVersion::try_from_str("foo", "1.2.2")?),
-            Some(&foo1)
-        );
-
-        // TOOD: Iter
         assert_equal(test_map.keys(), [&bar, &foo1, &foo2]);
 
         assert_equal(test_map.values(), ["bar", "foo v1", "foo v2"]);

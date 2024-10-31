@@ -53,10 +53,7 @@ object SplitShade {
                 lockscreenScene
             }
 
-        return mapOf(
-            Back to previousScreen,
-            Swipe.Up to previousScreen,
-        )
+        return mapOf(Back to previousScreen, Swipe.Up to previousScreen)
     }
 
     object Elements {
@@ -70,7 +67,7 @@ object SplitShade {
 
 @Composable
 fun SceneScope.SplitShade(
-    notificationList: @Composable (SceneScope.() -> Unit),
+    notificationList: @Composable SceneScope.() -> Unit,
     mediaPlayer: @Composable (SceneScope.() -> Unit)?,
     quickSettingsTiles: List<QuickSettingsTileViewModel>,
     nQuickSettingsRows: Int,
@@ -113,7 +110,7 @@ fun SceneScope.SplitShade(
                             tiles = quickSettingsTiles,
                             nRows = nQuickSettingsRows,
                             nColumns = nQuickSettingsColumns,
-                            Modifier.padding(top = QuickSettings.Dimensions.Padding)
+                            Modifier.padding(top = QuickSettings.Dimensions.Padding),
                         )
 
                         if (mediaPlayer != null) {
