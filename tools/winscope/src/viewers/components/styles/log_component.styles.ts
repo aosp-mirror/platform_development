@@ -24,11 +24,6 @@ export const logComponentStyles = `
     padding: 12px;
   }
 
-  .entries .filters {
-    display: flex;
-    flex-direction: row;
-  }
-
   .entries .scroll {
     flex: 1;
   }
@@ -39,20 +34,22 @@ export const logComponentStyles = `
     overflow-wrap: anywhere;
   }
 
-  .filters div,
+  .headers div,
   .entries div {
     padding: 4px;
   }
 
+  .filter {
+    align-content: center;
+  }
+
   .time {
-    flex: 0 1 250px;
+    flex: 1;
+    min-width: 135px;
   }
 
   .go-to-current-time {
-    flex: none;
-    margin-top: 4px;
-    font-size: 12px;
-    height: 65%;
+    height: 100%;
     width: fit-content;
   }
 
@@ -60,14 +57,24 @@ export const logComponentStyles = `
     text-align: center;
   }
 
-  .layer-or-display-id, .transaction-id {
-    flex: none;
-    width: 125px;
+  .right-align {
+    text-align: end;
+    justify-content: end;
+  }
+
+  .layer-or-display-id {
+    flex: 0.75;
+    min-width: 85px;
+  }
+
+  .transaction-id {
+    flex: 1;
+    min-width: 85px;
   }
 
   .vsyncid {
     flex: none;
-    width: 110px;
+    width: 90px;
   }
 
   .pid {
@@ -81,40 +88,32 @@ export const logComponentStyles = `
   }
 
   .transaction-type {
-    width: 200px;
+    flex: 1;
+    min-width: 85px;
   }
 
-  .flags, .flags select-with-filter {
-    flex: 2 0 250px;
-  }
-
-  .filters .flags {
-    margin-right: 16px;
+  .flags {
+    flex: 2;
+    min-width: 100px;
   }
 
   .log-level {
     flex: 1;
+    min-width: 85px;
   }
 
-  .filters .log-level, .filters .log-level select-with-filter {
-    flex: 1;
-  }
-
-  .tag, .tag select-with-filter {
+  .tag {
     flex: 2;
+    min-width: 85px;
   }
 
-  .source-file, .source-file select-with-filter {
+  .source-file {
     flex: 4;
+    min-width: 150px;
   }
 
   .text {
     flex: 10;
-  }
-
-  .filters mat-form-field {
-    width: 80%;
-    font-size: 12px;
   }
 
   .title-section .filters {
@@ -122,7 +121,8 @@ export const logComponentStyles = `
   }
 
   .transition-id {
-    flex: 1;
+    flex: none;
+    width: 40px;
   }
 
   .entries .headers {
@@ -133,30 +133,51 @@ export const logComponentStyles = `
     border-bottom: solid 1px rgba(0, 0, 0, 0.5);
   }
 
-  .transition-type {
-    flex: 2;
+  .header {
+    display: flex;
+    align-items: center;
   }
 
-  .jank_cuj-type {
+  .transition-type {
+    flex: 1;
+    min-width: 100px;
+  }
+
+  .handler {
+    flex: 3;
+    min-width: 70px;
+  }
+
+  .participants {
+    flex: 3;
+    white-space: pre-wrap;
+    min-width: 100px;
+  }
+
+  .jank-cuj-type {
     flex: 5;
   }
 
   .start-time, .end-time, .dispatch-time, .send-time {
-    flex: 4;
+    flex: 2;
+    min-width: 100px;
   }
 
   .duration {
-    flex: 3;
+    flex: none;
+    width: 60px;
   }
 
   .status {
-    flex: 2;
+    flex: none;
+    width: 110px;
   }
 
   .entry .status {
     display: flex;
-    align-items: center;
+    align-items: start;
     gap: 5px;
+    justify-content: end;
   }
 
   .status .mat-icon {
@@ -179,6 +200,7 @@ export const logComponentStyles = `
   }
   .input-display-id {
     flex: 1;
+    min-width: 50px;
   }
   .input-details {
     flex: 4;

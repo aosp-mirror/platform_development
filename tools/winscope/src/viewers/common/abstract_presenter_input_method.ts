@@ -33,6 +33,7 @@ import {
   ProcessedWindowManagerState,
 } from 'viewers/common/ime_utils';
 import {TableProperties} from 'viewers/common/table_properties';
+import {TextFilter, TextFilterValues} from 'viewers/common/text_filter';
 import {UserOptions} from 'viewers/common/user_options';
 import {
   AbstractHierarchyViewerPresenter,
@@ -73,6 +74,13 @@ export abstract class AbstractPresenterInputMethod extends AbstractHierarchyView
       },
       this.storage,
     ),
+    new TextFilter(
+      PersistentStoreProxy.new<TextFilterValues>(
+        'ImeHierarchyFilter',
+        new TextFilterValues('', []),
+        this.storage,
+      ),
+    ),
     [],
     true,
     false,
@@ -94,6 +102,13 @@ export abstract class AbstractPresenterInputMethod extends AbstractHierarchyView
         },
       },
       this.storage,
+    ),
+    new TextFilter(
+      PersistentStoreProxy.new<TextFilterValues>(
+        'ImePropertiesFilter',
+        new TextFilterValues('', []),
+        this.storage,
+      ),
     ),
     [],
   );
@@ -125,6 +140,7 @@ export abstract class AbstractPresenterInputMethod extends AbstractHierarchyView
   }
 
   async onAppEvent(event: WinscopeEvent) {
+    await this.handleCommonWinscopeEvents(event);
     await event.visit(
       WinscopeEventType.TRACE_POSITION_UPDATE,
       async (event) => {
@@ -173,6 +189,14 @@ export abstract class AbstractPresenterInputMethod extends AbstractHierarchyView
             }
           }
         }
+        this.refreshUIData();
+      },
+    );
+    await event.visit(
+      WinscopeEventType.FILTER_PRESET_APPLY_REQUEST,
+      async (event) => {
+        const filterPresetName = event.name;
+        await this.applyPresetConfig(filterPresetName);
         this.refreshUIData();
       },
     );

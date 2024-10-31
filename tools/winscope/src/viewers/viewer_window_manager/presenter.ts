@@ -30,6 +30,7 @@ import {DisplayIdentifier} from 'viewers/common/display_identifier';
 import {HierarchyPresenter} from 'viewers/common/hierarchy_presenter';
 import {PropertiesPresenter} from 'viewers/common/properties_presenter';
 import {RectsPresenter} from 'viewers/common/rects_presenter';
+import {TextFilter, TextFilterValues} from 'viewers/common/text_filter';
 import {UiHierarchyTreeNode} from 'viewers/common/ui_hierarchy_tree_node';
 import {UI_RECT_FACTORY} from 'viewers/common/ui_rect_factory';
 import {UserOptions} from 'viewers/common/user_options';
@@ -70,6 +71,13 @@ export class Presenter extends AbstractHierarchyViewerPresenter<UiData> {
       },
       this.storage,
     ),
+    new TextFilter(
+      PersistentStoreProxy.new<TextFilterValues>(
+        'WmHierarchyFilter',
+        new TextFilterValues('', []),
+        this.storage,
+      ),
+    ),
     Presenter.DENYLIST_PROPERTY_NAMES,
     true,
     false,
@@ -95,6 +103,7 @@ export class Presenter extends AbstractHierarchyViewerPresenter<UiData> {
     ),
     (tree: HierarchyTreeNode) => UI_RECT_FACTORY.makeUiRects(tree),
     this.getDisplays,
+    this.convertRectIdtoContainerName,
   );
   protected override propertiesPresenter = new PropertiesPresenter(
     PersistentStoreProxy.new<UserOptions>(
@@ -117,6 +126,13 @@ export class Presenter extends AbstractHierarchyViewerPresenter<UiData> {
       },
       this.storage,
     ),
+    new TextFilter(
+      PersistentStoreProxy.new<TextFilterValues>(
+        'WmPropertiesFilter',
+        new TextFilterValues('', []),
+        this.storage,
+      ),
+    ),
     Presenter.DENYLIST_PROPERTY_NAMES,
   );
   protected override multiTraceType = undefined;
@@ -131,10 +147,19 @@ export class Presenter extends AbstractHierarchyViewerPresenter<UiData> {
   }
 
   override async onAppEvent(event: WinscopeEvent) {
+    await this.handleCommonWinscopeEvents(event);
     await event.visit(
       WinscopeEventType.TRACE_POSITION_UPDATE,
       async (event) => {
         await this.applyTracePositionUpdate(event);
+        this.refreshUIData();
+      },
+    );
+    await event.visit(
+      WinscopeEventType.FILTER_PRESET_APPLY_REQUEST,
+      async (event) => {
+        const filterPresetName = event.name;
+        await this.applyPresetConfig(filterPresetName);
         this.refreshUIData();
       },
     );
@@ -178,6 +203,11 @@ export class Presenter extends AbstractHierarchyViewerPresenter<UiData> {
       });
     });
     return ids.sort();
+  }
+
+  private convertRectIdtoContainerName(id: string) {
+    const parts = id.split(' ');
+    return parts.slice(2).join(' ');
   }
 
   private refreshUIData() {

@@ -21,41 +21,49 @@ import {TraceBuilder} from 'test/unit/trace_builder';
 import {UnitTestUtils} from 'test/unit/utils';
 import {Parser} from 'trace/parser';
 import {Trace} from 'trace/trace';
+import {TraceType} from 'trace/trace_type';
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
 import {NotifyLogViewCallbackType} from 'viewers/common/abstract_log_viewer_presenter';
 import {AbstractLogViewerPresenterTest} from 'viewers/common/abstract_log_viewer_presenter_test';
-import {
-  LogEntry,
-  LogFieldType,
-  LogFieldValue,
-} from 'viewers/common/ui_data_log';
+import {LogSelectFilter} from 'viewers/common/log_filters';
+import {LogHeader} from 'viewers/common/ui_data_log';
 import {Presenter} from './presenter';
-import {TransactionsEntryType, UiData} from './ui_data';
+import {UiData} from './ui_data';
 
 class PresenterTransactionsTest extends AbstractLogViewerPresenterTest<UiData> {
-  private trace: Trace<PropertyTreeNode> | undefined;
-  private positionUpdate: TracePositionUpdate | undefined;
-  private secondPositionUpdate: TracePositionUpdate | undefined;
-
-  override readonly shouldExecuteHeaderTests = false;
-  override readonly shouldExecuteFilterTests = true;
-  override readonly shouldExecutePropertiesTests = true;
-
-  override readonly totalOutputEntries = 1647;
-  override readonly expectedIndexOfFirstPositionUpdate = 0;
-  override readonly expectedIndexOfSecondPositionUpdate = 13;
-  override readonly expectedInitialFilterOptions = new Map<
-    LogFieldType,
-    string[] | number
-  >([
-    [
-      LogFieldType.PID,
-      ['N/A', '0', '515', '1593', '2022', '2322', '2463', '3300'],
-    ],
-    [LogFieldType.UID, ['N/A', '1000', '1003', '10169', '10235', '10239']],
-    [
-      LogFieldType.TRANSACTION_TYPE,
-      [
+  override readonly expectedHeaders = [
+    {
+      header: new LogHeader(
+        {name: 'TX ID', cssClass: 'transaction-id right-align'},
+        new LogSelectFilter(Array.from({length: 1295}, () => '')),
+      ),
+    },
+    {
+      header: new LogHeader(
+        {name: 'VSYNC ID', cssClass: 'vsyncid right-align'},
+        new LogSelectFilter(Array.from({length: 710}, () => '')),
+      ),
+    },
+    {
+      header: new LogHeader(
+        {name: 'PID', cssClass: 'pid right-align'},
+        new LogSelectFilter(Array.from({length: 8}, () => '')),
+      ),
+      options: ['N/A', '0', '515', '1593', '2022', '2322', '2463', '3300'],
+    },
+    {
+      header: new LogHeader(
+        {name: 'UID', cssClass: 'uid right-align'},
+        new LogSelectFilter(Array.from({length: 6}, () => '')),
+      ),
+      options: ['N/A', '1000', '1003', '10169', '10235', '10239'],
+    },
+    {
+      header: new LogHeader(
+        {name: 'TYPE', cssClass: 'transaction-type'},
+        new LogSelectFilter(Array.from({length: 6}, () => '')),
+      ),
+      options: [
         'DISPLAY_CHANGED',
         'LAYER_ADDED',
         'LAYER_CHANGED',
@@ -63,81 +71,27 @@ class PresenterTransactionsTest extends AbstractLogViewerPresenterTest<UiData> {
         'LAYER_HANDLE_DESTROYED',
         'NO_OP',
       ],
-    ],
-    [LogFieldType.TRANSACTION_ID, 1295],
-    [LogFieldType.LAYER_OR_DISPLAY_ID, 117],
-  ]);
-  override readonly filterValuesToSet = new Map<LogFieldType, string[][]>([
-    [LogFieldType.TRANSACTION_ID, [[], ['2211908157465']]],
-    [LogFieldType.VSYNC_ID, [[], ['1'], ['1', '3', '10']]],
-    [LogFieldType.PID, [[], ['0'], ['0', '515']]],
-    [LogFieldType.UID, [[], ['1000'], ['1000', '1003']]],
-    [
-      LogFieldType.TRANSACTION_TYPE,
-      [
-        [],
-        [TransactionsEntryType.LAYER_ADDED],
-        [
-          TransactionsEntryType.LAYER_ADDED,
-          TransactionsEntryType.LAYER_DESTROYED,
-        ],
-      ],
-    ],
-    [LogFieldType.LAYER_OR_DISPLAY_ID, [[], ['1'], ['1', '3']]],
-    [LogFieldType.FLAGS, [[], ['Crop'], ['STRING_WITH_NO_MATCHES']]],
-  ]);
-  override readonly expectedFieldValuesAfterFilter = new Map<
-    LogFieldType,
-    Array<LogFieldValue[] | number>
-  >([
-    [LogFieldType.TRANSACTION_ID, [this.totalOutputEntries, ['2211908157465']]],
-    [LogFieldType.VSYNC_ID, [this.totalOutputEntries, [1], [1, 3, 10]]],
-    [
-      LogFieldType.PID,
-      [
-        ['N/A', '0', '515', '1593', '2022', '2322', '2463', '3300'],
-        ['0'],
-        ['0', '515'],
-      ],
-    ],
-    [
-      LogFieldType.UID,
-      [
-        ['N/A', '1000', '1003', '10169', '10235', '10239'],
-        ['1000'],
-        ['1000', '1003'],
-      ],
-    ],
-    [
-      LogFieldType.TRANSACTION_TYPE,
-      [
-        [
-          TransactionsEntryType.DISPLAY_CHANGED,
-          TransactionsEntryType.LAYER_ADDED,
-          TransactionsEntryType.LAYER_CHANGED,
-          TransactionsEntryType.LAYER_DESTROYED,
-          TransactionsEntryType.LAYER_HANDLE_DESTROYED,
-          TransactionsEntryType.NO_OP,
-        ],
-        [TransactionsEntryType.LAYER_ADDED],
-        [
-          TransactionsEntryType.LAYER_ADDED,
-          TransactionsEntryType.LAYER_DESTROYED,
-        ],
-      ],
-    ],
-    [
-      LogFieldType.LAYER_OR_DISPLAY_ID,
-      [this.totalOutputEntries, ['1'], ['1', '3']],
-    ],
-    [LogFieldType.FLAGS, [this.totalOutputEntries, 980, 0]],
-  ]);
-  override readonly logEntryClickIndex = 10;
-  override readonly filterNameForCurrentIndexTest = LogFieldType.PID;
-  override readonly filterChangeForCurrentIndexTest = ['0'];
-  override readonly secondFilterChangeForCurrentIndexTest = ['0', '515'];
-  override readonly expectedCurrentIndexAfterFilterChange = 10;
-  override readonly expectedCurrentIndexAfterSecondFilterChange = 11;
+    },
+    {
+      header: new LogHeader(
+        {name: 'LAYER/DISP ID', cssClass: 'layer-or-display-id right-align'},
+        new LogSelectFilter(Array.from({length: 117}, () => '')),
+      ),
+    },
+    {
+      header: new LogHeader(
+        {name: 'Flags', cssClass: 'flags'},
+        new LogSelectFilter(
+          Array.from({length: 30}, () => ''),
+          true,
+          '250',
+          '100%',
+        ),
+      ),
+    },
+  ];
+  private trace: Trace<PropertyTreeNode> | undefined;
+  private positionUpdate: TracePositionUpdate | undefined;
 
   override executeSpecializedTests() {
     describe('Specialized tests', () => {
@@ -149,37 +103,56 @@ class PresenterTransactionsTest extends AbstractLogViewerPresenterTest<UiData> {
       });
 
       beforeEach(async () => {
-        const notifyViewCallback = (newData: UiData) => {
+        presenter = await this.createPresenter((newData: UiData) => {
           uiData = newData;
-        };
-        presenter = await this.createPresenter(notifyViewCallback);
+        });
       });
 
-      it('includes no op transitions', async () => {
-        await presenter.onFilterChange(
-          LogFieldType.TRANSACTION_TYPE,
-          [TransactionsEntryType.NO_OP],
-          [],
-        );
-        const fieldValues = assertDefined(uiData).entries.map((entry) =>
-          getFieldValue(entry, LogFieldType.TRANSACTION_TYPE),
-        );
-        expect(new Set(fieldValues)).toEqual(
-          new Set([TransactionsEntryType.NO_OP]),
-        );
+      it('keeps properties related to what has changed regardless of hide defaults', async () => {
+        await presenter.onAppEvent(this.getPositionUpdate());
+        await presenter.onLogEntryClick(10);
+        expect(
+          assertDefined(uiData.propertiesTree).getAllChildren().length,
+        ).toEqual(8);
+        expect(
+          uiData.propertiesTree?.getChildByName('transformToDisplayInverse'),
+        ).toBeDefined();
+        expect(
+          uiData.propertiesTree?.getChildByName('destinationFrame'),
+        ).toBeDefined();
+        expect(
+          uiData.propertiesTree?.getChildByName('autoRefresh'),
+        ).toBeDefined();
 
-        for (const entry of assertDefined(uiData).entries) {
-          expect(
-            getFieldValue(entry, LogFieldType.LAYER_OR_DISPLAY_ID),
-          ).toEqual('');
-          expect(getFieldValue(entry, LogFieldType.FLAGS)).toEqual('');
-          expect(entry.propertiesTree).toEqual(undefined);
-        }
+        await presenter.onLogEntryClick(279);
+        expect(uiData.propertiesTree?.getChildByName('flags')).toBeDefined();
+        expect(uiData.propertiesTree?.getChildByName('parentId')).toBeDefined();
+        expect(
+          uiData.propertiesTree?.getChildByName('relativeParentId'),
+        ).toBeDefined();
+        expect(
+          uiData.propertiesTree?.getChildByName('transformToDisplayInverse'),
+        ).toBeUndefined();
+        expect(
+          uiData.propertiesTree?.getChildByName('destinationFrame'),
+        ).toBeUndefined();
+        expect(
+          uiData.propertiesTree?.getChildByName('autoRefresh'),
+        ).toBeUndefined();
+
+        await presenter.onLogEntryClick(584);
+        expect(uiData.propertiesTree?.getChildByName('flags')).toBeDefined();
+        expect(uiData.propertiesTree?.getChildByName('layerId')).toBeDefined();
+        expect(uiData.propertiesTree?.getChildByName('x')).toBeDefined();
+        expect(uiData.propertiesTree?.getChildByName('y')).toBeDefined();
+        expect(uiData.propertiesTree?.getChildByName('z')).toBeDefined();
+        expect(
+          uiData.propertiesTree?.getChildByName('parentId'),
+        ).toBeUndefined();
+        expect(
+          uiData.propertiesTree?.getChildByName('relativeParentId'),
+        ).toBeUndefined();
       });
-
-      function getFieldValue(entry: LogEntry, logFieldName: LogFieldType) {
-        return entry.fields.find((f) => f.type === logFieldName)?.value;
-      }
     });
   }
 
@@ -187,19 +160,20 @@ class PresenterTransactionsTest extends AbstractLogViewerPresenterTest<UiData> {
     const parser = (await UnitTestUtils.getParser(
       'traces/elapsed_and_real_timestamp/Transactions.pb',
     )) as Parser<PropertyTreeNode>;
-    this.trace = new TraceBuilder<PropertyTreeNode>().setParser(parser).build();
+    this.trace = new TraceBuilder<PropertyTreeNode>()
+      .setType(TraceType.TRANSACTIONS)
+      .setParser(parser)
+      .build();
     this.positionUpdate = TracePositionUpdate.fromTraceEntry(
       this.trace.getEntry(0),
     );
-    this.secondPositionUpdate = TracePositionUpdate.fromTraceEntry(
-      this.trace.getEntry(10),
-    );
   }
 
-  override createPresenterWithEmptyTrace(
+  override async createPresenterWithEmptyTrace(
     callback: NotifyLogViewCallbackType<UiData>,
-  ): Presenter {
+  ): Promise<Presenter> {
     const emptyTrace = new TraceBuilder<PropertyTreeNode>()
+      .setType(TraceType.TRANSACTIONS)
       .setEntries([])
       .build();
     return new Presenter(emptyTrace, new InMemoryStorage(), callback);
@@ -219,10 +193,6 @@ class PresenterTransactionsTest extends AbstractLogViewerPresenterTest<UiData> {
 
   override getPositionUpdate(): TracePositionUpdate {
     return assertDefined(this.positionUpdate);
-  }
-
-  override getSecondPositionUpdate(): TracePositionUpdate {
-    return assertDefined(this.secondPositionUpdate);
   }
 }
 

@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import {TextFilter} from 'viewers/common/text_filter';
 import {UiHierarchyTreeNode} from 'viewers/common/ui_hierarchy_tree_node';
 import {UserOptions} from 'viewers/common/user_options';
 import {UiRect} from 'viewers/components/rects/ui_rect';
@@ -29,6 +30,9 @@ export interface UiDataHierarchy {
   propertiesUserOptions: UserOptions;
   propertiesTree: UiPropertyTreeNode | undefined;
   highlightedProperty: string;
+  hierarchyFilter: TextFilter;
+  propertiesFilter: TextFilter;
+  isDarkMode?: boolean;
   rectsToDraw?: UiRect[];
   rectIdToShowState?: Map<string, RectShowState> | undefined;
   displays?: DisplayIdentifier[];

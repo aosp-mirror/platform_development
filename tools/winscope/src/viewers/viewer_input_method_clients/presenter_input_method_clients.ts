@@ -26,6 +26,7 @@ import {HierarchyPresenter} from 'viewers/common/hierarchy_presenter';
 import {ImeUiData} from 'viewers/common/ime_ui_data';
 import {UpdateSfSubtreeDisplayNames} from 'viewers/common/operations/update_sf_subtree_display_names';
 import {TableProperties} from 'viewers/common/table_properties';
+import {TextFilter, TextFilterValues} from 'viewers/common/text_filter';
 import {UserOptions} from 'viewers/common/user_options';
 import {UpdateDisplayNames} from './operations/update_display_names';
 
@@ -49,6 +50,13 @@ export class PresenterInputMethodClients extends AbstractPresenterInputMethod {
         },
       },
       this.storage,
+    ),
+    new TextFilter(
+      PersistentStoreProxy.new<TextFilterValues>(
+        'ImeHierarchyFilter',
+        new TextFilterValues('', []),
+        this.storage,
+      ),
     ),
     [],
     true,

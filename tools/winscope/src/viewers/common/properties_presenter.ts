@@ -14,11 +14,11 @@
  * limitations under the License.
  */
 
-import {FilterFlag} from 'common/filter_flag';
 import {HierarchyTreeNode} from 'trace/tree_node/hierarchy_tree_node';
 import {Operation} from 'trace/tree_node/operations/operation';
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
 import {TreeNode} from 'trace/tree_node/tree_node';
+import {TextFilter} from 'viewers/common/text_filter';
 import {IsModifiedCallbackType} from './add_diffs';
 import {AddDiffsPropertiesTree} from './add_diffs_properties_tree';
 import {Filter} from './operations/filter';
@@ -28,19 +28,24 @@ import {TreeNodeFilter, UiTreeUtils} from './ui_tree_utils';
 import {UserOptions} from './user_options';
 
 export class PropertiesPresenter {
-  private propertiesFilter: TreeNodeFilter = UiTreeUtils.makeNodeFilter('');
+  private propertiesFilter: TreeNodeFilter;
   private highlightedProperty = '';
   private propertiesTree: PropertyTreeNode | undefined;
   private formattedTree: UiPropertyTreeNode | undefined;
 
   constructor(
     private userOptions: UserOptions,
+    private textFilter: TextFilter,
     private propertiesDenylist: string[],
     private customOperations?: Array<Operation<UiPropertyTreeNode>>,
     private defaultAllowlist: string[] = [],
-  ) {}
+  ) {
+    this.propertiesFilter = UiTreeUtils.makeNodeFilter(
+      this.textFilter.getFilterPredicate(),
+    );
+  }
 
-  getUserOptions() {
+  getUserOptions(): UserOptions {
     return this.userOptions;
   }
 
@@ -48,15 +53,15 @@ export class PropertiesPresenter {
     this.propertiesTree = tree;
   }
 
-  getPropertiesTree() {
+  getPropertiesTree(): PropertyTreeNode | undefined {
     return this.propertiesTree;
   }
 
-  getFormattedTree() {
+  getFormattedTree(): UiPropertyTreeNode | undefined {
     return this.formattedTree;
   }
 
-  getHighlightedProperty() {
+  getHighlightedProperty(): string {
     return this.highlightedProperty;
   }
 
@@ -68,12 +73,23 @@ export class PropertiesPresenter {
     }
   }
 
-  applyPropertiesFilterChange(filterString: string, flags: FilterFlag[]) {
-    this.propertiesFilter = UiTreeUtils.makeNodeFilter(filterString, flags);
+  getTextFilter(): TextFilter | undefined {
+    return this.textFilter;
+  }
+
+  applyPropertiesFilterChange(textFilter: TextFilter) {
+    this.textFilter = textFilter;
+    this.propertiesFilter = UiTreeUtils.makeNodeFilter(
+      textFilter.getFilterPredicate(),
+    );
   }
 
   applyPropertiesUserOptionsChange(userOptions: UserOptions) {
     this.userOptions = userOptions;
+  }
+
+  updateDefaultAllowList(value: string[]) {
+    this.defaultAllowlist = value;
   }
 
   async formatPropertiesTree(

@@ -16,7 +16,7 @@
 import {Component, Input, ViewChild} from '@angular/core';
 import {PersistentStore} from 'common/persistent_store';
 import {TraceType} from 'trace/trace_type';
-import {LogComponent} from 'viewers/common/log_component';
+import {LogComponent} from 'viewers/components/log_component';
 import {viewerCardStyle} from 'viewers/components/styles/viewer_card.styles';
 import {UiData} from './ui_data';
 
@@ -30,9 +30,8 @@ import {UiData} from './ui_data';
         [scrollToIndex]="inputData?.scrollToIndex"
         [currentIndex]="inputData?.currentIndex"
         [entries]="inputData?.entries"
-        [filters]="inputData?.filters"
-        [traceType]="${TraceType.PROTO_LOG}"
-        [store]="store">
+        [headers]="inputData?.headers"
+        [traceType]="${TraceType.PROTO_LOG}">
       </log-view>
     </div>
   `,

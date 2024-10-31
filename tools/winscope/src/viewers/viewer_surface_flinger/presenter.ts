@@ -49,6 +49,7 @@ import {DisplayIdentifier} from 'viewers/common/display_identifier';
 import {HierarchyPresenter} from 'viewers/common/hierarchy_presenter';
 import {PropertiesPresenter} from 'viewers/common/properties_presenter';
 import {RectsPresenter} from 'viewers/common/rects_presenter';
+import {TextFilter, TextFilterValues} from 'viewers/common/text_filter';
 import {UiHierarchyTreeNode} from 'viewers/common/ui_hierarchy_tree_node';
 import {UI_RECT_FACTORY} from 'viewers/common/ui_rect_factory';
 import {UserOptions} from 'viewers/common/user_options';
@@ -88,6 +89,13 @@ export class Presenter extends AbstractHierarchyViewerPresenter<UiData> {
       },
       this.storage,
     ),
+    new TextFilter(
+      PersistentStoreProxy.new<TextFilterValues>(
+        'SfHierarchyFilter',
+        new TextFilterValues('', []),
+        this.storage,
+      ),
+    ),
     Presenter.DENYLIST_PROPERTY_NAMES,
     true,
     false,
@@ -114,6 +122,7 @@ export class Presenter extends AbstractHierarchyViewerPresenter<UiData> {
       UI_RECT_FACTORY.makeUiRects(tree, this.viewCapturePackageNames),
     (displays: UiRect[]) =>
       makeDisplayIdentifiers(displays, this.wmFocusedDisplayId),
+    convertRectIdToLayerorDisplayName,
   );
   protected override propertiesPresenter = new PropertiesPresenter(
     PersistentStoreProxy.new<UserOptions>(
@@ -135,6 +144,13 @@ export class Presenter extends AbstractHierarchyViewerPresenter<UiData> {
         },
       },
       this.storage,
+    ),
+    new TextFilter(
+      PersistentStoreProxy.new<TextFilterValues>(
+        'SfPropertiesFilter',
+        new TextFilterValues('', []),
+        this.storage,
+      ),
     ),
     Presenter.DENYLIST_PROPERTY_NAMES,
     undefined,
@@ -173,12 +189,22 @@ export class Presenter extends AbstractHierarchyViewerPresenter<UiData> {
   }
 
   override async onAppEvent(event: WinscopeEvent) {
+    await this.handleCommonWinscopeEvents(event);
     await event.visit(
       WinscopeEventType.TRACE_POSITION_UPDATE,
       async (event) => {
         await this.initializeIfNeeded();
         await this.setInitialWmActiveDisplay(event);
         await this.applyTracePositionUpdate(event);
+        this.updateCuratedProperties();
+        this.refreshUIData();
+      },
+    );
+    await event.visit(
+      WinscopeEventType.FILTER_PRESET_APPLY_REQUEST,
+      async (event) => {
+        const filterPresetName = event.name;
+        await this.applyPresetConfig(filterPresetName);
         this.updateCuratedProperties();
         this.refreshUIData();
       },
@@ -277,7 +303,9 @@ export class Presenter extends AbstractHierarchyViewerPresenter<UiData> {
       zOrderRelativeOfNode.setFormatter(
         new FixedStringFormatter(assertDefined(hTree.getZParent()).id),
       );
-      relativeParent = this.getLayerSummary(zOrderRelativeOfNode);
+      relativeParent = this.getLayerSummary(
+        zOrderRelativeOfNode.formattedValue(),
+      );
     }
 
     const curated: SfCuratedProperties = {
@@ -303,10 +331,8 @@ export class Presenter extends AbstractHierarchyViewerPresenter<UiData> {
       z: assertDefined(pTree.getChildByName('z')).formattedValue(),
       relativeParent,
       relativeChildren:
-        pTree
-          .getChildByName('relZChildren')
-          ?.getAllChildren()
-          .map((c) => this.getLayerSummary(c)) ?? [],
+        hTree.getRelativeChildren().map((c) => this.getLayerSummary(c.id)) ??
+        [],
       calcColor: this.getColorPropertyValue(pTree, 'color'),
       calcShadowRadius: this.getPixelPropertyValue(pTree, 'shadowRadius'),
       calcCornerRadius: this.getPixelPropertyValue(pTree, 'cornerRadius'),
@@ -363,7 +389,9 @@ export class Presenter extends AbstractHierarchyViewerPresenter<UiData> {
     if (occludedBy && occludedBy.length > 0) {
       summary.push({
         key: 'Occluded by',
-        layerValues: occludedBy.map((layer) => this.getLayerSummary(layer)),
+        layerValues: occludedBy.map((layer) =>
+          this.getLayerSummary(layer.formattedValue()),
+        ),
         desc: 'Fully occluded by these opaque layers',
       });
     }
@@ -375,7 +403,7 @@ export class Presenter extends AbstractHierarchyViewerPresenter<UiData> {
       summary.push({
         key: 'Partially occluded by',
         layerValues: partiallyOccludedBy.map((layer) =>
-          this.getLayerSummary(layer),
+          this.getLayerSummary(layer.formattedValue()),
         ),
         desc: 'Partially occluded by these opaque layers',
       });
@@ -385,7 +413,9 @@ export class Presenter extends AbstractHierarchyViewerPresenter<UiData> {
     if (coveredBy && coveredBy.length > 0) {
       summary.push({
         key: 'Covered by',
-        layerValues: coveredBy.map((layer) => this.getLayerSummary(layer)),
+        layerValues: coveredBy.map((layer) =>
+          this.getLayerSummary(layer.formattedValue()),
+        ),
         desc: 'Partially or fully covered by these likely translucent layers',
       });
     }
@@ -396,8 +426,7 @@ export class Presenter extends AbstractHierarchyViewerPresenter<UiData> {
     return nodes.map((reason) => reason.formattedValue()).join(', ');
   }
 
-  private getLayerSummary(layer: PropertyTreeNode): SfLayerSummary {
-    const nodeId = layer.formattedValue();
+  private getLayerSummary(nodeId: string): SfLayerSummary {
     const parts = nodeId.split(' ');
     return {
       layerId: parts[0],
@@ -483,4 +512,13 @@ export function makeDisplayIdentifiers(
   });
 
   return ids;
+}
+
+export function convertRectIdToLayerorDisplayName(id: string) {
+  if (id.startsWith('Display')) return id.split('-').slice(1).join('-').trim();
+  const idMinusStartLayerId = id.split(' ').slice(1).join(' ');
+  const idSplittingEndLayerId = idMinusStartLayerId.split('#');
+  return idSplittingEndLayerId
+    .slice(0, idSplittingEndLayerId.length - 1)
+    .join('#');
 }

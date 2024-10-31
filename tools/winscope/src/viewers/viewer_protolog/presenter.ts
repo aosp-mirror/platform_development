@@ -15,72 +15,68 @@
  */
 
 import {assertDefined} from 'common/assert_utils';
+import {PersistentStoreProxy} from 'common/persistent_store_proxy';
+import {Store} from 'common/store';
 import {Trace} from 'trace/trace';
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
 import {
   AbstractLogViewerPresenter,
   NotifyLogViewCallbackType,
 } from 'viewers/common/abstract_log_viewer_presenter';
+import {LogSelectFilter, LogTextFilter} from 'viewers/common/log_filters';
 import {LogPresenter} from 'viewers/common/log_presenter';
-import {
-  LogEntry,
-  LogField,
-  LogFieldType,
-  LogFilter,
-} from 'viewers/common/ui_data_log';
+import {TextFilter, TextFilterValues} from 'viewers/common/text_filter';
+import {LogEntry, LogField, LogHeader} from 'viewers/common/ui_data_log';
 import {ProtologEntry, UiData} from './ui_data';
 
 export class Presenter extends AbstractLogViewerPresenter<UiData> {
-  static readonly FIELD_TYPES = [
-    LogFieldType.LOG_LEVEL,
-    LogFieldType.TAG,
-    LogFieldType.SOURCE_FILE,
-    LogFieldType.TEXT,
-  ];
-  private isInitialized = false;
-
+  private static readonly COLUMNS = {
+    logLevel: {
+      name: 'Log Level',
+      cssClass: 'log-level',
+    },
+    tag: {
+      name: 'Tag',
+      cssClass: 'tag',
+    },
+    sourceFile: {
+      name: 'Source files',
+      cssClass: 'source-file',
+    },
+    text: {
+      name: 'Search text',
+      cssClass: 'text',
+    },
+  };
   protected override logPresenter = new LogPresenter<LogEntry>();
 
   constructor(
     trace: Trace<PropertyTreeNode>,
     notifyViewCallback: NotifyLogViewCallbackType<UiData>,
+    private storage: Store,
   ) {
     super(trace, notifyViewCallback, UiData.createEmpty());
   }
 
-  protected override async initializeIfNeeded() {
-    if (this.isInitialized) {
-      return;
-    }
-    const allEntries = await this.makeAllUiDataMessages();
-    const filters: LogFilter[] = [];
-
-    for (const type of Presenter.FIELD_TYPES) {
-      if (type === LogFieldType.TEXT) {
-        filters.push({
-          type,
-        });
-      } else {
-        filters.push({
-          type,
-          options: this.getUniqueMessageValues(
-            allEntries,
-            (entry: ProtologEntry) =>
-              assertDefined(
-                entry.fields.find((f) => f.type === type),
-              ).value.toString(),
-          ),
-        });
-      }
-    }
-
-    this.logPresenter.setAllEntries(allEntries);
-    this.logPresenter.setFilters(filters);
-    this.refreshUiData();
-    this.isInitialized = true;
+  protected override makeHeaders(): LogHeader[] {
+    return [
+      new LogHeader(Presenter.COLUMNS.logLevel, new LogSelectFilter([])),
+      new LogHeader(
+        Presenter.COLUMNS.tag,
+        new LogSelectFilter([], false, '150'),
+      ),
+      new LogHeader(
+        Presenter.COLUMNS.sourceFile,
+        new LogSelectFilter([], false, '300'),
+      ),
+      new LogHeader(
+        Presenter.COLUMNS.text,
+        new LogTextFilter(new TextFilter()),
+      ),
+    ];
   }
 
-  private async makeAllUiDataMessages(): Promise<ProtologEntry[]> {
+  protected override async makeUiDataEntries(): Promise<ProtologEntry[]> {
     const messages: ProtologEntry[] = [];
 
     for (
@@ -92,25 +88,25 @@ export class Presenter extends AbstractLogViewerPresenter<UiData> {
       const messageNode = await entry.getValue();
       const fields: LogField[] = [
         {
-          type: LogFieldType.LOG_LEVEL,
+          spec: Presenter.COLUMNS.logLevel,
           value: assertDefined(
             messageNode.getChildByName('level'),
           ).formattedValue(),
         },
         {
-          type: LogFieldType.TAG,
+          spec: Presenter.COLUMNS.tag,
           value: assertDefined(
             messageNode.getChildByName('tag'),
           ).formattedValue(),
         },
         {
-          type: LogFieldType.SOURCE_FILE,
+          spec: Presenter.COLUMNS.sourceFile,
           value: assertDefined(
             messageNode.getChildByName('at'),
           ).formattedValue(),
         },
         {
-          type: LogFieldType.TEXT,
+          spec: Presenter.COLUMNS.text,
           value: assertDefined(
             messageNode.getChildByName('text'),
           ).formattedValue(),
@@ -120,6 +116,31 @@ export class Presenter extends AbstractLogViewerPresenter<UiData> {
     }
 
     return messages;
+  }
+
+  protected override updateFiltersInHeaders(
+    headers: LogHeader[],
+    allEntries: ProtologEntry[],
+  ) {
+    for (const header of headers) {
+      if (header.filter instanceof LogTextFilter) {
+        header.filter.textFilter = new TextFilter(
+          PersistentStoreProxy.new<TextFilterValues>(
+            'ProtoLog' + header.spec.name,
+            new TextFilterValues('', []),
+            this.storage,
+          ),
+        );
+      } else if (header.filter instanceof LogSelectFilter) {
+        assertDefined(header.filter).options = this.getUniqueMessageValues(
+          allEntries,
+          (entry: ProtologEntry) =>
+            assertDefined(
+              entry.fields.find((f) => f.spec === header.spec),
+            ).value.toString(),
+        );
+      }
+    }
   }
 
   private getUniqueMessageValues(

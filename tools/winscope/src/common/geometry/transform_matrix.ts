@@ -69,11 +69,7 @@ export class TransformMatrix {
 
   transformPoint3D(point: Point3D): Point3D {
     const p = this.transformPoint(point);
-    return {
-      x: p.x,
-      y: p.y,
-      z: point.z,
-    };
+    return new Point3D(p.x, p.y, point.z);
   }
 
   transformRect(r: Rect): Rect {
@@ -120,6 +116,17 @@ export class TransformMatrix {
       this.dtdy,
       this.dsdy,
       this.ty + ty,
+    );
+  }
+
+  isEqual(other: TransformMatrix): boolean {
+    return (
+      this.dsdx === other.dsdx &&
+      this.dtdx === other.dtdx &&
+      this.tx === other.tx &&
+      this.dtdy === other.dtdy &&
+      this.dsdy === other.dsdy &&
+      this.ty === other.ty
     );
   }
 

@@ -12,11 +12,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+//! A path relative to a root. Useful for paths relative to an Android repo, for example.
+
 use core::fmt::Display;
 use std::path::{Path, PathBuf};
 
 use thiserror::Error;
 
+#[allow(missing_docs)]
 #[derive(Error, Debug)]
 pub enum RootedPathError {
     #[error("Root path is not absolute: {}", .0.display())]
@@ -25,13 +28,15 @@ pub enum RootedPathError {
     PathNotRelative(PathBuf),
 }
 
-#[derive(Debug, PartialEq, Eq)]
+/// A path relative to a root.
+#[derive(Debug, PartialEq, Eq, Clone)]
 pub struct RootedPath {
     root: PathBuf,
     path: PathBuf,
 }
 
 impl RootedPath {
+    /// Creates a new RootedPath from an absolute root and a path relative to the root.
     pub fn new<P: Into<PathBuf>>(
         root: P,
         path: impl AsRef<Path>,
@@ -47,15 +52,19 @@ impl RootedPath {
         let path = root.join(path);
         Ok(RootedPath { root, path })
     }
+    /// Returns the root.
     pub fn root(&self) -> &Path {
         self.root.as_path()
     }
+    /// Returns the path relative to the root.
     pub fn rel(&self) -> &Path {
         self.path.strip_prefix(&self.root).unwrap()
     }
+    /// Returns the absolute path.
     pub fn abs(&self) -> &Path {
         self.path.as_path()
     }
+    /// Creates a new RootedPath with path adjoined to self.
     pub fn join(&self, path: impl AsRef<Path>) -> Result<RootedPath, RootedPathError> {
         let path = path.as_ref();
         if !path.is_relative() {
@@ -63,6 +72,7 @@ impl RootedPath {
         }
         Ok(RootedPath { root: self.root.clone(), path: self.path.join(path) })
     }
+    /// Creates a new RootedPath with the same root but a new relative directory.
     pub fn with_same_root(&self, path: impl AsRef<Path>) -> Result<RootedPath, RootedPathError> {
         RootedPath::new(self.root.clone(), path)
     }
@@ -80,9 +90,9 @@ impl AsRef<Path> for RootedPath {
     }
 }
 
-impl Into<PathBuf> for RootedPath {
-    fn into(self) -> PathBuf {
-        self.path
+impl From<RootedPath> for PathBuf {
+    fn from(val: RootedPath) -> Self {
+        val.path
     }
 }
 
@@ -113,7 +123,7 @@ mod tests {
 
     #[test]
     fn test_conversion() -> Result<(), RootedPathError> {
-        let p = RootedPath::new(&"/foo", &"bar")?;
+        let p = RootedPath::new("/foo", "bar")?;
 
         let path = p.as_ref();
         assert_eq!(path, Path::new("/foo/bar"));

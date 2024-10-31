@@ -106,13 +106,17 @@ while [[ "$1" =~ ^- ]]; do
   esac
 done
 
-IN_GIT_WORKTREE=false
+TRUST_EXIT_CODE=false
 if git rev-parse >/dev/null 2>/dev/null; then
-  IN_GIT_WORKTREE=true
+  case "$MERGETOOL" in
+    bc* | vim*)
+      TRUST_EXIT_CODE=true
+      ;;
+  esac
 fi
 
 readonly MERGETOOL
-readonly IN_GIT_WORKTREE
+readonly TRUST_EXIT_CODE
 
 FILES_UNFILTERED=()
 if [[ "${#}" -eq 0 ]]; then
@@ -140,16 +144,22 @@ printf '    %s\n' "${FILES[@]}"
 for file in "${FILES[@]}"; do
   echo
   echo "Merging '${file}'"
+
   mergetool "$file"
   exit_code="$?"
-  if [[ "$exit_code" -eq 0 ]]; then
-    if $IN_GIT_WORKTREE && [[ -n "$(git ls-files "$file")" ]]; then
+  if [[ "$exit_code" -ne 0 ]]; then
+    echo "Failed to merge '${file}'"
+  fi
+
+  if $TRUST_EXIT_CODE && [[ "$exit_code" -eq 0 ]]; then
+    if [[ -n "$(git ls-files "$file")" ]]; then
       xtrace git add "$file"
     fi
-  else
-    echo "Failed to merge '${file}'"
+    continue
   fi
   read -r -p "Continue merging other files? [Y/n]" -n 1 yn || exit
   echo
   [[ "$yn" == [nNqQ] ]] && exit "$exit_code"
 done
+
+exit 0

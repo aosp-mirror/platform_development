@@ -15,7 +15,6 @@
  */
 
 import {assertDefined} from 'common/assert_utils';
-import {FilterFlag} from 'common/filter_flag';
 import {Trace, TraceEntry} from 'trace/trace';
 import {TraceType} from 'trace/trace_type';
 import {HierarchyTreeNode} from 'trace/tree_node/hierarchy_tree_node';
@@ -26,6 +25,7 @@ import {
 } from 'trace/tree_node/property_tree_node';
 import {TreeNode} from 'trace/tree_node/tree_node';
 import {IsModifiedCallbackType} from 'viewers/common/add_diffs';
+import {TextFilter} from 'viewers/common/text_filter';
 import {UiHierarchyTreeNode} from 'viewers/common/ui_hierarchy_tree_node';
 import {TreeNodeFilter, UiTreeUtils} from 'viewers/common/ui_tree_utils';
 import {UserOptions} from 'viewers/common/user_options';
@@ -44,7 +44,7 @@ export type GetHierarchyTreeNameType = (
 ) => string;
 
 export class HierarchyPresenter {
-  private hierarchyFilter: TreeNodeFilter = UiTreeUtils.makeNodeFilter('');
+  private hierarchyFilter: TreeNodeFilter;
   private pinnedItems: UiHierarchyTreeNode[] = [];
   private pinnedIds: string[] = [];
 
@@ -75,6 +75,7 @@ export class HierarchyPresenter {
 
   constructor(
     private userOptions: UserOptions,
+    private textFilter: TextFilter,
     private denylistProperties: string[],
     private showHeadings: boolean,
     private forceSelectFirstNode: boolean,
@@ -82,7 +83,11 @@ export class HierarchyPresenter {
     private customOperations?: Array<
       [TraceType, Array<Operation<UiHierarchyTreeNode>>]
     >,
-  ) {}
+  ) {
+    this.hierarchyFilter = UiTreeUtils.makeNodeFilter(
+      textFilter.getFilterPredicate(),
+    );
+  }
 
   getUserOptions(): UserOptions {
     return this.userOptions;
@@ -322,12 +327,19 @@ export class HierarchyPresenter {
       );
   }
 
-  async applyHierarchyFilterChange(filterString: string, flags: FilterFlag[]) {
-    this.hierarchyFilter = UiTreeUtils.makeNodeFilter(filterString, flags);
+  async applyHierarchyFilterChange(textFilter: TextFilter) {
+    this.textFilter = textFilter;
+    this.hierarchyFilter = UiTreeUtils.makeNodeFilter(
+      textFilter.getFilterPredicate(),
+    );
     this.currentFormattedTrees =
       await this.formatHierarchyTreesAndUpdatePinnedItems(
         this.currentHierarchyTrees,
       );
+  }
+
+  getTextFilter(): TextFilter {
+    return this.textFilter;
   }
 
   applyPinnedItemChange(pinnedItem: UiHierarchyTreeNode) {

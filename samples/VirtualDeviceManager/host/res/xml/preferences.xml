@@ -88,6 +88,12 @@
             android:summary="Use a custom home activity instead of the default one on home displays"
             android:defaultValue="false"
             app:iconSpaceReserved="false" />
+        <SwitchPreferenceCompat
+            android:key="@string/pref_enable_custom_status_bar"
+            android:title="Custom status bar"
+            android:summary="Show a custom status bar on the remote displays."
+            android:defaultValue="false"
+            app:iconSpaceReserved="false" />
     </PreferenceCategory>
 
     <PreferenceCategory

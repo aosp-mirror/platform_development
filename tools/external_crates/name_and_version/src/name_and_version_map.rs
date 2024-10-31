@@ -12,44 +12,44 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+//! A mapping from crate names and versions to some associated data.
+
 use std::collections::{BTreeMap, HashSet};
 
 use itertools::Itertools;
 use semver::Version;
 
-use crate::{Error, IsUpgradableTo, NameAndVersion, NamedAndVersioned};
+use crate::{Error, NameAndVersion, NamedAndVersioned};
 
+/// A mapping from crate names and versions to some associated data.
 pub trait NameAndVersionMap {
+    /// The data associated with each crate name and version.
     type Value;
 
+    /// Returns a reference to the map field.
     fn map_field(&self) -> &BTreeMap<NameAndVersion, Self::Value>;
+    /// Returns a mutable reference to the map field.
     fn map_field_mut(&mut self) -> &mut BTreeMap<NameAndVersion, Self::Value>;
-
+    /// Tries to insert a new key and value, returning an error if the key is already present.
     fn insert_or_error(&mut self, key: NameAndVersion, val: Self::Value) -> Result<(), Error>;
+    /// Returns the number of crates. Multiple versions of a crate count multiple times.
     fn num_crates(&self) -> usize;
+    /// Returns true if the map contains a crate with the specified name.
     fn contains_name(&self, name: &str) -> bool {
         self.get_versions(name).next().is_some()
     }
+    /// Returns an iterator over versions of a specified crate
     fn get_versions<'a, 'b>(
         &'a self,
         name: &'b str,
     ) -> Box<dyn Iterator<Item = (&'a NameAndVersion, &'a Self::Value)> + 'a>;
+    /// Returns a mutable iterator over versions of a specified crate
     fn get_versions_mut<'a, 'b>(
         &'a mut self,
         name: &'b str,
     ) -> Box<dyn Iterator<Item = (&'a NameAndVersion, &'a mut Self::Value)> + 'a>;
-    fn get_version_upgradable_from<T: NamedAndVersioned + IsUpgradableTo>(
-        &self,
-        other: &T,
-    ) -> Option<&NameAndVersion> {
-        let mut best_version = None;
-        for (nv, _val) in self.get_versions(other.name()) {
-            if other.is_upgradable_to(nv) {
-                best_version.replace(nv);
-            }
-        }
-        best_version
-    }
+    /// Returns an iterator over the map, filtered according to a predicate that acts on
+    /// all the available versions for a crate.
     fn filter_versions<
         'a: 'b,
         'b,
@@ -73,11 +73,14 @@ impl<ValueType> NameAndVersionMap for BTreeMap<NameAndVersion, ValueType> {
     }
 
     fn insert_or_error(&mut self, key: NameAndVersion, val: Self::Value) -> Result<(), Error> {
-        if self.contains_key(&key) {
-            Err(Error::DuplicateVersion(key.name().to_string(), key.version().clone()))
-        } else {
-            self.insert(key, val);
-            Ok(())
+        match self.entry(key) {
+            std::collections::btree_map::Entry::Vacant(e) => {
+                e.insert(val);
+                Ok(())
+            }
+            std::collections::btree_map::Entry::Occupied(e) => {
+                Err(Error::DuplicateVersion(e.key().name().to_string(), e.key().version().clone()))
+            }
         }
     }
 
@@ -134,6 +137,7 @@ impl<ValueType> NameAndVersionMap for BTreeMap<NameAndVersion, ValueType> {
     }
 }
 
+/// Select crates with a single version from an iterator.
 pub fn crates_with_single_version<'a, ValueType>(
     versions: &mut dyn Iterator<Item = (&'a NameAndVersion, &'a ValueType)>,
 ) -> HashSet<Version> {
@@ -145,6 +149,7 @@ pub fn crates_with_single_version<'a, ValueType>(
     vset
 }
 
+/// Select crates with multiple versions from an iterator.
 pub fn crates_with_multiple_versions<'a, ValueType>(
     versions: &mut dyn Iterator<Item = (&'a NameAndVersion, &'a ValueType)>,
 ) -> HashSet<Version> {
@@ -156,6 +161,7 @@ pub fn crates_with_multiple_versions<'a, ValueType>(
     vset
 }
 
+/// Select the most recent version of each crate from an iterator.
 pub fn most_recent_version<'a, ValueType>(
     versions: &mut dyn Iterator<Item = (&'a NameAndVersion, &'a ValueType)>,
 ) -> HashSet<Version> {
@@ -191,7 +197,6 @@ mod tests {
         assert_eq!(test_map.num_crates(), 0);
         assert!(!test_map.contains_key(&nvp as &dyn NamedAndVersioned));
         assert!(!test_map.contains_name("foo"));
-        assert!(test_map.get(&nvp as &dyn NamedAndVersioned).is_none());
         assert!(test_map.get_mut(&nvp as &dyn NamedAndVersioned).is_none());
         Ok(())
     }
@@ -225,8 +230,8 @@ mod tests {
         assert_eq!(test_map.get(&foo1), Some(&"foo v1".to_string()));
         assert_eq!(test_map.get(&foo2), Some(&"foo v2".to_string()));
         assert_eq!(test_map.get(&bar), Some(&"bar".to_string()));
-        assert!(test_map.get(&wrong_name).is_none());
-        assert!(test_map.get(&wrong_version).is_none());
+        assert!(!test_map.contains_key(&wrong_name));
+        assert!(!test_map.contains_key(&wrong_version));
 
         assert_eq!(test_map.get_mut(&foo1), Some(&mut "foo v1".to_string()));
         assert_eq!(test_map.get_mut(&foo2), Some(&mut "foo v2".to_string()));
@@ -234,12 +239,6 @@ mod tests {
         assert!(test_map.get_mut(&wrong_name).is_none());
         assert!(test_map.get_mut(&wrong_version).is_none());
 
-        assert_eq!(
-            test_map.get_version_upgradable_from(&NameAndVersion::try_from_str("foo", "1.2.2")?),
-            Some(&foo1)
-        );
-
-        // TOOD: Iter
         assert_equal(test_map.keys(), [&bar, &foo1, &foo2]);
 
         assert_equal(test_map.values(), ["bar", "foo v1", "foo v2"]);

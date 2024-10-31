@@ -34,7 +34,7 @@ import {MatSnackBar, MatSnackBarModule} from '@angular/material/snack-bar';
 import {BrowserAnimationsModule} from '@angular/platform-browser/animations';
 import {assertDefined} from 'common/assert_utils';
 import {InMemoryStorage} from 'common/in_memory_storage';
-import {ProxyTracingErrors} from 'messaging/user_warnings';
+import {ProxyTraceTimeout} from 'messaging/user_warnings';
 import {NoTraceTargetsSelected, WinscopeEvent} from 'messaging/winscope_event';
 import {MockAdbConnection} from 'test/unit/mock_adb_connection';
 import {UserNotifierChecker} from 'test/unit/user_notifier_checker';
@@ -276,37 +276,9 @@ describe('CollectTracesComponent', () => {
     goToConfigSection();
     await fixture.whenStable();
     fixture.detectChanges();
-    const collectTracesComponent = getCollectTracesComponent();
 
-    expect(
-      collectTracesComponent.traceConfig['window_trace']?.enabled,
-    ).toBeTrue();
-    const traceSection = assertDefined(
-      htmlElement.querySelector('.trace-section'),
-    );
-    const traceCheckboxInput = assertDefined(
-      traceSection.querySelector<HTMLInputElement>('.trace-checkbox input'),
-    );
-    traceCheckboxInput.click();
-    fixture.detectChanges();
-    expect(
-      collectTracesComponent.traceConfig['window_trace']?.enabled,
-    ).toBeFalse();
-
-    expect(
-      collectTracesComponent.dumpConfig['window_dump']?.enabled,
-    ).toBeTrue();
-    const dumpSection = assertDefined(
-      htmlElement.querySelector('.dump-section'),
-    );
-    const dumpCheckboxInput = assertDefined(
-      dumpSection.querySelector<HTMLInputElement>('.trace-checkbox input'),
-    );
-    dumpCheckboxInput.click();
-    fixture.detectChanges();
-    expect(
-      collectTracesComponent.dumpConfig['window_dump']?.enabled,
-    ).toBeFalse();
+    clickCheckboxAndCheckTraceConfig('window_trace', false);
+    clickCheckboxAndCheckTraceConfig('window_dump', true);
   });
 
   it('start trace button works as expected', async () => {
@@ -663,17 +635,7 @@ describe('CollectTracesComponent', () => {
     goToConfigSection();
     await fixture.whenStable();
     fixture.detectChanges();
-    const collectTracesComponent = getCollectTracesComponent();
-    const dumpCheckboxInput = assertDefined(
-      htmlElement.querySelector<HTMLInputElement>(
-        '.dump-section .trace-checkbox input',
-      ),
-    );
-    dumpCheckboxInput.click();
-    fixture.detectChanges();
-    expect(
-      collectTracesComponent.dumpConfig['window_dump']?.enabled,
-    ).toBeFalse();
+    clickCheckboxAndCheckTraceConfig('window_dump', true);
 
     component.showSecondComponent = true;
     fixture.detectChanges();
@@ -712,9 +674,7 @@ describe('CollectTracesComponent', () => {
       requested: [],
       collected: connection.files,
     });
-    userNotifierChecker.expectNotified([
-      new ProxyTracingErrors(['tracing timed out']),
-    ]);
+    userNotifierChecker.expectAdded([new ProxyTraceTimeout()]);
   });
 
   it('updates options in media based config on devices change from connection', () => {
@@ -772,6 +732,39 @@ describe('CollectTracesComponent', () => {
     );
     device.click();
     fixture.detectChanges();
+  }
+
+  function clickCheckboxAndCheckTraceConfig(key: string, isDump: boolean) {
+    const collectTracesComponent = getCollectTracesComponent();
+    expect(
+      isDump
+        ? collectTracesComponent.dumpConfig[key].enabled
+        : collectTracesComponent.traceConfig[key].enabled,
+    ).toBeTrue();
+
+    const checkboxSection = assertDefined(
+      htmlElement.querySelector(isDump ? '.dump-section' : '.trace-section'),
+    );
+    const traceBoxes = Array.from(
+      checkboxSection.querySelectorAll<HTMLElement>('.trace-checkbox'),
+    );
+
+    const expectedName = isDump
+      ? collectTracesComponent.dumpConfig[key].name
+      : collectTracesComponent.traceConfig[key].name;
+    const traceBox = assertDefined(
+      traceBoxes.find((box) => box.textContent?.includes(expectedName)),
+    );
+    const traceCheckboxInput = assertDefined(
+      traceBox.querySelector<HTMLInputElement>('input'),
+    );
+    traceCheckboxInput.click();
+    fixture.detectChanges();
+    expect(
+      isDump
+        ? collectTracesComponent.dumpConfig[key].enabled
+        : collectTracesComponent.traceConfig[key].enabled,
+    ).toBeFalse();
   }
 
   async function startProxyConnection() {

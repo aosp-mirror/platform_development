@@ -12,8 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+//! Derive the NameAndVersionMap trait for a struct with a suitable map field.
+
 use syn::{parse_macro_input, DeriveInput, Error};
 
+/// Derive the NameAndVersionMap trait for a struct with a suitable map field.
 #[proc_macro_derive(NameAndVersionMap)]
 pub fn derive_name_and_version_map(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
     let input = parse_macro_input!(input as DeriveInput);
@@ -77,7 +80,7 @@ mod name_and_version_map {
             }
         };
 
-        Ok(TokenStream::from(expanded))
+        Ok(expanded)
     }
 
     fn get_struct(input: &DeriveInput) -> Result<&DataStruct> {
@@ -89,17 +92,14 @@ mod name_and_version_map {
 
     fn get_map_field(strukt: &DataStruct) -> Result<&Field> {
         for field in &strukt.fields {
-            if let Ok((key_type, _value_type)) = get_map_type(&field.ty) {
-                if let syn::Type::Path(path) = &key_type {
-                    if path.path.segments.len() == 1
-                        && path.path.segments[0].ident == "NameAndVersion"
-                    {
-                        return Ok(field);
-                    }
+            if let Ok((syn::Type::Path(path), _value_type)) = get_map_type(&field.ty) {
+                if path.path.segments.len() == 1 && path.path.segments[0].ident == "NameAndVersion"
+                {
+                    return Ok(field);
                 }
             }
         }
-        return Err(Error::new_spanned(strukt.struct_token, "No field of type NameAndVersionMap"));
+        Err(Error::new_spanned(strukt.struct_token, "No field of type NameAndVersionMap"))
     }
 
     fn get_map_type(typ: &Type) -> Result<(&Type, &Type)> {

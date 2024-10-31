@@ -63,7 +63,7 @@ def create_argument_parser() -> argparse.ArgumentParser:
     return parser
 
 # Keep in sync with ProxyConnection#VERSION in Winscope
-VERSION = '3.2.0'
+VERSION = '4.0.2'
 
 PERFETTO_TRACE_CONFIG_FILE = '/data/misc/perfetto-configs/winscope-proxy-trace.conf'
 PERFETTO_DUMP_CONFIG_FILE = '/data/misc/perfetto-configs/winscope-proxy-dump.conf'
@@ -92,6 +92,10 @@ WINSCOPE_STATUS = "/data/local/tmp/winscope_status"
 
 # Max interval between the client keep-alive requests in seconds
 KEEP_ALIVE_INTERVAL_S = 5
+
+# Perfetto's default timeout for getting an ACK from producer processes is 5s
+# We need to be sure that the timeout is longer than that with a good margin.
+COMMAND_TIMEOUT_S = 15
 
 class File:
     def __init__(self, file, filetype) -> None:
@@ -756,6 +760,14 @@ write_into_file: true
 unique_session_name: "{PERFETTO_UNIQUE_SESSION_NAME}"
 EOF
 
+function is_perfetto_tracing_session_running {{
+    if perfetto --query | grep "{PERFETTO_UNIQUE_SESSION_NAME}" 2>&1 >/dev/null; then
+        return 0
+    else
+        return 1
+    fi
+}}
+
 if is_perfetto_tracing_session_running; then
     perfetto --attach=WINSCOPE-PROXY-TRACING-SESSION --stop
     echo 'Stopped already-running winscope perfetto session.'
@@ -1236,7 +1248,7 @@ class TraceThread(threading.Thread):
             log.debug("Waiting for {} trace shell to exit for {}".format(
                 self.trace_name,
                 self._device_id))
-            self.process.wait(timeout=5)
+            self.process.wait(timeout=COMMAND_TIMEOUT_S)
         except TimeoutError:
             log.debug(
                 "TIMEOUT - sending SIGKILL to the {} trace process on {}".format(self.trace_name, self._device_id))
@@ -1244,23 +1256,27 @@ class TraceThread(threading.Thread):
         self.join()
 
     def run(self):
+        retry_interval = 0.1
         log.debug("Trace {} started on {}".format(self.trace_name, self._device_id))
         self.reset_timer()
         self.out, self.err = self.process.communicate(self.trace_command)
         log.debug("Trace {} ended on {}, waiting for cleanup".format(self.trace_name, self._device_id))
         time.sleep(0.2)
-        for i in range(50):
+        for i in range(COMMAND_TIMEOUT_S / retry_interval):
             if call_adb(f"shell su root cat {WINSCOPE_STATUS}", device=self._device_id) == 'TRACE_OK\n':
-                log.debug("Trace {} finished successfully on {}".format(
+                log.debug("Trace {} finished on {}".format(
                     self.trace_name,
                     self._device_id))
                 if self.trace_name == "perfetto_trace":
+                    log.debug("Perfetto trace stderr output: {}".format(self.err.decode("utf-8")))
                     self._success = True
                 else:
                     self._success = len(self.err) == 0
                 break
             log.debug("Still waiting for cleanup on {} for {}".format(self._device_id, self.trace_name))
-            time.sleep(0.1)
+            time.sleep(retry_interval)
+
+        self._command_timed_out = True
 
     def success(self):
         return self._success
@@ -1363,15 +1379,13 @@ class EndTraceEndpoint(DeviceRequestEndpoint):
                 thread.end_trace()
             success = thread.success()
             signal_handler_log = call_adb(f"shell su root cat {SIGNAL_HANDLER_LOG}", device=device_id).encode('utf-8')
-            out = b"### Shell script's stdout - start\n" + \
-                thread.out + \
-                b"### Shell script's stdout - end\n" + \
-                b"### Shell script's stderr - start\n" + \
-                thread.err + \
-                b"### Shell script's stderr - end\n" + \
-                b"### Signal handler log - start\n" + \
-                signal_handler_log + \
-                b"### Signal handler log - end\n"
+            out = b"### Shell script's stdout ###\n" + \
+                (thread.out if thread.out else b'<no stdout>') + \
+                b"\n### Shell script's stderr ###\n" + \
+                (thread.err if thread.err else b'<no stderr>') + \
+                b"\n### Signal handler log:\n" + \
+                (signal_handler_log if signal_handler_log else b'<no signal handler logs>') + \
+                b"\n"
             if not success:
                 log.error(
                     "Error ending trace {} on the device\n### Output ###\n".format(thread.trace_name) + out.decode(

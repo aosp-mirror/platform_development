@@ -14,11 +14,11 @@
  * limitations under the License.
  */
 
-import {FilterFlag} from 'common/filter_flag';
 import {Timestamp} from 'common/time';
 import {TraceEntry} from 'trace/trace';
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
-import {LogFieldType} from './ui_data_log';
+import {TextFilter} from 'viewers/common/text_filter';
+import {LogHeader} from './ui_data_log';
 
 export enum ViewerEvents {
   HighlightedNodeChange = 'HighlightedNodeChange',
@@ -31,6 +31,7 @@ export enum ViewerEvents {
 
   PropertiesUserOptionsChange = 'PropertiesUserOptionsChange',
   PropertiesFilterChange = 'PropertiesFilterChange',
+  DispatchPropertiesFilterChange = 'DispatchPropertiesFilterChange',
   HighlightedPropertyChange = 'HighlightedPropertyChange',
 
   RectsUserOptionsChange = 'RectsUserOptionsChange',
@@ -42,6 +43,7 @@ export enum ViewerEvents {
   TimestampClick = 'TimestampClick',
   LogEntryClick = 'LogEntryClick',
   LogFilterChange = 'LogFilterChange',
+  LogTextFilterChange = 'LogTextFilterChange',
   ArrowDownPress = 'ArrowDownPress',
   ArrowUpPress = 'ArrowUpPress',
 }
@@ -58,13 +60,9 @@ export class TimestampClickDetail {
 }
 
 export class LogFilterChangeDetail {
-  constructor(
-    public type: LogFieldType,
-    public value: string[] | string,
-    public flags: FilterFlag[] = [],
-  ) {}
+  constructor(public header: LogHeader, public value: string[]) {}
 }
 
-export class TextFilterDetail {
-  constructor(public filterString: string, public flags: FilterFlag[]) {}
+export class LogTextFilterChangeDetail {
+  constructor(public header: LogHeader, public filter: TextFilter) {}
 }

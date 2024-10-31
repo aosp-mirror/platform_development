@@ -26,19 +26,26 @@ import com.android.compose.animation.scene.SceneScope
 import com.android.compose.animation.scene.SceneTransitions
 import com.android.compose.animation.scene.StaticElementContentPicker
 import com.android.compose.animation.scene.content.state.TransitionState
+import com.android.compose.animation.scene.demo.Overlays
 import com.android.compose.animation.scene.demo.Scenes
 import com.android.compose.animation.scene.demo.SpringConfiguration
+import com.android.compose.animation.scene.demo.transitions.QuickSettingsToNotificationShadeFadeProgress
+import com.android.compose.animation.scene.demo.transitions.ToNotificationShadeStartFadeProgress
 import com.android.compose.animation.scene.demo.transitions.ToShadeScrimFadeEndFraction
 import com.android.compose.animation.scene.demo.transitions.ToSplitShadeOpaqueBackgroundProgress
 
 fun notifications(
     isInteractive: Boolean,
     n: Int,
+    nInLockscreen: Int,
     springConfiguration: SpringConfiguration,
     textMeasurer: TextMeasurer,
 ): List<NotificationViewModel> {
     val transitions = NotificationContent.transitions(springConfiguration)
-    return List(n) { notification(isInteractive, it + 1, transitions, textMeasurer) }
+    return List(n) { i ->
+        val shownInLockscreen = i <= nInLockscreen - 1
+        notification(isInteractive, i + 1, transitions, textMeasurer, shownInLockscreen)
+    }
 }
 
 private fun notification(
@@ -46,13 +53,17 @@ private fun notification(
     i: Int,
     transitions: SceneTransitions,
     textMeasurer: TextMeasurer,
-    key: MovableElementKey =
+    shownInLockscreen: Boolean,
+): NotificationViewModel {
+    val key =
         MovableElementKey(
             "Notification:$i",
             identity = NotificationIdentity(),
-            contentPicker = NotificationContentPicker,
-        ),
-): NotificationViewModel {
+            contentPicker =
+                if (shownInLockscreen) NotificationThatCanBeOnLockscreenPicker
+                else NotificationOnlyInShadePicker,
+        )
+
     return object : NotificationViewModel {
         override val key: MovableElementKey = key
         override val state: MutableSceneTransitionLayoutState =
@@ -69,38 +80,101 @@ private fun notification(
     }
 }
 
-private object NotificationContentPicker : StaticElementContentPicker {
-    override val contents =
-        setOf(Scenes.Lockscreen, Scenes.Shade, Scenes.SplitLockscreen, Scenes.SplitShade)
+private object NotificationOnlyInShadePicker : StaticElementContentPicker {
+    override val contents = setOf(Scenes.Shade, Scenes.SplitShade, Overlays.Notifications)
 
     override fun contentDuringTransition(
         element: ElementKey,
         transition: TransitionState.Transition,
         fromContentZIndex: Float,
-        toContentZIndex: Float
+        toContentZIndex: Float,
     ): ContentKey {
-        return when {
-            transition.isTransitioning(from = Scenes.Lockscreen, to = Scenes.Shade) -> Scenes.Shade
-            transition.isTransitioning(from = Scenes.Shade, to = Scenes.Lockscreen) -> {
+        return pickSingleContentIn(contents, transition, element)
+    }
+}
+
+private object NotificationThatCanBeOnLockscreenPicker : StaticElementContentPicker {
+    override val contents =
+        setOf(
+            Scenes.Lockscreen,
+            Scenes.Shade,
+            Scenes.SplitLockscreen,
+            Scenes.SplitShade,
+            Overlays.Notifications,
+        )
+
+    override fun contentDuringTransition(
+        element: ElementKey,
+        transition: TransitionState.Transition,
+        fromContentZIndex: Float,
+        toContentZIndex: Float,
+    ): ContentKey {
+        fun handleLockscreenShadeTransition(
+            lockscreen: ContentKey,
+            shade: ContentKey,
+            toShadeOpaqueProgress: Float,
+        ): ContentKey? {
+            if (transition.isTransitioning(from = lockscreen, to = shade)) {
+                return shade
+            }
+
+            if (transition.isTransitioning(from = shade, to = lockscreen)) {
                 // From Shade to Lockscreen the shared element animation is disabled, so we first
                 // show the notification in the shade/scrim as long as the scrim is opaque, then we
                 // show them in the lockscreen once the scrim fades out.
-                if (transition.progress < 1f - ToShadeScrimFadeEndFraction) {
-                    Scenes.Shade
+                return if (transition.progress < 1f - toShadeOpaqueProgress) {
+                    shade
                 } else {
-                    Scenes.Lockscreen
+                    lockscreen
                 }
             }
-            transition.isTransitioning(from = Scenes.SplitLockscreen, to = Scenes.SplitShade) ->
-                Scenes.SplitShade
-            transition.isTransitioning(from = Scenes.SplitShade, to = Scenes.SplitLockscreen) -> {
-                if (transition.progress < 1f - ToSplitShadeOpaqueBackgroundProgress) {
-                    Scenes.SplitShade
-                } else {
-                    Scenes.SplitLockscreen
-                }
-            }
-            else -> pickSingleContentIn(contents, transition, element)
+
+            return null
         }
+
+        fun handleNotificationToQsOverLockscreen(): ContentKey? {
+            if (
+                !transition.isTransitioningBetween(
+                    Overlays.QuickSettings,
+                    Overlays.Notifications,
+                ) ||
+                    (transition.currentScene != Scenes.Lockscreen &&
+                        transition.currentScene != Scenes.SplitLockscreen)
+            ) {
+                return null
+            }
+
+            return if (
+                transition.progressTo(Overlays.Notifications) >=
+                    QuickSettingsToNotificationShadeFadeProgress
+            ) {
+                Overlays.Notifications
+            } else {
+                transition.currentScene
+            }
+        }
+
+        return handleLockscreenShadeTransition(
+            Scenes.Lockscreen,
+            Scenes.Shade,
+            ToShadeScrimFadeEndFraction,
+        )
+            ?: handleLockscreenShadeTransition(
+                Scenes.SplitLockscreen,
+                Scenes.SplitShade,
+                ToSplitShadeOpaqueBackgroundProgress,
+            )
+            ?: handleLockscreenShadeTransition(
+                Scenes.Lockscreen,
+                Overlays.Notifications,
+                ToNotificationShadeStartFadeProgress,
+            )
+            ?: handleLockscreenShadeTransition(
+                Scenes.SplitLockscreen,
+                Overlays.Notifications,
+                ToNotificationShadeStartFadeProgress,
+            )
+            ?: handleNotificationToQsOverLockscreen()
+            ?: pickSingleContentIn(contents, transition, element)
     }
 }
