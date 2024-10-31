@@ -27,6 +27,7 @@ import {TraceRect} from 'trace/trace_rect';
 import {TraceRectBuilder} from 'trace/trace_rect_builder';
 import {HierarchyTreeNode} from 'trace/tree_node/hierarchy_tree_node';
 import {InputConfig, RectsComputation} from './rects_computation';
+import {ZOrderPathsComputation} from './z_order_paths_computation';
 
 describe('SurfaceFlinger RectsComputation', () => {
   const rotationTransform = new Transform(
@@ -58,7 +59,7 @@ describe('SurfaceFlinger RectsComputation', () => {
             layerStack: 0,
             bounds: {left: 0, top: 0, right: 1, bottom: 1},
             screenBounds: {left: 0, top: 0, right: 1, bottom: 1},
-            zOrderPath: [0],
+            z: 0,
             transform: Transform.EMPTY,
           } as android.surfaceflinger.ILayerProto,
         },
@@ -69,7 +70,7 @@ describe('SurfaceFlinger RectsComputation', () => {
     ).toThrowError();
   });
 
-  it('makes layer rects according to z order paths', () => {
+  it('makes layer rects according to z order', () => {
     const hierarchyRoot = new HierarchyTreeBuilder()
       .setId('LayerTraceEntry')
       .setName('root')
@@ -84,7 +85,7 @@ describe('SurfaceFlinger RectsComputation', () => {
             layerStack: 0,
             bounds: {left: 0, top: 0, right: 1, bottom: 1},
             screenBounds: {left: 0, top: 0, right: 1, bottom: 1},
-            zOrderPath: [0],
+            z: 0,
             isComputedVisible: true,
             transform: Transform.EMPTY,
           } as android.surfaceflinger.ILayerProto,
@@ -99,7 +100,7 @@ describe('SurfaceFlinger RectsComputation', () => {
                 layerStack: 0,
                 bounds: {left: 0, top: 0, right: 2, bottom: 2},
                 screenBounds: {left: 0, top: 0, right: 2, bottom: 2},
-                zOrderPath: [0, 1],
+                z: 1,
                 occludedBy: [1],
                 isComputedVisible: false,
                 transform: Transform.EMPTY,
@@ -117,7 +118,8 @@ describe('SurfaceFlinger RectsComputation', () => {
             layerStack: 0,
             bounds: {left: 0, top: 0, right: 5, bottom: 5},
             screenBounds: {left: 0, top: 0, right: 5, bottom: 5},
-            zOrderPath: [0, 2],
+            z: 2,
+            zOrderRelativeOf: 1,
             isComputedVisible: true,
             color: {r: 0, g: 0, b: 0, a: 1},
             transform: Transform.EMPTY,
@@ -177,6 +179,7 @@ describe('SurfaceFlinger RectsComputation', () => {
         .setIsSpy(false)
         .build(),
     ];
+    new ZOrderPathsComputation().setRoot(hierarchyRoot).executeInPlace();
 
     computation.setRoot(hierarchyRoot).executeInPlace();
     checkLayerRects(hierarchyRoot, expectedRects);
@@ -197,7 +200,7 @@ describe('SurfaceFlinger RectsComputation', () => {
             layerStack: 0,
             bounds: {left: 0, top: 0, right: 1, bottom: 1},
             screenBounds: {left: 0, top: 0, right: 1, bottom: 1},
-            zOrderPath: [0],
+            z: 0,
             isComputedVisible: true,
             color: {r: 0, g: 0, b: 0, a: 1},
             transform: Transform.EMPTY,
@@ -213,7 +216,7 @@ describe('SurfaceFlinger RectsComputation', () => {
             layerStack: 1,
             bounds: {left: 0, top: 0, right: 1, bottom: 1},
             screenBounds: {left: 0, top: 0, right: 1, bottom: 1},
-            zOrderPath: [0],
+            z: 0,
             isComputedVisible: true,
             color: {r: 0, g: 0, b: 0, a: 1},
             transform: Transform.EMPTY,
@@ -445,7 +448,7 @@ describe('SurfaceFlinger RectsComputation', () => {
             layerStack: 0,
             bounds: {left: -50, top: -100, right: 50, bottom: 100},
             screenBounds: {left: -50, top: -100, right: 50, bottom: 100},
-            zOrderPath: [0],
+            z: 0,
             isComputedVisible: true,
             transform: Transform.EMPTY,
           } as android.surfaceflinger.ILayerProto,
@@ -460,7 +463,7 @@ describe('SurfaceFlinger RectsComputation', () => {
             layerStack: 0,
             bounds: {left: -50, top: -100, right: 50, bottom: 100},
             screenBounds: {left: -50, top: -100, right: 50, bottom: 100},
-            zOrderPath: [0],
+            z: 0,
             isComputedVisible: false,
             transform: Transform.EMPTY,
           } as android.surfaceflinger.ILayerProto,
@@ -475,7 +478,7 @@ describe('SurfaceFlinger RectsComputation', () => {
             layerStack: 0,
             bounds: {left: -50, top: -100, right: 50, bottom: 100},
             screenBounds: {left: -49.991, top: -100, right: 50, bottom: 100},
-            zOrderPath: [0],
+            z: 0,
             isComputedVisible: false,
             transform: Transform.EMPTY,
           } as android.surfaceflinger.ILayerProto,
@@ -495,7 +498,7 @@ describe('SurfaceFlinger RectsComputation', () => {
               right: 50000,
               bottom: 50000,
             },
-            zOrderPath: [0],
+            z: 0,
             isComputedVisible: false,
             transform: Transform.EMPTY,
           } as android.surfaceflinger.ILayerProto,
@@ -510,7 +513,7 @@ describe('SurfaceFlinger RectsComputation', () => {
             layerStack: 0,
             bounds: {left: -100, top: -50, right: 100, bottom: 50},
             screenBounds: {left: -100, top: -50, right: 100, bottom: 50},
-            zOrderPath: [0],
+            z: 0,
             isComputedVisible: false,
             transform: Transform.EMPTY,
           } as android.surfaceflinger.ILayerProto,
@@ -524,7 +527,7 @@ describe('SurfaceFlinger RectsComputation', () => {
             cornerRadius: 0,
             layerStack: 0,
             bounds: {left: -50, top: -100, right: 50, bottom: 100},
-            zOrderPath: [0],
+            z: 0,
             isComputedVisible: true,
             transform: Transform.EMPTY,
           } as android.surfaceflinger.ILayerProto,
@@ -590,7 +593,7 @@ describe('SurfaceFlinger RectsComputation', () => {
             layerStack: 0,
             bounds: {left: -50, top: -100, right: 50, bottom: 100},
             screenBounds: {left: -50, top: -100, right: 50, bottom: 100},
-            zOrderPath: [0],
+            z: 0,
             isComputedVisible: false,
             transform: Transform.EMPTY,
           } as android.surfaceflinger.ILayerProto,
@@ -605,7 +608,7 @@ describe('SurfaceFlinger RectsComputation', () => {
             layerStack: 0,
             bounds: {left: -100, top: -100, right: 100, bottom: 100},
             screenBounds: {left: -100, top: -100, right: 100, bottom: 100},
-            zOrderPath: [0],
+            z: 0,
             isComputedVisible: false,
             transform: Transform.EMPTY,
           } as android.surfaceflinger.ILayerProto,
@@ -651,7 +654,7 @@ describe('SurfaceFlinger RectsComputation', () => {
             layerStack: 0,
             bounds: {left: 0, top: 0, right: 1, bottom: 1},
             screenBounds: {left: 0, top: 0, right: 1, bottom: 1},
-            zOrderPath: [0],
+            z: 0,
             isComputedVisible: true,
             transform: Transform.EMPTY,
             inputWindowInfo: {
@@ -671,7 +674,7 @@ describe('SurfaceFlinger RectsComputation', () => {
                 layerStack: 0,
                 bounds: {left: 0, top: 0, right: 2, bottom: 2},
                 screenBounds: {left: 0, top: 0, right: 2, bottom: 2},
-                zOrderPath: [0, 1],
+                z: 1,
                 occludedBy: [1],
                 isComputedVisible: false,
                 transform: Transform.EMPTY,
@@ -694,7 +697,7 @@ describe('SurfaceFlinger RectsComputation', () => {
             layerStack: 0,
             bounds: {left: -999, top: -999, right: 999, bottom: 999},
             screenBounds: {left: 0, top: 0, right: 2, bottom: 2},
-            zOrderPath: [0],
+            z: 0,
             isComputedVisible: false,
             transform: Transform.EMPTY,
             inputWindowInfo: {
@@ -714,7 +717,7 @@ describe('SurfaceFlinger RectsComputation', () => {
             layerStack: 0,
             bounds: {left: 0, top: 0, right: 5, bottom: 5},
             screenBounds: {left: 0, top: 0, right: 5, bottom: 5},
-            zOrderPath: [0, 2],
+            z: 2,
             isComputedVisible: true,
             color: {r: 0, g: 0, b: 0, a: 1},
             transform: Transform.EMPTY,
@@ -734,7 +737,7 @@ describe('SurfaceFlinger RectsComputation', () => {
             layerStack: 0,
             bounds: {left: 0, top: 0, right: 5, bottom: 5},
             screenBounds: {left: 0, top: 0, right: 5, bottom: 5},
-            zOrderPath: [0],
+            z: 0,
             isComputedVisible: true,
             color: {r: 0, g: 0, b: 0, a: 1},
             transform: Transform.EMPTY,
@@ -751,7 +754,7 @@ describe('SurfaceFlinger RectsComputation', () => {
             layerStack: 0,
             bounds: {left: 0, top: 0, right: 5, bottom: 5},
             screenBounds: {left: 0, top: 0, right: 5, bottom: 5},
-            zOrderPath: [0, 2],
+            z: 2,
             isComputedVisible: true,
             color: {r: 0, g: 0, b: 0, a: 1},
             transform: Transform.EMPTY,
@@ -771,7 +774,7 @@ describe('SurfaceFlinger RectsComputation', () => {
             layerStack: 0,
             bounds: {left: 0, top: 0, right: 5, bottom: 5},
             screenBounds: {left: 0, top: 0, right: 5, bottom: 5},
-            zOrderPath: [0, 2],
+            z: 2,
             isComputedVisible: true,
             color: {r: 0, g: 0, b: 0, a: 1},
             transform: Transform.EMPTY,
@@ -801,7 +804,7 @@ describe('SurfaceFlinger RectsComputation', () => {
             layerStack: 1,
             bounds: {left: 0, top: 0, right: 5, bottom: 5},
             screenBounds: {left: 0, top: 0, right: 5, bottom: 5},
-            zOrderPath: [0, 2],
+            z: 2,
             isComputedVisible: true,
             color: {r: 0, g: 0, b: 0, a: 1},
             transform: Transform.EMPTY,
@@ -831,7 +834,7 @@ describe('SurfaceFlinger RectsComputation', () => {
             layerStack: 1,
             bounds: {left: 0, top: 0, right: 5, bottom: 5},
             screenBounds: {left: 0, top: 0, right: 5, bottom: 5},
-            zOrderPath: [0, 2],
+            z: 2,
             isComputedVisible: true,
             color: {r: 0, g: 0, b: 0, a: 1},
             transform: Transform.EMPTY,
