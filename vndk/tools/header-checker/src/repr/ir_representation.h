@@ -15,6 +15,8 @@
 #ifndef IR_REPRESENTATION_H_
 #define IR_REPRESENTATION_H_
 
+#include "utils/api_level.h"
+
 #include <list>
 #include <map>
 #include <memory>
@@ -865,8 +867,9 @@ class TypeDefinition {
 
 class ModuleIR {
  public:
-  ModuleIR(const std::set<std::string> *exported_headers = nullptr)
-      : exported_headers_(exported_headers) {}
+  ModuleIR(const std::set<std::string> *exported_headers = nullptr,
+           std::optional<utils::ApiLevel> availability = {})
+      : exported_headers_(exported_headers), availability_(availability) {}
 
   const std::string &GetCompilationUnitPath() const {
     return compilation_unit_path_;
@@ -991,6 +994,11 @@ class ModuleIR {
   bool IsLinkableMessageInExportedHeaders(
       const LinkableMessageIR *linkable_message) const;
 
+  void FilterRecordFields(RecordTypeIR &record_type) const;
+
+  void FilterEnumFields(EnumTypeIR &enum_type) const;
+
+  bool IsAvailable(const HasAvailabilityAttrs &decl_ir) const;
 
  public:
   // File path to the compilation unit (*.sdump)
@@ -1019,11 +1027,11 @@ class ModuleIR {
   // maps unique_id + source_file -> TypeDefinition
   AbiElementUnorderedMap<std::list<TypeDefinition>> odr_list_map_;
 
-
  private:
   // The compilation unit paths referenced by odr_list_map_;
   std::set<std::string> compilation_unit_paths_;
   const std::set<std::string> *exported_headers_;
+  const std::optional<utils::ApiLevel> availability_;
 };
 
 

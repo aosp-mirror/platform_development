@@ -64,6 +64,34 @@ describe('TraceConfigComponent', () => {
     expect(component).toBeTruthy();
   });
 
+  it('displays config alphabetically by name', () => {
+    expect(
+      Array.from(
+        htmlElement.querySelectorAll<HTMLElement>('.trace-checkbox'),
+      ).map((box) => box.textContent?.trim()),
+    ).toEqual([
+      'layers_trace',
+      'multiple_selection_trace',
+      'optional_multiple_selection_trace',
+      'optional_selection_trace',
+      'unavailable_trace',
+      'window_trace',
+    ]);
+  });
+
+  it('displays advanced config alphabetically by name', () => {
+    expect(
+      Array.from(
+        htmlElement.querySelectorAll<HTMLElement>('.config-heading'),
+      ).map((box) => box.textContent?.trim()),
+    ).toEqual([
+      'layers_trace configuration',
+      'multiple_selection_trace configuration',
+      'optional_multiple_selection_trace configuration',
+      'optional_selection_trace configuration',
+    ]);
+  });
+
   it('applies stored config and emits event on init', async () => {
     expect(
       assertDefined(component.traceConfig)['layers_trace'].enabled,
@@ -107,60 +135,59 @@ describe('TraceConfigComponent', () => {
   });
 
   it('trace checkbox enabled by default', () => {
+    const traceKey = 'layers_trace';
     configChangeSpy.calls.reset();
     const config = assertDefined(component.traceConfig);
 
-    const box = assertDefined(htmlElement.querySelector('.trace-checkbox'));
+    const box = getTraceBoxForKey('layers_trace');
     const inputElement = assertDefined(
       box.querySelector<HTMLInputElement>('input'),
     );
 
-    expect(box.textContent).toContain('layers_trace');
+    expect(box.textContent).toContain(traceKey);
     expect(inputElement.checked).toBeTrue();
     expect(inputElement.ariaChecked).toEqual('true');
-    expect(config['layers_trace'].enabled).toBeTrue();
+    expect(config[traceKey].enabled).toBeTrue();
 
     inputElement.click();
     fixture.detectChanges();
     expect(inputElement.checked).toBeFalse();
     expect(inputElement.ariaChecked).toEqual('false');
-    expect(config['layers_trace'].enabled).toBeFalse();
+    expect(config[traceKey].enabled).toBeFalse();
     expect(configChangeSpy).toHaveBeenCalledTimes(1);
   });
 
   it('trace checkbox not enabled by default', () => {
+    const traceKey = 'window_trace';
     configChangeSpy.calls.reset();
     const config = assertDefined(component.traceConfig);
 
-    const box = assertDefined(
-      htmlElement.querySelectorAll('.trace-checkbox').item(1),
-    );
+    const box = getTraceBoxForKey(traceKey);
     const inputElement = assertDefined(
       box.querySelector<HTMLInputElement>('input'),
     );
 
-    expect(box.textContent).toContain('window_trace');
+    expect(box.textContent).toContain(traceKey);
     expect(inputElement.checked).toBeFalse();
     expect(inputElement.ariaChecked).toEqual('false');
-    expect(config['window_trace'].enabled).toBeFalse();
+    expect(config[traceKey].enabled).toBeFalse();
 
     inputElement.click();
     fixture.detectChanges();
     expect(inputElement.checked).toBeTrue();
     expect(inputElement.ariaChecked).toEqual('true');
-    expect(config['window_trace'].enabled).toBeTrue();
+    expect(config[traceKey].enabled).toBeTrue();
     expect(configChangeSpy).toHaveBeenCalledTimes(1);
   });
 
   it('disables checkbox for unavailable trace', () => {
-    const boxes = htmlElement.querySelectorAll('.trace-checkbox');
-
-    const unavailableBox = assertDefined(boxes.item(2));
-    const unavailableInput = assertDefined(
-      unavailableBox.querySelector('input'),
+    const traceKey = 'unavailable_trace';
+    const box = getTraceBoxForKey(traceKey);
+    const inputElement = assertDefined(
+      box.querySelector<HTMLInputElement>('input'),
     );
-    expect(unavailableInput.disabled).toBeTrue();
-    expect(unavailableBox.textContent).toContain('unavailable_trace');
+    expect(inputElement.disabled).toBeTrue();
+    expect(box.textContent).toContain(traceKey);
   });
 
   it('enable and select configs show', () => {
@@ -221,7 +248,7 @@ describe('TraceConfigComponent', () => {
 
   it('clicking None button clears optional single selection config value', async () => {
     configChangeSpy.calls.reset();
-    await openSelect(1);
+    await openSelect(getIndexForConfigKey('optional_selection_trace'));
 
     const panel = assertDefined(
       document.querySelector<HTMLElement>('.mat-select-panel'),
@@ -247,7 +274,7 @@ describe('TraceConfigComponent', () => {
 
   it('clicking All button selects or clears all options for multiple selection config', async () => {
     configChangeSpy.calls.reset();
-    await openSelect(2);
+    await openSelect(getIndexForConfigKey('multiple_selection_trace'));
 
     const panel = assertDefined(
       document.querySelector<HTMLElement>('.mat-select-panel'),
@@ -273,7 +300,7 @@ describe('TraceConfigComponent', () => {
   });
 
   it('stabilizes tooltip position', async () => {
-    await openSelect(1);
+    await openSelect(getIndexForConfigKey('optional_selection_trace'));
 
     const panel = assertDefined(
       document.querySelector<HTMLElement>('.mat-select-panel'),
@@ -377,7 +404,7 @@ describe('TraceConfigComponent', () => {
         },
       },
       optional_multiple_selection_trace: {
-        name: 'multiple_selection_trace',
+        name: 'optional_multiple_selection_trace',
         enabled: true,
         available: true,
         types: [TraceType.TEST_TRACE_STRING],
@@ -407,6 +434,21 @@ describe('TraceConfigComponent', () => {
     f.detectChanges();
     await f.whenStable();
     f.detectChanges();
+  }
+
+  function getTraceBoxForKey(traceKey: string): HTMLElement {
+    const index = component
+      .getSortedTraceKeys()
+      .findIndex((key) => key === traceKey);
+    return assertDefined(
+      htmlElement.querySelectorAll<HTMLElement>('.trace-checkbox').item(index),
+    );
+  }
+
+  function getIndexForConfigKey(configKey: string): number {
+    return component
+      .getSortedConfigKeys()
+      .findIndex((key) => key === configKey);
   }
 
   async function openSelect(index: number) {

@@ -40,7 +40,7 @@ import {assertDefined} from 'common/assert_utils';
 import {FunctionUtils} from 'common/function_utils';
 import {PersistentStore} from 'common/persistent_store';
 import {StringUtils} from 'common/string_utils';
-import {TimeRange, Timestamp} from 'common/time';
+import {TimeRange, Timestamp, TimestampFormatType} from 'common/time';
 import {TimestampUtils} from 'common/timestamp_utils';
 import {Analytics} from 'logging/analytics';
 import {
@@ -947,16 +947,11 @@ export class TimelineComponent
       this.getCurrentTracePosition().timestamp.getValueNs();
     const timelineData = assertDefined(this.timelineData);
 
-    let formattedCurrentTimestamp = assertDefined(
+    const formattedCurrentTimestamp = assertDefined(
       timelineData.getTimestampConverter(),
     )
       .makeTimestampFromNs(currentTimestampNs)
-      .format();
-    if (TimestampUtils.isHumanRealTimestampFormat(formattedCurrentTimestamp)) {
-      formattedCurrentTimestamp = assertDefined(
-        TimestampUtils.extractTimeFromHumanTimestamp(formattedCurrentTimestamp),
-      );
-    }
+      .format(TimestampFormatType.DROP_DATE);
     this.selectedTimeFormControl.setValue(formattedCurrentTimestamp);
     this.selectedNsFormControl.setValue(`${currentTimestampNs} ns`);
   }

@@ -81,7 +81,11 @@ export class FileUtils {
       } else {
         const fileBlob = await file.async('blob');
         const unzippedFile = new File([fileBlob], filename);
-        unzippedFiles.push(unzippedFile);
+        if (await FileUtils.isZipFile(unzippedFile)) {
+          unzippedFiles.push(...(await FileUtils.unzipFile(fileBlob)));
+        } else {
+          unzippedFiles.push(unzippedFile);
+        }
       }
 
       onProgressUpdate((100 * (index + 1)) / filenames.length);

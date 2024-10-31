@@ -40,8 +40,9 @@ describe('Cross-Tool Protocol', () => {
   });
 
   it('allows communication with ABT', async () => {
-    const TIMESTAMP_IN_BUGREPORT_MESSAGE = '1670509911000000000';
-    const TIMESTAMP_FROM_ABT_TO_WINSCOPE = '1670509912000000000';
+    const TIMESTAMP_FROM_ABT_TO_WINSCOPE = '1684247274018192053';
+    const INITIAL_TRACE_TIMESTAMP = '1684147274018192053';
+    const TRACE_TIMESTAMP_CLOSEST_TO_ABT = '1684149608528382581';
     const TIMESTAMP_FROM_WINSCOPE = '1670509913000000000';
 
     await openWinscopeTabFromRemoteTool();
@@ -54,10 +55,10 @@ describe('Cross-Tool Protocol', () => {
     await clickWinscopeViewTracesButton();
     await checkWinscopeRenderedSurfaceFlingerView();
     await checkWinscopeRenderedAllViewTabs();
-    await checkWinscopeTimestamp(TIMESTAMP_IN_BUGREPORT_MESSAGE);
+    await checkWinscopeTimestamp(INITIAL_TRACE_TIMESTAMP);
 
     await sendRealtimeTimestampToWinscope(TIMESTAMP_FROM_ABT_TO_WINSCOPE);
-    await checkWinscopeTimestamp(TIMESTAMP_FROM_ABT_TO_WINSCOPE);
+    await checkWinscopeTimestamp(TRACE_TIMESTAMP_CLOSEST_TO_ABT);
 
     await sendTimestampToRemoteTool(TIMESTAMP_FROM_WINSCOPE);
     await checkRemoteToolRealtimeTimestamp(TIMESTAMP_FROM_WINSCOPE);

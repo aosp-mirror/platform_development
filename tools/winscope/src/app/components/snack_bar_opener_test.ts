@@ -52,7 +52,7 @@ describe('SnackBarOpener', () => {
     const expectedMessages = [filesMessage];
     expect(openSpy).toHaveBeenCalledWith(SnackBarComponent, {
       data: expectedMessages,
-      duration: 10000,
+      duration: 5000,
     });
   });
 
@@ -66,7 +66,7 @@ describe('SnackBarOpener', () => {
     const expectedMessages = Array.from({length: 5}, () => filesMessage);
     expect(openSpy).toHaveBeenCalledWith(SnackBarComponent, {
       data: expectedMessages,
-      duration: 10000,
+      duration: 25000,
     });
   });
 
@@ -78,7 +78,7 @@ describe('SnackBarOpener', () => {
     expectedMessages.push("... (cropped 1 'no valid files' message)");
     expect(openSpy).toHaveBeenCalledWith(SnackBarComponent, {
       data: expectedMessages,
-      duration: 10000,
+      duration: 30000,
     });
   });
 
@@ -90,7 +90,7 @@ describe('SnackBarOpener', () => {
     expectedMessages.push("... (cropped 2 'no valid files' messages)");
     expect(openSpy).toHaveBeenCalledWith(SnackBarComponent, {
       data: expectedMessages,
-      duration: 10000,
+      duration: 30000,
     });
   });
 
@@ -105,7 +105,7 @@ describe('SnackBarOpener', () => {
     );
     expect(openSpy).toHaveBeenCalledWith(SnackBarComponent, {
       data: expectedMessages,
-      duration: 10000,
+      duration: 30000,
     });
   });
 
@@ -121,7 +121,7 @@ describe('SnackBarOpener', () => {
     );
     expect(openSpy).toHaveBeenCalledWith(SnackBarComponent, {
       data: expectedMessages,
-      duration: 10000,
+      duration: 35000,
     });
   });
 
@@ -129,7 +129,7 @@ describe('SnackBarOpener', () => {
     snackBarOpener.onNotifications([filesNotif]);
     expect(openSpy).toHaveBeenCalledOnceWith(SnackBarComponent, {
       data: [filesMessage],
-      duration: 10000,
+      duration: 5000,
     });
     const ref: MatSnackBarRef<SnackBarComponent> =
       openSpy.calls.mostRecent().returnValue;
@@ -144,7 +144,7 @@ describe('SnackBarOpener', () => {
     await waitToBeCalled(afterDismissedSpy);
     expect(openSpy).toHaveBeenCalledOnceWith(SnackBarComponent, {
       data: [filesMessage],
-      duration: 10000,
+      duration: 5000,
     });
   });
 
