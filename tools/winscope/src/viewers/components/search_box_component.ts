@@ -22,11 +22,16 @@ import {TextFilter} from 'viewers/common/text_filter';
 @Component({
   selector: 'search-box',
   template: `
-    <mat-form-field class="search-box" [class.wide-field]="wideField" [appearance]="appearance" [style.font-size]="fontSize + 'px'" (keydown.enter)="$event.target.blur()">
+    <mat-form-field
+      *ngIf="textFilter"
+      [class]="'search-box ' + formFieldClass"
+      [appearance]="appearance"
+      [style.height]="height"
+      (keydown.enter)="$event.target.blur()">
       <mat-label>{{ label }}</mat-label>
       <input
         matInput
-        [(ngModel)]="textFilter.filterString"
+        [(ngModel)]="textFilter.values.filterString"
         (ngModelChange)="onFilterChange()"
         [name]="filterName" />
       <div class="field-suffix" matSuffix>
@@ -57,13 +62,13 @@ import {TextFilter} from 'viewers/common/text_filter';
   styles: [
     `
     .search-box {
-      height: 48px;
-    }
-    .wide-field {
-      width: 80%;
+      font-size: 14px;
     }
     .search-box .mat-icon {
       font-size: 18px;
+    }
+    .wide-field {
+      width: 100%;
     }
   `,
   ],
@@ -71,26 +76,26 @@ import {TextFilter} from 'viewers/common/text_filter';
 export class SearchBoxComponent {
   FilterFlag = FilterFlag;
 
-  @Input() textFilter: TextFilter | undefined = new TextFilter('', []);
+  @Input() textFilter: TextFilter | undefined = new TextFilter();
   @Input() label = 'Search';
   @Input() filterName = 'filter';
-  @Input() appearance: string | undefined;
-  @Input() fontSize = 14;
-  @Input() wideField = false;
+  @Input() appearance = '';
+  @Input() formFieldClass = '';
+  @Input() height = '48px';
 
   @Output() readonly filterChange = new EventEmitter<TextFilter>();
 
   hasFlag(flag: FilterFlag): boolean {
-    return assertDefined(this.textFilter).flags.includes(flag) ?? false;
+    return assertDefined(this.textFilter).values.flags.includes(flag) ?? false;
   }
 
   onFilterFlagClick(event: MouseEvent, flag: FilterFlag) {
     event.stopPropagation();
     const filter = assertDefined(this.textFilter);
     if (this.hasFlag(flag)) {
-      filter.flags = filter.flags.filter((f) => f !== flag);
+      filter.values.flags = filter.values.flags.filter((f) => f !== flag);
     } else {
-      filter.flags = filter.flags.concat(flag);
+      filter.values.flags = filter.values.flags.concat(flag);
     }
     this.onFilterChange();
   }

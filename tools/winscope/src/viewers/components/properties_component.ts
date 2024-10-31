@@ -46,7 +46,6 @@ import {viewerCardInnerStyle} from './styles/viewer_card.styles';
           [title]="title"
           (collapseButtonClicked)="collapseButtonClicked.emit()"></collapsible-section-title>
         <search-box
-          *ngIf="showFilter"
           [textFilter]="textFilter"
           (filterChange)="onFilterChange($event)"></search-box>
       </div>
@@ -117,7 +116,6 @@ export class PropertiesComponent {
   ViewerEvents = ViewerEvents;
 
   @Input() title = 'PROPERTIES';
-  @Input() showFilter = true;
   @Input() userOptions: UserOptions = {};
   @Input() placeholderText = '';
   @Input() propertiesTree: UiPropertyTreeNode | undefined;
@@ -128,6 +126,7 @@ export class PropertiesComponent {
   @Input() traceType: TraceType | undefined;
   @Input() store: PersistentStore | undefined;
   @Input() textFilter: TextFilter | undefined;
+  @Input() filterEventName = ViewerEvents.PropertiesFilterChange;
 
   @Output() collapseButtonClicked = new EventEmitter();
 
@@ -136,7 +135,7 @@ export class PropertiesComponent {
   constructor(@Inject(ElementRef) private elementRef: ElementRef) {}
 
   onFilterChange(detail: TextFilter) {
-    const event = new CustomEvent(ViewerEvents.PropertiesFilterChange, {
+    const event = new CustomEvent(this.filterEventName, {
       bubbles: true,
       detail,
     });
@@ -158,7 +157,7 @@ export class PropertiesComponent {
   showViewCaptureFormat(): boolean {
     return (
       this.traceType === TraceType.VIEW_CAPTURE &&
-      this.textFilter?.filterString === '' &&
+      this.textFilter?.values.filterString === '' &&
       // Todo: Highlight Inline in formatted ViewCapture Properties Component.
       !this.userOptions['showDiff']?.enabled &&
       this.curatedProperties !== undefined

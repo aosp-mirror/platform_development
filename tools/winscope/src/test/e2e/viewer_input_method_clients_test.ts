@@ -33,7 +33,7 @@ describe('Viewer Input Method Clients', () => {
     );
     await E2eTestUtils.checkTimelineTraceSelector({
       icon: 'keyboard_alt',
-      color: 'rgba(250, 144, 62, 1)',
+      color: 'rgba(255, 150, 75, 1)',
     });
     await E2eTestUtils.checkInitialRealTimestamp('2022-11-21, 18:05:11.145');
     await E2eTestUtils.checkFinalRealTimestamp('2022-11-21, 18:05:18.245');

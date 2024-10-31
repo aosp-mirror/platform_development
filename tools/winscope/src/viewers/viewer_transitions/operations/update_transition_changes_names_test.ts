@@ -15,7 +15,6 @@
  */
 
 import {PropertyTreeBuilder} from 'test/unit/property_tree_builder';
-import {UiPropertyTreeNode} from 'viewers/common/ui_property_tree_node';
 import {UpdateTransitionChangesNames} from './update_transition_changes_names';
 
 describe('UpdateTransitionChangesNames', () => {
@@ -34,32 +33,30 @@ describe('UpdateTransitionChangesNames', () => {
   });
 
   it('updates layerId and windowToken display names if in maps', () => {
-    const propertyRoot = UiPropertyTreeNode.from(
-      new PropertyTreeBuilder()
-        .setIsRoot(true)
-        .setRootId('TransitionsTraceEntry')
-        .setName('transition')
-        .setChildren([
-          {
-            name: 'wmData',
-            children: [
-              {
-                name: 'targets',
-                children: [
-                  {
-                    name: '0',
-                    children: [
-                      {name: 'layerId', value: 2},
-                      {name: 'windowId', value: 159077656n},
-                    ],
-                  },
-                ],
-              },
-            ],
-          },
-        ])
-        .build(),
-    );
+    const propertyRoot = new PropertyTreeBuilder()
+      .setIsRoot(true)
+      .setRootId('TransitionsTraceEntry')
+      .setName('transition')
+      .setChildren([
+        {
+          name: 'wmData',
+          children: [
+            {
+              name: 'targets',
+              children: [
+                {
+                  name: '0',
+                  children: [
+                    {name: 'layerId', value: 2},
+                    {name: 'windowId', value: 159077656n},
+                  ],
+                },
+              ],
+            },
+          ],
+        },
+      ])
+      .build();
 
     operation.apply(propertyRoot);
     expect(
@@ -69,7 +66,7 @@ describe('UpdateTransitionChangesNames', () => {
         ?.getChildByName('0')
         ?.getChildByName('layerId')
         ?.formattedValue(),
-    ).toEqual('2 testLayer');
+    ).toEqual('2 (testLayer)');
 
     expect(
       propertyRoot
@@ -82,32 +79,30 @@ describe('UpdateTransitionChangesNames', () => {
   });
 
   it('updates only windowId display name if neither layer id nor token in maps', () => {
-    const propertyRoot = UiPropertyTreeNode.from(
-      new PropertyTreeBuilder()
-        .setIsRoot(true)
-        .setRootId('TransitionsTraceEntry')
-        .setName('transition')
-        .setChildren([
-          {
-            name: 'wmData',
-            children: [
-              {
-                name: 'targets',
-                children: [
-                  {
-                    name: '0',
-                    children: [
-                      {name: 'layerId', value: 1},
-                      {name: 'windowId', value: 193491296n},
-                    ],
-                  },
-                ],
-              },
-            ],
-          },
-        ])
-        .build(),
-    );
+    const propertyRoot = new PropertyTreeBuilder()
+      .setIsRoot(true)
+      .setRootId('TransitionsTraceEntry')
+      .setName('transition')
+      .setChildren([
+        {
+          name: 'wmData',
+          children: [
+            {
+              name: 'targets',
+              children: [
+                {
+                  name: '0',
+                  children: [
+                    {name: 'layerId', value: 1},
+                    {name: 'windowId', value: 193491296n},
+                  ],
+                },
+              ],
+            },
+          ],
+        },
+      ])
+      .build();
 
     operation.apply(propertyRoot);
     expect(

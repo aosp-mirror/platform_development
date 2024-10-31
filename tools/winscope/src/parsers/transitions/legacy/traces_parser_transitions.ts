@@ -18,7 +18,7 @@ import {assertDefined} from 'common/assert_utils';
 import {Timestamp} from 'common/time';
 import {ParserTimestampConverter} from 'common/timestamp_converter';
 import {AbstractTracesParser} from 'parsers/traces/abstract_traces_parser';
-import {ParserTransitionsUtils} from 'parsers/transitions/parser_transitions_utils';
+import {EntryPropertiesTreeFactory} from 'parsers/transitions/entry_properties_tree_factory';
 import {CoarseVersion} from 'trace/coarse_version';
 import {Trace} from 'trace/trace';
 import {Traces} from 'trace/traces';
@@ -147,7 +147,7 @@ export class TracesParserTransitions extends AbstractTracesParser<PropertyTreeNo
 
     const compressedTransitions = Array.from(idToTransition.values());
     compressedTransitions.forEach((transition) => {
-      ParserTransitionsUtils.TRANSITION_OPERATIONS.forEach((operation) =>
+      EntryPropertiesTreeFactory.TRANSITION_OPERATIONS.forEach((operation) =>
         operation.apply(transition),
       );
     });

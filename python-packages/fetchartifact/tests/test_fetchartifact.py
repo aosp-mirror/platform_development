@@ -21,7 +21,7 @@ from aiohttp import ClientResponseError, ClientSession
 from aiohttp.test_utils import TestClient
 from aiohttp.web import Application, Request, Response
 
-from fetchartifact import fetch_artifact, fetch_artifact_chunked
+from fetchartifact import ArtifactDownloader, fetch_artifact, fetch_artifact_chunked
 
 TEST_BUILD_ID = "1234"
 TEST_TARGET = "linux"
@@ -91,6 +91,38 @@ async def test_failure_raises(android_ci_client: TestClient) -> None:
             query_url_base="/bad",
         ):
             pass
+
+
+class TestDownloader(ArtifactDownloader):
+    """Downloader which tracks calls to on_artifact_size and after_chunk."""
+
+    def __init__(self, target: str, build_id: str, artifact_name: str) -> None:
+        super().__init__(target, build_id, artifact_name, query_url_base="")
+        self.reported_content_length: int | None = None
+        self.reported_chunk_sizes: list[int] = []
+
+    def on_artifact_size(self, size: int) -> None:
+        super().on_artifact_size(size)
+        assert self.reported_content_length is None
+        self.reported_content_length = size
+
+    def after_chunk(self, size: int) -> None:
+        super().after_chunk(size)
+        self.reported_chunk_sizes.append(size)
+
+
+async def test_downloader_progress_reports(android_ci_client: TestClient) -> None:
+    """Tests that progress is reported when using ArtifactDownloader."""
+    downloader = TestDownloader(TEST_TARGET, TEST_BUILD_ID, TEST_ARTIFACT_NAME)
+
+    assert [b"Hell", b"o, w", b"orld", b"!"] == [
+        chunk
+        async for chunk in downloader.download(
+            cast(ClientSession, android_ci_client), chunk_size=4
+        )
+    ]
+    assert downloader.reported_content_length == len(TEST_RESPONSE.decode("utf-8"))
+    assert downloader.reported_chunk_sizes == [4, 4, 4, 1]
 
 
 @pytest.mark.requires_network

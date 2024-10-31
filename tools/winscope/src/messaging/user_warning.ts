@@ -14,13 +14,9 @@
  * limitations under the License.
  */
 
-import {Analytics} from 'logging/analytics';
 import {NotificationType, UserNotification} from './user_notification';
 
 export abstract class UserWarning implements UserNotification {
-  constructor() {
-    Analytics.UserNotification.logUserWarning(this.getDescriptor());
-  }
   getNotificationType(): NotificationType {
     return NotificationType.WARNING;
   }

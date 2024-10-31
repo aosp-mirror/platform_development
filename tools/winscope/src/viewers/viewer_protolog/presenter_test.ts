@@ -21,6 +21,7 @@ import {PropertyTreeBuilder} from 'test/unit/property_tree_builder';
 import {TimestampConverterUtils} from 'test/unit/timestamp_converter_utils';
 import {TraceBuilder} from 'test/unit/trace_builder';
 import {Trace} from 'trace/trace';
+import {TraceType} from 'trace/trace_type';
 import {
   DEFAULT_PROPERTY_FORMATTER,
   TIMESTAMP_NODE_FORMATTER,
@@ -28,117 +29,44 @@ import {
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
 import {NotifyLogViewCallbackType} from 'viewers/common/abstract_log_viewer_presenter';
 import {AbstractLogViewerPresenterTest} from 'viewers/common/abstract_log_viewer_presenter_test';
+import {LogSelectFilter, LogTextFilter} from 'viewers/common/log_filters';
 import {TextFilter} from 'viewers/common/text_filter';
-import {LogFieldType, LogFieldValue} from 'viewers/common/ui_data_log';
+import {LogHeader} from 'viewers/common/ui_data_log';
 import {Presenter} from './presenter';
 import {UiData} from './ui_data';
 
 class PresenterProtologTest extends AbstractLogViewerPresenterTest<UiData> {
+  override readonly expectedHeaders = [
+    {
+      header: new LogHeader(
+        {name: 'Log Level', cssClass: 'log-level'},
+        new LogSelectFilter(Array.from({length: 3}, () => '')),
+      ),
+      options: ['level0', 'level1', 'level2'],
+    },
+    {
+      header: new LogHeader(
+        {name: 'Tag', cssClass: 'tag'},
+        new LogSelectFilter(Array.from({length: 3}, () => '')),
+      ),
+      options: ['tag0', 'tag1', 'tag2'],
+    },
+    {
+      header: new LogHeader(
+        {name: 'Source files', cssClass: 'source-file'},
+        new LogSelectFilter(Array.from({length: 3}, () => '')),
+      ),
+      options: ['sourcefile0', 'sourcefile1', 'sourcefile2'],
+    },
+    {
+      header: new LogHeader(
+        {name: 'Search text', cssClass: 'text'},
+        new LogTextFilter(new TextFilter()),
+      ),
+    },
+  ];
   private trace: Trace<PropertyTreeNode> | undefined;
   private positionUpdate: TracePositionUpdate | undefined;
-  private secondPositionUpdate: TracePositionUpdate | undefined;
-
-  override readonly shouldExecuteHeaderTests = false;
-  override readonly shouldExecuteFilterTests = true;
-  override readonly shouldExecutePropertiesTests = false;
-
-  override readonly totalOutputEntries = 3;
-  override readonly expectedIndexOfFirstPositionUpdate = 0;
-  override readonly expectedIndexOfSecondPositionUpdate = 1;
-  override readonly expectedInitialFilterOptions = new Map<
-    LogFieldType,
-    string[] | number
-  >([
-    [LogFieldType.LOG_LEVEL, ['level0', 'level1', 'level2']],
-    [LogFieldType.TAG, ['tag0', 'tag1', 'tag2']],
-    [LogFieldType.SOURCE_FILE, ['sourcefile0', 'sourcefile1', 'sourcefile2']],
-  ]);
-  override readonly filterValuesToSet = new Map<
-    LogFieldType,
-    Array<string | string[]>
-  >([
-    [LogFieldType.LOG_LEVEL, [[], ['level1'], ['level0', 'level1', 'level2']]],
-    [LogFieldType.TAG, [[], ['tag1'], ['tag0', 'tag1', 'tag2']]],
-    [
-      LogFieldType.SOURCE_FILE,
-      [[], ['sourcefile1'], ['sourcefile0', 'sourcefile1', 'sourcefile2']],
-    ],
-    [LogFieldType.TEXT, [[], 'text', 'text0', 'text1']],
-  ]);
-  override readonly expectedFieldValuesAfterFilter = new Map<
-    LogFieldType,
-    Array<LogFieldValue[] | number>
-  >([
-    [
-      LogFieldType.LOG_LEVEL,
-      [this.totalOutputEntries, ['level1'], ['level0', 'level1', 'level2']],
-    ],
-    [
-      LogFieldType.TAG,
-      [this.totalOutputEntries, ['tag1'], ['tag0', 'tag1', 'tag2']],
-    ],
-    [
-      LogFieldType.SOURCE_FILE,
-      [
-        this.totalOutputEntries,
-        ['sourcefile1'],
-        ['sourcefile0', 'sourcefile1', 'sourcefile2'],
-      ],
-    ],
-    [
-      LogFieldType.TEXT,
-      [
-        this.totalOutputEntries,
-        ['text0', 'text1', 'text2'],
-        ['text0'],
-        ['text1'],
-      ],
-    ],
-  ]);
-  override readonly logEntryClickIndex = 10;
-  override readonly filterNameForCurrentIndexTest = LogFieldType.LOG_LEVEL;
-  override readonly filterChangeForCurrentIndexTest = ['level1'];
-  override readonly expectedCurrentIndexAfterFilterChange = 0;
-  override readonly secondFilterChangeForCurrentIndexTest = [
-    'level0',
-    'level1',
-  ];
-  override readonly expectedCurrentIndexAfterSecondFilterChange = 1;
-
-  override executeSpecializedTests() {
-    describe('Specialized tests', () => {
-      let presenter: Presenter;
-      let uiData: UiData;
-
-      beforeAll(async () => {
-        await this.setUpTestEnvironment();
-      });
-
-      beforeEach(async () => {
-        const notifyViewCallback = (newData: UiData) => {
-          uiData = newData;
-        };
-        presenter = await this.createPresenter(notifyViewCallback);
-      });
-
-      it('handles text filter change', async () => {
-        await presenter.onAppEvent(this.getSecondPositionUpdate());
-        expect(uiData.entries.length).toEqual(3);
-        expect(uiData.currentIndex).toEqual(1);
-        expect(uiData.scrollToIndex).toEqual(1);
-        expect(uiData.selectedIndex).toEqual(undefined);
-
-        await presenter.onTextFilterChange(
-          LogFieldType.TEXT,
-          new TextFilter('text0', []),
-        );
-        expect(uiData.entries.length).toEqual(1);
-        expect(uiData.currentIndex).toEqual(0);
-        expect(uiData.scrollToIndex).toEqual(0);
-        expect(uiData.selectedIndex).toEqual(undefined);
-      });
-    });
-  }
 
   override async setUpTestEnvironment(): Promise<void> {
     const time10 = TimestampConverterUtils.makeRealTimestamp(10n);
@@ -227,14 +155,16 @@ class PresenterProtologTest extends AbstractLogViewerPresenterTest<UiData> {
       .setTimestamps([time10, time11, time12])
       .build();
 
-    this.positionUpdate = TracePositionUpdate.fromTimestamp(time10);
-    this.secondPositionUpdate = TracePositionUpdate.fromTimestamp(time11);
+    this.positionUpdate = TracePositionUpdate.fromTraceEntry(
+      this.trace.getEntry(0),
+    );
   }
 
-  override createPresenterWithEmptyTrace(
+  override async createPresenterWithEmptyTrace(
     callback: NotifyLogViewCallbackType<UiData>,
-  ): Presenter {
+  ): Promise<Presenter> {
     const emptyTrace = new TraceBuilder<PropertyTreeNode>()
+      .setType(TraceType.PROTO_LOG)
       .setEntries([])
       .build();
     return new Presenter(emptyTrace, callback, new InMemoryStorage());
@@ -254,10 +184,6 @@ class PresenterProtologTest extends AbstractLogViewerPresenterTest<UiData> {
 
   override getPositionUpdate(): TracePositionUpdate {
     return assertDefined(this.positionUpdate);
-  }
-
-  override getSecondPositionUpdate(): TracePositionUpdate {
-    return assertDefined(this.secondPositionUpdate);
   }
 }
 

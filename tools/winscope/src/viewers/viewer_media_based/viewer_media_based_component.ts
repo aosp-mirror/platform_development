@@ -35,13 +35,14 @@ import {MediaBasedTraceEntry} from 'trace/media_based_trace_entry';
   <div class="overlay">
     <mat-card class="container" cdkDrag cdkDragBoundary=".overlay">
       <mat-card-title class="header">
-        <button mat-button class="button-drag" cdkDragHandle>
+        <button mat-button class="button-drag draggable" cdkDragHandle>
           <mat-icon class="drag-icon">drag_indicator</mat-icon>
         </button>
         <span
           #titleText
           *ngIf="titles.length <= 1"
-          class="mat-body-2 overlay-title"
+          cdkDragHandle
+          class="mat-body-2 overlay-title draggable"
           [matTooltip]="titles.at(index)"
           matTooltipPosition="above"
           [matTooltipShowDelay]="300"
@@ -125,8 +126,11 @@ import {MediaBasedTraceEntry} from 'trace/media_based_trace_entry';
         align-items: center;
       }
 
-      .button-drag {
+      .draggable {
         cursor: grab;
+      }
+
+      .button-drag {
         padding: 2px;
         min-width: fit-content;
       }
@@ -295,9 +299,11 @@ class ViewerMediaBasedComponent {
       const headerHeight =
         this.elementRef.nativeElement.querySelector('.header')?.clientHeight ??
         0;
-      const maxWidth =
+      const maxWidth = Math.min(
         ((maxHeight - headerHeight) * this.frameSize.width) /
-        this.frameSize.height;
+          this.frameSize.height,
+        window.innerWidth,
+      );
       container.style.maxWidth = `${maxWidth}px`;
       this.changeDetectorRef.detectChanges();
     });
