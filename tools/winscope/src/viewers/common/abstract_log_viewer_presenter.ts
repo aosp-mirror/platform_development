@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import {DOMUtils} from 'common/dom_utils';
 import {FunctionUtils} from 'common/function_utils';
 import {Timestamp} from 'common/time';
 import {
@@ -27,12 +28,13 @@ import {
 } from 'messaging/winscope_event_emitter';
 import {Trace, TraceEntry} from 'trace/trace';
 import {TraceEntryFinder} from 'trace/trace_entry_finder';
+import {TracePosition} from 'trace/trace_position';
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
 import {PropertiesPresenter} from 'viewers/common/properties_presenter';
+import {TextFilter} from 'viewers/common/text_filter';
 import {UserOptions} from 'viewers/common/user_options';
 import {LogPresenter} from './log_presenter';
-import {TextFilter} from './text_filter';
-import {LogEntry, LogFieldType, UiDataLog} from './ui_data_log';
+import {LogEntry, LogHeader, UiDataLog} from './ui_data_log';
 import {
   LogFilterChangeDetail,
   LogTextFilterChangeDetail,
@@ -45,10 +47,13 @@ export type NotifyLogViewCallbackType<UiData> = (uiData: UiData) => void;
 export abstract class AbstractLogViewerPresenter<UiData extends UiDataLog>
   implements WinscopeEventEmitter
 {
+  protected static readonly VALUE_NA = 'N/A';
   protected emitAppEvent: EmitEvent = FunctionUtils.DO_NOTHING_ASYNC;
   protected abstract logPresenter: LogPresenter<LogEntry>;
   protected propertiesPresenter?: PropertiesPresenter;
   protected keepCalculated?: boolean;
+  private activeTrace?: Trace<object>;
+  private isInitialized = false;
 
   protected constructor(
     protected readonly trace: Trace<PropertyTreeNode>,
@@ -67,14 +72,14 @@ export abstract class AbstractLogViewerPresenter<UiData extends UiDataLog>
       ViewerEvents.LogFilterChange,
       async (event) => {
         const detail: LogFilterChangeDetail = (event as CustomEvent).detail;
-        await this.onFilterChange(detail.type, detail.value);
+        await this.onSelectFilterChange(detail.header, detail.value);
       },
     );
     htmlElement.addEventListener(
       ViewerEvents.LogTextFilterChange,
       async (event) => {
         const detail: LogTextFilterChangeDetail = (event as CustomEvent).detail;
-        await this.onTextFilterChange(detail.type, detail.filter);
+        await this.onTextFilterChange(detail.header, detail.filter);
       },
     );
     htmlElement.addEventListener(ViewerEvents.LogEntryClick, async (event) => {
@@ -103,6 +108,23 @@ export abstract class AbstractLogViewerPresenter<UiData extends UiDataLog>
           (event as CustomEvent).detail.userOptions,
         ),
     );
+    htmlElement.addEventListener(
+      ViewerEvents.PropertiesFilterChange,
+      async (event) => {
+        const detail: TextFilter = (event as CustomEvent).detail;
+        await this.onPropertiesFilterChange(detail);
+      },
+    );
+
+    document.addEventListener('keydown', async (event: KeyboardEvent) => {
+      const isViewerVisible = DOMUtils.isElementVisible(htmlElement);
+      const isPositionChange =
+        event.key === 'ArrowRight' || event.key === 'ArrowLeft';
+      if (!isViewerVisible || !isPositionChange) {
+        return;
+      }
+      await this.onPositionChangeByKeyPress(event);
+    });
   }
 
   async onAppEvent(event: WinscopeEvent) {
@@ -112,28 +134,31 @@ export abstract class AbstractLogViewerPresenter<UiData extends UiDataLog>
         await this.applyTracePositionUpdate(event);
       },
     );
+    await event.visit(WinscopeEventType.DARK_MODE_TOGGLED, async (event) => {
+      this.uiData.isDarkMode = event.isDarkMode;
+      this.notifyViewChanged();
+    });
+    await event.visit(WinscopeEventType.ACTIVE_TRACE_CHANGED, async (event) => {
+      this.activeTrace = event.trace;
+    });
   }
 
-  async onFilterChange(type: LogFieldType, value: string[] | string) {
-    this.logPresenter.applyFilterChange(type, value);
+  async onSelectFilterChange(header: LogHeader, value: string[]) {
+    this.logPresenter.applySelectFilterChange(header, value);
     await this.updatePropertiesTree();
     this.uiData.currentIndex = this.logPresenter.getCurrentIndex();
     this.uiData.selectedIndex = this.logPresenter.getSelectedIndex();
-    this.uiData.scrollToIndex =
-      this.logPresenter.getCurrentIndex() ??
-      this.logPresenter.getSelectedIndex();
+    this.uiData.scrollToIndex = this.logPresenter.getScrollToIndex();
     this.uiData.entries = this.logPresenter.getFilteredEntries();
     this.notifyViewChanged();
   }
 
-  async onTextFilterChange(type: LogFieldType, filter: TextFilter) {
-    this.logPresenter.applyTextFilterChange(type, filter);
+  async onTextFilterChange(header: LogHeader, value: TextFilter) {
+    this.logPresenter.applyTextFilterChange(header, value);
     await this.updatePropertiesTree();
     this.uiData.currentIndex = this.logPresenter.getCurrentIndex();
     this.uiData.selectedIndex = this.logPresenter.getSelectedIndex();
-    this.uiData.scrollToIndex =
-      this.logPresenter.getCurrentIndex() ??
-      this.logPresenter.getSelectedIndex();
+    this.uiData.scrollToIndex = this.logPresenter.getScrollToIndex();
     this.uiData.entries = this.logPresenter.getFilteredEntries();
     this.notifyViewChanged();
   }
@@ -145,7 +170,17 @@ export abstract class AbstractLogViewerPresenter<UiData extends UiDataLog>
     this.propertiesPresenter.applyPropertiesUserOptionsChange(userOptions);
     this.uiData.propertiesUserOptions =
       this.propertiesPresenter.getUserOptions();
-    await this.updatePropertiesTree();
+    await this.updatePropertiesTree(false);
+    this.notifyViewChanged();
+  }
+
+  async onPropertiesFilterChange(textFilter: TextFilter) {
+    if (!this.propertiesPresenter) {
+      return;
+    }
+    this.propertiesPresenter.applyPropertiesFilterChange(textFilter);
+    await this.updatePropertiesTree(false);
+    this.uiData.propertiesFilter = textFilter;
     this.notifyViewChanged();
   }
 
@@ -180,9 +215,44 @@ export abstract class AbstractLogViewerPresenter<UiData extends UiDataLog>
     this.notifyViewChanged();
   }
 
+  async onPositionChangeByKeyPress(event: KeyboardEvent) {
+    const currIndex = this.uiData.currentIndex;
+    if (this.activeTrace === this.trace && currIndex !== undefined) {
+      if (event.key === 'ArrowRight') {
+        event.stopImmediatePropagation();
+        if (currIndex < this.uiData.entries.length - 1) {
+          const currTimestamp =
+            this.uiData.entries[currIndex].traceEntry.getTimestamp();
+          const nextEntry = this.uiData.entries
+            .slice(currIndex + 1)
+            .find((entry) => entry.traceEntry.getTimestamp() > currTimestamp);
+          if (nextEntry) {
+            return this.emitAppEvent(
+              new TracePositionUpdate(
+                TracePosition.fromTraceEntry(nextEntry.traceEntry),
+                true,
+              ),
+            );
+          }
+        }
+      } else {
+        event.stopImmediatePropagation();
+        if (currIndex > 0) {
+          return this.emitAppEvent(
+            new TracePositionUpdate(
+              TracePosition.fromTraceEntry(
+                this.uiData.entries[currIndex - 1].traceEntry,
+              ),
+              true,
+            ),
+          );
+        }
+      }
+    }
+  }
+
   protected refreshUiData() {
     this.uiData.headers = this.logPresenter.getHeaders();
-    this.uiData.filters = this.logPresenter.getFilters();
     this.uiData.entries = this.logPresenter.getFilteredEntries();
     this.uiData.selectedIndex = this.logPresenter.getSelectedIndex();
     this.uiData.scrollToIndex = this.logPresenter.getScrollToIndex();
@@ -191,15 +261,21 @@ export abstract class AbstractLogViewerPresenter<UiData extends UiDataLog>
       this.uiData.propertiesTree = this.propertiesPresenter.getFormattedTree();
       this.uiData.propertiesUserOptions =
         this.propertiesPresenter.getUserOptions();
+      this.uiData.propertiesFilter = this.propertiesPresenter.getTextFilter();
     }
   }
 
   protected async applyTracePositionUpdate(event: TracePositionUpdate) {
     await this.initializeIfNeeded();
-    const entry = TraceEntryFinder.findCorrespondingEntry(
-      this.trace,
-      event.position,
-    );
+    let entry: TraceEntry<PropertyTreeNode> | undefined;
+    if (event.position.entry?.getFullTrace() === this.trace) {
+      entry = event.position.entry as TraceEntry<PropertyTreeNode>;
+    } else {
+      entry = TraceEntryFinder.findCorrespondingEntry(
+        this.trace,
+        event.position,
+      );
+    }
     this.logPresenter.applyTracePositionUpdate(entry);
 
     this.uiData.selectedIndex = this.logPresenter.getSelectedIndex();
@@ -214,10 +290,13 @@ export abstract class AbstractLogViewerPresenter<UiData extends UiDataLog>
     this.notifyViewChanged();
   }
 
-  protected async updatePropertiesTree() {
+  protected async updatePropertiesTree(updateDefaultAllowlist = true) {
     if (this.propertiesPresenter) {
       const tree = this.getPropertiesTree();
       this.propertiesPresenter.setPropertiesTree(tree);
+      if (updateDefaultAllowlist && this.updateDefaultAllowlist) {
+        this.updateDefaultAllowlist(tree);
+      }
       await this.propertiesPresenter.formatPropertiesTree(
         undefined,
         undefined,
@@ -225,6 +304,27 @@ export abstract class AbstractLogViewerPresenter<UiData extends UiDataLog>
       );
       this.uiData.propertiesTree = this.propertiesPresenter.getFormattedTree();
     }
+  }
+
+  private async initializeIfNeeded() {
+    if (this.isInitialized) {
+      return;
+    }
+
+    if (this.initializeTraceSpecificData) {
+      await this.initializeTraceSpecificData();
+    }
+
+    const headers = this.makeHeaders();
+    const allEntries = await this.makeUiDataEntries(headers);
+    if (this.updateFiltersInHeaders) {
+      this.updateFiltersInHeaders(headers, allEntries);
+    }
+
+    this.logPresenter.setAllEntries(allEntries);
+    this.logPresenter.setHeaders(headers);
+    this.refreshUiData();
+    this.isInitialized = true;
   }
 
   private updateIndicesUiData() {
@@ -250,5 +350,14 @@ export abstract class AbstractLogViewerPresenter<UiData extends UiDataLog>
     this.notifyViewCallback(this.uiData);
   }
 
-  protected abstract initializeIfNeeded(): Promise<void>;
+  protected abstract makeHeaders(): LogHeader[];
+  protected abstract makeUiDataEntries(
+    headers: LogHeader[],
+  ): Promise<LogEntry[]>;
+  protected initializeTraceSpecificData?(): Promise<void>;
+  protected updateFiltersInHeaders?(
+    headers: LogHeader[],
+    allEntries: LogEntry[],
+  ): void;
+  protected updateDefaultAllowlist?(tree: PropertyTreeNode | undefined): void;
 }

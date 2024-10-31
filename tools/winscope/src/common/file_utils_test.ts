@@ -72,7 +72,21 @@ describe('FileUtils', () => {
       'traces/winscope.zip',
     );
     const unzippedFiles = await FileUtils.unzipFile(validZipFile);
-    expect(unzippedFiles.length).toBe(2);
+    expect(unzippedFiles.map((f) => f.name)).toEqual([
+      'Surface Flinger/SurfaceFlinger.pb',
+      'Window Manager/WindowManager.pb',
+    ]);
+  });
+
+  it('recursively unzips archive', async () => {
+    const validZipFile = await UnitTestUtils.getFixtureFile(
+      'traces/recursive_winscope.zip',
+    );
+    const unzippedFiles = await FileUtils.unzipFile(validZipFile);
+    expect(unzippedFiles.map((f) => f.name)).toEqual([
+      'Surface Flinger/SurfaceFlinger.pb',
+      'Window Manager/WindowManager.pb',
+    ]);
   });
 
   it('decompresses gzipped file', async () => {

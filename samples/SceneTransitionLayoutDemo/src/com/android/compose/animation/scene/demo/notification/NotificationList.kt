@@ -36,6 +36,7 @@ import com.android.compose.animation.scene.SceneTransitionLayoutState
 import com.android.compose.animation.scene.demo.DemoConfiguration
 import com.android.compose.animation.scene.demo.Scenes
 import com.android.compose.animation.scene.observableTransitionState
+import com.android.compose.modifiers.thenIf
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.filter
@@ -56,6 +57,7 @@ fun SceneScope.NotificationList(
     notifications: List<NotificationViewModel>,
     maxNotificationCount: Int?,
     demoConfiguration: DemoConfiguration,
+    isScrollable: Boolean = true,
     modifier: Modifier = Modifier,
 ) {
     if (demoConfiguration.interactiveNotifications) {
@@ -66,9 +68,12 @@ fun SceneScope.NotificationList(
     // SceneTransitionLayout bounds.
     // TODO(b/291025415): Make sure everything still works when using `LazyColumn` instead of a
     // scrollable `Column`.
-    val scrollState = rememberScrollState()
+    val scrollState = if (isScrollable) rememberScrollState() else null
     Column(
-        modifier.verticalScroll(scrollState).fillMaxWidth().padding(16.dp),
+        modifier
+            .thenIf(scrollState != null) { Modifier.verticalScroll(scrollState!!) }
+            .fillMaxWidth()
+            .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(2.dp),
     ) {
         val n = maxNotificationCount ?: notifications.size
@@ -94,7 +99,7 @@ fun SceneScope.NotificationList(
 
 @Composable
 private fun SceneScope.ExpandFirstNotificationWhenSwipingFromLockscreenToShade(
-    notifications: List<NotificationViewModel>,
+    notifications: List<NotificationViewModel>
 ) {
     val firstNotification = notifications.firstOrNull() ?: return
     val coroutineScope = rememberCoroutineScope()

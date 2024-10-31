@@ -105,7 +105,7 @@ describe('Viewer Protolog', () => {
 
   async function filterByText(filterString: string) {
     await E2eTestUtils.updateInputField(
-      `${viewerSelector} .filters .text`,
+      `${viewerSelector} .headers .text`,
       'Search text',
       filterString,
     );

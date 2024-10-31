@@ -32,14 +32,15 @@ export class UiData implements UiDataHierarchy {
   displays: DisplayIdentifier[] = [];
   highlightedItem = '';
   highlightedProperty = '';
-  hierarchyFilter = new TextFilter('', []);
-  propertiesFilter = new TextFilter('', []);
+  hierarchyFilter = new TextFilter();
+  propertiesFilter = new TextFilter();
   pinnedItems: UiHierarchyTreeNode[] = [];
   rectsUserOptions: UserOptions = {};
   hierarchyUserOptions: UserOptions = {};
   propertiesUserOptions: UserOptions = {};
   hierarchyTrees: UiHierarchyTreeNode[] | undefined;
   propertiesTree: UiPropertyTreeNode | undefined;
+  isDarkMode = false;
 
   constructor(
     public curatedProperties: SfCuratedProperties | undefined = undefined,

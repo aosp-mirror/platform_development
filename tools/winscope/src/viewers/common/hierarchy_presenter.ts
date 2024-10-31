@@ -25,6 +25,7 @@ import {
 } from 'trace/tree_node/property_tree_node';
 import {TreeNode} from 'trace/tree_node/tree_node';
 import {IsModifiedCallbackType} from 'viewers/common/add_diffs';
+import {TextFilter} from 'viewers/common/text_filter';
 import {UiHierarchyTreeNode} from 'viewers/common/ui_hierarchy_tree_node';
 import {TreeNodeFilter, UiTreeUtils} from 'viewers/common/ui_tree_utils';
 import {UserOptions} from 'viewers/common/user_options';
@@ -35,7 +36,6 @@ import {Filter} from './operations/filter';
 import {FlattenChildren} from './operations/flatten_children';
 import {SimplifyNames} from './operations/simplify_names';
 import {PropertiesPresenter} from './properties_presenter';
-import {TextFilter} from './text_filter';
 import {UiTreeFormatter} from './ui_tree_formatter';
 
 export type GetHierarchyTreeNameType = (
@@ -85,8 +85,7 @@ export class HierarchyPresenter {
     >,
   ) {
     this.hierarchyFilter = UiTreeUtils.makeNodeFilter(
-      textFilter.filterString,
-      textFilter.flags,
+      textFilter.getFilterPredicate(),
     );
   }
 
@@ -331,8 +330,7 @@ export class HierarchyPresenter {
   async applyHierarchyFilterChange(textFilter: TextFilter) {
     this.textFilter = textFilter;
     this.hierarchyFilter = UiTreeUtils.makeNodeFilter(
-      textFilter.filterString,
-      textFilter.flags,
+      textFilter.getFilterPredicate(),
     );
     this.currentFormattedTrees =
       await this.formatHierarchyTreesAndUpdatePinnedItems(

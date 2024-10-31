@@ -62,7 +62,7 @@ import {viewerCardInnerStyle} from './styles/viewer_card.styles';
       <div *ngIf="pinnedItems.length > 0" class="pinned-items">
         <tree-node
           *ngFor="let pinnedItem of pinnedItems"
-          class="node"
+          class="node full-opacity"
           [class]="pinnedItem.getDiff()"
           [class.selected]="isHighlighted(pinnedItem, highlightedItem)"
           [class.clickable]="true"
