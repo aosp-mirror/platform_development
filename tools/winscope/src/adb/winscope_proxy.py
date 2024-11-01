@@ -62,17 +62,18 @@ def create_argument_parser() -> argparse.ArgumentParser:
     return parser
 
 # Keep in sync with ProxyConnection#VERSION in Winscope
-VERSION = '4.0.5'
+VERSION = '4.0.6'
 
 PERFETTO_TRACE_CONFIG_FILE = '/data/misc/perfetto-configs/winscope-proxy-trace.conf'
 PERFETTO_DUMP_CONFIG_FILE = '/data/misc/perfetto-configs/winscope-proxy-dump.conf'
 PERFETTO_TRACE_FILE = '/data/misc/perfetto-traces/winscope-proxy-trace.perfetto-trace'
 PERFETTO_DUMP_FILE = '/data/misc/perfetto-traces/winscope-proxy-dump.perfetto-trace'
 PERFETTO_UNIQUE_SESSION_NAME = 'winscope proxy perfetto tracing'
-PERFETTO_TRACING_SESSIONS_QUERY_RESULT = """TRACING SESSIONS:
+PERFETTO_TRACING_SESSIONS_QUERY_START = """TRACING SESSIONS:
 
 ID      UID     STATE      BUF (#) KB   DUR (s)   #DS  STARTED  NAME
-===     ===     =====      ==========   =======   ===  =======  ===="""
+===     ===     =====      ==========   =======   ===  =======  ====\n"""
+PERFETTO_TRACING_SESSIONS_QUERY_END = """\nNOTE: Some tracing sessions are not reported in the list above."""
 
 WINSCOPE_VERSION_HEADER = "Winscope-Proxy-Version"
 WINSCOPE_TOKEN_HEADER = "Winscope-Token"
@@ -1076,7 +1077,7 @@ class DeviceRequestEndpoint(RequestEndpoint):
 
         too_many_perfetto_sessions = self.too_many_perfetto_sessions(perfetto_query_result)
         if (too_many_perfetto_sessions):
-            warnings.append("Limit of 5 Perfetto sessions reached on device. Legacy traces will be collected.")
+            warnings.append("Limit of 5 Perfetto sessions reached on device. Will attempt to collect legacy traces.")
             log.warning(warnings[0])
 
         trace_targets: list[tuple[DumpTarget | TraceTarget, TraceConfig | None]] = []
@@ -1089,7 +1090,9 @@ class DeviceRequestEndpoint(RequestEndpoint):
                 if target.get_trace_config is not None:
                     config = target.get_trace_config(is_perfetto)
                     self.apply_config(config, t.get("config"), server, device_id)
-                if (trace_name == perfetto_name and not too_many_perfetto_sessions) or not is_perfetto:
+                is_valid_perfetto_target = trace_name == perfetto_name and not too_many_perfetto_sessions
+                is_valid_trace_target = trace_name != perfetto_name and not is_perfetto
+                if is_valid_perfetto_target or is_valid_trace_target:
                     trace_targets.append((target, config))
 
             except KeyError as err:
@@ -1105,11 +1108,16 @@ class DeviceRequestEndpoint(RequestEndpoint):
         return trace_targets, warnings
 
     def too_many_perfetto_sessions(self, perfetto_query_result: str):
-        concurrent_sessions_start = perfetto_query_result.find(PERFETTO_TRACING_SESSIONS_QUERY_RESULT)
-        if (concurrent_sessions_start != -1):
-            concurrent_sessions = perfetto_query_result[concurrent_sessions_start:]
-            log.info(f"Concurrent sessions: {concurrent_sessions}")
-            number_of_concurrent_sessions = len(concurrent_sessions[len(PERFETTO_TRACING_SESSIONS_QUERY_RESULT):].split("\n")) - 2
+        concurrent_sessions_start = perfetto_query_result.find(PERFETTO_TRACING_SESSIONS_QUERY_START)
+        if concurrent_sessions_start != -1:
+            concurrent_sessions = perfetto_query_result[concurrent_sessions_start + len(PERFETTO_TRACING_SESSIONS_QUERY_START):]
+            log.info(f"Concurrent sessions:\n{concurrent_sessions}\n")
+            concurrent_sessions_end = concurrent_sessions.find(PERFETTO_TRACING_SESSIONS_QUERY_END)
+            if concurrent_sessions_end > 0:
+                concurrent_sessions_end -= 1
+            concurrent_sessions = concurrent_sessions[:concurrent_sessions_end]
+            number_of_concurrent_sessions = len(concurrent_sessions.split("\n")) if len(concurrent_sessions) > 0 else 0
+
             if PERFETTO_UNIQUE_SESSION_NAME in concurrent_sessions:
                 call_adb("shell perfetto --attach=WINSCOPE-PROXY-TRACING-SESSION --stop")
                 log.debug("Stopped already-running winscope perfetto session.")
