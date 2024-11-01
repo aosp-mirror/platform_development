@@ -31,32 +31,26 @@ export class ZOrderPathsComputation implements Computation {
     if (!this.root) {
       throw new Error('root not set in SF z-order paths computation');
     }
-
-    this.updateZOrderParents(this.root);
-    this.root.forEachNodeDfs((node) => {
-      if (node.id === 'LayerTraceEntry root') return;
-      const zOrderPath = this.getZOrderPath(node);
-      node.addEagerProperty(
-        DEFAULT_PROPERTY_TREE_NODE_FACTORY.makeCalculatedProperty(
-          `${node.id}`,
-          'zOrderPath',
-          zOrderPath,
-        ),
-      );
-    });
+    const layerIdToTreeNode = this.makeMapOfIdToNode();
+    this.updateZOrderParents(layerIdToTreeNode);
   }
 
-  private updateZOrderParents(root: HierarchyTreeNode) {
+  private makeMapOfIdToNode(): Map<number, HierarchyTreeNode> {
     const layerIdToTreeNode = new Map<number, HierarchyTreeNode>();
-    root.forEachNodeDfs((node) => {
+    assertDefined(this.root).forEachNodeDfs((node) => {
       if (node.isRoot()) return;
       layerIdToTreeNode.set(
         assertDefined(node.getEagerPropertyByName('id')).getValue(),
         node,
       );
     });
+    return layerIdToTreeNode;
+  }
 
-    root.forEachNodeDfs((node) => {
+  private updateZOrderParents(
+    layerIdToTreeNode: Map<number, HierarchyTreeNode>,
+  ) {
+    assertDefined(this.root).forEachNodeDfs((node) => {
       const zOrderRelativeOf = node
         .getEagerPropertyByName('zOrderRelativeOf')
         ?.getValue();
@@ -73,18 +67,8 @@ export class ZOrderPathsComputation implements Computation {
           return;
         }
         node.setZParent(zParent);
-
         zParent.addRelativeChild(node);
       }
     });
-  }
-
-  private getZOrderPath(node: HierarchyTreeNode | undefined): number[] {
-    if (!node) return [];
-
-    const zOrderPath = this.getZOrderPath(node.getZParent());
-    const z = node.getEagerPropertyByName('z')?.getValue();
-    if (z !== undefined) zOrderPath.push(z);
-    return zOrderPath;
   }
 }
