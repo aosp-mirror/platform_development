@@ -405,7 +405,7 @@ export class RectsComputation implements Computation {
       curAbsoluteZByLayerStack.set(layerStack, 1);
     }
 
-    const layersWithRects = LayerExtractor.extractLayersSortedByZ(
+    const layersWithRects = LayerExtractor.extractLayersTopToBottom(
       assertDefined(this.root),
     ).filter((node) =>
       shouldIncludeLayer(node, assertDefined(this.invalidBoundsFromDisplays)),
