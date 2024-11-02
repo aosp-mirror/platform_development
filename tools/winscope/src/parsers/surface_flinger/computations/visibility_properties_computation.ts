@@ -49,15 +49,14 @@ export class VisibilityPropertiesComputation implements Computation {
     this.displays =
       this.root.getEagerPropertyByName('displays')?.getAllChildren().slice() ??
       [];
-
-    const layersOrderedByZ = LayerExtractor.extractLayersSortedByZ(
+    const topDownTraversal = LayerExtractor.extractLayersTopToBottom(
       assertDefined(this.root),
     );
 
     const opaqueLayers: HierarchyTreeNode[] = [];
     const translucentLayers: HierarchyTreeNode[] = [];
 
-    for (const layer of layersOrderedByZ) {
+    for (const layer of topDownTraversal) {
       let isVisible = this.getIsVisible(layer);
       if (!isVisible) {
         layer.addEagerProperty(
