@@ -207,7 +207,7 @@ class PresenterInputTest extends AbstractLogViewerPresenterTest<UiData> {
       {spec: uiData.headers[2].spec, value: 'DOWN'},
       {spec: uiData.headers[3].spec, value: 4},
       {spec: uiData.headers[4].spec, value: 0},
-      {spec: uiData.headers[5].spec, value: '[0: (431, 624)]'},
+      {spec: uiData.headers[5].spec, value: '[212, 64, 82, 75]'},
       {
         spec: uiData.headers[6].spec,
         value: [
