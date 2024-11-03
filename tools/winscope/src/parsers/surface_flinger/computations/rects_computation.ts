@@ -169,14 +169,27 @@ class RectSfFactory {
     const inputWindowInfo = assertDefined(
       layer.getEagerPropertyByName('inputWindowInfo'),
     );
+
+    const layerTransform = Transform.from(
+      assertDefined(layer.getEagerPropertyByName('transform')),
+    ).matrix;
+    const inverseLayerTransform = layerTransform.inverse();
+
+    // The input frame is given in the display space.
     let inputWindowRect = GeometryFactory.makeRect(
-      assertDefined(layer.getEagerPropertyByName('bounds')),
+      assertDefined(inputWindowInfo.getChildByName('frame')),
     );
+    // Transform it to layer space.
+    inputWindowRect = inverseLayerTransform.transformRect(
+      displayTransform?.transformRect(inputWindowRect) ?? inputWindowRect,
+    );
+
     const inputConfig = assertDefined(
       inputWindowInfo.getChildByName('inputConfig'),
     ).getValue();
 
     const shouldCropToDisplay =
+      inputWindowRect.isEmpty() ||
       (inputConfig & InputConfig.IS_WALLPAPER) !== 0 ||
       (invalidBoundsFromDisplays !== undefined &&
         invalidBoundsFromDisplays.some((invalid) =>
@@ -192,10 +205,6 @@ class RectSfFactory {
         layer.getEagerPropertyByName('isComputedVisible'),
       ).getValue();
 
-    const layerTransform = Transform.from(
-      assertDefined(layer.getEagerPropertyByName('transform')),
-    ).matrix;
-
     let touchableRegion: Region | undefined;
     const isTouchable = (inputConfig & InputConfig.NOT_TOUCHABLE) === 0;
     const touchableRegionNode =
@@ -204,15 +213,12 @@ class RectSfFactory {
     if (!isTouchable) {
       touchableRegion = Region.createEmpty();
     } else if (touchableRegionNode !== undefined) {
-      // The touchable region is given in the display space, not layer space.
+      // The touchable region is given in the display space.
       touchableRegion = GeometryFactory.makeRegion(touchableRegionNode);
-      // First, transform the region into layer stack space.
-      touchableRegion =
-        displayTransform?.transformRegion(touchableRegion) ?? touchableRegion;
-      // Second, transform the region into layer space.
-      touchableRegion = layerTransform
-        .inverse()
-        .transformRegion(touchableRegion);
+      // Transform it to layer space.
+      touchableRegion = inverseLayerTransform.transformRegion(
+        displayTransform?.transformRegion(touchableRegion) ?? touchableRegion,
+      );
       if (shouldCropToDisplay && display !== undefined) {
         touchableRegion = new Region(
           touchableRegion.rects.map((rect) => {
@@ -399,7 +405,7 @@ export class RectsComputation implements Computation {
       curAbsoluteZByLayerStack.set(layerStack, 1);
     }
 
-    const layersWithRects = LayerExtractor.extractLayersSortedByZ(
+    const layersWithRects = LayerExtractor.extractLayersTopToBottom(
       assertDefined(this.root),
     ).filter((node) =>
       shouldIncludeLayer(node, assertDefined(this.invalidBoundsFromDisplays)),
