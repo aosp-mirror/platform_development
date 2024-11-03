@@ -40,7 +40,7 @@ from abc import abstractmethod
 from enum import Enum
 from http import HTTPStatus
 from http.server import HTTPServer, BaseHTTPRequestHandler
-from logging import DEBUG, INFO, WARNING
+from logging import DEBUG, INFO
 from tempfile import NamedTemporaryFile
 from typing import Callable
 
@@ -54,22 +54,26 @@ secret_token = None
 def create_argument_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description='Proxy for go/winscope', prog='winscope_proxy')
 
-    parser.add_argument('--verbose', '-v', dest='loglevel', action='store_const', const=INFO)
-    parser.add_argument('--debug', '-d', dest='loglevel', action='store_const', const=DEBUG)
+    parser.add_argument('--info', '-i', dest='loglevel', action='store_const', const=INFO)
     parser.add_argument('--port', '-p', default=5544, action='store')
 
-    parser.set_defaults(loglevel=WARNING)
+    parser.set_defaults(loglevel=DEBUG)
 
     return parser
 
 # Keep in sync with ProxyConnection#VERSION in Winscope
-VERSION = '4.0.1'
+VERSION = '4.0.6'
 
 PERFETTO_TRACE_CONFIG_FILE = '/data/misc/perfetto-configs/winscope-proxy-trace.conf'
 PERFETTO_DUMP_CONFIG_FILE = '/data/misc/perfetto-configs/winscope-proxy-dump.conf'
 PERFETTO_TRACE_FILE = '/data/misc/perfetto-traces/winscope-proxy-trace.perfetto-trace'
 PERFETTO_DUMP_FILE = '/data/misc/perfetto-traces/winscope-proxy-dump.perfetto-trace'
 PERFETTO_UNIQUE_SESSION_NAME = 'winscope proxy perfetto tracing'
+PERFETTO_TRACING_SESSIONS_QUERY_START = """TRACING SESSIONS:
+
+ID      UID     STATE      BUF (#) KB   DUR (s)   #DS  STARTED  NAME
+===     ===     =====      ==========   =======   ===  =======  ====\n"""
+PERFETTO_TRACING_SESSIONS_QUERY_END = """\nNOTE: Some tracing sessions are not reported in the list above."""
 
 WINSCOPE_VERSION_HEADER = "Winscope-Proxy-Version"
 WINSCOPE_TOKEN_HEADER = "Winscope-Token"
@@ -92,6 +96,10 @@ WINSCOPE_STATUS = "/data/local/tmp/winscope_status"
 
 # Max interval between the client keep-alive requests in seconds
 KEEP_ALIVE_INTERVAL_S = 5
+
+# Perfetto's default timeout for getting an ACK from producer processes is 5s
+# We need to be sure that the timeout is longer than that with a good margin.
+COMMAND_TIMEOUT_S = 15
 
 class File:
     def __init__(self, file, filetype) -> None:
@@ -187,13 +195,11 @@ class TraceConfig:
     def execute_optional_config_command(self, server, device_id, shell, command, config_key, config_value):
         process = subprocess.Popen(shell, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
                                     stdin=subprocess.PIPE, start_new_session=True)
-        log.debug(f"Changing optional trace config on device {device_id} {config_key}:{config_value}")
         out, err = process.communicate(command.encode('utf-8'))
         if process.returncode != 0:
             raise AdbError(
                 f"Error executing command:\n {command}\n\n### OUTPUT ###{out.decode('utf-8')}\n{err.decode('utf-8')}")
-        log.debug(f"Optional trace config changed on device {device_id}")
-        server.respond(HTTPStatus.OK, b'', "text/plain")
+        log.debug(f"Optional trace config changed on device {device_id} {config_key}:{config_value}")
 
     def execute_perfetto_config_command(self, server, shell, command, trace_name):
         process = subprocess.Popen(shell, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
@@ -202,8 +208,7 @@ class TraceConfig:
         if process.returncode != 0:
             raise AdbError(
                 f"Error executing command:\n {command}\n\n### OUTPUT ###{out.decode('utf-8')}\n{err.decode('utf-8')}")
-        log.debug(f'{trace_name} (perfetto) configured to start along the other perfetto traces.')
-        server.respond(HTTPStatus.OK, b'', "text/plain")
+        log.info(f'{trace_name} (perfetto) configured to start along the other perfetto traces.')
 
 
 class SurfaceFlingerTraceConfig(TraceConfig):
@@ -756,22 +761,6 @@ write_into_file: true
 unique_session_name: "{PERFETTO_UNIQUE_SESSION_NAME}"
 EOF
 
-function is_perfetto_tracing_session_running {{
-    if perfetto --query | grep "{PERFETTO_UNIQUE_SESSION_NAME}" 2>&1 >/dev/null; then
-        return 0
-    else
-        return 1
-    fi
-}}
-
-if is_perfetto_tracing_session_running; then
-    perfetto --attach=WINSCOPE-PROXY-TRACING-SESSION --stop
-    echo 'Stopped already-running winscope perfetto session.'
-fi
-
-echo 'Concurrent Perfetto Sessions'
-perfetto --query | sed -n '/^TRACING SESSIONS:$/,$p'
-
 rm -f {PERFETTO_TRACE_FILE}
 perfetto --out {PERFETTO_TRACE_FILE} --txt --config {PERFETTO_TRACE_CONFIG_FILE} --detach=WINSCOPE-PROXY-TRACING-SESSION
 echo 'Started perfetto trace.'
@@ -941,7 +930,7 @@ class RequestRouter:
                              error.encode("utf-8"), 'text/txt')
 
     def _bad_token(self):
-        log.info("Bad token")
+        log.warning("Bad token")
         self.request.respond(HTTPStatus.FORBIDDEN, b"Bad Winscope authorization token!\nThis is Winscope ADB proxy.\n",
                              'text/txt')
 
@@ -973,13 +962,9 @@ def call_adb(params: str, device: str = None, stdin: bytes = None):
         log.debug("Call: " + ' '.join(command))
         return subprocess.check_output(command, stderr=subprocess.STDOUT, input=stdin).decode('utf-8')
     except OSError as ex:
-        log.debug('Error executing adb command: {}\n{}'.format(
-            ' '.join(command), repr(ex)))
         raise AdbError('Error executing adb command: {}\n{}'.format(
             ' '.join(command), repr(ex)))
     except subprocess.CalledProcessError as ex:
-        log.debug('Error executing adb command: {}\n{}'.format(
-            ' '.join(command), ex.output.decode("utf-8")))
         raise AdbError('Error executing adb command: adb {}\n{}'.format(
             params, ex.output.decode("utf-8")))
 
@@ -991,13 +976,9 @@ def call_adb_outfile(params: str, outfile, device: str = None, stdin: bytes = No
         _, err = process.communicate(stdin)
         outfile.seek(0)
         if process.returncode != 0:
-            log.debug('Error executing adb command: adb {}\n'.format(params) + err.decode(
-                'utf-8') + '\n' + outfile.read().decode('utf-8'))
             raise AdbError('Error executing adb command: adb {}\n'.format(params) + err.decode(
                 'utf-8') + '\n' + outfile.read().decode('utf-8'))
     except OSError as ex:
-        log.debug('Error executing adb command: adb {}\n{}'.format(
-            params, repr(ex)))
         raise AdbError(
             'Error executing adb command: adb {}\n{}'.format(params, repr(ex)))
 
@@ -1036,7 +1017,7 @@ class ListDevicesEndpoint(RequestEndpoint):
                 }
         self.foundDevices = devices
         j = json.dumps(devices)
-        log.debug("Detected devices: " + j)
+        log.info("Detected devices: " + j)
         server.respond(HTTPStatus.OK, j.encode("utf-8"), "text/json")
 
 
@@ -1083,25 +1064,35 @@ class DeviceRequestEndpoint(RequestEndpoint):
         return json.loads(server.rfile.read(length).decode("utf-8"))
 
     def get_targets_and_prepare_for_tracing(self, server, device_id, perfetto_config_file, targets_map: dict[str, TraceTarget | DumpTarget], perfetto_name):
-        log.debug("Clearing perfetto config file for previous tracing session")
+        warnings: list[str] = []
+
         call_adb(f"shell su root rm -f {perfetto_config_file}", device_id)
+        log.debug("Cleared perfetto config file for previous tracing session")
 
         trace_requests: list[dict] = self.get_request(server)
         trace_types = [t.get("name") for t in trace_requests]
         log.debug(f"Received client request of {trace_types} for {device_id}")
+
         perfetto_query_result = call_adb("shell perfetto --query", device_id)
+
+        too_many_perfetto_sessions = self.too_many_perfetto_sessions(perfetto_query_result)
+        if (too_many_perfetto_sessions):
+            warnings.append("Limit of 5 Perfetto sessions reached on device. Will attempt to collect legacy traces.")
+            log.warning(warnings[0])
 
         trace_targets: list[tuple[DumpTarget | TraceTarget, TraceConfig | None]] = []
         for t in trace_requests:
             try:
                 trace_name = t.get("name")
                 target = targets_map[trace_name]
-                is_perfetto = target.is_perfetto_available(perfetto_query_result)
+                is_perfetto = (not too_many_perfetto_sessions) and target.is_perfetto_available(perfetto_query_result)
                 config = None
                 if target.get_trace_config is not None:
                     config = target.get_trace_config(is_perfetto)
                     self.apply_config(config, t.get("config"), server, device_id)
-                if trace_name == perfetto_name or not is_perfetto:
+                is_valid_perfetto_target = trace_name == perfetto_name and not too_many_perfetto_sessions
+                is_valid_trace_target = trace_name != perfetto_name and not is_perfetto
+                if is_valid_perfetto_target or is_valid_trace_target:
                     trace_targets.append((target, config))
 
             except KeyError as err:
@@ -1114,7 +1105,25 @@ class DeviceRequestEndpoint(RequestEndpoint):
         log.debug("Trace requested for {} with targets {}".format(
             device_id, ','.join([target.trace_name for target, config in trace_targets])))
 
-        return trace_targets
+        return trace_targets, warnings
+
+    def too_many_perfetto_sessions(self, perfetto_query_result: str):
+        concurrent_sessions_start = perfetto_query_result.find(PERFETTO_TRACING_SESSIONS_QUERY_START)
+        if concurrent_sessions_start != -1:
+            concurrent_sessions = perfetto_query_result[concurrent_sessions_start + len(PERFETTO_TRACING_SESSIONS_QUERY_START):]
+            log.info(f"Concurrent sessions:\n{concurrent_sessions}\n")
+            concurrent_sessions_end = concurrent_sessions.find(PERFETTO_TRACING_SESSIONS_QUERY_END)
+            if concurrent_sessions_end > 0:
+                concurrent_sessions_end -= 1
+            concurrent_sessions = concurrent_sessions[:concurrent_sessions_end]
+            number_of_concurrent_sessions = len(concurrent_sessions.split("\n")) if len(concurrent_sessions) > 0 else 0
+
+            if PERFETTO_UNIQUE_SESSION_NAME in concurrent_sessions:
+                call_adb("shell perfetto --attach=WINSCOPE-PROXY-TRACING-SESSION --stop")
+                log.debug("Stopped already-running winscope perfetto session.")
+                number_of_concurrent_sessions -= 1
+            return number_of_concurrent_sessions >= 5
+        return False
 
     def apply_config(self, trace_config: TraceConfig, requested_configs: list[dict], server, device_id):
         for requested_config in requested_configs:
@@ -1156,9 +1165,9 @@ class DeviceRequestEndpoint(RequestEndpoint):
                 .format( device_id))
 
     def clear_last_tracing_session(self, device_id):
-        log.debug("Clearing previous tracing session files from device")
         call_adb(f"shell su root rm -rf {WINSCOPE_BACKUP_DIR}", device_id)
         call_adb(f"shell su root mkdir {WINSCOPE_BACKUP_DIR}", device_id)
+        log.debug("Cleared previous tracing session files from device")
 
 
 class FetchFilesEndpoint(DeviceRequestEndpoint):
@@ -1208,6 +1217,7 @@ class TraceThread(threading.Thread):
         self._keep_alive_timer = None
         self.out = None,
         self.err = None,
+        self._command_timed_out = False
         self._success = False
         try:
             shell = get_shell_args(self._device_id, "trace")
@@ -1225,7 +1235,7 @@ class TraceThread(threading.Thread):
             self.end_trace()
 
     def reset_timer(self):
-        log.debug(
+        log.info(
             "Resetting keep-alive clock for {} trace on {}".format(self.trace_name, self._device_id))
         if self._keep_alive_timer:
             self._keep_alive_timer.cancel()
@@ -1236,7 +1246,7 @@ class TraceThread(threading.Thread):
     def end_trace(self):
         if self._keep_alive_timer:
             self._keep_alive_timer.cancel()
-        log.debug("Sending SIGINT to the {} process on {}".format(
+        log.info("Sending SIGINT to the {} process on {}".format(
             self.trace_name,
             self._device_id))
         self.process.send_signal(signal.SIGINT)
@@ -1244,36 +1254,41 @@ class TraceThread(threading.Thread):
             log.debug("Waiting for {} trace shell to exit for {}".format(
                 self.trace_name,
                 self._device_id))
-            self.process.wait(timeout=5)
+            self.process.wait(timeout=COMMAND_TIMEOUT_S)
         except TimeoutError:
-            log.debug(
+            log.error(
                 "TIMEOUT - sending SIGKILL to the {} trace process on {}".format(self.trace_name, self._device_id))
             self.process.kill()
         self.join()
 
     def run(self):
-        log.debug("Trace {} started on {}".format(self.trace_name, self._device_id))
+        retry_interval = 0.1
+        log.info("Trace {} started on {}".format(self.trace_name, self._device_id))
         self.reset_timer()
         self.out, self.err = self.process.communicate(self.trace_command)
-        log.debug("Trace {} ended on {}, waiting for cleanup".format(self.trace_name, self._device_id))
+        log.info("Trace {} ended on {}, waiting for cleanup".format(self.trace_name, self._device_id))
         time.sleep(0.2)
-        for i in range(50):
+        for i in range(int(COMMAND_TIMEOUT_S / retry_interval)):
             if call_adb(f"shell su root cat {WINSCOPE_STATUS}", device=self._device_id) == 'TRACE_OK\n':
-                log.debug("Trace {} finished on {}".format(
+                log.info("Trace {} finished on {}".format(
                     self.trace_name,
                     self._device_id))
                 if self.trace_name == "perfetto_trace":
-                    log.debug("Perfetto trace stderr output: {}".format(self.err.decode("utf-8")))
+                    log.info("Perfetto trace stderr output: {}".format(self.err.decode("utf-8")))
                     self._success = True
                 else:
                     self._success = len(self.err) == 0
-                break
+                return
             log.debug("Still waiting for cleanup on {} for {}".format(self._device_id, self.trace_name))
-            time.sleep(0.1)
+            time.sleep(retry_interval)
+
+        self._command_timed_out = True
 
     def success(self):
         return self._success
 
+    def timed_out(self):
+        return self._command_timed_out
 
 class StartTraceEndpoint(DeviceRequestEndpoint):
     TRACE_COMMAND = """
@@ -1307,7 +1322,7 @@ while true; do sleep 0.1; done
 """
 
     def process_with_device(self, server, path, device_id):
-        trace_targets = self.get_targets_and_prepare_for_tracing(
+        trace_targets, warnings = self.get_targets_and_prepare_for_tracing(
             server, device_id, PERFETTO_TRACE_CONFIG_FILE, TRACE_TARGETS, "perfetto_trace")
 
         for t, config in trace_targets:
@@ -1341,7 +1356,7 @@ while true; do sleep 0.1; done
                     TRACE_THREADS[device_id].append(thread)
                 thread.start()
 
-        server.respond(HTTPStatus.OK, b'', "text/plain")
+        server.respond(HTTPStatus.OK, json.dumps(warnings).encode("utf-8"), "text/json")
 
 
 def move_collected_files(files: list[File | FileMatcher], device_id, trace_identifier):
@@ -1372,15 +1387,17 @@ class EndTraceEndpoint(DeviceRequestEndpoint):
                 thread.end_trace()
             success = thread.success()
             signal_handler_log = call_adb(f"shell su root cat {SIGNAL_HANDLER_LOG}", device=device_id).encode('utf-8')
-            out = b"### Shell script's stdout - start\n" + \
-                thread.out + \
-                b"### Shell script's stdout - end\n" + \
-                b"### Shell script's stderr - start\n" + \
-                thread.err + \
-                b"### Shell script's stderr - end\n" + \
-                b"### Signal handler log - start\n" + \
-                signal_handler_log + \
-                b"### Signal handler log - end\n"
+            out = b"### Shell script's stdout ###\n" + \
+                (thread.out if thread.out else b'<no stdout>') + \
+                b"\n### Shell script's stderr ###\n" + \
+                (thread.err if thread.err else b'<no stderr>') + \
+                b"\n### Signal handler log:\n" + \
+                (signal_handler_log if signal_handler_log else b'<no signal handler logs>') + \
+                b"\n"
+            if (thread.timed_out()):
+                timeout_message = "Trace {} timed out during cleanup".format(thread.trace_name)
+                errors.append(timeout_message)
+                log.error(timeout_message)
             if not success:
                 log.error(
                     "Error ending trace {} on the device\n### Output ###\n".format(thread.trace_name) + out.decode(
@@ -1409,7 +1426,7 @@ class StatusEndpoint(DeviceRequestEndpoint):
 
 class DumpEndpoint(DeviceRequestEndpoint):
     def process_with_device(self, server, path, device_id):
-        dump_targets = self.get_targets_and_prepare_for_tracing(
+        dump_targets, warnings = self.get_targets_and_prepare_for_tracing(
             server, device_id, PERFETTO_DUMP_CONFIG_FILE, DUMP_TARGETS, "perfetto_dump")
 
         dump_commands = []
@@ -1426,12 +1443,12 @@ class DumpEndpoint(DeviceRequestEndpoint):
         shell = get_shell_args(device_id, "dump")
         process = subprocess.Popen(shell, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
                                    stdin=subprocess.PIPE, start_new_session=True)
-        log.debug("Starting dump on device {}".format(device_id))
+        log.info("Starting dump on device {}".format(device_id))
         out, err = process.communicate(dump_commands.encode('utf-8'))
         if process.returncode != 0:
             raise AdbError("Error executing dump command." + "\n\n### OUTPUT ###" + out.decode('utf-8') + "\n"
                            + err.decode('utf-8'))
-        log.debug("Dump finished on device {}".format(device_id))
+        log.info("Dump finished on device {}".format(device_id))
 
         for target, config in dump_targets:
             if config:
@@ -1441,7 +1458,7 @@ class DumpEndpoint(DeviceRequestEndpoint):
             else:
                 move_collected_files(target.files, device_id, "")
 
-        server.respond(HTTPStatus.OK, b'', "text/plain")
+        server.respond(HTTPStatus.OK, json.dumps(warnings).encode("utf-8"), "text/plain")
 
 
 class ADBWinscopeProxy(BaseHTTPRequestHandler):

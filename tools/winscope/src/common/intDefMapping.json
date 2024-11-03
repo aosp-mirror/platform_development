@@ -499,6 +499,12 @@
       "4": "HISTORY_FLAG_GET_ATTRIBUTION_CHAINS"
     }
   },
+  "android.app.AppOpsManager.OpNotedCallbackFlags": {
+    "flag": true,
+    "values": {
+      "1": "OP_NOTED_CALLBACK_FLAG_IGNORE_ASYNC"
+    }
+  },
   "android.app.AppOpsManager.SamplingStrategy": {
     "flag": false,
     "values": {
@@ -1691,7 +1697,9 @@
       "210041": "TAG_PACKAGE_INSTALLED",
       "210042": "TAG_PACKAGE_UPDATED",
       "210043": "TAG_PACKAGE_UNINSTALLED",
-      "210044": "TAG_BACKUP_SERVICE_TOGGLED"
+      "210044": "TAG_BACKUP_SERVICE_TOGGLED",
+      "210045": "TAG_NFC_ENABLED",
+      "210046": "TAG_NFC_DISABLED"
     }
   },
   "android.app.admin.SystemUpdateInfo.SecurityPatchState": {
@@ -1790,6 +1798,14 @@
       "5": "STATUS_ACCESS_DENIED"
     }
   },
+  "android.app.appfunctions.AppFunctionManager.EnabledState": {
+    "flag": false,
+    "values": {
+      "0": "APP_FUNCTION_STATE_DEFAULT",
+      "1": "APP_FUNCTION_STATE_ENABLED",
+      "2": "APP_FUNCTION_STATE_DISABLED"
+    }
+  },
   "android.app.appfunctions.ExecuteAppFunctionResponse.ResultCode": {
     "flag": false,
     "values": {
@@ -1798,7 +1814,8 @@
       "2": "RESULT_APP_UNKNOWN_ERROR",
       "3": "RESULT_INTERNAL_ERROR",
       "4": "RESULT_INVALID_ARGUMENT",
-      "5": "RESULT_TIMED_OUT"
+      "5": "RESULT_DISABLED",
+      "6": "RESULT_CANCELLED"
     }
   },
   "android.app.backup.BackupAgent.BackupTransportFlags": {
@@ -2406,6 +2423,7 @@
       "1": "POLICY_TYPE_AUDIO",
       "2": "POLICY_TYPE_RECENTS",
       "3": "POLICY_TYPE_ACTIVITY",
+      "4": "POLICY_TYPE_CLIPBOARD",
       "5": "POLICY_TYPE_CAMERA",
       "6": "POLICY_TYPE_BLOCKED_ACTIVITY"
     }
@@ -2581,7 +2599,8 @@
   "android.content.Intent.ExtendedFlags": {
     "flag": true,
     "values": {
-      "1": "EXTENDED_FLAG_FILTER_MISMATCH"
+      "1": "EXTENDED_FLAG_FILTER_MISMATCH",
+      "2": "EXTENDED_FLAG_MISSING_CREATOR_OR_INVALID_TOKEN"
     }
   },
   "android.content.Intent.FillInFlags": {
@@ -3079,6 +3098,23 @@
       "0": "REASON_CONFIRM_PACKAGE_CHANGE",
       "1": "REASON_OWNERSHIP_CHANGED",
       "2": "REASON_REMIND_OWNERSHIP"
+    }
+  },
+  "android.content.pm.PackageInstaller.VerificationFailedReason": {
+    "flag": false,
+    "values": {
+      "0": "VERIFICATION_FAILED_REASON_UNKNOWN",
+      "1": "VERIFICATION_FAILED_REASON_NETWORK_UNAVAILABLE",
+      "2": "VERIFICATION_FAILED_REASON_PACKAGE_BLOCKED"
+    }
+  },
+  "android.content.pm.PackageInstaller.VerificationPolicy": {
+    "flag": false,
+    "values": {
+      "0": "VERIFICATION_POLICY_NONE",
+      "1": "VERIFICATION_POLICY_BLOCK_FAIL_OPEN",
+      "2": "VERIFICATION_POLICY_BLOCK_FAIL_WARN",
+      "3": "VERIFICATION_POLICY_BLOCK_FAIL_CLOSED"
     }
   },
   "android.content.pm.PackageManager.AppMetadataSource": {
@@ -3753,6 +3789,21 @@
       "2": "DOMAIN_STATE_VERIFIED"
     }
   },
+  "android.content.pm.verify.pkg.VerificationSession.VerificationIncompleteReason": {
+    "flag": false,
+    "values": {
+      "1": "VERIFICATION_INCOMPLETE_NETWORK_UNAVAILABLE",
+      "0": "VERIFICATION_INCOMPLETE_UNKNOWN"
+    }
+  },
+  "android.content.pm.verify.pkg.VerificationStatus.VerifierStatusAsl": {
+    "flag": false,
+    "values": {
+      "0": "VERIFIER_STATUS_ASL_UNDEFINED",
+      "1": "VERIFIER_STATUS_ASL_GOOD",
+      "2": "VERIFIER_STATUS_ASL_BAD"
+    }
+  },
   "android.content.res.ApkAssets.FormatType": {
     "flag": false,
     "values": {
@@ -3990,6 +4041,7 @@
       "538982489": "Y8",
       "540422489": "Y16",
       "54": "YCBCR_P010",
+      "60": "YCBCR_P210",
       "16": "NV16",
       "17": "NV21",
       "20": "YUY2",
@@ -4374,7 +4426,8 @@
       "147193856": "DATASPACE_BT2020",
       "281083904": "DATASPACE_BT709",
       "155844608": "DATASPACE_DCI_P3",
-      "138477568": "DATASPACE_SRGB_LINEAR"
+      "138477568": "DATASPACE_SRGB_LINEAR",
+      "142999552": "DATASPACE_DISPLAY_BT2020"
     }
   },
   "android.hardware.HardwareBuffer.Format": {
@@ -4395,10 +4448,25 @@
       "52": "DS_FP32UI8",
       "53": "S_UI8",
       "54": "YCBCR_P010",
+      "60": "YCBCR_P210",
       "56": "R_8",
       "57": "R_16",
       "58": "RG_1616",
       "59": "RGBA_10101010"
+    }
+  },
+  "android.hardware.LutProperties.Dimension": {
+    "flag": false,
+    "values": {
+      "1": "ONE_DIMENSION",
+      "3": "THREE_DIMENSION"
+    }
+  },
+  "android.hardware.LutProperties.SamplingKey": {
+    "flag": false,
+    "values": {
+      "0": "SAMPLING_KEY_RGB",
+      "1": "SAMPLING_KEY_MAX_RGB"
     }
   },
   "android.hardware.SensorAdditionalInfo.AdditionalInfoType": {
@@ -4669,7 +4737,8 @@
       "5": "DISMISSED_REASON_ERROR",
       "6": "DISMISSED_REASON_SERVER_REQUESTED",
       "7": "DISMISSED_REASON_CREDENTIAL_CONFIRMED",
-      "8": "DISMISSED_REASON_CONTENT_VIEW_MORE_OPTIONS"
+      "8": "DISMISSED_REASON_CONTENT_VIEW_MORE_OPTIONS",
+      "9": "DISMISSED_REASON_ERROR_NO_WM"
     }
   },
   "android.hardware.biometrics.BiometricRequestConstants.RequestReason": {
@@ -5347,7 +5416,9 @@
       "58": "KEY_GESTURE_TYPE_TV_ACCESSIBILITY_SHORTCUT_CHORD",
       "59": "KEY_GESTURE_TYPE_TV_TRIGGER_BUG_REPORT",
       "60": "KEY_GESTURE_TYPE_ACCESSIBILITY_SHORTCUT",
-      "61": "KEY_GESTURE_TYPE_CLOSE_ALL_DIALOGS"
+      "61": "KEY_GESTURE_TYPE_CLOSE_ALL_DIALOGS",
+      "62": "KEY_GESTURE_TYPE_MOVE_TO_NEXT_DISPLAY",
+      "63": "KEY_GESTURE_TYPE_TOGGLE_TALKBACK"
     }
   },
   "android.hardware.input.KeyboardLayoutSelectionResult.LayoutSelectionCriteria": {
@@ -5683,6 +5754,69 @@
       "5": "PROGRAM_TYPE_DAB",
       "6": "PROGRAM_TYPE_DRMO",
       "7": "PROGRAM_TYPE_SXM"
+    }
+  },
+  "android.hardware.radio.RadioAlert.AlertCategory": {
+    "flag": false,
+    "values": {
+      "0": "CATEGORY_GEO",
+      "1": "CATEGORY_MET",
+      "2": "CATEGORY_SAFETY",
+      "3": "CATEGORY_SECURITY",
+      "4": "CATEGORY_RESCUE",
+      "5": "CATEGORY_FIRE",
+      "6": "CATEGORY_HEALTH",
+      "7": "CATEGORY_ENV",
+      "8": "CATEGORY_TRANSPORT",
+      "9": "CATEGORY_INFRA",
+      "10": "CATEGORY_CBRNE",
+      "11": "CATEGORY_OTHER"
+    }
+  },
+  "android.hardware.radio.RadioAlert.AlertCertainty": {
+    "flag": false,
+    "values": {
+      "0": "CERTAINTY_OBSERVED",
+      "1": "CERTAINTY_LIKELY",
+      "2": "CERTAINTY_POSSIBLE",
+      "3": "CERTAINTY_UNLIKELY",
+      "4": "CERTAINTY_UNKNOWN"
+    }
+  },
+  "android.hardware.radio.RadioAlert.AlertMessageType": {
+    "flag": false,
+    "values": {
+      "0": "MESSAGE_TYPE_ALERT",
+      "1": "MESSAGE_TYPE_UPDATE",
+      "2": "MESSAGE_TYPE_CANCEL"
+    }
+  },
+  "android.hardware.radio.RadioAlert.AlertSeverity": {
+    "flag": false,
+    "values": {
+      "0": "SEVERITY_EXTREME",
+      "1": "SEVERITY_SEVERE",
+      "2": "SEVERITY_MODERATE",
+      "3": "SEVERITY_MINOR",
+      "4": "SEVERITY_UNKNOWN"
+    }
+  },
+  "android.hardware.radio.RadioAlert.AlertStatus": {
+    "flag": false,
+    "values": {
+      "0": "STATUS_ACTUAL",
+      "1": "STATUS_EXERCISE",
+      "2": "STATUS_TEST"
+    }
+  },
+  "android.hardware.radio.RadioAlert.AlertUrgency": {
+    "flag": false,
+    "values": {
+      "0": "URGENCY_IMMEDIATE",
+      "1": "URGENCY_EXPECTED",
+      "2": "URGENCY_FUTURE",
+      "3": "URGENCY_PAST",
+      "4": "URGENCY_UNKNOWN"
     }
   },
   "android.hardware.radio.RadioManager.Band": {
@@ -6268,6 +6402,7 @@
       "15": "ENCODING_AAC_ELD",
       "16": "ENCODING_AAC_XHE",
       "17": "ENCODING_AC4",
+      "32": "ENCODING_AC4_L4",
       "18": "ENCODING_E_AC3_JOC",
       "19": "ENCODING_DOLBY_MAT",
       "20": "ENCODING_OPUS",
@@ -6305,6 +6440,7 @@
       "15": "ENCODING_AAC_ELD",
       "16": "ENCODING_AAC_XHE",
       "17": "ENCODING_AC4",
+      "32": "ENCODING_AC4_L4",
       "18": "ENCODING_E_AC3_JOC",
       "19": "ENCODING_DOLBY_MAT",
       "20": "ENCODING_OPUS",
@@ -6331,6 +6467,7 @@
       "10": "ENCODING_AAC_LC",
       "14": "ENCODING_DOLBY_TRUEHD",
       "17": "ENCODING_AC4",
+      "32": "ENCODING_AC4_L4",
       "18": "ENCODING_E_AC3_JOC",
       "19": "ENCODING_DOLBY_MAT",
       "23": "ENCODING_MPEGH_BL_L3",
@@ -6568,7 +6705,8 @@
       "4": "MUTED_BY_STREAM_MUTED",
       "8": "MUTED_BY_APP_OPS",
       "16": "MUTED_BY_CLIENT_VOLUME",
-      "32": "MUTED_BY_VOLUME_SHAPER"
+      "32": "MUTED_BY_VOLUME_SHAPER",
+      "64": "MUTED_BY_PORT_VOLUME"
     }
   },
   "android.media.AudioPlaybackConfiguration.PlayerState": {
@@ -7881,8 +8019,7 @@
       "8": "STATE_CONNECTING",
       "9": "STATE_SKIPPING_TO_PREVIOUS",
       "10": "STATE_SKIPPING_TO_NEXT",
-      "11": "STATE_SKIPPING_TO_QUEUE_ITEM",
-      "12": "STATE_PLAYBACK_SUPPRESSED"
+      "11": "STATE_SKIPPING_TO_QUEUE_ITEM"
     }
   },
   "android.media.soundtrigger.SoundTriggerDetector.RecognitionFlags": {
@@ -9147,7 +9284,8 @@
       "43": "FRONTEND_STATUS_TYPE_IPTV_PACKETS_LOST",
       "44": "FRONTEND_STATUS_TYPE_IPTV_PACKETS_RECEIVED",
       "45": "FRONTEND_STATUS_TYPE_IPTV_WORST_JITTER_MS",
-      "46": "FRONTEND_STATUS_TYPE_IPTV_AVERAGE_JITTER_MS"
+      "46": "FRONTEND_STATUS_TYPE_IPTV_AVERAGE_JITTER_MS",
+      "47": "FRONTEND_STATUS_TYPE_STANDARD_EXT"
     }
   },
   "android.media.tv.tuner.frontend.FrontendStatus.FrontendTransmissionMode": {
@@ -9794,7 +9932,8 @@
       "14": "POWER_COMPONENT_PHONE",
       "15": "POWER_COMPONENT_AMBIENT_DISPLAY",
       "16": "POWER_COMPONENT_IDLE",
-      "17": "POWER_COMPONENT_REATTRIBUTED_TO_OTHER_CONSUMERS"
+      "17": "POWER_COMPONENT_REATTRIBUTED_TO_OTHER_CONSUMERS",
+      "18": "POWER_COMPONENT_BASE"
     }
   },
   "android.os.BatteryConsumer.PowerModel": {
@@ -9924,6 +10063,46 @@
       "4": "BUGREPORT_MODE_TELEPHONY",
       "5": "BUGREPORT_MODE_WIFI",
       "7": "BUGREPORT_MODE_ONBOARDING"
+    }
+  },
+  "android.os.Build.SdkIntFull": {
+    "flag": false,
+    "values": {
+      "100000": "BASE",
+      "200000": "BASE_1_1",
+      "300000": "CUPCAKE",
+      "400000": "DONUT",
+      "500000": "ECLAIR",
+      "600000": "ECLAIR_0_1",
+      "700000": "ECLAIR_MR1",
+      "800000": "FROYO",
+      "900000": "GINGERBREAD",
+      "1000000": "GINGERBREAD_MR1",
+      "1100000": "HONEYCOMB",
+      "1200000": "HONEYCOMB_MR1",
+      "1300000": "HONEYCOMB_MR2",
+      "1400000": "ICE_CREAM_SANDWICH",
+      "1500000": "ICE_CREAM_SANDWICH_MR1",
+      "1600000": "JELLY_BEAN",
+      "1700000": "JELLY_BEAN_MR1",
+      "1800000": "JELLY_BEAN_MR2",
+      "1900000": "KITKAT",
+      "2000000": "KITKAT_WATCH",
+      "2100000": "LOLLIPOP",
+      "2200000": "LOLLIPOP_MR1",
+      "2300000": "M",
+      "2400000": "N",
+      "2500000": "N_MR1",
+      "2600000": "O",
+      "2700000": "O_MR1",
+      "2800000": "P",
+      "2900000": "Q",
+      "3000000": "R",
+      "3100000": "S",
+      "3200000": "S_V2",
+      "3300000": "TIRAMISU",
+      "3400000": "UPSIDE_DOWN_CAKE",
+      "3500000": "VANILLA_ICE_CREAM"
     }
   },
   "android.os.Bundle.HasBinderStatus": {
@@ -10436,6 +10615,15 @@
       "3000": "RESUME_ON_REBOOT_REBOOT_ERROR_LSKF_NOT_CAPTURED",
       "4000": "RESUME_ON_REBOOT_REBOOT_ERROR_SLOT_MISMATCH",
       "5000": "RESUME_ON_REBOOT_REBOOT_ERROR_PROVIDER_PREPARATION_FAILURE"
+    }
+  },
+  "android.os.RemoteCallbackList.FrozenCalleePolicy": {
+    "flag": false,
+    "values": {
+      "0": "FROZEN_CALLEE_POLICY_UNSET",
+      "1": "FROZEN_CALLEE_POLICY_ENQUEUE_ALL",
+      "2": "FROZEN_CALLEE_POLICY_ENQUEUE_MOST_RECENT",
+      "3": "FROZEN_CALLEE_POLICY_DROP"
     }
   },
   "android.os.StrictMode.ThreadPolicyMask": {
@@ -11142,12 +11330,16 @@
       "3": "TYPE_CHALLENGE"
     }
   },
-  "android.security.attestationverification.AttestationVerificationManager.VerificationResult": {
-    "flag": false,
+  "android.security.attestationverification.AttestationVerificationManager.VerificationResultFlags": {
+    "flag": true,
     "values": {
-      "0": "RESULT_UNKNOWN",
-      "1": "RESULT_SUCCESS",
-      "2": "RESULT_FAILURE"
+      "1": "FLAG_FAILURE_UNKNOWN",
+      "2": "FLAG_FAILURE_UNSUPPORTED_PROFILE",
+      "4": "FLAG_FAILURE_CERTS",
+      "8": "FLAG_FAILURE_LOCAL_BINDING_REQUIREMENTS",
+      "16": "FLAG_FAILURE_KEYSTORE_REQUIREMENTS",
+      "32": "FLAG_FAILURE_BOOT_STATE",
+      "64": "FLAG_FAILURE_PATCH_LEVEL_DIFF"
     }
   },
   "android.security.identity.CredentialDataResult.Entries.Status": {
@@ -14602,7 +14794,8 @@
       "40": "EVENT_EMERGENCY_CALLBACK_MODE_CHANGED",
       "41": "EVENT_SIMULTANEOUS_CELLULAR_CALLING_SUBSCRIPTIONS_CHANGED",
       "42": "EVENT_CARRIER_ROAMING_NTN_MODE_CHANGED",
-      "43": "EVENT_CARRIER_ROAMING_NTN_ELIGIBLE_STATE_CHANGED"
+      "43": "EVENT_CARRIER_ROAMING_NTN_ELIGIBLE_STATE_CHANGED",
+      "44": "EVENT_CARRIER_ROAMING_NTN_AVAILABLE_SERVICES_CHANGED"
     }
   },
   "android.telephony.TelephonyManager.AllowedNetworkTypesReason": {
@@ -15101,7 +15294,9 @@
       "8192": "TYPE_BIP",
       "4096": "TYPE_VSIM",
       "16384": "TYPE_ENTERPRISE",
-      "32768": "TYPE_RCS"
+      "32768": "TYPE_RCS",
+      "65536": "TYPE_OEM_PAID",
+      "131072": "TYPE_OEM_PRIVATE"
     }
   },
   "android.telephony.data.ApnSetting.AuthType": {
@@ -16457,7 +16652,8 @@
       "3": "DATAGRAM_TYPE_KEEP_ALIVE",
       "4": "DATAGRAM_TYPE_LAST_SOS_MESSAGE_STILL_NEED_HELP",
       "5": "DATAGRAM_TYPE_LAST_SOS_MESSAGE_NO_HELP_NEEDED",
-      "6": "DATAGRAM_TYPE_SMS"
+      "6": "DATAGRAM_TYPE_SMS",
+      "7": "DATAGRAM_TYPE_CHECK_PENDING_INCOMING_SMS"
     }
   },
   "android.telephony.satellite.SatelliteManager.DeviceHoldPosition": {
@@ -17347,12 +17543,9 @@
     "flag": true,
     "values": {
       "0": "JANK_NONE",
-      "1": "DISPLAY_HAL",
-      "2": "JANK_SURFACEFLINGER_DEADLINE_MISSED",
-      "4": "JANK_SURFACEFLINGER_GPU_DEADLINE_MISSED",
-      "8": "JANK_APP_DEADLINE_MISSED",
-      "16": "PREDICTION_ERROR",
-      "32": "SURFACE_FLINGER_SCHEDULING"
+      "1": "JANK_COMPOSER",
+      "2": "JANK_APPLICATION",
+      "4": "JANK_OTHER"
     }
   },
   "android.view.SurfaceView.SurfaceLifecycleStrategy": {
@@ -18114,6 +18307,14 @@
       "4": "FLASH_REASON_PREVIEW"
     }
   },
+  "android.view.accessibility.AccessibilityNodeInfo.CheckedState": {
+    "flag": false,
+    "values": {
+      "0": "CHECKED_STATE_FALSE",
+      "1": "CHECKED_STATE_TRUE",
+      "2": "CHECKED_STATE_PARTIAL"
+    }
+  },
   "android.view.accessibility.AccessibilityNodeInfo.PrefetchingStrategy": {
     "flag": true,
     "values": {
@@ -18358,7 +18559,8 @@
       "62": "PHASE_WM_NOTIFY_IME_VISIBILITY_CHANGED_FROM_CLIENT",
       "63": "PHASE_WM_POSTING_CHANGED_IME_VISIBILITY",
       "64": "PHASE_WM_INVOKING_IME_REQUESTED_LISTENER",
-      "65": "PHASE_CLIENT_ALREADY_HIDDEN"
+      "65": "PHASE_CLIENT_ALREADY_HIDDEN",
+      "66": "PHASE_CLIENT_VIEW_HANDLER_AVAILABLE"
     }
   },
   "android.view.inputmethod.ImeTracker.Status": {
@@ -18667,6 +18869,22 @@
       "1": "RECORD_CONTINUOUSLY"
     }
   },
+  "android.webkit.WebChromeClient.FileChooserParams.Mode": {
+    "flag": false,
+    "values": {
+      "0": "MODE_OPEN",
+      "1": "MODE_OPEN_MULTIPLE",
+      "2": "MODE_OPEN_FOLDER",
+      "3": "MODE_SAVE"
+    }
+  },
+  "android.webkit.WebChromeClient.FileChooserParams.PermissionMode": {
+    "flag": false,
+    "values": {
+      "0": "PERMISSION_MODE_READ",
+      "1": "PERMISSION_MODE_READ_WRITE"
+    }
+  },
   "android.webkit.WebSettings.CacheMode": {
     "flag": false,
     "values": {
@@ -18937,7 +19155,8 @@
     "flag": false,
     "values": {
       "0": "EDGE_LEFT",
-      "1": "EDGE_RIGHT"
+      "1": "EDGE_RIGHT",
+      "2": "EDGE_NONE"
     }
   },
   "android.window.BackNavigationInfo.BackTargetType": {
@@ -18955,7 +19174,8 @@
     "flag": false,
     "values": {
       "0": "PRIORITY_DEFAULT",
-      "1000000": "PRIORITY_OVERLAY"
+      "1000000": "PRIORITY_OVERLAY",
+      "-2": "PRIORITY_SYSTEM_NAVIGATION_OBSERVER"
     }
   },
   "android.window.SplashScreen.SplashScreenStyle": {
@@ -19014,9 +19234,10 @@
       "-30000": "TASK_CHILD_LAYER_TASK_BACKGROUND",
       "-20000": "TASK_CHILD_LAYER_LETTERBOX_BACKGROUND",
       "10000": "TASK_CHILD_LAYER_COMPAT_UI",
-      "20000": "TASK_CHILD_LAYER_WINDOW_DECORATIONS",
-      "30000": "TASK_CHILD_LAYER_RECENTS_ANIMATION_PIP_OVERLAY",
-      "40000": "TASK_CHILD_LAYER_TASK_OVERLAY",
+      "20000": "TASK_CHILD_LAYER_SETTINGS_DIALOG",
+      "30000": "TASK_CHILD_LAYER_WINDOW_DECORATIONS",
+      "40000": "TASK_CHILD_LAYER_RECENTS_ANIMATION_PIP_OVERLAY",
+      "50000": "TASK_CHILD_LAYER_TASK_OVERLAY",
       "60000": "TASK_CHILD_LAYER_RESIZE_VEIL"
     }
   },
@@ -19072,7 +19293,8 @@
     "values": {
       "1": "REFERENCE_BROADCAST",
       "2": "REFERENCE_CACHE",
-      "4": "REFERENCE_PERSIST"
+      "4": "REFERENCE_PERSIST",
+      "8": "REFERENCE_CONTENT_SUGGESTION"
     }
   },
   "android.window.TransitionFilter.ContainerOrder": {
