@@ -31,6 +31,7 @@ import {AbtChromeExtensionProtocol} from 'abt_chrome_extension/abt_chrome_extens
 import {Mediator} from 'app/mediator';
 import {TimelineData} from 'app/timeline_data';
 import {TracePipeline} from 'app/trace_pipeline';
+import {Download} from 'common/download';
 import {FileUtils} from 'common/file_utils';
 import {globalConfig} from 'common/global_config';
 import {InMemoryStorage} from 'common/in_memory_storage';
@@ -105,8 +106,9 @@ import {UploadTracesComponent} from './upload_traces_component';
               class="file-name-input-field"
               *ngIf="isEditingFilename"
               floatLabel="always"
-              (keydown.enter)="onCheckIconClick()"
-              (focusout)="onCheckIconClick()"
+              (keydown.esc)="trySubmitFilename()"
+              (keydown.enter)="trySubmitFilename()"
+              (focusout)="trySubmitFilename()"
               matTooltip="Allowed: A-Z a-z 0-9 . _ - #">
               <mat-label>Edit file name</mat-label>
               <input matInput class="right-align" [formControl]="filenameFormControl" />
@@ -117,7 +119,7 @@ import {UploadTracesComponent} from './upload_traces_component';
               mat-icon-button
               class="check-button"
               matTooltip="Submit file name"
-              (click)="onCheckIconClick()">
+              (click)="trySubmitFilename()">
               <mat-icon>check</mat-icon>
             </button>
             <button
@@ -265,7 +267,7 @@ import {UploadTracesComponent} from './upload_traces_component';
         flex-direction: column;
         flex: 1;
         overflow: auto;
-        height: 820px;
+        height: 870px;
       }
       .horizontal-align {
         justify-content: center;
@@ -507,7 +509,7 @@ export class AppComponent implements WinscopeEventListener {
     this.isEditingFilename = true;
   }
 
-  onCheckIconClick() {
+  trySubmitFilename() {
     if (this.filenameFormControl.invalid) {
       return;
     }
@@ -530,7 +532,7 @@ export class AppComponent implements WinscopeEventListener {
         ? this.filenameFormControl.value
         : this.tracePipeline.getDownloadArchiveFilename()
     }.zip`;
-    await this.downloadTraces(archiveBlob, archiveFilename);
+    this.downloadTraces(archiveBlob, archiveFilename);
     progressListener.onOperationFinished(true);
   }
 
@@ -568,15 +570,9 @@ export class AppComponent implements WinscopeEventListener {
     });
   }
 
-  async downloadTraces(blob: Blob, filename: string) {
-    const a = document.createElement('a');
-    document.body.appendChild(a);
+  downloadTraces(blob: Blob, filename: string) {
     const url = window.URL.createObjectURL(blob);
-    a.href = url;
-    a.download = filename;
-    a.click();
-    window.URL.revokeObjectURL(url);
-    document.body.removeChild(a);
+    Download.fromUrl(url, filename);
   }
 
   async onWinscopeEvent(event: WinscopeEvent) {

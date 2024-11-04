@@ -1,6 +1,6 @@
 [workspace]
 members = [
-    "crate_health",
+    "crate_tool",
     "google_metadata",
     "license_checker",
     "name_and_version",

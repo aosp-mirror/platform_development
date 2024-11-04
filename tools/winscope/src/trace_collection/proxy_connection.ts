@@ -26,7 +26,10 @@ import {PersistentStore} from 'common/persistent_store';
 import {TimeUtils} from 'common/time_utils';
 import {UserNotifier} from 'common/user_notifier';
 import {Analytics} from 'logging/analytics';
-import {ProxyTracingErrors} from 'messaging/user_warnings';
+import {
+  ProxyTracingErrors,
+  ProxyTracingWarnings,
+} from 'messaging/user_warnings';
 import {AdbConnection, OnRequestSuccessCallback} from './adb_connection';
 import {AdbDevice} from './adb_device';
 import {ConnectionState} from './connection_state';
@@ -34,7 +37,7 @@ import {ProxyEndpoint} from './proxy_endpoint';
 import {TraceRequest} from './trace_request';
 
 export class ProxyConnection extends AdbConnection {
-  static readonly VERSION = '4.0.0';
+  static readonly VERSION = '4.0.6';
   static readonly WINSCOPE_PROXY_URL = 'http://localhost:5544';
 
   private static readonly MULTI_DISPLAY_SCREENRECORD_VERSION = '1.4';
@@ -205,7 +208,10 @@ export class ProxyConnection extends AdbConnection {
           `${ProxyEndpoint.START_TRACE}${
             assertDefined(this.selectedDevice).id
           }/`,
-          () => this.keepTraceAlive(),
+          (response: HttpResponse) => {
+            this.tryProcessWarnings(response);
+            this.keepTraceAlive();
+          },
           this.requestedTraces,
         );
         // TODO(b/330118129): identify source of additional start latency that affects some traces
@@ -231,9 +237,7 @@ export class ProxyConnection extends AdbConnection {
                   );
                 return processed;
               });
-              UserNotifier.add(
-                new ProxyTracingErrors(processedErrors),
-              ).notify();
+              UserNotifier.add(new ProxyTracingErrors(processedErrors));
             }
           },
         );
@@ -242,7 +246,7 @@ export class ProxyConnection extends AdbConnection {
       case ConnectionState.DUMPING_STATE:
         await this.postToProxy(
           `${ProxyEndpoint.DUMP}${assertDefined(this.selectedDevice).id}/`,
-          FunctionUtils.DO_NOTHING,
+          (response: HttpResponse) => this.tryProcessWarnings(response),
           this.requestedTraces,
         );
         return;
@@ -256,6 +260,17 @@ export class ProxyConnection extends AdbConnection {
 
       default:
       // do nothing
+    }
+  }
+
+  private tryProcessWarnings(response: HttpResponse) {
+    try {
+      const warnings = JSON.parse(response.body);
+      if (Array.isArray(warnings) && warnings.length > 0) {
+        UserNotifier.add(new ProxyTracingWarnings(warnings)).notify();
+      }
+    } catch {
+      // do nothing - warnings unavailable
     }
   }
 

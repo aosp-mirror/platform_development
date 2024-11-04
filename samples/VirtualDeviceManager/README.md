@@ -390,6 +390,17 @@ keyboard** are forwarded to the activity streamed on the focused display.
 **Externally connected mouse** events are also forwarded to the relevant
 display, if the mouse pointer is currently positioned on a streamed display.
 
+### Power
+
+The power menu button acts as a "virtual power button". It will toggle the state
+of the virtual device and all its displays between ON and OFF.
+Run the commands below on the host device to enable this functionality.
+
+```shell
+adb shell device_config put virtual_devices android.companion.virtual.flags.device_aware_display_power true
+adb shell am force-stop com.example.android.vdmdemo.host
+```
+
 <!-- LINT.ThenChange(README.md) -->
 <!-- LINT.IfChange(demos) -->
 
@@ -405,7 +416,8 @@ display, if the mouse pointer is currently positioned on a streamed display.
     use. By default, will use the sensors of the device it's shown on.
 
 -   **Display Power**: A simple activity showcasing the behavior of proximity
-    locks, screen brightness override and requesting the screen to be kept on.
+    locks, screen brightness override and requesting the screen to be kept on
+    or turned on.
 
 -   **Rotation**: A simple activity that is in landscape by default and can send
     orientation change requests on demand. Showcases the display rotation on the
@@ -443,6 +455,8 @@ which showcases implicit intent handling.
 ## SDK Version
 
 ### Beyond Android 15
+
+-   Added support for custom power management.
 
 -   Added support for custom system windows (like status bar) and insets.
 

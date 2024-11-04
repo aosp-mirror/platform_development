@@ -24,6 +24,7 @@ export class HierarchyTreeNode extends TreeNode {
   private secondaryRects: TraceRect[] | undefined;
   private zParent: HierarchyTreeNode | undefined;
   private parent: this | undefined;
+  private relativeChildren: HierarchyTreeNode[] = [];
 
   constructor(
     id: string,
@@ -61,8 +62,8 @@ export class HierarchyTreeNode extends TreeNode {
     return this.secondaryRects;
   }
 
-  setZParent(parent: HierarchyTreeNode): void {
-    this.zParent = parent;
+  setZParent(value: HierarchyTreeNode): void {
+    this.zParent = value;
   }
 
   getZParent(): HierarchyTreeNode | undefined {
@@ -75,6 +76,14 @@ export class HierarchyTreeNode extends TreeNode {
 
   getParent(): this | undefined {
     return this.parent;
+  }
+
+  addRelativeChild(value: HierarchyTreeNode): void {
+    this.relativeChildren.push(value);
+  }
+
+  getRelativeChildren(): HierarchyTreeNode[] {
+    return this.relativeChildren;
   }
 
   override isRoot(): boolean {

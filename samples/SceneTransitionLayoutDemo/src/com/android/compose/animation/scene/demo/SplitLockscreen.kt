@@ -31,18 +31,23 @@ import com.android.compose.animation.scene.SceneKey
 import com.android.compose.animation.scene.SceneScope
 
 object SplitLockscreen {
-    fun userActions(isLockscreenDismissable: Boolean, shadeScene: SceneKey) =
+    fun userActions(
+        isLockscreenDismissable: Boolean,
+        shadeScene: SceneKey,
+        configuration: DemoConfiguration,
+    ) =
         Lockscreen.userActions(
             isLockscreenDismissable,
             shadeScene,
             requiresFullDistanceSwipeToShade = false,
+            configuration,
             fastSwipeToQuickSettings = false,
         )
 }
 
 @Composable
 fun SceneScope.SplitLockscreen(
-    notificationList: @Composable (SceneScope.() -> Unit),
+    notificationList: @Composable SceneScope.() -> Unit,
     mediaPlayer: @Composable (SceneScope.() -> Unit)?,
     isDismissable: Boolean,
     onToggleDismissable: () -> Unit,

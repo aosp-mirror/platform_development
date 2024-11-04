@@ -20,7 +20,11 @@ import {
   HttpRequestStatus,
   HttpResponse,
 } from 'common/http_request';
-import {ProxyTracingErrors} from 'messaging/user_warnings';
+import {UserNotification} from 'messaging/user_notification';
+import {
+  ProxyTracingErrors,
+  ProxyTracingWarnings,
+} from 'messaging/user_warnings';
 import {UserNotifierChecker} from 'test/unit/user_notifier_checker';
 import {waitToBeCalled} from 'test/utils';
 import {AdbDevice} from 'trace_collection/adb_device';
@@ -334,6 +338,23 @@ describe('ProxyConnection', () => {
       ]);
     });
 
+    it('posts start trace request to proxy and handles response with warnings', async () => {
+      postSpy.and.returnValue(
+        Promise.resolve({
+          status: HttpRequestStatus.SUCCESS,
+          type: '',
+          text: '',
+          body: '["test warning"]',
+          getHeader: getVersionHeader,
+        }),
+      );
+      await checkSuccessfulTraceRequest(
+        [mockTraceRequest],
+        [mockTraceRequest],
+        [new ProxyTracingWarnings(['test warning'])],
+      );
+    });
+
     it('handles trace timeout', async () => {
       const requestObj = [mockTraceRequest];
       getSpy.and.returnValue(
@@ -388,7 +409,7 @@ describe('ProxyConnection', () => {
         getHeader: getVersionHeader,
       });
       checkTraceEndedSuccessfully();
-      userNotifierChecker.expectNotified([
+      userNotifierChecker.expectAdded([
         new ProxyTracingErrors([
           'please check your display state (must be on at start of trace)',
           "'unknown error'",
@@ -456,6 +477,23 @@ describe('ProxyConnection', () => {
       ]);
     });
 
+    it('posts dump request and handles response with warnings', async () => {
+      postSpy.and.returnValue(
+        Promise.resolve({
+          status: HttpRequestStatus.SUCCESS,
+          type: '',
+          text: '',
+          body: '["test warning"]',
+          getHeader: getVersionHeader,
+        }),
+      );
+      await checkSuccessfulDumpRequest(
+        [mockTraceRequest],
+        [mockTraceRequest],
+        [new ProxyTracingWarnings(['test warning'])],
+      );
+    });
+
     function checkTraceEndedSuccessfully() {
       expect(postSpy).toHaveBeenCalledOnceWith(
         ProxyConnection.WINSCOPE_PROXY_URL +
@@ -470,6 +508,7 @@ describe('ProxyConnection', () => {
     async function checkSuccessfulTraceRequest(
       requests: TraceRequest[],
       updatedRequests = requests,
+      warnings?: UserNotification[],
     ) {
       postSpy.calls.reset();
       await connection.startTrace(mockDevice, requests);
@@ -482,11 +521,17 @@ describe('ProxyConnection', () => {
         updatedRequests,
       );
       expect(connection.getState()).toEqual(ConnectionState.TRACING);
+      if (warnings !== undefined) {
+        userNotifierChecker.expectNotified(warnings);
+      } else {
+        userNotifierChecker.expectNone();
+      }
     }
 
     async function checkSuccessfulDumpRequest(
       requests: TraceRequest[],
       updatedRequests = requests,
+      warnings?: UserNotification[],
     ) {
       postSpy.calls.reset();
       await connection.dumpState(mockDevice, requests);
@@ -499,6 +544,11 @@ describe('ProxyConnection', () => {
         updatedRequests,
       );
       expect(connection.getState()).toEqual(ConnectionState.DUMPING_STATE);
+      if (warnings !== undefined) {
+        userNotifierChecker.expectNotified(warnings);
+      } else {
+        userNotifierChecker.expectNone();
+      }
     }
   });
 

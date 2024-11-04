@@ -21,12 +21,13 @@ package com.example.android.vdmdemo.common;
 option java_outer_classname = "RemoteEventProto";
 option java_package = "com.example.android.vdmdemo.common";
 
-// Next ID: 19
+// Next ID: 23
 message RemoteEvent {
   int32 display_id = 1;
 
   oneof event {
     DeviceCapabilities device_capabilities = 2;
+    DeviceState device_state = 22;
     StartStreaming start_streaming = 3;
     StopStreaming stop_streaming = 4;
     DisplayCapabilities display_capabilities = 5;
@@ -55,6 +56,10 @@ message DeviceCapabilities {
   repeated CameraCapabilities camera_capabilities = 5;
   bool supports_audio_input = 3;
   bool supports_audio_output = 4;
+}
+
+message DeviceState {
+  bool power_on = 1;
 }
 
 message DisplayRotation {
