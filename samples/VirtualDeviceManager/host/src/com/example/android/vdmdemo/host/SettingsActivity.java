@@ -47,6 +47,12 @@ public class SettingsActivity extends Hilt_SettingsActivity {
         @Inject PreferenceController mPreferenceController;
 
         @Override
+        public void onResume() {
+            super.onResume();
+            mPreferenceController.evaluate(getPreferenceManager());
+        }
+
+        @Override
         public void onCreatePreferences(Bundle savedInstanceState, String rootKey) {
             setPreferencesFromResource(R.xml.preferences, rootKey);
             mPreferenceController.evaluate(getPreferenceManager());

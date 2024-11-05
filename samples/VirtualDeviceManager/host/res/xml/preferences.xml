@@ -94,6 +94,14 @@
             android:summary="Show a custom status bar on the remote displays."
             android:defaultValue="false"
             app:iconSpaceReserved="false" />
+        <ListPreference
+            android:key="@string/pref_display_timeout"
+            android:title="Display timeout"
+            android:entries="@array/display_timeout_labels"
+            android:entryValues="@array/display_timeouts"
+            android:defaultValue="0"
+            app:useSimpleSummaryProvider="true"
+            app:iconSpaceReserved="false" />
     </PreferenceCategory>
 
     <PreferenceCategory

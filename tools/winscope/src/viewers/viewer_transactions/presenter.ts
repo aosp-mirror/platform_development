@@ -23,26 +23,28 @@ import {
   AbstractLogViewerPresenter,
   NotifyLogViewCallbackType,
 } from 'viewers/common/abstract_log_viewer_presenter';
+import {LogSelectFilter} from 'viewers/common/log_filters';
 import {LogPresenter} from 'viewers/common/log_presenter';
 import {PropertiesPresenter} from 'viewers/common/properties_presenter';
-import {TextFilter} from 'viewers/common/text_filter';
-import {LogField, LogFieldType, LogFilter} from 'viewers/common/ui_data_log';
+import {TextFilter, TextFilterValues} from 'viewers/common/text_filter';
+import {LogField, LogHeader} from 'viewers/common/ui_data_log';
 import {UserOptions} from 'viewers/common/user_options';
 import {SetRootDisplayNames} from './operations/set_root_display_name';
 import {TransactionsEntry, TransactionsEntryType, UiData} from './ui_data';
 
 export class Presenter extends AbstractLogViewerPresenter<UiData> {
-  private static readonly FIELD_TYPES = [
-    LogFieldType.TRANSACTION_ID,
-    LogFieldType.VSYNC_ID,
-    LogFieldType.PID,
-    LogFieldType.UID,
-    LogFieldType.TRANSACTION_TYPE,
-    LogFieldType.LAYER_OR_DISPLAY_ID,
-    LogFieldType.FLAGS,
-  ];
-  private static readonly VALUE_NA = 'N/A';
-  private isInitialized = false;
+  private static readonly COLUMNS = {
+    id: {name: 'TX ID', cssClass: 'transaction-id right-align'},
+    vsyncId: {name: 'VSYNC ID', cssClass: 'vsyncid right-align'},
+    pid: {name: 'PID', cssClass: 'pid right-align'},
+    uid: {name: 'UID', cssClass: 'uid right-align'},
+    type: {name: 'TYPE', cssClass: 'transaction-type'},
+    layerOrDisplayId: {
+      name: 'LAYER/DISP ID',
+      cssClass: 'layer-or-display-id right-align',
+    },
+    flags: {name: 'Flags', cssClass: 'flags'},
+  };
 
   protected override keepCalculated = true;
   protected override logPresenter = new LogPresenter<TransactionsEntry>();
@@ -62,10 +64,12 @@ export class Presenter extends AbstractLogViewerPresenter<UiData> {
       },
       this.storage,
     ),
-    PersistentStoreProxy.new<TextFilter>(
-      'TransactionsPropertiesFilter',
-      new TextFilter('', []),
-      this.storage,
+    new TextFilter(
+      PersistentStoreProxy.new<TextFilterValues>(
+        'TransactionsPropertiesFilter',
+        new TextFilterValues('', []),
+        this.storage,
+      ),
     ),
     [],
     [new SetRootDisplayNames()],
@@ -79,46 +83,31 @@ export class Presenter extends AbstractLogViewerPresenter<UiData> {
     super(trace, notifyViewCallback, UiData.createEmpty());
   }
 
-  protected override async initializeIfNeeded() {
-    if (this.isInitialized) {
-      return;
-    }
-
-    const allEntries = await this.makeUiDataEntries();
-    const filters: LogFilter[] = [];
-
-    for (const type of Presenter.FIELD_TYPES) {
-      if (type === LogFieldType.FLAGS) {
-        filters.push({
-          type,
-          options: this.getUniqueUiDataEntryValues(
-            allEntries,
-            (entry: TransactionsEntry) =>
-              assertDefined(
-                entry.fields.find((f) => f.type === type)?.value as string,
-              )
-                .split('|')
-                .map((flag) => flag.trim()),
-          ),
-        });
-      } else {
-        filters.push({
-          type,
-          options: this.getUniqueUiDataEntryValues(
-            allEntries,
-            (entry: TransactionsEntry) =>
-              assertDefined(
-                entry.fields.find((f) => f.type === type),
-              ).value.toString(),
-          ),
-        });
-      }
-    }
-
-    this.logPresenter.setAllEntries(allEntries);
-    this.logPresenter.setFilters(filters);
-    this.refreshUiData();
-    this.isInitialized = true;
+  protected override makeHeaders(): LogHeader[] {
+    return [
+      new LogHeader(
+        Presenter.COLUMNS.id,
+        new LogSelectFilter([], false, '125'),
+      ),
+      new LogHeader(
+        Presenter.COLUMNS.vsyncId,
+        new LogSelectFilter([], false, '90'),
+      ),
+      new LogHeader(Presenter.COLUMNS.pid, new LogSelectFilter([])),
+      new LogHeader(Presenter.COLUMNS.uid, new LogSelectFilter([])),
+      new LogHeader(
+        Presenter.COLUMNS.type,
+        new LogSelectFilter([], false, '175'),
+      ),
+      new LogHeader(
+        Presenter.COLUMNS.layerOrDisplayId,
+        new LogSelectFilter([]),
+      ),
+      new LogHeader(
+        Presenter.COLUMNS.flags,
+        new LogSelectFilter([], true, '250', '100%'),
+      ),
+    ];
   }
 
   protected override updateDefaultAllowlist(
@@ -146,7 +135,7 @@ export class Presenter extends AbstractLogViewerPresenter<UiData> {
     this.propertiesPresenter.updateDefaultAllowList(allowlist);
   }
 
-  private async makeUiDataEntries(): Promise<TransactionsEntry[]> {
+  protected override async makeUiDataEntries(): Promise<TransactionsEntry[]> {
     const entries: TransactionsEntry[] = [];
 
     const entryProtos = await Promise.all(
@@ -184,22 +173,22 @@ export class Presenter extends AbstractLogViewerPresenter<UiData> {
 
         for (const layerState of layerChanges) {
           const fields: LogField[] = [
-            {type: LogFieldType.TRANSACTION_ID, value: transactionId},
-            {type: LogFieldType.VSYNC_ID, value: vsyncId},
-            {type: LogFieldType.PID, value: pid},
-            {type: LogFieldType.UID, value: uid},
+            {spec: Presenter.COLUMNS.id, value: transactionId},
+            {spec: Presenter.COLUMNS.vsyncId, value: vsyncId},
+            {spec: Presenter.COLUMNS.pid, value: pid},
+            {spec: Presenter.COLUMNS.uid, value: uid},
             {
-              type: LogFieldType.TRANSACTION_TYPE,
+              spec: Presenter.COLUMNS.type,
               value: TransactionsEntryType.LAYER_CHANGED,
             },
             {
-              type: LogFieldType.LAYER_OR_DISPLAY_ID,
+              spec: Presenter.COLUMNS.layerOrDisplayId,
               value: assertDefined(
                 layerState.getChildByName('layerId'),
               ).formattedValue(),
             },
             {
-              type: LogFieldType.FLAGS,
+              spec: Presenter.COLUMNS.flags,
               value: assertDefined(
                 layerState.getChildByName('what'),
               ).formattedValue(),
@@ -213,22 +202,22 @@ export class Presenter extends AbstractLogViewerPresenter<UiData> {
         ).getAllChildren();
         for (const displayState of displayChanges) {
           const fields: LogField[] = [
-            {type: LogFieldType.TRANSACTION_ID, value: transactionId},
-            {type: LogFieldType.VSYNC_ID, value: vsyncId},
-            {type: LogFieldType.PID, value: pid},
-            {type: LogFieldType.UID, value: uid},
+            {spec: Presenter.COLUMNS.id, value: transactionId},
+            {spec: Presenter.COLUMNS.vsyncId, value: vsyncId},
+            {spec: Presenter.COLUMNS.pid, value: pid},
+            {spec: Presenter.COLUMNS.uid, value: uid},
             {
-              type: LogFieldType.TRANSACTION_TYPE,
+              spec: Presenter.COLUMNS.type,
               value: TransactionsEntryType.DISPLAY_CHANGED,
             },
             {
-              type: LogFieldType.LAYER_OR_DISPLAY_ID,
+              spec: Presenter.COLUMNS.layerOrDisplayId,
               value: assertDefined(
                 displayState.getChildByName('id'),
               ).formattedValue(),
             },
             {
-              type: LogFieldType.FLAGS,
+              spec: Presenter.COLUMNS.flags,
               value: assertDefined(
                 displayState.getChildByName('what'),
               ).formattedValue(),
@@ -239,16 +228,16 @@ export class Presenter extends AbstractLogViewerPresenter<UiData> {
 
         if (layerChanges.length === 0 && displayChanges.length === 0) {
           const fields: LogField[] = [
-            {type: LogFieldType.TRANSACTION_ID, value: transactionId},
-            {type: LogFieldType.VSYNC_ID, value: vsyncId},
-            {type: LogFieldType.PID, value: pid},
-            {type: LogFieldType.UID, value: uid},
+            {spec: Presenter.COLUMNS.id, value: transactionId},
+            {spec: Presenter.COLUMNS.vsyncId, value: vsyncId},
+            {spec: Presenter.COLUMNS.pid, value: pid},
+            {spec: Presenter.COLUMNS.uid, value: uid},
             {
-              type: LogFieldType.TRANSACTION_TYPE,
+              spec: Presenter.COLUMNS.type,
               value: TransactionsEntryType.NO_OP,
             },
-            {type: LogFieldType.LAYER_OR_DISPLAY_ID, value: ''},
-            {type: LogFieldType.FLAGS, value: ''},
+            {spec: Presenter.COLUMNS.layerOrDisplayId, value: ''},
+            {spec: Presenter.COLUMNS.flags, value: ''},
           ];
           entries.push(new TransactionsEntry(entry, fields, undefined));
         }
@@ -258,21 +247,21 @@ export class Presenter extends AbstractLogViewerPresenter<UiData> {
         entryNode.getChildByName('addedLayers'),
       ).getAllChildren()) {
         const fields: LogField[] = [
-          {type: LogFieldType.TRANSACTION_ID, value: ''},
-          {type: LogFieldType.VSYNC_ID, value: vsyncId},
-          {type: LogFieldType.PID, value: Presenter.VALUE_NA},
-          {type: LogFieldType.UID, value: Presenter.VALUE_NA},
+          {spec: Presenter.COLUMNS.id, value: ''},
+          {spec: Presenter.COLUMNS.vsyncId, value: vsyncId},
+          {spec: Presenter.COLUMNS.pid, value: Presenter.VALUE_NA},
+          {spec: Presenter.COLUMNS.uid, value: Presenter.VALUE_NA},
           {
-            type: LogFieldType.TRANSACTION_TYPE,
+            spec: Presenter.COLUMNS.type,
             value: TransactionsEntryType.LAYER_ADDED,
           },
           {
-            type: LogFieldType.LAYER_OR_DISPLAY_ID,
+            spec: Presenter.COLUMNS.layerOrDisplayId,
             value: assertDefined(
               layerCreationArgs.getChildByName('layerId'),
             ).formattedValue(),
           },
-          {type: LogFieldType.FLAGS, value: ''},
+          {spec: Presenter.COLUMNS.flags, value: ''},
         ];
         entries.push(new TransactionsEntry(entry, fields, layerCreationArgs));
       }
@@ -281,19 +270,19 @@ export class Presenter extends AbstractLogViewerPresenter<UiData> {
         entryNode.getChildByName('destroyedLayers'),
       ).getAllChildren()) {
         const fields: LogField[] = [
-          {type: LogFieldType.TRANSACTION_ID, value: ''},
-          {type: LogFieldType.VSYNC_ID, value: vsyncId},
-          {type: LogFieldType.PID, value: Presenter.VALUE_NA},
-          {type: LogFieldType.UID, value: Presenter.VALUE_NA},
+          {spec: Presenter.COLUMNS.id, value: ''},
+          {spec: Presenter.COLUMNS.vsyncId, value: vsyncId},
+          {spec: Presenter.COLUMNS.pid, value: Presenter.VALUE_NA},
+          {spec: Presenter.COLUMNS.uid, value: Presenter.VALUE_NA},
           {
-            type: LogFieldType.TRANSACTION_TYPE,
+            spec: Presenter.COLUMNS.type,
             value: TransactionsEntryType.LAYER_DESTROYED,
           },
           {
-            type: LogFieldType.LAYER_OR_DISPLAY_ID,
+            spec: Presenter.COLUMNS.layerOrDisplayId,
             value: destroyedLayerId.formattedValue(),
           },
-          {type: LogFieldType.FLAGS, value: ''},
+          {spec: Presenter.COLUMNS.flags, value: ''},
         ];
         entries.push(new TransactionsEntry(entry, fields, destroyedLayerId));
       }
@@ -302,22 +291,22 @@ export class Presenter extends AbstractLogViewerPresenter<UiData> {
         entryNode.getChildByName('addedDisplays'),
       ).getAllChildren()) {
         const fields: LogField[] = [
-          {type: LogFieldType.TRANSACTION_ID, value: ''},
-          {type: LogFieldType.VSYNC_ID, value: vsyncId},
-          {type: LogFieldType.PID, value: Presenter.VALUE_NA},
-          {type: LogFieldType.UID, value: Presenter.VALUE_NA},
+          {spec: Presenter.COLUMNS.id, value: ''},
+          {spec: Presenter.COLUMNS.vsyncId, value: vsyncId},
+          {spec: Presenter.COLUMNS.pid, value: Presenter.VALUE_NA},
+          {spec: Presenter.COLUMNS.uid, value: Presenter.VALUE_NA},
           {
-            type: LogFieldType.TRANSACTION_TYPE,
+            spec: Presenter.COLUMNS.type,
             value: TransactionsEntryType.DISPLAY_ADDED,
           },
           {
-            type: LogFieldType.LAYER_OR_DISPLAY_ID,
+            spec: Presenter.COLUMNS.layerOrDisplayId,
             value: assertDefined(
               displayState.getChildByName('id'),
             ).formattedValue(),
           },
           {
-            type: LogFieldType.FLAGS,
+            spec: Presenter.COLUMNS.flags,
             value: assertDefined(
               displayState.getChildByName('what'),
             ).formattedValue(),
@@ -330,19 +319,19 @@ export class Presenter extends AbstractLogViewerPresenter<UiData> {
         entryNode.getChildByName('removedDisplays'),
       ).getAllChildren()) {
         const fields: LogField[] = [
-          {type: LogFieldType.TRANSACTION_ID, value: ''},
-          {type: LogFieldType.VSYNC_ID, value: vsyncId},
-          {type: LogFieldType.PID, value: Presenter.VALUE_NA},
-          {type: LogFieldType.UID, value: Presenter.VALUE_NA},
+          {spec: Presenter.COLUMNS.id, value: ''},
+          {spec: Presenter.COLUMNS.vsyncId, value: vsyncId},
+          {spec: Presenter.COLUMNS.pid, value: Presenter.VALUE_NA},
+          {spec: Presenter.COLUMNS.uid, value: Presenter.VALUE_NA},
           {
-            type: LogFieldType.TRANSACTION_TYPE,
+            spec: Presenter.COLUMNS.type,
             value: TransactionsEntryType.DISPLAY_REMOVED,
           },
           {
-            type: LogFieldType.LAYER_OR_DISPLAY_ID,
+            spec: Presenter.COLUMNS.layerOrDisplayId,
             value: removedDisplayId.formattedValue(),
           },
-          {type: LogFieldType.FLAGS, value: ''},
+          {spec: Presenter.COLUMNS.flags, value: ''},
         ];
         entries.push(new TransactionsEntry(entry, fields, removedDisplayId));
       }
@@ -351,19 +340,19 @@ export class Presenter extends AbstractLogViewerPresenter<UiData> {
         entryNode.getChildByName('destroyedLayerHandles'),
       ).getAllChildren()) {
         const fields: LogField[] = [
-          {type: LogFieldType.TRANSACTION_ID, value: ''},
-          {type: LogFieldType.VSYNC_ID, value: vsyncId},
-          {type: LogFieldType.PID, value: Presenter.VALUE_NA},
-          {type: LogFieldType.UID, value: Presenter.VALUE_NA},
+          {spec: Presenter.COLUMNS.id, value: ''},
+          {spec: Presenter.COLUMNS.vsyncId, value: vsyncId},
+          {spec: Presenter.COLUMNS.pid, value: Presenter.VALUE_NA},
+          {spec: Presenter.COLUMNS.uid, value: Presenter.VALUE_NA},
           {
-            type: LogFieldType.TRANSACTION_TYPE,
+            spec: Presenter.COLUMNS.type,
             value: TransactionsEntryType.LAYER_HANDLE_DESTROYED,
           },
           {
-            type: LogFieldType.LAYER_OR_DISPLAY_ID,
+            spec: Presenter.COLUMNS.layerOrDisplayId,
             value: destroyedLayerHandleId.formattedValue(),
           },
-          {type: LogFieldType.FLAGS, value: ''},
+          {spec: Presenter.COLUMNS.flags, value: ''},
         ];
         entries.push(
           new TransactionsEntry(entry, fields, destroyedLayerHandleId),
@@ -372,6 +361,36 @@ export class Presenter extends AbstractLogViewerPresenter<UiData> {
     }
 
     return entries;
+  }
+
+  protected override updateFiltersInHeaders(
+    headers: LogHeader[],
+    allEntries: TransactionsEntry[],
+  ) {
+    for (const header of headers) {
+      if (header.spec === Presenter.COLUMNS.flags) {
+        (assertDefined(header.filter) as LogSelectFilter).options =
+          this.getUniqueUiDataEntryValues(
+            allEntries,
+            (entry: TransactionsEntry) =>
+              assertDefined(
+                entry.fields.find((f) => f.spec === header.spec)
+                  ?.value as string,
+              )
+                .split('|')
+                .map((flag) => flag.trim()),
+          );
+      } else {
+        (assertDefined(header.filter) as LogSelectFilter).options =
+          this.getUniqueUiDataEntryValues(
+            allEntries,
+            (entry: TransactionsEntry) =>
+              assertDefined(
+                entry.fields.find((f) => f.spec === header.spec),
+              ).value.toString(),
+          );
+      }
+    }
   }
 
   private getUniqueUiDataEntryValues<T>(

@@ -15,7 +15,7 @@
 use std::{
     cell::OnceCell,
     collections::{BTreeMap, BTreeSet},
-    fs::{create_dir, read, write},
+    fs::{read, write},
     io::BufRead,
     process::Command,
     str::from_utf8,
@@ -26,23 +26,8 @@ use itertools::Itertools;
 use name_and_version::{NameAndVersionMap, NamedAndVersioned};
 use rooted_path::RootedPath;
 use semver::Version;
-use serde::Serialize;
-use tinytemplate::TinyTemplate;
 
 use crate::{crate_collection::CrateCollection, ensure_exists_and_empty, RunQuiet};
-
-static CARGO_TOML_TEMPLATE: &str = include_str!("templates/Cargo.toml.template");
-
-#[derive(Serialize)]
-struct Dep {
-    name: String,
-    version: String,
-}
-
-#[derive(Serialize)]
-struct CargoToml {
-    deps: Vec<Dep>,
-}
 
 pub struct PseudoCrate<State: PseudoCrateState> {
     path: RootedPath,
@@ -177,45 +162,28 @@ impl PseudoCrate<CargoVendorDirty> {
     pub fn new(path: RootedPath) -> Self {
         PseudoCrate { path, extra: CargoVendorDirty {} }
     }
-    #[allow(dead_code)]
-    pub fn init<'a>(
-        &self,
-        crates: impl Iterator<Item = &'a (impl NamedAndVersioned + 'a)>,
-        exact_version: bool,
-    ) -> Result<()> {
+    pub fn init(&self) -> Result<()> {
         if self.path.abs().exists() {
             return Err(anyhow!("Can't init pseudo-crate because {} already exists", self.path));
         }
         ensure_exists_and_empty(&self.path)?;
 
-        let mut deps = Vec::new();
-        for krate in crates {
-            // Special cases:
-            // * libsqlite3-sys is a sub-crate of rusqlite
-            // * remove_dir_all has a version not known by crates.io (b/313489216)
-            if krate.name() != "libsqlite3-sys" {
-                deps.push(Dep {
-                    name: krate.name().to_string(),
-                    version: format!(
-                        "{}{}",
-                        if exact_version { "=" } else { "" },
-                        if krate.name() == "remove_dir_all"
-                            && krate.version().to_string() == "0.7.1"
-                        {
-                            "0.7.0".to_string()
-                        } else {
-                            krate.version().to_string()
-                        }
-                    ),
-                });
-            }
-        }
+        write(
+            self.path.join("Cargo.toml")?,
+            r#"[package]
+name = "android-pseudo-crate"
+version = "0.1.0"
+edition = "2021"
+publish = false
+license = "Apache-2.0"
 
-        let mut tt = TinyTemplate::new();
-        tt.add_template("cargo_toml", CARGO_TOML_TEMPLATE)?;
-        write(self.path.join("Cargo.toml")?, tt.render("cargo_toml", &CargoToml { deps })?)?;
+[dependencies]
+"#,
+        )?;
+        write(self.path.join("crate-list.txt")?, "")?;
+        write(self.path.join(".gitignore")?, "target/\nvendor/\n")?;
 
-        create_dir(self.path.join("src")?).context("Failed to create src dir")?;
+        ensure_exists_and_empty(&self.path.join("src")?)?;
         write(self.path.join("src/lib.rs")?, "// Nothing")
             .context("Failed to create src/lib.rs")?;
 
@@ -243,9 +211,9 @@ impl PseudoCrate<CargoVendorDirty> {
     pub fn cargo_add_unversioned(&self, crate_name: &str) -> Result<()> {
         self.add_internal(crate_name, crate_name)
     }
-    pub fn remove(&self, crate_name: &str) -> Result<()> {
+    pub fn remove(&self, crate_name: impl AsRef<str>) -> Result<()> {
         Command::new("cargo")
-            .args(["remove", crate_name])
+            .args(["remove", crate_name.as_ref()])
             .current_dir(&self.path)
             .run_quiet_and_expect_success()?;
         Ok(())

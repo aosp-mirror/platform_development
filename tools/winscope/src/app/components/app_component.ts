@@ -106,8 +106,9 @@ import {UploadTracesComponent} from './upload_traces_component';
               class="file-name-input-field"
               *ngIf="isEditingFilename"
               floatLabel="always"
-              (keydown.enter)="onCheckIconClick()"
-              (focusout)="onCheckIconClick()"
+              (keydown.esc)="trySubmitFilename()"
+              (keydown.enter)="trySubmitFilename()"
+              (focusout)="trySubmitFilename()"
               matTooltip="Allowed: A-Z a-z 0-9 . _ - #">
               <mat-label>Edit file name</mat-label>
               <input matInput class="right-align" [formControl]="filenameFormControl" />
@@ -118,7 +119,7 @@ import {UploadTracesComponent} from './upload_traces_component';
               mat-icon-button
               class="check-button"
               matTooltip="Submit file name"
-              (click)="onCheckIconClick()">
+              (click)="trySubmitFilename()">
               <mat-icon>check</mat-icon>
             </button>
             <button
@@ -508,7 +509,7 @@ export class AppComponent implements WinscopeEventListener {
     this.isEditingFilename = true;
   }
 
-  onCheckIconClick() {
+  trySubmitFilename() {
     if (this.filenameFormControl.invalid) {
       return;
     }

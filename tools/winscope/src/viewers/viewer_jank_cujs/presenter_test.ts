@@ -26,26 +26,45 @@ import {TraceType} from 'trace/trace_type';
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
 import {NotifyLogViewCallbackType} from 'viewers/common/abstract_log_viewer_presenter';
 import {AbstractLogViewerPresenterTest} from 'viewers/common/abstract_log_viewer_presenter_test';
-import {TextFilter} from 'viewers/common/text_filter';
+import {LogHeader} from 'viewers/common/ui_data_log';
 import {Presenter} from './presenter';
 import {UiData} from './ui_data';
 
 class PresenterJankCujsTest extends AbstractLogViewerPresenterTest<UiData> {
+  override readonly expectedHeaders = [
+    {
+      header: new LogHeader({
+        name: 'Type',
+        cssClass: 'jank-cuj-type',
+      }),
+    },
+    {
+      header: new LogHeader({
+        name: 'Start Time',
+        cssClass: 'start-time time',
+      }),
+    },
+    {
+      header: new LogHeader({
+        name: 'End Time',
+        cssClass: 'end-time time',
+      }),
+    },
+    {
+      header: new LogHeader({
+        name: 'Duration',
+        cssClass: 'duration right-align',
+      }),
+    },
+    {
+      header: new LogHeader({
+        name: 'Status',
+        cssClass: 'status right-align',
+      }),
+    },
+  ];
   private trace: Trace<PropertyTreeNode> | undefined;
   private positionUpdate: TracePositionUpdate | undefined;
-  private secondPositionUpdate: TracePositionUpdate | undefined;
-
-  override readonly shouldExecuteHeaderTests = true;
-  override readonly shouldExecuteFilterTests = false;
-  override readonly shouldExecutePropertiesTests = true;
-
-  override readonly totalOutputEntries = 16;
-  override readonly expectedIndexOfFirstPositionUpdate = 0;
-  override readonly expectedIndexOfSecondPositionUpdate = 2;
-  override readonly logEntryClickIndex = 3;
-  override readonly numberOfUnfilteredProperties = 4;
-  override readonly propertiesFilter = new TextFilter('launcher', []);
-  override readonly numberOfFilteredProperties = 1;
 
   override async setUpTestEnvironment(): Promise<void> {
     const parser = (await UnitTestUtils.getTracesParser([
@@ -59,9 +78,6 @@ class PresenterJankCujsTest extends AbstractLogViewerPresenterTest<UiData> {
 
     this.positionUpdate = TracePositionUpdate.fromTraceEntry(
       this.trace.getEntry(0),
-    );
-    this.secondPositionUpdate = TracePositionUpdate.fromTraceEntry(
-      this.trace.getEntry(2),
     );
   }
 
@@ -89,10 +105,6 @@ class PresenterJankCujsTest extends AbstractLogViewerPresenterTest<UiData> {
 
   override getPositionUpdate(): TracePositionUpdate {
     return assertDefined(this.positionUpdate);
-  }
-
-  override getSecondPositionUpdate(): TracePositionUpdate {
-    return assertDefined(this.secondPositionUpdate);
   }
 
   override executePropertiesChecksAfterPositionUpdate(uiData: UiData) {

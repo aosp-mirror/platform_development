@@ -169,7 +169,6 @@ class MutableSceneTransitionLayoutSaver(
     private val sceneSaver: Scenes.SceneSaver,
     private val transitions: SceneTransitions,
     private val canChangeScene: (SceneKey) -> Boolean,
-    private val enableInterruptions: Boolean,
 ) : Saver<MutableSceneTransitionLayoutState, String> {
     override fun SaverScope.save(state: MutableSceneTransitionLayoutState): String {
         val currentScene = state.transitionState.currentScene
@@ -182,7 +181,6 @@ class MutableSceneTransitionLayoutSaver(
             currentScene,
             transitions,
             canChangeScene = canChangeScene,
-            enableInterruptions = enableInterruptions,
         )
     }
 }
@@ -219,8 +217,8 @@ fun SystemUi(
         launcherColumns = 4
     }
 
-    val notificationCount =
-        max(configuration.notificationsInLockscreen, configuration.notificationsInShade)
+    val notificationCountInLockscreen = configuration.notificationsInLockscreen
+    val notificationCount = max(notificationCountInLockscreen, configuration.notificationsInShade)
     val interactiveNotifications = configuration.interactiveNotifications
     val notificationSprings = configuration.springConfigurations.notificationSprings
     val notificationTextMeasurer = rememberTextMeasurer(cacheSize = notificationCount * 2)
@@ -228,12 +226,14 @@ fun SystemUi(
         remember(
             interactiveNotifications,
             notificationCount,
+            notificationCountInLockscreen,
             notificationSprings,
             notificationTextMeasurer,
         ) {
             notifications(
                 interactiveNotifications,
                 notificationCount,
+                notificationCountInLockscreen,
                 notificationSprings,
                 notificationTextMeasurer,
             )
@@ -248,18 +248,21 @@ fun SystemUi(
     var showConfigurationDialog by remember { mutableStateOf(false) }
 
     val nQuickSettingsColumns =
-        when (windowSizeClass.widthSizeClass) {
-            WindowWidthSizeClass.Compact -> 2
-            WindowWidthSizeClass.Medium,
-            WindowWidthSizeClass.Expanded ->
-                when (windowSizeClass.heightSizeClass) {
-                    // Phone landscape.
-                    WindowHeightSizeClass.Compact -> 2
-                    else -> 3
-                }
-            else -> error("Unknown size class: ${windowSizeClass.widthSizeClass}")
+        if (configuration.enableOverlays) {
+            2
+        } else {
+            when (windowSizeClass.widthSizeClass) {
+                WindowWidthSizeClass.Compact -> 2
+                WindowWidthSizeClass.Medium,
+                WindowWidthSizeClass.Expanded ->
+                    when (windowSizeClass.heightSizeClass) {
+                        // Phone landscape.
+                        WindowHeightSizeClass.Compact -> 2
+                        else -> 3
+                    }
+                else -> error("Unknown size class: ${windowSizeClass.widthSizeClass}")
+            }
         }
-
     val nQuickSettingsRow = 4
     val nQuickSettingsSplitShadeRows = nQuickSettingsColumns
 
@@ -277,7 +280,6 @@ fun SystemUi(
         remember(quickSettingsPagerState, springConfiguration, configuration) {
             systemUiTransitions(quickSettingsPagerState, springConfiguration, configuration)
         }
-    val enableInterruptions = configuration.enableInterruptions
 
     val sceneSaver =
         remember(lockscreenScene, shadeScene) { Scenes.SceneSaver(lockscreenScene, shadeScene) }
@@ -303,22 +305,11 @@ fun SystemUi(
         }
 
     val stateSaver =
-        remember(sceneSaver, transitions, canChangeScene, enableInterruptions) {
-            MutableSceneTransitionLayoutSaver(
-                sceneSaver,
-                transitions,
-                canChangeScene,
-                enableInterruptions,
-            )
+        remember(sceneSaver, transitions, canChangeScene) {
+            MutableSceneTransitionLayoutSaver(sceneSaver, transitions, canChangeScene)
         }
     val layoutState =
-        rememberSaveable(
-            transitions,
-            canChangeScene,
-            enableInterruptions,
-            configuration,
-            saver = stateSaver,
-        ) {
+        rememberSaveable(transitions, canChangeScene, configuration, saver = stateSaver) {
             val initialScene =
                 initialScene?.let {
                     Scenes.ensureCorrectScene(
@@ -335,7 +326,6 @@ fun SystemUi(
                 canShowOverlay = { configuration.canChangeSceneOrOverlays },
                 canHideOverlay = { configuration.canChangeSceneOrOverlays },
                 canReplaceOverlay = { _, _ -> configuration.canChangeSceneOrOverlays },
-                enableInterruptions = enableInterruptions,
             )
         }
 
@@ -371,8 +361,8 @@ fun SystemUi(
     }
 
     @Composable
-    fun SceneScope.NotificationList(maxNotificationCount: Int) {
-        NotificationList(notifications, maxNotificationCount, configuration)
+    fun SceneScope.NotificationList(maxNotificationCount: Int, isScrollable: Boolean = true) {
+        NotificationList(notifications, maxNotificationCount, configuration, isScrollable)
     }
 
     if (showConfigurationDialog) {
@@ -450,6 +440,15 @@ fun SystemUi(
                     } else {
                         null
                     }
+
+                val qsPager: (@Composable SceneScope.() -> Unit) = {
+                    QuickSettingsPager(
+                        pagerState = quickSettingsPagerState,
+                        tiles = quickSettingsTiles,
+                        nRows = nQuickSettingsRow,
+                        nColumns = nQuickSettingsColumns,
+                    )
+                }
 
                 // SceneTransitionLayout can only be bound to one SceneTransitionLayoutState, so
                 // make sure we recompose it fully when we create a new state object.
@@ -552,10 +551,7 @@ fun SystemUi(
                             ),
                         ) {
                             QuickSettings(
-                                quickSettingsPagerState,
-                                quickSettingsTiles,
-                                nQuickSettingsRow,
-                                nQuickSettingsColumns,
+                                qsPager,
                                 mediaPlayer,
                                 ::onSettingsButtonClicked,
                                 ::onPowerButtonClicked,
@@ -607,7 +603,8 @@ fun SystemUi(
                             NotificationShade(
                                 notificationList = {
                                     NotificationList(
-                                        maxNotificationCount = configuration.notificationsInShade
+                                        maxNotificationCount = configuration.notificationsInShade,
+                                        isScrollable = false,
                                     )
                                 }
                             )
@@ -617,7 +614,7 @@ fun SystemUi(
                             userActions = QuickSettingsShade.UserActions,
                             alignment = Alignment.TopStart,
                         ) {
-                            QuickSettingsShade(mediaPlayer)
+                            QuickSettingsShade(qsPager, mediaPlayer)
                         }
                     }
                 }

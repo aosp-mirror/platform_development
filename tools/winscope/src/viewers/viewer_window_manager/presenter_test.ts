@@ -28,7 +28,7 @@ import {HierarchyTreeNode} from 'trace/tree_node/hierarchy_tree_node';
 import {NotifyHierarchyViewCallbackType} from 'viewers/common/abstract_hierarchy_viewer_presenter';
 import {AbstractHierarchyViewerPresenterTest} from 'viewers/common/abstract_hierarchy_viewer_presenter_test';
 import {DiffType} from 'viewers/common/diff_type';
-import {TextFilter} from 'viewers/common/text_filter';
+import {TextFilter, TextFilterValues} from 'viewers/common/text_filter';
 import {UiHierarchyTreeNode} from 'viewers/common/ui_hierarchy_tree_node';
 import {UiTreeUtils} from 'viewers/common/ui_tree_utils';
 import {Presenter} from './presenter';
@@ -50,7 +50,9 @@ class PresenterWindowManagerTest extends AbstractHierarchyViewerPresenterTest<Ui
   override readonly numberOfDefaultProperties = 29;
   override readonly numberOfNonDefaultProperties = 21;
   override readonly expectedFirstRect = new Rect(0, 0, 1080, 2400);
-  override readonly propertiesFilter = new TextFilter('requested', []);
+  override readonly propertiesFilter = new TextFilter(
+    new TextFilterValues('requested', []),
+  );
   override readonly expectedTotalRects = 12;
   override readonly expectedVisibleRects = 7;
   override readonly treeNodeLongName =
@@ -58,7 +60,9 @@ class PresenterWindowManagerTest extends AbstractHierarchyViewerPresenterTest<Ui
   override readonly treeNodeShortName =
     'com.google.(...).NexusLauncherActivity';
   override readonly numberOfFilteredProperties = 2;
-  override readonly hierarchyFilter = new TextFilter('ScreenDecor', []);
+  override readonly hierarchyFilter = new TextFilter(
+    new TextFilterValues('ScreenDecor', []),
+  );
   override readonly expectedHierarchyChildrenAfterStringFilter = 2;
   override readonly propertyWithDiff = 'animator';
   override readonly expectedPropertyDiffType = DiffType.ADDED;
@@ -85,12 +89,24 @@ class PresenterWindowManagerTest extends AbstractHierarchyViewerPresenterTest<Ui
     const firstEntryDataTree = await firstEntry.getValue();
     this.selectedTree = UiHierarchyTreeNode.from(
       assertDefined(
-        firstEntryDataTree.findDfs(UiTreeUtils.makeNodeFilter('93d3f3c')),
+        firstEntryDataTree.findDfs(
+          UiTreeUtils.makeNodeFilter(
+            new TextFilter(
+              new TextFilterValues('93d3f3c', []),
+            ).getFilterPredicate(),
+          ),
+        ),
       ),
     );
     this.selectedTreeAfterPositionUpdate = UiHierarchyTreeNode.from(
       assertDefined(
-        firstEntryDataTree.findDfs(UiTreeUtils.makeNodeFilter('f7092ed')),
+        firstEntryDataTree.findDfs(
+          UiTreeUtils.makeNodeFilter(
+            new TextFilter(
+              new TextFilterValues('f7092ed', []),
+            ).getFilterPredicate(),
+          ),
+        ),
       ),
     );
   }

@@ -9,6 +9,7 @@ message RootMessage {
 
 message InputWindowInfoProto {
   optional int32 layoutParamsFlags = 1;
+  optional int32 inputConfig = 2;
 }
 
 /* represents WindowManager.LayoutParams */

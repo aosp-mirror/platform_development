@@ -18,17 +18,22 @@ package com.android.compose.animation.scene.demo.transitions
 
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.gestures.Orientation
+import com.android.compose.animation.scene.BaseTransitionBuilder
 import com.android.compose.animation.scene.Edge
 import com.android.compose.animation.scene.SceneTransitionsBuilder
 import com.android.compose.animation.scene.TransitionBuilder
-import com.android.compose.animation.scene.demo.NotificationShade
 import com.android.compose.animation.scene.demo.Overlays
+import com.android.compose.animation.scene.demo.PartialShade
 import com.android.compose.animation.scene.demo.notification.NotificationList
 
 fun SceneTransitionsBuilder.notificationShadeTransitions() {
     to(Overlays.Notifications) {
         spec = tween(500)
         toNotificationShade()
+        sharedElement(
+            NotificationList.Elements.Notifications,
+            elevateInContent = Overlays.Notifications,
+        )
     }
 
     from(Overlays.Notifications) {
@@ -38,15 +43,33 @@ fun SceneTransitionsBuilder.notificationShadeTransitions() {
     }
 
     overscroll(Overlays.Notifications, Orientation.Vertical) {
-        translate(NotificationShade.Elements.Root, y = { absoluteDistance })
+        notifyStlThatShadeDoesNotResizeDuringThisTransition()
+
+        translate(PartialShade.Elements.Root, y = { absoluteDistance })
     }
 
     overscroll(Overlays.Notifications, Orientation.Horizontal) {
-        translate(NotificationShade.Elements.Root, x = { absoluteDistance })
+        notifyStlThatShadeDoesNotResizeDuringThisTransition()
+
+        translate(PartialShade.Elements.Root, x = { absoluteDistance })
     }
 }
 
+val ToNotificationShadeStartFadeProgress = 0.5f
+
 private fun TransitionBuilder.toNotificationShade() {
-    translate(NotificationShade.Elements.Root, Edge.Top)
-    fractionRange(start = 0.5f) { fade(NotificationList.Elements.Notifications) }
+    notifyStlThatShadeDoesNotResizeDuringThisTransition()
+
+    translate(PartialShade.Elements.Root, Edge.Top)
+    fractionRange(start = ToNotificationShadeStartFadeProgress) {
+        fade(NotificationList.Elements.Notifications)
+    }
+}
+
+fun BaseTransitionBuilder.notifyStlThatShadeDoesNotResizeDuringThisTransition() {
+    // Let STL know that the shade and its background are not expected to change during this
+    // transition. This allows better handling of the size during interruptions. See
+    // b/290930950#comment22 for details.
+    scaleSize(PartialShade.Elements.Root, width = 1f, height = 1f)
+    scaleSize(PartialShade.Elements.Background, width = 1f, height = 1f)
 }

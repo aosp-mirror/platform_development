@@ -1,5 +1,5 @@
 [package]
-name = "crate_health"
+name = "crate_tool"
 version = "0.1.0"
 edition = "2021"
 
@@ -8,20 +8,22 @@ edition = "2021"
 [dependencies]
 anyhow = "1"
 cargo = "0.76"
+cfg-expr = "0.17"
 chrono = "0.4"
 clap = { version = "4.4.6", features = ["derive"] }
+crates-index = "3.2.0"
 glob = "0.3"
 itertools = "0.11"
 num_cpus = "1"
 protobuf = "3"
-reqwest = { version = "0.12.5", features = ["blocking"] }
+reqwest = { version = "0.12.5", features = ["blocking", "gzip"] }
 semver = "1"
-serde = { version = "1", features = ["derive"] }
+# TODO: Unpin once https://github.com/serde-rs/serde/issues/2844 is resolved.
+serde = { version = "=1.0.210", features = ["derive"] }
 serde_json = "1"
 spdx = "0.10"
 thiserror = "1"
 threadpool = "1"
-tinytemplate = "1.2"
 walkdir = "2"
 whoami = "1"
 google_metadata = { path = "../google_metadata"}

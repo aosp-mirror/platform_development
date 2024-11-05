@@ -106,6 +106,7 @@ import {MiniTimelineComponent} from './mini-timeline/mini_timeline_component';
               <mat-form-field
                 class="time-input human"
                 appearance="fill"
+                (keydown.esc)="$event.target.blur()"
                 (keydown.enter)="onKeydownEnterTimeInputField($event)"
                 (change)="onHumanTimeInputChange($event)">
                 <mat-icon
@@ -132,6 +133,7 @@ import {MiniTimelineComponent} from './mini-timeline/mini_timeline_component';
               <mat-form-field
                 class="time-input nano"
                 appearance="fill"
+                (keydown.esc)="$event.target.blur()"
                 (keydown.enter)="onKeydownEnterNanosecondsTimeInputField($event)"
                 (change)="onNanosecondsInputTimeChange($event)">
                 <mat-icon

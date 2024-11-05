@@ -16,9 +16,7 @@
 
 import {ClipboardModule} from '@angular/cdk/clipboard';
 import {ScrollingModule} from '@angular/cdk/scrolling';
-import {CommonModule} from '@angular/common';
 import {HttpClientModule} from '@angular/common/http';
-import {CUSTOM_ELEMENTS_SCHEMA} from '@angular/core';
 import {
   ComponentFixture,
   ComponentFixtureAutoDetect,
@@ -26,7 +24,6 @@ import {
 } from '@angular/core/testing';
 import {FormsModule} from '@angular/forms';
 import {MatButtonModule} from '@angular/material/button';
-import {MatCheckboxModule} from '@angular/material/checkbox';
 import {MatDividerModule} from '@angular/material/divider';
 import {MatFormFieldModule} from '@angular/material/form-field';
 import {MatIconModule} from '@angular/material/icon';
@@ -41,21 +38,27 @@ import {TimestampConverterUtils} from 'test/unit/timestamp_converter_utils';
 import {TraceBuilder} from 'test/unit/trace_builder';
 import {UnitTestUtils} from 'test/unit/utils';
 import {Trace, TraceEntry} from 'trace/trace';
+import {TraceType} from 'trace/trace_type';
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
-import {LogComponent} from 'viewers/common/log_component';
-import {LogField, LogFieldType} from 'viewers/common/ui_data_log';
+import {LogSelectFilter} from 'viewers/common/log_filters';
+import {LogHeader} from 'viewers/common/ui_data_log';
 import {CollapsedSectionsComponent} from 'viewers/components/collapsed_sections_component';
 import {CollapsibleSectionTitleComponent} from 'viewers/components/collapsible_section_title_component';
+import {LogComponent} from 'viewers/components/log_component';
 import {PropertiesComponent} from 'viewers/components/properties_component';
 import {PropertyTreeNodeDataViewComponent} from 'viewers/components/property_tree_node_data_view_component';
 import {RectsComponent} from 'viewers/components/rects/rects_component';
+import {SearchBoxComponent} from 'viewers/components/search_box_component';
+import {SelectWithFilterComponent} from 'viewers/components/select_with_filter_component';
 import {TreeComponent} from 'viewers/components/tree_component';
 import {TreeNodeComponent} from 'viewers/components/tree_node_component';
-import {Presenter} from './presenter';
+import {UserOptionsComponent} from 'viewers/components/user_options_component';
 import {InputEntry, UiData} from './ui_data';
 import {ViewerInputComponent} from './viewer_input_component';
 
 describe('ViewerInputComponent', () => {
+  const testSpec = {name: 'Test Column', cssClass: 'test-class'};
+  const testField = {spec: testSpec, value: 'VALUE'};
   let fixture: ComponentFixture<ViewerInputComponent>;
   let component: ViewerInputComponent;
   let htmlElement: HTMLElement;
@@ -71,6 +74,7 @@ describe('ViewerInputComponent', () => {
       .setName('entry')
       .build();
     trace = new TraceBuilder<PropertyTreeNode>()
+      .setType(TraceType.INPUT_EVENT_MERGED)
       .setEntries([tree])
       .setTimestamps([TimestampConverterUtils.makeElapsedTimestamp(20n)])
       .build();
@@ -81,21 +85,19 @@ describe('ViewerInputComponent', () => {
     await TestBed.configureTestingModule({
       providers: [{provide: ComponentFixtureAutoDetect, useValue: true}],
       imports: [
-        CommonModule,
-        MatIconModule,
-        MatDividerModule,
-        HttpClientModule,
-        MatCheckboxModule,
         MatSliderModule,
+        MatTooltipModule,
+        MatDividerModule,
+        ScrollingModule,
+        MatIconModule,
+        ClipboardModule,
         MatFormFieldModule,
+        MatButtonModule,
         MatInputModule,
         BrowserAnimationsModule,
         FormsModule,
-        MatTooltipModule,
-        MatButtonModule,
         MatSelectModule,
-        ScrollingModule,
-        ClipboardModule,
+        HttpClientModule,
       ],
       declarations: [
         ViewerInputComponent,
@@ -107,8 +109,10 @@ describe('ViewerInputComponent', () => {
         CollapsibleSectionTitleComponent,
         LogComponent,
         RectsComponent,
+        SelectWithFilterComponent,
+        SearchBoxComponent,
+        UserOptionsComponent,
       ],
-      schemas: [CUSTOM_ELEMENTS_SCHEMA],
     }).compileComponents();
 
     fixture = TestBed.createComponent(ViewerInputComponent);
@@ -123,14 +127,28 @@ describe('ViewerInputComponent', () => {
     expect(component).toBeTruthy();
   });
 
-  it('renders entries', () => {
-    expect(htmlElement.querySelector('.scroll')).toBeTruthy();
+  it('renders filter in title', () => {
+    expect(htmlElement.querySelector('.headers .filter')).toBeNull();
+    expect(
+      htmlElement.querySelector(
+        `.title-section .filter.${testSpec.cssClass.split(' ')[0]}`,
+      ),
+    ).toBeTruthy();
+  });
 
-    const entry = assertDefined(htmlElement.querySelector('.scroll .entry'));
-    expect(entry.innerHTML).toContain(`MOTION #1`);
-    expect(entry.innerHTML).toContain(`EXAMPLE SOURCE #1`);
-    expect(entry.innerHTML).toContain(`EXAMPLE ACTION #1`);
-    expect(entry.innerHTML).toContain(`EXAMPLE DETAILS #1`);
+  it('renders entries with field values and no trace timestamp', () => {
+    expect(htmlElement.querySelector('.scroll')).toBeTruthy();
+    const entry = assertDefined(
+      htmlElement.querySelector(
+        `.scroll .entry .${testSpec.cssClass.split(' ')[0]}`,
+      ),
+    );
+    expect(entry.textContent).toContain('VALUE');
+    expect(htmlElement.querySelector('.scroll .entry .time')).toBeNull();
+  });
+
+  it('hides go to current time button', () => {
+    expect(htmlElement.querySelector('.go-to-current-time')).toBeNull();
   });
 
   it('shows message when no event is selected', () => {
@@ -198,9 +216,9 @@ describe('ViewerInputComponent', () => {
     ];
 
     const uiData = UiData.createEmpty();
+    uiData.headers = [new LogHeader(testSpec, new LogSelectFilter([]))];
     uiData.entries = entries;
     uiData.selectedIndex = 0;
-    uiData.headers = Presenter.FIELD_TYPES;
 
     uiData.rectsToDraw = [];
     return uiData;
@@ -210,33 +228,24 @@ describe('ViewerInputComponent', () => {
     entry: TraceEntry<PropertyTreeNode>,
     num: number,
   ): InputEntry {
-    const fields: LogField[] = [
-      {
-        type: LogFieldType.INPUT_TYPE,
-        value: `MOTION #${num}`,
-      },
-      {
-        type: LogFieldType.INPUT_SOURCE,
-        value: `EXAMPLE SOURCE #${num}`,
-      },
-      {
-        type: LogFieldType.INPUT_ACTION,
-        value: `EXAMPLE ACTION #${num}`,
-      },
-      {
-        type: LogFieldType.INPUT_DEVICE_ID,
-        value: 42,
-      },
-      {
-        type: LogFieldType.INPUT_DISPLAY_ID,
-        value: 2,
-      },
-      {
-        type: LogFieldType.INPUT_EVENT_DETAILS,
-        value: `EXAMPLE DETAILS #${num}`,
-      },
-    ];
-
-    return new InputEntry(entry, fields, tree, tree, undefined);
+    return new InputEntry(
+      entry,
+      [
+        {
+          spec: testSpec,
+          value: 'VALUE',
+          propagateEntryTimestamp: true,
+        },
+        testField,
+        testField,
+        testField,
+        testField,
+        testField,
+        testField,
+      ],
+      tree,
+      tree,
+      undefined,
+    );
   }
 });
