@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+import {Store} from 'common/store';
 import {WinscopeEvent} from 'messaging/winscope_event';
 import {EmitEvent} from 'messaging/winscope_event_emitter';
 import {Trace} from 'trace/trace';
@@ -32,13 +33,13 @@ export class ViewerTransitions implements Viewer {
   private readonly presenter: Presenter;
   private readonly view: View;
 
-  constructor(trace: Trace<PropertyTreeNode>, traces: Traces) {
+  constructor(trace: Trace<PropertyTreeNode>, traces: Traces, storage: Store) {
     this.trace = trace;
     this.htmlElement = document.createElement('viewer-transitions');
     const notifyViewCallback = (data: UiData) => {
       (this.htmlElement as any).inputData = data;
     };
-    this.presenter = new Presenter(trace, traces, notifyViewCallback);
+    this.presenter = new Presenter(trace, traces, storage, notifyViewCallback);
     this.presenter.addEventListeners(this.htmlElement);
 
     this.view = new View(

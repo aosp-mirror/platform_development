@@ -21,6 +21,7 @@ import android.hardware.input.InputManager;
 import android.hardware.input.InputManagerGlobal;
 import android.os.SystemClock;
 import android.util.SparseArray;
+import android.view.Display;
 import android.view.IWindowManager;
 import android.view.MotionEvent;
 
@@ -38,21 +39,22 @@ public abstract class MonkeyMotionEvent extends MonkeyEvent {
     private float mYPrecision;
     private int mDeviceId;
     private int mSource;
-    private int mFlags;
     private int mEdgeFlags;
+    private int mDisplayId;
 
     //If true, this is an intermediate step (more verbose logging, only)
     private boolean mIntermediateNote;
 
-    protected MonkeyMotionEvent(int type, int source, int action) {
+    protected MonkeyMotionEvent(int type, int source, int action, int display) {
         super(type);
         mSource = source;
         mDownTime = -1;
         mEventTime = -1;
         mAction = action;
-        mPointers = new SparseArray<MotionEvent.PointerCoords>();
+        mPointers = new SparseArray<>();
         mXPrecision = 1;
         mYPrecision = 1;
+        mDisplayId = display;
     }
 
     public MonkeyMotionEvent addPointer(int id, float x, float y) {
@@ -123,23 +125,25 @@ public abstract class MonkeyMotionEvent extends MonkeyEvent {
     }
 
     /**
-     * 
+     *
      * @return instance of a motion event
      */
     private MotionEvent getEvent() {
         int pointerCount = mPointers.size();
-        int[] pointerIds = new int[pointerCount];
         MotionEvent.PointerCoords[] pointerCoords = new MotionEvent.PointerCoords[pointerCount];
+        MotionEvent.PointerProperties[] pointerProperties
+                = new MotionEvent.PointerProperties[pointerCount];
         for (int i = 0; i < pointerCount; i++) {
-            pointerIds[i] = mPointers.keyAt(i);
             pointerCoords[i] = mPointers.valueAt(i);
+            pointerProperties[i] = new MotionEvent.PointerProperties();
+            pointerProperties[i].id = mPointers.keyAt(i);
         }
 
-        MotionEvent ev = MotionEvent.obtain(mDownTime,
+        return MotionEvent.obtain(mDownTime,
                 mEventTime < 0 ? SystemClock.uptimeMillis() : mEventTime,
-                mAction, pointerCount, pointerIds, pointerCoords,
-                mMetaState, mXPrecision, mYPrecision, mDeviceId, mEdgeFlags, mSource, mFlags);
-        return ev;
+                mAction, pointerCount, pointerProperties, pointerCoords,
+                mMetaState, 0 /*buttonState*/, mXPrecision, mYPrecision, mDeviceId, mEdgeFlags,
+                mSource, mDisplayId, 0 /*flags*/);
     }
 
     public MotionEvent getMotionEventForInjection() {

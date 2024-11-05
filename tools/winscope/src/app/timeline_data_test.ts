@@ -423,7 +423,7 @@ describe('TimelineData', () => {
       undefined,
       TimestampConverterUtils.TIMESTAMP_CONVERTER,
     );
-    userNotifierChecker.expectNotified([new CannotParseAllTransitions()]);
+    userNotifierChecker.expectAdded([new CannotParseAllTransitions()]);
     expect(timelineData.getTransitionEntries()).toEqual([undefined]);
   });
 });

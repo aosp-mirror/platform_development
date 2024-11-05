@@ -24,14 +24,18 @@ type TypedArray =
   | Float32Array
   | Float64Array;
 
-class ArrayUtils {
-  static equal<T>(a: T[] | TypedArray, b: T[] | TypedArray): boolean {
+export class ArrayUtils {
+  static equal<T>(
+    a: T[] | TypedArray,
+    b: T[] | TypedArray,
+    predicate: (a: T | number, b: T | number) => boolean = (a, b) => a === b,
+  ): boolean {
     if (a.length !== b.length) {
       return false;
     }
 
     for (let i = 0; i < a.length; i++) {
-      if (a[i] !== b[i]) {
+      if (!predicate(a[i], b[i])) {
         return false;
       }
     }
@@ -157,5 +161,3 @@ class ArrayUtils {
     return result;
   }
 }
-
-export {ArrayUtils};

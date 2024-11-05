@@ -18,6 +18,7 @@ package com.android.compose.animation.scene.demo
 
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -28,7 +29,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -115,10 +115,7 @@ object QuickSettings {
 @Composable
 @OptIn(ExperimentalFoundationApi::class)
 fun SceneScope.QuickSettings(
-    pagerState: PagerState,
-    tiles: List<QuickSettingsTileViewModel>,
-    nGridRows: Int,
-    nGridColumns: Int,
+    qsPager: @Composable SceneScope.() -> Unit,
     mediaPlayer: (@Composable SceneScope.() -> Unit)?,
     onSettingsButtonClicked: () -> Unit,
     onPowerButtonClicked: () -> Unit,
@@ -143,14 +140,12 @@ fun SceneScope.QuickSettings(
                     horizontalPaddingModifier.padding(top = QuickSettings.Dimensions.Padding)
                 )
 
-                QuickSettingsPager(
-                    pagerState = pagerState,
-                    tiles = tiles,
-                    nRows = nGridRows,
-                    nColumns = nGridColumns,
+                Box(
                     Modifier.padding(top = QuickSettings.Dimensions.Padding)
-                        .element(QuickSettings.Elements.ExpandedGrid),
-                )
+                        .element(QuickSettings.Elements.ExpandedGrid)
+                ) {
+                    qsPager()
+                }
 
                 if (mediaPlayer != null) {
                     Box(horizontalPaddingModifier) { mediaPlayer() }
@@ -172,6 +167,8 @@ fun SceneScope.QuickSettings(
                 onPowerButtonClicked,
                 Modifier.align(Alignment.BottomCenter)
                     .element(QuickSettings.Elements.FooterActions)
+                    // Intercepts touches, prevents the scrollable container behind from scrolling.
+                    .clickable(interactionSource = null, indication = null) { /* do nothing */ }
                     .background(Color.Black, QuickSettings.Shapes.FooterActionsBackground)
                     .padding(
                         top = QuickSettings.Dimensions.FooterActionsPadding,

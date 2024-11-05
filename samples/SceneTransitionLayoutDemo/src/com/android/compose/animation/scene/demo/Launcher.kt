@@ -38,11 +38,26 @@ import com.android.compose.animation.scene.UserActionResult
 import com.android.compose.grid.VerticalGrid
 
 object Launcher {
-    fun userActions(shadeScene: SceneKey): Map<UserAction, UserActionResult> {
-        return mapOf(
-            Swipe.Down to shadeScene,
-            Swipe(SwipeDirection.Down, pointerCount = 2) to Scenes.QuickSettings,
-        )
+    fun userActions(
+        shadeScene: SceneKey,
+        configuration: DemoConfiguration,
+    ): Map<UserAction, UserActionResult> {
+        return buildList {
+                if (configuration.enableOverlays) {
+                    add(
+                        Swipe(SwipeDirection.Down, fromSource = HorizontalHalfScreen.Start) to
+                            UserActionResult.ShowOverlay(Overlays.QuickSettings)
+                    )
+                    add(
+                        Swipe(SwipeDirection.Down, fromSource = HorizontalHalfScreen.End) to
+                            UserActionResult.ShowOverlay(Overlays.Notifications)
+                    )
+                } else {
+                    add(Swipe.Down to shadeScene)
+                    add(Swipe(SwipeDirection.Down, pointerCount = 2) to Scenes.QuickSettings)
+                }
+            }
+            .toMap()
     }
 
     object Elements {
