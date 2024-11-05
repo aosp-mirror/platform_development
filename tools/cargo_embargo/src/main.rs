@@ -947,8 +947,10 @@ fn apply_patch_file(output_path: &Path, patch_path: &Path) -> Result<()> {
         .output()
         .context("Running patch")?;
     if !patch_output.status.success() {
+        let stdout = String::from_utf8(patch_output.stdout)?;
+        let stderr = String::from_utf8(patch_output.stderr)?;
         // These errors will cause the cargo_embargo command to fail, but not yet!
-        return Err(anyhow!("failed to apply patch {patch_path:?}"));
+        bail!("failed to apply patch {patch_path:?}:\n\nout:\n{stdout}\n\nerr:\n{stderr}");
     }
     Ok(())
 }
