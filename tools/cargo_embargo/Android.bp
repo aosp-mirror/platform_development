@@ -38,6 +38,7 @@ rust_defaults {
 
 rust_binary_host {
     name: "cargo_embargo",
+    required: ["bpfmt"],
     defaults: ["cargo_embargo.defaults"],
 }
 
