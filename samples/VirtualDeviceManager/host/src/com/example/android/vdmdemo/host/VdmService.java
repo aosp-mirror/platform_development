@@ -78,6 +78,7 @@ import com.google.common.util.concurrent.MoreExecutors;
 
 import dagger.hilt.android.AndroidEntryPoint;
 
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -516,6 +517,12 @@ public final class VdmService extends Hilt_VdmService {
             }
         }
 
+        if (Flags.deviceAwareDisplayPower()) {
+            int displayTimeout = Integer.parseInt(
+                    mPreferenceController.getString(R.string.pref_display_timeout));
+            virtualDeviceBuilder.setScreenOffTimeout(Duration.ofMillis(displayTimeout));
+        }
+
         if (mPreferenceController.getBoolean(R.string.pref_hide_from_recents)) {
             virtualDeviceBuilder.setDevicePolicy(POLICY_TYPE_RECENTS, DEVICE_POLICY_CUSTOM);
         }
@@ -702,7 +709,7 @@ public final class VdmService extends Hilt_VdmService {
         observers.put(R.string.pref_display_ime_policy,
                 s -> {
                     if (mVirtualDevice != null) {
-                        int policy = Integer.valueOf((String) s);
+                        int policy = Integer.parseInt((String) s);
                         Arrays.stream(mDisplayRepository.getDisplayIds()).forEach(
                                 displayId -> mVirtualDevice.setDisplayImePolicy(displayId, policy));
                     }
@@ -713,6 +720,7 @@ public final class VdmService extends Hilt_VdmService {
         observers.put(R.string.pref_always_unlocked_device, v -> recreateVirtualDevice());
         observers.put(R.string.pref_enable_client_native_ime, v -> recreateVirtualDevice());
         observers.put(R.string.pref_enable_custom_home, v -> recreateVirtualDevice());
+        observers.put(R.string.pref_display_timeout, v -> recreateVirtualDevice());
         observers.put(R.string.pref_enable_display_category, v -> recreateVirtualDevice());
 
         return observers;
