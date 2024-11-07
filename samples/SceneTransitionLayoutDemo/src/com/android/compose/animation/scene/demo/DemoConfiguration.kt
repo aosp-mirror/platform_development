@@ -69,7 +69,7 @@ data class DemoConfiguration(
     val isFullscreen: Boolean = false,
     val canChangeSceneOrOverlays: Boolean = true,
     val transitionInterceptionThreshold: Float = 0.05f,
-    val springConfigurations: DemoSpringConfigurations = DemoSpringConfigurations.presets[1],
+    val springConfigurations: DemoSpringConfigurations = DemoSpringConfigurations.presets[0],
     val useOverscrollSpec: Boolean = true,
     val overscrollProgressConverter: DemoOverscrollProgress = Tanh(maxProgress = 0.2f, tilt = 3f),
     val lsToShadeRequiresFullSwipe: ToggleableState = ToggleableState.Indeterminate,
@@ -150,14 +150,24 @@ data class DemoSpringConfigurations(
         val presets =
             listOf(
                 DemoSpringConfigurations(
-                    name = "Fast",
+                    name = "Default",
+                    systemUiSprings =
+                        SpringConfiguration(
+                            Spring.StiffnessMediumLow,
+                            Spring.DampingRatioLowBouncy,
+                        ),
+                    notificationSprings =
+                        SpringConfiguration(Spring.StiffnessMediumLow, Spring.DampingRatioLowBouncy),
+                ),
+                DemoSpringConfigurations(
+                    name = "NotBouncy Fast",
                     systemUiSprings =
                         SpringConfiguration(Spring.StiffnessMedium, Spring.DampingRatioNoBouncy),
                     notificationSprings =
                         SpringConfiguration(Spring.StiffnessMedium, Spring.DampingRatioNoBouncy),
                 ),
                 DemoSpringConfigurations(
-                    name = "Normal",
+                    name = "NotBouncy Normal",
                     systemUiSprings =
                         SpringConfiguration(Spring.StiffnessMediumLow, Spring.DampingRatioNoBouncy),
                     notificationSprings =

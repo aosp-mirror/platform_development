@@ -39,7 +39,6 @@ import com.android.compose.animation.scene.ElementKey
 import com.android.compose.animation.scene.SceneKey
 import com.android.compose.animation.scene.SceneScope
 import com.android.compose.animation.scene.Swipe
-import com.android.compose.animation.scene.SwipeDirection
 import com.android.compose.animation.scene.UserAction
 import com.android.compose.animation.scene.UserActionResult
 
@@ -54,14 +53,14 @@ object Lockscreen {
         return buildList {
                 if (configuration.enableOverlays) {
                     add(
-                        Swipe(SwipeDirection.Down, fromSource = HorizontalHalfScreen.Start) to
+                        Swipe.Down(fromSource = HorizontalHalfScreen.Start) to
                             UserActionResult.ShowOverlay(
                                 Overlays.QuickSettings,
                                 requiresFullDistanceSwipe = requiresFullDistanceSwipeToShade,
                             )
                     )
                     add(
-                        Swipe(SwipeDirection.Down, fromSource = HorizontalHalfScreen.End) to
+                        Swipe.Down(fromSource = HorizontalHalfScreen.End) to
                             UserActionResult.ShowOverlay(
                                 Overlays.Notifications,
                                 requiresFullDistanceSwipe = requiresFullDistanceSwipeToShade,
@@ -89,7 +88,7 @@ object Lockscreen {
                 )
 
                 if (fastSwipeToQuickSettings) {
-                    add(Swipe(SwipeDirection.Down, pointerCount = 2) to Scenes.QuickSettings)
+                    add(Swipe.Down(pointerCount = 2) to Scenes.QuickSettings)
                 }
             }
             .toMap()
