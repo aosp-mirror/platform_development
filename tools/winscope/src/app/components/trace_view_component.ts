@@ -73,8 +73,8 @@ interface Tab {
                 class="tab">
               <mat-icon
                 class="icon"
-                [style]="{color: TRACE_INFO[tab.view.traces[0].type].color, marginRight: '0.5rem'}">
-                  {{ TRACE_INFO[tab.view.traces[0].type].icon }}
+                [style]="{color: getTabIconColor(tab), marginRight: '0.5rem'}">
+                  {{ getTabIcon(tab) }}
               </mat-icon>
               <span>
                 {{ getTitle(tab.view) }}
@@ -303,6 +303,22 @@ export class TraceViewComponent
     this.renderViewsOverlay();
   }
 
+  getTabIconColor(tab: Tab): string {
+    if (tab.view.type === ViewType.GLOBAL_SEARCH) return '';
+    const trace = tab.view.traces.at(0);
+    if (!trace) return '';
+    return TRACE_INFO[trace.type].color;
+  }
+
+  getTabIcon(tab: Tab): string {
+    if (tab.view.type === ViewType.GLOBAL_SEARCH) {
+      return TRACE_INFO[TraceType.SEARCH].icon;
+    }
+    const trace = tab.view.traces.at(0);
+    if (!trace) return '';
+    return TRACE_INFO[trace.type].icon;
+  }
+
   async onTabClick(tab: Tab) {
     await this.showTab(tab, false);
   }
@@ -332,7 +348,7 @@ export class TraceViewComponent
   }
 
   getTitle(view: View): string {
-    const isDump = view.traces.length === 1 && view.traces[0].isDump();
+    const isDump = view.traces.length === 1 && view.traces.at(0)?.isDump();
     return view.title + (isDump ? ' Dump' : '');
   }
 
@@ -410,14 +426,14 @@ export class TraceViewComponent
   }
 
   private getCurrentTabTraceType(): TraceType | undefined {
-    return this.currentActiveTab?.view.traces[0].type;
+    return this.currentActiveTab?.view.traces.at(0)?.type;
   }
 
   private renderViewsTab(firstToRender: boolean) {
     this.tabs = this.viewers
       .map((viewer) => viewer.getViews())
       .flat()
-      .filter((view) => view.type === ViewType.TAB)
+      .filter((view) => view.type !== ViewType.OVERLAY)
       .map((view) => {
         return {
           view,
@@ -432,7 +448,10 @@ export class TraceViewComponent
     });
 
     if (this.tabs.length > 0) {
-      this.showTab(this.tabs[0], firstToRender);
+      const tabToShow = assertDefined(
+        this.tabs.find((tab) => tab.view.type !== ViewType.GLOBAL_SEARCH),
+      );
+      this.showTab(tabToShow, firstToRender);
     }
   }
 
@@ -483,9 +502,7 @@ export class TraceViewComponent
     this.currentActiveTab = tab;
 
     if (!firstToRender) {
-      Analytics.Navigation.logTabSwitched(
-        TRACE_INFO[tab.view.traces[0].type].name,
-      );
+      Analytics.Navigation.logTabSwitched(tab.view.title);
       await this.emitAppEvent(new TabbedViewSwitched(tab.view));
     }
   }

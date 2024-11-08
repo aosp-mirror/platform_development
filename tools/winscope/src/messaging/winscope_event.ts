@@ -143,7 +143,9 @@ export class TabbedViewSwitched extends WinscopeEvent {
 
   constructor(view: View) {
     super();
-    assertTrue(view.type === ViewType.TAB);
+    assertTrue(
+      view.type === ViewType.TRACE_TAB || view.type === ViewType.GLOBAL_SEARCH,
+    );
     this.newFocusedView = view;
   }
 }
