@@ -59,13 +59,20 @@ class Updater:
         prebuilts_project = self.src_dir / "prebuilts/abi-dumps"
         prebuilts_dir = prebuilts_project / "ndk"
         abi_out = self.build_dir / "soong/abi-dumps/ndk"
-        for dump in abi_out.glob("**/abi.stg"):
-            install_path = prebuilts_dir / dump.relative_to(abi_out)
-            install_dir = install_path.parent
-            if not install_dir.exists():
-                install_dir.mkdir(parents=True)
-            logger().info(f"Copying ABI dump {dump} to {install_path}")
-            shutil.copy2(dump, install_path)
+        for version_dir in abi_out.iterdir():
+            try:
+                int(version_dir.name)
+            except ValueError:
+                logger().info("Skipping %s because it is a preview API level", version_dir)
+                continue
+
+            for dump in version_dir.glob("**/abi.stg"):
+                install_path = prebuilts_dir / dump.relative_to(abi_out)
+                install_dir = install_path.parent
+                if not install_dir.exists():
+                    install_dir.mkdir(parents=True)
+                logger().info(f"Copying ABI dump {dump} to {install_path}")
+                shutil.copy2(dump, install_path)
 
     def run(self) -> None:
         """Runs the updater.
