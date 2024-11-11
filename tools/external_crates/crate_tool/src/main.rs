@@ -61,6 +61,12 @@ enum Cmd {
         #[command(flatten)]
         crates: MigrationCrateList,
     },
+    /// Analyze a crate to see if it can be imported.
+    #[command(hide = true)]
+    AnalyzeImport {
+        /// The crate name.
+        crate_name: String,
+    },
     /// Import a crate and its dependencies into the monorepo.
     #[command(hide = true)]
     Import {
@@ -211,6 +217,7 @@ fn main() -> Result<()> {
             managed_repo.regenerate(crates.to_list(&managed_repo)?.into_iter(), true)
         }
         Cmd::PreuploadCheck { files } => managed_repo.preupload_check(&files),
+        Cmd::AnalyzeImport { crate_name } => managed_repo.analyze_import(&crate_name),
         Cmd::Import { crate_name } => managed_repo.import(&crate_name),
         Cmd::FixLicenses { crates } => {
             managed_repo.fix_licenses(crates.to_list(&managed_repo)?.into_iter())

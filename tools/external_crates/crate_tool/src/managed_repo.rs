@@ -23,6 +23,7 @@ use std::{
 };
 
 use anyhow::{anyhow, Context, Result};
+use crates_index::DependencyKind;
 use glob::glob;
 use google_metadata::GoogleMetadata;
 use itertools::Itertools;
@@ -362,6 +363,75 @@ impl ManagedRepo {
             )?;
         }
 
+        Ok(())
+    }
+    pub fn analyze_import(&self, crate_name: &str) -> Result<()> {
+        if self.contains(crate_name) {
+            println!("Crate already imported at {}", self.managed_dir_for(crate_name));
+            return Ok(());
+        }
+        let legacy_dir = self.legacy_dir_for(crate_name, None)?;
+        if legacy_dir.abs().exists() {
+            println!("Legacy crate already imported at {}", legacy_dir);
+            return Ok(());
+        }
+
+        let mut managed_crates = self.new_cc();
+        managed_crates.add_from(self.managed_dir().rel())?;
+        let legacy_crates = self.legacy_crates()?;
+
+        let cio_crate = self.crates_io.get_crate(crate_name)?;
+
+        for version in cio_crate.versions() {
+            println!("Version {}", version.version());
+            let mut found_problems = false;
+            for (dep, req) in version.android_deps_with_version_reqs() {
+                let cc = if managed_crates.contains_name(dep.crate_name()) {
+                    &managed_crates
+                } else {
+                    &legacy_crates
+                };
+                if !cc.contains_name(dep.crate_name()) {
+                    found_problems = true;
+                    println!(
+                        "  Dep {} {} has not been imported to Android",
+                        dep.crate_name(),
+                        dep.requirement()
+                    );
+                    if matches!(dep.kind(), DependencyKind::Dev) {
+                        println!("    But this is a dev dependency, probably only needed if you want to run the tests");
+                    }
+                    if dep.is_optional() {
+                        println!("    But this is an optional dependency, used by the following features: {}", dep.features().join(", "));
+                    }
+                    continue;
+                }
+                let versions = cc.get_versions(dep.crate_name()).collect::<Vec<_>>();
+                let has_matching_version =
+                    versions.iter().any(|(nv, _)| req.matches_relaxed(nv.version()));
+                if !has_matching_version {
+                    found_problems = true;
+                }
+                if !has_matching_version || versions.len() > 1 {
+                    if has_matching_version {
+                        println!("  Dep {} has multiple versions available. You may need to override the default choice in cargo_embargo.json", dep.crate_name());
+                    }
+                    for (_, dep_crate) in versions {
+                        println!(
+                            "  Dep {} {} is {}satisfied by v{} at {}",
+                            dep.crate_name(),
+                            dep.requirement(),
+                            if req.matches_relaxed(dep_crate.version()) { "" } else { "not " },
+                            dep_crate.version(),
+                            dep_crate.path()
+                        );
+                    }
+                }
+            }
+            if !found_problems {
+                println!("  No problems found with this version.")
+            }
+        }
         Ok(())
     }
     pub fn import(&self, crate_name: &str) -> Result<()> {
