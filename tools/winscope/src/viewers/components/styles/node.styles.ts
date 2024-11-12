@@ -26,38 +26,42 @@ export const nodeStyles =
         width: 100%;
     }
 
+    .node:not(.selected):not(.full-opacity):not(:hover) {
+        opacity: 0.5;
+    }
+
     .node.clickable {
         cursor: pointer;
     }
 
     .node:not(.selected).added,
     .node:not(.selected).addedMove {
-        background: ${Color.ADDED_ELEMENT_BACKGROUND};
+        background-color: var(--added-element-color);
     }
 
     .node:not(.selected).deleted,
     .node:not(.selected).deletedMove {
-        background: ${Color.DELETED_ELEMENT_BACKGROUND};
+        background-color: var(--deleted-element-color);
     }
 
     .node:not(.selected).modified {
-        background: ${Color.MODIFIED_ELEMENT_BACKGROUND};
+        background-color: var(--modified-element-color);
     }
 
     .node:hover:not(.selected) {
-        background-color: ${Color.HOVER_ELEMENT_BACKGROUND};
+        background-color: var(--hover-element-color);
     }
 
     .node.addedMove:after,
     .node.deletedMove:after {
-        content: 'moved';
+        content: 'Moved';
         font: 14px 'Roboto', sans-serif;
         margin: 0 5px;
-        background: ${Color.CHIP_BLUE};
-        border-radius: 5px;
+        background-color: ${Color.CHIP_BLUE};
+        color: ${Color.TEXT_BLACK};
+        border-radius: 10px;
         height: fit-content;
         padding: 3px;
-        color: white;
     }
 ` + selectedElementStyle;
 
@@ -114,11 +118,15 @@ export const nodeInnerItemStyles = `
       position: absolute;
     }
 
-    .toggle-tree-btn, .expand-tree-btn, .pin-node-btn, .toggle-rect-show-state-btn {
+    .icon-wrapper-copy {
+        right: 0;
+    }
+
+    .toggle-tree-btn, .expand-tree-btn, .pin-node-btn, .toggle-rect-show-state-btn, .copy-btn {
         padding: 0;
     }
 
-    .toggle-rect-show-state-btn {
+    .toggle-rect-show-state-btn, .copy-btn {
         transform: scale(0.75);
     }
 
@@ -147,6 +155,9 @@ export const nodeInnerItemStyles = `
         vertical-align: middle;
         color: inherit;
         cursor: pointer;
+        height: 24px;
+        width: 24px;
+        line-height: 24px;
     }
 
     .expand-tree-btn {
@@ -154,16 +165,25 @@ export const nodeInnerItemStyles = `
     }
 
     .expand-tree-btn.modified {
-        background: ${Color.MODIFIED_ELEMENT_BACKGROUND};
+        background-color: var(--modified-element-color);
     }
 
     .expand-tree-btn.deleted,
     .expand-tree-btn.deletedMove {
-        background: ${Color.DELETED_ELEMENT_BACKGROUND};
+        background-color: var(--deleted-element-color);
     }
 
     .expand-tree-btn.added,
     .expand-tree-btn.addedMove {
-        background: ${Color.ADDED_ELEMENT_BACKGROUND};
+        background-color: var(--added-element-color);
+    }
+
+    .icon-wrapper-show-state {
+        opacity: 1;
+    }
+
+    :host:not(:hover):not(.selected) .icon-wrapper-show-state,
+    :host:not(:hover) .icon-wrapper-copy {
+        visibility: hidden;
     }
 `;

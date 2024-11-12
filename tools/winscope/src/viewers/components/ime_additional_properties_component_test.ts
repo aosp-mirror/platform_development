@@ -74,6 +74,14 @@ describe('ImeAdditionalPropertiesComponent', () => {
     expect(htmlElement.querySelector('.input-method-surface')).toBeDefined();
   });
 
+  it('renders placeholder text', () => {
+    component.additionalProperties = undefined;
+    fixture.detectChanges();
+    expect(
+      htmlElement.querySelector('.placeholder-text')?.textContent,
+    ).toContain('No IME entry found.');
+  });
+
   it('emits update additional property tree event on wm state button click', () => {
     const button = assertDefined(
       htmlElement.querySelector('.wm-state-button'),
@@ -159,47 +167,50 @@ describe('ImeAdditionalPropertiesComponent', () => {
   class TestHostComponent {
     isImeManagerService = false;
 
-    additionalProperties = new ImeAdditionalProperties(
-      {
-        id: 'wmStateId',
-        name: 'wmState',
-        wmStateProperties: {
-          timestamp: '1970-01-01, 00:00:00.000000000',
-          focusedApp: 'exampleFocusedApp',
-          focusedWindow: undefined,
-          focusedActivity: undefined,
-          isInputMethodWindowVisible: false,
-          imeControlTarget: TreeNodeUtils.makePropertyNode(
-            'DisplayContent.inputMethodControlTarget',
-            'inputMethodControlTarget',
-            null,
-          ),
-          imeInputTarget: undefined,
-          imeLayeringTarget: undefined,
-          imeInsetsSourceProvider: undefined,
-        },
-        hierarchyTree: TreeNodeUtils.makeHierarchyNode({name: 'wmStateProto'}),
-      },
-      {
-        id: 'ime',
-        name: 'imeLayers',
-        properties: {
-          imeContainer: {
-            id: '123',
-            zOrderRelativeOfId: -1,
-            z: 0,
+    additionalProperties: ImeAdditionalProperties | undefined =
+      new ImeAdditionalProperties(
+        {
+          id: 'wmStateId',
+          name: 'wmState',
+          wmStateProperties: {
+            timestamp: '1970-01-01, 00:00:00.000000000',
+            focusedApp: 'exampleFocusedApp',
+            focusedWindow: undefined,
+            focusedActivity: undefined,
+            isInputMethodWindowVisible: false,
+            imeControlTarget: TreeNodeUtils.makePropertyNode(
+              'DisplayContent.inputMethodControlTarget',
+              'inputMethodControlTarget',
+              null,
+            ),
+            imeInputTarget: undefined,
+            imeLayeringTarget: undefined,
+            imeInsetsSourceProvider: undefined,
           },
-          inputMethodSurface: {
-            id: '456',
-            isVisible: false,
-          },
-          focusedWindowColor: undefined,
-          root: undefined,
+          hierarchyTree: TreeNodeUtils.makeHierarchyNode({
+            name: 'wmStateProto',
+          }),
         },
-        taskLayerOfImeContainer: undefined,
-        taskLayerOfImeSnapshot: undefined,
-      },
-    );
+        {
+          id: 'ime',
+          name: 'imeLayers',
+          properties: {
+            imeContainer: {
+              id: '123',
+              zOrderRelativeOfId: -1,
+              z: 0,
+            },
+            inputMethodSurface: {
+              id: '456',
+              isVisible: false,
+            },
+            focusedWindowColor: undefined,
+            root: undefined,
+          },
+          taskLayerOfImeContainer: undefined,
+          taskLayerOfImeSnapshot: undefined,
+        },
+      );
     highlightedItem = '';
     additionalPropertieTreeName: string | undefined;
     collapseButtonClicked = false;

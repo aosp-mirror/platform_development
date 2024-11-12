@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import {InMemoryStorage} from 'common/in_memory_storage';
+import {InMemoryStorage} from './in_memory_storage';
 import {PersistentStoreProxy} from './persistent_store_proxy';
 
 describe('PersistentStoreObject', () => {

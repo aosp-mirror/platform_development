@@ -23,7 +23,7 @@ import {
   ViewChild,
 } from '@angular/core';
 import {assertDefined} from 'common/assert_utils';
-import {Point} from 'common/geometry_types';
+import {Point} from 'common/geometry/point';
 import {TimeRange} from 'common/time';
 import {ComponentTimestampConverter} from 'common/timestamp_converter';
 import {Trace, TraceEntry} from 'trace/trace';
@@ -58,7 +58,7 @@ export abstract class AbstractTimelineRowComponent<T extends {}> {
   }
 
   getBackgroundColor() {
-    return this.isActive ? 'var(--drawer-block-secondary)' : undefined;
+    return this.isActive ? 'var(--selected-element-color)' : undefined;
   }
 
   ngAfterViewInit() {
@@ -101,12 +101,12 @@ export abstract class AbstractTimelineRowComponent<T extends {}> {
 
     canvas.width = HiPPIwidth;
     canvas.height = HiPPIheight;
-    canvas.style.width = width + 'px';
-    canvas.style.height = height + 'px';
+    canvas.style.width = '100%';
+    canvas.style.height = '100%';
 
     // ensure all drawing operations are scaled
     if (window.devicePixelRatio !== 1) {
-      const context = canvas.getContext('2d')!;
+      const context = assertDefined(canvas.getContext('2d'));
       context.scale(window.devicePixelRatio, window.devicePixelRatio);
     }
 
@@ -126,7 +126,7 @@ export abstract class AbstractTimelineRowComponent<T extends {}> {
     this.viewInitialized = true;
   }
 
-  async handleMouseDown(e: MouseEvent) {
+  handleMouseDown(e: MouseEvent) {
     e.preventDefault();
     e.stopPropagation();
     const mousePoint = {
@@ -134,15 +134,13 @@ export abstract class AbstractTimelineRowComponent<T extends {}> {
       y: e.offsetY,
     };
 
-    const transitionEntry = this.getEntryAt(mousePoint);
+    const entry = this.getEntryAt(mousePoint);
     // TODO: This can probably get made better by getting the transition and checking both the end and start timestamps match
-    if (transitionEntry && transitionEntry !== this.selectedEntry) {
+    if (entry && entry !== this.selectedEntry) {
       this.redraw();
-      this.selectedEntry = transitionEntry;
-      this.onTracePositionUpdate.emit(
-        TracePosition.fromTraceEntry(transitionEntry),
-      );
-    } else if (!transitionEntry && this.trace) {
+      this.selectedEntry = entry;
+      this.onTracePositionUpdate.emit(TracePosition.fromTraceEntry(entry));
+    } else if (!entry && this.trace) {
       this.onTraceClicked.emit(this.trace);
     }
   }
@@ -160,6 +158,7 @@ export abstract class AbstractTimelineRowComponent<T extends {}> {
 
   @HostListener('wheel', ['$event'])
   updateScroll(event: WheelEvent) {
+    event.preventDefault();
     this.onScrollEvent.emit(event);
   }
 

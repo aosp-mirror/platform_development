@@ -18,7 +18,7 @@ import {PersistentStore} from 'common/persistent_store';
 import {TraceType} from 'trace/trace_type';
 import {CollapsibleSections} from 'viewers/common/collapsible_sections';
 import {CollapsibleSectionType} from 'viewers/common/collapsible_section_type';
-import {ShadingMode} from 'viewers/components/rects/types3d';
+import {ShadingMode} from 'viewers/components/rects/shading_mode';
 import {viewerCardStyle} from 'viewers/components/styles/viewer_card.styles';
 import {UiData} from './ui_data';
 
@@ -42,14 +42,17 @@ import {UiData} from './ui_data';
         [shadingModes]="shadingModes"
         [dependencies]="inputData?.dependencies ?? []"
         [userOptions]="inputData?.rectsUserOptions ?? {}"
+        [pinnedItems]="inputData?.pinnedItems ?? []"
+        [isDarkMode]="inputData?.isDarkMode ?? false"
         (collapseButtonClicked)="sections.onCollapseStateChange(CollapsibleSectionType.RECTS, true)"></rects-view>
       <hierarchy-view
         class="hierarchy-view"
         [class.collapsed]="sections.isSectionCollapsed(CollapsibleSectionType.HIERARCHY)"
-        [tree]="inputData?.hierarchyTrees[0]"
+        [tree]="inputData?.hierarchyTrees?.at(0)"
         [dependencies]="inputData?.dependencies ?? []"
         [highlightedItem]="inputData?.highlightedItem ?? ''"
         [pinnedItems]="inputData?.pinnedItems ?? []"
+        [textFilter]="inputData?.hierarchyFilter"
         [store]="store"
         [userOptions]="inputData?.hierarchyUserOptions ?? {}"
         [rectIdToShowState]="inputData?.rectIdToShowState"
@@ -60,6 +63,7 @@ import {UiData} from './ui_data';
         [userOptions]="inputData?.propertiesUserOptions ?? {}"
         [propertiesTree]="inputData?.propertiesTree"
         [traceType]="${TraceType.WINDOW_MANAGER}"
+        [textFilter]="inputData?.propertiesFilter"
         [highlightedProperty]="inputData?.highlightedProperty ?? ''"
         [store]="store"
         [isProtoDump]="false"
