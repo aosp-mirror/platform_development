@@ -16,6 +16,7 @@
 
 package com.android.compose.animation.scene.demo
 
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -44,6 +45,9 @@ fun SceneScope.NotificationShade(
     modifier: Modifier = Modifier,
 ) {
     PartialShade(modifier) {
-        Column(Modifier.element(NotificationShade.Elements.Content)) { notificationList() }
+        Column(Modifier.element(NotificationShade.Elements.Content)) {
+            // Don't resize the notifications during the reveal.
+            Box(Modifier.noResizeDuringTransitions()) { notificationList() }
+        }
     }
 }
