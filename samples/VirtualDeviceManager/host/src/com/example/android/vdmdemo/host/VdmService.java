@@ -487,6 +487,9 @@ public final class VdmService extends Hilt_VdmService {
     }
 
     private void createVirtualDevice(AssociationInfo associationInfo) {
+        Log.d(TAG, "VdmService createVirtualDevice name: "
+                + mDeviceCapabilities.getDeviceName() + " with association: " + associationInfo);
+
         VirtualDeviceParams.Builder virtualDeviceBuilder =
                 new VirtualDeviceParams.Builder()
                         .setName("VirtualDevice - " + mDeviceCapabilities.getDeviceName());
