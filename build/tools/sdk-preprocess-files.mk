@@ -82,7 +82,7 @@ ALL_SDK_FILES += $(android_jar_src_target)
 
 # ===== SDK for system modules =====
 # A subset of the public SDK to convert to system modules for use with javac -source 9 -target 9
-ALL_SDK_FILES += $(call intermediates-dir-for,JAVA_LIBRARIES,core-current-stubs-for-system-modules,,COMMON)/classes.jar
+ALL_SDK_FILES += $(call intermediates-dir-for,JAVA_LIBRARIES,core-current-stubs-for-system-modules-exportable,,COMMON)/classes.jar
 
 # ====================================================
 
