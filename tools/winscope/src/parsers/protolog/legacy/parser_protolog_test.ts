@@ -141,7 +141,7 @@ describe('ParserProtoLog', () => {
       ],
       {
         'message': 'Starting activity when config will change = false',
-        'ts': '2024-02-29, 08:53:26.399',
+        'ts': '2024-02-29, 08:53:26.400',
         'tag': 'WindowManager',
         'level': 'VERBOSE',
         'at': 'com/android/server/wm/ActivityStarter.java',

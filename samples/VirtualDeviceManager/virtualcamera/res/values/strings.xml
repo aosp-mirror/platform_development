@@ -1,6 +1,0 @@
-<resources>
-    <string name="app_name" translatable="false">Virtual Camera Demo</string>
-    <string name="create_camera" translatable="false">Create camera</string>
-    <string name="remove_camera" translatable="false">Remove camera</string>
-    <string name="camera_name" translatable="false">Virtual Camera</string>
-</resources>

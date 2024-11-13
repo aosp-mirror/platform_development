@@ -29,7 +29,7 @@ export class ZOrderPathsComputation implements Computation {
 
   executeInPlace(): void {
     if (!this.root) {
-      throw Error('root not set');
+      throw new Error('root not set in SF z-order paths computation');
     }
 
     this.updateZOrderParents(this.root);
@@ -73,6 +73,30 @@ export class ZOrderPathsComputation implements Computation {
           return;
         }
         node.setZParent(zParent);
+
+        // add rel-z children to zParent
+        const existingRelZChildren =
+          zParent.getEagerPropertyByName('relZChildren');
+        if (existingRelZChildren) {
+          zParent.addEagerProperty(
+            DEFAULT_PROPERTY_TREE_NODE_FACTORY.makeCalculatedProperty(
+              zParent.id,
+              'relZChildren',
+              existingRelZChildren
+                .getAllChildren()
+                .map((c) => c.getValue())
+                .concat([node.id]),
+            ),
+          );
+        } else {
+          zParent.addEagerProperty(
+            DEFAULT_PROPERTY_TREE_NODE_FACTORY.makeCalculatedProperty(
+              zParent.id,
+              'relZChildren',
+              [node.id],
+            ),
+          );
+        }
       }
     });
   }

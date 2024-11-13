@@ -41,6 +41,13 @@ describe('ParserTransitions', () => {
     expect(parser.getCoarseVersion()).toEqual(CoarseVersion.LEGACY);
   });
 
+  it('has expected descriptors', () => {
+    expect(parser.getDescriptors()).toEqual([
+      'wm_transition_trace.pb',
+      'shell_transition_trace.pb',
+    ]);
+  });
+
   it('provides timestamps', () => {
     const timestamps = assertDefined(parser.getTimestamps());
     const expected = [

@@ -21,6 +21,7 @@
     <uses-permission android:name="android.permission.BODY_SENSORS" />
     <uses-permission android:name="android.permission.POST_NOTIFICATION" />
     <uses-permission android:name="android.permission.VIBRATE" />
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
 
     <!-- LINT.IfChange -->
     <application
@@ -37,9 +38,45 @@
         </activity>
 
         <activity
+            android:name=".ActivityPolicyDemoActivity"
+            android:exported="true"
+            android:label="@string/activity_policy_demo" />
+
+        <activity
+            android:name=".MainActivityWithDisplayCategory"
+            android:requiredDisplayCategory="@string/display_category"
+            android:exported="true"
+            android:label="VDM Demos Restricted">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+                <category android:name="com.example.android.vdmdemo.DISPLAY_CATEGORY" />
+            </intent-filter>
+        </activity>
+
+        <activity
+            android:name=".CalculatorWithDisplayCategory"
+            android:requiredDisplayCategory="@string/display_category"
+            android:exported="true"
+            android:label="Calculator Restricted">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.APP_CALCULATOR" />
+                <category android:name="android.intent.category.LAUNCHER" />
+                <category android:name="com.example.android.vdmdemo.DISPLAY_CATEGORY" />
+            </intent-filter>
+        </activity>
+
+        <activity
             android:name=".SensorDemoActivity"
             android:exported="false"
             android:label="@string/sensor_demo" />
+
+        <activity
+            android:name=".DisplayPowerDemoActivity"
+            android:exported="false"
+            android:label="@string/display_power_demo" />
 
         <activity
             android:name=".RotationDemoActivity"
@@ -75,6 +112,30 @@
             android:name=".StylusDemoActivity"
             android:exported="true"
             android:label="@string/stylus_demo" />
+
+        <activity
+            android:name=".BlockedActivity"
+            android:exported="true"
+            android:label="@string/blocked_activity" />
+
+        <activity
+            android:name=".OptedOutActivity"
+            android:canDisplayOnRemoteDevices="false"
+            android:exported="true"
+            android:label="@string/opted_out_activity" />
+
+        <activity
+            android:name=".TurnScreenOnActivity"
+            android:turnScreenOn="true"
+            android:exported="false"
+            android:label="@string/turn_screen_on_activity" />
+
+        <activity
+            android:name=".TurnScreenOnShowWhenLockedActivity"
+            android:turnScreenOn="true"
+            android:showWhenLocked="true"
+            android:exported="false"
+            android:label="@string/turn_screen_on_show_when_locked_activity" />
 
     </application>
     <!-- LINT.ThenChange(/samples/VirtualDeviceManager/README.md:demos) -->
