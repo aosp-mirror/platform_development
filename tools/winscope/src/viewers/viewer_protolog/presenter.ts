@@ -28,7 +28,10 @@ import {TextFilter} from 'viewers/common/text_filter';
 import {LogEntry, LogField, LogHeader} from 'viewers/common/ui_data_log';
 import {ProtologEntry, UiData} from './ui_data';
 
-export class Presenter extends AbstractLogViewerPresenter<UiData> {
+export class Presenter extends AbstractLogViewerPresenter<
+  UiData,
+  PropertyTreeNode
+> {
   private static readonly COLUMNS = {
     logLevel: {
       name: 'Log Level',
