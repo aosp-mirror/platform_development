@@ -43,13 +43,10 @@ object Launcher {
     ): Map<UserAction, UserActionResult> {
         return buildList {
                 if (configuration.enableOverlays) {
+                    add(Swipe.Down to UserActionResult.ShowOverlay(Overlays.Notifications))
                     add(
-                        Swipe.Down(fromSource = HorizontalHalfScreen.Start) to
+                        Swipe.Down(fromSource = SceneContainerEdge.TopEnd) to
                             UserActionResult.ShowOverlay(Overlays.QuickSettings)
-                    )
-                    add(
-                        Swipe.Down(fromSource = HorizontalHalfScreen.End) to
-                            UserActionResult.ShowOverlay(Overlays.Notifications)
                     )
                 } else {
                     add(Swipe.Down to shadeScene)

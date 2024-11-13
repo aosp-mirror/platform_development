@@ -470,8 +470,16 @@ fun SystemUi(
                             Modifier.semantics { testTagsAsResourceId = true }
                                 .testTag("SystemUiSceneTransitionLayout"),
                         swipeSourceDetector =
-                            if (configuration.enableOverlays) HorizontalHalfScreenDetector
-                            else DefaultEdgeDetector,
+                            if (configuration.enableOverlays) {
+                                remember {
+                                    SplitEdgeDetector(
+                                        topEdgeSplitFraction = { 0.5f },
+                                        edgeSize = 60.dp,
+                                    )
+                                }
+                            } else {
+                                DefaultEdgeDetector
+                            },
                     ) {
                         scene(Scenes.Launcher, Launcher.userActions(shadeScene, configuration)) {
                             Launcher(launcherColumns)
@@ -604,6 +612,14 @@ fun SystemUi(
                         }
 
                         overlay(
+                            Overlays.QuickSettings,
+                            userActions = QuickSettingsShade.UserActions,
+                            alignment = Alignment.TopEnd,
+                        ) {
+                            QuickSettingsShade(qsPager, mediaPlayer)
+                        }
+
+                        overlay(
                             Overlays.Notifications,
                             userActions = NotificationShade.UserActions,
                             alignment = Alignment.TopEnd,
@@ -616,13 +632,6 @@ fun SystemUi(
                                     )
                                 }
                             )
-                        }
-                        overlay(
-                            Overlays.QuickSettings,
-                            userActions = QuickSettingsShade.UserActions,
-                            alignment = Alignment.TopStart,
-                        ) {
-                            QuickSettingsShade(qsPager, mediaPlayer)
                         }
                     }
                 }

@@ -35,7 +35,8 @@ object NotificationShade {
         mapOf(
             Back to UserActionResult.HideOverlay(Overlays.Notifications),
             Swipe.Up to UserActionResult.HideOverlay(Overlays.Notifications),
-            Swipe.Left to UserActionResult.ReplaceByOverlay(Overlays.QuickSettings),
+            Swipe.Down(fromSource = SceneContainerEdge.TopEnd) to
+                UserActionResult.ReplaceByOverlay(Overlays.QuickSettings),
         )
 }
 
