@@ -19,6 +19,7 @@
   "workspace": true,
   "workspace_excludes": [
     "crate_tool",
-    "license_checker"
+    "license_checker",
+    "test_mapping"
   ]
 }
