@@ -30,6 +30,7 @@ export class UiData implements UiDataLog {
     public headers: LogHeader[],
     public entries: LogEntry[],
     public selectedIndex: undefined | number,
+    public currentIndex: undefined | number,
     public scrollToIndex: undefined | number,
     public propertiesTree: undefined | UiPropertyTreeNode,
   ) {}
@@ -37,9 +38,10 @@ export class UiData implements UiDataLog {
   propertiesFilter = new TextFilter();
 
   static createEmpty() {
-    return new UiData([], [], undefined, undefined, undefined);
+    return new UiData([], [], undefined, undefined, undefined, undefined);
   }
 }
+
 export class CujEntry implements LogEntry {
   constructor(
     public traceEntry: TraceEntry<PropertyTreeNode>,
