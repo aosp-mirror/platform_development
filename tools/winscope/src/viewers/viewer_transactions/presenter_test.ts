@@ -172,11 +172,8 @@ class PresenterTransactionsTest extends AbstractLogViewerPresenterTest<UiData> {
   override async createPresenterWithEmptyTrace(
     callback: NotifyLogViewCallbackType<UiData>,
   ): Promise<Presenter> {
-    const emptyTrace = new TraceBuilder<PropertyTreeNode>()
-      .setType(TraceType.TRANSACTIONS)
-      .setEntries([])
-      .build();
-    return new Presenter(emptyTrace, new InMemoryStorage(), callback);
+    const trace = UnitTestUtils.makeEmptyTrace(TraceType.TRANSACTIONS);
+    return new Presenter(trace, new InMemoryStorage(), callback);
   }
 
   override async createPresenter(

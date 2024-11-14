@@ -120,7 +120,7 @@ export class ParserSearch implements Parser<QueryResult> {
   private validateQueryResult(): QueryResult {
     return assertDefined(
       this.queryResult,
-      () => 'Attempted to retrieve entry before running search query.',
+      () => 'Attempted to retrieve query result before running search query.',
     );
   }
 }
