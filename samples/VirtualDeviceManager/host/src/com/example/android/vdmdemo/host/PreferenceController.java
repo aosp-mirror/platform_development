@@ -121,6 +121,9 @@ final class PreferenceController {
 
             new BoolRule(R.string.pref_record_encoder_output, TIRAMISU),
 
+            new BoolRule(R.string.pref_enable_update_audio_policy_mixes, VANILLA_ICE_CREAM)
+                    .withDefaultValue(true),
+
             // Internal-only switches not exposed in the settings page.
             // All of these are booleans acting as switches, while the above ones may be any type.
 
