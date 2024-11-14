@@ -114,10 +114,7 @@ class PresenterWindowManagerTest extends AbstractHierarchyViewerPresenterTest<Ui
   override createPresenterWithEmptyTrace(
     callback: NotifyHierarchyViewCallbackType<UiData>,
   ): Presenter {
-    const trace = new TraceBuilder<HierarchyTreeNode>()
-      .setType(TraceType.WINDOW_MANAGER)
-      .setEntries([])
-      .build();
+    const trace = UnitTestUtils.makeEmptyTrace(TraceType.WINDOW_MANAGER);
     const traces = new Traces();
     traces.addTrace(trace);
     return new Presenter(trace, traces, new InMemoryStorage(), callback);

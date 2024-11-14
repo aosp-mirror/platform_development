@@ -23,6 +23,7 @@ import {TimestampConverterUtils} from 'test/unit/timestamp_converter_utils';
 import {TracesBuilder} from 'test/unit/traces_builder';
 import {TraceBuilder} from 'test/unit/trace_builder';
 import {UserNotifierChecker} from 'test/unit/user_notifier_checker';
+import {UnitTestUtils} from 'test/unit/utils';
 import {Traces} from 'trace/traces';
 import {TracePosition} from 'trace/trace_position';
 import {TraceType} from 'trace/trace_type';
@@ -212,10 +213,7 @@ describe('TimelineData', () => {
     expect(success).toBeFalse();
 
     success = timelineData.trySetActiveTrace(
-      new TraceBuilder<{}>()
-        .setType(TraceType.SURFACE_FLINGER)
-        .setEntries([])
-        .build(),
+      UnitTestUtils.makeEmptyTrace(TraceType.SURFACE_FLINGER),
     );
     expect(timelineData.getActiveTrace()).toEqual(traceWm);
     expect(success).toBeFalse();

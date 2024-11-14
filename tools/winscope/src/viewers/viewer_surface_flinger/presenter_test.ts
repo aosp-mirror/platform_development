@@ -137,10 +137,7 @@ class PresenterSurfaceFlingerTest extends AbstractHierarchyViewerPresenterTest<U
   override createPresenterWithEmptyTrace(
     callback: NotifyHierarchyViewCallbackType<UiData>,
   ): Presenter {
-    const trace = new TraceBuilder<HierarchyTreeNode>()
-      .setType(TraceType.SURFACE_FLINGER)
-      .setEntries([])
-      .build();
+    const trace = UnitTestUtils.makeEmptyTrace(TraceType.SURFACE_FLINGER);
     const traces = new Traces();
     traces.addTrace(trace);
     return new Presenter(trace, traces, new InMemoryStorage(), callback);
