@@ -27,6 +27,7 @@ use license_checker::find_licenses;
 use name_and_version::NamedAndVersioned;
 use rooted_path::RootedPath;
 use semver::Version;
+use test_mapping::TestMapping;
 
 use crate::{
     android_bp::run_cargo_embargo,
@@ -215,6 +216,14 @@ impl<State: ManagedCrateState> ManagedCrate<State> {
         metadata.migrate_homepage();
         metadata.remove_deprecated_url();
         metadata.write()?;
+        Ok(())
+    }
+    pub fn fix_test_mapping(&self) -> Result<()> {
+        let mut tm = TestMapping::read(self.android_crate_path().clone())?;
+        println!("{}", self.name());
+        if tm.fix_import_paths() || tm.add_new_tests_to_postsubmit()? {
+            tm.write()?;
+        }
         Ok(())
     }
 }
