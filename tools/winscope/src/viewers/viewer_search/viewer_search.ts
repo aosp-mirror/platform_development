@@ -23,16 +23,25 @@ import {TRACE_INFO} from 'trace/trace_info';
 import {TraceType} from 'trace/trace_type';
 import {QueryResult} from 'trace_processor/query_result';
 import {View, Viewer, ViewType} from 'viewers/viewer';
+import {Presenter} from './presenter';
+import {UiData} from './ui_data';
+import {ViewerSearchComponent} from './viewer_search_component';
 
 export class ViewerSearch implements Viewer {
   static readonly DEPENDENCIES: TraceType[] = [TraceType.SEARCH];
 
   private readonly htmlElement: HTMLElement;
+  private readonly presenter: Presenter;
   private readonly traces: Traces;
   private readonly view: View;
 
   constructor(traces: Traces, storage: Store) {
     this.htmlElement = document.createElement('viewer-search');
+    const notifyViewCallback = (data: UiData) => {
+      (this.htmlElement as unknown as ViewerSearchComponent).inputData = data;
+    };
+    this.presenter = new Presenter(traces, storage, notifyViewCallback);
+    this.presenter.addEventListeners(this.htmlElement);
     this.traces = traces;
     this.view = new View(
       ViewType.GLOBAL_SEARCH,
@@ -42,9 +51,13 @@ export class ViewerSearch implements Viewer {
     );
   }
 
-  async onWinscopeEvent(event: WinscopeEvent) {}
+  async onWinscopeEvent(event: WinscopeEvent) {
+    await this.presenter.onAppEvent(event);
+  }
 
-  setEmitEvent(callback: EmitEvent) {}
+  setEmitEvent(callback: EmitEvent) {
+    this.presenter.setEmitEvent(callback);
+  }
 
   getViews(): View[] {
     return [this.view];

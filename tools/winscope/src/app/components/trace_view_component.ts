@@ -217,22 +217,6 @@ interface Tab {
         border-radius: 15px;
       }
 
-      .save-field {
-        display: flex;
-        align-items: center;
-        font-size: 14px;
-        width: 100%;
-      }
-
-      .save-field mat-form-field {
-        width: 100%;
-      }
-
-      .save-field button {
-        height: fit-content;
-        margin-inline-start: 10px;
-      }
-
       .existing-preset {
         display: flex;
         flex-direction: row;
