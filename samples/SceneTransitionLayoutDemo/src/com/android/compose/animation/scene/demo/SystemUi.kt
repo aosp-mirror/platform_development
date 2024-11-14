@@ -75,6 +75,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.testTagsAsResourceId
@@ -276,9 +277,16 @@ fun SystemUi(
     val quickSettingsPagerState = rememberPagerState { nQuickSettingsPages }
 
     val springConfiguration = configuration.springConfigurations.systemUiSprings
+    val hapticFeedback = LocalHapticFeedback.current
+    val revealHaptics = remember(hapticFeedback) { DemoContainerRevealHaptics(hapticFeedback) }
     val transitions =
         remember(quickSettingsPagerState, springConfiguration, configuration) {
-            systemUiTransitions(quickSettingsPagerState, springConfiguration, configuration)
+            systemUiTransitions(
+                quickSettingsPagerState,
+                springConfiguration,
+                configuration,
+                revealHaptics,
+            )
         }
 
     val sceneSaver =
