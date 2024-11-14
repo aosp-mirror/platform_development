@@ -52,19 +52,10 @@ object Lockscreen {
     ): Map<UserAction, UserActionResult> {
         return buildList {
                 if (configuration.enableOverlays) {
+                    add(Swipe.Down to UserActionResult.ShowOverlay(Overlays.Notifications))
                     add(
-                        Swipe.Down(fromSource = HorizontalHalfScreen.Start) to
-                            UserActionResult.ShowOverlay(
-                                Overlays.QuickSettings,
-                                requiresFullDistanceSwipe = requiresFullDistanceSwipeToShade,
-                            )
-                    )
-                    add(
-                        Swipe.Down(fromSource = HorizontalHalfScreen.End) to
-                            UserActionResult.ShowOverlay(
-                                Overlays.Notifications,
-                                requiresFullDistanceSwipe = requiresFullDistanceSwipeToShade,
-                            )
+                        Swipe.Down(fromSource = SceneContainerEdge.TopEnd) to
+                            UserActionResult.ShowOverlay(Overlays.QuickSettings)
                     )
                 } else {
                     add(
