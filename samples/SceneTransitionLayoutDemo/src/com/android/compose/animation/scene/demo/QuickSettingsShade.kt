@@ -32,6 +32,7 @@ import com.android.compose.animation.scene.UserActionResult
 
 object QuickSettingsShade {
     object Elements {
+        val Root = ElementKey("QuickSettingsShadeRoot")
         val Content = ElementKey("QuickSettingsShadeContent")
     }
 
@@ -50,7 +51,7 @@ fun ContentScope.QuickSettingsShade(
     mediaPlayer: @Composable (ContentScope.() -> Unit)?,
     modifier: Modifier = Modifier,
 ) {
-    PartialShade(modifier) {
+    PartialShade(QuickSettingsShade.Elements.Root, modifier) {
         Column(Modifier.element(QuickSettingsShade.Elements.Content)) {
             if (mediaPlayer != null) {
                 // Ensure that the media player is above the QS tiles when they fade in.

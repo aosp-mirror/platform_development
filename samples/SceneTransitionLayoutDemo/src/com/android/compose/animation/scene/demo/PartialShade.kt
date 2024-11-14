@@ -43,16 +43,9 @@ import androidx.compose.ui.node.invalidateDraw
 import androidx.compose.ui.unit.dp
 import com.android.compose.animation.scene.ContentScope
 import com.android.compose.animation.scene.ElementKey
-import com.android.compose.animation.scene.LowestZIndexContentPicker
 import com.android.compose.modifiers.thenIf
 
 object PartialShade {
-    object Elements {
-        val Root = ElementKey("PartialShadeRoot", placeAllCopies = true)
-        val Background =
-            ElementKey("PartialShadeBackground", contentPicker = LowestZIndexContentPicker)
-    }
-
     object Colors {
         val Background
             @Composable get() = Shade.Colors.Scrim
@@ -70,6 +63,7 @@ object PartialShade {
 
 @Composable
 fun ContentScope.PartialShade(
+    rootElement: ElementKey,
     modifier: Modifier = Modifier,
     content: @Composable BoxScope.() -> Unit,
 ) {
@@ -84,26 +78,16 @@ fun ContentScope.PartialShade(
             .thenIf(isSplitShade) { Modifier.padding(16.dp) }
             .overscroll(verticalOverscrollEffect)
             .overscroll(contentOverscrollEffect)
-            .element(PartialShade.Elements.Root)
+            .element(rootElement)
             .clip(shape)
-    ) {
-        val backgroundColor = PartialShade.Colors.Background
-        Box(
-            Modifier.element(PartialShade.Elements.Background)
-                .matchParentSize()
-                .thenIf(!isSplitShade) { Modifier.then(ExtraBackgroundElement(backgroundColor)) }
-                .background(backgroundColor)
-        )
-
-        Box(
-            Modifier.disableSwipesWhenScrolling()
-                .verticalScroll(
-                    rememberScrollState(),
-                    overscrollEffect = contentOverscrollEffect.withoutVisualEffect(),
-                ),
-            content = content,
-        )
-    }
+            .background(PartialShade.Colors.Background)
+            .disableSwipesWhenScrolling()
+            .verticalScroll(
+                rememberScrollState(),
+                overscrollEffect = contentOverscrollEffect.withoutVisualEffect(),
+            ),
+        content = content,
+    )
 }
 
 // A modifier that ensures that there is no hole between the shade and the top of the device when

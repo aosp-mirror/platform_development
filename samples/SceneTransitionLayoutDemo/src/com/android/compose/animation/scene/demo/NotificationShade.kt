@@ -30,6 +30,7 @@ import com.android.compose.animation.scene.UserActionResult
 
 object NotificationShade {
     object Elements {
+        val Root = ElementKey("NotificationShadeRoot")
         val Content = ElementKey("NotificationShadeContent")
     }
 
@@ -49,7 +50,7 @@ fun ContentScope.NotificationShade(
     notificationList: @Composable ContentScope.() -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    PartialShade(modifier) {
+    PartialShade(NotificationShade.Elements.Root, modifier) {
         Column(Modifier.element(NotificationShade.Elements.Content)) {
             if (clock != null || mediaPlayer != null) {
                 Column(Modifier.padding(horizontal = 16.dp).padding(top = 16.dp)) {
