@@ -134,7 +134,14 @@ describe('ParserSearch', () => {
 
     it('provides query result', async () => {
       const entry = await parser.getEntry(0);
-      expect(entry.columns()).toEqual(['id', 'type', 'ts', 'arg_set_id']);
+      expect(entry.columns()).toEqual([
+        'id',
+        'type',
+        'ts',
+        'arg_set_id',
+        'base64_proto',
+        'base64_proto_id',
+      ]);
       expect(entry.numRows()).toEqual(0);
     });
   });
