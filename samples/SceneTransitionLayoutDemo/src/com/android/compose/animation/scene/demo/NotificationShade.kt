@@ -27,6 +27,8 @@ import com.android.compose.animation.scene.ContentScope
 import com.android.compose.animation.scene.ElementKey
 import com.android.compose.animation.scene.Swipe
 import com.android.compose.animation.scene.UserActionResult
+import com.android.compose.animation.scene.UserActionResult.ShowOverlay
+import com.android.compose.animation.scene.UserActionResult.ShowOverlay.HideCurrentOverlays
 
 object NotificationShade {
     object Elements {
@@ -39,7 +41,10 @@ object NotificationShade {
             Back to UserActionResult.HideOverlay(Overlays.Notifications),
             Swipe.Up to UserActionResult.HideOverlay(Overlays.Notifications),
             Swipe.Down(fromSource = SceneContainerEdge.TopEnd) to
-                UserActionResult.ReplaceByOverlay(Overlays.QuickSettings),
+                ShowOverlay(
+                    Overlays.QuickSettings,
+                    hideCurrentOverlays = HideCurrentOverlays.Some(Overlays.Notifications),
+                ),
         )
 }
 
