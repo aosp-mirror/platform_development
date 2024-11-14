@@ -346,6 +346,16 @@ class UnitTestUtils {
     ).toEqual(0);
   }
 
+  static makeEmptyTrace<T extends TraceType>(
+    traceType: T,
+  ): Trace<TraceEntryTypeMap[T]> {
+    return new TraceBuilder<TraceEntryTypeMap[T]>()
+      .setEntries([])
+      .setTimestamps([])
+      .setType(traceType)
+      .build();
+  }
+
   private static testTimestamps(
     timestamp: Timestamp,
     expectedTimestamp: Timestamp,

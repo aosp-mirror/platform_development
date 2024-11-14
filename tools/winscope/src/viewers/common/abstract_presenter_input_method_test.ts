@@ -107,10 +107,7 @@ export abstract class AbstractPresenterInputMethodTest extends AbstractHierarchy
   override createPresenterWithEmptyTrace(
     callback: NotifyHierarchyViewCallbackType<ImeUiData>,
   ): AbstractPresenterInputMethod {
-    const trace = new TraceBuilder<HierarchyTreeNode>()
-      .setType(this.imeTraceType)
-      .setEntries([])
-      .build();
+    const trace = UnitTestUtils.makeEmptyTrace(this.imeTraceType);
     const traces = new Traces();
     traces.addTrace(trace);
     return new this.PresenterInputMethod(

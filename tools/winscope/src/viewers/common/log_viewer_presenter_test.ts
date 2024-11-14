@@ -25,6 +25,7 @@ import {MockPresenter} from 'test/unit/mock_log_viewer_presenter';
 import {PropertyTreeBuilder} from 'test/unit/property_tree_builder';
 import {TimestampConverterUtils} from 'test/unit/timestamp_converter_utils';
 import {TraceBuilder} from 'test/unit/trace_builder';
+import {UnitTestUtils} from 'test/unit/utils';
 import {Trace} from 'trace/trace';
 import {TracePosition} from 'trace/trace_position';
 import {TraceType} from 'trace/trace_type';
@@ -280,7 +281,9 @@ describe('AbstractLogViewerPresenter', () => {
     expect(listenerSpy).toHaveBeenCalledTimes(2);
 
     await presenter.onAppEvent(
-      new ActiveTraceChanged(new TraceBuilder<object>().setEntries([]).build()),
+      new ActiveTraceChanged(
+        UnitTestUtils.makeEmptyTrace(TraceType.TRANSACTIONS),
+      ),
     );
     pressRightArrowKey();
     expect(listenerSpy).toHaveBeenCalledTimes(3);
@@ -539,11 +542,7 @@ describe('AbstractLogViewerPresenter', () => {
   });
 
   it('is robust to empty trace', async () => {
-    const trace = new TraceBuilder<PropertyTreeNode>()
-      .setType(TraceType.TRANSACTIONS)
-      .setEntries([])
-      .setTimestamps([])
-      .build();
+    const trace = UnitTestUtils.makeEmptyTrace(TraceType.TRANSACTIONS);
     const presenter = new MockPresenter(
       trace,
       new InMemoryStorage(),
