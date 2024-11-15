@@ -523,7 +523,9 @@ public final class VdmService extends Hilt_VdmService {
         if (Flags.deviceAwareDisplayPower()) {
             int displayTimeout = Integer.parseInt(
                     mPreferenceController.getString(R.string.pref_display_timeout));
-            virtualDeviceBuilder.setScreenOffTimeout(Duration.ofMillis(displayTimeout));
+            virtualDeviceBuilder
+                    .setDimDuration(Duration.ofMillis(displayTimeout / 2))
+                    .setScreenOffTimeout(Duration.ofMillis(displayTimeout));
         }
 
         if (mPreferenceController.getBoolean(R.string.pref_hide_from_recents)) {

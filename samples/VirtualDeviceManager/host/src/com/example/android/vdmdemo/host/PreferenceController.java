@@ -111,6 +111,11 @@ final class PreferenceController {
                     android.companion.virtualdevice.flags.Flags::displayPowerManagerApis)
                     .withDefaultValue(String.valueOf(0)),
 
+            // TODO: update to post-V once available
+            new StringRule(R.string.pref_enable_client_brightness, VANILLA_ICE_CREAM,
+                    android.companion.virtualdevice.flags.Flags::deviceAwareDisplayPower,
+                    android.companion.virtualdevice.flags.Flags::displayPowerManagerApis),
+
             new StringRule(R.string.pref_display_ime_policy, VANILLA_ICE_CREAM, Flags::vdmCustomIme)
                     .withRequiredPermissions(ADD_TRUSTED_DISPLAY)
                     .withDefaultValue(String.valueOf(0)),
