@@ -20,6 +20,7 @@ import {FormControl, ValidationErrors, Validators} from '@angular/forms';
 import {assertDefined} from 'common/assert_utils';
 import {TimeDuration} from 'common/time_duration';
 import {TIME_UNIT_TO_NANO} from 'common/time_units';
+import {Analytics} from 'logging/analytics';
 import {TraceType} from 'trace/trace_type';
 import {CollapsibleSections} from 'viewers/common/collapsible_sections';
 import {CollapsibleSectionType} from 'viewers/common/collapsible_section_type';
@@ -291,20 +292,27 @@ export class ViewerSearchComponent {
   lastQueryExecutionTime: string | undefined;
   lastQueryStartTime: number | undefined;
   initializing = false;
-  private readonly runOption = {
-    name: 'Run Query',
-    onClickCallback: (search: Search) =>
-      this.onRunQueryFromOptionsClick(search),
-  };
   readonly savedSearchMenuOptions: MenuOption[] = [
-    this.runOption,
+    {
+      name: 'Run Query',
+      onClickCallback: (search: Search) => {
+        Analytics.TraceSearch.logQueryRequested('saved');
+        this.onRunQueryFromOptionsClick(search);
+      },
+    },
     {
       name: 'Delete Query',
       onClickCallback: (search: Search) => this.onDeleteQueryClick(search),
     },
   ];
   readonly recentSearchMenuOptions: MenuOption[] = [
-    this.runOption,
+    {
+      name: 'Run Query',
+      onClickCallback: (search: Search) => {
+        Analytics.TraceSearch.logQueryRequested('recent');
+        this.onRunQueryFromOptionsClick(search);
+      },
+    },
     {name: 'Save Query', onClickCallback: (search: Search) => {}},
   ];
 
@@ -336,9 +344,11 @@ export class ViewerSearchComponent {
         this.searchQueryControl.setValue(this.runningQuery);
         this.saveQueryNameControl.setValue(this.runningQuery);
       }
+      const executionTimeMs =
+        Date.now() - assertDefined(this.lastQueryStartTime);
+      Analytics.TraceSearch.logQueryExecutionTime(executionTimeMs);
       this.lastQueryExecutionTime = new TimeDuration(
-        BigInt(Date.now() - assertDefined(this.lastQueryStartTime)) *
-          BigInt(TIME_UNIT_TO_NANO.ms),
+        BigInt(executionTimeMs * TIME_UNIT_TO_NANO.ms),
       ).format();
       this.lastQueryStartTime = undefined;
       this.runningQuery = undefined;
@@ -360,6 +370,7 @@ export class ViewerSearchComponent {
 
   onSearchQueryClick() {
     this.runningQuery = assertDefined(this.searchQueryControl.value);
+    Analytics.TraceSearch.logQueryRequested('new');
     this.dispatchSearchQueryEvent();
   }
 
@@ -374,6 +385,7 @@ export class ViewerSearchComponent {
       ),
     });
     this.elementRef.nativeElement.dispatchEvent(event);
+    Analytics.TraceSearch.logQuerySaved();
     this.saveQueryNameControl.reset();
   }
 
