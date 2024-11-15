@@ -57,6 +57,7 @@
     <string name="pref_display_ime_policy" translatable="false">display_ime_policy</string>
     <string name="pref_enable_client_native_ime" translatable="false">enable_client_native_ime</string>
     <string name="pref_record_encoder_output" translatable="false">record_encoder_output</string>
+    <string name="pref_enable_update_audio_policy_mixes" translatable="false">enable_update_mixing_rules</string>
 
     <string name="internal_pref_home_displays_supported" translatable="false">home_displays_supported</string>
     <string name="internal_pref_mirror_displays_supported" translatable="false">mirror_displays_supported</string>
