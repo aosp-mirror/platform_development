@@ -287,7 +287,7 @@ final class AudioStreamer {
 
         synchronized (mLock) {
             if (mAudioSessionPolicy != null) {
-                Log.w(TAG, "MediaSession AudioPolicy is already registered");
+                Log.w(TAG, "MediaSession AudioPolicy is already registered.");
                 return false;
             }
 
@@ -318,7 +318,7 @@ final class AudioStreamer {
             mRemoteSubmixDevice = getNewRemoteSubmixAudioDevice(preexistingRemoteSubmixDevices);
         }
 
-        Log.i(TAG, "Registered MediaSession audio policy done with success.");
+        Log.i(TAG, "Registered MediaSession audio policy successfully.");
         return true;
     }
 
@@ -351,7 +351,7 @@ final class AudioStreamer {
         mUidAudioPolicy = uidPolicy;
         mReroutedUids = ImmutableSet.copyOf(uids);
 
-        Log.i(TAG, "Registered UID audio policy done with success.");
+        Log.d(TAG, "Registered UID audio policy successfully.");
     }
 
     @SuppressLint("MissingPermission")
@@ -364,7 +364,7 @@ final class AudioStreamer {
             mReroutedUids = ImmutableSet.of();
         }
 
-        Log.i(TAG, "Unregistered UID audio policy done.");
+        Log.d(TAG, "Unregistered UID audio policy done.");
     }
 
     @SuppressLint("MissingPermission")
