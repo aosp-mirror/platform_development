@@ -104,7 +104,7 @@ impl PseudoCrate<CargoVendorClean> {
     fn crates(&self) -> &CrateCollection {
         self.extra.crates.get_or_init(|| {
             Command::new("cargo")
-                .args(["vendor"])
+                .args(["vendor", "--versioned-dirs"])
                 .current_dir(&self.path)
                 .run_quiet_and_expect_success()
                 .unwrap();
