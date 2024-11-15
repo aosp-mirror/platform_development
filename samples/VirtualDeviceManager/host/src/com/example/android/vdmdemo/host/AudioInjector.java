@@ -233,9 +233,7 @@ public final class AudioInjector implements Consumer<RemoteEvent> {
     public void updateVdmUids(Set<Integer> updatedUids) {
         synchronized (mLock) {
             if (mAudioPolicy == null) {
-                Log.e(
-                        TAG,
-                        "Not updating AudioPolicy - no audio policy configured");
+                Log.e(TAG, "Not updating AudioPolicy - no audio policy configured");
                 return;
             }
 
