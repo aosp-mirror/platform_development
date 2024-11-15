@@ -19,17 +19,18 @@ package com.android.compose.animation.scene.demo.transitions
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.gestures.Orientation
 import com.android.compose.animation.scene.BaseTransitionBuilder
-import com.android.compose.animation.scene.Edge
 import com.android.compose.animation.scene.SceneTransitionsBuilder
 import com.android.compose.animation.scene.TransitionBuilder
 import com.android.compose.animation.scene.demo.Overlays
 import com.android.compose.animation.scene.demo.PartialShade
 import com.android.compose.animation.scene.demo.notification.NotificationList
+import com.android.compose.animation.scene.reveal.ContainerRevealHaptics
+import com.android.compose.animation.scene.reveal.verticalContainerReveal
 
-fun SceneTransitionsBuilder.notificationShadeTransitions() {
+fun SceneTransitionsBuilder.notificationShadeTransitions(revealHaptics: ContainerRevealHaptics) {
     to(Overlays.Notifications) {
         spec = tween(500)
-        toNotificationShade()
+        toNotificationShade(revealHaptics)
         sharedElement(
             NotificationList.Elements.Notifications,
             elevateInContent = Overlays.Notifications,
@@ -38,7 +39,7 @@ fun SceneTransitionsBuilder.notificationShadeTransitions() {
 
     from(Overlays.Notifications) {
         spec = tween(500)
-        reversed { toNotificationShade() }
+        reversed { toNotificationShade(revealHaptics) }
         sharedElement(NotificationList.Elements.Notifications, enabled = false)
     }
 
@@ -57,13 +58,8 @@ fun SceneTransitionsBuilder.notificationShadeTransitions() {
 
 val ToNotificationShadeStartFadeProgress = 0.5f
 
-private fun TransitionBuilder.toNotificationShade() {
-    notifyStlThatShadeDoesNotResizeDuringThisTransition()
-
-    translate(PartialShade.Elements.Root, Edge.Top)
-    fractionRange(start = ToNotificationShadeStartFadeProgress) {
-        fade(NotificationList.Elements.Notifications)
-    }
+private fun TransitionBuilder.toNotificationShade(revealHaptics: ContainerRevealHaptics) {
+    verticalContainerReveal(PartialShade.Elements.Root, revealHaptics)
 }
 
 fun BaseTransitionBuilder.notifyStlThatShadeDoesNotResizeDuringThisTransition() {

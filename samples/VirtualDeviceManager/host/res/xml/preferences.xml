@@ -105,6 +105,18 @@
     </PreferenceCategory>
 
     <PreferenceCategory
+        android:key="audio"
+        android:title="Audio"
+        app:iconSpaceReserved="false">
+    <SwitchPreferenceCompat
+        android:key="@string/pref_enable_update_audio_policy_mixes"
+        android:title="Use AudioPolicy.updateMixingRules"
+        android:summary="Updates the dynamic AudiPolicy mixing rules instead of unregistering and registering the AudioPolicy."
+        android:defaultValue="true"
+        app:iconSpaceReserved="false" />
+    </PreferenceCategory>
+
+    <PreferenceCategory
         android:key="ime"
         android:title="Input Method"
         app:iconSpaceReserved="false">

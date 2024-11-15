@@ -327,6 +327,11 @@ Each input screen has a "Back", "Home" and "Forward" buttons.
     adb shell am force-stop com.example.android.vdmdemo.host
     ```
 
+#### Audio
+
+-   **Use AudioPolicy.updateMixingRules**: Updates the dynamic AudiPolicy mixing rules
+    instead of unregistering and re-registering the AudioPolicy.
+
 #### Input method
 
 Note: The virtual keyboard acts like a physically connected keyboard to the host
