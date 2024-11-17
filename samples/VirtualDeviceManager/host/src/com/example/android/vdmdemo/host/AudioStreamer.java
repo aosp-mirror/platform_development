@@ -19,6 +19,7 @@ package com.example.android.vdmdemo.host;
 import static com.google.common.collect.Iterables.getOnlyElement;
 import static com.google.common.util.concurrent.Uninterruptibles.joinUninterruptibly;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.media.AudioDeviceInfo;
 import android.media.AudioFormat;
@@ -29,10 +30,13 @@ import android.media.AudioRecord;
 import android.media.audiopolicy.AudioMix;
 import android.media.audiopolicy.AudioMixingRule;
 import android.media.audiopolicy.AudioPolicy;
+import android.os.SystemClock;
 import android.util.Log;
+import android.util.Pair;
 
 import androidx.annotation.GuardedBy;
 import androidx.annotation.Nullable;
+import androidx.core.os.BuildCompat;
 
 import com.example.android.vdmdemo.common.RemoteEventProto.AudioFrame;
 import com.example.android.vdmdemo.common.RemoteEventProto.RemoteEvent;
@@ -46,6 +50,7 @@ import dagger.hilt.android.qualifiers.ApplicationContext;
 
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
@@ -78,10 +83,13 @@ final class AudioStreamer {
     private AudioManager mAudioManager;
     private int mPlaybackSessionId;
 
+    @Inject
+    PreferenceController mPreferenceController;
+
     private final Object mLock = new Object();
 
     @GuardedBy("mLock")
-    private AudioPolicy mAudioPolicy;
+    private AudioPolicy mAudioSessionPolicy;
 
     @GuardedBy("mLock")
     private AudioMix mSessionIdAudioMix;
@@ -114,10 +122,9 @@ final class AudioStreamer {
                                 c -> STREAMING_PLAYER_STATES.contains(c.getPlayerState())
                                         && (mReroutedUids.contains(c.getClientUid())
                                         || c.getSessionId() == mPlaybackSessionId));
-                        if (mAudioPolicy == null) {
-                            Log.d(
-                                    TAG,
-                                    "There's no active audio policy, ignoring playback "
+
+                        if (mAudioSessionPolicy == null) {
+                            Log.d(TAG, "There's no active audio policy, ignoring playback "
                                             + "config callback");
                             return;
                         }
@@ -128,9 +135,8 @@ final class AudioStreamer {
                                     RemoteEvent.newBuilder()
                                             .setStartAudio(StartAudio.newBuilder())
                                             .build());
-                            mStreamingThread =
-                                    new StreamingThread(
-                                            mAudioPolicy.createAudioRecordSink(mSessionIdAudioMix),
+                            mStreamingThread = new StreamingThread(
+                                    mAudioSessionPolicy.createAudioRecordSink(mSessionIdAudioMix),
                                             mRemoteIo);
                             mStreamingThread.start();
                         } else if (!shouldStream && mStreamingThread != null) {
@@ -153,57 +159,32 @@ final class AudioStreamer {
     }
 
     public void start(int deviceId, int audioSessionId) {
+        Log.d(TAG, "AudioStreamer start with deviceId " + deviceId + " and audioSessionId "
+                + audioSessionId);
         mDeviceContext = mApplicationContext.createDeviceContext(deviceId)
                 .createDeviceContext(deviceId);
-        mPlaybackSessionId = audioSessionId;
 
         mAudioManager = mDeviceContext.getSystemService(AudioManager.class);
-
-        mAudioManager.registerAudioPlaybackCallback(mAudioPlaybackCallback, null);
-        synchronized (mLock) {
-            updateAudioPolicies(mReroutedUids);
+        if (mAudioManager != null) {
+            mAudioManager.registerAudioPlaybackCallback(mAudioPlaybackCallback, null);
+            registerAudioPolicies(audioSessionId, ImmutableSet.of());
         }
     }
 
-    private void registerAudioPolicy() {
-        AudioMixingRule mixingRule =
-                new AudioMixingRule.Builder()
-                        .addMixRule(AudioMixingRule.RULE_MATCH_AUDIO_SESSION_ID, mPlaybackSessionId)
-                        .build();
-        AudioMix audioMix =
-                new AudioMix.Builder(mixingRule)
-                        .setRouteFlags(AudioMix.ROUTE_FLAG_LOOP_BACK)
-                        .setFormat(AUDIO_FORMAT)
-                        .build();
-
+    private void registerAudioPolicies(int audioSessionId, ImmutableSet<Integer> uids) {
         synchronized (mLock) {
-            if (mAudioPolicy != null) {
-                Log.w(TAG, "AudioPolicy is already registered");
-                return;
+            // order is important, the Session ID audio policy creates
+            // the remote submix audio device used in the uid policy
+            if (registerSessionPolicy(audioSessionId)) {
+                registerUidPolicy(uids);
             }
-            mAudioPolicy = new AudioPolicy.Builder(mApplicationContext).addMix(audioMix).build();
-            int ret = mAudioManager.registerAudioPolicy(mAudioPolicy);
-            if (ret != AudioManager.SUCCESS) {
-                Log.e(TAG, "Failed to register audio policy, error code " + ret);
-                mAudioPolicy = null;
-                return;
-            }
+        }
+    }
 
-            // This is a hacky way to determine audio device associated with audio mix.
-            // once audio record for the policy is initialized, audio policy manager
-            // will create remote submix instance so we can compare devices before and after
-            // to determine which device corresponds to this particular mix.
-            // The ghost audio record needs to be kept alive, releasing it would cause
-            // destruction of remote submix instances and potential problems when updating the
-            // UID-based render policy pointing to the remote submix device.
-            List<AudioDeviceInfo> preexistingRemoteSubmixDevices = getRemoteSubmixDevices();
-            mGhostRecord = mAudioPolicy.createAudioRecordSink(audioMix);
-            mGhostRecord.startRecording();
-            mRemoteSubmixDevice = getNewRemoteSubmixAudioDevice(preexistingRemoteSubmixDevices);
-            mSessionIdAudioMix = audioMix;
-            if (!mReroutedUids.isEmpty()) {
-                registerUidPolicy(mReroutedUids);
-            }
+    private void unregisterAudioPolicies() {
+        synchronized (mLock) {
+            unregisterUidPolicy();
+            unregisterSessionPolicy();
         }
     }
 
@@ -223,14 +204,14 @@ final class AudioStreamer {
             Log.e(TAG, "There's more than 1 new remote submix device");
             return null;
         }
-        if (newDevices.size() == 0) {
+        if (newDevices.isEmpty()) {
             Log.e(TAG, "Didn't find new remote submix device");
             return null;
         }
         return getOnlyElement(newDevices);
     }
 
-    public void updateVdmUids(Set<Integer> uids) {
+    public void updateVdmUids(ImmutableSet<Integer> uids) {
         Log.w(TAG, "Updating mixing rule to reroute uids " + uids);
         synchronized (mLock) {
             if (mRemoteSubmixDevice == null) {
@@ -247,80 +228,177 @@ final class AudioStreamer {
         }
     }
 
-    // TODO(b/293611855) Use finer grained audio policy + mix controls once bugs are addressed
-    // This shouldn't unregister all audio policies just to re-register them again.
-    // That's inefficient and leads to audio leaks. But this is the most correct way to do this at
-    // this time.
+    @SuppressLint("MissingPermission")
     @GuardedBy("mLock")
-    private void updateAudioPolicies(Set<Integer> uids) {
-        // TODO(b/293279299) Use Flagged API
-        // if (com.android.media.audio.flags.Flags.FLAG_AUDIO_POLICY_UPDATE_MIXING_RULES_API &&
-        // uidAudioMix != null && (!reroutedUids.isEmpty() && !uids.isEmpty())) {
-        //   Pair<AudioMix, AudioMixingRule> update = Pair.create(uidAudioMix,
-        // createUidMixingRule(uids));
-        //   uidAudioPolicy.updateMixingRules(Collections.singletonList(update));
-        //   return;
-        // }
+    private void updateAudioPolicies(ImmutableSet<Integer> uids) {
+        long startUpdateTimeMs = SystemClock.uptimeMillis();
 
-        if (mAudioPolicy != null) {
-            mAudioManager.unregisterAudioPolicy(mAudioPolicy);
-            mAudioPolicy = null;
-        }
-        if (mUidAudioPolicy != null) {
-            mAudioManager.unregisterAudioPolicy(mUidAudioPolicy);
-            mUidAudioPolicy = null;
-        }
+        Log.d(TAG, "Started updateAudioPolicies. Already rerouted uids: "
+                + mReroutedUids + " -> updated uids: " + uids);
 
-        mReroutedUids = ImmutableSet.copyOf(uids);
-        registerAudioPolicy();
+        if (BuildCompat.isAtLeastV() && mPreferenceController.getBoolean(
+                R.string.pref_enable_update_audio_policy_mixes)) {
+            if (mUidAudioPolicy != null && mUidAudioMix != null && !mReroutedUids.isEmpty()) {
+                if (uids.isEmpty()) {
+                    unregisterUidPolicy();
+
+                    Log.d(TAG, "Unregistered UID AudioPolicy since uid set is empty in "
+                            + (SystemClock.uptimeMillis() - startUpdateTimeMs) + "ms.");
+                } else {
+                    Pair<AudioMix, AudioMixingRule> update =
+                            Pair.create(mUidAudioMix, createUidMixingRule(uids));
+                    mReroutedUids = ImmutableSet.copyOf(uids);
+                    mUidAudioPolicy.updateMixingRules(Collections.singletonList(update));
+
+                    Log.d(TAG, "Updated UID AudioPolicy mixes in "
+                            + (SystemClock.uptimeMillis() - startUpdateTimeMs) + "ms.");
+                }
+            } else {
+                registerUidPolicy(uids);
+
+                Log.d(TAG, "Registered UID AudioPolicy since there was none previous in "
+                        + (SystemClock.uptimeMillis() - startUpdateTimeMs) + "ms.");
+            }
+        } else {
+            // Legacy and inefficient way to unregister the UID audio policy and then just
+            // re-register it again. Leads to audio leaks.
+            synchronized (mLock) {
+                unregisterUidPolicy();
+                registerUidPolicy(uids);
+            }
+
+            Log.d(TAG, "Unregistered / re-registered UID AudioPolicy in "
+                    + (SystemClock.uptimeMillis() - startUpdateTimeMs) + "ms.");
+        }
     }
 
+    @SuppressLint("MissingPermission")
+    @GuardedBy("mLock")
+    // returns true if successfully registered, false otherwise
+    private boolean registerSessionPolicy(int audioSessionId) {
+        AudioMixingRule mixingRule = new AudioMixingRule.Builder()
+                .addMixRule(AudioMixingRule.RULE_MATCH_AUDIO_SESSION_ID, audioSessionId)
+                .build();
+
+        AudioMix audioMix = new AudioMix.Builder(mixingRule)
+                .setRouteFlags(AudioMix.ROUTE_FLAG_LOOP_BACK)
+                .setFormat(AUDIO_FORMAT)
+                .build();
+
+        synchronized (mLock) {
+            if (mAudioSessionPolicy != null) {
+                Log.w(TAG, "MediaSession AudioPolicy is already registered.");
+                return false;
+            }
+
+            AudioPolicy sessionPolicy = new AudioPolicy.Builder(mApplicationContext)
+                    .addMix(audioMix)
+                    .build();
+
+            int ret = mAudioManager.registerAudioPolicy(sessionPolicy);
+            if (ret != AudioManager.SUCCESS) {
+                Log.e(TAG, "Failed to register media session audio policy, error code " + ret);
+                return false;
+            }
+
+            mAudioSessionPolicy = sessionPolicy;
+            mSessionIdAudioMix = audioMix;
+            mPlaybackSessionId = audioSessionId;
+
+            // This is a hacky way to determine audio device associated with audio mix.
+            // once audio record for the policy is initialized, audio policy manager
+            // will create remote submix instance so we can compare devices before and after
+            // to determine which device corresponds to this particular mix.
+            // The ghost audio record needs to be kept alive, releasing it would cause
+            // destruction of remote submix instances and potential problems when updating the
+            // UID-based render policy pointing to the remote submix device.
+            List<AudioDeviceInfo> preexistingRemoteSubmixDevices = getRemoteSubmixDevices();
+            mGhostRecord = mAudioSessionPolicy.createAudioRecordSink(audioMix);
+            mGhostRecord.startRecording();
+            mRemoteSubmixDevice = getNewRemoteSubmixAudioDevice(preexistingRemoteSubmixDevices);
+        }
+
+        Log.i(TAG, "Registered MediaSession audio policy successfully.");
+        return true;
+    }
+
+    @SuppressLint("MissingPermission")
     @GuardedBy("mLock")
     private void registerUidPolicy(ImmutableSet<Integer> uids) {
-        mUidAudioMix =
-                new AudioMix.Builder(createUidMixingRule(uids))
+        // we can't create an UID audio policy with no uids to redirect
+        // nor without a remote submix device created by the media session policy
+        if (uids.isEmpty() || mRemoteSubmixDevice == null) {
+            return;
+        }
+
+        AudioMix uidAudioMix = new AudioMix.Builder(createUidMixingRule(uids))
                         .setRouteFlags(AudioMix.ROUTE_FLAG_RENDER)
                         .setDevice(mRemoteSubmixDevice)
                         .setFormat(AUDIO_FORMAT)
                         .build();
+
         AudioPolicy uidPolicy = new AudioPolicy.Builder(mApplicationContext)
-                .addMix(mUidAudioMix)
+                .addMix(uidAudioMix)
                 .build();
+
         int ret = mAudioManager.registerAudioPolicy(uidPolicy);
         if (ret != AudioManager.SUCCESS) {
-            Log.e(TAG, "Error " + ret + " while trying to register UID policy");
+            Log.e(TAG, "Failed to register UID audio policy, error code " + ret);
             return;
         }
 
+        mUidAudioMix = uidAudioMix;
         mUidAudioPolicy = uidPolicy;
         mReroutedUids = ImmutableSet.copyOf(uids);
+
+        Log.d(TAG, "Registered UID audio policy successfully.");
     }
 
-    public void stop() {
-        synchronized (mLock) {
-            if (mStreamingThread != null) {
-                mStreamingThread.stopStreaming();
-                joinUninterruptibly(mStreamingThread);
-                mStreamingThread = null;
-            }
-            if (mAudioManager != null) {
-                if (mUidAudioPolicy != null) {
-                    mAudioManager.unregisterAudioPolicy(mUidAudioPolicy);
-                    mUidAudioPolicy = null;
-                }
-                if (mAudioPolicy != null) {
-                    mAudioManager.unregisterAudioPolicy(mAudioPolicy);
-                    mAudioPolicy = null;
-                }
-                mAudioManager.unregisterAudioPlaybackCallback(mAudioPlaybackCallback);
-            }
+    @SuppressLint("MissingPermission")
+    @GuardedBy("mLock")
+    private void unregisterUidPolicy() {
+        if (mUidAudioPolicy != null) {
+            mAudioManager.unregisterAudioPolicy(mUidAudioPolicy);
+            mUidAudioPolicy = null;
+            mUidAudioMix = null;
+            mReroutedUids = ImmutableSet.of();
+        }
 
+        Log.d(TAG, "Unregistered UID audio policy done.");
+    }
+
+    @SuppressLint("MissingPermission")
+    @GuardedBy("mLock")
+    private void unregisterSessionPolicy() {
+        if (mAudioSessionPolicy != null) {
             if (mGhostRecord != null) {
                 mGhostRecord.stop();
                 mGhostRecord.release();
                 mGhostRecord = null;
             }
 
+            mAudioManager.unregisterAudioPolicy(mAudioSessionPolicy);
+            mPlaybackSessionId = 0;
+            mAudioSessionPolicy = null;
+            mSessionIdAudioMix = null;
+            mRemoteSubmixDevice = null;
+        }
+
+        Log.i(TAG, "Unregistered MediaSession audio policy done.");
+    }
+    public void stop() {
+        Log.d(TAG, "AudioStreamer stop.");
+        synchronized (mLock) {
+            if (mStreamingThread != null) {
+                mStreamingThread.stopStreaming();
+                joinUninterruptibly(mStreamingThread);
+                mStreamingThread = null;
+            }
+
+            if (mAudioManager != null) {
+                unregisterAudioPolicies();
+                mAudioManager.unregisterAudioPlaybackCallback(mAudioPlaybackCallback);
+            }
         }
     }
 
