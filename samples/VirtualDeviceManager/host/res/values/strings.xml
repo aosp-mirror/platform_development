@@ -51,6 +51,7 @@
     <string name="pref_enable_display_category" translatable="false">enable_display_category</string>
     <string name="pref_always_unlocked_device" translatable="false">always_unlocked_device</string>
     <string name="pref_display_timeout" translatable="false">display_timeout</string>
+    <string name="pref_enable_client_brightness" translatable="false">enable_client_brightness</string>
     <string name="pref_show_pointer_icon" translatable="false">show_pointer_icon</string>
     <string name="pref_enable_custom_home" translatable="false">enable_custom_home</string>
     <string name="pref_enable_custom_status_bar" translatable="false">enable_custom_status_bar</string>

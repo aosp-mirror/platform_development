@@ -306,6 +306,18 @@ Each input screen has a "Back", "Home" and "Forward" buttons.
     adb shell device_config put virtual_devices android.companion.virtual.flags.vdm_custom_home true
     adb shell am force-stop com.example.android.vdmdemo.host
     ```
+
+-   **Custom status bar**: Whether to add a custom status bar view on the
+    non-mirror virtual displays. Run the commands below to enable this
+    functionality. \
+    *This can be changed dynamically but only applies to newly created
+    displays.*
+
+    ```shell
+    adb shell device_config put virtual_devices android.companion.virtualdevice.flags.status_bar_and_insets true
+    adb shell am force-stop com.example.android.vdmdemo.host
+    ```
+
 -   **Display timeout**: Whether to keep the displays always awake or to put
     them to sleep after a timeout. Run the commands below to enable this
     functionality. \
@@ -316,14 +328,14 @@ Each input screen has a "Back", "Home" and "Forward" buttons.
     adb shell am force-stop com.example.android.vdmdemo.host
     ```
 
--   **Custom status bar**: Whether to add a custom status bar view on the
-    non-mirror virtual displays. Run the commands below to enable this
-    functionality. \
+-   **Enable client brightness**: Whether to propagate any brightness changes
+    from the virtual display to the client's display. Run the commands below to
+    enable this functionality. \
     *This can be changed dynamically but only applies to newly created
     displays.*
 
     ```shell
-    adb shell device_config put virtual_devices android.companion.virtualdevice.flags.status_bar_and_insets true
+    adb shell device_config put virtual_devices android.companion.virtualdevice.flags.device_aware_display_power true
     adb shell am force-stop com.example.android.vdmdemo.host
     ```
 
