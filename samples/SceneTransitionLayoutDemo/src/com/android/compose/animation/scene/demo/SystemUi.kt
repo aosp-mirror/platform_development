@@ -70,6 +70,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toComposeRect
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalConfiguration
@@ -429,7 +430,19 @@ fun SystemUi(
 
         Box(
             Modifier.thenIf(!configuration.isFullscreen) {
-                    Modifier.padding(3.dp).border(1.dp, borderColor, shape).clip(shape)
+                    Modifier.padding(3.dp)
+                        .then(
+                            if (configuration.transitionBorder) {
+                                Modifier.border(
+                                    5.dp,
+                                    if (layoutState.isTransitioning()) Color.Red else Color.Green,
+                                    shape,
+                                )
+                            } else {
+                                Modifier.border(1.dp, borderColor, shape)
+                            }
+                        )
+                        .clip(shape)
                 }
                 .background(MaterialTheme.colorScheme.surfaceVariant)
         ) {
