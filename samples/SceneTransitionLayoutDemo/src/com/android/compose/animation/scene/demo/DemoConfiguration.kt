@@ -74,6 +74,7 @@ data class DemoConfiguration(
     val overscrollProgressConverter: DemoOverscrollProgress = Tanh(maxProgress = 0.2f, tilt = 3f),
     val lsToShadeRequiresFullSwipe: ToggleableState = ToggleableState.Indeterminate,
     val enableOverlays: Boolean = false,
+    val transitionBorder: Boolean = true,
 ) {
     companion object {
         val Saver = run {
@@ -89,6 +90,7 @@ data class DemoConfiguration(
             val overscrollProgress = "overscrollProgress"
             val lsToShadeRequiresFullSwipe = "lsToShadeRequiresFullSwipe"
             val enableOverlays = "enableOverlays"
+            val transitionBorder = "transitionBorder"
 
             mapSaver(
                 save = {
@@ -105,6 +107,7 @@ data class DemoConfiguration(
                         overscrollProgress to it.overscrollProgressConverter.save(),
                         lsToShadeRequiresFullSwipe to it.lsToShadeRequiresFullSwipe,
                         enableOverlays to it.enableOverlays,
+                        transitionBorder to it.transitionBorder,
                     )
                 },
                 restore = {
@@ -125,6 +128,7 @@ data class DemoConfiguration(
                         lsToShadeRequiresFullSwipe =
                             it[lsToShadeRequiresFullSwipe] as ToggleableState,
                         enableOverlays = it[enableOverlays] as Boolean,
+                        transitionBorder = it[transitionBorder] as Boolean,
                     )
                 },
             )
@@ -365,6 +369,17 @@ fun DemoConfigurationDialog(
                     onCheckedChange = {
                         onConfigurationChange(
                             configuration.copy(enableOverlays = !configuration.enableOverlays)
+                        )
+                    },
+                )
+
+                // Transition border.
+                Checkbox(
+                    label = "Transition border",
+                    checked = configuration.transitionBorder,
+                    onCheckedChange = {
+                        onConfigurationChange(
+                            configuration.copy(transitionBorder = !configuration.transitionBorder)
                         )
                     },
                 )
