@@ -480,7 +480,7 @@ which showcases implicit intent handling.
 
 ## SDK Version
 
-### Beyond Android 15
+### Android 16 / Baklava
 
 -   Added support for custom power management.
 
@@ -499,6 +499,8 @@ which showcases implicit intent handling.
 -   Added support for virtual rotary input.
 
 ### Android 15 / Vanilla Ice Cream / SDK level 35
+
+-   Added support for virtual camera.
 
 -   Added support for virtual stylus input.
 
