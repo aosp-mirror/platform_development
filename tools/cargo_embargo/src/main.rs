@@ -575,8 +575,9 @@ fn generate_cargo_out(cfg: &VariantConfig, intermediates_dir: &Path) -> Result<C
 /// Skips initial comment lines, then returns all lines before the first line
 /// starting with `rust_`, `genrule {`, or `LOCAL_DIR`.
 ///
-/// If `path` could not be read, return a placeholder license TODO line.
-fn read_license_header(path: &Path) -> Result<String> {
+/// If `path` could not be read and a license is required, return a
+/// placeholder license TODO line.
+fn read_license_header(path: &Path, require_license: bool) -> Result<String> {
     // Keep the old license header.
     match std::fs::read_to_string(path) {
         Ok(s) => Ok(s
@@ -590,7 +591,12 @@ fn read_license_header(path: &Path) -> Result<String> {
             .collect::<Vec<&str>>()
             .join("\n")),
         Err(e) if e.kind() == std::io::ErrorKind::NotFound => {
-            Ok("// DO NOT SUBMIT: Add license before submitting.\n".to_string())
+            let placeholder = if require_license {
+                "// DO NOT SUBMIT: Add license before submitting.\n"
+            } else {
+                ""
+            };
+            Ok(placeholder.to_string())
         }
         Err(e) => Err(anyhow!("error when reading {path:?}: {e}")),
     }
@@ -665,7 +671,7 @@ fn write_build_files(
         let package_header = generate_android_bp_package_header(
             package_name,
             package_cfg,
-            read_license_header(&output_path)?.trim(),
+            read_license_header(&output_path, true)?.trim(),
             crates,
             &cfg.variants.first().unwrap().module_name_overrides,
         )?;
@@ -678,7 +684,7 @@ fn write_build_files(
             + "# Do not modify this file after the LOCAL_DIR line\n"
             + "# because the changes will be overridden on upgrade.\n"
             + "# Content before the first line starting with LOCAL_DIR is preserved.\n"
-            + read_license_header(&output_path)?.trim()
+            + read_license_header(&output_path, false)?.trim()
             + "\n"
             + &mk_contents;
         File::create(&output_path)?.write_all(mk_contents.as_bytes())?;
