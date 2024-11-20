@@ -19,8 +19,9 @@ package {
 android_app {
     name: "ShareTest",
     srcs: [
-        "**/*.java",
-        "**/*.kt",
+        "src/**/*.java",
+        "src/**/*.kt",
+        "aidl/**/I*.aidl",
     ],
     asset_dirs: ["assets"],
     sdk_version: "35",
@@ -31,5 +32,14 @@ android_app {
         "androidx.compose.material_material-icons-extended",
         "androidx.activity_activity-compose",
         "androidx.compose.animation_animation-graphics",
+        "androidx.lifecycle_lifecycle-viewmodel-compose",
+        "androidx.lifecycle_lifecycle-runtime-compose",
+        "dagger2",
+        "hilt_android",
+        "kotlinx_coroutines",
+        "kotlinx-coroutines-android",
     ],
+    aidl: {
+        local_include_dirs: ["aidl"],
+    },
 }
