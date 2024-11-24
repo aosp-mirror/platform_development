@@ -72,6 +72,13 @@ enum Cmd {
     Import {
         /// The crate name.
         crate_name: String,
+
+        /// The crate version.
+        version: String,
+
+        /// Run "cargo_embargo autoconfig"
+        #[arg(long, default_value_t = false)]
+        autoconfig: bool,
     },
     /// Regenerate crates from vendored code by applying patches, running cargo_embargo, etc.
     Regenerate {
@@ -218,7 +225,9 @@ fn main() -> Result<()> {
         }
         Cmd::PreuploadCheck { files } => managed_repo.preupload_check(&files),
         Cmd::AnalyzeImport { crate_name } => managed_repo.analyze_import(&crate_name),
-        Cmd::Import { crate_name } => managed_repo.import(&crate_name),
+        Cmd::Import { crate_name, version, autoconfig } => {
+            managed_repo.import(&crate_name, &version, autoconfig)
+        }
         Cmd::FixLicenses { crates } => {
             managed_repo.fix_licenses(crates.to_list(&managed_repo)?.into_iter())
         }

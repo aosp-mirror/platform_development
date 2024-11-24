@@ -313,8 +313,11 @@ export class Presenter extends AbstractLogViewerPresenter<UiData> {
     dispatchTree: PropertyTreeNode,
   ): string {
     const keyDetails =
-      'Keycode: ' + eventTree.getChildByName('keyCode')?.formattedValue() ??
-      '<?>';
+      'Keycode: ' +
+        eventTree
+          .getChildByName('keyCode')
+          ?.formattedValue()
+          ?.replace(/^KEYCODE_/, '') ?? '<?>';
     return keyDetails + ' ' + Presenter.extractDispatchDetails(dispatchTree);
   }
 

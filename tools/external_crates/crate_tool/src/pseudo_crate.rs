@@ -14,7 +14,7 @@
 
 use std::{
     cell::OnceCell,
-    collections::{BTreeMap, BTreeSet},
+    collections::BTreeMap,
     fs::{read, write},
     io::BufRead,
     process::Command,
@@ -112,17 +112,6 @@ impl PseudoCrate<CargoVendorClean> {
             crates.add_from(self.get_path().join("vendor").unwrap()).unwrap();
             crates
         })
-    }
-    pub fn deps_of(&self, crate_name: &str) -> Result<BTreeSet<String>> {
-        let mut deps = BTreeSet::new();
-        let output = Command::new("cargo")
-            .args(["tree", "--prefix", "none"])
-            .current_dir(self.vendored_dir_for(crate_name)?)
-            .run_quiet_and_expect_success()?;
-        for line in from_utf8(&output.stdout)?.lines() {
-            deps.insert(line.split_once(' ').unwrap().0.to_string());
-        }
-        Ok(deps)
     }
     fn mark_dirty(self) -> PseudoCrate<CargoVendorDirty> {
         PseudoCrate { path: self.path, extra: CargoVendorDirty {} }

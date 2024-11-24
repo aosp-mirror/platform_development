@@ -102,6 +102,12 @@
             android:defaultValue="0"
             app:useSimpleSummaryProvider="true"
             app:iconSpaceReserved="false" />
+        <SwitchPreferenceCompat
+            android:key="@string/pref_enable_client_brightness"
+            android:title="Enable client brightness"
+            android:summary="Propagate the virtual display brightness changes to the client display"
+            android:defaultValue="false"
+            app:iconSpaceReserved="false" />
     </PreferenceCategory>
 
     <PreferenceCategory
