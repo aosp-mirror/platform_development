@@ -107,7 +107,7 @@ final class AudioStreamer {
     private AudioDeviceInfo mRemoteSubmixDevice;
 
     @GuardedBy("mLock")
-    private AudioRecord mGhostRecord;
+    private AudioRecord mHostRecord;
 
     private ImmutableSet<Integer> mReroutedUids = ImmutableSet.of();
 
@@ -131,15 +131,16 @@ final class AudioStreamer {
 
                         if (mSessionIdAudioMix != null && shouldStream
                                 && mStreamingThread == null) {
+                            Log.d(TAG, "Send StartAudio RemoteEvent to remote device.");
                             mRemoteIo.sendMessage(
                                     RemoteEvent.newBuilder()
                                             .setStartAudio(StartAudio.newBuilder())
                                             .build());
-                            mStreamingThread = new StreamingThread(
-                                    mAudioSessionPolicy.createAudioRecordSink(mSessionIdAudioMix),
-                                            mRemoteIo);
+                            // reuse the same AudioRecord that is kept alive and recording
+                            mStreamingThread = new StreamingThread(mHostRecord, mRemoteIo);
                             mStreamingThread.start();
                         } else if (!shouldStream && mStreamingThread != null) {
+                            Log.d(TAG, "Send StopAudio RemoteEvent to remote device.");
                             mRemoteIo.sendMessage(
                                     RemoteEvent.newBuilder()
                                             .setStopAudio(StopAudio.newBuilder())
@@ -309,12 +310,16 @@ final class AudioStreamer {
             // once audio record for the policy is initialized, audio policy manager
             // will create remote submix instance so we can compare devices before and after
             // to determine which device corresponds to this particular mix.
-            // The ghost audio record needs to be kept alive, releasing it would cause
+            // The audio record needs to be kept alive, releasing it would cause
             // destruction of remote submix instances and potential problems when updating the
             // UID-based render policy pointing to the remote submix device.
             List<AudioDeviceInfo> preexistingRemoteSubmixDevices = getRemoteSubmixDevices();
-            mGhostRecord = mAudioSessionPolicy.createAudioRecordSink(audioMix);
-            mGhostRecord.startRecording();
+            // The AudioRecord is tied to the session audio policy and its assigned audio mix,
+            // It is created with the session policy and is always recording
+            // as long as the policy exists.
+            mHostRecord = mAudioSessionPolicy.createAudioRecordSink(audioMix);
+            mHostRecord.startRecording();
+
             mRemoteSubmixDevice = getNewRemoteSubmixAudioDevice(preexistingRemoteSubmixDevices);
         }
 
@@ -371,10 +376,11 @@ final class AudioStreamer {
     @GuardedBy("mLock")
     private void unregisterSessionPolicy() {
         if (mAudioSessionPolicy != null) {
-            if (mGhostRecord != null) {
-                mGhostRecord.stop();
-                mGhostRecord.release();
-                mGhostRecord = null;
+            // The AudioRecord is tied to the session audio policy
+            if (mHostRecord != null) {
+                mHostRecord.stop();
+                mHostRecord.release();
+                mHostRecord = null;
             }
 
             mAudioManager.unregisterAudioPolicy(mAudioSessionPolicy);
@@ -426,6 +432,9 @@ final class AudioStreamer {
                         SAMPLE_RATE,
                         AudioFormat.CHANNEL_OUT_STEREO,
                         AudioFormat.ENCODING_PCM_16BIT);
+        // Max safe number of AudioRecord buffers in which to expect silence
+        // when stopping and flushing the AudioRecord
+        private static final int MAX_FLUSH_BUFFERS = 64;
         private final RemoteIo mRemoteIo;
         private final AudioRecord mAudioRecord;
         private final AtomicBoolean mIsRunning = new AtomicBoolean(true);
@@ -446,7 +455,12 @@ final class AudioStreamer {
                 return;
             }
 
-            mAudioRecord.startRecording();
+            // we expect an active and already recording AudioRecord
+            if (mAudioRecord.getRecordingState() != AudioRecord.RECORDSTATE_RECORDING) {
+                Log.e(TAG, "Audio record is not recording");
+                return;
+            }
+
             byte[] buffer = new byte[BUFFER_SIZE];
             while (mIsRunning.get()) {
                 int ret = mAudioRecord.read(buffer, 0, buffer.length, AudioRecord.READ_BLOCKING);
@@ -455,16 +469,38 @@ final class AudioStreamer {
                     continue;
                 }
 
-                mRemoteIo.sendMessage(
-                        RemoteEvent.newBuilder()
-                                .setAudioFrame(
-                                        AudioFrame.newBuilder()
-                                                .setData(ByteString.copyFrom(buffer, 0, ret)))
-                                .build());
+                if (mIsRunning.get()) {
+                    mRemoteIo.sendMessage(RemoteEvent.newBuilder().setAudioFrame(
+                            AudioFrame.newBuilder().setData(
+                                    ByteString.copyFrom(buffer, 0, ret))).build());
+                } else {
+                    // Streaming ended, we just need to "flush" the remaining unneeded data
+                    // from the AudioRecord, since the AudioRecord might be reused later
+                    // There is no straightforward API to do this on the AudioRecord,
+                    // so simulate this by reading enough data until we get silence (buffer full
+                    // of zeros) or for safety a reasonable number of buffers has passed
+                    int i = 0;
+                    while (i++ < MAX_FLUSH_BUFFERS && !isSilence(buffer)) {
+                        mAudioRecord.read(buffer, 0, buffer.length, AudioRecord.READ_BLOCKING);
+                    }
+                    Log.d(TAG, "Flushed " + i + " AudioRecord buffers.");
+                    // Note: we already send the stop play RemoteEvent since we prioritize
+                    // low latency for the user input, the alternative is to continue sending
+                    // the rest of the audio data and only stop the actual remote playback here
+                }
             }
+            // we only stop the streaming and not the AudioRecord recording
+            // which is owned by the AudioStreamer
             Log.d(TAG, "Stopping audio streaming");
-            mAudioRecord.stop();
-            mAudioRecord.release();
+        }
+
+        private static boolean isSilence(byte[] buffer) {
+            for (byte b : buffer) {
+                if (b != 0) {
+                    return false;
+                }
+            }
+            return true;
         }
 
         void stopStreaming() {
