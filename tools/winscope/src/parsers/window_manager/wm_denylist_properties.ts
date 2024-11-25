@@ -14,32 +14,8 @@
  * limitations under the License.
  */
 
-import {WmProtoType} from './wm_proto_type';
-
-const commonDenylistProperties = [
+export const WM_DENYLIST_PROPERTIES = [
   'prototype',
   'rootWindowContainer',
   'children',
 ];
-
-export const WM_DENYLIST_PROPERTIES = new Map<WmProtoType, string[]>([
-  [
-    WmProtoType.WindowManagerService,
-    commonDenylistProperties.concat(['windowContainer']),
-  ],
-  [WmProtoType.RootWindowContainer, commonDenylistProperties],
-  [WmProtoType.WindowContainer, commonDenylistProperties],
-  [
-    WmProtoType.DisplayContent,
-    commonDenylistProperties.concat(['windowContainer']),
-  ],
-  [WmProtoType.DisplayArea, commonDenylistProperties],
-  [WmProtoType.Task, commonDenylistProperties.concat(['windowContainer'])],
-  [WmProtoType.Activity, commonDenylistProperties],
-  [WmProtoType.WindowToken, commonDenylistProperties],
-  [WmProtoType.WindowState, commonDenylistProperties],
-  [
-    WmProtoType.TaskFragment,
-    commonDenylistProperties.concat(['windowContainer']),
-  ],
-]);
