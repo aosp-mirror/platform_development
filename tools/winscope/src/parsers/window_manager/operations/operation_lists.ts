@@ -51,7 +51,7 @@ export const WM_OPERATION_LISTS = new Map<WmProtoType, OperationLists>([
         new AddDefaults(
           WmTamperedProtos.WindowManagerServiceField,
           undefined,
-          WM_DENYLIST_PROPERTIES.get(WmProtoType.WindowManagerService),
+          WM_DENYLIST_PROPERTIES,
         ),
       ],
     },
@@ -74,7 +74,7 @@ export const WM_OPERATION_LISTS = new Map<WmProtoType, OperationLists>([
         new AddDefaults(
           WmTamperedProtos.RootWindowContainerField,
           undefined,
-          WM_DENYLIST_PROPERTIES.get(WmProtoType.RootWindowContainer),
+          WM_DENYLIST_PROPERTIES,
         ),
       ],
     },
@@ -98,7 +98,7 @@ export const WM_OPERATION_LISTS = new Map<WmProtoType, OperationLists>([
         new AddDefaults(
           WmTamperedProtos.WindowContainerField,
           undefined,
-          WM_DENYLIST_PROPERTIES.get(WmProtoType.WindowContainer),
+          WM_DENYLIST_PROPERTIES,
         ),
       ],
     },
@@ -121,7 +121,7 @@ export const WM_OPERATION_LISTS = new Map<WmProtoType, OperationLists>([
         new AddDefaults(
           WmTamperedProtos.DisplayContentField,
           undefined,
-          WM_DENYLIST_PROPERTIES.get(WmProtoType.DisplayContent),
+          WM_DENYLIST_PROPERTIES,
         ),
       ],
     },
@@ -144,7 +144,7 @@ export const WM_OPERATION_LISTS = new Map<WmProtoType, OperationLists>([
         new AddDefaults(
           WmTamperedProtos.DisplayAreaField,
           undefined,
-          WM_DENYLIST_PROPERTIES.get(WmProtoType.DisplayArea),
+          WM_DENYLIST_PROPERTIES,
         ),
       ],
     },
@@ -167,7 +167,7 @@ export const WM_OPERATION_LISTS = new Map<WmProtoType, OperationLists>([
         new AddDefaults(
           WmTamperedProtos.TaskField,
           undefined,
-          WM_DENYLIST_PROPERTIES.get(WmProtoType.Task),
+          WM_DENYLIST_PROPERTIES,
         ),
       ],
     },
@@ -191,7 +191,7 @@ export const WM_OPERATION_LISTS = new Map<WmProtoType, OperationLists>([
         new AddDefaults(
           WmTamperedProtos.ActivityField,
           undefined,
-          WM_DENYLIST_PROPERTIES.get(WmProtoType.Activity),
+          WM_DENYLIST_PROPERTIES,
         ),
       ],
     },
@@ -214,7 +214,7 @@ export const WM_OPERATION_LISTS = new Map<WmProtoType, OperationLists>([
         new AddDefaults(
           WmTamperedProtos.WindowTokenField,
           undefined,
-          WM_DENYLIST_PROPERTIES.get(WmProtoType.WindowToken),
+          WM_DENYLIST_PROPERTIES,
         ),
       ],
     },
@@ -245,7 +245,7 @@ export const WM_OPERATION_LISTS = new Map<WmProtoType, OperationLists>([
         new AddDefaults(
           WmTamperedProtos.WindowStateField,
           undefined,
-          WM_DENYLIST_PROPERTIES.get(WmProtoType.WindowState),
+          WM_DENYLIST_PROPERTIES,
         ),
       ],
     },
@@ -268,7 +268,7 @@ export const WM_OPERATION_LISTS = new Map<WmProtoType, OperationLists>([
         new AddDefaults(
           WmTamperedProtos.TaskFragmentField,
           undefined,
-          WM_DENYLIST_PROPERTIES.get(WmProtoType.TaskFragment),
+          WM_DENYLIST_PROPERTIES,
         ),
       ],
     },
