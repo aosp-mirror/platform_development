@@ -158,11 +158,7 @@ export class PropertiesProviderFactory {
         .setData(entry)
         .setRootId('WindowManagerState')
         .setRootName('root')
-        .setDenyList(
-          assertDefined(
-            DENYLIST_PROPERTIES.get(ProtoType.WindowManagerService),
-          ),
-        )
+        .setDenyList(assertDefined(DENYLIST_PROPERTIES))
         .build();
     };
   }
@@ -307,17 +303,13 @@ export class PropertiesProviderFactory {
       const identifier = this.getIdentifier(containerChild);
       const name = this.getName(containerChild, identifier);
       const token = this.makeToken(identifier);
-      const containerDenylistProperties = assertDefined(
-        DENYLIST_PROPERTIES.get(containerChildType),
-      );
-
       const container = this.getContainer(containerChild);
 
       return new PropertyTreeBuilderFromProto()
         .setData(container)
         .setRootId(`${containerChildType} ${token}`)
         .setRootName(name)
-        .setDenyList(containerDenylistProperties)
+        .setDenyList(DENYLIST_PROPERTIES)
         .build();
     };
   }
