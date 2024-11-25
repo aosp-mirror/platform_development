@@ -14,8 +14,15 @@
  * limitations under the License.
  */
 
-export const DENYLIST_PROPERTIES = [
-  'prototype',
-  'rootWindowContainer',
-  'children',
-];
+package com.android.compose.animation.scene.demo
+
+import androidx.compose.ui.hapticfeedback.HapticFeedback
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import com.android.compose.animation.scene.reveal.ContainerRevealHaptics
+
+class DemoContainerRevealHaptics(private val hapticFeedback: HapticFeedback) :
+    ContainerRevealHaptics {
+    override fun onRevealThresholdCrossed(revealed: Boolean) {
+        hapticFeedback.performHapticFeedback(HapticFeedbackType.GestureThresholdActivate)
+    }
+}

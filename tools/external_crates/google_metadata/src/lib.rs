@@ -83,11 +83,11 @@ impl GoogleMetadata {
         let mut metadata = GoogleMetadata { path, metadata: MetaData::new() };
         let name = name.into();
         metadata.set_date_to_today()?;
+        metadata.metadata.set_name(name.clone());
         metadata.set_version_and_urls(&name, version)?;
         let third_party = metadata.metadata.third_party.mut_or_insert_default();
         third_party.set_homepage(crates_io_homepage(&name));
         third_party.set_license_type(license_type);
-        metadata.metadata.set_name(name);
         metadata.metadata.set_description(desc.into());
         Ok(metadata)
     }

@@ -308,3 +308,17 @@ export class CannotParseAllTransitions extends UserWarning {
     return 'Cannot parse all transitions. Some may be missing in Transitions viewer.';
   }
 }
+
+export class TraceSearchQueryFailed extends UserWarning {
+  constructor(private readonly errorMessage: string) {
+    super();
+  }
+
+  getDescriptor(): string {
+    return 'trace search query failed';
+  }
+
+  getMessage(): string {
+    return `Search query failed: ${this.errorMessage}`;
+  }
+}

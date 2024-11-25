@@ -92,9 +92,8 @@ export class TranslateIntDef implements Operation<PropertyTreeNode> {
     annotationType: string,
   ): string {
     let flags = '';
-
     const mapping =
-      intDefMapping[annotationType as keyof typeof intDefMapping].values;
+      intDefMapping[annotationType as keyof typeof intDefMapping]?.values ?? {};
 
     const knownFlagValues = Object.keys(mapping)
       .reverse()

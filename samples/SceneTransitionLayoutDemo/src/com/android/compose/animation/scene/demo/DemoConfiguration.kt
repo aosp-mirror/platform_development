@@ -69,11 +69,12 @@ data class DemoConfiguration(
     val isFullscreen: Boolean = false,
     val canChangeSceneOrOverlays: Boolean = true,
     val transitionInterceptionThreshold: Float = 0.05f,
-    val springConfigurations: DemoSpringConfigurations = DemoSpringConfigurations.presets[1],
+    val springConfigurations: DemoSpringConfigurations = DemoSpringConfigurations.presets[0],
     val useOverscrollSpec: Boolean = true,
     val overscrollProgressConverter: DemoOverscrollProgress = Tanh(maxProgress = 0.2f, tilt = 3f),
     val lsToShadeRequiresFullSwipe: ToggleableState = ToggleableState.Indeterminate,
     val enableOverlays: Boolean = false,
+    val transitionBorder: Boolean = true,
 ) {
     companion object {
         val Saver = run {
@@ -89,6 +90,7 @@ data class DemoConfiguration(
             val overscrollProgress = "overscrollProgress"
             val lsToShadeRequiresFullSwipe = "lsToShadeRequiresFullSwipe"
             val enableOverlays = "enableOverlays"
+            val transitionBorder = "transitionBorder"
 
             mapSaver(
                 save = {
@@ -105,6 +107,7 @@ data class DemoConfiguration(
                         overscrollProgress to it.overscrollProgressConverter.save(),
                         lsToShadeRequiresFullSwipe to it.lsToShadeRequiresFullSwipe,
                         enableOverlays to it.enableOverlays,
+                        transitionBorder to it.transitionBorder,
                     )
                 },
                 restore = {
@@ -125,6 +128,7 @@ data class DemoConfiguration(
                         lsToShadeRequiresFullSwipe =
                             it[lsToShadeRequiresFullSwipe] as ToggleableState,
                         enableOverlays = it[enableOverlays] as Boolean,
+                        transitionBorder = it[transitionBorder] as Boolean,
                     )
                 },
             )
@@ -150,14 +154,24 @@ data class DemoSpringConfigurations(
         val presets =
             listOf(
                 DemoSpringConfigurations(
-                    name = "Fast",
+                    name = "Default",
+                    systemUiSprings =
+                        SpringConfiguration(
+                            Spring.StiffnessMediumLow,
+                            Spring.DampingRatioLowBouncy,
+                        ),
+                    notificationSprings =
+                        SpringConfiguration(Spring.StiffnessMediumLow, Spring.DampingRatioLowBouncy),
+                ),
+                DemoSpringConfigurations(
+                    name = "NotBouncy Fast",
                     systemUiSprings =
                         SpringConfiguration(Spring.StiffnessMedium, Spring.DampingRatioNoBouncy),
                     notificationSprings =
                         SpringConfiguration(Spring.StiffnessMedium, Spring.DampingRatioNoBouncy),
                 ),
                 DemoSpringConfigurations(
-                    name = "Normal",
+                    name = "NotBouncy Normal",
                     systemUiSprings =
                         SpringConfiguration(Spring.StiffnessMediumLow, Spring.DampingRatioNoBouncy),
                     notificationSprings =
@@ -355,6 +369,17 @@ fun DemoConfigurationDialog(
                     onCheckedChange = {
                         onConfigurationChange(
                             configuration.copy(enableOverlays = !configuration.enableOverlays)
+                        )
+                    },
+                )
+
+                // Transition border.
+                Checkbox(
+                    label = "Transition border",
+                    checked = configuration.transitionBorder,
+                    onCheckedChange = {
+                        onConfigurationChange(
+                            configuration.copy(transitionBorder = !configuration.transitionBorder)
                         )
                     },
                 )
