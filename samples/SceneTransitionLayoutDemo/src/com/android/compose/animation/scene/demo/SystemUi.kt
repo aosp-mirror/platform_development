@@ -265,7 +265,7 @@ fun SystemUi(
                 else -> error("Unknown size class: ${windowSizeClass.widthSizeClass}")
             }
         }
-    val nQuickSettingsRow = 4
+    val nQuickSettingsRow = configuration.quickSettingsRows
     val nQuickSettingsSplitShadeRows = nQuickSettingsColumns
 
     // The state of the quick settings pager in the phone (one column) layout.

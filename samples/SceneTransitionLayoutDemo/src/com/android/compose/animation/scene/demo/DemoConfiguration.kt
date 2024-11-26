@@ -64,6 +64,7 @@ import kotlin.math.tanh
 data class DemoConfiguration(
     val notificationsInLockscreen: Int = 2,
     val notificationsInShade: Int = 10,
+    val quickSettingsRows: Int = 4,
     val interactiveNotifications: Boolean = false,
     val showMediaPlayer: Boolean = true,
     val isFullscreen: Boolean = false,
@@ -80,6 +81,7 @@ data class DemoConfiguration(
         val Saver = run {
             val notificationsInLockscreenKey = "notificationsInLockscreen"
             val notificationsInShadeKey = "notificationsInShade"
+            val quickSettingsRowsKey = "quickSettingsRows"
             val interactiveNotificationsKey = "interactiveNotifications"
             val showMediaPlayerKey = "showMediaPlayer"
             val isFullscreenKey = "isFullscreen"
@@ -97,6 +99,7 @@ data class DemoConfiguration(
                     mapOf(
                         notificationsInLockscreenKey to it.notificationsInLockscreen,
                         notificationsInShadeKey to it.notificationsInShade,
+                        quickSettingsRowsKey to it.quickSettingsRows,
                         interactiveNotificationsKey to it.interactiveNotifications,
                         showMediaPlayerKey to it.showMediaPlayer,
                         isFullscreenKey to it.isFullscreen,
@@ -114,6 +117,7 @@ data class DemoConfiguration(
                     DemoConfiguration(
                         notificationsInLockscreen = it[notificationsInLockscreenKey] as Int,
                         notificationsInShade = it[notificationsInShadeKey] as Int,
+                        quickSettingsRows = it[quickSettingsRowsKey] as Int,
                         interactiveNotifications = it[interactiveNotificationsKey] as Boolean,
                         showMediaPlayer = it[showMediaPlayerKey] as Boolean,
                         isFullscreen = it[isFullscreenKey] as Boolean,
@@ -470,6 +474,16 @@ fun DemoConfigurationDialog(
                     configuration.notificationsInLockscreen,
                     onValueChange = {
                         onConfigurationChange(configuration.copy(notificationsInLockscreen = it))
+                    },
+                )
+
+                Text(text = "Quick Settings", style = MaterialTheme.typography.titleMedium)
+
+                Counter(
+                    "# quick settings rows",
+                    configuration.quickSettingsRows,
+                    onValueChange = {
+                        onConfigurationChange(configuration.copy(quickSettingsRows = it))
                     },
                 )
 
