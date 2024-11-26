@@ -31,6 +31,7 @@ import {BrowserAnimationsModule} from '@angular/platform-browser/animations';
 import {assertDefined} from 'common/assert_utils';
 import {FilterFlag} from 'common/filter_flag';
 import {PersistentStore} from 'common/persistent_store';
+import {DuplicateLayerIds, MissingLayerIds} from 'messaging/user_warnings';
 import {HierarchyTreeBuilder} from 'test/unit/hierarchy_tree_builder';
 import {TraceType} from 'trace/trace_type';
 import {TextFilter} from 'viewers/common/text_filter';
@@ -230,5 +231,51 @@ describe('HierarchyComponent', () => {
     collapseButton.click();
     fixture.detectChanges();
     expect(spy).toHaveBeenCalled();
+  });
+
+  it('shows warnings', () => {
+    expect(htmlElement.querySelectorAll('.warning').length).toEqual(0);
+
+    const warning1 = new DuplicateLayerIds([123]);
+    component.tree?.addWarning(warning1);
+    const warning2 = new MissingLayerIds();
+    component.tree?.addWarning(warning2);
+    fixture.detectChanges();
+    const warnings = htmlElement.querySelectorAll('.warning');
+    expect(warnings.length).toEqual(2);
+    expect(warnings[0].textContent?.trim()).toEqual(
+      'warning ' + warning1.getMessage(),
+    );
+    expect(warnings[1].textContent?.trim()).toEqual(
+      'warning ' + warning2.getMessage(),
+    );
+  });
+
+  it('shows warning tooltip if text overflowing', () => {
+    const warning = new DuplicateLayerIds([123]);
+    component.tree?.addWarning(warning);
+    fixture.detectChanges();
+
+    const warningEl = assertDefined(htmlElement.querySelector('.warning'));
+    const msgEl = assertDefined(warningEl.querySelector('.warning-message'));
+
+    const spy = spyOnProperty(msgEl, 'scrollWidth').and.returnValue(
+      msgEl.clientWidth,
+    );
+    warningEl.dispatchEvent(new Event('mouseenter'));
+    fixture.detectChanges();
+    expect(
+      document.querySelector<HTMLElement>('.mat-tooltip-panel'),
+    ).toBeNull();
+    warningEl.dispatchEvent(new Event('mouseleave'));
+    fixture.detectChanges();
+
+    spy.and.returnValue(msgEl.clientWidth + 1);
+    fixture.detectChanges();
+    warningEl.dispatchEvent(new Event('mouseenter'));
+    fixture.detectChanges();
+    expect(
+      document.querySelector<HTMLElement>('.mat-tooltip-panel')?.textContent,
+    ).toEqual(warning.getMessage());
   });
 });

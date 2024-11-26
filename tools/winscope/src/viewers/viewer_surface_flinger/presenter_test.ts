@@ -89,6 +89,9 @@ class PresenterSurfaceFlingerTest extends AbstractHierarchyViewerPresenterTest<U
           'traces/elapsed_and_real_timestamp/SurfaceFlinger.pb',
           6,
         ),
+        await UnitTestUtils.getTraceEntry<HierarchyTreeNode>(
+          'traces/elapsed_and_real_timestamp/SurfaceFlinger_with_duplicated_ids.pb',
+        ),
       ])
       .build();
 
@@ -503,6 +506,14 @@ class PresenterSurfaceFlingerTest extends AbstractHierarchyViewerPresenterTest<U
           name: nodeWithRelZChild.name,
         });
         expect(uiData.curatedProperties?.relativeChildren).toEqual([]);
+      });
+
+      it('adds warnings to ui hierarchy tree node', async () => {
+        await presenter.onAppEvent(this.getPositionUpdate());
+        expect(uiData.hierarchyTrees?.at(0)?.getWarnings().length).toEqual(0);
+        const entry = assertDefined(this.traceSf?.getEntry(5));
+        await presenter.onAppEvent(TracePositionUpdate.fromTraceEntry(entry));
+        expect(uiData.hierarchyTrees?.at(0)?.getWarnings().length).toEqual(1);
       });
 
       async function checkColorAndTransformProperties(
