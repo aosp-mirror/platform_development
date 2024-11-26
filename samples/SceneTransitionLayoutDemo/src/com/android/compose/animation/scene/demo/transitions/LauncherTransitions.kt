@@ -17,7 +17,6 @@
 package com.android.compose.animation.scene.demo.transitions
 
 import androidx.compose.animation.core.tween
-import androidx.compose.foundation.gestures.Orientation
 import androidx.compose.ui.unit.dp
 import com.android.compose.animation.scene.SceneTransitionsBuilder
 import com.android.compose.animation.scene.demo.Bouncer
@@ -35,6 +34,4 @@ fun SceneTransitionsBuilder.launcherTransitions() {
             scaleDraw(Launcher.Elements.Scene, 0.5f, 0.5f)
         }
     }
-
-    overscrollDisabled(Scenes.Launcher, Orientation.Vertical)
 }

@@ -44,11 +44,10 @@ fun systemUiTransitions(
     defaultOverscrollProgressConverter = configuration.overscrollProgressConverter
 
     alwaysOnDisplayTransitions()
-    shadeTransitions(qsPagerState, configuration)
+    shadeTransitions(qsPagerState)
     splitShadeTransitions()
-    quickSettingsTransitions(configuration)
-    lockscreenTransitions(configuration)
-    bouncerTransitions(configuration)
+    quickSettingsTransitions()
+    lockscreenTransitions()
     launcherTransitions()
     notificationShadeTransitions(revealHaptics)
     quickSettingsShadeTransitions(revealHaptics)

@@ -25,7 +25,6 @@ import com.android.compose.animation.scene.SceneTransitionsBuilder
 import com.android.compose.animation.scene.TransitionBuilder
 import com.android.compose.animation.scene.UserActionDistance
 import com.android.compose.animation.scene.UserActionDistanceScope
-import com.android.compose.animation.scene.demo.DemoConfiguration
 import com.android.compose.animation.scene.demo.MediaPlayer
 import com.android.compose.animation.scene.demo.QuickSettings
 import com.android.compose.animation.scene.demo.QuickSettingsGrid
@@ -34,10 +33,7 @@ import com.android.compose.animation.scene.demo.Shade
 import com.android.compose.animation.scene.demo.notification.NotificationList
 import com.android.compose.animation.scene.inScene
 
-fun SceneTransitionsBuilder.shadeTransitions(
-    qsPagerState: PagerState,
-    configuration: DemoConfiguration,
-) {
+fun SceneTransitionsBuilder.shadeTransitions(qsPagerState: PagerState) {
     // The distance when swiping the Shade from/to a scene (except QuickSettings).
     val swipeDistance =
         object : UserActionDistance {
@@ -156,10 +152,6 @@ fun SceneTransitionsBuilder.shadeTransitions(
             fade(QuickSettings.Elements.Date)
         }
         timestampRange(startMillis = 350) { fade(Shade.Elements.Date) }
-    }
-
-    if (configuration.useOverscrollSpec) {
-        overscrollDisabled(Scenes.Shade, Orientation.Vertical)
     }
 }
 
