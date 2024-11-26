@@ -17,10 +17,12 @@
 import {InMemoryStorage} from 'common/in_memory_storage';
 import {TraceSearchQueryAlreadyRun} from 'messaging/user_warnings';
 import {
+  InitializeTraceSearchRequest,
   TraceAddRequest,
   TracePositionUpdate,
   TraceRemoveRequest,
   TraceSearchFailed,
+  TraceSearchInitialized,
   TraceSearchRequest,
 } from 'messaging/winscope_event';
 import {TimestampConverterUtils} from 'test/unit/timestamp_converter_utils';
@@ -67,7 +69,13 @@ describe('PresenterSearch', () => {
   });
 
   it('adds event listeners', () => {
-    let spy: jasmine.Spy = spyOn(presenter, 'onSearchQueryClick');
+    let spy: jasmine.Spy = spyOn(presenter, 'onGlobalSearchSectionClick');
+    element.dispatchEvent(
+      new CustomEvent(ViewerEvents.GlobalSearchSectionClick),
+    );
+    expect(spy).toHaveBeenCalled();
+
+    spy = spyOn(presenter, 'onSearchQueryClick');
     let testQuery = 'search query';
     element.dispatchEvent(
       new CustomEvent(ViewerEvents.SearchQueryClick, {
@@ -107,6 +115,21 @@ describe('PresenterSearch', () => {
       }),
     );
     expect(spy).toHaveBeenCalledWith(deleteQueryDetail.search);
+  });
+
+  it('handles trace search initialization', async () => {
+    await presenter.onGlobalSearchSectionClick();
+    expect(emitEventSpy).toHaveBeenCalledOnceWith(
+      new InitializeTraceSearchRequest(),
+    );
+    expect(uiData.initialized).toBeFalse();
+
+    await presenter.onAppEvent(new TraceSearchInitialized());
+    expect(uiData.initialized).toBeTrue();
+
+    emitEventSpy.calls.reset();
+    await presenter.onGlobalSearchSectionClick();
+    expect(emitEventSpy).not.toHaveBeenCalled();
   });
 
   it('handles search for successful query with zero rows', async () => {

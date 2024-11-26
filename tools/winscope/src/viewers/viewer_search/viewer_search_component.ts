@@ -50,12 +50,17 @@ import {Search, UiData} from './ui_data';
 
       <div
         class="global-search"
-        [class.collapsed]="sections.isSectionCollapsed(CollapsibleSectionType.GLOBAL_SEARCH)">
+        [class.collapsed]="sections.isSectionCollapsed(CollapsibleSectionType.GLOBAL_SEARCH)"
+        (click)="onGlobalSearchClick($event)">
         <div class="title-section">
           <collapsible-section-title
             class="padded-title"
             [title]="CollapsibleSectionType.GLOBAL_SEARCH"
             (collapseButtonClicked)="sections.onCollapseStateChange(CollapsibleSectionType.GLOBAL_SEARCH, true)"></collapsible-section-title>
+            <span class="mat-body-2 message-with-spinner" *ngIf="initializing">
+              <span>Initializing</span>
+              <mat-spinner [diameter]="20"></mat-spinner>
+            </span>
         </div>
 
           <mat-tab-group class="search-tabs">
@@ -285,6 +290,7 @@ export class ViewerSearchComponent {
   runningQuery: string | undefined;
   lastQueryExecutionTime: string | undefined;
   lastQueryStartTime: number | undefined;
+  initializing = false;
   private readonly runOption = {
     name: 'Run Query',
     onClickCallback: (search: Search) =>
@@ -316,6 +322,9 @@ export class ViewerSearchComponent {
   }
 
   ngOnChanges() {
+    if (this.initializing && this.inputData?.initialized) {
+      this.initializing = false;
+    }
     const runningQueryComplete = this.inputData?.currentSearches.some(
       (search) => search.query === this.runningQuery,
     );
@@ -333,6 +342,14 @@ export class ViewerSearchComponent {
       ).format();
       this.lastQueryStartTime = undefined;
       this.runningQuery = undefined;
+    }
+  }
+
+  onGlobalSearchClick() {
+    if (!this.initializing && !this.inputData?.initialized) {
+      this.initializing = true;
+      const event = new CustomEvent(ViewerEvents.GlobalSearchSectionClick);
+      this.elementRef.nativeElement.dispatchEvent(event);
     }
   }
 
