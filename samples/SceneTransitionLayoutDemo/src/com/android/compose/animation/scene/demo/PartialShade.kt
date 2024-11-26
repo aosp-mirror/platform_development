@@ -17,13 +17,16 @@
 package com.android.compose.animation.scene.demo
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.gestures.Orientation
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.overscroll
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.withoutVisualEffect
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -41,6 +44,7 @@ import androidx.compose.ui.unit.dp
 import com.android.compose.animation.scene.ElementKey
 import com.android.compose.animation.scene.LowestZIndexContentPicker
 import com.android.compose.animation.scene.SceneScope
+import com.android.compose.gesture.effect.rememberOffsetOverscrollEffect
 import com.android.compose.modifiers.thenIf
 
 object PartialShade {
@@ -74,10 +78,13 @@ fun SceneScope.PartialShade(
 
     val shape =
         if (isSplitShade) PartialShade.Shapes.SplitBackground else PartialShade.Shapes.Background
+    val contentOverscrollEffect = rememberOffsetOverscrollEffect(Orientation.Vertical)
     Box(
         modifier
             .fillMaxWidth(if (isSplitShade) 0.5f else 1f)
             .thenIf(isSplitShade) { Modifier.padding(16.dp) }
+            .overscroll(verticalOverscrollEffect)
+            .overscroll(contentOverscrollEffect)
             .element(PartialShade.Elements.Root)
             .clip(shape)
     ) {
@@ -89,7 +96,14 @@ fun SceneScope.PartialShade(
                 .background(backgroundColor)
         )
 
-        Box(Modifier.verticalScroll(rememberScrollState()), content = content)
+        Box(
+            Modifier.disableSwipesWhenScrolling()
+                .verticalScroll(
+                    rememberScrollState(),
+                    overscrollEffect = contentOverscrollEffect.withoutVisualEffect(),
+                ),
+            content = content,
+        )
     }
 }
 

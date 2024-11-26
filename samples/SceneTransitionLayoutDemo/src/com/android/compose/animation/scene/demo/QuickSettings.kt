@@ -130,8 +130,10 @@ fun SceneScope.QuickSettings(
 
             val offsetOverscrollEffect = rememberOffsetOverscrollEffect(Orientation.Vertical)
             Column(
-                Modifier.overscroll(verticalOverscrollEffect)
+                Modifier.noResizeDuringTransitions()
+                    .overscroll(verticalOverscrollEffect)
                     .overscroll(offsetOverscrollEffect)
+                    .disableSwipesWhenScrolling()
                     .verticalScroll(scrollState, overscrollEffect = offsetOverscrollEffect)
                     .padding(vertical = QuickSettings.Dimensions.Padding)
             ) {
