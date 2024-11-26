@@ -62,7 +62,7 @@ def create_argument_parser() -> argparse.ArgumentParser:
     return parser
 
 # Keep in sync with ProxyConnection#VERSION in Winscope
-VERSION = '4.0.6'
+VERSION = '4.0.7'
 
 PERFETTO_TRACE_CONFIG_FILE = '/data/misc/perfetto-configs/winscope-proxy-trace.conf'
 PERFETTO_DUMP_CONFIG_FILE = '/data/misc/perfetto-configs/winscope-proxy-dump.conf'
@@ -1387,6 +1387,13 @@ class EndTraceEndpoint(DeviceRequestEndpoint):
                 thread.end_trace()
             success = thread.success()
             signal_handler_log = call_adb(f"shell su root cat {SIGNAL_HANDLER_LOG}", device=device_id).encode('utf-8')
+            if (thread.timed_out()):
+                timeout_message = "Trace {} timed out during cleanup".format(thread.trace_name)
+                errors.append(timeout_message)
+                log.error(timeout_message)
+            if not success:
+                log.error("Error ending trace {} on the device")
+                errors.append("Error ending trace {} on the device: {}".format(thread.trace_name, thread.err))
             out = b"### Shell script's stdout ###\n" + \
                 (thread.out if thread.out else b'<no stdout>') + \
                 b"\n### Shell script's stderr ###\n" + \
@@ -1394,16 +1401,8 @@ class EndTraceEndpoint(DeviceRequestEndpoint):
                 b"\n### Signal handler log:\n" + \
                 (signal_handler_log if signal_handler_log else b'<no signal handler logs>') + \
                 b"\n"
-            if (thread.timed_out()):
-                timeout_message = "Trace {} timed out during cleanup".format(thread.trace_name)
-                errors.append(timeout_message)
-                log.error(timeout_message)
-            if not success:
-                log.error(
-                    "Error ending trace {} on the device\n### Output ###\n".format(thread.trace_name) + out.decode(
-                        "utf-8")
-                )
-                errors.append("Error ending trace {} on the device: {}".format(thread.trace_name, thread.err))
+            log.debug("### Output ###\n".format(thread.trace_name) + out.decode(
+                        "utf-8"))
             if thread.trace_name in TRACE_TARGETS:
                 files = TRACE_TARGETS[thread.trace_name].files
                 move_collected_files(files, device_id, thread.trace_identifier)
