@@ -47,7 +47,7 @@ class PresenterWindowManagerTest extends AbstractHierarchyViewerPresenterTest<Ui
   override readonly shouldExecuteDumpTests = true;
   override readonly shouldExecuteSimplifyNamesTest = true;
 
-  override readonly numberOfDefaultProperties = 29;
+  override readonly numberOfDefaultProperties = 30;
   override readonly numberOfNonDefaultProperties = 21;
   override readonly expectedFirstRect = new Rect(0, 0, 1080, 2400);
   override readonly propertiesFilter = new TextFilter('requested');
