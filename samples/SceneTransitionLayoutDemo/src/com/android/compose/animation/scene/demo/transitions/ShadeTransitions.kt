@@ -19,7 +19,7 @@ package com.android.compose.animation.scene.demo.transitions
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.gestures.Orientation
 import androidx.compose.foundation.pager.PagerState
-import androidx.compose.ui.unit.IntSize
+import com.android.compose.animation.scene.ContentKey
 import com.android.compose.animation.scene.Edge
 import com.android.compose.animation.scene.SceneTransitionsBuilder
 import com.android.compose.animation.scene.TransitionBuilder
@@ -42,7 +42,8 @@ fun SceneTransitionsBuilder.shadeTransitions(
     val swipeDistance =
         object : UserActionDistance {
             override fun UserActionDistanceScope.absoluteDistance(
-                fromSceneSize: IntSize,
+                fromContent: ContentKey,
+                toContent: ContentKey,
                 orientation: Orientation,
             ): Float {
                 val distance = Shade.Elements.Scrim.targetOffset(Scenes.Shade)?.y ?: return 0f
@@ -87,7 +88,8 @@ fun SceneTransitionsBuilder.shadeTransitions(
     val qsSwipeDistance =
         object : UserActionDistance {
             override fun UserActionDistanceScope.absoluteDistance(
-                fromSceneSize: IntSize,
+                fromContent: ContentKey,
+                toContent: ContentKey,
                 orientation: Orientation,
             ): Float {
                 val scrimOffsetInShade =

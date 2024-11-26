@@ -44,7 +44,7 @@ ${OUT_DIR}/target/common/obj/PACKAGING/android_jar_intermediates/android.jar    
 ${OUT_DIR}/target/common/obj/PACKAGING/android_jar_intermediates/android-stubs-src.jar  platforms/${PLATFORM_NAME}/android-stubs-src.jar
 
 # core-for-system-modules.jar for building system modules
-${OUT_DIR}/target/common/obj/JAVA_LIBRARIES/core-current-stubs-for-system-modules_intermediates/classes.jar    platforms/${PLATFORM_NAME}/core-for-system-modules.jar
+${OUT_DIR}/target/common/obj/JAVA_LIBRARIES/core-current-stubs-for-system-modules-exportable_intermediates/classes.jar    platforms/${PLATFORM_NAME}/core-for-system-modules.jar
 
 # optional API files.
 development/build/optional.json                                                               platforms/${PLATFORM_NAME}/optional/optional.json

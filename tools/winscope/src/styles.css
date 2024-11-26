@@ -133,3 +133,10 @@ body.dark-mode button.mat-flat-button.mat-primary {
 log-view .headers .mat-form-field-infix {
     width: 100%;
 }
+
+.warning-icon {
+    color: var(--warning-color);
+}
+.error-icon {
+    color: var(--error-color);
+}

@@ -39,29 +39,21 @@ import {
 } from 'messaging/winscope_event';
 import {TimestampConverterUtils} from 'test/unit/timestamp_converter_utils';
 import {TraceBuilder} from 'test/unit/trace_builder';
+import {UnitTestUtils} from 'test/unit/utils';
 import {TraceType} from 'trace/trace_type';
 import {Viewer, ViewType} from 'viewers/viewer';
 import {ViewerStub} from 'viewers/viewer_stub';
 import {TraceViewComponent} from './trace_view_component';
 
 describe('TraceViewComponent', () => {
-  const traceSf = new TraceBuilder<object>()
-    .setType(TraceType.SURFACE_FLINGER)
-    .setEntries([])
-    .build();
+  const traceSf = UnitTestUtils.makeEmptyTrace(TraceType.SURFACE_FLINGER);
   const traceWm = new TraceBuilder<object>()
     .setType(TraceType.WINDOW_MANAGER)
     .setEntries([{}])
     .setTimestamps([TimestampConverterUtils.makeZeroTimestamp()])
     .build();
-  const traceSr = new TraceBuilder<object>()
-    .setType(TraceType.SCREEN_RECORDING)
-    .setEntries([])
-    .build();
-  const traceProtolog = new TraceBuilder<object>()
-    .setType(TraceType.PROTO_LOG)
-    .setEntries([])
-    .build();
+  const traceSr = UnitTestUtils.makeEmptyTrace(TraceType.SCREEN_RECORDING);
+  const traceProtolog = UnitTestUtils.makeEmptyTrace(TraceType.PROTO_LOG);
 
   let fixture: ComponentFixture<TestHostComponent>;
   let component: TestHostComponent;

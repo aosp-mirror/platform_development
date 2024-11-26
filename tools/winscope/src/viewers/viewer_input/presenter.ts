@@ -33,7 +33,7 @@ import {LogSelectFilter} from 'viewers/common/log_filters';
 import {LogPresenter} from 'viewers/common/log_presenter';
 import {PropertiesPresenter} from 'viewers/common/properties_presenter';
 import {RectsPresenter} from 'viewers/common/rects_presenter';
-import {TextFilter, TextFilterValues} from 'viewers/common/text_filter';
+import {TextFilter} from 'viewers/common/text_filter';
 import {LogHeader} from 'viewers/common/ui_data_log';
 import {UI_RECT_FACTORY} from 'viewers/common/ui_rect_factory';
 import {UserOptions} from 'viewers/common/user_options';
@@ -94,24 +94,12 @@ export class Presenter extends AbstractLogViewerPresenter<UiData> {
   protected override logPresenter = new LogPresenter<InputEntry>();
   protected override propertiesPresenter = new PropertiesPresenter(
     {},
-    new TextFilter(
-      PersistentStoreProxy.new<TextFilterValues>(
-        'InputPropertiesFilter',
-        new TextFilterValues('', []),
-        this.storage,
-      ),
-    ),
+    new TextFilter(),
     [],
   );
   protected dispatchPropertiesPresenter = new PropertiesPresenter(
     {},
-    new TextFilter(
-      PersistentStoreProxy.new<TextFilterValues>(
-        'InputDispatchPropertiesFilter',
-        new TextFilterValues('', []),
-        this.storage,
-      ),
-    ),
+    new TextFilter(),
     Presenter.DENYLIST_DISPATCH_PROPERTIES,
     [new DispatchEntryFormatter(this.layerIdToName)],
   );
@@ -313,8 +301,11 @@ export class Presenter extends AbstractLogViewerPresenter<UiData> {
     dispatchTree: PropertyTreeNode,
   ): string {
     const keyDetails =
-      'Keycode: ' + eventTree.getChildByName('keyCode')?.formattedValue() ??
-      '<?>';
+      'Keycode: ' +
+        eventTree
+          .getChildByName('keyCode')
+          ?.formattedValue()
+          ?.replace(/^KEYCODE_/, '') ?? '<?>';
     return keyDetails + ' ' + Presenter.extractDispatchDetails(dispatchTree);
   }
 
