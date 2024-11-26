@@ -39,7 +39,7 @@ import {TextFilter} from 'viewers/common/text_filter';
 import {UiHierarchyTreeNode} from 'viewers/common/ui_hierarchy_tree_node';
 import {UserOptions} from 'viewers/common/user_options';
 import {HierarchyPresenter} from './hierarchy_presenter';
-import {PresetHierarchy} from './preset_hierarchy';
+import {PresetHierarchy, TextFilterValues} from './preset_hierarchy';
 import {RectShowState} from './rect_show_state';
 import {UiDataHierarchy} from './ui_data_hierarchy';
 import {ViewerEvents} from './viewer_events';
@@ -224,9 +224,13 @@ export abstract class AbstractHierarchyViewerPresenter<
   protected saveConfigAsPreset(storeKey: string) {
     const preset: PresetHierarchy = {
       hierarchyUserOptions: this.uiData.hierarchyUserOptions,
-      hierarchyFilter: this.uiData.hierarchyFilter.values,
+      hierarchyFilter: TextFilterValues.fromTextFilter(
+        this.uiData.hierarchyFilter,
+      ),
       propertiesUserOptions: this.uiData.propertiesUserOptions,
-      propertiesFilter: this.uiData.propertiesFilter.values,
+      propertiesFilter: TextFilterValues.fromTextFilter(
+        this.uiData.propertiesFilter,
+      ),
       rectsUserOptions: this.uiData.rectsUserOptions,
       rectIdToShowState: this.uiData.rectIdToShowState,
     };
@@ -241,14 +245,20 @@ export abstract class AbstractHierarchyViewerPresenter<
         parsedPreset.hierarchyUserOptions,
       );
       await this.hierarchyPresenter.applyHierarchyFilterChange(
-        new TextFilter(parsedPreset.hierarchyFilter),
+        new TextFilter(
+          parsedPreset.hierarchyFilter.filterString,
+          parsedPreset.hierarchyFilter.flags,
+        ),
       );
 
       this.propertiesPresenter.applyPropertiesUserOptionsChange(
         parsedPreset.propertiesUserOptions,
       );
       this.propertiesPresenter.applyPropertiesFilterChange(
-        new TextFilter(parsedPreset.propertiesFilter),
+        new TextFilter(
+          parsedPreset.propertiesFilter.filterString,
+          parsedPreset.propertiesFilter.flags,
+        ),
       );
       await this.updatePropertiesTree();
 

@@ -18,27 +18,26 @@ import {FilterFlag} from 'common/filter_flag';
 import {StringUtils} from 'common/string_utils';
 import {StringFilterPredicate} from 'viewers/common/string_filter_predicate';
 
-export class TextFilterValues {
-  constructor(public filterString: string, public flags: FilterFlag[]) {}
-}
-
 export class TextFilter {
-  constructor(public values: TextFilterValues = new TextFilterValues('', [])) {}
+  constructor(
+    public filterString: string = '',
+    public flags: FilterFlag[] = [],
+  ) {}
 
   getFilterPredicate(): StringFilterPredicate {
-    const matchCase = this.values.flags.includes(FilterFlag.MATCH_CASE);
-    const matchWord = this.values.flags.includes(FilterFlag.MATCH_WORD);
-    const useRegex = this.values.flags.includes(FilterFlag.USE_REGEX);
+    const matchCase = this.flags.includes(FilterFlag.MATCH_CASE);
+    const matchWord = this.flags.includes(FilterFlag.MATCH_WORD);
+    const useRegex = this.flags.includes(FilterFlag.USE_REGEX);
 
     if (useRegex) {
       const regexFlags = useRegex && !matchCase ? 'i' : '';
       const regexString = matchWord
-        ? '\\b(?:' + this.values.filterString + ')\\b'
-        : this.values.filterString;
+        ? '\\b(?:' + this.filterString + ')\\b'
+        : this.filterString;
       try {
         const regex = new RegExp(regexString, regexFlags);
         return (entryString: string) => {
-          if (this.values.filterString.length === 0) return true;
+          if (this.filterString.length === 0) return true;
           return regex.test(entryString);
         };
       } catch (e) {
@@ -46,10 +45,10 @@ export class TextFilter {
       }
     } else {
       const testString = matchCase
-        ? this.values.filterString
-        : this.values.filterString.toLowerCase();
+        ? this.filterString
+        : this.filterString.toLowerCase();
       return (entryString: string) => {
-        if (this.values.filterString.length === 0) return true;
+        if (this.filterString.length === 0) return true;
 
         let entrySubstring = matchCase
           ? entryString
