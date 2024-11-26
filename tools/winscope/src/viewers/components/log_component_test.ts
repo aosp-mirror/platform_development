@@ -187,7 +187,7 @@ describe('LogComponent', () => {
     const allEntries = component.entries.slice();
     htmlElement.addEventListener(ViewerEvents.LogTextFilterChange, (event) => {
       const detail: LogTextFilterChangeDetail = (event as CustomEvent).detail;
-      if (detail.filter.values.filterString.length === 0) {
+      if (detail.filter.filterString.length === 0) {
         component.entries = allEntries;
         return;
       }
@@ -195,7 +195,7 @@ describe('LogComponent', () => {
         const entryValue = assertDefined(
           entry.fields.find((f) => f.spec === detail.header.spec),
         ).value.toString();
-        return entryValue.includes(detail.filter.values.filterString);
+        return entryValue.includes(detail.filter.filterString);
       });
     });
     expect(htmlElement.querySelectorAll('.entry').length).toEqual(2);

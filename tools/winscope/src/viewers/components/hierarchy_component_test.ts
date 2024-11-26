@@ -33,7 +33,7 @@ import {FilterFlag} from 'common/filter_flag';
 import {PersistentStore} from 'common/persistent_store';
 import {HierarchyTreeBuilder} from 'test/unit/hierarchy_tree_builder';
 import {TraceType} from 'trace/trace_type';
-import {TextFilter, TextFilterValues} from 'viewers/common/text_filter';
+import {TextFilter} from 'viewers/common/text_filter';
 import {UiHierarchyTreeNode} from 'viewers/common/ui_hierarchy_tree_node';
 import {ViewerEvents} from 'viewers/common/viewer_events';
 import {HierarchyTreeNodeDataViewComponent} from 'viewers/components/hierarchy_tree_node_data_view_component';
@@ -219,9 +219,7 @@ describe('HierarchyComponent', () => {
     inputEl.value = 'Root';
     inputEl.dispatchEvent(new Event('input'));
     fixture.detectChanges();
-    expect(textFilter).toEqual(
-      new TextFilter(new TextFilterValues('Root', [FilterFlag.MATCH_CASE])),
-    );
+    expect(textFilter).toEqual(new TextFilter('Root', [FilterFlag.MATCH_CASE]));
   });
 
   it('handles collapse button click', () => {
