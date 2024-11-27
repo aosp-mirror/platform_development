@@ -38,7 +38,7 @@ import {NotifyLogViewCallbackType} from 'viewers/common/abstract_log_viewer_pres
 import {AbstractLogViewerPresenterTest} from 'viewers/common/abstract_log_viewer_presenter_test';
 import {VISIBLE_CHIP} from 'viewers/common/chip';
 import {LogSelectFilter} from 'viewers/common/log_filters';
-import {TextFilter, TextFilterValues} from 'viewers/common/text_filter';
+import {TextFilter} from 'viewers/common/text_filter';
 import {LogField, LogHeader} from 'viewers/common/ui_data_log';
 import {UserOptions} from 'viewers/common/user_options';
 import {ViewerEvents} from 'viewers/common/viewer_events';
@@ -630,9 +630,7 @@ class PresenterInputTest extends AbstractLogViewerPresenterTest<UiData> {
         expect(
           assertDefined(uiData.dispatchPropertiesTree).getAllChildren().length,
         ).toEqual(5);
-        await presenter.onDispatchPropertiesFilterChange(
-          new TextFilter(new TextFilterValues('212', [])),
-        );
+        await presenter.onDispatchPropertiesFilterChange(new TextFilter('212'));
         expect(
           assertDefined(uiData.dispatchPropertiesTree).getAllChildren().length,
         ).toEqual(1);

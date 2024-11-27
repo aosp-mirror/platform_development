@@ -15,7 +15,6 @@
  */
 
 import {assertDefined} from 'common/assert_utils';
-import {PersistentStoreProxy} from 'common/persistent_store_proxy';
 import {Store} from 'common/store';
 import {Trace} from 'trace/trace';
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
@@ -25,7 +24,7 @@ import {
 } from 'viewers/common/abstract_log_viewer_presenter';
 import {LogSelectFilter, LogTextFilter} from 'viewers/common/log_filters';
 import {LogPresenter} from 'viewers/common/log_presenter';
-import {TextFilter, TextFilterValues} from 'viewers/common/text_filter';
+import {TextFilter} from 'viewers/common/text_filter';
 import {LogEntry, LogField, LogHeader} from 'viewers/common/ui_data_log';
 import {ProtologEntry, UiData} from './ui_data';
 
@@ -123,15 +122,7 @@ export class Presenter extends AbstractLogViewerPresenter<UiData> {
     allEntries: ProtologEntry[],
   ) {
     for (const header of headers) {
-      if (header.filter instanceof LogTextFilter) {
-        header.filter.textFilter = new TextFilter(
-          PersistentStoreProxy.new<TextFilterValues>(
-            'ProtoLog' + header.spec.name,
-            new TextFilterValues('', []),
-            this.storage,
-          ),
-        );
-      } else if (header.filter instanceof LogSelectFilter) {
+      if (header.filter instanceof LogSelectFilter) {
         assertDefined(header.filter).options = this.getUniqueMessageValues(
           allEntries,
           (entry: ProtologEntry) =>

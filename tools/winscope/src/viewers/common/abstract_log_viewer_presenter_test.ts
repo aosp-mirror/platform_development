@@ -86,12 +86,10 @@ export abstract class AbstractLogViewerPresenterTest<UiData extends UiDataLog> {
     ): boolean | undefined {
       if (first instanceof LogTextFilter && second instanceof LogTextFilter) {
         return (
-          first.textFilter.values.filterString ===
-            second.textFilter.values.filterString &&
-          first.textFilter.values.flags.length ===
-            second.textFilter.values.flags.length &&
-          first.textFilter.values.flags.every(
-            (flag, index) => flag === second.textFilter.values.flags[index],
+          first.textFilter.filterString === second.textFilter.filterString &&
+          first.textFilter.flags.length === second.textFilter.flags.length &&
+          first.textFilter.flags.every(
+            (flag, index) => flag === second.textFilter.flags[index],
           )
         );
       }

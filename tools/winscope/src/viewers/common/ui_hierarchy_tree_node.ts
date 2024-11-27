@@ -52,6 +52,8 @@ export class UiHierarchyTreeNode extends HierarchyTreeNode implements DiffNode {
         UiHierarchyTreeNode.from(child, displayNode),
       );
     });
+    node.getWarnings().forEach((warning) => displayNode.addWarning(warning));
+
     return displayNode;
   }
 

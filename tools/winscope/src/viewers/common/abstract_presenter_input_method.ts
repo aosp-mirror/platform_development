@@ -33,7 +33,7 @@ import {
   ProcessedWindowManagerState,
 } from 'viewers/common/ime_utils';
 import {TableProperties} from 'viewers/common/table_properties';
-import {TextFilter, TextFilterValues} from 'viewers/common/text_filter';
+import {TextFilter} from 'viewers/common/text_filter';
 import {UserOptions} from 'viewers/common/user_options';
 import {
   AbstractHierarchyViewerPresenter,
@@ -74,13 +74,7 @@ export abstract class AbstractPresenterInputMethod extends AbstractHierarchyView
       },
       this.storage,
     ),
-    new TextFilter(
-      PersistentStoreProxy.new<TextFilterValues>(
-        'ImeHierarchyFilter',
-        new TextFilterValues('', []),
-        this.storage,
-      ),
-    ),
+    new TextFilter(),
     [],
     true,
     false,
@@ -103,13 +97,7 @@ export abstract class AbstractPresenterInputMethod extends AbstractHierarchyView
       },
       this.storage,
     ),
-    new TextFilter(
-      PersistentStoreProxy.new<TextFilterValues>(
-        'ImePropertiesFilter',
-        new TextFilterValues('', []),
-        this.storage,
-      ),
-    ),
+    new TextFilter(),
     [],
   );
   protected override multiTraceType = undefined;
