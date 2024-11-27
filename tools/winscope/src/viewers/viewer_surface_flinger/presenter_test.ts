@@ -385,6 +385,30 @@ the default for its data type.`,
         ).toEqual(2);
       });
 
+      it('handles rect double click if view capture trace present', async () => {
+        const [presenter, traceVc] = await createPresenterWithViewCapture(
+          assertDefined(this.traceSf),
+        );
+        const spy = jasmine.createSpy();
+        presenter.setEmitEvent(spy);
+
+        await presenter.onRectDoubleClick('not in package');
+        expect(spy).not.toHaveBeenCalled();
+        await presenter.onRectDoubleClick(
+          'com.google.android.apps.nexuslauncher',
+        );
+        expect(spy).toHaveBeenCalledOnceWith(
+          new TabbedViewSwitchRequest(traceVc),
+        );
+      });
+
+      it('robust to rect double click if view capture trace not present', async () => {
+        const spy = jasmine.createSpy();
+        presenter.setEmitEvent(spy);
+        await presenter.onRectDoubleClick('not in package');
+        expect(spy).not.toHaveBeenCalled();
+      });
+
       it('keeps alpha and transform type regardless of show/hide defaults', async () => {
         const treeForAlphaCheck = this.getSelectedTree();
         const treeForTransformCheck = this.getSelectedTreeAfterPositionUpdate();
@@ -461,6 +485,93 @@ the default for its data type.`,
         const entry = assertDefined(this.traceSf?.getEntry(5));
         await presenter.onAppEvent(TracePositionUpdate.fromTraceEntry(entry));
         expect(uiData.hierarchyTrees?.at(0)?.getWarnings().length).toEqual(1);
+      });
+
+      it('sets properties tree but no curated properties for root node', async () => {
+        await presenter.onAppEvent(this.getPositionUpdate());
+        await presenter.onHighlightedIdChange(
+          assertDefined(uiData.hierarchyTrees)[0].id,
+        );
+        expect(uiData.propertiesTree?.getDisplayName()).toEqual(
+          '1970-01-01, 00:00:00.000',
+        );
+        expect(uiData.curatedProperties).toBeUndefined();
+      });
+
+      it('formats summary, color, pixel and crop correctly in curated properties', async () => {
+        const tree = new HierarchyTreeBuilder()
+          .setId('LayerTraceEntry')
+          .setName('root')
+          .setChildren([
+            {
+              id: '1',
+              name: 'layer1',
+              properties: {
+                occludedBy: ['0 layer0'],
+                partiallyOccludedBy: ['2 layer2'],
+                flags: null,
+                zOrderRelativeOf: null,
+                bounds: null,
+                screenBounds: null,
+                activeBuffer: null,
+                currFrame: null,
+                destinationFrame: {left: 0, right: 1, top: 0, bottom: 1},
+                z: null,
+                color: {r: 0, g: 0, b: 0, a: 1},
+                shadowRadius: 1,
+                cornerRadius: null,
+                cornerRadiusCrop: null,
+                backgroundBlurRadius: null,
+                requestedColor: null,
+                requestedCornerRadius: null,
+              },
+            },
+          ])
+          .build();
+        const traces = new Traces();
+        const traceSf = new TraceBuilder<HierarchyTreeNode>()
+          .setType(TraceType.SURFACE_FLINGER)
+          .setEntries([tree])
+          .build();
+        traces.addTrace(traceSf);
+        const notifyViewCallback = (newData: UiData) => {
+          uiData = newData;
+        };
+        const presenter = new Presenter(
+          traceSf,
+          traces,
+          new InMemoryStorage(),
+          notifyViewCallback,
+        );
+        const positionUpdate = TracePositionUpdate.fromTraceEntry(
+          traceSf.getEntry(0),
+        );
+        await presenter.onAppEvent(positionUpdate);
+        await presenter.onHighlightedIdChange(
+          assertDefined(tree.getChildByName('layer1')).id,
+        );
+        expect(uiData.curatedProperties?.summary).toEqual([
+          {
+            key: 'Occluded by',
+            desc: 'Fully occluded by these opaque layers',
+            layerValues: [{layerId: '0', nodeId: '0 layer0', name: 'layer0'}],
+          },
+          {
+            key: 'Partially occluded by',
+            desc: 'Partially occluded by these opaque layers',
+            layerValues: [{layerId: '2', nodeId: '2 layer2', name: 'layer2'}],
+          },
+        ]);
+        expect(uiData.curatedProperties?.calcColor).toEqual(
+          '(0, 0, 0), alpha: 1',
+        );
+        expect(uiData.curatedProperties?.reqColor).toEqual('no color found');
+        expect(uiData.curatedProperties?.calcShadowRadius).toEqual('1 px');
+        expect(uiData.curatedProperties?.calcCornerRadius).toEqual('0 px');
+        expect(uiData.curatedProperties?.destinationFrame).toEqual(
+          '(0, 0) - (1, 1)',
+        );
+        expect(uiData.curatedProperties?.reqCrop).toEqual(EMPTY_OBJ_STRING);
       });
 
       async function checkColorAndTransform(

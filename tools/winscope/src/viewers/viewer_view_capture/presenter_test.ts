@@ -209,6 +209,106 @@ the default for its data type.`,
     expect(curatedProperties.alpha).toEqual('1');
     expect(curatedProperties.willNotDraw).toEqual('false');
   }
+
+  override executeSpecializedTests() {
+    describe('Specialized tests', () => {
+      let presenter: Presenter;
+      let uiData: UiData;
+
+      beforeAll(async () => {
+        await this.setUpTestEnvironment();
+      });
+
+      beforeEach(() => {
+        const notifyViewCallback = (newData: UiData) => {
+          uiData = newData;
+        };
+        presenter = this.createPresenter(
+          notifyViewCallback as NotifyHierarchyViewCallbackType<UiData>,
+          new InMemoryStorage(),
+        );
+      });
+
+      it('exposes all VC traces', () => {
+        const traces = new Traces();
+        const vcTraces = [
+          UnitTestUtils.makeEmptyTrace(TraceType.VIEW_CAPTURE),
+          UnitTestUtils.makeEmptyTrace(TraceType.VIEW_CAPTURE),
+        ];
+        vcTraces.forEach((trace) => traces.addTrace(trace));
+        const notifyViewCallback = (newData: UiData) => {
+          uiData = newData;
+        };
+        const presenter = new Presenter(
+          traces,
+          new InMemoryStorage(),
+          notifyViewCallback,
+        );
+        expect(presenter.getTraces()).toEqual(vcTraces);
+      });
+
+      it('extracts rects from SF trace', async () => {
+        const sfTrace = new TraceBuilder<HierarchyTreeNode>()
+          .setType(TraceType.SURFACE_FLINGER)
+          .setEntries([await UnitTestUtils.getLayerTraceEntry(0)])
+          .build();
+        const presenter = createPresenterWithSfTrace(
+          assertDefined(this.traces),
+          sfTrace,
+        );
+        await presenter.onAppEvent(assertDefined(this.positionUpdate));
+        expect(assertDefined(uiData.sfRects).length).toBeGreaterThan(0);
+      });
+
+      it('handles double click if SF trace present', async () => {
+        const sfTrace = UnitTestUtils.makeEmptyTrace(TraceType.SURFACE_FLINGER);
+        const presenter = createPresenterWithSfTrace(
+          assertDefined(this.traces),
+          sfTrace,
+        );
+        const spy = jasmine.createSpy();
+        presenter.setEmitEvent(spy);
+
+        await presenter.onMiniRectsDoubleClick();
+        expect(spy).toHaveBeenCalledOnceWith(
+          new TabbedViewSwitchRequest(sfTrace),
+        );
+      });
+
+      it('robust to double click if SF trace not present', async () => {
+        const spy = jasmine.createSpy();
+        presenter.setEmitEvent(spy);
+        await presenter.onMiniRectsDoubleClick();
+        expect(spy).not.toHaveBeenCalled();
+      });
+
+      it('clears curated properties on position update if no properties tree found', async () => {
+        await presenter.onAppEvent(assertDefined(this.secondPositionUpdate));
+        const nodeName = 'com.android.internal.policy.DecorView@220010144';
+        await presenter.onHighlightedIdChange(nodeName);
+        expect(uiData.propertiesTree).toBeDefined();
+        expect(uiData.curatedProperties).toBeDefined();
+
+        await presenter.onAppEvent(assertDefined(this.positionUpdate));
+        expect(uiData.propertiesTree).toBeUndefined();
+        expect(uiData.curatedProperties).toBeUndefined();
+      });
+
+      function createPresenterWithSfTrace(
+        vcTraces: Traces,
+        sfTrace: Trace<HierarchyTreeNode>,
+      ): Presenter {
+        const traces = new Traces();
+        vcTraces.forEachTrace((trace) => traces.addTrace(trace));
+        traces.addTrace(sfTrace);
+
+        const notifyViewCallback = (newData: UiData) => {
+          uiData = newData;
+        };
+        return new Presenter(traces, new InMemoryStorage(), notifyViewCallback);
+      }
+    });
+  }
 }
 
 describe('PresenterViewCapture', () => {
