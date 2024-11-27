@@ -15,7 +15,6 @@
  */
 
 import {assertDefined} from 'common/assert_utils';
-import {PersistentStoreProxy} from 'common/persistent_store_proxy';
 import {Store} from 'common/store';
 import {CustomQueryType} from 'trace/custom_query';
 import {Trace} from 'trace/trace';
@@ -30,7 +29,7 @@ import {
 import {LogSelectFilter} from 'viewers/common/log_filters';
 import {LogPresenter} from 'viewers/common/log_presenter';
 import {PropertiesPresenter} from 'viewers/common/properties_presenter';
-import {TextFilter, TextFilterValues} from 'viewers/common/text_filter';
+import {TextFilter} from 'viewers/common/text_filter';
 import {ColumnSpec, LogField, LogHeader} from 'viewers/common/ui_data_log';
 import {UpdateTransitionChangesNames} from './operations/update_transition_changes_names';
 import {TransitionsEntry, TransitionStatus, UiData} from './ui_data';
@@ -62,13 +61,7 @@ export class Presenter extends AbstractLogViewerPresenter<UiData> {
   protected override logPresenter = new LogPresenter<TransitionsEntry>(false);
   protected override propertiesPresenter = new PropertiesPresenter(
     {},
-    new TextFilter(
-      PersistentStoreProxy.new<TextFilterValues>(
-        'TransitionsPropertiesFilter',
-        new TextFilterValues('', []),
-        this.storage,
-      ),
-    ),
+    new TextFilter(),
     [],
   );
 
