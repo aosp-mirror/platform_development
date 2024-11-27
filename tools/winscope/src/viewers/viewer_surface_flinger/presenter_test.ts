@@ -57,7 +57,7 @@ class PresenterSurfaceFlingerTest extends AbstractHierarchyViewerPresenterTest<U
   override readonly numberOfDefaultProperties = 32;
   override readonly numberOfNonDefaultProperties = 24;
   override readonly expectedFirstRect = new Rect(0, 0, 1080, 2400);
-  override readonly propertiesFilter = new TextFilter('bound', []);
+  override readonly propertiesFilter = new TextFilter('bound');
   override readonly expectedTotalRects = 11;
   override readonly expectedVisibleRects = 6;
   override readonly treeNodeLongName =
@@ -65,7 +65,7 @@ class PresenterSurfaceFlingerTest extends AbstractHierarchyViewerPresenterTest<U
   override readonly treeNodeShortName =
     'ActivityRecord{64953af u0 com.google.(...).NexusLauncherActivity#96';
   override readonly numberOfFilteredProperties = 3;
-  override readonly hierarchyFilter = new TextFilter('Wallpaper', []);
+  override readonly hierarchyFilter = new TextFilter('Wallpaper');
   override readonly expectedHierarchyChildrenAfterStringFilter = 4;
   override readonly propertyWithDiff = 'bounds';
   override readonly expectedPropertyDiffType = DiffType.ADDED;
@@ -88,6 +88,9 @@ class PresenterSurfaceFlingerTest extends AbstractHierarchyViewerPresenterTest<U
         await UnitTestUtils.getTraceEntry<HierarchyTreeNode>(
           'traces/elapsed_and_real_timestamp/SurfaceFlinger.pb',
           6,
+        ),
+        await UnitTestUtils.getTraceEntry<HierarchyTreeNode>(
+          'traces/elapsed_and_real_timestamp/SurfaceFlinger_with_duplicated_ids.pb',
         ),
       ])
       .build();
@@ -133,10 +136,7 @@ class PresenterSurfaceFlingerTest extends AbstractHierarchyViewerPresenterTest<U
   override createPresenterWithEmptyTrace(
     callback: NotifyHierarchyViewCallbackType<UiData>,
   ): Presenter {
-    const trace = new TraceBuilder<HierarchyTreeNode>()
-      .setType(TraceType.SURFACE_FLINGER)
-      .setEntries([])
-      .build();
+    const trace = UnitTestUtils.makeEmptyTrace(TraceType.SURFACE_FLINGER);
     const traces = new Traces();
     traces.addTrace(trace);
     return new Presenter(trace, traces, new InMemoryStorage(), callback);
@@ -475,13 +475,17 @@ class PresenterSurfaceFlingerTest extends AbstractHierarchyViewerPresenterTest<U
         const nodeWithRelZChild = assertDefined(
           assertDefined(uiData.hierarchyTrees)[0].findDfs(
             UiTreeUtils.makeNodeFilter(
-              '98 2c99222 com.google.android.apps.nexuslauncher/com.google.android.apps.nexuslauncher.NexusLauncherActivity#98',
+              new TextFilter(
+                '98 2c99222 com.google.android.apps.nexuslauncher/com.google.android.apps.nexuslauncher.NexusLauncherActivity#98',
+              ).getFilterPredicate(),
             ),
           ),
         );
         const nodeWithRelZParent = assertDefined(
           assertDefined(uiData.hierarchyTrees)[0].findDfs(
-            UiTreeUtils.makeNodeFilter('13 ImeContainer#13'),
+            UiTreeUtils.makeNodeFilter(
+              new TextFilter('13 ImeContainer#13').getFilterPredicate(),
+            ),
           ),
         );
 
@@ -502,6 +506,14 @@ class PresenterSurfaceFlingerTest extends AbstractHierarchyViewerPresenterTest<U
           name: nodeWithRelZChild.name,
         });
         expect(uiData.curatedProperties?.relativeChildren).toEqual([]);
+      });
+
+      it('adds warnings to ui hierarchy tree node', async () => {
+        await presenter.onAppEvent(this.getPositionUpdate());
+        expect(uiData.hierarchyTrees?.at(0)?.getWarnings().length).toEqual(0);
+        const entry = assertDefined(this.traceSf?.getEntry(5));
+        await presenter.onAppEvent(TracePositionUpdate.fromTraceEntry(entry));
+        expect(uiData.hierarchyTrees?.at(0)?.getWarnings().length).toEqual(1);
       });
 
       async function checkColorAndTransformProperties(

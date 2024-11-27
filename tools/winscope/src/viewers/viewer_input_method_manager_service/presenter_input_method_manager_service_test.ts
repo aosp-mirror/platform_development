@@ -29,7 +29,7 @@ import {PresenterInputMethodManagerService} from './presenter_input_method_manag
 class PresenterInputMethodManagerServiceTest extends AbstractPresenterInputMethodTest {
   override readonly numberOfDefaultProperties = 1;
   override readonly numberOfNonDefaultProperties = 2;
-  override readonly propertiesFilter = new TextFilter('elapsedNanos', []);
+  override readonly propertiesFilter = new TextFilter('elapsedNanos');
   override readonly numberOfFilteredProperties = 1;
 
   protected override readonly PresenterInputMethod =

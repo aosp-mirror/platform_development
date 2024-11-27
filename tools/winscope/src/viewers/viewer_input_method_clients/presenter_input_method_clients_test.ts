@@ -25,7 +25,7 @@ import {PresenterInputMethodClients} from './presenter_input_method_clients';
 class PresenterInputMethodClientsTest extends AbstractPresenterInputMethodTest {
   override readonly numberOfDefaultProperties = 1;
   override readonly numberOfNonDefaultProperties = 2;
-  override readonly propertiesFilter = new TextFilter('where', []);
+  override readonly propertiesFilter = new TextFilter('where');
   override readonly numberOfFilteredProperties = 1;
 
   protected override readonly PresenterInputMethod =

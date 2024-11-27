@@ -71,11 +71,7 @@ export class Presenter extends AbstractHierarchyViewerPresenter<UiData> {
       },
       this.storage,
     ),
-    PersistentStoreProxy.new<TextFilter>(
-      'WmHierarchyFilter',
-      new TextFilter('', []),
-      this.storage,
-    ),
+    new TextFilter(),
     Presenter.DENYLIST_PROPERTY_NAMES,
     true,
     false,
@@ -124,11 +120,7 @@ export class Presenter extends AbstractHierarchyViewerPresenter<UiData> {
       },
       this.storage,
     ),
-    PersistentStoreProxy.new<TextFilter>(
-      'WmPropertiesFilter',
-      new TextFilter('', []),
-      this.storage,
-    ),
+    new TextFilter(),
     Presenter.DENYLIST_PROPERTY_NAMES,
   );
   protected override multiTraceType = undefined;

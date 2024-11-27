@@ -45,13 +45,13 @@ import {MatToolbarModule} from '@angular/material/toolbar';
 import {MatTooltipModule} from '@angular/material/tooltip';
 import {BrowserModule, Title} from '@angular/platform-browser';
 import {BrowserAnimationsModule} from '@angular/platform-browser/animations';
-import {LogComponent} from 'viewers/common/log_component';
 import {CollapsedSectionsComponent} from 'viewers/components/collapsed_sections_component';
 import {CollapsibleSectionTitleComponent} from 'viewers/components/collapsible_section_title_component';
 import {CoordinatesTableComponent} from 'viewers/components/coordinates_table_component';
 import {HierarchyComponent} from 'viewers/components/hierarchy_component';
 import {HierarchyTreeNodeDataViewComponent} from 'viewers/components/hierarchy_tree_node_data_view_component';
 import {ImeAdditionalPropertiesComponent} from 'viewers/components/ime_additional_properties_component';
+import {LogComponent} from 'viewers/components/log_component';
 import {PropertiesComponent} from 'viewers/components/properties_component';
 import {PropertiesTableComponent} from 'viewers/components/properties_table_component';
 import {PropertyTreeNodeDataViewComponent} from 'viewers/components/property_tree_node_data_view_component';
@@ -70,6 +70,8 @@ import {ViewerJankCujsComponent} from 'viewers/viewer_jank_cujs/viewer_jank_cujs
 import {ViewerMediaBasedComponent} from 'viewers/viewer_media_based/viewer_media_based_component';
 import {ProtologScrollDirective} from 'viewers/viewer_protolog/scroll_strategy/protolog_scroll_directive';
 import {ViewerProtologComponent} from 'viewers/viewer_protolog/viewer_protolog_component';
+import {SearchListComponent} from 'viewers/viewer_search/search_list_component';
+import {ViewerSearchComponent} from 'viewers/viewer_search/viewer_search_component';
 import {ViewerSurfaceFlingerComponent} from 'viewers/viewer_surface_flinger/viewer_surface_flinger_component';
 import {TransactionsScrollDirective} from 'viewers/viewer_transactions/scroll_strategy/transactions_scroll_directive';
 import {ViewerTransactionsComponent} from 'viewers/viewer_transactions/viewer_transactions_component';
@@ -114,6 +116,7 @@ import {GlobalErrorHandler} from './global_error_handler';
     ViewerMediaBasedComponent,
     ViewerTransitionsComponent,
     ViewerViewCaptureComponent,
+    ViewerSearchComponent,
     CollectTracesComponent,
     UploadTracesComponent,
     AdbProxyComponent,
@@ -155,6 +158,7 @@ import {GlobalErrorHandler} from './global_error_handler';
     LogComponent,
     WarningDialogComponent,
     SearchBoxComponent,
+    SearchListComponent,
   ],
   imports: [
     BrowserModule,

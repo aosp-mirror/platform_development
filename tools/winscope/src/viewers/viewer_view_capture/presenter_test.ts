@@ -53,14 +53,14 @@ class PresenterViewCaptureTest extends AbstractHierarchyViewerPresenterTest<UiDa
   override readonly numberOfDefaultProperties = 3;
   override readonly numberOfNonDefaultProperties = 15;
   override readonly expectedFirstRect = new Rect(0, 0, 1080, 249);
-  override readonly propertiesFilter = new TextFilter('alpha', []);
+  override readonly propertiesFilter = new TextFilter('alpha');
   override readonly expectedTotalRects = 13;
   override readonly expectedVisibleRects = 5;
   override readonly treeNodeLongName =
     'com.android.launcher3.taskbar.TaskbarView@80213537';
   override readonly treeNodeShortName = 'TaskbarView@80213537';
   override readonly numberOfFilteredProperties = 1;
-  override readonly hierarchyFilter = new TextFilter('BubbleBarView', []);
+  override readonly hierarchyFilter = new TextFilter('BubbleBarView');
   override readonly expectedHierarchyChildrenAfterStringFilter = 1;
   override readonly propertyWithDiff = 'translationY';
   override readonly expectedPropertyDiffType = DiffType.MODIFIED;

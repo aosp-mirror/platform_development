@@ -26,6 +26,7 @@ import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.WindowManager;
 import android.view.inputmethod.InputMethodManager;
 
 import androidx.activity.result.ActivityResultLauncher;
@@ -241,6 +242,8 @@ public class MainActivity extends Hilt_MainActivity {
             }
         } else if (event.hasDeviceState()) {
             mPowerOn = event.getDeviceState().getPowerOn();
+        } else if (event.hasBrightnessEvent()) {
+            runOnUiThread(() -> setBrightness(event.getBrightnessEvent().getBrightness()));
         }
     }
 
@@ -258,6 +261,12 @@ public class MainActivity extends Hilt_MainActivity {
                 .setDeviceState(DeviceState.newBuilder().setPowerOn(mPowerOn))
                 .build());
 
+    }
+
+    private void setBrightness(float brightness) {
+        WindowManager.LayoutParams layout = getWindow().getAttributes();
+        layout.screenBrightness = brightness;
+        getWindow().setAttributes(layout);
     }
 
     private static boolean hasRecordAudioPermission(Context context) {

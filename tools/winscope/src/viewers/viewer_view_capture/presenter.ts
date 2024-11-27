@@ -71,11 +71,7 @@ export class Presenter extends AbstractHierarchyViewerPresenter<UiData> {
       },
       this.storage,
     ),
-    PersistentStoreProxy.new<TextFilter>(
-      'VcHierarchyFilter',
-      new TextFilter('', []),
-      this.storage,
-    ),
+    new TextFilter(),
     Presenter.DENYLIST_PROPERTY_NAMES,
     false,
     true,
@@ -125,11 +121,7 @@ export class Presenter extends AbstractHierarchyViewerPresenter<UiData> {
       },
       this.storage,
     ),
-    PersistentStoreProxy.new<TextFilter>(
-      'VcPropertiesFilter',
-      new TextFilter('', []),
-      this.storage,
-    ),
+    new TextFilter(),
     Presenter.DENYLIST_PROPERTY_NAMES,
   );
   protected override readonly multiTraceType = TraceType.VIEW_CAPTURE;

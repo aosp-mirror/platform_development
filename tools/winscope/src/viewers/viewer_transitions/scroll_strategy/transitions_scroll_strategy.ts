@@ -14,8 +14,6 @@
  * limitations under the License.
  */
 
-import {assertDefined} from 'common/assert_utils';
-import {LogFieldType} from 'viewers/common/ui_data_log';
 import {VariableHeightScrollStrategy} from 'viewers/common/variable_height_scroll_strategy';
 import {TransitionsEntry} from 'viewers/viewer_transitions/ui_data';
 
@@ -26,9 +24,7 @@ export class TransitionsScrollStrategy extends VariableHeightScrollStrategy {
 
   protected override predictScrollItemHeight(entry: TransitionsEntry): number {
     const participantsHeight = this.subItemHeight(
-      assertDefined(
-        entry.fields.find((f) => f.type === LogFieldType.PARTICIPANTS),
-      ).value as string,
+      entry.fields[6].value as string,
       this.participantsCharsPerRow,
     );
     const timestampHeight = this.subItemHeight(

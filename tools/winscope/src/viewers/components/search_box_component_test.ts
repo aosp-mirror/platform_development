@@ -48,7 +48,7 @@ describe('SearchBoxComponent', () => {
     fixture = TestBed.createComponent(SearchBoxComponent);
     component = fixture.componentInstance;
     htmlElement = fixture.nativeElement;
-    component.textFilter = new TextFilter('', []);
+    component.textFilter = new TextFilter();
     fixture.detectChanges();
   });
 
@@ -70,7 +70,7 @@ describe('SearchBoxComponent', () => {
     expect(component.textFilter?.filterString).toEqual('');
     changeFilterString('Test');
     expect(component.textFilter?.filterString).toEqual('Test');
-    expect(spy).toHaveBeenCalledWith(new TextFilter('Test', []));
+    expect(spy).toHaveBeenCalledWith(new TextFilter('Test'));
   });
 
   it('handles change in flags', () => {
@@ -87,7 +87,7 @@ describe('SearchBoxComponent', () => {
 
     buttons.item(0).click();
     fixture.detectChanges();
-    expect(spy).toHaveBeenCalledWith(new TextFilter('', []));
+    expect(spy).toHaveBeenCalledWith(new TextFilter());
 
     buttons.item(2).click();
     fixture.detectChanges();

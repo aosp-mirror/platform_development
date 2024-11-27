@@ -37,22 +37,78 @@ import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
 import {NotifyLogViewCallbackType} from 'viewers/common/abstract_log_viewer_presenter';
 import {AbstractLogViewerPresenterTest} from 'viewers/common/abstract_log_viewer_presenter_test';
 import {VISIBLE_CHIP} from 'viewers/common/chip';
+import {LogSelectFilter} from 'viewers/common/log_filters';
 import {TextFilter} from 'viewers/common/text_filter';
-import {
-  LogFieldType,
-  LogFieldValue,
-  UiDataLog,
-} from 'viewers/common/ui_data_log';
+import {LogField, LogHeader} from 'viewers/common/ui_data_log';
 import {UserOptions} from 'viewers/common/user_options';
 import {ViewerEvents} from 'viewers/common/viewer_events';
 import {Presenter} from './presenter';
 import {UiData} from './ui_data';
 
 class PresenterInputTest extends AbstractLogViewerPresenterTest<UiData> {
+  override readonly expectedHeaders = [
+    {
+      header: new LogHeader({
+        name: 'Type',
+        cssClass: 'input-type inline',
+      }),
+    },
+    {
+      header: new LogHeader({
+        name: 'Source',
+        cssClass: 'input-source',
+      }),
+    },
+    {
+      header: new LogHeader({
+        name: 'Action',
+        cssClass: 'input-action',
+      }),
+    },
+    {
+      header: new LogHeader({
+        name: 'Device',
+        cssClass: 'input-device-id right-align',
+      }),
+    },
+    {
+      header: new LogHeader({
+        name: 'Display',
+        cssClass: 'input-display-id right-align',
+      }),
+    },
+    {
+      header: new LogHeader({
+        name: 'Details',
+        cssClass: 'input-details',
+      }),
+    },
+    {
+      header: new LogHeader(
+        {
+          name: 'Target Windows',
+          cssClass: 'input-windows',
+        },
+        new LogSelectFilter(
+          Array.from({length: 6}, () => ''),
+          true,
+          '100',
+          '100%',
+        ),
+      ),
+      options: [
+        this.wrappedName('win-212'),
+        this.wrappedName('win-64'),
+        this.wrappedName('win-82'),
+        this.wrappedName('win-75'),
+        this.wrappedName('win-zero-not-98'),
+        this.wrappedName('98'),
+      ],
+    },
+  ];
   private trace: Trace<PropertyTreeNode> | undefined;
   private surfaceFlingerTrace: Trace<HierarchyTreeNode> | undefined;
   private positionUpdate: TracePositionUpdate | undefined;
-  private secondPositionUpdate: TracePositionUpdate | undefined;
   private layerIdToName: Array<{id: number; name: string}> = [
     {id: 0, name: 'win-zero-not-98'},
     {id: 212, name: 'win-212'},
@@ -61,90 +117,6 @@ class PresenterInputTest extends AbstractLogViewerPresenterTest<UiData> {
     {id: 75, name: 'win-75'},
     // The layer name for window with id 98 is omitted to test incomplete mapping.
   ];
-
-  override readonly shouldExecuteHeaderTests = true;
-  override readonly shouldExecuteFilterTests = true;
-  override readonly shouldExecutePropertiesTests = true;
-
-  override readonly totalOutputEntries = 8;
-  override readonly expectedIndexOfFirstPositionUpdate = 0;
-  override readonly expectedIndexOfSecondPositionUpdate = 2;
-  override readonly logEntryClickIndex = 3;
-  override readonly expectedInitialFilterOptions = new Map<
-    LogFieldType,
-    string[] | number
-  >([
-    [
-      LogFieldType.INPUT_DISPATCH_WINDOWS,
-      [
-        wrappedName('win-212'),
-        wrappedName('win-64'),
-        wrappedName('win-82'),
-        wrappedName('win-75'),
-        wrappedName('win-zero-not-98'),
-        wrappedName('98'),
-      ],
-    ],
-  ]);
-  override readonly filterValuesToSet = new Map<
-    LogFieldType,
-    Array<string | string[]>
-  >([
-    [
-      LogFieldType.INPUT_DISPATCH_WINDOWS,
-      [
-        // Case 1: No filter.
-        [],
-        // Case 2: The second entry is dispatched only to window '98'. Also ensure
-        // that this does not match events dispatched to window 'win-zero-not-98'.
-        [wrappedName('98')],
-        // Case 3: Events dispatched to 64 are also dispatched to other windows.
-        [wrappedName('win-64')],
-        // Case 4: Multiple filters that match all events.
-        [wrappedName('win-zero-not-98'), wrappedName('98')],
-      ],
-    ],
-  ]);
-  override readonly expectedFieldValuesAfterFilter = new Map<
-    LogFieldType,
-    Array<LogFieldValue[] | number>
-  >([
-    [
-      LogFieldType.INPUT_DISPATCH_WINDOWS,
-      [
-        // Case 1
-        this.totalOutputEntries,
-        // Case 2
-        [wrappedName('98')],
-        // Case 3
-        [
-          [
-            wrappedName('win-212'),
-            wrappedName('win-64'),
-            wrappedName('win-82'),
-            wrappedName('win-75'),
-            wrappedName('win-zero-not-98'),
-          ].join(', '),
-        ],
-        // Case 4
-        this.totalOutputEntries,
-      ],
-    ],
-  ]);
-
-  override readonly filterNameForCurrentIndexTest =
-    LogFieldType.INPUT_DISPATCH_WINDOWS;
-  override readonly filterChangeForCurrentIndexTest = [wrappedName('98')];
-  override readonly secondFilterChangeForCurrentIndexTest = [
-    wrappedName('98'),
-    wrappedName('515'),
-  ];
-  override readonly expectedCurrentIndexAfterFilterChange = 0;
-  override readonly expectedCurrentIndexAfterSecondFilterChange = 0;
-  override readonly numberOfUnfilteredProperties = 15;
-  override readonly propertiesFilter = new TextFilter('axis', []);
-  override readonly numberOfFilteredProperties = 1;
-  override positionUpdateEarliestEntry: TracePositionUpdate | undefined;
 
   override async setUpTestEnvironment(): Promise<void> {
     const parser = (await UnitTestUtils.getTracesParser([
@@ -168,10 +140,6 @@ class PresenterInputTest extends AbstractLogViewerPresenterTest<UiData> {
     this.positionUpdate = TracePositionUpdate.fromTraceEntry(
       this.trace.getEntry(0),
     );
-    this.secondPositionUpdate = TracePositionUpdate.fromTraceEntry(
-      this.trace.getEntry(2),
-    );
-    this.positionUpdateEarliestEntry = this.positionUpdate;
   }
 
   override async createPresenterWithEmptyTrace(
@@ -218,49 +186,36 @@ class PresenterInputTest extends AbstractLogViewerPresenterTest<UiData> {
     return assertDefined(this.positionUpdate);
   }
 
-  override getSecondPositionUpdate(): TracePositionUpdate {
-    return assertDefined(this.secondPositionUpdate);
-  }
-
-  override executePropertiesChecksForEmptyTrace(uiDataLog: UiDataLog) {
-    const uiData = uiDataLog as UiData;
+  override executePropertiesChecksForEmptyTrace(uiData: UiData) {
     expect(uiData.highlightedProperty).toBeFalsy();
     expect(uiData.dispatchPropertiesTree).toBeUndefined();
     expect(uiData.dispatchPropertiesFilter).toBeDefined();
   }
 
-  override executePropertiesChecksAfterPositionUpdate(
-    uiDataLog: UiDataLog,
-  ): void {
-    expect(uiDataLog.entries.length).toEqual(8);
-    expect(uiDataLog.currentIndex).toEqual(0);
-    expect(uiDataLog.selectedIndex).toBeUndefined();
-    const curEntry = uiDataLog.entries[0];
-    const expectedFields = [
+  override executePropertiesChecksAfterPositionUpdate(uiData: UiData): void {
+    expect(uiData.entries.length).toEqual(8);
+    expect(uiData.currentIndex).toEqual(0);
+    expect(uiData.selectedIndex).toBeUndefined();
+    const curEntry = uiData.entries[0];
+    const expectedFields: LogField[] = [
       {
-        type: LogFieldType.INPUT_TYPE,
+        spec: uiData.headers[0].spec,
         value: 'MOTION',
+        propagateEntryTimestamp: true,
       },
+      {spec: uiData.headers[1].spec, value: 'TOUCHSCREEN'},
+      {spec: uiData.headers[2].spec, value: 'DOWN'},
+      {spec: uiData.headers[3].spec, value: 4},
+      {spec: uiData.headers[4].spec, value: 0},
+      {spec: uiData.headers[5].spec, value: '[212, 64, 82, 75]'},
       {
-        type: LogFieldType.INPUT_SOURCE,
-        value: 'TOUCHSCREEN',
-      },
-      {
-        type: LogFieldType.INPUT_ACTION,
-        value: 'DOWN',
-      },
-      {
-        type: LogFieldType.INPUT_EVENT_DETAILS,
-        value: '[0: (431, 624)]',
-      },
-      {
-        type: LogFieldType.INPUT_DISPATCH_WINDOWS,
+        spec: uiData.headers[6].spec,
         value: [
-          wrappedName('win-212'),
-          wrappedName('win-64'),
-          wrappedName('win-82'),
-          wrappedName('win-75'),
-          wrappedName('win-zero-not-98'),
+          this.wrappedName('win-212'),
+          this.wrappedName('win-64'),
+          this.wrappedName('win-82'),
+          this.wrappedName('win-75'),
+          this.wrappedName('win-zero-not-98'),
         ].join(', '),
       },
     ];
@@ -268,7 +223,7 @@ class PresenterInputTest extends AbstractLogViewerPresenterTest<UiData> {
       expect(curEntry.fields).toContain(field);
     });
 
-    const motionEvent = assertDefined(uiDataLog.propertiesTree);
+    const motionEvent = assertDefined(uiData.propertiesTree);
     expect(motionEvent.getChildByName('eventId')?.getValue()).toEqual(
       330184796,
     );
@@ -276,7 +231,6 @@ class PresenterInputTest extends AbstractLogViewerPresenterTest<UiData> {
       'ACTION_DOWN',
     );
 
-    const uiData = uiDataLog as UiData;
     const dispatchProperties = assertDefined(uiData.dispatchPropertiesTree);
     expect(dispatchProperties.getAllChildren().length).toEqual(5);
 
@@ -453,7 +407,7 @@ class PresenterInputTest extends AbstractLogViewerPresenterTest<UiData> {
         expect(spy).toHaveBeenCalled();
 
         spy = spyOn(presenter, 'onDispatchPropertiesFilterChange');
-        const filter = new TextFilter('', []);
+        const filter = new TextFilter();
         element.dispatchEvent(
           new CustomEvent(ViewerEvents.DispatchPropertiesFilterChange, {
             detail: filter,
@@ -672,13 +626,11 @@ class PresenterInputTest extends AbstractLogViewerPresenterTest<UiData> {
           (uiDataLog) => (uiData = uiDataLog as UiData),
         );
         await presenter.onAppEvent(this.getPositionUpdate());
-        await presenter.onLogEntryClick(this.logEntryClickIndex);
+        await presenter.onLogEntryClick(3);
         expect(
           assertDefined(uiData.dispatchPropertiesTree).getAllChildren().length,
         ).toEqual(5);
-        await presenter.onDispatchPropertiesFilterChange(
-          new TextFilter('212', []),
-        );
+        await presenter.onDispatchPropertiesFilterChange(new TextFilter('212'));
         expect(
           assertDefined(uiData.dispatchPropertiesTree).getAllChildren().length,
         ).toEqual(1);
@@ -812,10 +764,10 @@ class PresenterInputTest extends AbstractLogViewerPresenterTest<UiData> {
       }
     });
   }
-}
 
-function wrappedName(name: string): string {
-  return `\u{200C}${name}\u{200C}`;
+  private wrappedName(name: string): string {
+    return `\u{200C}${name}\u{200C}`;
+  }
 }
 
 describe('PresenterInput', async () => {

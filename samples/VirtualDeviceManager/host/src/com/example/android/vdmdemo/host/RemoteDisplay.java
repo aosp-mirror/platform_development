@@ -61,6 +61,7 @@ import android.view.Surface;
 import androidx.annotation.IntDef;
 
 import com.example.android.vdmdemo.common.RemoteEventProto;
+import com.example.android.vdmdemo.common.RemoteEventProto.BrightnessEvent;
 import com.example.android.vdmdemo.common.RemoteEventProto.DeviceState;
 import com.example.android.vdmdemo.common.RemoteEventProto.DisplayCapabilities;
 import com.example.android.vdmdemo.common.RemoteEventProto.DisplayRotation;
@@ -76,6 +77,7 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.util.Collections;
 import java.util.Set;
+import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
 
@@ -90,6 +92,8 @@ class RemoteDisplay implements AutoCloseable {
             DisplayManager.VIRTUAL_DISPLAY_FLAG_TRUSTED
                     | DisplayManager.VIRTUAL_DISPLAY_FLAG_PUBLIC
                     | DisplayManager.VIRTUAL_DISPLAY_FLAG_OWN_CONTENT_ONLY;
+
+    private static final float DEFAULT_CLIENT_BRIGHTNESS = 0.3f;
 
     static final int DISPLAY_TYPE_APP = 0;
     static final int DISPLAY_TYPE_HOME = 1;
@@ -188,6 +192,17 @@ class RemoteDisplay implements AutoCloseable {
                                 "VirtualDisplay" + mRemoteDisplayId, mWidth, mHeight, mDpi)
                         .setDisplayCategories(displayCategories)
                         .setFlags(flags);
+
+        if (mPreferenceController.getBoolean(R.string.pref_enable_client_brightness)) {
+            virtualDisplayBuilder
+                    .setDefaultBrightness(DEFAULT_CLIENT_BRIGHTNESS)
+                    .setBrightnessListener(
+                            Executors.newSingleThreadExecutor(), this::onBrightnessChanged);
+        } else {
+            mRemoteIo.sendMessage(RemoteEvent.newBuilder()
+                    .setBrightnessEvent(BrightnessEvent.newBuilder().setBrightness(-1f))
+                    .build());
+        }
 
         if (mDisplayType == DISPLAY_TYPE_HOME) {
             virtualDisplayBuilder = VdmCompat.setHomeSupported(virtualDisplayBuilder, flags);
@@ -310,6 +325,13 @@ class RemoteDisplay implements AutoCloseable {
                                             .setRotationDegrees(rotationDegrees))
                             .build());
         }
+    }
+
+    private void onBrightnessChanged(float brightness) {
+        Log.v(TAG, "VirtualDisplay brightness changed to " + brightness);
+        mRemoteIo.sendMessage(RemoteEvent.newBuilder()
+                .setBrightnessEvent(BrightnessEvent.newBuilder().setBrightness(brightness))
+                .build());
     }
 
     void processRemoteEvent(RemoteEvent event) {

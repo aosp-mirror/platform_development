@@ -47,10 +47,10 @@ class PresenterWindowManagerTest extends AbstractHierarchyViewerPresenterTest<Ui
   override readonly shouldExecuteDumpTests = true;
   override readonly shouldExecuteSimplifyNamesTest = true;
 
-  override readonly numberOfDefaultProperties = 29;
+  override readonly numberOfDefaultProperties = 30;
   override readonly numberOfNonDefaultProperties = 21;
   override readonly expectedFirstRect = new Rect(0, 0, 1080, 2400);
-  override readonly propertiesFilter = new TextFilter('requested', []);
+  override readonly propertiesFilter = new TextFilter('requested');
   override readonly expectedTotalRects = 12;
   override readonly expectedVisibleRects = 7;
   override readonly treeNodeLongName =
@@ -58,7 +58,7 @@ class PresenterWindowManagerTest extends AbstractHierarchyViewerPresenterTest<Ui
   override readonly treeNodeShortName =
     'com.google.(...).NexusLauncherActivity';
   override readonly numberOfFilteredProperties = 2;
-  override readonly hierarchyFilter = new TextFilter('ScreenDecor', []);
+  override readonly hierarchyFilter = new TextFilter('ScreenDecor');
   override readonly expectedHierarchyChildrenAfterStringFilter = 2;
   override readonly propertyWithDiff = 'animator';
   override readonly expectedPropertyDiffType = DiffType.ADDED;
@@ -85,12 +85,20 @@ class PresenterWindowManagerTest extends AbstractHierarchyViewerPresenterTest<Ui
     const firstEntryDataTree = await firstEntry.getValue();
     this.selectedTree = UiHierarchyTreeNode.from(
       assertDefined(
-        firstEntryDataTree.findDfs(UiTreeUtils.makeNodeFilter('93d3f3c')),
+        firstEntryDataTree.findDfs(
+          UiTreeUtils.makeNodeFilter(
+            new TextFilter('93d3f3c').getFilterPredicate(),
+          ),
+        ),
       ),
     );
     this.selectedTreeAfterPositionUpdate = UiHierarchyTreeNode.from(
       assertDefined(
-        firstEntryDataTree.findDfs(UiTreeUtils.makeNodeFilter('f7092ed')),
+        firstEntryDataTree.findDfs(
+          UiTreeUtils.makeNodeFilter(
+            new TextFilter('f7092ed').getFilterPredicate(),
+          ),
+        ),
       ),
     );
   }
@@ -98,10 +106,7 @@ class PresenterWindowManagerTest extends AbstractHierarchyViewerPresenterTest<Ui
   override createPresenterWithEmptyTrace(
     callback: NotifyHierarchyViewCallbackType<UiData>,
   ): Presenter {
-    const trace = new TraceBuilder<HierarchyTreeNode>()
-      .setType(TraceType.WINDOW_MANAGER)
-      .setEntries([])
-      .build();
+    const trace = UnitTestUtils.makeEmptyTrace(TraceType.WINDOW_MANAGER);
     const traces = new Traces();
     traces.addTrace(trace);
     return new Presenter(trace, traces, new InMemoryStorage(), callback);

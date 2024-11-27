@@ -27,6 +27,7 @@ import {TextFilter} from 'viewers/common/text_filter';
       [class]="'search-box ' + formFieldClass"
       [appearance]="appearance"
       [style.height]="height"
+      (keydown.esc)="$event.target.blur()"
       (keydown.enter)="$event.target.blur()">
       <mat-label>{{ label }}</mat-label>
       <input
@@ -76,7 +77,7 @@ import {TextFilter} from 'viewers/common/text_filter';
 export class SearchBoxComponent {
   FilterFlag = FilterFlag;
 
-  @Input() textFilter: TextFilter | undefined = new TextFilter('', []);
+  @Input() textFilter: TextFilter | undefined = new TextFilter();
   @Input() label = 'Search';
   @Input() filterName = 'filter';
   @Input() appearance = '';

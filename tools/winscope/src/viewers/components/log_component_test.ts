@@ -35,6 +35,14 @@ import {TraceBuilder} from 'test/unit/trace_builder';
 import {TraceEntry} from 'trace/trace';
 import {TraceType} from 'trace/trace_type';
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
+import {LogSelectFilter, LogTextFilter} from 'viewers/common/log_filters';
+import {TextFilter} from 'viewers/common/text_filter';
+import {
+  ColumnSpec,
+  LogEntry,
+  LogField,
+  LogHeader,
+} from 'viewers/common/ui_data_log';
 import {
   LogFilterChangeDetail,
   LogTextFilterChangeDetail,
@@ -47,10 +55,12 @@ import {PropertiesComponent} from 'viewers/components/properties_component';
 import {SearchBoxComponent} from 'viewers/components/search_box_component';
 import {SelectWithFilterComponent} from 'viewers/components/select_with_filter_component';
 import {LogComponent} from './log_component';
-import {TextFilter} from './text_filter';
-import {LogEntry, LogFieldType, LogFilter} from './ui_data_log';
 
 describe('LogComponent', () => {
+  const testColumn1: ColumnSpec = {name: 'test1', cssClass: 'test-1'};
+  const testColumn2: ColumnSpec = {name: 'test2', cssClass: 'test-2'};
+  const testColumn3: ColumnSpec = {name: 'test3', cssClass: 'test-3'};
+
   let fixture: ComponentFixture<LogComponent>;
   let component: LogComponent;
   let htmlElement: HTMLElement;
@@ -91,8 +101,24 @@ describe('LogComponent', () => {
   });
 
   it('renders filters', () => {
-    const filters = htmlElement.querySelectorAll('.entries .filter');
-    expect(filters.length).toEqual(2);
+    const filtersInTable = htmlElement.querySelectorAll('.entries .filter');
+    expect(filtersInTable.length).toEqual(2);
+    const filtersInTitle = htmlElement.querySelectorAll(
+      '.title-section .filter',
+    );
+    expect(filtersInTitle.length).toEqual(0);
+  });
+
+  it('renders filters in title', () => {
+    component.title = 'Test';
+    component.showFiltersInTitle = true;
+    fixture.detectChanges();
+    const filtersInTable = htmlElement.querySelectorAll('.entries .filter');
+    expect(filtersInTable.length).toEqual(0);
+    const filtersInTitle = htmlElement.querySelectorAll(
+      '.title-section .filter',
+    );
+    expect(filtersInTitle.length).toEqual(2);
   });
 
   it('renders entries', () => {
@@ -130,7 +156,7 @@ describe('LogComponent', () => {
       }
       component.entries = allEntries.filter((entry) => {
         const entryValue = assertDefined(
-          entry.fields.find((f) => f.type === detail.type),
+          entry.fields.find((f) => f.spec === detail.header.spec),
         ).value.toString();
         if (Array.isArray(detail.value)) {
           return detail.value.includes(entryValue);
@@ -140,9 +166,7 @@ describe('LogComponent', () => {
     });
     expect(htmlElement.querySelectorAll('.entry').length).toEqual(2);
     const filterTrigger = assertDefined(
-      htmlElement.querySelector<HTMLElement>(
-        '.headers .tag .mat-select-trigger',
-      ),
+      htmlElement.querySelector<HTMLElement>('.headers .mat-select-trigger'),
     );
     filterTrigger.click();
     await fixture.whenStable();
@@ -169,7 +193,7 @@ describe('LogComponent', () => {
       }
       component.entries = allEntries.filter((entry) => {
         const entryValue = assertDefined(
-          entry.fields.find((f) => f.type === detail.type),
+          entry.fields.find((f) => f.spec === detail.header.spec),
         ).value.toString();
         return entryValue.includes(detail.filter.filterString);
       });
@@ -177,7 +201,7 @@ describe('LogComponent', () => {
     expect(htmlElement.querySelectorAll('.entry').length).toEqual(2);
 
     const inputEl = assertDefined(
-      htmlElement.querySelector<HTMLInputElement>(`.headers .vsyncid input`),
+      htmlElement.querySelector<HTMLInputElement>('.headers input'),
     );
 
     inputEl.value = '123';
@@ -225,17 +249,19 @@ describe('LogComponent', () => {
   });
 
   it('propagates entry on trace entry timestamp click', () => {
-    let entry: TraceEntry<PropertyTreeNode> | undefined;
-    htmlElement.addEventListener(ViewerEvents.TimestampClick, (event) => {
-      const detail: TimestampClickDetail = (event as CustomEvent).detail;
-      entry = detail.entry;
-    });
     const logTimestampButton = assertDefined(
       htmlElement.querySelectorAll<HTMLElement>('.time-button').item(1),
     );
-    logTimestampButton.click();
+    checkEntryPropagatedOnTimestampClick(logTimestampButton);
+  });
 
-    expect(entry).toBeDefined();
+  it('propagates entry on timestamp click with propagateEntryTimestamp set', () => {
+    const logTimestampButton = assertDefined(
+      htmlElement
+        .querySelectorAll<HTMLElement>(`.${testColumn3.cssClass} button`)
+        .item(1),
+    );
+    checkEntryPropagatedOnTimestampClick(logTimestampButton);
   });
 
   it('propagates timestamp on raw timestamp click', () => {
@@ -245,7 +271,7 @@ describe('LogComponent', () => {
       timestamp = detail.timestamp;
     });
     const logTimestampButton = assertDefined(
-      htmlElement.querySelector<HTMLElement>('.send-time button'),
+      htmlElement.querySelector<HTMLElement>(`.${testColumn3.cssClass} button`),
     );
     logTimestampButton.click();
 
@@ -313,15 +339,15 @@ describe('LogComponent', () => {
       fieldTime = TimestampConverterUtils.makeRealTimestamp(2n);
     }
 
-    const fields1 = [
-      {type: LogFieldType.TAG, value: 'Test tag 1'},
-      {type: LogFieldType.VSYNC_ID, value: 123},
-      {type: LogFieldType.SEND_TIME, value: fieldTime},
+    const fields1: LogField[] = [
+      {spec: testColumn1, value: 'Test tag 1'},
+      {spec: testColumn2, value: 123},
+      {spec: testColumn3, value: fieldTime},
     ];
     const fields2 = [
-      {type: LogFieldType.TAG, value: 'Test tag 2'},
-      {type: LogFieldType.VSYNC_ID, value: 1234},
-      {type: LogFieldType.SEND_TIME, value: fieldTime},
+      {spec: testColumn1, value: 'Test tag 2'},
+      {spec: testColumn2, value: 1234},
+      {spec: testColumn3, value: fieldTime, propagateEntryTimestamp: true},
     ];
 
     const trace = new TraceBuilder<PropertyTreeNode>()
@@ -339,14 +365,27 @@ describe('LogComponent', () => {
 
     const entries = [entry1, entry2];
 
-    const filters = [
-      new LogFilter(LogFieldType.TAG, ['Test tag 1', 'Test tag 2']),
-      new LogFilter(LogFieldType.VSYNC_ID, undefined, new TextFilter('', [])),
+    const headers = [
+      new LogHeader(
+        testColumn1,
+        new LogSelectFilter(['Test tag 1', 'Test tag 2']),
+      ),
+      new LogHeader(testColumn2, new LogTextFilter(new TextFilter())),
     ];
 
     component.entries = entries;
-    component.headers = filters;
+    component.headers = headers;
     component.selectedIndex = 0;
     component.traceType = TraceType.CUJS;
+  }
+
+  function checkEntryPropagatedOnTimestampClick(button: HTMLElement) {
+    let entry: TraceEntry<object> | undefined;
+    htmlElement.addEventListener(ViewerEvents.TimestampClick, (event) => {
+      const detail: TimestampClickDetail = (event as CustomEvent).detail;
+      entry = detail.entry;
+    });
+    button.click();
+    expect(entry).toBeDefined();
   }
 });
