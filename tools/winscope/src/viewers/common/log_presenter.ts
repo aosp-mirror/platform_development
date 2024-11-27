@@ -113,7 +113,7 @@ export class LogPresenter<Entry extends LogEntry> {
 
   applyTextFilterChange(header: LogHeader, value: TextFilter) {
     const filter = assertDefined(header.filter);
-    const filterString = value.values.filterString;
+    const filterString = value.filterString;
     filter.updateFilterValue([filterString]);
     if (filterString.length > 0) {
       this.filterPredicates.set(header.spec, filter.getFilterPredicate());

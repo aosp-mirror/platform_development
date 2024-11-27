@@ -19,7 +19,7 @@ import {TimestampConverterUtils} from 'test/unit/timestamp_converter_utils';
 import {TraceBuilder} from 'test/unit/trace_builder';
 import {TraceType} from 'trace/trace_type';
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
-import {TextFilter, TextFilterValues} from 'viewers/common/text_filter';
+import {TextFilter} from 'viewers/common/text_filter';
 import {LogSelectFilter, LogTextFilter} from './log_filters';
 import {LogPresenter} from './log_presenter';
 import {LogEntry, LogHeader} from './ui_data_log';
@@ -77,9 +77,7 @@ describe('LogPresenter', () => {
       presenter.setAllEntries(testEntries);
       expectAllIndicesUndefined();
 
-      stringFilter = new LogTextFilter(
-        new TextFilter(new TextFilterValues('stringValue', [])),
-      );
+      stringFilter = new LogTextFilter(new TextFilter('stringValue'));
       numberFilter = new LogSelectFilter(['0', '1', '2', '3']);
       headers = [
         new LogHeader(STRING_COLUMN, stringFilter),

@@ -34,7 +34,7 @@ import {
   PropertySource,
   PropertyTreeNode,
 } from 'trace/tree_node/property_tree_node';
-import {TextFilter, TextFilterValues} from 'viewers/common/text_filter';
+import {TextFilter} from 'viewers/common/text_filter';
 import {LogSelectFilter, LogTextFilter} from './log_filters';
 import {LogHeader, UiDataLog} from './ui_data_log';
 import {UserOptions} from './user_options';
@@ -509,9 +509,7 @@ describe('AbstractLogViewerPresenter', () => {
     expect(
       assertDefined(uiData.propertiesTree).getAllChildren().length,
     ).toEqual(3);
-    await presenter.onPropertiesFilterChange(
-      new TextFilter(new TextFilterValues('pass', [])),
-    );
+    await presenter.onPropertiesFilterChange(new TextFilter('pass'));
     expect(
       assertDefined(uiData.propertiesTree).getAllChildren().length,
     ).toEqual(2);
