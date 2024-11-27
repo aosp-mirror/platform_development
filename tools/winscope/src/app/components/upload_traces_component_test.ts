@@ -188,7 +188,7 @@ describe('UploadTracesComponent', () => {
       htmlElement.querySelector<HTMLButtonElement>('.load-btn'),
     );
 
-    expect(htmlElement.querySelector('.trace-error-icon')).toBeTruthy();
+    expect(htmlElement.querySelector('.error-icon')).toBeTruthy();
     expect(viewTracesButton.disabled).toBeTrue();
   });
 
