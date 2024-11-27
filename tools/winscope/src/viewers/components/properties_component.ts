@@ -90,10 +90,6 @@ import {viewerCardInnerStyle} from './styles/viewer_card.styles';
         flex-direction: column;
       }
 
-      .padded-title {
-        padding-bottom: 8px;
-      }
-
       .property-groups {
         overflow-y: auto;
       }

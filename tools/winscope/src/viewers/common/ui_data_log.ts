@@ -45,7 +45,7 @@ export class LogHeader {
 }
 
 export interface LogEntry {
-  traceEntry: TraceEntry<PropertyTreeNode>;
+  traceEntry: TraceEntry<object>;
   fields: LogField[];
   propertiesTree?: undefined | PropertyTreeNode;
 }

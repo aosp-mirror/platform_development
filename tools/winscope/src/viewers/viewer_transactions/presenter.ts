@@ -32,7 +32,10 @@ import {UserOptions} from 'viewers/common/user_options';
 import {SetRootDisplayNames} from './operations/set_root_display_name';
 import {TransactionsEntry, TransactionsEntryType, UiData} from './ui_data';
 
-export class Presenter extends AbstractLogViewerPresenter<UiData> {
+export class Presenter extends AbstractLogViewerPresenter<
+  UiData,
+  PropertyTreeNode
+> {
   private static readonly COLUMNS = {
     id: {name: 'TX ID', cssClass: 'transaction-id right-align'},
     vsyncId: {name: 'VSYNC ID', cssClass: 'vsyncid right-align'},

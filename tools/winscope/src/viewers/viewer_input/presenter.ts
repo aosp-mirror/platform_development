@@ -50,7 +50,10 @@ enum InputEventType {
   MOTION,
 }
 
-export class Presenter extends AbstractLogViewerPresenter<UiData> {
+export class Presenter extends AbstractLogViewerPresenter<
+  UiData,
+  PropertyTreeNode
+> {
   private static readonly COLUMNS = {
     type: {
       name: 'Type',
