@@ -28,7 +28,8 @@ export abstract class AbstractLogViewerPresenterTest<UiData extends UiDataLog> {
   execute() {
     describe('Common tests', () => {
       let uiData: UiData;
-      let presenter: AbstractLogViewerPresenter<UiData>;
+      let presenter: AbstractLogViewerPresenter<UiData, object>;
+
       beforeAll(async () => {
         await this.setUpTestEnvironment();
       });
@@ -38,6 +39,9 @@ export abstract class AbstractLogViewerPresenterTest<UiData extends UiDataLog> {
         presenter = await this.createPresenter((newData) => {
           uiData = newData;
         });
+        if (this.resetTestEnvironment) {
+          this.resetTestEnvironment();
+        }
       });
 
       it('is robust to empty trace', async () => {
@@ -118,12 +122,13 @@ export abstract class AbstractLogViewerPresenterTest<UiData extends UiDataLog> {
   abstract setUpTestEnvironment(): Promise<void>;
   abstract createPresenter(
     callback: NotifyLogViewCallbackType<UiData>,
-  ): Promise<AbstractLogViewerPresenter<UiData>>;
+  ): Promise<AbstractLogViewerPresenter<UiData, object>>;
   abstract createPresenterWithEmptyTrace(
     callback: NotifyLogViewCallbackType<UiData>,
-  ): Promise<AbstractLogViewerPresenter<UiData>>;
+  ): Promise<AbstractLogViewerPresenter<UiData, object>>;
   abstract getPositionUpdate(): TracePositionUpdate;
 
+  resetTestEnvironment?(): void;
   executePropertiesChecksForEmptyTrace?(uiData: UiDataLog): void;
   executePropertiesChecksAfterPositionUpdate?(uiData: UiDataLog): void;
   executeSpecializedTests?(): void;
