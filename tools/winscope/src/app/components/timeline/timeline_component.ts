@@ -639,6 +639,32 @@ export class TimelineComponent
       }
       await this.miniTimeline?.drawer?.draw();
     });
+    await event.visit(WinscopeEventType.NEW_SEARCH_TRACE, async (event) => {
+      this.sortedTraces.unshift(event.trace);
+      this.sortedTraces.sort((a, b) =>
+        TraceTypeUtils.compareByDisplayOrder(a.type, b.type),
+      );
+      this.selectedTracesFormControl.setValue(
+        (this.selectedTracesFormControl.value ?? []).concat([event.trace]),
+      );
+      this.applyNewTraceSelection(event.trace);
+      await this.miniTimeline?.drawer?.draw();
+    });
+    await event.visit(
+      WinscopeEventType.TRACE_SEARCH_REMOVAL_REQUEST,
+      async (event) => {
+        this.sortedTraces = this.sortedTraces.filter(
+          (trace) => trace !== event.trace,
+        );
+        this.selectedTracesFormControl.setValue(
+          this.selectedTracesFormControl.value?.filter(
+            (trace) => trace !== event.trace,
+          ) ?? [],
+        );
+        this.applyNewTraceSelection(event.trace);
+        await this.miniTimeline?.drawer?.draw();
+      },
+    );
   }
 
   async toggleExpand() {

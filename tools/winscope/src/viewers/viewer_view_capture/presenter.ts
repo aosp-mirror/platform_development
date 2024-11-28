@@ -39,7 +39,7 @@ import {DisplayIdentifier} from 'viewers/common/display_identifier';
 import {HierarchyPresenter} from 'viewers/common/hierarchy_presenter';
 import {PropertiesPresenter} from 'viewers/common/properties_presenter';
 import {RectsPresenter} from 'viewers/common/rects_presenter';
-import {TextFilter, TextFilterValues} from 'viewers/common/text_filter';
+import {TextFilter} from 'viewers/common/text_filter';
 import {UiHierarchyTreeNode} from 'viewers/common/ui_hierarchy_tree_node';
 import {UI_RECT_FACTORY} from 'viewers/common/ui_rect_factory';
 import {UserOptions} from 'viewers/common/user_options';
@@ -71,13 +71,7 @@ export class Presenter extends AbstractHierarchyViewerPresenter<UiData> {
       },
       this.storage,
     ),
-    new TextFilter(
-      PersistentStoreProxy.new<TextFilterValues>(
-        'VcHierarchyFilter',
-        new TextFilterValues('', []),
-        this.storage,
-      ),
-    ),
+    new TextFilter(),
     Presenter.DENYLIST_PROPERTY_NAMES,
     false,
     true,
@@ -127,13 +121,7 @@ export class Presenter extends AbstractHierarchyViewerPresenter<UiData> {
       },
       this.storage,
     ),
-    new TextFilter(
-      PersistentStoreProxy.new<TextFilterValues>(
-        'VcPropertiesFilter',
-        new TextFilterValues('', []),
-        this.storage,
-      ),
-    ),
+    new TextFilter(),
     Presenter.DENYLIST_PROPERTY_NAMES,
   );
   protected override readonly multiTraceType = TraceType.VIEW_CAPTURE;

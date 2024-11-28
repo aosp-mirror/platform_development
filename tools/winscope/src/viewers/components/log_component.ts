@@ -122,7 +122,7 @@ import {
               [formFieldClass]="
                 'wide-field no-padding-field center-field '
                  + header.spec.cssClass
-                 + (header.filter.textFilter.values.filterString?.length === 0 ? ' mat-body-2' : '')
+                 + (header.filter.textFilter.filterString?.length === 0 ? ' mat-body-2' : '')
               "
               height="fit-content"
               (filterChange)="onSearchBoxChange($event, header)"></search-box>
