@@ -33,7 +33,9 @@ import {
 import {
   ActiveTraceChanged,
   ExpandedTimelineToggled,
+  NewSearchTrace,
   TracePositionUpdate,
+  TraceSearchFailed,
   ViewersLoaded,
   ViewersUnloaded,
   WinscopeEvent,
@@ -299,6 +301,34 @@ export class Mediator {
         await this.findViewerByType(event.traceType)?.onWinscopeEvent(event);
       },
     );
+
+    await event.visit(WinscopeEventType.TRACE_SEARCH_REQUEST, async (event) => {
+      const searchViewer = this.viewers.find(
+        (viewer) => viewer.getViews()[0].type === ViewType.GLOBAL_SEARCH,
+      );
+      const trace = await this.tracePipeline.tryCreateSearchTrace(event.query);
+      if (!trace) {
+        await searchViewer?.onWinscopeEvent(new TraceSearchFailed());
+        return;
+      }
+      const newSearchTrace = new NewSearchTrace(trace);
+      await searchViewer?.onWinscopeEvent(newSearchTrace);
+      if (trace.lengthEntries > 0 && !trace.isDumpWithoutTimestamp()) {
+        assertDefined(this.timelineData).getTraces().addTrace(trace);
+        await this.timelineComponent?.onWinscopeEvent(newSearchTrace);
+      }
+    });
+
+    await event.visit(
+      WinscopeEventType.TRACE_SEARCH_REMOVAL_REQUEST,
+      async (event) => {
+        this.tracePipeline.getTraces().deleteTrace(event.trace);
+        if (this.timelineData.hasTrace(event.trace)) {
+          this.timelineData.getTraces().deleteTrace(event.trace);
+          await this.timelineComponent?.onWinscopeEvent(event);
+        }
+      },
+    );
   }
 
   private async loadFiles(files: File[], source: FilesSource) {
@@ -465,7 +495,7 @@ export class Mediator {
     await this.propagateTracePosition(initialPosition, true);
 
     this.focusedTabView = this.viewers
-      .find((v) => v.getViews()[0].type !== ViewType.OVERLAY)
+      .find((v) => v.getViews()[0].type === ViewType.TRACE_TAB)
       ?.getViews()[0];
     this.areViewersLoaded = true;
 

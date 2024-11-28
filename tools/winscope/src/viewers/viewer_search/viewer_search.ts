@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023 The Android Open Source Project
+ * Copyright (C) 2024 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 import {Store} from 'common/store';
 import {WinscopeEvent} from 'messaging/winscope_event';
 import {EmitEvent} from 'messaging/winscope_event_emitter';
@@ -20,33 +21,33 @@ import {Trace} from 'trace/trace';
 import {Traces} from 'trace/traces';
 import {TRACE_INFO} from 'trace/trace_info';
 import {TraceType} from 'trace/trace_type';
-import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
+import {QueryResult} from 'trace_processor/query_result';
 import {View, Viewer, ViewType} from 'viewers/viewer';
 import {Presenter} from './presenter';
 import {UiData} from './ui_data';
+import {ViewerSearchComponent} from './viewer_search_component';
 
-export class ViewerTransitions implements Viewer {
-  static readonly DEPENDENCIES: TraceType[] = [TraceType.TRANSITION];
+export class ViewerSearch implements Viewer {
+  static readonly DEPENDENCIES: TraceType[] = [TraceType.SEARCH];
 
-  private readonly trace: Trace<PropertyTreeNode>;
   private readonly htmlElement: HTMLElement;
   private readonly presenter: Presenter;
+  private readonly traces: Traces;
   private readonly view: View;
 
-  constructor(trace: Trace<PropertyTreeNode>, traces: Traces, storage: Store) {
-    this.trace = trace;
-    this.htmlElement = document.createElement('viewer-transitions');
+  constructor(traces: Traces, storage: Store) {
+    this.htmlElement = document.createElement('viewer-search');
     const notifyViewCallback = (data: UiData) => {
-      (this.htmlElement as any).inputData = data;
+      (this.htmlElement as unknown as ViewerSearchComponent).inputData = data;
     };
-    this.presenter = new Presenter(trace, traces, storage, notifyViewCallback);
+    this.presenter = new Presenter(traces, storage, notifyViewCallback);
     this.presenter.addEventListeners(this.htmlElement);
-
+    this.traces = traces;
     this.view = new View(
-      ViewType.TRACE_TAB,
+      ViewType.GLOBAL_SEARCH,
       this.getTraces(),
       this.htmlElement,
-      TRACE_INFO[TraceType.TRANSITION].name,
+      TRACE_INFO[TraceType.SEARCH].name,
     );
   }
 
@@ -62,7 +63,7 @@ export class ViewerTransitions implements Viewer {
     return [this.view];
   }
 
-  getTraces(): Array<Trace<PropertyTreeNode>> {
-    return [this.trace];
+  getTraces(): Array<Trace<QueryResult>> {
+    return this.traces.getTraces(TraceType.SEARCH);
   }
 }

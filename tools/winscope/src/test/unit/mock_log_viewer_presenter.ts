@@ -30,7 +30,10 @@ import {LogEntry, LogHeader, UiDataLog} from 'viewers/common/ui_data_log';
 import {UiPropertyTreeNode} from 'viewers/common/ui_property_tree_node';
 import {UserOptions} from 'viewers/common/user_options';
 
-export class MockPresenter extends AbstractLogViewerPresenter<UiDataLog> {
+export class MockPresenter extends AbstractLogViewerPresenter<
+  UiDataLog,
+  PropertyTreeNode
+> {
   protected override logPresenter = new LogPresenter<LogEntry>();
   protected override propertiesPresenter = new PropertiesPresenter(
     {

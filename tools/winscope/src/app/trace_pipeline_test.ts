@@ -458,6 +458,16 @@ describe('TracePipeline', () => {
     ).toBeUndefined();
   });
 
+  it('tries to create search trace', async () => {
+    const perfettoFile = await UnitTestUtils.getFixtureFile(
+      'traces/perfetto/layers_trace.perfetto-trace',
+    );
+    await loadFiles([perfettoFile]);
+    const validQuery = 'select ts from surfaceflinger_layers_snapshot';
+    expect(await tracePipeline.tryCreateSearchTrace(validQuery)).toBeDefined();
+    expect(await tracePipeline.tryCreateSearchTrace('fail')).toBeUndefined();
+  });
+
   async function loadFiles(
     files: File[],
     source: FilesSource = FilesSource.TEST,
