@@ -472,6 +472,9 @@ adb shell am force-stop com.example.android.vdmdemo.host
 -   **Stylus**: A simple drawing activity that reacts on stylus input events.
     Use together with the simulated stylus input feature of the host app.
 
+-   **Recorder**: A simple activity that can start multiple audio recorders.
+    This helps test audio recording permissions and concurrent recordings.
+
 The demo activity depends on whether the **Display Category** Host preference is
 enabled or not. If enabled, it becomes equivalent to the **Home** demo activity,
 which showcases implicit intent handling.
