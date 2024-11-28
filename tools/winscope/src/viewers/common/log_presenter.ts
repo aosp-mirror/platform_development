@@ -17,7 +17,6 @@
 import {ArrayUtils} from 'common/array_utils';
 import {assertDefined} from 'common/assert_utils';
 import {TraceEntry} from 'trace/trace';
-import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
 import {StringFilterPredicate} from 'viewers/common/string_filter_predicate';
 import {TextFilter} from 'viewers/common/text_filter';
 import {ColumnSpec, LogEntry, LogHeader} from './ui_data_log';
@@ -27,7 +26,7 @@ export class LogPresenter<Entry extends LogEntry> {
   private filteredEntries: Entry[] = [];
   private headers: LogHeader[] = [];
   private filterPredicates = new Map<ColumnSpec, StringFilterPredicate>();
-  private currentEntry: TraceEntry<PropertyTreeNode> | undefined;
+  private currentEntry: TraceEntry<object> | undefined;
   private selectedIndex: number | undefined;
   private scrollToIndex: number | undefined;
   private currentIndex: number | undefined;
@@ -106,7 +105,7 @@ export class LogPresenter<Entry extends LogEntry> {
     }
   }
 
-  applyTracePositionUpdate(entry: TraceEntry<PropertyTreeNode> | undefined) {
+  applyTracePositionUpdate(entry: TraceEntry<object> | undefined) {
     this.currentEntry = entry;
     this.resetIndices();
   }

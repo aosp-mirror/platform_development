@@ -160,8 +160,7 @@ describe('Cross-Tool Protocol', () => {
         const handles = await browser.getAllWindowHandles();
         if (handles.length < 2) return false;
         await browser.switchTo().window(await getWindowHandleWinscope());
-        const opened = element(by.css('upload-traces'));
-        return await opened.isPresent();
+        return await element(by.css('upload-traces')).isPresent();
       },
       20000,
       'The Winscope tab did not open',

@@ -140,3 +140,28 @@ log-view .headers .mat-form-field-infix {
 .error-icon {
     color: var(--error-color);
 }
+
+.save-field {
+    display: flex;
+    align-items: center;
+    font-size: 14px;
+    width: 100%;
+}
+
+.save-field mat-form-field {
+    width: 100%;
+}
+
+.save-field button {
+    height: fit-content;
+    min-width: fit-content;
+    margin-inline-start: 10px;
+}
+
+.search-tabs .mat-tab-label {
+    min-width: 80px;
+}
+
+.search-tabs mat-tab-body {
+    padding: 12px;
+}
