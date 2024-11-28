@@ -82,10 +82,10 @@ describe('TraceViewComponent', () => {
     htmlElement = fixture.nativeElement;
     component = fixture.componentInstance;
     component.viewers = [
-      new ViewerStub('Title0', 'Content0', traceSf, ViewType.TAB),
-      new ViewerStub('Title1', 'Content1', traceWm, ViewType.TAB),
+      new ViewerStub('Title0', 'Content0', traceSf, ViewType.TRACE_TAB),
+      new ViewerStub('Title1', 'Content1', traceWm, ViewType.TRACE_TAB),
       new ViewerStub('Title2', 'Content2', traceSr, ViewType.OVERLAY),
-      new ViewerStub('Title3', 'Content3', traceProtolog, ViewType.TAB),
+      new ViewerStub('Title3', 'Content3', traceProtolog, ViewType.TRACE_TAB),
     ];
     fixture.detectChanges();
   });
@@ -111,7 +111,7 @@ describe('TraceViewComponent', () => {
   it('throws error if more than one overlay present', () => {
     expect(() => {
       component.viewers = [
-        new ViewerStub('Title0', 'Content0', traceSf, ViewType.TAB),
+        new ViewerStub('Title0', 'Content0', traceSf, ViewType.TRACE_TAB),
         new ViewerStub('Title1', 'Content1', traceWm, ViewType.OVERLAY),
         new ViewerStub('Title2', 'Content2', traceSr, ViewType.OVERLAY),
       ];
@@ -361,6 +361,17 @@ describe('TraceViewComponent', () => {
         TraceType.SURFACE_FLINGER,
       ),
     );
+  });
+
+  it('does not show global tab first', () => {
+    component.viewers = [
+      new ViewerStub('Title0', 'Content0', undefined, ViewType.GLOBAL_SEARCH),
+      new ViewerStub('Title1', 'Content1', traceWm, ViewType.TRACE_TAB),
+    ];
+    fixture.detectChanges();
+    const visibleTabContents = getVisibleTabContents();
+    expect(visibleTabContents.length).toEqual(1);
+    expect(visibleTabContents[0].innerHTML).toEqual('Content1');
   });
 
   function getVisibleTabContents() {
