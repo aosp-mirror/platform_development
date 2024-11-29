@@ -41,13 +41,13 @@ class RecorderDemoActivity :
 
     private var audioManager: AudioManager? = null
 
-    private val recorders = ArrayList<AudioRecord?>(NUMBER_OF_RECORDERS)
+    private val recorders = MutableList<AudioRecord?>(NUMBER_OF_RECORDERS) { null }
 
     private val audioRecordingCallback =
         object : AudioManager.AudioRecordingCallback() {
             override fun onRecordingConfigChanged(configs: List<AudioRecordingConfiguration>) {
                 super.onRecordingConfigChanged(configs)
-                Log.d(TAG, "onRecordingConfigChanged with configs: $configs")
+                Log.d(TAG, "onRecordingConfigChanged with configs: ${configs.map { toLog(it) }}")
             }
         }
 
@@ -72,11 +72,11 @@ class RecorderDemoActivity :
         audioManager?.unregisterAudioRecordingCallback(audioRecordingCallback)
     }
 
-    private fun onFirstButtonClick(view: View) {
+    fun onFirstButtonClick(view: View) {
         onButtonClick(view as Button, 0 /* first recorder index */)
     }
 
-    private fun onSecondButtonClick(view: View) {
+    fun onSecondButtonClick(view: View) {
         onButtonClick(view as Button, 1 /* second recorder index */)
     }
 
@@ -171,6 +171,17 @@ class RecorderDemoActivity :
             }
         }
     }
+
+    @SuppressLint("MissingPermission")
+    private fun toLog(config: AudioRecordingConfiguration) =
+        with(config) {
+            "AudioRecordingConfiguration: $this has " +
+                "audioSource: ${this.audioSource} audioDevice: ${this.audioDevice} " +
+                "clientAudioSource: ${this.clientAudioSource} " +
+                "clientAudioSessionId: ${this.clientAudioSessionId} " +
+                "clientEffects: ${this.clientEffects} effects: ${this.effects} " +
+                "isClientSilenced: ${this.isClientSilenced} format: ${this.format}"
+        }
 
     data class RecorderSettings(
         val source: Int,
