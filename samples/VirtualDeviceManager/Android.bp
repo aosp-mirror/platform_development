@@ -59,6 +59,7 @@ android_app {
     min_sdk_version: "34",
     srcs: [
         "demos/src/**/*.java",
+        "demos/src/**/*.kt",
     ],
     resource_dirs: [
         "demos/res",
