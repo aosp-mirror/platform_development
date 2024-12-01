@@ -132,11 +132,7 @@ class ParserWindowManagerUtils {
         .setData(entry)
         .setRootId('WindowManagerState')
         .setRootName('root')
-        .setDenyList(
-          assertDefined(
-            WM_DENYLIST_PROPERTIES.get(WmProtoType.WindowManagerService),
-          ),
-        )
+        .setDenyList(WM_DENYLIST_PROPERTIES)
         .build();
     };
   }
@@ -283,17 +279,13 @@ class ParserWindowManagerUtils {
       const identifier = this.getIdentifier(containerChild);
       const name = this.getName(containerChild, identifier);
       const token = this.makeToken(identifier);
-      const containerDenylistProperties = assertDefined(
-        WM_DENYLIST_PROPERTIES.get(containerChildType),
-      );
-
       const container = this.getContainer(containerChild);
 
       return new PropertyTreeBuilderFromProto()
         .setData(container)
         .setRootId(`${containerChildType} ${token}`)
         .setRootName(name)
-        .setDenyList(containerDenylistProperties)
+        .setDenyList(WM_DENYLIST_PROPERTIES)
         .build();
     };
   }
