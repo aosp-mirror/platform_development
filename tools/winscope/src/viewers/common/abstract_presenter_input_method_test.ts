@@ -27,7 +27,7 @@ import {ImeTraceType, TraceType} from 'trace/trace_type';
 import {HierarchyTreeNode} from 'trace/tree_node/hierarchy_tree_node';
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
 import {ImeUiData} from 'viewers/common/ime_ui_data';
-import {TextFilter, TextFilterValues} from 'viewers/common/text_filter';
+import {TextFilter} from 'viewers/common/text_filter';
 import {PresenterInputMethodClients} from 'viewers/viewer_input_method_clients/presenter_input_method_clients';
 import {PresenterInputMethodManagerService} from 'viewers/viewer_input_method_manager_service/presenter_input_method_manager_service';
 import {PresenterInputMethodService} from 'viewers/viewer_input_method_service/presenter_input_method_service';
@@ -51,9 +51,7 @@ export abstract class AbstractPresenterInputMethodTest extends AbstractHierarchy
   override readonly shouldExecuteDumpTests = true;
   override readonly shouldExecuteSimplifyNamesTest = false;
 
-  override readonly hierarchyFilter = new TextFilter(
-    new TextFilterValues('Reject all', []),
-  );
+  override readonly hierarchyFilter = new TextFilter('Reject all');
   override readonly expectedHierarchyChildrenAfterStringFilter = 0;
 
   override async setUpTestEnvironment(): Promise<void> {

@@ -32,6 +32,12 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        <activity
+            android:name="com.android.compose.animation.scene.demo.NestedSharedElementActivity"
+            android:theme="@style/Theme.SceneTransitionLayoutDemo"
+            android:windowSoftInputMode="adjustResize"
+            android:exported="true">
+        </activity>
 
         <profileable android:shell="true" />
     </application>

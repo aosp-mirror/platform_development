@@ -69,4 +69,11 @@
         android:onClick="onDemoSelected"
         android:text="@string/stylus_demo" />
 
+    <Button
+        android:id="@+id/recorder_demo"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:onClick="onDemoSelected"
+        android:text="@string/recorder_demo" />
+
 </LinearLayout>

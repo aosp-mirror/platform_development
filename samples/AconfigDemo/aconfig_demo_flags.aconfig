@@ -195,3 +195,10 @@ flag {
     bug: "336778457"
     is_fixed_read_only: false
 }
+flag {
+    name: "one_stage_rollback_test_flag"
+    namespace: "gantry"
+    description: "A test flag to verify one stage rollback"
+    bug: "303703498"
+    is_fixed_read_only: false
+}

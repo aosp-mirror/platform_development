@@ -213,4 +213,8 @@ export const logComponentStyles = `
     display: flex;
     flex: 10;
   }
+
+  .search-result {
+    flex: 1;
+  }
 `;
