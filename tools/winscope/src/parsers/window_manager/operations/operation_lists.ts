@@ -53,7 +53,7 @@ export class WmOperationLists {
           new AddDefaults(
             this.tamperedProtos.windowManagerServiceField,
             undefined,
-            DENYLIST_PROPERTIES.get(ProtoType.WindowManagerService),
+            DENYLIST_PROPERTIES,
           ),
         ],
       },
@@ -76,7 +76,7 @@ export class WmOperationLists {
           new AddDefaults(
             this.tamperedProtos.rootWindowContainerField,
             undefined,
-            DENYLIST_PROPERTIES.get(ProtoType.RootWindowContainer),
+            DENYLIST_PROPERTIES,
           ),
         ],
       },
@@ -100,7 +100,7 @@ export class WmOperationLists {
           new AddDefaults(
             this.tamperedProtos.windowContainerField,
             undefined,
-            DENYLIST_PROPERTIES.get(ProtoType.WindowContainer),
+            DENYLIST_PROPERTIES,
           ),
         ],
       },
@@ -123,7 +123,7 @@ export class WmOperationLists {
           new AddDefaults(
             this.tamperedProtos.displayContentField,
             undefined,
-            DENYLIST_PROPERTIES.get(ProtoType.DisplayContent),
+            DENYLIST_PROPERTIES,
           ),
         ],
       },
@@ -146,7 +146,7 @@ export class WmOperationLists {
           new AddDefaults(
             this.tamperedProtos.displayAreaField,
             undefined,
-            DENYLIST_PROPERTIES.get(ProtoType.DisplayArea),
+            DENYLIST_PROPERTIES,
           ),
         ],
       },
@@ -169,7 +169,7 @@ export class WmOperationLists {
           new AddDefaults(
             this.tamperedProtos.taskField,
             undefined,
-            DENYLIST_PROPERTIES.get(ProtoType.Task),
+            DENYLIST_PROPERTIES,
           ),
         ],
       },
@@ -193,7 +193,7 @@ export class WmOperationLists {
           new AddDefaults(
             this.tamperedProtos.activityField,
             undefined,
-            DENYLIST_PROPERTIES.get(ProtoType.Activity),
+            DENYLIST_PROPERTIES,
           ),
         ],
       },
@@ -216,7 +216,7 @@ export class WmOperationLists {
           new AddDefaults(
             this.tamperedProtos.windowTokenField,
             undefined,
-            DENYLIST_PROPERTIES.get(ProtoType.WindowToken),
+            DENYLIST_PROPERTIES,
           ),
         ],
       },
@@ -247,7 +247,7 @@ export class WmOperationLists {
           new AddDefaults(
             this.tamperedProtos.windowStateField,
             undefined,
-            DENYLIST_PROPERTIES.get(ProtoType.WindowState),
+            DENYLIST_PROPERTIES,
           ),
         ],
       },
@@ -270,7 +270,7 @@ export class WmOperationLists {
           new AddDefaults(
             this.tamperedProtos.taskFragmentField,
             undefined,
-            DENYLIST_PROPERTIES.get(ProtoType.TaskFragment),
+            DENYLIST_PROPERTIES,
           ),
         ],
       },

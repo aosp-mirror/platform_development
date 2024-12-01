@@ -90,10 +90,6 @@ import {viewerCardInnerStyle} from './styles/viewer_card.styles';
         flex-direction: column;
       }
 
-      .padded-title {
-        padding-bottom: 8px;
-      }
-
       .property-groups {
         overflow-y: auto;
       }
@@ -157,7 +153,7 @@ export class PropertiesComponent {
   showViewCaptureFormat(): boolean {
     return (
       this.traceType === TraceType.VIEW_CAPTURE &&
-      this.textFilter?.values.filterString === '' &&
+      this.textFilter?.filterString === '' &&
       // Todo: Highlight Inline in formatted ViewCapture Properties Component.
       !this.userOptions['showDiff']?.enabled &&
       this.curatedProperties !== undefined
