@@ -16,7 +16,6 @@
 
 import {PersistentStoreProxy} from 'common/persistent_store_proxy';
 import {Store} from 'common/store';
-import {WinscopeEvent, WinscopeEventType} from 'messaging/winscope_event';
 import {Trace} from 'trace/trace';
 import {Traces} from 'trace/traces';
 import {TraceType} from 'trace/trace_type';
@@ -111,11 +110,9 @@ export class Presenter extends AbstractHierarchyViewerPresenter<UiData> {
         showDefaults: {
           name: 'Show defaults',
           enabled: false,
-          tooltip: `
-                If checked, shows the value of all properties.
-                Otherwise, hides all properties whose value is
-                the default for its data type.
-              `,
+          tooltip: `If checked, shows the value of all properties.
+Otherwise, hides all properties whose value is
+the default for its data type.`,
         },
       },
       this.storage,
@@ -132,25 +129,6 @@ export class Presenter extends AbstractHierarchyViewerPresenter<UiData> {
     notifyViewCallback: NotifyHierarchyViewCallbackType<UiData>,
   ) {
     super(trace, traces, storage, notifyViewCallback, new UiData());
-  }
-
-  override async onAppEvent(event: WinscopeEvent) {
-    await this.handleCommonWinscopeEvents(event);
-    await event.visit(
-      WinscopeEventType.TRACE_POSITION_UPDATE,
-      async (event) => {
-        await this.applyTracePositionUpdate(event);
-        this.refreshUIData();
-      },
-    );
-    await event.visit(
-      WinscopeEventType.FILTER_PRESET_APPLY_REQUEST,
-      async (event) => {
-        const filterPresetName = event.name;
-        await this.applyPresetConfig(filterPresetName);
-        this.refreshUIData();
-      },
-    );
   }
 
   override async onHighlightedNodeChange(item: UiHierarchyTreeNode) {
@@ -175,7 +153,11 @@ export class Presenter extends AbstractHierarchyViewerPresenter<UiData> {
   }
 
   protected override keepCalculated(tree: HierarchyTreeNode): boolean {
-    return tree.isRoot();
+    return false;
+  }
+
+  protected override refreshUIData() {
+    this.refreshHierarchyViewerUiData();
   }
 
   private getDisplays(rects: UiRect[]): DisplayIdentifier[] {
@@ -196,9 +178,5 @@ export class Presenter extends AbstractHierarchyViewerPresenter<UiData> {
   private convertRectIdtoContainerName(id: string) {
     const parts = id.split(' ');
     return parts.slice(2).join(' ');
-  }
-
-  private refreshUIData() {
-    this.refreshHierarchyViewerUiData();
   }
 }

@@ -208,7 +208,18 @@ export abstract class AbstractHierarchyViewerPresenter<
     this.copyUiDataAndNotifyView();
   }
 
-  protected async handleCommonWinscopeEvents(event: WinscopeEvent) {
+  async onAppEvent(event: WinscopeEvent) {
+    await event.visit(
+      WinscopeEventType.TRACE_POSITION_UPDATE,
+      async (event) => {
+        if (this.initializeIfNeeded) await this.initializeIfNeeded(event);
+        await this.applyTracePositionUpdate(event);
+        if (this.processDataAfterPositionUpdate) {
+          await this.processDataAfterPositionUpdate(event);
+        }
+        this.refreshUIData();
+      },
+    );
     await event.visit(
       WinscopeEventType.FILTER_PRESET_SAVE_REQUEST,
       async (event) => {
@@ -219,6 +230,14 @@ export abstract class AbstractHierarchyViewerPresenter<
       this.uiData.isDarkMode = event.isDarkMode;
       this.copyUiDataAndNotifyView();
     });
+    await event.visit(
+      WinscopeEventType.FILTER_PRESET_APPLY_REQUEST,
+      async (event) => {
+        const filterPresetName = event.name;
+        await this.applyPresetConfig(filterPresetName);
+        this.refreshUIData();
+      },
+    );
   }
 
   protected saveConfigAsPreset(storeKey: string) {
@@ -423,11 +442,15 @@ export abstract class AbstractHierarchyViewerPresenter<
     this.notifyViewCallback(copy);
   }
 
-  abstract onAppEvent(event: WinscopeEvent): Promise<void>;
   abstract onHighlightedNodeChange(node: UiHierarchyTreeNode): Promise<void>;
   abstract onHighlightedIdChange(id: string): Promise<void>;
   protected abstract keepCalculated(tree: HierarchyTreeNode): boolean;
   protected abstract getOverrideDisplayName(
     selected: [Trace<HierarchyTreeNode>, HierarchyTreeNode],
   ): string | undefined;
+  protected abstract refreshUIData(): void;
+  protected initializeIfNeeded?(event: TracePositionUpdate): Promise<void>;
+  protected processDataAfterPositionUpdate?(
+    event: TracePositionUpdate,
+  ): Promise<void>;
 }
