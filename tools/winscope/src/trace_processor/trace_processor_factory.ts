@@ -22,11 +22,11 @@ import {
   WasmEngineProxy,
 } from 'trace_processor/wasm_engine_proxy';
 
-export class TraceProcessor {
+export class TraceProcessorFactory {
   private static wasmEngine?: WasmEngineProxy;
 
-  static async getTraceProcessor(): Promise<WasmEngineProxy> {
-    if (!TraceProcessor.wasmEngine) {
+  static async getSingleInstance(): Promise<WasmEngineProxy> {
+    if (!TraceProcessorFactory.wasmEngine) {
       const traceProcessorRootUrl =
         globalConfig.MODE === 'KARMA_TEST'
           ? UrlUtils.getRootUrl() +
@@ -35,9 +35,9 @@ export class TraceProcessor {
       initWasm(traceProcessorRootUrl);
       const engineId = 'random-id';
       const enginePort = resetEngineWorker();
-      TraceProcessor.wasmEngine = new WasmEngineProxy(engineId, enginePort);
+      TraceProcessorFactory.wasmEngine = new WasmEngineProxy(engineId, enginePort);
     }
 
-    return TraceProcessor.wasmEngine;
+    return TraceProcessorFactory.wasmEngine;
   }
 }
