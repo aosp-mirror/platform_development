@@ -24,7 +24,7 @@ import {TextFilter} from 'viewers/common/text_filter';
   template: `
     <mat-form-field
       *ngIf="textFilter"
-      [class]="'search-box ' + formFieldClass"
+      [class]="getFormFieldClasses()"
       [appearance]="appearance"
       [style.height]="height"
       (keydown.esc)="$event.target.blur()"
@@ -64,6 +64,7 @@ import {TextFilter} from 'viewers/common/text_filter';
     `
     .search-box {
       font-size: 14px;
+      margin-top: 4px;
     }
     .search-box .mat-icon {
       font-size: 18px;
@@ -103,5 +104,13 @@ export class SearchBoxComponent {
 
   onFilterChange() {
     this.filterChange.emit(this.textFilter);
+  }
+
+  getFormFieldClasses(): string {
+    return (
+      'search-box ' +
+      ((this.textFilter?.filterString.length ?? 0) > 0 ? 'highlighted ' : '') +
+      this.formFieldClass
+    );
   }
 }
