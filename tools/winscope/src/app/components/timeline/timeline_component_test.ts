@@ -278,7 +278,7 @@ describe('TimelineComponent', () => {
 
   it('handles undefined active trace input', async () => {
     const traces = new TracesBuilder()
-      .setTimestamps(TraceType.SCREEN_RECORDING, [time100, time110])
+      .setTimestamps(TraceType.EVENT_LOG, [time100, time110])
       .build();
 
     const timelineData = assertDefined(component.timelineData);
