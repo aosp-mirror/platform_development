@@ -216,6 +216,7 @@ export class TracePipeline {
     const legacyParsers = await new LegacyParserFactory().createParsers(
       filterResult.legacy,
       this.timestampConverter,
+      filterResult.metadata,
       progressListener,
     );
 

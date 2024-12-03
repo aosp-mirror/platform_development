@@ -468,6 +468,17 @@ describe('TracePipeline', () => {
     expect(await tracePipeline.tryCreateSearchTrace('fail')).toBeUndefined();
   });
 
+  it('creates screen recording using metadata', async () => {
+    const screenRecording = await UnitTestUtils.getFixtureFile(
+      'traces/elapsed_and_real_timestamp/screen_recording_no_metadata.mp4',
+    );
+    const metadata = await UnitTestUtils.getFixtureFile(
+      'traces/elapsed_and_real_timestamp/screen_recording_metadata.json',
+    );
+    await loadFiles([screenRecording, metadata]);
+    await expectLoadResult(1, []);
+  });
+
   async function loadFiles(
     files: File[],
     source: FilesSource = FilesSource.TEST,
