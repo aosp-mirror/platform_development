@@ -43,16 +43,16 @@ import {
   ExpandedTimelineToggled,
   FilterPresetApplyRequest,
   FilterPresetSaveRequest,
-  NewSearchTrace,
   NoTraceTargetsSelected as NoTraceTargetsSelectedEvent,
   RemoteToolDownloadStart,
   RemoteToolFilesReceived,
   RemoteToolTimestampReceived,
   TabbedViewSwitched,
   TabbedViewSwitchRequest,
+  TraceAddRequest,
   TracePositionUpdate,
+  TraceRemoveRequest,
   TraceSearchFailed,
-  TraceSearchRemovalRequest,
   TraceSearchRequest,
   ViewersLoaded,
   ViewersUnloaded,
@@ -882,7 +882,7 @@ describe('Mediator', () => {
   ) {
     const searchTraces = tracePipeline.getTraces().getTraces(TraceType.SEARCH);
     const newTrace = searchTraces[searchTraces.length - 1];
-    const newTraceEvent = new NewSearchTrace(newTrace);
+    const newTraceEvent = new TraceAddRequest(newTrace);
     expect(searchViewer.onWinscopeEvent).toHaveBeenCalledWith(newTraceEvent);
     expect(timelineData.hasTrace(newTrace)).toEqual(hasTimestamps);
     const timelineComponentSpy = timelineComponent.onWinscopeEvent;
@@ -896,7 +896,7 @@ describe('Mediator', () => {
   async function removeSearchTraceAndCheckPropagation(hasTimestamps: boolean) {
     const searchTraces = tracePipeline.getTraces().getTraces(TraceType.SEARCH);
     const newTrace = searchTraces[searchTraces.length - 1];
-    const removalRequest = new TraceSearchRemovalRequest(newTrace);
+    const removalRequest = new TraceRemoveRequest(newTrace);
     await mediator.onWinscopeEvent(removalRequest);
     expect(tracePipeline.getTraces().hasTrace(newTrace)).toBeFalse();
     expect(timelineData.hasTrace(newTrace)).toBeFalse();
