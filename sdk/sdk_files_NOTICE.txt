@@ -4680,7 +4680,7 @@ Introduction
   encourage you to use the following text:
 
    """  
-    Portions of this software are copyright © <year> The FreeType
+    Portions of this software are copyright Â© <year> The FreeType
     Project (www.freetype.org).  All rights reserved.
    """
 
@@ -12421,7 +12421,6 @@ Notices for file(s):
 ------------------------------------------------------------
 
    Copyright (c) 2006-2009, The Android Open Source Project
-   Copyright 2006, Brian Swetland <swetland@frotz.net>
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -13555,7 +13554,7 @@ Notices for file(s):
  *   limitations under the License.
  */
 
-W3C® SOFTWARE NOTICE AND LICENSE
+W3CÂ® SOFTWARE NOTICE AND LICENSE
 http://www.w3.org/Consortium/Legal/2002/copyright-software-20021231
 
 This work (and included software, documentation such as READMEs, or other
