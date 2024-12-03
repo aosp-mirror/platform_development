@@ -94,6 +94,7 @@ class RemoteDisplay implements AutoCloseable {
                     | DisplayManager.VIRTUAL_DISPLAY_FLAG_OWN_CONTENT_ONLY;
 
     private static final float DEFAULT_CLIENT_BRIGHTNESS = 0.3f;
+    private static final float DIM_CLIENT_BRIGHTNESS = 0.15f;
 
     static final int DISPLAY_TYPE_APP = 0;
     static final int DISPLAY_TYPE_HOME = 1;
@@ -196,6 +197,7 @@ class RemoteDisplay implements AutoCloseable {
         if (mPreferenceController.getBoolean(R.string.pref_enable_client_brightness)) {
             virtualDisplayBuilder
                     .setDefaultBrightness(DEFAULT_CLIENT_BRIGHTNESS)
+                    .setDimBrightness(DIM_CLIENT_BRIGHTNESS)
                     .setBrightnessListener(
                             Executors.newSingleThreadExecutor(), this::onBrightnessChanged);
         } else {

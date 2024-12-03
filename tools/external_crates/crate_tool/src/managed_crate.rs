@@ -80,8 +80,12 @@ static CUSTOMIZATIONS: &[&str] = &[
 
 static SYMLINKS: &[&str] = &["LICENSE", "NOTICE"];
 
-static DELETIONS: LazyLock<HashMap<&str, &[&str]>> =
-    LazyLock::new(|| HashMap::from([("libbpf-sys", ["elfutils", "zlib", "libbpf"].as_slice())]));
+static DELETIONS: LazyLock<HashMap<&str, &[&str]>> = LazyLock::new(|| {
+    HashMap::from([
+        ("libbpf-sys", ["elfutils", "zlib", "libbpf"].as_slice()),
+        ("libusb1-sys", ["libusb"].as_slice()),
+    ])
+});
 
 impl<State: ManagedCrateState> ManagedCrate<State> {
     pub fn name(&self) -> &str {
