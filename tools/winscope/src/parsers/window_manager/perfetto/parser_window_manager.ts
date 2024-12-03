@@ -111,6 +111,10 @@ export class ParserWindowManager extends AbstractParser<HierarchyTreeNode> {
           return result;
         });
       })
+      .visit(CustomQueryType.INITIALIZE_TRACE_SEARCH, async () => {
+        // TODO: Create views
+        await this.createSqlTableWithDefaults('__intrinsic_windowmanager');
+      })
       .getResult();
   }
 

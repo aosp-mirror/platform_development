@@ -20,6 +20,7 @@ export enum CustomQueryType {
   VIEW_CAPTURE_METADATA,
   VSYNCID,
   WM_WINDOWS_TOKEN_AND_TITLE,
+  INITIALIZE_TRACE_SEARCH,
 }
 
 export class ProcessParserResult {
@@ -52,6 +53,12 @@ export class ProcessParserResult {
   ): CustomQueryResultTypeMap<T>[CustomQueryType.WM_WINDOWS_TOKEN_AND_TITLE] {
     return parserResult;
   }
+
+  static [CustomQueryType.INITIALIZE_TRACE_SEARCH]<T>(
+    parserResult: CustomQueryParserResultTypeMap[CustomQueryType.INITIALIZE_TRACE_SEARCH],
+  ): CustomQueryResultTypeMap<T>[CustomQueryType.INITIALIZE_TRACE_SEARCH] {
+    return parserResult;
+  }
 }
 
 export interface CustomQueryParamTypeMap {
@@ -59,6 +66,7 @@ export interface CustomQueryParamTypeMap {
   [CustomQueryType.VIEW_CAPTURE_METADATA]: never;
   [CustomQueryType.VSYNCID]: never;
   [CustomQueryType.WM_WINDOWS_TOKEN_AND_TITLE]: never;
+  [CustomQueryType.INITIALIZE_TRACE_SEARCH]: never;
 }
 
 export interface CustomQueryParserResultTypeMap {
@@ -72,6 +80,7 @@ export interface CustomQueryParserResultTypeMap {
     token: string;
     title: string;
   }>;
+  [CustomQueryType.INITIALIZE_TRACE_SEARCH]: void;
 }
 
 export interface CustomQueryResultTypeMap<T> {
@@ -85,6 +94,7 @@ export interface CustomQueryResultTypeMap<T> {
     token: string;
     title: string;
   }>;
+  [CustomQueryType.INITIALIZE_TRACE_SEARCH]: void;
 }
 
 export class VisitableParserCustomQuery<Q extends CustomQueryType> {

@@ -174,6 +174,11 @@ export class ParserSurfaceFlinger extends AbstractParser<HierarchyTreeNode> {
         }
         return result;
       })
+      .visit(CustomQueryType.INITIALIZE_TRACE_SEARCH, async () => {
+        // TODO: Create views
+        await this.createSqlTableWithDefaults('surfaceflinger_layer');
+        await this.createSqlTableWithDefaults('surfaceflinger_layers_snapshot');
+      })
       .getResult();
   }
 
