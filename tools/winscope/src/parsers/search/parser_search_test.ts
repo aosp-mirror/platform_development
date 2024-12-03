@@ -149,6 +149,7 @@ describe('ParserSearch', () => {
   it('notifies user of parsing error before throwing error', async () => {
     const createFailingParser = () => createParser('SELECT * FROM fake_table');
     await expectAsync(createFailingParser()).toBeRejected();
+    userNotifierChecker.reset();
     try {
       parser = await createFailingParser();
     } catch (e) {

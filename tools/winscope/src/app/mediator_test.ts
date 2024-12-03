@@ -248,9 +248,12 @@ describe('Mediator', () => {
 
   it('handles collected traces from Winscope', async () => {
     await mediator.onWinscopeEvent(
-      new AppFilesCollected({requested: [], collected: inputFiles}),
+      new AppFilesCollected({
+        requested: [],
+        collected: [inputFiles[0], inputFiles[1]],
+      }),
     );
-    userNotifierChecker.expectNotified([]);
+    userNotifierChecker.expectNone();
     await checkLoadTraceViewEvents(collectTracesComponent);
   });
 
@@ -504,8 +507,9 @@ describe('Mediator', () => {
 
     resetSpyCalls();
     await mediator.onWinscopeEvent(new AppTraceViewRequest());
-    await checkLoadTraceViewEvents(uploadTracesComponent);
-    userNotifierChecker.expectNotified([new IncompleteFrameMapping(errorMsg)]);
+    await checkLoadTraceViewEvents(uploadTracesComponent, undefined, [
+      new IncompleteFrameMapping(errorMsg),
+    ]);
   });
 
   describe('timestamp received from remote tool', () => {
@@ -811,6 +815,7 @@ describe('Mediator', () => {
   async function checkLoadTraceViewEvents(
     progressListener: ProgressListener,
     expectedViewers = viewers,
+    notifications: UserWarning[] = [],
   ) {
     expect(progressListener.onProgressUpdate).toHaveBeenCalled();
     expect(progressListener.onOperationFinished).toHaveBeenCalled();
@@ -823,7 +828,7 @@ describe('Mediator', () => {
     // by sending them a "trace position update" event
     checkTracePositionUpdateEvents(
       (expectedViewers as WinscopeEventListener[]).concat([timelineComponent]),
-      [],
+      notifications,
     );
   }
 

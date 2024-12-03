@@ -329,7 +329,9 @@ export class TracePipeline {
         currArchive.push(new TraceFile(file, undefined));
       }
     }
-    unzippedArchives.push(currArchive);
+    if (currArchive.length > 0) {
+      unzippedArchives.push(currArchive);
+    }
     progressListener?.onProgressUpdate(progressMessage, 100);
 
     return unzippedArchives;
