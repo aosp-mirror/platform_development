@@ -326,14 +326,14 @@ describe('Mediator', () => {
         requested: [
           {
             name: 'Collected Trace',
-            types: [TraceType.EVENT_LOG, TraceType.CUJS],
+            types: [TraceType.SURFACE_FLINGER],
           },
           {
             name: 'Uncollected Trace',
             types: [TraceType.TRANSITION],
           },
         ],
-        collected: inputFiles.concat([eventLogFile]),
+        collected: [inputFiles[0]],
       }),
     );
     expect(
@@ -772,7 +772,9 @@ describe('Mediator', () => {
     files = inputFiles,
     viewersToReassignTraces = [viewerStub0, viewerStub1],
   ) {
-    await mediator.onWinscopeEvent(new AppFilesUploaded(files));
+    for (const file of files) {
+      await mediator.onWinscopeEvent(new AppFilesUploaded([file]));
+    }
     userNotifierChecker.expectNone();
     viewersToReassignTraces.forEach((viewer) =>
       reassignViewerStubTrace(viewer),
