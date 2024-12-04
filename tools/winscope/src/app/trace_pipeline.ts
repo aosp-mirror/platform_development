@@ -300,6 +300,7 @@ export class TracePipeline {
 
     progressListener?.onProgressUpdate(progressMessage, 0);
 
+    const currArchive: UnzippedArchive = [];
     for (let i = 0; i < files.length; i++) {
       let file = files[i];
 
@@ -325,11 +326,12 @@ export class TracePipeline {
           UserNotifier.add(new CorruptedArchive(file));
         }
       } else {
-        unzippedArchives.push([new TraceFile(file, undefined)]);
-        onSubProgressUpdate(100);
+        currArchive.push(new TraceFile(file, undefined));
       }
     }
-
+    if (currArchive.length > 0) {
+      unzippedArchives.push(currArchive);
+    }
     progressListener?.onProgressUpdate(progressMessage, 100);
 
     return unzippedArchives;
