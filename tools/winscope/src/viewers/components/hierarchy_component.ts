@@ -45,6 +45,7 @@ import {viewerCardInnerStyle} from './styles/viewer_card.styles';
           title="HIERARCHY"
           (collapseButtonClicked)="collapseButtonClicked.emit()"></collapsible-section-title>
         <search-box
+          formFieldClass="applied-field"
           [textFilter]="textFilter"
           (filterChange)="onFilterChange($event)"></search-box>
       </div>
