@@ -22,7 +22,7 @@ import {UserNotifier} from 'common/user_notifier';
 import {TraceSearchQueryAlreadyRun} from 'messaging/user_warnings';
 import {
   TracePositionUpdate,
-  TraceSearchRemovalRequest,
+  TraceRemoveRequest,
   TraceSearchRequest,
   WinscopeEvent,
   WinscopeEventType,
@@ -30,6 +30,7 @@ import {
 import {EmitEvent} from 'messaging/winscope_event_emitter';
 import {Trace} from 'trace/trace';
 import {Traces} from 'trace/traces';
+import {TraceType} from 'trace/trace_type';
 import {QueryResult} from 'trace_processor/query_result';
 import {
   DeleteSavedQueryClickDetail,
@@ -103,8 +104,10 @@ export class Presenter {
   }
 
   async onAppEvent(event: WinscopeEvent) {
-    await event.visit(WinscopeEventType.NEW_SEARCH_TRACE, async (event) => {
-      this.showQueryResult(event.trace);
+    await event.visit(WinscopeEventType.TRACE_ADD_REQUEST, async (event) => {
+      if (event.trace.type === TraceType.SEARCH) {
+        this.showQueryResult(event.trace as Trace<QueryResult>);
+      }
     });
     await event.visit(WinscopeEventType.TRACE_SEARCH_FAILED, async (event) => {
       this.onTraceSearchFailed();
@@ -140,7 +143,7 @@ export class Presenter {
     const runQueryIndex = this.runQueries.findIndex((r) => r.query === query);
     const trace = this.runQueries[runQueryIndex].trace;
     if (runQueryIndex !== -1 && trace) {
-      this.emitWinscopeEvent(new TraceSearchRemovalRequest(trace));
+      this.emitWinscopeEvent(new TraceRemoveRequest(trace));
       this.runQueries.splice(runQueryIndex, 1);
     }
   }
