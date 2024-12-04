@@ -33,7 +33,7 @@ import {
 import {
   ActiveTraceChanged,
   ExpandedTimelineToggled,
-  NewSearchTrace,
+  TraceAddRequest,
   TracePositionUpdate,
   TraceSearchFailed,
   ViewersLoaded,
@@ -311,7 +311,7 @@ export class Mediator {
         await searchViewer?.onWinscopeEvent(new TraceSearchFailed());
         return;
       }
-      const newSearchTrace = new NewSearchTrace(trace);
+      const newSearchTrace = new TraceAddRequest(trace);
       await searchViewer?.onWinscopeEvent(newSearchTrace);
       if (trace.lengthEntries > 0 && !trace.isDumpWithoutTimestamp()) {
         assertDefined(this.timelineData).getTraces().addTrace(trace);
@@ -319,16 +319,13 @@ export class Mediator {
       }
     });
 
-    await event.visit(
-      WinscopeEventType.TRACE_SEARCH_REMOVAL_REQUEST,
-      async (event) => {
-        this.tracePipeline.getTraces().deleteTrace(event.trace);
-        if (this.timelineData.hasTrace(event.trace)) {
-          this.timelineData.getTraces().deleteTrace(event.trace);
-          await this.timelineComponent?.onWinscopeEvent(event);
-        }
-      },
-    );
+    await event.visit(WinscopeEventType.TRACE_REMOVE_REQUEST, async (event) => {
+      this.tracePipeline.getTraces().deleteTrace(event.trace);
+      if (this.timelineData.hasTrace(event.trace)) {
+        this.timelineData.getTraces().deleteTrace(event.trace);
+        await this.timelineComponent?.onWinscopeEvent(event);
+      }
+    });
   }
 
   private async loadFiles(files: File[], source: FilesSource) {
