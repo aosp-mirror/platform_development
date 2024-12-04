@@ -558,6 +558,7 @@ impl ManagedRepo {
     ) -> Result<()> {
         let pseudo_crate = self.pseudo_crate().vendor()?;
         for crate_name in crates {
+            println!("Regenerating {}", crate_name.as_ref());
             let mc = self.managed_crate_for(crate_name.as_ref())?;
             // TODO: Don't give up if there's a failure.
             mc.regenerate(update_metadata, &pseudo_crate)?;
@@ -882,6 +883,13 @@ impl ManagedRepo {
         for crate_name in crates {
             let mc = self.managed_crate_for(crate_name.as_ref())?;
             mc.fix_test_mapping()?;
+        }
+        Ok(())
+    }
+    pub fn verify_checksums<T: AsRef<str>>(&self, crates: impl Iterator<Item = T>) -> Result<()> {
+        for krate in crates {
+            println!("Verifying checksums for {}", krate.as_ref());
+            checksum::verify(self.managed_dir_for(krate.as_ref()).abs())?;
         }
         Ok(())
     }

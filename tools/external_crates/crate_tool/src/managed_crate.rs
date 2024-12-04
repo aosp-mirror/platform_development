@@ -433,6 +433,7 @@ impl ManagedCrate<Vendored> {
         let android_crate_dir = staged.android_crate.path();
         remove_dir_all(android_crate_dir)?;
         rename(staged.staging_path(), android_crate_dir)?;
+        checksum::generate(android_crate_dir.abs())?;
 
         Ok(staged)
     }
