@@ -463,24 +463,6 @@ impl ManagedCrate<Staged> {
 
         Ok(())
     }
-    pub fn diff_staged(&self) -> Result<()> {
-        let diff_status = Command::new("diff")
-            .args(["-u", "-r", "-w", "--no-dereference"])
-            .arg(self.staging_path().rel())
-            .arg(self.android_crate.path().rel())
-            .current_dir(self.extra.vendored_crate.path().root())
-            .spawn()?
-            .wait()?;
-        if !diff_status.success() {
-            return Err(anyhow!(
-                "Found differences between {} and {}",
-                self.android_crate.path(),
-                self.staging_path()
-            ));
-        }
-
-        Ok(())
-    }
     pub fn patch_success(&self) -> bool {
         self.extra.patch_output.iter().all(|output| output.1.status.success())
     }

@@ -612,9 +612,8 @@ impl ManagedRepo {
             .collect::<BTreeSet<_>>();
 
         for crate_name in changed_android_crates {
-            println!("Checking {}", crate_name);
-            let mc = self.managed_crate_for(&crate_name)?.stage(&pseudo_crate)?;
-            mc.diff_staged()?;
+            println!("Verifying checksums for {}", crate_name);
+            checksum::verify(self.managed_dir_for(&crate_name).abs())?;
         }
         Ok(())
     }
