@@ -17,10 +17,10 @@
 import {InMemoryStorage} from 'common/in_memory_storage';
 import {TraceSearchQueryAlreadyRun} from 'messaging/user_warnings';
 import {
-  NewSearchTrace,
+  TraceAddRequest,
   TracePositionUpdate,
+  TraceRemoveRequest,
   TraceSearchFailed,
-  TraceSearchRemovalRequest,
   TraceSearchRequest,
 } from 'messaging/winscope_event';
 import {TimestampConverterUtils} from 'test/unit/timestamp_converter_utils';
@@ -132,7 +132,7 @@ describe('PresenterSearch', () => {
       .setType(TraceType.SEARCH)
       .build();
 
-    await presenter.onAppEvent(new NewSearchTrace(trace));
+    await presenter.onAppEvent(new TraceAddRequest(trace));
     const expectedSearchResult = new SearchResult(testQuery, [], []);
     expect(uiData.currentSearches).toEqual([expectedSearchResult]);
     expect(uiData.lastTraceFailed).toEqual(false);
@@ -157,6 +157,13 @@ describe('PresenterSearch', () => {
     expect(emitEventSpy).toHaveBeenCalledOnceWith(
       TracePositionUpdate.fromTimestamp(time100, true),
     );
+  });
+
+  it('handles non-search trace added event', async () => {
+    const currData = uiData;
+    const trace = UnitTestUtils.makeEmptyTrace(TraceType.SURFACE_FLINGER);
+    await presenter.onAppEvent(new TraceAddRequest(trace));
+    expect(uiData).toEqual(currData);
   });
 
   it('handles search for query already run', () => {
@@ -206,7 +213,7 @@ describe('PresenterSearch', () => {
 
     await presenter.onResetQueryClick(testQuery);
     expect(emitEventSpy).toHaveBeenCalledOnceWith(
-      new TraceSearchRemovalRequest(trace),
+      new TraceRemoveRequest(trace),
     );
     expect(uiData.currentSearches).toEqual([]);
     expect(uiData.recentSearches).toEqual([new Search(testQuery)]);
@@ -222,7 +229,7 @@ describe('PresenterSearch', () => {
 
     await presenter.onResetQueryClick(newQuery);
     expect(emitEventSpy).toHaveBeenCalledOnceWith(
-      new TraceSearchRemovalRequest(trace),
+      new TraceRemoveRequest(trace),
     );
     expect(uiData.currentSearches).toEqual([]);
     expect(uiData.recentSearches).toEqual([
@@ -274,7 +281,7 @@ describe('PresenterSearch', () => {
     expect(emitEventSpy).toHaveBeenCalledOnceWith(
       new TraceSearchRequest(testQuery),
     );
-    await presenter.onAppEvent(new NewSearchTrace(trace));
+    await presenter.onAppEvent(new TraceAddRequest(trace));
     expect(uiData.currentSearches).toEqual([
       new SearchResult(testQuery, [], []),
     ]);

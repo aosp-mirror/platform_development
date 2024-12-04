@@ -43,12 +43,14 @@ describe('TimelineData', () => {
     .setTimestamps(TraceType.PROTO_LOG, [timestamp9])
     .setTimestamps(TraceType.EVENT_LOG, [timestamp9])
     .setTimestamps(TraceType.SURFACE_FLINGER, [timestamp10])
+    .setTimestamps(TraceType.SCREEN_RECORDING, [timestamp5])
     .setTimestamps(TraceType.WINDOW_MANAGER, [timestamp11])
     .setTimestamps(TraceType.TRANSACTIONS, [])
     .build();
 
   const traceSf = assertDefined(traces.getTrace(TraceType.SURFACE_FLINGER));
   const traceWm = assertDefined(traces.getTrace(TraceType.WINDOW_MANAGER));
+  const traceSr = assertDefined(traces.getTrace(TraceType.SCREEN_RECORDING));
 
   const position10 = TracePosition.fromTraceEntry(
     assertDefined(traces.getTrace(TraceType.SURFACE_FLINGER)).getEntry(0),
@@ -131,13 +133,25 @@ describe('TimelineData', () => {
     expect(timelineData.getFullTimeRange().from).toEqual(timestamp9);
   });
 
-  it('uses first entry of first active trace by default', () => {
+  it('uses first entry of first active trace by default, excluding screen recording', () => {
     timelineData.initialize(
       traces,
       undefined,
       TimestampConverterUtils.TIMESTAMP_CONVERTER,
     );
+    expect(timelineData.getActiveTrace()).toEqual(traceSf);
     expect(timelineData.getCurrentPosition()).toEqual(position10);
+  });
+
+  it('defaults active trace to screen recording if it is the only trace', () => {
+    const tracesOnlySr = new Traces();
+    tracesOnlySr.addTrace(traceSr);
+    timelineData.initialize(
+      tracesOnlySr,
+      undefined,
+      TimestampConverterUtils.TIMESTAMP_CONVERTER,
+    );
+    expect(timelineData.getActiveTrace()).toEqual(traceSr);
   });
 
   it('uses explicit position if set and valid within time range', () => {
@@ -170,9 +184,7 @@ describe('TimelineData', () => {
 
     timelineData.setPosition(TracePosition.fromTimestamp(timestamp0));
     expect(timelineData.getCurrentPosition()).toEqual(
-      TracePosition.fromTraceEntry(
-        assertDefined(traces.getTrace(TraceType.PROTO_LOG)).getEntry(0),
-      ),
+      TracePosition.fromTraceEntry(traceSr.getEntry(0)),
     );
 
     timelineData.setPosition(position1000);
