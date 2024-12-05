@@ -108,11 +108,9 @@ export class HierarchyPresenter {
   getAllCurrentHierarchyTrees():
     | Array<[Trace<HierarchyTreeNode>, HierarchyTreeNode[]]>
     | undefined {
-    const currentTrees = [];
-    for (const entry of this.currentHierarchyTrees?.entries() ?? []) {
-      currentTrees.push(entry);
-    }
-    return currentTrees;
+    return this.currentHierarchyTrees
+      ? Array.from(this.currentHierarchyTrees.entries())
+      : undefined;
   }
 
   getCurrentHierarchyTreeNames(
@@ -226,8 +224,8 @@ export class HierarchyPresenter {
       const trace = entry.getFullTrace();
       currEntries.set(trace, entry);
 
-      const tree: HierarchyTreeNode | undefined = await entry?.getValue();
-      if (tree) currTrees.set(trace, [tree]);
+      const tree = await entry.getValue();
+      currTrees.set(trace, [tree]);
 
       const entryIndex = entry.getIndex();
       if (entryIndex > 0) {
@@ -321,10 +319,12 @@ export class HierarchyPresenter {
 
   async applyHierarchyUserOptionsChange(userOptions: UserOptions) {
     this.userOptions = userOptions;
-    this.currentFormattedTrees =
-      await this.formatHierarchyTreesAndUpdatePinnedItems(
-        this.currentHierarchyTrees,
-      );
+    if (this.currentHierarchyTrees) {
+      this.currentFormattedTrees =
+        await this.formatHierarchyTreesAndUpdatePinnedItems(
+          this.currentHierarchyTrees,
+        );
+    }
   }
 
   async applyHierarchyFilterChange(textFilter: TextFilter) {
@@ -332,10 +332,12 @@ export class HierarchyPresenter {
     this.hierarchyFilter = UiTreeUtils.makeNodeFilter(
       textFilter.getFilterPredicate(),
     );
-    this.currentFormattedTrees =
-      await this.formatHierarchyTreesAndUpdatePinnedItems(
-        this.currentHierarchyTrees,
-      );
+    if (this.currentHierarchyTrees) {
+      this.currentFormattedTrees =
+        await this.formatHierarchyTreesAndUpdatePinnedItems(
+          this.currentHierarchyTrees,
+        );
+    }
   }
 
   getTextFilter(): TextFilter {
@@ -374,14 +376,9 @@ export class HierarchyPresenter {
   }
 
   private async formatHierarchyTreesAndUpdatePinnedItems(
-    hierarchyTrees:
-      | Map<Trace<HierarchyTreeNode>, HierarchyTreeNode[]>
-      | undefined,
+    hierarchyTrees: Map<Trace<HierarchyTreeNode>, HierarchyTreeNode[]>,
   ): Promise<Map<Trace<HierarchyTreeNode>, UiHierarchyTreeNode[]> | undefined> {
     this.pinnedItems = [];
-
-    if (!hierarchyTrees) return undefined;
-
     const formattedTrees = new Map<
       Trace<HierarchyTreeNode>,
       UiHierarchyTreeNode[]
@@ -506,12 +503,10 @@ export class HierarchyPresenter {
   }
 
   static isHierarchyTreeModified: IsModifiedCallbackType = async (
-    newTree: TreeNode | undefined,
-    oldTree: TreeNode | undefined,
+    newTree: TreeNode,
+    oldTree: TreeNode,
     denylistProperties: string[],
   ) => {
-    if (!newTree && !oldTree) return false;
-    if (!newTree || !oldTree) return true;
     if ((newTree as UiHierarchyTreeNode).isRoot()) return false;
     const newProperties = await (
       newTree as UiHierarchyTreeNode

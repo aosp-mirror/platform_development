@@ -160,12 +160,9 @@ export class PropertiesPresenter {
   }
 
   static isPropertyNodeModified: IsModifiedCallbackType = async (
-    newTree: TreeNode | undefined,
-    oldTree: TreeNode | undefined,
+    newTree: TreeNode,
+    oldTree: TreeNode,
   ) => {
-    if (!newTree && !oldTree) return false;
-    if (!newTree || !oldTree) return true;
-
     const newValue = (newTree as UiPropertyTreeNode).formattedValue();
     const oldValue = (oldTree as UiPropertyTreeNode).formattedValue();
 

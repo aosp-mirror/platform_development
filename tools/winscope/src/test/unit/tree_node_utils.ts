@@ -214,11 +214,11 @@ export class TreeNodeUtils {
       if (node.getDisplayName() !== expectedNode.getDisplayName()) {
         return false;
       }
+      const chips = node.getChips();
+      const expChips = expectedNode.getChips();
       if (
-        !(
-          node.getChips().length === 0 && expectedNode.getChips().length === 0
-        ) &&
-        node.getChips() !== expectedNode.getChips()
+        chips.length !== expChips.length ||
+        !chips.every((chip, i) => chip === expChips[i])
       ) {
         return false;
       }
