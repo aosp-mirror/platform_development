@@ -44,6 +44,5 @@ export class UiData implements UiDataHierarchy {
 
   constructor(
     public curatedProperties: SfCuratedProperties | undefined = undefined,
-    public displayPropertyGroups = true,
   ) {}
 }

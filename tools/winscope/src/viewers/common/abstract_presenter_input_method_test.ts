@@ -27,13 +27,13 @@ import {ImeTraceType, TraceType} from 'trace/trace_type';
 import {HierarchyTreeNode} from 'trace/tree_node/hierarchy_tree_node';
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
 import {ImeUiData} from 'viewers/common/ime_ui_data';
-import {TextFilter} from 'viewers/common/text_filter';
 import {PresenterInputMethodClients} from 'viewers/viewer_input_method_clients/presenter_input_method_clients';
 import {PresenterInputMethodManagerService} from 'viewers/viewer_input_method_manager_service/presenter_input_method_manager_service';
 import {PresenterInputMethodService} from 'viewers/viewer_input_method_service/presenter_input_method_service';
 import {NotifyHierarchyViewCallbackType} from './abstract_hierarchy_viewer_presenter';
 import {AbstractHierarchyViewerPresenterTest} from './abstract_hierarchy_viewer_presenter_test';
 import {AbstractPresenterInputMethod} from './abstract_presenter_input_method';
+import {VISIBLE_CHIP} from './chip';
 import {UiDataHierarchy} from './ui_data_hierarchy';
 import {UiHierarchyTreeNode} from './ui_hierarchy_tree_node';
 import {UiPropertyTreeNode} from './ui_property_tree_node';
@@ -45,14 +45,34 @@ export abstract class AbstractPresenterInputMethodTest extends AbstractHierarchy
   private selectedTree: UiHierarchyTreeNode | undefined;
   private entries: Map<TraceType, HierarchyTreeNode> | undefined;
 
-  override readonly shouldExecuteFlatTreeTest = true;
   override readonly shouldExecuteRectTests = false;
-  override readonly shouldExecuteShowDiffTests = false;
-  override readonly shouldExecuteDumpTests = true;
   override readonly shouldExecuteSimplifyNamesTest = false;
-
-  override readonly hierarchyFilter = new TextFilter('Reject all');
-  override readonly expectedHierarchyChildrenAfterStringFilter = 0;
+  override readonly keepCalculatedPropertiesInChild = false;
+  override readonly keepCalculatedPropertiesInRoot = false;
+  override readonly expectedHierarchyOpts = {
+    showOnlyVisible: {
+      name: 'Show only',
+      chip: VISIBLE_CHIP,
+      enabled: false,
+    },
+    simplifyNames: {
+      name: 'Simplify names',
+      enabled: true,
+    },
+    flat: {
+      name: 'Flat',
+      enabled: false,
+    },
+  };
+  override readonly expectedPropertiesOpts = {
+    showDefaults: {
+      name: 'Show defaults',
+      enabled: false,
+      tooltip: `If checked, shows the value of all properties.
+Otherwise, hides all properties whose value is
+the default for its data type.`,
+    },
+  };
 
   override async setUpTestEnvironment(): Promise<void> {
     let secondEntries: Map<TraceType, HierarchyTreeNode>;
@@ -115,23 +135,6 @@ export abstract class AbstractPresenterInputMethodTest extends AbstractHierarchy
       callback,
     );
   }
-  override createPresenterWithCorruptedTrace(
-    callback: NotifyHierarchyViewCallbackType<ImeUiData>,
-  ): AbstractPresenterInputMethod {
-    const trace = new TraceBuilder<HierarchyTreeNode>()
-      .setType(this.imeTraceType)
-      .setEntries([assertDefined(this.selectedTree)])
-      .setIsCorrupted(true)
-      .build();
-    const traces = new Traces();
-    traces.addTrace(trace);
-    return new this.PresenterInputMethod(
-      trace,
-      traces,
-      new InMemoryStorage(),
-      callback,
-    );
-  }
 
   override createPresenter(
     callback: NotifyHierarchyViewCallbackType<ImeUiData>,
@@ -150,30 +153,6 @@ export abstract class AbstractPresenterInputMethodTest extends AbstractHierarchy
     return this.secondPositionUpdate;
   }
 
-  override getShowDiffPositionUpdate(): TracePositionUpdate {
-    return assertDefined(this.positionUpdate);
-  }
-
-  override getExpectedChildrenBeforeVisibilityFilter(): number {
-    return this.numberOfFlattenedChildren;
-  }
-
-  override getExpectedChildrenAfterVisibilityFilter(): number {
-    return this.numberOfVisibleChildren;
-  }
-
-  override getExpectedChildrenBeforeFlatFilter(): number {
-    return this.numberOfNestedChildren;
-  }
-
-  override getExpectedChildrenAfterFlatFilter(): number {
-    return this.numberOfFlattenedChildren;
-  }
-
-  override getExpectedHierarchyChildrenBeforeStringFilter(): number {
-    return this.numberOfFlattenedChildren;
-  }
-
   override getSelectedTree(): UiHierarchyTreeNode {
     return assertDefined(this.selectedTree);
   }
@@ -182,14 +161,12 @@ export abstract class AbstractPresenterInputMethodTest extends AbstractHierarchy
     return assertDefined(this.selectedTree);
   }
 
-  override executeChecksForPropertiesTreeAfterPositionUpdate(
-    uiData: UiDataHierarchy,
-  ) {
+  override executePropertiesChecksAfterPositionUpdate(uiData: UiDataHierarchy) {
     const trees = assertDefined(uiData.hierarchyTrees);
     expect(trees.length).toEqual(this.numberOfNestedChildren);
   }
 
-  override executeChecksForPropertiesTreeAfterSecondPositionUpdate(
+  override executePropertiesChecksAfterSecondPositionUpdate(
     uiData: UiDataHierarchy,
   ) {
     const trees = assertDefined(uiData.hierarchyTrees);
@@ -345,8 +322,6 @@ export abstract class AbstractPresenterInputMethodTest extends AbstractHierarchy
   protected getPropertiesTree?(): PropertyTreeNode;
   protected abstract getSelectedNode(): HierarchyTreeNode;
 
-  protected abstract readonly numberOfFlattenedChildren: number;
-  protected abstract readonly numberOfVisibleChildren: number;
   protected abstract readonly numberOfNestedChildren: number;
   protected abstract readonly PresenterInputMethod:
     | typeof PresenterInputMethodClients
