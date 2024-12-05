@@ -236,6 +236,20 @@ export class ProxyTraceTimeout extends UserWarning {
   }
 }
 
+export class ProxyTracingWarnings extends UserWarning {
+  constructor(private readonly warnings: string[]) {
+    super();
+  }
+
+  getDescriptor(): string {
+    return 'proxy tracing warnings';
+  }
+
+  getMessage(): string {
+    return `Trace collection warning: ${this.warnings.join(', ')}`;
+  }
+}
+
 export class ProxyTracingErrors extends UserWarning {
   constructor(private readonly errorMessages: string[]) {
     super();
@@ -246,7 +260,7 @@ export class ProxyTracingErrors extends UserWarning {
   }
 
   getMessage(): string {
-    return `Errors occurred during tracing: ${this.errorMessages.join(', ')}`;
+    return `Trace collection errors: ${this.errorMessages.join(', ')}`;
   }
 }
 
@@ -260,8 +274,8 @@ export class MissingLayerIds extends UserWarning {
   }
 }
 
-export class DuplicateLayerId extends UserWarning {
-  constructor(private readonly layerId: string) {
+export class DuplicateLayerIds extends UserWarning {
+  constructor(private readonly layerIds: number[]) {
     super();
   }
 
@@ -270,7 +284,9 @@ export class DuplicateLayerId extends UserWarning {
   }
 
   getMessage(): string {
-    return `Duplicate SF layer id ${this.layerId} found - adding it as "Duplicate" to the hierarchy`;
+    const optionalPlural = this.layerIds.length > 1 ? 's' : '';
+    const layerIds = this.layerIds.join(', ');
+    return `Duplicate SF layer id${optionalPlural} ${layerIds} found - adding as "Duplicate" to the hierarchy`;
   }
 }
 
@@ -292,5 +308,29 @@ export class CannotParseAllTransitions extends UserWarning {
 
   getMessage(): string {
     return 'Cannot parse all transitions. Some may be missing in Transitions viewer.';
+  }
+}
+
+export class TraceSearchQueryFailed extends UserWarning {
+  constructor(private readonly errorMessage: string) {
+    super();
+  }
+
+  getDescriptor(): string {
+    return 'trace search query failed';
+  }
+
+  getMessage(): string {
+    return `Search query failed: ${this.errorMessage}`;
+  }
+}
+
+export class TraceSearchQueryAlreadyRun extends UserWarning {
+  getDescriptor(): string {
+    return 'trace search query already run';
+  }
+
+  getMessage(): string {
+    return 'Trace search query has already been run for this trace';
   }
 }

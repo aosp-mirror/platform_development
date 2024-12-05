@@ -78,6 +78,7 @@ import com.google.common.util.concurrent.MoreExecutors;
 
 import dagger.hilt.android.AndroidEntryPoint;
 
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -360,8 +361,6 @@ public final class VdmService extends Hilt_VdmService {
         closeVirtualDevice();
         mRemoteIo.removeMessageConsumer(mRemoteEventConsumer);
         mDisplayManager.unregisterDisplayListener(mDisplayListener);
-        mAudioStreamer.stop();
-        mAudioInjector.stop();
     }
 
     void addVirtualDeviceListener(Consumer<Boolean> listener) {
@@ -408,18 +407,43 @@ public final class VdmService extends Hilt_VdmService {
 
     private void handleAudioCapabilities() {
         if (mPreferenceController.getBoolean(R.string.pref_enable_client_audio)) {
+            openAudio();
+        } else {
+            closeAudio();
+        }
+    }
+
+    private void openAudio() {
+        AudioManager audioManager = getSystemService(AudioManager.class);
+        if (audioManager != null) {
+            // Assuming one playback session id and one recording session id per host (for now)
+            // Reuse them if already initialized
+            if (mPlaybackAudioSessionId == 0) {
+                mPlaybackAudioSessionId = audioManager.generateAudioSessionId();
+            }
+            if (mRecordingAudioSessionId == 0) {
+                mRecordingAudioSessionId = audioManager.generateAudioSessionId();
+            }
+
             if (mVirtualDevice != null) {
                 if (mDeviceCapabilities.getSupportsAudioOutput()) {
                     mAudioStreamer.start(mVirtualDevice.getDeviceId(), mPlaybackAudioSessionId);
+                } else {
+                    mAudioStreamer.stop();
                 }
+
                 if (mDeviceCapabilities.getSupportsAudioInput()) {
                     mAudioInjector.start(mVirtualDevice.getDeviceId(), mRecordingAudioSessionId);
+                } else {
+                    mAudioInjector.stop();
                 }
             }
-        } else {
-            mAudioStreamer.stop();
-            mAudioInjector.stop();
         }
+    }
+
+    private void closeAudio() {
+        mAudioStreamer.stop();
+        mAudioInjector.stop();
     }
 
     private void associateAndCreateVirtualDevice() {
@@ -486,16 +510,18 @@ public final class VdmService extends Hilt_VdmService {
     }
 
     private void createVirtualDevice(AssociationInfo associationInfo) {
+        Log.d(TAG, "VdmService createVirtualDevice name: "
+                + mDeviceCapabilities.getDeviceName() + " with association: " + associationInfo);
+
         VirtualDeviceParams.Builder virtualDeviceBuilder =
                 new VirtualDeviceParams.Builder()
                         .setName("VirtualDevice - " + mDeviceCapabilities.getDeviceName());
 
-        AudioManager audioManager = getSystemService(AudioManager.class);
-        mPlaybackAudioSessionId = audioManager.generateAudioSessionId();
-        mRecordingAudioSessionId = audioManager.generateAudioSessionId();
         mPreferenceController.evaluate();
 
         if (mPreferenceController.getBoolean(R.string.pref_enable_client_audio)) {
+            openAudio();
+
             virtualDeviceBuilder.setDevicePolicy(POLICY_TYPE_AUDIO, DEVICE_POLICY_CUSTOM)
                     .setAudioPlaybackSessionId(mPlaybackAudioSessionId)
                     .setAudioRecordingSessionId(mRecordingAudioSessionId);
@@ -514,6 +540,14 @@ public final class VdmService extends Hilt_VdmService {
                 virtualDeviceBuilder.setHomeComponent(
                         new ComponentName(this, CustomLauncherActivity.class));
             }
+        }
+
+        if (Flags.deviceAwareDisplayPower()) {
+            int displayTimeout = Integer.parseInt(
+                    mPreferenceController.getString(R.string.pref_display_timeout));
+            virtualDeviceBuilder
+                    .setDimDuration(Duration.ofMillis(displayTimeout / 2))
+                    .setScreenOffTimeout(Duration.ofMillis(displayTimeout));
         }
 
         if (mPreferenceController.getBoolean(R.string.pref_hide_from_recents)) {
@@ -606,10 +640,14 @@ public final class VdmService extends Hilt_VdmService {
         for (Consumer<Boolean> listener : mLocalVirtualDeviceLifecycleListeners) {
             listener.accept(false);
         }
+
         if (mRemoteSensorManager != null) {
             mRemoteSensorManager.close();
             mRemoteSensorManager = null;
         }
+
+        closeAudio();
+
         if (mVirtualDevice != null) {
             Log.i(TAG, "Closing virtual device");
             mDisplayRepository.clear();
@@ -702,7 +740,7 @@ public final class VdmService extends Hilt_VdmService {
         observers.put(R.string.pref_display_ime_policy,
                 s -> {
                     if (mVirtualDevice != null) {
-                        int policy = Integer.valueOf((String) s);
+                        int policy = Integer.parseInt((String) s);
                         Arrays.stream(mDisplayRepository.getDisplayIds()).forEach(
                                 displayId -> mVirtualDevice.setDisplayImePolicy(displayId, policy));
                     }
@@ -713,6 +751,7 @@ public final class VdmService extends Hilt_VdmService {
         observers.put(R.string.pref_always_unlocked_device, v -> recreateVirtualDevice());
         observers.put(R.string.pref_enable_client_native_ime, v -> recreateVirtualDevice());
         observers.put(R.string.pref_enable_custom_home, v -> recreateVirtualDevice());
+        observers.put(R.string.pref_display_timeout, v -> recreateVirtualDevice());
         observers.put(R.string.pref_enable_display_category, v -> recreateVirtualDevice());
 
         return observers;

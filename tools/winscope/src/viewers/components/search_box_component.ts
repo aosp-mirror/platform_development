@@ -24,14 +24,15 @@ import {TextFilter} from 'viewers/common/text_filter';
   template: `
     <mat-form-field
       *ngIf="textFilter"
-      [class]="'search-box ' + formFieldClass"
+      [class]="getFormFieldClasses()"
       [appearance]="appearance"
       [style.height]="height"
+      (keydown.esc)="$event.target.blur()"
       (keydown.enter)="$event.target.blur()">
       <mat-label>{{ label }}</mat-label>
       <input
         matInput
-        [(ngModel)]="textFilter.values.filterString"
+        [(ngModel)]="textFilter.filterString"
         (ngModelChange)="onFilterChange()"
         [name]="filterName" />
       <div class="field-suffix" matSuffix>
@@ -63,6 +64,7 @@ import {TextFilter} from 'viewers/common/text_filter';
     `
     .search-box {
       font-size: 14px;
+      margin-top: 4px;
     }
     .search-box .mat-icon {
       font-size: 18px;
@@ -86,21 +88,29 @@ export class SearchBoxComponent {
   @Output() readonly filterChange = new EventEmitter<TextFilter>();
 
   hasFlag(flag: FilterFlag): boolean {
-    return assertDefined(this.textFilter).values.flags.includes(flag) ?? false;
+    return assertDefined(this.textFilter).flags.includes(flag) ?? false;
   }
 
   onFilterFlagClick(event: MouseEvent, flag: FilterFlag) {
     event.stopPropagation();
     const filter = assertDefined(this.textFilter);
     if (this.hasFlag(flag)) {
-      filter.values.flags = filter.values.flags.filter((f) => f !== flag);
+      filter.flags = filter.flags.filter((f) => f !== flag);
     } else {
-      filter.values.flags = filter.values.flags.concat(flag);
+      filter.flags = filter.flags.concat(flag);
     }
     this.onFilterChange();
   }
 
   onFilterChange() {
     this.filterChange.emit(this.textFilter);
+  }
+
+  getFormFieldClasses(): string {
+    return (
+      'search-box ' +
+      ((this.textFilter?.filterString.length ?? 0) > 0 ? 'highlighted ' : '') +
+      this.formFieldClass
+    );
   }
 }
