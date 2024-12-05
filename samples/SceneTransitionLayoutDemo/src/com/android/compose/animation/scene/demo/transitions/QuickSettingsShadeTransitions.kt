@@ -72,15 +72,7 @@ fun SceneTransitionsBuilder.quickSettingsShadeTransitions(revealHaptics: Contain
         }
     }
 
-    overscroll(Overlays.QuickSettings, Orientation.Vertical) {
-        notifyStlThatShadeDoesNotResizeDuringThisTransition()
+    overscrollDisabled(Overlays.QuickSettings, Orientation.Vertical)
 
-        translate(PartialShade.Elements.Root, y = { absoluteDistance })
-    }
-
-    overscroll(Overlays.QuickSettings, Orientation.Horizontal) {
-        notifyStlThatShadeDoesNotResizeDuringThisTransition()
-
-        translate(PartialShade.Elements.Root, x = { absoluteDistance })
-    }
+    overscrollDisabled(Overlays.QuickSettings, Orientation.Horizontal)
 }
