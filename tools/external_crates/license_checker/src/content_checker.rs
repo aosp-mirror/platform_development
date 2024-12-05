@@ -71,6 +71,7 @@ static LICENSE_CONTENT_CLASSIFICATION: LazyLock<Vec<(LicenseReq, String)>> = Laz
         ("BSD-2-Clause", include_str!("licenses/BSD-2-Clause.txt")),
         ("BSD-3-Clause", include_str!("licenses/BSD-3-Clause.txt")),
         ("Unlicense", include_str!("licenses/Unlicense.txt")),
+        ("Zlib", include_str!("licenses/Zlib.txt")),
     ]
     .into_iter()
     .map(|(req, tokens)| {
