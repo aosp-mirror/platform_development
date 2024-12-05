@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import {UserWarning} from 'messaging/user_warning';
 import {TraceRect} from 'trace/trace_rect';
 import {PropertiesProvider} from 'trace/tree_node/properties_provider';
 import {PropertyTreeNode} from './property_tree_node';
@@ -25,6 +26,7 @@ export class HierarchyTreeNode extends TreeNode {
   private zParent: HierarchyTreeNode | undefined;
   private parent: this | undefined;
   private relativeChildren: HierarchyTreeNode[] = [];
+  private warnings: UserWarning[] = [];
 
   constructor(
     id: string,
@@ -98,5 +100,13 @@ export class HierarchyTreeNode extends TreeNode {
     }
 
     return ancestor;
+  }
+
+  getWarnings(): UserWarning[] {
+    return this.warnings;
+  }
+
+  addWarning(warning: UserWarning) {
+    this.warnings.push(warning);
   }
 }

@@ -54,7 +54,7 @@ export class ViewerViewCapture implements Viewer {
     );
 
     this.view = new View(
-      ViewType.TAB,
+      ViewType.TRACE_TAB,
       this.getTraces(),
       this.htmlElement,
       TRACE_INFO[TraceType.VIEW_CAPTURE].name,
