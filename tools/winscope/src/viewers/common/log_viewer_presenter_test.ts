@@ -25,6 +25,7 @@ import {MockPresenter} from 'test/unit/mock_log_viewer_presenter';
 import {PropertyTreeBuilder} from 'test/unit/property_tree_builder';
 import {TimestampConverterUtils} from 'test/unit/timestamp_converter_utils';
 import {TraceBuilder} from 'test/unit/trace_builder';
+import {UnitTestUtils} from 'test/unit/utils';
 import {Trace} from 'trace/trace';
 import {TracePosition} from 'trace/trace_position';
 import {TraceType} from 'trace/trace_type';
@@ -33,7 +34,7 @@ import {
   PropertySource,
   PropertyTreeNode,
 } from 'trace/tree_node/property_tree_node';
-import {TextFilter, TextFilterValues} from 'viewers/common/text_filter';
+import {TextFilter} from 'viewers/common/text_filter';
 import {LogSelectFilter, LogTextFilter} from './log_filters';
 import {LogHeader, UiDataLog} from './ui_data_log';
 import {UserOptions} from './user_options';
@@ -280,7 +281,9 @@ describe('AbstractLogViewerPresenter', () => {
     expect(listenerSpy).toHaveBeenCalledTimes(2);
 
     await presenter.onAppEvent(
-      new ActiveTraceChanged(new TraceBuilder<object>().setEntries([]).build()),
+      new ActiveTraceChanged(
+        UnitTestUtils.makeEmptyTrace(TraceType.TRANSACTIONS),
+      ),
     );
     pressRightArrowKey();
     expect(listenerSpy).toHaveBeenCalledTimes(3);
@@ -506,9 +509,7 @@ describe('AbstractLogViewerPresenter', () => {
     expect(
       assertDefined(uiData.propertiesTree).getAllChildren().length,
     ).toEqual(3);
-    await presenter.onPropertiesFilterChange(
-      new TextFilter(new TextFilterValues('pass', [])),
-    );
+    await presenter.onPropertiesFilterChange(new TextFilter('pass'));
     expect(
       assertDefined(uiData.propertiesTree).getAllChildren().length,
     ).toEqual(2);
@@ -539,11 +540,7 @@ describe('AbstractLogViewerPresenter', () => {
   });
 
   it('is robust to empty trace', async () => {
-    const trace = new TraceBuilder<PropertyTreeNode>()
-      .setType(TraceType.TRANSACTIONS)
-      .setEntries([])
-      .setTimestamps([])
-      .build();
+    const trace = UnitTestUtils.makeEmptyTrace(TraceType.TRANSACTIONS);
     const presenter = new MockPresenter(
       trace,
       new InMemoryStorage(),

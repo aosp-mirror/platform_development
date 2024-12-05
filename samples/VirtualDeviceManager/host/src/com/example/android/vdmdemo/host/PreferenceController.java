@@ -74,8 +74,8 @@ final class PreferenceController {
                     VANILLA_ICE_CREAM, Flags::crossDeviceClipboard)
                     .withRequiredPermissions(ADD_TRUSTED_DISPLAY),
 
-            new BoolRule(R.string.pref_enable_custom_activity_policy,
-                    VANILLA_ICE_CREAM,  // TODO: update to post-V once available
+            // TODO(b/379277747): Change to BAKLAVA
+            new BoolRule(R.string.pref_enable_custom_activity_policy, VANILLA_ICE_CREAM,
                     Flags::dynamicPolicy,
                     android.companion.virtualdevice.flags.Flags::activityControlApi),
 
@@ -100,16 +100,21 @@ final class PreferenceController {
             new BoolRule(R.string.pref_enable_custom_home, VANILLA_ICE_CREAM, Flags::vdmCustomHome)
                     .withRequiredPermissions(ADD_TRUSTED_DISPLAY),
 
-            new BoolRule(R.string.pref_enable_custom_status_bar,
-                    VANILLA_ICE_CREAM,  // TODO: update to post-V once available
+            // TODO(b/379277747): Change to BAKLAVA
+            new BoolRule(R.string.pref_enable_custom_status_bar, VANILLA_ICE_CREAM,
                     android.companion.virtualdevice.flags.Flags::statusBarAndInsets)
                     .withRequiredPermissions(ADD_TRUSTED_DISPLAY),
 
-            // TODO: update to post-V once available
+            // TODO(b/379277747): Change to BAKLAVA
             new StringRule(R.string.pref_display_timeout, VANILLA_ICE_CREAM,
                     android.companion.virtualdevice.flags.Flags::deviceAwareDisplayPower,
                     android.companion.virtualdevice.flags.Flags::displayPowerManagerApis)
                     .withDefaultValue(String.valueOf(0)),
+
+            // TODO(b/379277747): Change to BAKLAVA
+            new StringRule(R.string.pref_enable_client_brightness, VANILLA_ICE_CREAM,
+                    android.companion.virtualdevice.flags.Flags::deviceAwareDisplayPower,
+                    android.companion.virtualdevice.flags.Flags::displayPowerManagerApis),
 
             new StringRule(R.string.pref_display_ime_policy, VANILLA_ICE_CREAM, Flags::vdmCustomIme)
                     .withRequiredPermissions(ADD_TRUSTED_DISPLAY)
@@ -120,6 +125,9 @@ final class PreferenceController {
                     .withRequiredPermissions(ADD_TRUSTED_DISPLAY),
 
             new BoolRule(R.string.pref_record_encoder_output, TIRAMISU),
+
+            new BoolRule(R.string.pref_enable_update_audio_policy_mixes, VANILLA_ICE_CREAM)
+                    .withDefaultValue(true),
 
             // Internal-only switches not exposed in the settings page.
             // All of these are booleans acting as switches, while the above ones may be any type.
@@ -133,12 +141,14 @@ final class PreferenceController {
             new InternalBoolRule(R.string.internal_pref_virtual_stylus_supported,
                     VANILLA_ICE_CREAM, Flags::virtualStylus),
 
+            // TODO(b/379277747): Change to BAKLAVA
             new InternalBoolRule(R.string.internal_pref_virtual_rotary_supported,
-                    VANILLA_ICE_CREAM,  // TODO: update to post-V once available
+                    VANILLA_ICE_CREAM,
                     android.companion.virtualdevice.flags.Flags::virtualRotary),
 
+            // TODO(b/379277747): Change to BAKLAVA
             new InternalBoolRule(R.string.internal_pref_display_rotation_supported,
-                    VANILLA_ICE_CREAM,  // TODO: update to post-V once available
+                    VANILLA_ICE_CREAM,
                     android.companion.virtualdevice.flags.Flags::virtualDisplayRotationApi)
     );
     // LINT.ThenChange(/samples/VirtualDeviceManager/README.md:host_options)

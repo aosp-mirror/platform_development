@@ -16,7 +16,7 @@
 
 import {assertDefined} from 'common/assert_utils';
 import {UserNotifier} from 'common/user_notifier';
-import {MissingLayerIds} from 'messaging/user_warnings';
+import {DuplicateLayerIds, MissingLayerIds} from 'messaging/user_warnings';
 import {perfetto} from 'protos/surfaceflinger/latest/static';
 import {android} from 'protos/surfaceflinger/udc/static';
 import {HierarchyTreeNode} from 'trace/tree_node/hierarchy_tree_node';
@@ -122,7 +122,17 @@ export class EntryHierarchyTreeFactory {
         new RectsComputation(),
       ])
       .build();
-    UserNotifier.notify();
+
+    if (missingLayerIds) {
+      tree.addWarning(new MissingLayerIds());
+    }
+    const duplicateIds = Array.from(processed.keys()).filter(
+      (layerId) => assertDefined(processed.get(layerId)) > 1,
+    );
+    if (duplicateIds.length > 0) {
+      tree.addWarning(new DuplicateLayerIds(duplicateIds));
+    }
+
     return tree;
   }
 

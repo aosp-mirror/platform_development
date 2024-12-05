@@ -15,7 +15,6 @@
  */
 
 import {assertDefined} from 'common/assert_utils';
-import {PersistentStoreProxy} from 'common/persistent_store_proxy';
 import {Store} from 'common/store';
 import {Timestamp} from 'common/time';
 import {TimeDuration} from 'common/time_duration';
@@ -27,11 +26,14 @@ import {
 } from 'viewers/common/abstract_log_viewer_presenter';
 import {LogPresenter} from 'viewers/common/log_presenter';
 import {PropertiesPresenter} from 'viewers/common/properties_presenter';
-import {TextFilter, TextFilterValues} from 'viewers/common/text_filter';
+import {TextFilter} from 'viewers/common/text_filter';
 import {LogField, LogHeader} from 'viewers/common/ui_data_log';
 import {CujEntry, CujStatus, UiData} from './ui_data';
 
-export class Presenter extends AbstractLogViewerPresenter<UiData> {
+export class Presenter extends AbstractLogViewerPresenter<
+  UiData,
+  PropertyTreeNode
+> {
   private static readonly COLUMNS = {
     type: {
       name: 'Type',
@@ -59,13 +61,7 @@ export class Presenter extends AbstractLogViewerPresenter<UiData> {
   protected override logPresenter = new LogPresenter<CujEntry>();
   protected override propertiesPresenter = new PropertiesPresenter(
     {},
-    new TextFilter(
-      PersistentStoreProxy.new<TextFilterValues>(
-        'CujsPropertiesFilter',
-        new TextFilterValues('', []),
-        this.storage,
-      ),
-    ),
+    new TextFilter(),
     [],
     [],
   );

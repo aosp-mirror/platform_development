@@ -20,6 +20,7 @@ import {TracePositionUpdate} from 'messaging/winscope_event';
 import {PropertyTreeBuilder} from 'test/unit/property_tree_builder';
 import {TimestampConverterUtils} from 'test/unit/timestamp_converter_utils';
 import {TraceBuilder} from 'test/unit/trace_builder';
+import {UnitTestUtils} from 'test/unit/utils';
 import {Trace} from 'trace/trace';
 import {TraceType} from 'trace/trace_type';
 import {
@@ -163,11 +164,8 @@ class PresenterProtologTest extends AbstractLogViewerPresenterTest<UiData> {
   override async createPresenterWithEmptyTrace(
     callback: NotifyLogViewCallbackType<UiData>,
   ): Promise<Presenter> {
-    const emptyTrace = new TraceBuilder<PropertyTreeNode>()
-      .setType(TraceType.PROTO_LOG)
-      .setEntries([])
-      .build();
-    return new Presenter(emptyTrace, callback, new InMemoryStorage());
+    const trace = UnitTestUtils.makeEmptyTrace(TraceType.PROTO_LOG);
+    return new Presenter(trace, callback, new InMemoryStorage());
   }
 
   override async createPresenter(

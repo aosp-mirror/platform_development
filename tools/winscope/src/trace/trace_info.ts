@@ -30,6 +30,7 @@ const EVENT_LOG_ICON = 'description';
 const TRANSITION_ICON = 'animation';
 const CUJ_ICON = 'label';
 const INPUT_ICON = 'touch_app';
+const SEARCH_ICON = 'search';
 
 interface TraceInfoMap {
   [key: number]: {
@@ -169,7 +170,7 @@ export const TRACE_INFO: TraceInfoMap = {
     legacyExt: '.winscope',
   },
   [TraceType.CUJS]: {
-    name: 'Cujs',
+    name: 'Jank CUJs',
     icon: CUJ_ICON,
     color: '#FF63B8',
     downloadArchiveDir: 'eventlog',
@@ -190,10 +191,17 @@ export const TRACE_INFO: TraceInfoMap = {
     legacyExt: '.winscope',
   },
   [TraceType.INPUT_EVENT_MERGED]: {
-    name: 'Input Events',
+    name: 'Input',
     icon: INPUT_ICON,
     color: '#8baef4',
     downloadArchiveDir: 'input',
     legacyExt: '.winscope',
+  },
+  [TraceType.SEARCH]: {
+    name: 'Search',
+    icon: SEARCH_ICON,
+    color: '#DEBE13',
+    downloadArchiveDir: '',
+    legacyExt: '',
   },
 };
