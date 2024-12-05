@@ -146,3 +146,59 @@ flag {
     purpose: PURPOSE_BUGFIX
   }
 }
+flag {
+    name: "pc_test_1"
+    namespace: "core_experiments_team_internal"
+    description: "A test flag to verify saturation improvements"
+    bug: "336778457"
+    is_fixed_read_only: false
+}
+flag {
+    name: "pc_test_2"
+    namespace: "core_experiments_team_internal"
+    description: "A test flag to verify saturation improvements"
+    bug: "336778457"
+    is_fixed_read_only: false
+}
+flag {
+    name: "pc_test_3"
+    namespace: "core_experiments_team_internal"
+    description: "A test flag to verify saturation improvements"
+    bug: "336778457"
+    is_fixed_read_only: false
+}
+flag {
+    name: "pc_test_4"
+    namespace: "core_experiments_team_internal"
+    description: "A test flag to verify saturation improvements"
+    bug: "336778457"
+    is_fixed_read_only: false
+}
+flag {
+    name: "pc_test_5"
+    namespace: "core_experiments_team_internal"
+    description: "A test flag to verify saturation improvements"
+    bug: "336778457"
+    is_fixed_read_only: false
+}
+flag {
+    name: "pc_test_6"
+    namespace: "core_experiments_team_internal"
+    description: "A test flag to verify saturation improvements"
+    bug: "336778457"
+    is_fixed_read_only: false
+}
+flag {
+    name: "pc_test_7"
+    namespace: "core_experiments_team_internal"
+    description: "A test flag to verify saturation improvements"
+    bug: "336778457"
+    is_fixed_read_only: false
+}
+flag {
+    name: "one_stage_rollback_test_flag"
+    namespace: "gantry"
+    description: "A test flag to verify one stage rollback"
+    bug: "303703498"
+    is_fixed_read_only: false
+}

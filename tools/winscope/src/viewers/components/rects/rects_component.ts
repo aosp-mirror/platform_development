@@ -215,12 +215,10 @@ import {ShadingMode} from './shading_mode';
         display: flex;
         flex-direction: column;
       }
-      .mat-title {
-        padding-top: 8px;
-      }
       .right-btn-container {
         display: flex;
         align-items: center;
+        padding: 2px 0px;
       }
       .right-btn-container .mat-slider-horizontal {
         min-width: 64px !important;

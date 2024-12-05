@@ -24,7 +24,7 @@ import {hierarchyTreeNodeDataViewStyles} from 'viewers/components/styles/tree_no
     <span class="mat-body-1" *ngIf="node">
       <span class="mat-body-2" *ngIf="node.heading()">{{ node.heading() }}</span>
       <ng-container *ngIf="node.heading()">&ngsp;-&ngsp;</ng-container>
-      <span>{{ node.getDisplayName() }}</span>
+      <span class="display-name" [matTooltip]="getNameTooltip()" [matTooltipShowDelay]="300">{{ node.getDisplayName() }}</span>
       <div *ngFor="let chip of node.getChips()" [class]="chipClass(chip)" [matTooltip]="chip.long">
         {{ chip.short }}
       </div>
@@ -34,6 +34,13 @@ import {hierarchyTreeNodeDataViewStyles} from 'viewers/components/styles/tree_no
 })
 export class HierarchyTreeNodeDataViewComponent {
   @Input() node?: UiHierarchyTreeNode;
+
+  getNameTooltip(): string | undefined {
+    if (this.node?.name !== this.node?.getDisplayName()) {
+      return this.node?.name;
+    }
+    return undefined;
+  }
 
   chipClass(chip: Chip) {
     return [

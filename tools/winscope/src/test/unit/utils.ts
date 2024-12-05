@@ -28,6 +28,7 @@ import {Traces} from 'trace/traces';
 import {TraceFile} from 'trace/trace_file';
 import {TraceEntryTypeMap, TraceType} from 'trace/trace_type';
 import {HierarchyTreeNode} from 'trace/tree_node/hierarchy_tree_node';
+import {QueryResult, Row, RowIterator} from 'trace_processor/query_result';
 import {TimestampConverterUtils} from './timestamp_converter_utils';
 import {TraceBuilder} from './trace_builder';
 
@@ -344,6 +345,47 @@ class UnitTestUtils {
     expect(
       collapsedSections.querySelectorAll('.collapsed-section').length,
     ).toEqual(0);
+  }
+
+  static makeEmptyTrace<T extends TraceType>(
+    traceType: T,
+  ): Trace<TraceEntryTypeMap[T]> {
+    return new TraceBuilder<TraceEntryTypeMap[T]>()
+      .setEntries([])
+      .setTimestamps([])
+      .setType(traceType)
+      .build();
+  }
+
+  static makeSearchTraceSpies(
+    ts?: Timestamp,
+  ): [jasmine.SpyObj<QueryResult>, jasmine.SpyObj<RowIterator<Row>>] {
+    const spyQueryResult = jasmine.createSpyObj<QueryResult>('result', [
+      'numRows',
+      'columns',
+      'iter',
+    ]);
+    spyQueryResult.numRows.and.returnValue(1);
+    spyQueryResult.columns.and.returnValue(
+      ts === undefined ? ['property'] : ['ts', 'property'],
+    );
+
+    const spyIter = jasmine.createSpyObj<RowIterator<Row>>('iter', [
+      'valid',
+      'next',
+      'get',
+    ]);
+    if (ts) {
+      spyIter.get.withArgs('ts').and.returnValue(ts.getValueNs());
+    }
+    spyIter.get.withArgs('property').and.returnValue('test_value');
+    spyIter.valid.and.returnValue(true);
+    spyIter.next.and.callFake(() =>
+      assertDefined(spyIter).valid.and.returnValue(false),
+    );
+    spyQueryResult.iter.and.returnValue(spyIter);
+
+    return [spyQueryResult, spyIter];
   }
 
   private static testTimestamps(

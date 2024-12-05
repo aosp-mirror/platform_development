@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-import {DuplicateLayerId} from 'messaging/user_warnings';
 import {PropertyTreeBuilder} from 'test/unit/property_tree_builder';
 import {TreeNodeUtils} from 'test/unit/tree_node_utils';
 import {UserNotifierChecker} from 'test/unit/user_notifier_checker';
@@ -221,7 +220,6 @@ describe('HierarchyTreeBuilderSf', () => {
     expectedRoot.addOrReplaceChild(expectedRootLayer);
 
     expect(root).toEqual(expectedRoot);
-    userNotifierChecker.expectAdded([new DuplicateLayerId('2')]);
   });
 
   it('builds root with default parent values correctly', () => {

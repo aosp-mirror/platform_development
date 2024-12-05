@@ -34,7 +34,7 @@ import {
 import {VISIBLE_CHIP} from 'viewers/common/chip';
 import {DiffType} from 'viewers/common/diff_type';
 import {RectShowState} from 'viewers/common/rect_show_state';
-import {TextFilter, TextFilterValues} from 'viewers/common/text_filter';
+import {TextFilter} from 'viewers/common/text_filter';
 import {UiHierarchyTreeNode} from 'viewers/common/ui_hierarchy_tree_node';
 import {UiTreeUtils} from 'viewers/common/ui_tree_utils';
 import {UserOptions} from 'viewers/common/user_options';
@@ -417,9 +417,7 @@ export abstract class AbstractHierarchyViewerPresenterTest<
 
           await presenter.onAppEvent(this.getPositionUpdate());
           const longNameFilter = UiTreeUtils.makeNodeFilter(
-            new TextFilter(
-              new TextFilterValues(longName, []),
-            ).getFilterPredicate(),
+            new TextFilter(longName).getFilterPredicate(),
           );
           let nodeWithLongName = assertDefined(
             assertDefined(uiData.hierarchyTrees)[0].findDfs(longNameFilter),
@@ -470,7 +468,7 @@ export abstract class AbstractHierarchyViewerPresenterTest<
             ?.findDfs(
               (node) =>
                 !node.isRoot() &&
-                !node.id.includes(this.hierarchyFilter.values.filterString),
+                !node.id.includes(this.hierarchyFilter.filterString),
             ),
         );
         pinNode(nonMatchNode);
@@ -749,14 +747,10 @@ export abstract class AbstractHierarchyViewerPresenterTest<
         await presenter.onAppEvent(saveEvent);
         expect(storage.get(saveEvent.name)).toBeDefined();
 
-        await presenter.onHierarchyFilterChange(
-          new TextFilter(new TextFilterValues('Test Filter', [])),
-        );
+        await presenter.onHierarchyFilterChange(new TextFilter('Test Filter'));
         await presenter.onHierarchyUserOptionsChange({});
         await presenter.onPropertiesUserOptionsChange({});
-        await presenter.onPropertiesFilterChange(
-          new TextFilter(new TextFilterValues('Test Filter', [])),
-        );
+        await presenter.onPropertiesFilterChange(new TextFilter('Test Filter'));
 
         if (this.shouldExecuteRectTests) {
           presenter.onRectsUserOptionsChange({});

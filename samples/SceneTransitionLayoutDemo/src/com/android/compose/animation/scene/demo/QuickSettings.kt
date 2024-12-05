@@ -57,7 +57,6 @@ import com.android.compose.animation.scene.NestedScrollBehavior
 import com.android.compose.animation.scene.SceneKey
 import com.android.compose.animation.scene.SceneScope
 import com.android.compose.animation.scene.Swipe
-import com.android.compose.animation.scene.SwipeDirection
 import com.android.compose.animation.scene.UserAction
 import com.android.compose.animation.scene.UserActionResult
 
@@ -80,8 +79,8 @@ object QuickSettings {
         return mapOf(
             Back to shadeScene,
             Swipe.Up to shadeScene,
-            Swipe(SwipeDirection.Up, pointerCount = 2) to fastSwipeUpScene,
-            Swipe(SwipeDirection.Up, fromSource = Edge.Bottom) to fastSwipeUpScene,
+            Swipe.Up(pointerCount = 2) to fastSwipeUpScene,
+            Swipe.Up(fromSource = Edge.Bottom) to fastSwipeUpScene,
         )
     }
 
