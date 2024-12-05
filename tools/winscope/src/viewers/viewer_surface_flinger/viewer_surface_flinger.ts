@@ -56,7 +56,7 @@ export class ViewerSurfaceFlinger implements Viewer {
     );
 
     this.view = new View(
-      ViewType.TAB,
+      ViewType.TRACE_TAB,
       this.getTraces(),
       this.htmlElement,
       TRACE_INFO[TraceType.SURFACE_FLINGER].name,

@@ -118,6 +118,24 @@ body.dark-mode button.mat-flat-button.mat-primary {
     border-top: 8px solid transparent;
 }
 
+.applied-field .mat-form-field-flex {
+    border-width: 2px;
+    border-style: solid;
+    border-color: transparent;
+}
+
+.applied-field.highlighted:not(.mat-focused) .mat-form-field-flex {
+    border-color: var(--primary);
+}
+
+.applied-field.highlighted .mat-form-field-flex {
+    background-color: var(--selected-element-color);
+}
+
+.applied-field.highlighted:not(.mat-focused) .mat-form-field-underline {
+    display: none;
+}
+
 .no-padding-field .mat-form-field-wrapper {
     padding-bottom: 0px;
 }
@@ -132,4 +150,36 @@ body.dark-mode button.mat-flat-button.mat-primary {
 
 log-view .headers .mat-form-field-infix {
     width: 100%;
+}
+
+.warning-icon {
+    color: var(--warning-color);
+}
+.error-icon {
+    color: var(--error-color);
+}
+
+.save-field {
+    display: flex;
+    align-items: center;
+    font-size: 14px;
+    width: 100%;
+}
+
+.save-field mat-form-field {
+    width: 100%;
+}
+
+.save-field button {
+    height: fit-content;
+    min-width: fit-content;
+    margin-inline-start: 10px;
+}
+
+.search-tabs .mat-tab-label {
+    min-width: 80px;
+}
+
+.search-tabs mat-tab-body {
+    padding: 12px;
 }

@@ -37,6 +37,9 @@
         android:name="android.permission.ADD_TRUSTED_DISPLAY"
         tools:ignore="ProtectedPermissions" />
     <uses-permission
+        android:name="android.permission.ADD_MIRROR_DISPLAY"
+        tools:ignore="ProtectedPermissions" />
+    <uses-permission
         android:name="android.permission.SUBSCRIBE_TO_KEYGUARD_LOCKED_STATE"
         tools:ignore="ProtectedPermissions" />
 

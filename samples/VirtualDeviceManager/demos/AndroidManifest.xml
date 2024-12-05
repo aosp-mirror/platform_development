@@ -137,6 +137,11 @@
             android:exported="false"
             android:label="@string/turn_screen_on_show_when_locked_activity" />
 
+        <activity
+            android:name=".RecorderDemoActivity"
+            android:exported="true"
+            android:label="@string/recorder_demo" />
+
     </application>
     <!-- LINT.ThenChange(/samples/VirtualDeviceManager/README.md:demos) -->
 </manifest>

@@ -14,9 +14,7 @@
  * limitations under the License.
  */
 
-import {globalConfig} from 'common/global_config';
 import {ParserTimestampConverter} from 'common/timestamp_converter';
-import {UrlUtils} from 'common/url_utils';
 import {UserNotifier} from 'common/user_notifier';
 import {ProgressListener} from 'messaging/progress_listener';
 import {InvalidPerfettoTrace} from 'messaging/user_warnings';
@@ -33,11 +31,8 @@ import {ParserViewCapture} from 'parsers/view_capture/perfetto/parser_view_captu
 import {ParserWindowManager} from 'parsers/window_manager/perfetto/parser_window_manager';
 import {Parser} from 'trace/parser';
 import {TraceFile} from 'trace/trace_file';
-import {
-  initWasm,
-  resetEngineWorker,
-  WasmEngineProxy,
-} from 'trace_processor/wasm_engine_proxy';
+import {TraceProcessorFactory} from 'trace_processor/trace_processor_factory';
+import {WasmEngineProxy} from 'trace_processor/wasm_engine_proxy';
 
 export class ParserFactory {
   private static readonly PARSERS = [
@@ -54,7 +49,6 @@ export class ParserFactory {
     ParserKeyEvent,
   ];
   private static readonly CHUNK_SIZE_BYTES = 50 * 1024 * 1024;
-  private static traceProcessor?: WasmEngineProxy;
 
   async createParsers(
     traceFile: TraceFile,
@@ -123,24 +117,14 @@ export class ParserFactory {
   }
 
   private async initializeTraceProcessor(): Promise<WasmEngineProxy> {
-    if (!ParserFactory.traceProcessor) {
-      const traceProcessorRootUrl =
-        globalConfig.MODE === 'KARMA_TEST'
-          ? UrlUtils.getRootUrl() +
-            'base/deps_build/trace_processor/to_be_served/'
-          : UrlUtils.getRootUrl();
-      initWasm(traceProcessorRootUrl);
-      const engineId = 'random-id';
-      const enginePort = resetEngineWorker();
-      ParserFactory.traceProcessor = new WasmEngineProxy(engineId, enginePort);
-    }
+    const traceProcessor = await TraceProcessorFactory.getSingleInstance();
 
-    await ParserFactory.traceProcessor.resetTraceProcessor({
+    await traceProcessor.resetTraceProcessor({
       cropTrackEvents: false,
       ingestFtraceInRawTable: false,
       analyzeTraceProtoContent: false,
     });
 
-    return ParserFactory.traceProcessor;
+    return traceProcessor;
   }
 }

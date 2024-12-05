@@ -26,9 +26,9 @@ export interface UiDataLog {
   entries: LogEntry[];
   selectedIndex: undefined | number;
   scrollToIndex: undefined | number;
+  currentIndex: undefined | number;
 
   headers: LogHeader[];
-  currentIndex?: undefined | number;
   propertiesTree?: undefined | UiPropertyTreeNode;
   propertiesUserOptions?: UserOptions;
   propertiesFilter?: TextFilter;
@@ -45,7 +45,7 @@ export class LogHeader {
 }
 
 export interface LogEntry {
-  traceEntry: TraceEntry<PropertyTreeNode>;
+  traceEntry: TraceEntry<object>;
   fields: LogField[];
   propertiesTree?: undefined | PropertyTreeNode;
 }

@@ -24,6 +24,8 @@ import androidx.compose.animation.core.VectorConverter
 import androidx.compose.animation.core.VisibilityThreshold
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
+import androidx.compose.foundation.gestures.FlingBehavior
+import androidx.compose.foundation.gestures.ScrollableDefaults
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -210,6 +212,7 @@ private fun SceneScope.ShadeLayout(
                 { background() },
                 { underScrim() },
                 {
+                    val flingBehavior = ScrollableDefaults.flingBehavior()
                     Box(
                         Modifier.verticalNestedScrollToScene(
                                 topBehavior = NestedScrollBehavior.EdgeWithPreview
@@ -220,6 +223,7 @@ private fun SceneScope.ShadeLayout(
                                     underScrimHeight,
                                     density,
                                     scrimMinTopPadding,
+                                    flingBehavior,
                                 ) {
                                     scrimNestedScrollConnection(
                                         scrimOffset = { scrimOffset.value },
@@ -227,6 +231,7 @@ private fun SceneScope.ShadeLayout(
                                         underScrimHeight = { underScrimHeight.value },
                                         density = density,
                                         scrimMinTopPadding = scrimMinTopPadding,
+                                        flingBehavior = flingBehavior,
                                     )
                                 }
                             )
@@ -320,12 +325,14 @@ private fun scrimNestedScrollConnection(
     underScrimHeight: () -> Float,
     density: Density,
     scrimMinTopPadding: Dp,
+    flingBehavior: FlingBehavior,
 ): PriorityNestedScrollConnection {
     return LargeTopAppBarNestedScrollConnection(
         height = scrimOffset,
         onHeightChanged = onScrimOffsetChange,
         minHeight = { minScrimOffset(density, underScrimHeight(), scrimMinTopPadding) },
         maxHeight = { 0f },
+        flingBehavior = flingBehavior,
     )
 }
 
