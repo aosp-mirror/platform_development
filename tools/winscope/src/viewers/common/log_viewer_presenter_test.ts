@@ -113,14 +113,9 @@ describe('AbstractLogViewerPresenter', () => {
   });
 
   beforeEach(() => {
-    presenter = new MockPresenter(
-      trace,
-      new InMemoryStorage(),
-      (newData) => {
-        uiData = newData;
-      },
-      true,
-    );
+    presenter = new MockPresenter(trace, new InMemoryStorage(), (newData) => {
+      uiData = newData;
+    });
   });
 
   it('adds events listeners', async () => {
@@ -545,7 +540,6 @@ describe('AbstractLogViewerPresenter', () => {
       trace,
       new InMemoryStorage(),
       (newData) => (uiData = newData),
-      true,
     );
 
     await presenter.onAppEvent(

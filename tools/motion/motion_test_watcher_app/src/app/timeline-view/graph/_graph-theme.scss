@@ -2,14 +2,10 @@
 @use "@angular/material" as mat;
 
 @mixin color($theme) {
-  .golden-card {
-    background-color: white; 
-    // mat.get-theme-color($theme, surface-container-low);
-  }
 }
 
 @mixin typography($theme) {
-  .wrapper {
+  .label {
     font: mat.get-theme-typography($theme, label-large, font);
   }
 }
