@@ -19,8 +19,7 @@ import {PersistentStoreProxy} from 'common/persistent_store_proxy';
 import {Store} from 'common/store';
 import {
   TabbedViewSwitchRequest,
-  WinscopeEvent,
-  WinscopeEventType,
+  TracePositionUpdate,
 } from 'messaging/winscope_event';
 import {CustomQueryType} from 'trace/custom_query';
 import {Trace} from 'trace/trace';
@@ -39,7 +38,7 @@ import {DisplayIdentifier} from 'viewers/common/display_identifier';
 import {HierarchyPresenter} from 'viewers/common/hierarchy_presenter';
 import {PropertiesPresenter} from 'viewers/common/properties_presenter';
 import {RectsPresenter} from 'viewers/common/rects_presenter';
-import {TextFilter, TextFilterValues} from 'viewers/common/text_filter';
+import {TextFilter} from 'viewers/common/text_filter';
 import {UiHierarchyTreeNode} from 'viewers/common/ui_hierarchy_tree_node';
 import {UI_RECT_FACTORY} from 'viewers/common/ui_rect_factory';
 import {UserOptions} from 'viewers/common/user_options';
@@ -71,13 +70,7 @@ export class Presenter extends AbstractHierarchyViewerPresenter<UiData> {
       },
       this.storage,
     ),
-    new TextFilter(
-      PersistentStoreProxy.new<TextFilterValues>(
-        'VcHierarchyFilter',
-        new TextFilterValues('', []),
-        this.storage,
-      ),
-    ),
+    new TextFilter(),
     Presenter.DENYLIST_PROPERTY_NAMES,
     false,
     true,
@@ -118,22 +111,14 @@ export class Presenter extends AbstractHierarchyViewerPresenter<UiData> {
         showDefaults: {
           name: 'Show defaults',
           enabled: false,
-          tooltip: `
-              If checked, shows the value of all properties.
-              Otherwise, hides all properties whose value is
-              the default for its data type.
-            `,
+          tooltip: `If checked, shows the value of all properties.
+Otherwise, hides all properties whose value is
+the default for its data type.`,
         },
       },
       this.storage,
     ),
-    new TextFilter(
-      PersistentStoreProxy.new<TextFilterValues>(
-        'VcPropertiesFilter',
-        new TextFilterValues('', []),
-        this.storage,
-      ),
-    ),
+    new TextFilter(),
     Presenter.DENYLIST_PROPERTY_NAMES,
   );
   protected override readonly multiTraceType = TraceType.VIEW_CAPTURE;
@@ -168,46 +153,6 @@ export class Presenter extends AbstractHierarchyViewerPresenter<UiData> {
     return this.viewCaptureTraces;
   }
 
-  getViewCaptureTraceFromId(id: number): Trace<HierarchyTreeNode> {
-    return assertDefined(this.viewCaptureTraces[id]);
-  }
-
-  override async onAppEvent(event: WinscopeEvent) {
-    await this.handleCommonWinscopeEvents(event);
-    await event.visit(
-      WinscopeEventType.TRACE_POSITION_UPDATE,
-      async (event) => {
-        await this.initializeIfNeeded();
-        await this.applyTracePositionUpdate(event);
-
-        if (this.uiData && this.surfaceFlingerTrace) {
-          const surfaceFlingerEntry =
-            (await TraceEntryFinder.findCorrespondingEntry(
-              this.surfaceFlingerTrace,
-              event.position,
-            )?.getValue()) as HierarchyTreeNode;
-          if (surfaceFlingerEntry) {
-            this.sfRects = UI_RECT_FACTORY.makeUiRects(
-              surfaceFlingerEntry,
-              this.viewCapturePackageNames,
-            );
-          }
-        }
-        this.updateCuratedProperties();
-        this.refreshUIData();
-      },
-    );
-    await event.visit(
-      WinscopeEventType.FILTER_PRESET_APPLY_REQUEST,
-      async (event) => {
-        const filterPresetName = event.name;
-        await this.applyPresetConfig(filterPresetName);
-        this.updateCuratedProperties();
-        this.refreshUIData();
-      },
-    );
-  }
-
   override async onHighlightedNodeChange(node: UiHierarchyTreeNode) {
     await this.applyHighlightedNodeChange(node);
     this.updateCuratedProperties();
@@ -224,13 +169,38 @@ export class Presenter extends AbstractHierarchyViewerPresenter<UiData> {
     return undefined;
   }
 
-  protected override keepCalculated(): boolean {
-    return true;
+  protected override keepCalculated(node: UiHierarchyTreeNode): boolean {
+    return node.isRoot();
   }
 
-  private async initializeIfNeeded() {
+  protected override async initializeIfNeeded() {
     await this.initializePackageNamesIfNeeded();
     await this.initializeWindowsIfNeeded();
+  }
+
+  protected override async processDataAfterPositionUpdate(
+    event: TracePositionUpdate,
+  ): Promise<void> {
+    if (this.uiData && this.surfaceFlingerTrace) {
+      const surfaceFlingerEntry =
+        (await TraceEntryFinder.findCorrespondingEntry(
+          this.surfaceFlingerTrace,
+          event.position,
+        )?.getValue()) as HierarchyTreeNode;
+      if (surfaceFlingerEntry) {
+        this.sfRects = UI_RECT_FACTORY.makeUiRects(
+          surfaceFlingerEntry,
+          this.viewCapturePackageNames,
+        );
+      }
+    }
+    this.updateCuratedProperties();
+  }
+
+  protected override refreshUIData() {
+    this.uiData.sfRects = this.sfRects;
+    this.uiData.curatedProperties = this.curatedProperties;
+    this.refreshHierarchyViewerUiData();
   }
 
   private async initializePackageNamesIfNeeded() {
@@ -334,11 +304,5 @@ export class Presenter extends AbstractHierarchyViewerPresenter<UiData> {
     const index = this.viewCaptureTraces.indexOf(trace);
     assertTrue(index !== -1);
     return index;
-  }
-
-  private refreshUIData() {
-    this.uiData.sfRects = this.sfRects;
-    this.uiData.curatedProperties = this.curatedProperties;
-    this.refreshHierarchyViewerUiData();
   }
 }

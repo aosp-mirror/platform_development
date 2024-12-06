@@ -159,9 +159,7 @@ fun SceneTransitionsBuilder.shadeTransitions(
     }
 
     if (configuration.useOverscrollSpec) {
-        overscroll(Scenes.Shade, Orientation.Vertical) {
-            translate(Shade.Elements.Scrim, y = { absoluteDistance })
-        }
+        overscrollDisabled(Scenes.Shade, Orientation.Vertical)
     }
 }
 

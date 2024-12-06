@@ -40,11 +40,14 @@ import {TimeRange} from 'common/time';
 import {
   ActiveTraceChanged,
   ExpandedTimelineToggled,
+  TraceAddRequest,
   TracePositionUpdate,
+  TraceRemoveRequest,
   WinscopeEvent,
 } from 'messaging/winscope_event';
 import {TimestampConverterUtils} from 'test/unit/timestamp_converter_utils';
 import {TracesBuilder} from 'test/unit/traces_builder';
+import {UnitTestUtils} from 'test/unit/utils';
 import {Trace} from 'trace/trace';
 import {Traces} from 'trace/traces';
 import {TRACE_INFO} from 'trace/trace_info';
@@ -275,7 +278,7 @@ describe('TimelineComponent', () => {
 
   it('handles undefined active trace input', async () => {
     const traces = new TracesBuilder()
-      .setTimestamps(TraceType.SCREEN_RECORDING, [time100, time110])
+      .setTimestamps(TraceType.EVENT_LOG, [time100, time110])
       .build();
 
     const timelineData = assertDefined(component.timelineData);
@@ -1023,6 +1026,26 @@ describe('TimelineComponent', () => {
 
     expect(activeTrace).toEqual(trace);
     expect(position).toBeDefined();
+  });
+
+  it('adds/removes trace and redraws timeline', async () => {
+    loadSfWmTraces();
+    const timelineComponent = assertDefined(component.timeline);
+    const initialTraces = timelineComponent.sortedTraces.slice();
+    const spy = spyOn(
+      assertDefined(timelineComponent.miniTimeline?.drawer),
+      'draw',
+    );
+    const trace = UnitTestUtils.makeEmptyTrace(TraceType.SEARCH);
+
+    await timelineComponent.onWinscopeEvent(new TraceAddRequest(trace));
+    expect(spy).toHaveBeenCalledTimes(1);
+    expect(timelineComponent.sortedTraces).not.toEqual(initialTraces);
+    expect(timelineComponent.sortedTraces[0]).toEqual(trace);
+
+    await timelineComponent.onWinscopeEvent(new TraceRemoveRequest(trace));
+    expect(spy).toHaveBeenCalledTimes(2);
+    expect(timelineComponent.sortedTraces).toEqual(initialTraces);
   });
 
   function loadSfWmTraces(hostComponent = component, hostFixture = fixture) {

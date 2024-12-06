@@ -46,6 +46,7 @@ import {viewerCardInnerStyle} from './styles/viewer_card.styles';
           [title]="title"
           (collapseButtonClicked)="collapseButtonClicked.emit()"></collapsible-section-title>
         <search-box
+          formFieldClass="applied-field"
           [textFilter]="textFilter"
           (filterChange)="onFilterChange($event)"></search-box>
       </div>
@@ -90,10 +91,6 @@ import {viewerCardInnerStyle} from './styles/viewer_card.styles';
         flex-direction: column;
       }
 
-      .padded-title {
-        padding-bottom: 8px;
-      }
-
       .property-groups {
         overflow-y: auto;
       }
@@ -121,7 +118,6 @@ export class PropertiesComponent {
   @Input() propertiesTree: UiPropertyTreeNode | undefined;
   @Input() highlightedProperty = '';
   @Input() curatedProperties: CuratedProperties | undefined;
-  @Input() displayPropertyGroups = false;
   @Input() isProtoDump = false;
   @Input() traceType: TraceType | undefined;
   @Input() store: PersistentStore | undefined;
@@ -157,7 +153,7 @@ export class PropertiesComponent {
   showViewCaptureFormat(): boolean {
     return (
       this.traceType === TraceType.VIEW_CAPTURE &&
-      this.textFilter?.values.filterString === '' &&
+      this.textFilter?.filterString === '' &&
       // Todo: Highlight Inline in formatted ViewCapture Properties Component.
       !this.userOptions['showDiff']?.enabled &&
       this.curatedProperties !== undefined

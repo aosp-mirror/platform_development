@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 import {assertDefined} from 'common/assert_utils';
-import {DuplicateLayerId} from 'messaging/user_warnings';
+import {DuplicateLayerIds} from 'messaging/user_warnings';
 import {TimestampConverterUtils} from 'test/unit/timestamp_converter_utils';
 import {TraceBuilder} from 'test/unit/trace_builder';
 import {UserNotifierChecker} from 'test/unit/user_notifier_checker';
@@ -152,7 +152,9 @@ describe('Perfetto ParserSurfaceFlinger', () => {
         'traces/perfetto/layers_trace_with_duplicated_ids.perfetto-trace',
       );
       const entry = await parser.getEntry(0);
-      expect(entry).toBeTruthy();
+      expect(entry.getWarnings()).toEqual([
+        new DuplicateLayerIds([-2147483595]),
+      ]);
 
       const layer = assertDefined(
         entry.findDfs(
@@ -173,12 +175,10 @@ describe('Perfetto ParserSurfaceFlinger', () => {
           ),
         ),
       );
-
       expect(dupLayer.name).toEqual(
         'Input Consumer recents_animation_input_consumer#408(Mirror) duplicate(1)',
       );
       expect(dupLayer.getAllChildren().length).toEqual(0);
-      userNotifierChecker.expectNotified([new DuplicateLayerId('-2147483595')]);
     });
   });
 });

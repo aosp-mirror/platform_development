@@ -18,6 +18,7 @@ package com.android.compose.animation.scene.demo
 
 import android.content.Context
 import androidx.activity.compose.BackHandler
+import androidx.compose.foundation.OverscrollEffect
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -265,7 +266,7 @@ fun SystemUi(
                 else -> error("Unknown size class: ${windowSizeClass.widthSizeClass}")
             }
         }
-    val nQuickSettingsRow = 4
+    val nQuickSettingsRow = configuration.quickSettingsRows
     val nQuickSettingsSplitShadeRows = nQuickSettingsColumns
 
     // The state of the quick settings pager in the phone (one column) layout.
@@ -370,8 +371,18 @@ fun SystemUi(
     }
 
     @Composable
-    fun SceneScope.NotificationList(maxNotificationCount: Int, isScrollable: Boolean = true) {
-        NotificationList(notifications, maxNotificationCount, configuration, isScrollable)
+    fun SceneScope.NotificationList(
+        maxNotificationCount: Int,
+        isScrollable: Boolean = true,
+        overscrollEffect: OverscrollEffect? = null,
+    ) {
+        NotificationList(
+            notifications = notifications,
+            maxNotificationCount = maxNotificationCount,
+            demoConfiguration = configuration,
+            isScrollable = isScrollable,
+            overscrollEffect = overscrollEffect,
+        )
     }
 
     if (showConfigurationDialog) {
@@ -591,9 +602,10 @@ fun SystemUi(
                             Shade.userActions(isLockscreenDismissed, lockscreenScene),
                         ) {
                             Shade(
-                                notificationList = {
+                                notificationList = { overscrollEffect ->
                                     NotificationList(
-                                        maxNotificationCount = configuration.notificationsInShade
+                                        maxNotificationCount = configuration.notificationsInShade,
+                                        overscrollEffect = overscrollEffect,
                                     )
                                 },
                                 mediaPlayer,

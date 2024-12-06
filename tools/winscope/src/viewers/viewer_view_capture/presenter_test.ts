@@ -15,10 +15,12 @@
  */
 
 import {assertDefined} from 'common/assert_utils';
-import {Rect} from 'common/geometry/rect';
 import {InMemoryStorage} from 'common/in_memory_storage';
 import {Store} from 'common/store';
-import {TracePositionUpdate} from 'messaging/winscope_event';
+import {
+  TabbedViewSwitchRequest,
+  TracePositionUpdate,
+} from 'messaging/winscope_event';
 import {TraceBuilder} from 'test/unit/trace_builder';
 import {UnitTestUtils} from 'test/unit/utils';
 import {CustomQueryType} from 'trace/custom_query';
@@ -29,8 +31,7 @@ import {TraceType} from 'trace/trace_type';
 import {HierarchyTreeNode} from 'trace/tree_node/hierarchy_tree_node';
 import {NotifyHierarchyViewCallbackType} from 'viewers/common/abstract_hierarchy_viewer_presenter';
 import {AbstractHierarchyViewerPresenterTest} from 'viewers/common/abstract_hierarchy_viewer_presenter_test';
-import {DiffType} from 'viewers/common/diff_type';
-import {TextFilter, TextFilterValues} from 'viewers/common/text_filter';
+import {VISIBLE_CHIP} from 'viewers/common/chip';
 import {UiDataHierarchy} from 'viewers/common/ui_data_hierarchy';
 import {UiHierarchyTreeNode} from 'viewers/common/ui_hierarchy_tree_node';
 import {UiTreeUtils} from 'viewers/common/ui_tree_utils';
@@ -41,33 +42,58 @@ class PresenterViewCaptureTest extends AbstractHierarchyViewerPresenterTest<UiDa
   private traces: Traces | undefined;
   private positionUpdate: TracePositionUpdate | undefined;
   private secondPositionUpdate: TracePositionUpdate | undefined;
-  private diffPositionUpdate: TracePositionUpdate | undefined;
   private selectedTree: UiHierarchyTreeNode | undefined;
 
-  override readonly shouldExecuteFlatTreeTest = false;
   override readonly shouldExecuteRectTests = true;
-  override readonly shouldExecuteShowDiffTests = true;
-  override readonly shouldExecuteDumpTests = false;
   override readonly shouldExecuteSimplifyNamesTest = true;
+  override readonly keepCalculatedPropertiesInChild = false;
+  override readonly keepCalculatedPropertiesInRoot = true;
+  override readonly expectedHierarchyOpts = {
+    showDiff: {
+      name: 'Show diff',
+      enabled: false,
+      isUnavailable: true,
+    },
+    showOnlyVisible: {
+      name: 'Show only',
+      chip: VISIBLE_CHIP,
+      enabled: false,
+    },
+    simplifyNames: {
+      name: 'Simplify names',
+      enabled: true,
+    },
+  };
+  override readonly expectedPropertiesOpts = {
+    showDiff: {
+      name: 'Show diff',
+      enabled: false,
+      isUnavailable: true,
+    },
+    showDefaults: {
+      name: 'Show defaults',
+      enabled: false,
+      tooltip: `If checked, shows the value of all properties.
+Otherwise, hides all properties whose value is
+the default for its data type.`,
+    },
+  };
+  override readonly expectedRectsOpts = {
+    ignoreRectShowState: {
+      name: 'Ignore',
+      icon: 'visibility',
+      enabled: false,
+    },
+    showOnlyVisible: {
+      name: 'Show only',
+      chip: VISIBLE_CHIP,
+      enabled: false,
+    },
+  };
 
-  override readonly numberOfDefaultProperties = 3;
-  override readonly numberOfNonDefaultProperties = 15;
-  override readonly expectedFirstRect = new Rect(0, 0, 1080, 249);
-  override readonly propertiesFilter = new TextFilter(
-    new TextFilterValues('alpha', []),
-  );
-  override readonly expectedTotalRects = 13;
-  override readonly expectedVisibleRects = 5;
   override readonly treeNodeLongName =
     'com.android.launcher3.taskbar.TaskbarView@80213537';
   override readonly treeNodeShortName = 'TaskbarView@80213537';
-  override readonly numberOfFilteredProperties = 1;
-  override readonly hierarchyFilter = new TextFilter(
-    new TextFilterValues('BubbleBarView', []),
-  );
-  override readonly expectedHierarchyChildrenAfterStringFilter = 1;
-  override readonly propertyWithDiff = 'translationY';
-  override readonly expectedPropertyDiffType = DiffType.MODIFIED;
 
   override async setUpTestEnvironment(): Promise<void> {
     const parsers = (await UnitTestUtils.getParsers(
@@ -96,17 +122,15 @@ class PresenterViewCaptureTest extends AbstractHierarchyViewerPresenterTest<UiDa
     const firstEntryDataTree = await firstEntry.getValue();
     this.selectedTree = UiHierarchyTreeNode.from(
       assertDefined(
-        firstEntryDataTree.findDfs(
-          UiTreeUtils.makeIdMatchFilter(
-            'ViewNode com.android.launcher3.taskbar.TaskbarView@80213537',
-          ),
-        ),
+        firstEntryDataTree
+          .findDfs(
+            UiTreeUtils.makeIdMatchFilter(
+              'ViewNode com.android.launcher3.taskbar.TaskbarView@80213537',
+            ),
+          )
+          ?.getParent(),
       ),
-    );
-
-    this.diffPositionUpdate = TracePositionUpdate.fromTraceEntry(
-      traceTaskbar.getEntry(21),
-    );
+    ).getChildByName('com.android.launcher3.taskbar.TaskbarView@80213537');
   }
 
   override createPresenterWithEmptyTrace(
@@ -119,23 +143,6 @@ class PresenterViewCaptureTest extends AbstractHierarchyViewerPresenterTest<UiDa
         packageName: 'the_package_name',
         windowName: 'the_window_name',
       })
-      .build();
-    const traces = new Traces();
-    traces.addTrace(trace);
-    return new Presenter(traces, new InMemoryStorage(), callback);
-  }
-
-  override createPresenterWithCorruptedTrace(
-    callback: NotifyHierarchyViewCallbackType<UiData>,
-  ): Presenter {
-    const trace = new TraceBuilder<HierarchyTreeNode>()
-      .setType(TraceType.VIEW_CAPTURE)
-      .setEntries([assertDefined(this.selectedTree)])
-      .setParserCustomQueryResult(CustomQueryType.VIEW_CAPTURE_METADATA, {
-        packageName: 'the_package_name',
-        windowName: 'the_window_name',
-      })
-      .setIsCorrupted(true)
       .build();
     const traces = new Traces();
     traces.addTrace(trace);
@@ -157,30 +164,6 @@ class PresenterViewCaptureTest extends AbstractHierarchyViewerPresenterTest<UiDa
     return assertDefined(this.secondPositionUpdate);
   }
 
-  override getShowDiffPositionUpdate(): TracePositionUpdate {
-    return assertDefined(this.diffPositionUpdate);
-  }
-
-  override getExpectedChildrenBeforeVisibilityFilter(): number {
-    return this.numberOfNestedChildren;
-  }
-
-  override getExpectedChildrenAfterVisibilityFilter(): number {
-    return this.numberOfVisibleChildren;
-  }
-
-  override getExpectedHierarchyChildrenBeforeStringFilter(): number {
-    return this.numberOfNestedChildren;
-  }
-
-  override executeSpecializedChecksForPropertiesFromNode(
-    uiData: UiDataHierarchy,
-  ) {
-    expect(
-      assertDefined((uiData as UiData).curatedProperties).translationY,
-    ).toEqual('-0.633');
-  }
-
   override getSelectedTree(): UiHierarchyTreeNode {
     return assertDefined(this.selectedTree);
   }
@@ -189,9 +172,7 @@ class PresenterViewCaptureTest extends AbstractHierarchyViewerPresenterTest<UiDa
     return assertDefined(this.selectedTree);
   }
 
-  override executeChecksForPropertiesTreeAfterPositionUpdate(
-    uiData: UiDataHierarchy,
-  ) {
+  override executePropertiesChecksAfterPositionUpdate(uiData: UiDataHierarchy) {
     const propertiesTree = assertDefined(uiData.propertiesTree);
     expect(
       assertDefined(
@@ -202,16 +183,18 @@ class PresenterViewCaptureTest extends AbstractHierarchyViewerPresenterTest<UiDa
       {displayId: 0, groupId: 0, name: 'Taskbar', isActive: true},
       {displayId: 1, groupId: 1, name: 'PhoneWindow@25063d9', isActive: true},
     ]);
+    expect(
+      assertDefined((uiData as UiData).curatedProperties).translationY,
+    ).toEqual('-0.633');
   }
 
-  override executeChecksForPropertiesTreeAfterSecondPositionUpdate(
+  override executePropertiesChecksAfterSecondPositionUpdate(
     uiData: UiDataHierarchy,
   ) {
     const propertiesTree = assertDefined(uiData.propertiesTree);
+    expect(propertiesTree.getChildByName('translationY')).toBeUndefined();
     expect(
-      assertDefined(
-        propertiesTree.getChildByName('translationY'),
-      ).formattedValue(),
+      assertDefined((uiData as UiData).curatedProperties).translationY,
     ).toEqual('0');
   }
 
@@ -227,8 +210,105 @@ class PresenterViewCaptureTest extends AbstractHierarchyViewerPresenterTest<UiDa
     expect(curatedProperties.willNotDraw).toEqual('false');
   }
 
-  private readonly numberOfVisibleChildren = 6;
-  private readonly numberOfNestedChildren = 16;
+  override executeSpecializedTests() {
+    describe('Specialized tests', () => {
+      let presenter: Presenter;
+      let uiData: UiData;
+
+      beforeAll(async () => {
+        await this.setUpTestEnvironment();
+      });
+
+      beforeEach(() => {
+        const notifyViewCallback = (newData: UiData) => {
+          uiData = newData;
+        };
+        presenter = this.createPresenter(
+          notifyViewCallback as NotifyHierarchyViewCallbackType<UiData>,
+          new InMemoryStorage(),
+        );
+      });
+
+      it('exposes all VC traces', () => {
+        const traces = new Traces();
+        const vcTraces = [
+          UnitTestUtils.makeEmptyTrace(TraceType.VIEW_CAPTURE),
+          UnitTestUtils.makeEmptyTrace(TraceType.VIEW_CAPTURE),
+        ];
+        vcTraces.forEach((trace) => traces.addTrace(trace));
+        const notifyViewCallback = (newData: UiData) => {
+          uiData = newData;
+        };
+        const presenter = new Presenter(
+          traces,
+          new InMemoryStorage(),
+          notifyViewCallback,
+        );
+        expect(presenter.getTraces()).toEqual(vcTraces);
+      });
+
+      it('extracts rects from SF trace', async () => {
+        const sfTrace = new TraceBuilder<HierarchyTreeNode>()
+          .setType(TraceType.SURFACE_FLINGER)
+          .setEntries([await UnitTestUtils.getLayerTraceEntry(0)])
+          .build();
+        const presenter = createPresenterWithSfTrace(
+          assertDefined(this.traces),
+          sfTrace,
+        );
+        await presenter.onAppEvent(assertDefined(this.positionUpdate));
+        expect(assertDefined(uiData.sfRects).length).toBeGreaterThan(0);
+      });
+
+      it('handles double click if SF trace present', async () => {
+        const sfTrace = UnitTestUtils.makeEmptyTrace(TraceType.SURFACE_FLINGER);
+        const presenter = createPresenterWithSfTrace(
+          assertDefined(this.traces),
+          sfTrace,
+        );
+        const spy = jasmine.createSpy();
+        presenter.setEmitEvent(spy);
+
+        await presenter.onMiniRectsDoubleClick();
+        expect(spy).toHaveBeenCalledOnceWith(
+          new TabbedViewSwitchRequest(sfTrace),
+        );
+      });
+
+      it('robust to double click if SF trace not present', async () => {
+        const spy = jasmine.createSpy();
+        presenter.setEmitEvent(spy);
+        await presenter.onMiniRectsDoubleClick();
+        expect(spy).not.toHaveBeenCalled();
+      });
+
+      it('clears curated properties on position update if no properties tree found', async () => {
+        await presenter.onAppEvent(assertDefined(this.secondPositionUpdate));
+        const nodeName = 'com.android.internal.policy.DecorView@220010144';
+        await presenter.onHighlightedIdChange(nodeName);
+        expect(uiData.propertiesTree).toBeDefined();
+        expect(uiData.curatedProperties).toBeDefined();
+
+        await presenter.onAppEvent(assertDefined(this.positionUpdate));
+        expect(uiData.propertiesTree).toBeUndefined();
+        expect(uiData.curatedProperties).toBeUndefined();
+      });
+
+      function createPresenterWithSfTrace(
+        vcTraces: Traces,
+        sfTrace: Trace<HierarchyTreeNode>,
+      ): Presenter {
+        const traces = new Traces();
+        vcTraces.forEachTrace((trace) => traces.addTrace(trace));
+        traces.addTrace(sfTrace);
+
+        const notifyViewCallback = (newData: UiData) => {
+          uiData = newData;
+        };
+        return new Presenter(traces, new InMemoryStorage(), notifyViewCallback);
+      }
+    });
+  }
 }
 
 describe('PresenterViewCapture', () => {
