@@ -14,17 +14,16 @@
  * limitations under the License.
  */
 
-@file:OptIn(ExperimentalFoundationApi::class)
-
 package com.android.compose.animation.scene.demo
 
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.AnimationVector1D
 import androidx.compose.animation.core.VectorConverter
 import androidx.compose.animation.core.VisibilityThreshold
-import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.OverscrollEffect
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.FlingBehavior
+import androidx.compose.foundation.gestures.Orientation
 import androidx.compose.foundation.gestures.ScrollableDefaults
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -34,6 +33,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.overscroll
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.LocalTextStyle
@@ -70,7 +70,6 @@ import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import com.android.compose.animation.scene.Back
 import com.android.compose.animation.scene.ElementKey
-import com.android.compose.animation.scene.NestedScrollBehavior
 import com.android.compose.animation.scene.SceneKey
 import com.android.compose.animation.scene.SceneScope
 import com.android.compose.animation.scene.Swipe
@@ -79,6 +78,7 @@ import com.android.compose.animation.scene.UserActionResult
 import com.android.compose.animation.scene.ValueKey
 import com.android.compose.animation.scene.animateElementFloatAsState
 import com.android.compose.animation.scene.animateSceneFloatAsState
+import com.android.compose.animation.scene.effect.rememberOffsetOverscrollEffect
 import com.android.compose.modifiers.thenIf
 import com.android.compose.nestedscroll.LargeTopAppBarNestedScrollConnection
 import com.android.compose.nestedscroll.PriorityNestedScrollConnection
@@ -139,7 +139,7 @@ object Shade {
 
 @Composable
 fun SceneScope.Shade(
-    notificationList: @Composable SceneScope.() -> Unit,
+    notificationList: @Composable SceneScope.(OverscrollEffect?) -> Unit,
     mediaPlayer: (@Composable SceneScope.() -> Unit)?,
     quickSettingsTiles: List<QuickSettingsTileViewModel>,
     nQuickSettingsColumns: Int,
@@ -214,9 +214,7 @@ private fun SceneScope.ShadeLayout(
                 {
                     val flingBehavior = ScrollableDefaults.flingBehavior()
                     Box(
-                        Modifier.verticalNestedScrollToScene(
-                                topBehavior = NestedScrollBehavior.EdgeWithPreview
-                            )
+                        Modifier.verticalNestedScrollToScene()
                             .nestedScroll(
                                 remember(
                                     scrimOffset,
@@ -397,12 +395,19 @@ private fun SceneScope.UnderScrim(
 
 @Composable
 private fun SceneScope.Scrim(
-    notificationList: @Composable SceneScope.() -> Unit,
+    notificationList: @Composable SceneScope.(OverscrollEffect?) -> Unit,
     shouldPunchHoleBehindScrim: Boolean,
     scrimMinTopPadding: Dp,
     modifier: Modifier = Modifier,
 ) {
-    Box(modifier.element(Shade.Elements.Scrim).clip(Shade.Shapes.Scrim)) {
+    val overscrollEffect = rememberOffsetOverscrollEffect(Orientation.Vertical)
+    Box(
+        modifier
+            .overscroll(verticalOverscrollEffect)
+            .overscroll(overscrollEffect)
+            .element(Shade.Elements.Scrim)
+            .clip(Shade.Shapes.Scrim)
+    ) {
         if (shouldPunchHoleBehindScrim) {
             Spacer(
                 Modifier.fillMaxSize().drawBehind {
@@ -426,7 +431,7 @@ private fun SceneScope.Scrim(
                 .fillMaxSize(),
             propagateMinConstraints = true,
         ) {
-            notificationList()
+            notificationList(overscrollEffect)
         }
     }
 }

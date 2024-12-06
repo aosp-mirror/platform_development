@@ -20,8 +20,6 @@ import {Store} from 'common/store';
 import {
   TabbedViewSwitchRequest,
   TracePositionUpdate,
-  WinscopeEvent,
-  WinscopeEventType,
 } from 'messaging/winscope_event';
 import {LayerFlag} from 'parsers/surface_flinger/layer_flag';
 import {CustomQueryType} from 'trace/custom_query';
@@ -130,11 +128,9 @@ export class Presenter extends AbstractHierarchyViewerPresenter<UiData> {
         showDefaults: {
           name: 'Show defaults',
           enabled: false,
-          tooltip: `
-              If checked, shows the value of all properties.
-              Otherwise, hides all properties whose value is
-              the default for its data type.
-            `,
+          tooltip: `If checked, shows the value of all properties.
+Otherwise, hides all properties whose value is
+the default for its data type.`,
         },
       },
       this.storage,
@@ -146,9 +142,8 @@ export class Presenter extends AbstractHierarchyViewerPresenter<UiData> {
   );
   protected override multiTraceType = undefined;
 
-  private viewCapturePackageNames: string[] = [];
+  private viewCapturePackageNames: string[] | undefined;
   private curatedProperties: SfCuratedProperties | undefined;
-  private displayPropertyGroups = false;
   private wmTrace: Trace<HierarchyTreeNode> | undefined;
   private wmFocusedDisplayId: number | undefined;
 
@@ -163,40 +158,19 @@ export class Presenter extends AbstractHierarchyViewerPresenter<UiData> {
   }
 
   async onRectDoubleClick(rectId: string) {
+    if (!this.viewCapturePackageNames) {
+      return;
+    }
     const rectHasViewCapture = this.viewCapturePackageNames.some(
       (packageName) => rectId.includes(packageName),
     );
     if (!rectHasViewCapture) {
       return;
     }
-    const newActiveTrace = this.traces.getTrace(TraceType.VIEW_CAPTURE);
-    if (!newActiveTrace) {
-      return;
-    }
+    const newActiveTrace = assertDefined(
+      this.traces.getTrace(TraceType.VIEW_CAPTURE),
+    );
     await this.emitWinscopeEvent(new TabbedViewSwitchRequest(newActiveTrace));
-  }
-
-  override async onAppEvent(event: WinscopeEvent) {
-    await this.handleCommonWinscopeEvents(event);
-    await event.visit(
-      WinscopeEventType.TRACE_POSITION_UPDATE,
-      async (event) => {
-        await this.initializeIfNeeded();
-        await this.setInitialWmActiveDisplay(event);
-        await this.applyTracePositionUpdate(event);
-        this.updateCuratedProperties();
-        this.refreshUIData();
-      },
-    );
-    await event.visit(
-      WinscopeEventType.FILTER_PRESET_APPLY_REQUEST,
-      async (event) => {
-        const filterPresetName = event.name;
-        await this.applyPresetConfig(filterPresetName);
-        this.updateCuratedProperties();
-        this.refreshUIData();
-      },
-    );
   }
 
   override async onHighlightedNodeChange(item: UiHierarchyTreeNode) {
@@ -223,15 +197,27 @@ export class Presenter extends AbstractHierarchyViewerPresenter<UiData> {
     return tree.isRoot();
   }
 
-  private async initializeIfNeeded() {
-    const tracesVc = this.traces.getTraces(TraceType.VIEW_CAPTURE);
-    const promisesPackageName = tracesVc.map(async (trace) => {
-      const packageAndWindow = await trace.customQuery(
-        CustomQueryType.VIEW_CAPTURE_METADATA,
-      );
-      return packageAndWindow.packageName;
-    });
-    this.viewCapturePackageNames = await Promise.all(promisesPackageName);
+  protected override async initializeIfNeeded(event: TracePositionUpdate) {
+    if (!this.viewCapturePackageNames) {
+      const tracesVc = this.traces.getTraces(TraceType.VIEW_CAPTURE);
+      const promisesPackageName = tracesVc.map(async (trace) => {
+        const packageAndWindow = await trace.customQuery(
+          CustomQueryType.VIEW_CAPTURE_METADATA,
+        );
+        return packageAndWindow.packageName;
+      });
+      this.viewCapturePackageNames = await Promise.all(promisesPackageName);
+    }
+    await this.setInitialWmActiveDisplay(event);
+  }
+
+  protected override async processDataAfterPositionUpdate(): Promise<void> {
+    this.updateCuratedProperties();
+  }
+
+  protected override refreshUIData() {
+    this.uiData.curatedProperties = this.curatedProperties;
+    this.refreshHierarchyViewerUiData();
   }
 
   private updateCuratedProperties() {
@@ -241,17 +227,14 @@ export class Presenter extends AbstractHierarchyViewerPresenter<UiData> {
     if (selectedHierarchyTree && propertiesTree) {
       if (selectedHierarchyTree[1].isRoot()) {
         this.curatedProperties = undefined;
-        this.displayPropertyGroups = false;
       } else {
         this.curatedProperties = this.getCuratedProperties(
           selectedHierarchyTree[1],
           propertiesTree,
         );
-        this.displayPropertyGroups = true;
       }
     } else {
       this.curatedProperties = undefined;
-      this.displayPropertyGroups = false;
     }
   }
 
@@ -318,9 +301,9 @@ export class Presenter extends AbstractHierarchyViewerPresenter<UiData> {
       ).formattedValue(),
       z: assertDefined(pTree.getChildByName('z')).formattedValue(),
       relativeParent,
-      relativeChildren:
-        hTree.getRelativeChildren().map((c) => this.getLayerSummary(c.id)) ??
-        [],
+      relativeChildren: hTree
+        .getRelativeChildren()
+        .map((c) => this.getLayerSummary(c.id)),
       calcColor: this.getColorPropertyValue(pTree, 'color'),
       calcShadowRadius: this.getPixelPropertyValue(pTree, 'shadowRadius'),
       calcCornerRadius: this.getPixelPropertyValue(pTree, 'cornerRadius'),
@@ -452,12 +435,6 @@ export class Presenter extends AbstractHierarchyViewerPresenter<UiData> {
         .getEagerPropertyByName('focusedDisplayId')
         ?.getValue();
     }
-  }
-
-  private refreshUIData() {
-    this.uiData.curatedProperties = this.curatedProperties;
-    this.uiData.displayPropertyGroups = this.displayPropertyGroups;
-    this.refreshHierarchyViewerUiData();
   }
 }
 
