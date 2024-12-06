@@ -99,10 +99,6 @@ export class ParserTransactions extends AbstractParser<PropertyTreeNode> {
           entriesRange,
         );
       })
-      .visit(CustomQueryType.INITIALIZE_TRACE_SEARCH, async () => {
-        // TODO: Create views
-        await this.createSqlTableWithDefaults(this.getTableName());
-      })
       .getResult();
   }
 

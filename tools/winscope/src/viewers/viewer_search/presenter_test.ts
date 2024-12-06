@@ -124,8 +124,9 @@ describe('PresenterSearch', () => {
     );
     expect(uiData.initialized).toBeFalse();
 
-    await presenter.onAppEvent(new TraceSearchInitialized());
+    await presenter.onAppEvent(new TraceSearchInitialized(['test_view']));
     expect(uiData.initialized).toBeTrue();
+    expect(uiData.searchViews).toEqual(['test_view']);
 
     emitEventSpy.calls.reset();
     await presenter.onGlobalSearchSectionClick();
