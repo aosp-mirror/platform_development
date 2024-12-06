@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-import {FunctionUtils} from 'common/function_utils';
 import {Store} from 'common/store';
 import {WinscopeEvent} from 'messaging/winscope_event';
 import {EmitEvent} from 'messaging/winscope_event_emitter';
@@ -31,14 +30,11 @@ import {UiData} from './ui_data';
 export class ViewerViewCapture implements Viewer {
   static readonly DEPENDENCIES: TraceType[] = [TraceType.VIEW_CAPTURE];
 
-  private readonly traces: Traces;
   private readonly htmlElement: HTMLElement;
   private readonly presenter: Presenter;
   private readonly view: View;
-  private emitAppEvent: EmitEvent = FunctionUtils.DO_NOTHING_ASYNC;
 
   constructor(traces: Traces, storage: Store) {
-    this.traces = traces;
     this.htmlElement = document.createElement('viewer-view-capture');
     const notifyViewCallback = (uiData: UiData) => {
       (this.htmlElement as any).inputData = uiData;

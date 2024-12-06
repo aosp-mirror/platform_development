@@ -118,7 +118,6 @@ export class PropertiesComponent {
   @Input() propertiesTree: UiPropertyTreeNode | undefined;
   @Input() highlightedProperty = '';
   @Input() curatedProperties: CuratedProperties | undefined;
-  @Input() displayPropertyGroups = false;
   @Input() isProtoDump = false;
   @Input() traceType: TraceType | undefined;
   @Input() store: PersistentStore | undefined;
