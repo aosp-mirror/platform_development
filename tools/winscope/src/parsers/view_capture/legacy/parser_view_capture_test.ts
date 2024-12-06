@@ -22,6 +22,7 @@ import {Parser} from 'trace/parser';
 import {Trace} from 'trace/trace';
 import {TraceType} from 'trace/trace_type';
 import {HierarchyTreeNode} from 'trace/tree_node/hierarchy_tree_node';
+import {PropertySource} from 'trace/tree_node/property_tree_node';
 
 describe('ParserViewCapture', () => {
   let parser: Parser<HierarchyTreeNode>;
@@ -57,6 +58,10 @@ describe('ParserViewCapture', () => {
     expect(entry.id).toEqual(
       'ViewNode com.android.launcher3.taskbar.TaskbarDragLayer@265160962',
     );
+    // check calculated properties not overridden by lazily fetched properties
+    expect(
+      (await entry.getAllProperties()).getChildByName('translationX')?.source,
+    ).toEqual(PropertySource.CALCULATED);
   });
 
   it('supports VIEW_CAPTURE_METADATA custom query', async () => {
