@@ -16,12 +16,14 @@
 
 package com.android.compose.animation.scene.demo.notification
 
+import androidx.compose.foundation.OverscrollEffect
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.withoutVisualEffect
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.key
@@ -57,8 +59,9 @@ fun SceneScope.NotificationList(
     notifications: List<NotificationViewModel>,
     maxNotificationCount: Int?,
     demoConfiguration: DemoConfiguration,
-    isScrollable: Boolean = true,
     modifier: Modifier = Modifier,
+    isScrollable: Boolean = true,
+    overscrollEffect: OverscrollEffect? = null,
 ) {
     if (demoConfiguration.interactiveNotifications) {
         ExpandFirstNotificationWhenSwipingFromLockscreenToShade(notifications)
@@ -69,9 +72,12 @@ fun SceneScope.NotificationList(
     // TODO(b/291025415): Make sure everything still works when using `LazyColumn` instead of a
     // scrollable `Column`.
     val scrollState = if (isScrollable) rememberScrollState() else null
+
     Column(
         modifier
-            .thenIf(scrollState != null) { Modifier.verticalScroll(scrollState!!) }
+            .thenIf(scrollState != null) {
+                Modifier.verticalScroll(scrollState!!, overscrollEffect?.withoutVisualEffect())
+            }
             .fillMaxWidth()
             .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(2.dp),
