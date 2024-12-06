@@ -26,6 +26,8 @@ import android.util.Log;
 import androidx.annotation.GuardedBy;
 import androidx.annotation.NonNull;
 
+import com.google.common.collect.ImmutableSet;
+
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -70,7 +72,7 @@ final class RunningVdmUidsTracker implements ActivityListener {
 
         observers.put(R.string.pref_enable_client_audio, b -> {
             synchronized (mLock) {
-                updateVdmUids(mRunningVdmUids);
+                updateVdmUids(ImmutableSet.copyOf(mRunningVdmUids));
             }
         });
 
@@ -86,7 +88,7 @@ final class RunningVdmUidsTracker implements ActivityListener {
             return;
         }
 
-        final Set<Integer> updatedUids;
+        final ImmutableSet<Integer> updatedUids;
         synchronized (mLock) {
             HashSet<Integer> displayUidSet =
                     mDisplayIdToRunningUids.computeIfAbsent(displayId, k -> new HashSet<>());
@@ -95,7 +97,7 @@ final class RunningVdmUidsTracker implements ActivityListener {
                     mDisplayIdToRunningUids.values().stream()
                             .flatMap(Collection::stream)
                             .collect(Collectors.toSet());
-            updatedUids = mRunningVdmUids;
+            updatedUids = ImmutableSet.copyOf(mRunningVdmUids);
         }
 
         updateVdmUids(updatedUids);
@@ -104,7 +106,7 @@ final class RunningVdmUidsTracker implements ActivityListener {
     @Override
     public void onDisplayEmpty(int displayId) {
         Set<Integer> uidsBefore;
-        Set<Integer> uidsAfter;
+        ImmutableSet<Integer> uidsAfter;
         synchronized (mLock) {
             uidsBefore = mRunningVdmUids;
             mDisplayIdToRunningUids.remove(displayId);
@@ -112,7 +114,7 @@ final class RunningVdmUidsTracker implements ActivityListener {
                     mDisplayIdToRunningUids.values().stream()
                             .flatMap(Collection::stream)
                             .collect(Collectors.toSet());
-            uidsAfter = mRunningVdmUids;
+            uidsAfter = ImmutableSet.copyOf(mRunningVdmUids);
         }
 
         if (!uidsAfter.equals(uidsBefore)) {
@@ -120,7 +122,7 @@ final class RunningVdmUidsTracker implements ActivityListener {
         }
     }
 
-    private void updateVdmUids(Set<Integer> uids) {
+    private void updateVdmUids(ImmutableSet<Integer> uids) {
         if (mPreferenceController.getBoolean(R.string.pref_enable_client_audio)) {
             mAudioStreamer.updateVdmUids(uids);
             mAudioInjector.updateVdmUids(uids);

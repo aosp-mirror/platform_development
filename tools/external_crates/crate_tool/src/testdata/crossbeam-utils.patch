@@ -1,0 +1,103 @@
+--- a/tests/sharded_lock.rs
++++ b/tests/sharded_lock.rs
+@@ -46,6 +46,8 @@ fn frob() {
+ }
+ 
+ #[test]
++// Android aborts on panic and this test relies on stack unwinding.
++#[cfg(not(target_os = "android"))]
+ fn arc_poison_wr() {
+     let arc = Arc::new(ShardedLock::new(1));
+     let arc2 = arc.clone();
+@@ -58,6 +60,8 @@ fn arc_poison_wr() {
+ }
+ 
+ #[test]
++// Android aborts on panic and this test relies on stack unwinding.
++#[cfg(not(target_os = "android"))]
+ fn arc_poison_ww() {
+     let arc = Arc::new(ShardedLock::new(1));
+     assert!(!arc.is_poisoned());
+@@ -72,6 +76,8 @@ fn arc_poison_ww() {
+ }
+ 
+ #[test]
++// Android aborts on panic and this test relies on stack unwinding.
++#[cfg(not(target_os = "android"))]
+ fn arc_no_poison_rr() {
+     let arc = Arc::new(ShardedLock::new(1));
+     let arc2 = arc.clone();
+@@ -84,6 +90,8 @@ fn arc_no_poison_rr() {
+     assert_eq!(*lock, 1);
+ }
+ #[test]
++// Android aborts on panic and this test relies on stack unwinding.
++#[cfg(not(target_os = "android"))]
+ fn arc_no_poison_sl() {
+     let arc = Arc::new(ShardedLock::new(1));
+     let arc2 = arc.clone();
+@@ -135,6 +143,8 @@ fn arc() {
+ }
+ 
+ #[test]
++// Android aborts on panic and this test relies on stack unwinding.
++#[cfg(not(target_os = "android"))]
+ fn arc_access_in_unwind() {
+     let arc = Arc::new(ShardedLock::new(1));
+     let arc2 = arc.clone();
+@@ -211,6 +221,8 @@ fn test_into_inner_drop() {
+ }
+ 
+ #[test]
++// Android aborts on panic and this test relies on stack unwinding.
++#[cfg(not(target_os = "android"))]
+ fn test_into_inner_poison() {
+     let m = Arc::new(ShardedLock::new(NonCopy(10)));
+     let m2 = m.clone();
+@@ -235,6 +247,8 @@ fn test_get_mut() {
+ }
+ 
+ #[test]
++// Android aborts on panic and this test relies on stack unwinding.
++#[cfg(not(target_os = "android"))]
+ fn test_get_mut_poison() {
+     let m = Arc::new(ShardedLock::new(NonCopy(10)));
+     let m2 = m.clone();
+--- a/tests/thread.rs
++++ b/tests/thread.rs
+@@ -9,6 +9,8 @@ const THREADS: usize = 10;
+ const SMALL_STACK_SIZE: usize = 20;
+ 
+ #[test]
++// Android aborts on panic and this test relies on stack unwinding.
++#[cfg(not(target_os = "android"))]
+ fn join() {
+     let counter = AtomicUsize::new(0);
+     thread::scope(|scope| {
+@@ -64,6 +66,8 @@ fn counter_builder() {
+ }
+ 
+ #[test]
++// Android aborts on panic and this test relies on stack unwinding.
++#[cfg(not(target_os = "android"))]
+ fn counter_panic() {
+     let counter = AtomicUsize::new(0);
+     let result = thread::scope(|scope| {
+@@ -84,6 +88,8 @@ fn counter_panic() {
+ }
+ 
+ #[test]
++// Android aborts on panic and this test relies on stack unwinding.
++#[cfg(not(target_os = "android"))]
+ fn panic_twice() {
+     let result = thread::scope(|scope| {
+         scope.spawn(|_| {
+@@ -108,6 +114,8 @@ fn panic_twice() {
+ }
+ 
+ #[test]
++// Android aborts on panic and this test relies on stack unwinding.
++#[cfg(not(target_os = "android"))]
+ fn panic_many() {
+     let result = thread::scope(|scope| {
+         scope.spawn(|_| panic!("deliberate panic #1"));

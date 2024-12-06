@@ -30,6 +30,7 @@ import {timeButtonStyle} from './styles/clickable_property.styles';
       <div *ngIf="node?.formattedValue()" class="property-value" [class]="[timeClass()]">
         <button
           *ngIf="isTimestamp()"
+          class="time-button"
           mat-button
           color="primary"
           (click)="onTimestampClicked(node)">

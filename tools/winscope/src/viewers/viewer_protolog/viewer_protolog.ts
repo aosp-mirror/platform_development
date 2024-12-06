@@ -46,7 +46,7 @@ class ViewerProtoLog implements Viewer {
     this.presenter.addEventListeners(this.htmlElement);
 
     this.view = new View(
-      ViewType.TAB,
+      ViewType.TRACE_TAB,
       this.getTraces(),
       this.htmlElement,
       TRACE_INFO[TraceType.PROTO_LOG].name,

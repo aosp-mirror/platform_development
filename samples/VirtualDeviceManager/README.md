@@ -318,6 +318,32 @@ Each input screen has a "Back", "Home" and "Forward" buttons.
     adb shell am force-stop com.example.android.vdmdemo.host
     ```
 
+-   **Display timeout**: Whether to keep the displays always awake or to put
+    them to sleep after a timeout. Run the commands below to enable this
+    functionality. \
+    *Changing this will recreate the virtual device.*
+
+    ```shell
+    adb shell device_config put virtual_devices android.companion.virtualdevice.flags.device_aware_display_power true
+    adb shell am force-stop com.example.android.vdmdemo.host
+    ```
+
+-   **Enable client brightness**: Whether to propagate any brightness changes
+    from the virtual display to the client's display. Run the commands below to
+    enable this functionality. \
+    *This can be changed dynamically but only applies to newly created
+    displays.*
+
+    ```shell
+    adb shell device_config put virtual_devices android.companion.virtualdevice.flags.device_aware_display_power true
+    adb shell am force-stop com.example.android.vdmdemo.host
+    ```
+
+#### Audio
+
+-   **Use AudioPolicy.updateMixingRules**: Updates the dynamic AudiPolicy mixing rules
+    instead of unregistering and re-registering the AudioPolicy.
+
 #### Input method
 
 Note: The virtual keyboard acts like a physically connected keyboard to the host
@@ -390,6 +416,17 @@ keyboard** are forwarded to the activity streamed on the focused display.
 **Externally connected mouse** events are also forwarded to the relevant
 display, if the mouse pointer is currently positioned on a streamed display.
 
+### Power
+
+The power menu button acts as a "virtual power button". It will toggle the state
+of the virtual device and all its displays between ON and OFF.
+Run the commands below on the host device to enable this functionality.
+
+```shell
+adb shell device_config put virtual_devices android.companion.virtual.flags.device_aware_display_power true
+adb shell am force-stop com.example.android.vdmdemo.host
+```
+
 <!-- LINT.ThenChange(README.md) -->
 <!-- LINT.IfChange(demos) -->
 
@@ -405,7 +442,8 @@ display, if the mouse pointer is currently positioned on a streamed display.
     use. By default, will use the sensors of the device it's shown on.
 
 -   **Display Power**: A simple activity showcasing the behavior of proximity
-    locks, screen brightness override and requesting the screen to be kept on.
+    locks, screen brightness override and requesting the screen to be kept on
+    or turned on.
 
 -   **Rotation**: A simple activity that is in landscape by default and can send
     orientation change requests on demand. Showcases the display rotation on the
@@ -434,6 +472,9 @@ display, if the mouse pointer is currently positioned on a streamed display.
 -   **Stylus**: A simple drawing activity that reacts on stylus input events.
     Use together with the simulated stylus input feature of the host app.
 
+-   **Recorder**: A simple activity that can start multiple audio recorders.
+    This helps test audio recording permissions and concurrent recordings.
+
 The demo activity depends on whether the **Display Category** Host preference is
 enabled or not. If enabled, it becomes equivalent to the **Home** demo activity,
 which showcases implicit intent handling.
@@ -442,7 +483,9 @@ which showcases implicit intent handling.
 
 ## SDK Version
 
-### Beyond Android 15
+### Android 16 / Baklava
+
+-   Added support for custom power management.
 
 -   Added support for custom system windows (like status bar) and insets.
 
@@ -459,6 +502,8 @@ which showcases implicit intent handling.
 -   Added support for virtual rotary input.
 
 ### Android 15 / Vanilla Ice Cream / SDK level 35
+
+-   Added support for virtual camera.
 
 -   Added support for virtual stylus input.
 

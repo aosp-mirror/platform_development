@@ -48,7 +48,7 @@ describe('SearchBoxComponent', () => {
     fixture = TestBed.createComponent(SearchBoxComponent);
     component = fixture.componentInstance;
     htmlElement = fixture.nativeElement;
-    component.textFilter = new TextFilter('', []);
+    component.textFilter = new TextFilter();
     fixture.detectChanges();
   });
 
@@ -68,9 +68,11 @@ describe('SearchBoxComponent', () => {
   it('handles change in filter', () => {
     const spy = spyOn(component.filterChange, 'emit');
     expect(component.textFilter?.filterString).toEqual('');
+    expect(htmlElement.querySelector('.highlighted')).toBeNull();
     changeFilterString('Test');
     expect(component.textFilter?.filterString).toEqual('Test');
-    expect(spy).toHaveBeenCalledWith(new TextFilter('Test', []));
+    expect(spy).toHaveBeenCalledWith(new TextFilter('Test'));
+    expect(htmlElement.querySelector('.highlighted')).toBeTruthy();
   });
 
   it('handles change in flags', () => {
@@ -87,7 +89,7 @@ describe('SearchBoxComponent', () => {
 
     buttons.item(0).click();
     fixture.detectChanges();
-    expect(spy).toHaveBeenCalledWith(new TextFilter('', []));
+    expect(spy).toHaveBeenCalledWith(new TextFilter());
 
     buttons.item(2).click();
     fixture.detectChanges();

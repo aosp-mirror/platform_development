@@ -14,8 +14,8 @@
 
 use gestalt_ratio::gestalt_ratio;
 use itertools::Itertools;
-use lazy_static::lazy_static;
 use spdx::{LicenseReq, Licensee};
+use std::sync::LazyLock;
 
 fn strip_punctuation(text: &str) -> String {
     let lowercase = text.to_lowercase();
@@ -62,8 +62,8 @@ pub(crate) fn classify_license_file_contents(contents: &str) -> Option<LicenseRe
     None
 }
 
-lazy_static! {
-    static ref LICENSE_CONTENT_CLASSIFICATION: Vec<(LicenseReq, String)> = vec![
+static LICENSE_CONTENT_CLASSIFICATION: LazyLock<Vec<(LicenseReq, String)>> = LazyLock::new(|| {
+    vec![
         ("MIT", include_str!("licenses/MIT.txt")),
         ("Apache-2.0", include_str!("licenses/Apache-2.0.txt")),
         ("ISC", include_str!("licenses/ISC.txt")),
@@ -71,6 +71,7 @@ lazy_static! {
         ("BSD-2-Clause", include_str!("licenses/BSD-2-Clause.txt")),
         ("BSD-3-Clause", include_str!("licenses/BSD-3-Clause.txt")),
         ("Unlicense", include_str!("licenses/Unlicense.txt")),
+        ("Zlib", include_str!("licenses/Zlib.txt")),
     ]
     .into_iter()
     .map(|(req, tokens)| {
@@ -78,8 +79,8 @@ lazy_static! {
         assert!(!tokens.is_empty());
         (Licensee::parse(req).unwrap().into_req(), tokens)
     })
-    .collect();
-}
+    .collect()
+});
 
 #[cfg(test)]
 mod tests {

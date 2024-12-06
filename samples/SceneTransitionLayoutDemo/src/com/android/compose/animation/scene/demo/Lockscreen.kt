@@ -39,7 +39,6 @@ import com.android.compose.animation.scene.ElementKey
 import com.android.compose.animation.scene.SceneKey
 import com.android.compose.animation.scene.SceneScope
 import com.android.compose.animation.scene.Swipe
-import com.android.compose.animation.scene.SwipeDirection
 import com.android.compose.animation.scene.UserAction
 import com.android.compose.animation.scene.UserActionResult
 
@@ -48,16 +47,26 @@ object Lockscreen {
         isLockscreenDismissable: Boolean,
         shadeScene: SceneKey,
         requiresFullDistanceSwipeToShade: Boolean,
+        configuration: DemoConfiguration,
         fastSwipeToQuickSettings: Boolean = true,
     ): Map<UserAction, UserActionResult> {
         return buildList {
-                add(
-                    Swipe.Down to
-                        UserActionResult(
-                            shadeScene,
-                            requiresFullDistanceSwipe = requiresFullDistanceSwipeToShade,
-                        )
-                )
+                if (configuration.enableOverlays) {
+                    add(Swipe.Down to UserActionResult.ShowOverlay(Overlays.Notifications))
+                    add(
+                        Swipe.Down(fromSource = SceneContainerEdge.TopEnd) to
+                            UserActionResult.ShowOverlay(Overlays.QuickSettings)
+                    )
+                } else {
+                    add(
+                        Swipe.Down to
+                            UserActionResult(
+                                shadeScene,
+                                requiresFullDistanceSwipe = requiresFullDistanceSwipeToShade,
+                            )
+                    )
+                }
+
                 add(Swipe.Start to Scenes.StubEnd)
                 add(Swipe.End to Scenes.StubStart)
                 add(
@@ -70,7 +79,7 @@ object Lockscreen {
                 )
 
                 if (fastSwipeToQuickSettings) {
-                    add(Swipe(SwipeDirection.Down, pointerCount = 2) to Scenes.QuickSettings)
+                    add(Swipe.Down(pointerCount = 2) to Scenes.QuickSettings)
                 }
             }
             .toMap()
@@ -155,10 +164,7 @@ internal fun SceneScope.LockButton(
 }
 
 @Composable
-internal fun SceneScope.LockscreenCameraButton(
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
+internal fun SceneScope.LockscreenCameraButton(onClick: () -> Unit, modifier: Modifier = Modifier) {
     CameraButton(
         backgroundColor = MaterialTheme.colorScheme.surfaceBright,
         iconColor = MaterialTheme.colorScheme.onSurface,

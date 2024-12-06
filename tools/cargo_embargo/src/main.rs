@@ -47,7 +47,6 @@ use clap::Subcommand;
 use log::debug;
 use nix::fcntl::OFlag;
 use nix::unistd::pipe2;
-use once_cell::sync::Lazy;
 use std::collections::BTreeMap;
 use std::collections::VecDeque;
 use std::env;
@@ -56,6 +55,7 @@ use std::io::{Read, Write};
 use std::path::Path;
 use std::path::PathBuf;
 use std::process::{Command, Stdio};
+use std::sync::LazyLock;
 use tempfile::tempdir;
 
 // Major TODOs
@@ -63,7 +63,7 @@ use tempfile::tempdir;
 //  * handle warnings. put them in comments in the android.bp, some kind of report section
 
 /// Rust modules which shouldn't use the default generated names, to avoid conflicts or confusion.
-pub static RENAME_MAP: Lazy<BTreeMap<&str, &str>> = Lazy::new(|| {
+pub static RENAME_MAP: LazyLock<BTreeMap<&str, &str>> = LazyLock::new(|| {
     [
         ("libash", "libash_rust"),
         ("libatomic", "libatomic_rust"),
@@ -87,7 +87,7 @@ pub static RENAME_MAP: Lazy<BTreeMap<&str, &str>> = Lazy::new(|| {
 /// generated automatically by this script. Examples include compiler builtins
 /// and other foundational libraries. It also tracks the location of rules.mk
 /// build files for crates that are not under external/rust/crates.
-pub static RULESMK_RENAME_MAP: Lazy<BTreeMap<&str, &str>> = Lazy::new(|| {
+pub static RULESMK_RENAME_MAP: LazyLock<BTreeMap<&str, &str>> = LazyLock::new(|| {
     [
         ("liballoc", "trusty/user/base/lib/liballoc-rust"),
         ("libcompiler_builtins", "trusty/user/base/lib/libcompiler_builtins-rust"),
@@ -332,7 +332,7 @@ fn run_embargo(args: &Args, config_filename: &Path, intermediates_dir: &Path) ->
         .to_str()
         .ok_or(anyhow!("Failed to convert intermediate dir path to string"))?
         .to_string()
-        + "target.tmp/**/build/*/out/*";
+        + "/target.tmp/**/build/*/out/*";
 
     let cfg = Config::from_file(config_filename)?;
     let crates = make_all_crates(args, &cfg, intermediates_dir)?;
@@ -575,8 +575,9 @@ fn generate_cargo_out(cfg: &VariantConfig, intermediates_dir: &Path) -> Result<C
 /// Skips initial comment lines, then returns all lines before the first line
 /// starting with `rust_`, `genrule {`, or `LOCAL_DIR`.
 ///
-/// If `path` could not be read, return a placeholder license TODO line.
-fn read_license_header(path: &Path) -> Result<String> {
+/// If `path` could not be read and a license is required, return a
+/// placeholder license TODO line.
+fn read_license_header(path: &Path, require_license: bool) -> Result<String> {
     // Keep the old license header.
     match std::fs::read_to_string(path) {
         Ok(s) => Ok(s
@@ -590,7 +591,12 @@ fn read_license_header(path: &Path) -> Result<String> {
             .collect::<Vec<&str>>()
             .join("\n")),
         Err(e) if e.kind() == std::io::ErrorKind::NotFound => {
-            Ok("// DO NOT SUBMIT: Add license before submitting.\n".to_string())
+            let placeholder = if require_license {
+                "// DO NOT SUBMIT: Add license before submitting.\n"
+            } else {
+                ""
+            };
+            Ok(placeholder.to_string())
         }
         Err(e) => Err(anyhow!("error when reading {path:?}: {e}")),
     }
@@ -648,6 +654,10 @@ fn write_build_files(
             )?;
         }
     }
+    if !mk_contents.is_empty() {
+        // If rules.mk is generated, then make it accessible via dirgroup.
+        bp_contents += &generate_android_bp_for_rules_mk(package_name)?;
+    }
 
     let def = PackageConfig::default();
     let package_cfg = cfg.package.get(package_name).unwrap_or(&def);
@@ -661,8 +671,9 @@ fn write_build_files(
         let package_header = generate_android_bp_package_header(
             package_name,
             package_cfg,
-            read_license_header(&output_path)?.trim(),
+            read_license_header(&output_path, true)?.trim(),
             crates,
+            &cfg.variants.first().unwrap().module_name_overrides,
         )?;
         let bp_contents = package_header + &bp_contents;
         write_format_android_bp(&output_path, &bp_contents, package_cfg.patch.as_deref())?;
@@ -673,7 +684,7 @@ fn write_build_files(
             + "# Do not modify this file after the LOCAL_DIR line\n"
             + "# because the changes will be overridden on upgrade.\n"
             + "# Content before the first line starting with LOCAL_DIR is preserved.\n"
-            + read_license_header(&output_path)?.trim()
+            + read_license_header(&output_path, false)?.trim()
             + "\n"
             + &mk_contents;
         File::create(&output_path)?.write_all(mk_contents.as_bytes())?;
@@ -690,14 +701,26 @@ fn generate_android_bp_package_header(
     package_cfg: &PackageConfig,
     license_header: &str,
     crates: &[Vec<Crate>],
+    module_name_overrides: &BTreeMap<String, String>,
 ) -> Result<String> {
     let crates = crates.iter().flatten().collect::<Vec<_>>();
     if let Some(first) = crates.first() {
         if let Some(license) = first.license.as_ref() {
             if crates.iter().all(|c| c.license.as_ref() == Some(license)) {
                 let mut modules = Vec::new();
-                let license = choose_license(license);
-                let license_name = format!("external_rust_crates_{}_license", package_name);
+                let licenses = choose_licenses(license)?;
+
+                let default_license_name = format!("external_rust_crates_{}_license", package_name);
+
+                let license_name = match override_module_name(
+                    &default_license_name,
+                    &[],
+                    module_name_overrides,
+                    &RENAME_MAP,
+                ) {
+                    Some(x) => x,
+                    None => default_license_name,
+                };
 
                 let mut package_module = BpModule::new("package".to_string());
                 package_module.props.set("default_team", "trendy_team_android_rust");
@@ -707,15 +730,17 @@ fn generate_android_bp_package_header(
                 let mut license_module = BpModule::new("license".to_string());
                 license_module.props.set("name", license_name);
                 license_module.props.set("visibility", vec![":__subpackages__"]);
-                license_module
-                    .props
-                    .set("license_kinds", vec![format!("SPDX-license-identifier-{}", license)]);
-                let license_text = package_cfg
-                    .license_text
-                    .as_deref()
-                    .unwrap_or_else(|| first.license_file.as_deref().unwrap_or("LICENSE"))
-                    .to_string();
-                license_module.props.set("license_text", vec![license_text]);
+                license_module.props.set(
+                    "license_kinds",
+                    licenses
+                        .into_iter()
+                        .map(|license| format!("SPDX-license-identifier-{}", license))
+                        .collect::<Vec<_>>(),
+                );
+                let license_text = package_cfg.license_text.clone().unwrap_or_else(|| {
+                    vec![first.license_file.as_deref().unwrap_or("LICENSE").to_string()]
+                });
+                license_module.props.set("license_text", license_text);
                 modules.push(license_module);
 
                 let mut bp_contents = "// This file is generated by cargo_embargo.\n".to_owned()
@@ -739,24 +764,58 @@ fn generate_android_bp_package_header(
         + "\n")
 }
 
-/// Given an SPDX license expression that may offer a choice between several licenses, choose one to
-/// use.
-fn choose_license(license: &str) -> &str {
-    match license {
-        "MIT OR Apache-2.0" => "Apache-2.0",
-        "Apache-2.0 OR MIT" => "Apache-2.0",
-        "MIT/Apache-2.0" => "Apache-2.0",
-        "Apache-2.0/MIT" => "Apache-2.0",
-        "Apache-2.0 or BSD-3-Clause" => "Apache-2.0",
-        "Zlib OR Apache-2.0 OR MIT" => "Apache-2.0",
-        "MIT OR LGPL-3.0-or-later" => "MIT",
-        "Apache-2.0 / MIT" => "Apache-2.0",
-        "Unlicense OR MIT" => "MIT",
-        "BSD-3-Clause OR MIT OR Apache-2.0" => "Apache-2.0",
-        "BSD-2-Clause OR Apache-2.0 OR MIT" => "Apache-2.0",
-        "Apache-2.0 WITH LLVM-exception OR Apache-2.0 OR MIT" => "Apache-2.0",
-        _ => license,
-    }
+/// Given an SPDX license expression that may offer a choice between several licenses, choose one or
+/// more to use.
+fn choose_licenses(license: &str) -> Result<Vec<&str>> {
+    Ok(match license {
+        // Variations on "MIT OR Apache-2.0"
+        "MIT OR Apache-2.0" => vec!["Apache-2.0"],
+        "Apache-2.0 OR MIT" => vec!["Apache-2.0"],
+        "MIT/Apache-2.0" => vec!["Apache-2.0"],
+        "Apache-2.0/MIT" => vec!["Apache-2.0"],
+        "Apache-2.0 / MIT" => vec!["Apache-2.0"],
+
+        // Variations on "BSD-* OR Apache-2.0"
+        "Apache-2.0 OR BSD-3-Clause" => vec!["Apache-2.0"],
+        "Apache-2.0 or BSD-3-Clause" => vec!["Apache-2.0"],
+        "BSD-3-Clause OR Apache-2.0" => vec!["Apache-2.0"],
+
+        // Variations on "BSD-* OR MIT OR Apache-2.0"
+        "BSD-3-Clause OR MIT OR Apache-2.0" => vec!["Apache-2.0"],
+        "BSD-2-Clause OR Apache-2.0 OR MIT" => vec!["Apache-2.0"],
+
+        // Variations on "Zlib OR MIT OR Apache-2.0"
+        "Zlib OR Apache-2.0 OR MIT" => vec!["Apache-2.0"],
+        "MIT OR Apache-2.0 OR Zlib" => vec!["Apache-2.0"],
+
+        // Variations on "Apache-2.0 OR *"
+        "Apache-2.0 OR BSL-1.0" => vec!["Apache-2.0"],
+        "Apache-2.0 WITH LLVM-exception OR Apache-2.0 OR MIT" => vec!["Apache-2.0"],
+
+        // Variations on "Unlicense OR MIT"
+        "Unlicense OR MIT" => vec!["MIT"],
+        "Unlicense/MIT" => vec!["MIT"],
+
+        // Multiple licenses.
+        "(MIT OR Apache-2.0) AND Unicode-DFS-2016" => vec!["Apache-2.0", "Unicode-DFS-2016"],
+        "MIT AND BSD-3-Clause" => vec!["BSD-3-Clause", "MIT"],
+        // Usually we interpret "/" as "OR", but in the case of libfuzzer-sys, closer
+        // inspection of the terms indicates the correct interpretation is "(MIT OR APACHE) AND NCSA".
+        "MIT/Apache-2.0/NCSA" => vec!["Apache-2.0", "NCSA"],
+
+        // Other cases.
+        "MIT OR LGPL-3.0-or-later" => vec!["MIT"],
+        "MIT/BSD-3-Clause" => vec!["MIT"],
+
+        "LGPL-2.1-only OR BSD-2-Clause" => vec!["BSD-2-Clause"],
+        _ => {
+            // If there is whitespace, it is probably an SPDX expression.
+            if license.contains(char::is_whitespace) {
+                bail!("Unrecognized license: {license}");
+            }
+            vec![license]
+        }
+    })
 }
 
 /// Generates and returns a Soong Blueprint for the given set of crates, for a single variant of a
@@ -867,19 +926,37 @@ fn generate_rules_mk(
     })
 }
 
+/// Generates and returns a Soong Blueprint for a Trusty rules.mk
+fn generate_android_bp_for_rules_mk(package_name: &str) -> Result<String> {
+    let mut bp_contents = String::new();
+
+    let mut m = BpModule::new("dirgroup".to_string());
+    m.props.set("name", format!("trusty_dirgroup_external_rust_crates_{}", package_name));
+    m.props.set("dirs", vec!["."]);
+    m.props.set("visibility", vec!["//trusty/vendor/google/aosp/scripts"]);
+
+    m.write(&mut bp_contents)?;
+    bp_contents += "\n";
+
+    Ok(bp_contents)
+}
+
 /// Apply patch from `patch_path` to file `output_path`.
 ///
 /// Warns but still returns ok if the patch did not cleanly apply,
 fn apply_patch_file(output_path: &Path, patch_path: &Path) -> Result<()> {
     let patch_output = Command::new("patch")
         .arg("-s")
+        .arg("--no-backup-if-mismatch")
         .arg(output_path)
         .arg(patch_path)
         .output()
         .context("Running patch")?;
     if !patch_output.status.success() {
+        let stdout = String::from_utf8(patch_output.stdout)?;
+        let stderr = String::from_utf8(patch_output.stderr)?;
         // These errors will cause the cargo_embargo command to fail, but not yet!
-        return Err(anyhow!("failed to apply patch {patch_path:?}"));
+        bail!("failed to apply patch {patch_path:?}:\n\nout:\n{stdout}\n\nerr:\n{stderr}");
     }
     Ok(())
 }
@@ -1346,8 +1423,14 @@ mod tests {
             let package_name = &crates[0][0].package_name;
             let def = PackageConfig::default();
             let package_cfg = cfg.package.get(package_name).unwrap_or(&def);
-            let mut output =
-                generate_android_bp_package_header(package_name, package_cfg, "", &crates).unwrap();
+            let mut output = generate_android_bp_package_header(
+                package_name,
+                package_cfg,
+                "",
+                &crates,
+                &cfg.variants.first().unwrap().module_name_overrides,
+            )
+            .unwrap();
             for (variant_index, variant_cfg) in cfg.variants.iter().enumerate() {
                 let variant_crates = &crates[variant_index];
                 let package_name = &variant_crates[0].package_name;

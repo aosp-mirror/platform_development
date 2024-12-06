@@ -106,6 +106,7 @@ import {MiniTimelineComponent} from './mini-timeline/mini_timeline_component';
               <mat-form-field
                 class="time-input human"
                 appearance="fill"
+                (keydown.esc)="$event.target.blur()"
                 (keydown.enter)="onKeydownEnterTimeInputField($event)"
                 (change)="onHumanTimeInputChange($event)">
                 <mat-icon
@@ -132,6 +133,7 @@ import {MiniTimelineComponent} from './mini-timeline/mini_timeline_component';
               <mat-form-field
                 class="time-input nano"
                 appearance="fill"
+                (keydown.esc)="$event.target.blur()"
                 (keydown.enter)="onKeydownEnterNanosecondsTimeInputField($event)"
                 (change)="onNanosecondsInputTimeChange($event)">
                 <mat-icon
@@ -635,6 +637,29 @@ export class TimelineComponent
       if (activeTrace === undefined) {
         return;
       }
+      await this.miniTimeline?.drawer?.draw();
+    });
+    await event.visit(WinscopeEventType.TRACE_ADD_REQUEST, async (event) => {
+      this.sortedTraces.unshift(event.trace);
+      this.sortedTraces.sort((a, b) =>
+        TraceTypeUtils.compareByDisplayOrder(a.type, b.type),
+      );
+      this.selectedTracesFormControl.setValue(
+        (this.selectedTracesFormControl.value ?? []).concat([event.trace]),
+      );
+      this.applyNewTraceSelection(event.trace);
+      await this.miniTimeline?.drawer?.draw();
+    });
+    await event.visit(WinscopeEventType.TRACE_REMOVE_REQUEST, async (event) => {
+      this.sortedTraces = this.sortedTraces.filter(
+        (trace) => trace !== event.trace,
+      );
+      this.selectedTracesFormControl.setValue(
+        this.selectedTracesFormControl.value?.filter(
+          (trace) => trace !== event.trace,
+        ) ?? [],
+      );
+      this.applyNewTraceSelection(event.trace);
       await this.miniTimeline?.drawer?.draw();
     });
   }

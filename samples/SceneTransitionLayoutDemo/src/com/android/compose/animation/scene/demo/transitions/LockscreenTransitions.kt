@@ -48,13 +48,9 @@ fun SceneTransitionsBuilder.lockscreenTransitions(configuration: DemoConfigurati
     if (configuration.useOverscrollSpec) {
         overscrollDisabled(Scenes.Lockscreen, Orientation.Vertical)
 
-        overscroll(Scenes.StubStart, Orientation.Horizontal) {
-            translate(Stub.Elements.TextStart, x = { absoluteDistance })
-        }
+        overscrollDisabled(Scenes.StubStart, Orientation.Horizontal)
 
-        overscroll(Scenes.StubEnd, Orientation.Horizontal) {
-            translate(Stub.Elements.TextEnd, x = { absoluteDistance })
-        }
+        overscrollDisabled(Scenes.StubEnd, Orientation.Horizontal)
     }
 }
 
@@ -69,7 +65,7 @@ fun SceneTransitionsBuilder.commonLockscreenTransitions(lockscreenScene: SceneKe
                 scaleDraw(Bouncer.Elements.Content, scaleY = 0.8f, scaleX = 0.8f)
             }
         },
-        key = TransitionKey.PredictiveBack
+        key = TransitionKey.PredictiveBack,
     ) {
         bouncerToLockscreenTransition()
     }

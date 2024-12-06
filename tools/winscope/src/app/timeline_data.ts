@@ -78,7 +78,7 @@ export class TimelineData {
         }),
       );
       if (someCorrupted) {
-        UserNotifier.add(new CannotParseAllTransitions()).notify();
+        UserNotifier.add(new CannotParseAllTransitions());
       }
     }
 
@@ -88,12 +88,11 @@ export class TimelineData {
 
     const tracesSortedByDisplayOrder = traces
       .mapTrace((trace) => trace)
-      .filter(
-        (trace) =>
-          TraceTypeUtils.isTraceTypeWithViewer(trace.type) &&
-          trace.type !== TraceType.SCREEN_RECORDING,
-      )
+      .filter((trace) => TraceTypeUtils.isTraceTypeWithViewer(trace.type))
       .sort((a, b) => {
+        // do not set screen recording as active unless it is the only trace
+        if (a.type === TraceType.SCREEN_RECORDING) return 1;
+        if (b.type === TraceType.SCREEN_RECORDING) return -1;
         return TraceTypeUtils.compareByDisplayOrder(a.type, b.type);
       });
     if (tracesSortedByDisplayOrder.length > 0) {

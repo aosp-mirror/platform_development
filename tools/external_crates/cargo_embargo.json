@@ -18,7 +18,8 @@
   "tests": true,
   "workspace": true,
   "workspace_excludes": [
-    "crate_health",
-    "license_checker"
+    "crate_tool",
+    "license_checker",
+    "test_mapping"
   ]
 }
