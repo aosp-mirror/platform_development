@@ -31,7 +31,7 @@ import {ParserViewCapture} from 'parsers/view_capture/perfetto/parser_view_captu
 import {ParserWindowManager} from 'parsers/window_manager/perfetto/parser_window_manager';
 import {Parser} from 'trace/parser';
 import {TraceFile} from 'trace/trace_file';
-import {TraceProcessor} from 'trace/trace_processor';
+import {TraceProcessorFactory} from 'trace_processor/trace_processor_factory';
 import {WasmEngineProxy} from 'trace_processor/wasm_engine_proxy';
 
 export class ParserFactory {
@@ -117,7 +117,7 @@ export class ParserFactory {
   }
 
   private async initializeTraceProcessor(): Promise<WasmEngineProxy> {
-    const traceProcessor = await TraceProcessor.getTraceProcessor();
+    const traceProcessor = await TraceProcessorFactory.getSingleInstance();
 
     await traceProcessor.resetTraceProcessor({
       cropTrackEvents: false,

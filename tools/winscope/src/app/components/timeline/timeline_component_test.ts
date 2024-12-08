@@ -40,9 +40,9 @@ import {TimeRange} from 'common/time';
 import {
   ActiveTraceChanged,
   ExpandedTimelineToggled,
-  NewSearchTrace,
+  TraceAddRequest,
   TracePositionUpdate,
-  TraceSearchRemovalRequest,
+  TraceRemoveRequest,
   WinscopeEvent,
 } from 'messaging/winscope_event';
 import {TimestampConverterUtils} from 'test/unit/timestamp_converter_utils';
@@ -278,7 +278,7 @@ describe('TimelineComponent', () => {
 
   it('handles undefined active trace input', async () => {
     const traces = new TracesBuilder()
-      .setTimestamps(TraceType.SCREEN_RECORDING, [time100, time110])
+      .setTimestamps(TraceType.EVENT_LOG, [time100, time110])
       .build();
 
     const timelineData = assertDefined(component.timelineData);
@@ -1028,7 +1028,7 @@ describe('TimelineComponent', () => {
     expect(position).toBeDefined();
   });
 
-  it('adds/removes search trace and redraws timeline', async () => {
+  it('adds/removes trace and redraws timeline', async () => {
     loadSfWmTraces();
     const timelineComponent = assertDefined(component.timeline);
     const initialTraces = timelineComponent.sortedTraces.slice();
@@ -1036,16 +1036,14 @@ describe('TimelineComponent', () => {
       assertDefined(timelineComponent.miniTimeline?.drawer),
       'draw',
     );
-    const searchTrace = UnitTestUtils.makeEmptyTrace(TraceType.SEARCH);
+    const trace = UnitTestUtils.makeEmptyTrace(TraceType.SEARCH);
 
-    await timelineComponent.onWinscopeEvent(new NewSearchTrace(searchTrace));
+    await timelineComponent.onWinscopeEvent(new TraceAddRequest(trace));
     expect(spy).toHaveBeenCalledTimes(1);
     expect(timelineComponent.sortedTraces).not.toEqual(initialTraces);
-    expect(timelineComponent.sortedTraces[0]).toEqual(searchTrace);
+    expect(timelineComponent.sortedTraces[0]).toEqual(trace);
 
-    await timelineComponent.onWinscopeEvent(
-      new TraceSearchRemovalRequest(searchTrace),
-    );
+    await timelineComponent.onWinscopeEvent(new TraceRemoveRequest(trace));
     expect(spy).toHaveBeenCalledTimes(2);
     expect(timelineComponent.sortedTraces).toEqual(initialTraces);
   });

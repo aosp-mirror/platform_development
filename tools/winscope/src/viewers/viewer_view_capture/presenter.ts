@@ -19,8 +19,7 @@ import {PersistentStoreProxy} from 'common/persistent_store_proxy';
 import {Store} from 'common/store';
 import {
   TabbedViewSwitchRequest,
-  WinscopeEvent,
-  WinscopeEventType,
+  TracePositionUpdate,
 } from 'messaging/winscope_event';
 import {CustomQueryType} from 'trace/custom_query';
 import {Trace} from 'trace/trace';
@@ -112,11 +111,9 @@ export class Presenter extends AbstractHierarchyViewerPresenter<UiData> {
         showDefaults: {
           name: 'Show defaults',
           enabled: false,
-          tooltip: `
-              If checked, shows the value of all properties.
-              Otherwise, hides all properties whose value is
-              the default for its data type.
-            `,
+          tooltip: `If checked, shows the value of all properties.
+Otherwise, hides all properties whose value is
+the default for its data type.`,
         },
       },
       this.storage,
@@ -156,46 +153,6 @@ export class Presenter extends AbstractHierarchyViewerPresenter<UiData> {
     return this.viewCaptureTraces;
   }
 
-  getViewCaptureTraceFromId(id: number): Trace<HierarchyTreeNode> {
-    return assertDefined(this.viewCaptureTraces[id]);
-  }
-
-  override async onAppEvent(event: WinscopeEvent) {
-    await this.handleCommonWinscopeEvents(event);
-    await event.visit(
-      WinscopeEventType.TRACE_POSITION_UPDATE,
-      async (event) => {
-        await this.initializeIfNeeded();
-        await this.applyTracePositionUpdate(event);
-
-        if (this.uiData && this.surfaceFlingerTrace) {
-          const surfaceFlingerEntry =
-            (await TraceEntryFinder.findCorrespondingEntry(
-              this.surfaceFlingerTrace,
-              event.position,
-            )?.getValue()) as HierarchyTreeNode;
-          if (surfaceFlingerEntry) {
-            this.sfRects = UI_RECT_FACTORY.makeUiRects(
-              surfaceFlingerEntry,
-              this.viewCapturePackageNames,
-            );
-          }
-        }
-        this.updateCuratedProperties();
-        this.refreshUIData();
-      },
-    );
-    await event.visit(
-      WinscopeEventType.FILTER_PRESET_APPLY_REQUEST,
-      async (event) => {
-        const filterPresetName = event.name;
-        await this.applyPresetConfig(filterPresetName);
-        this.updateCuratedProperties();
-        this.refreshUIData();
-      },
-    );
-  }
-
   override async onHighlightedNodeChange(node: UiHierarchyTreeNode) {
     await this.applyHighlightedNodeChange(node);
     this.updateCuratedProperties();
@@ -212,13 +169,38 @@ export class Presenter extends AbstractHierarchyViewerPresenter<UiData> {
     return undefined;
   }
 
-  protected override keepCalculated(): boolean {
-    return true;
+  protected override keepCalculated(node: UiHierarchyTreeNode): boolean {
+    return node.isRoot();
   }
 
-  private async initializeIfNeeded() {
+  protected override async initializeIfNeeded() {
     await this.initializePackageNamesIfNeeded();
     await this.initializeWindowsIfNeeded();
+  }
+
+  protected override async processDataAfterPositionUpdate(
+    event: TracePositionUpdate,
+  ): Promise<void> {
+    if (this.uiData && this.surfaceFlingerTrace) {
+      const surfaceFlingerEntry =
+        (await TraceEntryFinder.findCorrespondingEntry(
+          this.surfaceFlingerTrace,
+          event.position,
+        )?.getValue()) as HierarchyTreeNode;
+      if (surfaceFlingerEntry) {
+        this.sfRects = UI_RECT_FACTORY.makeUiRects(
+          surfaceFlingerEntry,
+          this.viewCapturePackageNames,
+        );
+      }
+    }
+    this.updateCuratedProperties();
+  }
+
+  protected override refreshUIData() {
+    this.uiData.sfRects = this.sfRects;
+    this.uiData.curatedProperties = this.curatedProperties;
+    this.refreshHierarchyViewerUiData();
   }
 
   private async initializePackageNamesIfNeeded() {
@@ -322,11 +304,5 @@ export class Presenter extends AbstractHierarchyViewerPresenter<UiData> {
     const index = this.viewCaptureTraces.indexOf(trace);
     assertTrue(index !== -1);
     return index;
-  }
-
-  private refreshUIData() {
-    this.uiData.sfRects = this.sfRects;
-    this.uiData.curatedProperties = this.curatedProperties;
-    this.refreshHierarchyViewerUiData();
   }
 }
