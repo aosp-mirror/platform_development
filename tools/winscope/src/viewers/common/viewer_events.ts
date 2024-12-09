@@ -47,6 +47,7 @@ export enum ViewerEvents {
   ArrowDownPress = 'ArrowDownPress',
   ArrowUpPress = 'ArrowUpPress',
 
+  GlobalSearchSectionClick = 'GlobalSearchSectionClick',
   SearchQueryClick = 'SearchQueryClick',
   ResetQueryClick = 'ResetQueryClick',
   SaveQueryClick = 'SaveQueryClick',

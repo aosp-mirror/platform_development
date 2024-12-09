@@ -21,6 +21,7 @@ import {Store} from 'common/store';
 import {UserNotifier} from 'common/user_notifier';
 import {TraceSearchQueryAlreadyRun} from 'messaging/user_warnings';
 import {
+  InitializeTraceSearchRequest,
   TracePositionUpdate,
   TraceRemoveRequest,
   TraceSearchRequest,
@@ -76,6 +77,12 @@ export class Presenter {
   addEventListeners(htmlElement: HTMLElement) {
     this.viewerElement = htmlElement;
     htmlElement.addEventListener(
+      ViewerEvents.GlobalSearchSectionClick,
+      async (event) => {
+        this.onGlobalSearchSectionClick();
+      },
+    );
+    htmlElement.addEventListener(
       ViewerEvents.SearchQueryClick,
       async (event) => {
         const detail: QueryClickDetail = (event as CustomEvent).detail;
@@ -104,6 +111,13 @@ export class Presenter {
   }
 
   async onAppEvent(event: WinscopeEvent) {
+    await event.visit(
+      WinscopeEventType.TRACE_SEARCH_INITIALIZED,
+      async (event) => {
+        this.uiData.initialized = true;
+        this.copyUiDataAndNotifyView();
+      },
+    );
     await event.visit(WinscopeEventType.TRACE_ADD_REQUEST, async (event) => {
       if (event.trace.type === TraceType.SEARCH) {
         this.showQueryResult(event.trace as Trace<QueryResult>);
@@ -114,6 +128,12 @@ export class Presenter {
     });
     for (const p of this.currentSearchPresenters) {
       await p.onAppEvent(event);
+    }
+  }
+
+  async onGlobalSearchSectionClick() {
+    if (!this.uiData.initialized) {
+      this.emitWinscopeEvent(new InitializeTraceSearchRequest());
     }
   }
 

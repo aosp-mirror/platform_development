@@ -469,6 +469,7 @@ describe('AppComponent', () => {
     expect(htmlElement.querySelector('.upload-traces-card')).toBeTruthy();
     expect(htmlElement.querySelector('.viewers')).toBeFalsy();
     expect(htmlElement.querySelector('.upload-new')).toBeFalsy();
+    expect(htmlElement.querySelector('timeline')).toBeFalsy();
     checkPermanentHeaderItems();
   }
 
@@ -479,6 +480,7 @@ describe('AppComponent', () => {
     expect(htmlElement.querySelector('.upload-traces-card')).toBeFalsy();
     expect(htmlElement.querySelector('.viewers')).toBeTruthy();
     expect(htmlElement.querySelector('.upload-new')).toBeTruthy();
+    expect(htmlElement.querySelector('timeline')).toBeTruthy();
     checkPermanentHeaderItems();
   }
 

@@ -45,8 +45,11 @@ export enum WinscopeEventType {
   FILTER_PRESET_APPLY_REQUEST,
   TRACE_SEARCH_REQUEST,
   TRACE_SEARCH_FAILED,
+  TRACE_SEARCH_COMPLETED,
   TRACE_ADD_REQUEST,
   TRACE_REMOVE_REQUEST,
+  INITIALIZE_TRACE_SEARCH_REQUEST,
+  TRACE_SEARCH_INITIALIZED,
 }
 
 interface TypeMap {
@@ -74,6 +77,9 @@ interface TypeMap {
   [WinscopeEventType.TRACE_SEARCH_FAILED]: TraceSearchFailed;
   [WinscopeEventType.TRACE_ADD_REQUEST]: TraceAddRequest;
   [WinscopeEventType.TRACE_REMOVE_REQUEST]: TraceRemoveRequest;
+  [WinscopeEventType.INITIALIZE_TRACE_SEARCH_REQUEST]: InitializeTraceSearchRequest;
+  [WinscopeEventType.TRACE_SEARCH_INITIALIZED]: TraceSearchInitialized;
+  [WinscopeEventType.TRACE_SEARCH_COMPLETED]: TraceSearchCompleted;
 }
 
 export abstract class WinscopeEvent {
@@ -271,4 +277,16 @@ export class TraceRemoveRequest extends WinscopeEvent {
   constructor(readonly trace: Trace<object>) {
     super();
   }
+}
+
+export class InitializeTraceSearchRequest extends WinscopeEvent {
+  override readonly type = WinscopeEventType.INITIALIZE_TRACE_SEARCH_REQUEST;
+}
+
+export class TraceSearchInitialized extends WinscopeEvent {
+  override readonly type = WinscopeEventType.TRACE_SEARCH_INITIALIZED;
+}
+
+export class TraceSearchCompleted extends WinscopeEvent {
+  override readonly type = WinscopeEventType.TRACE_SEARCH_COMPLETED;
 }
