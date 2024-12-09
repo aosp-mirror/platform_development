@@ -127,17 +127,6 @@ export abstract class AbstractInputEventParser extends AbstractParser<PropertyTr
           AbstractInputEventParser.createVsyncIdQuery,
         );
       })
-      .visit(CustomQueryType.INITIALIZE_TRACE_SEARCH, async () => {
-        // TODO: Create views
-        try {
-          await this.createSqlTableWithDefaults(
-            '__intrinsic_android_input_event_dispatch',
-          );
-        } catch (e) {
-          // swallow - table already created
-        }
-        await this.createSqlTableWithDefaults(this.getIntrinsicTableName());
-      })
       .getResult();
   }
 
@@ -165,6 +154,4 @@ export abstract class AbstractInputEventParser extends AbstractParser<PropertyTr
       ORDER BY tbl.id;
     `;
   }
-
-  protected abstract getIntrinsicTableName(): string;
 }

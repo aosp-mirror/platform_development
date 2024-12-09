@@ -105,6 +105,7 @@ export class Presenter {
     await event.visit(
       WinscopeEventType.TRACE_SEARCH_INITIALIZED,
       async (event) => {
+        this.uiData.searchViews = event.views;
         this.uiData.initialized = true;
         this.copyUiDataAndNotifyView();
       },

@@ -1059,7 +1059,7 @@ describe('TimelineComponent', () => {
 
     await timelineComponent.onWinscopeEvent(new InitializeTraceSearchRequest());
     checkTimelineDisabled();
-    await timelineComponent.onWinscopeEvent(new TraceSearchInitialized());
+    await timelineComponent.onWinscopeEvent(new TraceSearchInitialized([]));
     checkTimelineEnabled();
 
     await timelineComponent.onWinscopeEvent(new TraceSearchRequest(''));

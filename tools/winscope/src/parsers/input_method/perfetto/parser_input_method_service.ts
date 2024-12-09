@@ -22,12 +22,6 @@ import {FakeProtoTransformer} from 'parsers/perfetto/fake_proto_transformer';
 import {Utils} from 'parsers/perfetto/utils';
 import {TamperedMessageType} from 'parsers/tampered_message_type';
 import root from 'protos/ime/latest/json';
-import {
-  CustomQueryParserResultTypeMap,
-  CustomQueryType,
-  VisitableParserCustomQuery,
-} from 'trace/custom_query';
-import {EntriesRange} from 'trace/index_types';
 import {TraceFile} from 'trace/trace_file';
 import {TraceType} from 'trace/trace_type';
 import {HierarchyTreeNode} from 'trace/tree_node/hierarchy_tree_node';
@@ -77,20 +71,6 @@ export class ParserInputMethodService extends AbstractParser<HierarchyTreeNode> 
     return ParserInputMethodService.HIERARCHY_TREE_FACTORY.makeHierarchyTree(
       entryProto,
     );
-  }
-
-  override async customQuery<Q extends CustomQueryType>(
-    type: Q,
-    entriesRange: EntriesRange,
-  ): Promise<CustomQueryParserResultTypeMap[Q]> {
-    return new VisitableParserCustomQuery(type)
-      .visit(CustomQueryType.INITIALIZE_TRACE_SEARCH, async () => {
-        // TODO: Create views
-        await this.createSqlTableWithDefaults(
-          '__intrinsic_inputmethod_service',
-        );
-      })
-      .getResult();
   }
 
   protected override getStdLibModuleName(): string | undefined {

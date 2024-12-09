@@ -172,41 +172,6 @@ export abstract class AbstractParser<T> implements Parser<T> {
     return undefined;
   }
 
-  protected async createSqlTableWithDefaults(
-    tableName: string,
-  ): Promise<string> {
-    const newTableName = `${tableName}_with_defaults`;
-    const sql = `
-      CREATE PERFETTO TABLE ${newTableName}(
-        id INT,
-        base64_proto_id INT,
-        flat_key STRING,
-        key STRING,
-        int_value LONG,
-        string_value STRING,
-        real_value DOUBLE,
-        display_value STRING
-      ) AS
-      SELECT
-        id,
-        base64_proto_id,
-        flat_key,
-        key,
-        int_value,
-        string_value,
-        real_value,
-        CASE
-          WHEN int_value IS NOT NULL THEN cast_string!(int_value)
-          WHEN string_value IS NOT NULL THEN string_value
-          WHEN real_value IS NOT NULL THEN cast_string!(real_value)
-          ELSE NULL END
-        AS display_value
-      FROM __intrinsic_winscope_proto_to_args_with_defaults('${tableName}');
-    `;
-    await this.traceProcessor.query(sql);
-    return newTableName;
-  }
-
   protected abstract getTableName(): string;
   abstract getEntry(index: AbsoluteEntryIndex): Promise<T>;
   abstract getTraceType(): TraceType;
