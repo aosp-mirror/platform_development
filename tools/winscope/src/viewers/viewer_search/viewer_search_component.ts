@@ -71,15 +71,6 @@ import {Search, UiData} from './ui_data';
                   {{globalSearchText}}
                 </span>
 
-                <button
-                  mat-button
-                  class="query-button end-align-button reset-button"
-                  color="primary"
-                  (click)="onResetQueryClick()"
-                  [disabled]="!currentSearchPresent()">
-                  <mat-icon> restore </mat-icon>
-                  <span>  Reset Query </span>
-                </button>
                 <mat-form-field appearance="outline" class="query-field padded-field">
                   <textarea matInput [formControl]="searchQueryControl" (keydown)="onTextAreaKeydown($event)" [readonly]="runningQuery"></textarea>
                   <mat-error *ngIf="searchQueryControl.invalid && searchQueryControl.value">Enter valid SQL query.</mat-error>
@@ -106,6 +97,10 @@ import {Search, UiData} from './ui_data';
                     [disabled]="searchQueryDisabled()"> Run Search Query </button>
                 </div>
                 <div class="current-search" *ngFor="let search of inputData.currentSearches">
+                  <span class="query">
+                    <span class="mat-body-2"> Current: </span>
+                    <span class="mat-body-1"> {{search.query}} </span>
+                  </span>
                   <ng-container
                     [ngTemplateOutlet]="saveQueryField"
                     [ngTemplateOutletContext]="{search}"></ng-container>
@@ -220,10 +215,11 @@ import {Search, UiData} from './ui_data';
         color: #FF8A00;
       }
       .current-search {
-        display: flex;
-        flex-direction: row;
-        justify-content: space-between;
         padding: 10px 0px;
+      }
+      .current-search .query {
+        display: flex;
+        flex-direction: column;
       }
       .message-with-spinner {
         display: flex;
@@ -363,11 +359,6 @@ export class ViewerSearchComponent {
     }
   }
 
-  onResetQueryClick() {
-    this.lastQueryExecutionTime = undefined;
-    this.dispatchResetQueryEvent();
-  }
-
   onSearchQueryClick() {
     this.runningQuery = assertDefined(this.searchQueryControl.value);
     Analytics.TraceSearch.logQueryRequested('new');
@@ -390,9 +381,6 @@ export class ViewerSearchComponent {
   }
 
   onRunQueryFromOptionsClick(search: Search) {
-    if (this.currentSearchPresent()) {
-      this.dispatchResetQueryEvent();
-    }
     this.runningQuery = search.query;
     this.dispatchSearchQueryEvent();
   }
@@ -408,7 +396,7 @@ export class ViewerSearchComponent {
     return (
       this.searchQueryControl.invalid ||
       !!this.runningQuery ||
-      this.currentSearchPresent()
+      !this.inputData?.initialized
     );
   }
 
@@ -443,15 +431,6 @@ export class ViewerSearchComponent {
     this.lastQueryStartTime = Date.now();
     const event = new CustomEvent(ViewerEvents.SearchQueryClick, {
       detail: new QueryClickDetail(assertDefined(this.runningQuery)),
-    });
-    this.elementRef.nativeElement.dispatchEvent(event);
-  }
-
-  private dispatchResetQueryEvent() {
-    const event = new CustomEvent(ViewerEvents.ResetQueryClick, {
-      detail: new QueryClickDetail(
-        assertDefined(this.inputData?.currentSearches[0].query),
-      ),
     });
     this.elementRef.nativeElement.dispatchEvent(event);
   }

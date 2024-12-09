@@ -18,8 +18,6 @@ import {assertDefined} from 'common/assert_utils';
 import {FunctionUtils} from 'common/function_utils';
 import {PersistentStoreProxy} from 'common/persistent_store_proxy';
 import {Store} from 'common/store';
-import {UserNotifier} from 'common/user_notifier';
-import {TraceSearchQueryAlreadyRun} from 'messaging/user_warnings';
 import {
   InitializeTraceSearchRequest,
   TracePositionUpdate,
@@ -89,13 +87,6 @@ export class Presenter {
         this.onSearchQueryClick(detail.query);
       },
     );
-    htmlElement.addEventListener(
-      ViewerEvents.ResetQueryClick,
-      async (event) => {
-        const detail: QueryClickDetail = (event as CustomEvent).detail;
-        await this.onResetQueryClick(detail.query);
-      },
-    );
     htmlElement.addEventListener(ViewerEvents.SaveQueryClick, async (event) => {
       const detail: SaveQueryClickDetail = (event as CustomEvent).detail;
       this.onSaveQueryClick(detail.query, detail.name);
@@ -138,16 +129,14 @@ export class Presenter {
   }
 
   async onSearchQueryClick(query: string) {
-    if (this.runQueries.some((q) => q.query === query)) {
-      UserNotifier.add(new TraceSearchQueryAlreadyRun()).notify();
-      this.onTraceSearchFailed();
-      return;
+    if (this.runQueries.length > 0) {
+      this.clearQuery(this.runQueries[this.runQueries.length - 1].query);
     }
     this.runQueries.push(new QueryAndTrace(query, undefined));
     this.emitWinscopeEvent(new TraceSearchRequest(query));
   }
 
-  async onResetQueryClick(query: string) {
+  private clearQuery(query: string) {
     this.uiData.currentSearches = this.uiData.currentSearches.filter(
       (s) => s.query !== query,
     );
@@ -161,10 +150,12 @@ export class Presenter {
     });
 
     const runQueryIndex = this.runQueries.findIndex((r) => r.query === query);
-    const trace = this.runQueries[runQueryIndex].trace;
-    if (runQueryIndex !== -1 && trace) {
-      this.emitWinscopeEvent(new TraceRemoveRequest(trace));
-      this.runQueries.splice(runQueryIndex, 1);
+    if (runQueryIndex !== -1) {
+      const trace = this.runQueries[runQueryIndex].trace;
+      if (trace) {
+        this.emitWinscopeEvent(new TraceRemoveRequest(trace));
+        this.runQueries.splice(runQueryIndex, 1);
+      }
     }
   }
 
@@ -189,13 +180,16 @@ export class Presenter {
   }
 
   private async showQueryResult(newTrace: Trace<QueryResult>) {
-    const lastRunQuery = this.runQueries[this.runQueries.length - 1];
-    lastRunQuery.trace = newTrace;
+    const traceQuery = newTrace.getDescriptors()[0];
+    const runQuery = assertDefined(
+      this.runQueries.find((q) => q.query === traceQuery),
+    );
+    runQuery.trace = newTrace;
 
     if (this.uiData.recentSearches.length >= 10) {
       this.uiData.recentSearches.pop();
     }
-    this.uiData.recentSearches.unshift(new Search(lastRunQuery.query));
+    this.uiData.recentSearches.unshift(new Search(runQuery.query));
 
     this.uiData.currentSearches = [];
     for (const {query, trace} of this.runQueries) {
