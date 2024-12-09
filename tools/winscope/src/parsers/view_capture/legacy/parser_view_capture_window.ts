@@ -147,7 +147,7 @@ export class ParserViewCaptureWindow implements Parser<HierarchyTreeNode> {
   }
 
   getDescriptors(): string[] {
-    return this.descriptors;
+    return [this.windowName, ...this.descriptors];
   }
 
   private decodeTimestamps(): Timestamp[] {
