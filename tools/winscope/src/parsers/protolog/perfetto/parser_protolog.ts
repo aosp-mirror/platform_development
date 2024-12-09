@@ -17,6 +17,12 @@
 import {AbstractParser} from 'parsers/perfetto/abstract_parser';
 import {LogMessage} from 'parsers/protolog/log_message';
 import {ParserProtologUtils} from 'parsers/protolog/parser_protolog_utils';
+import {
+  CustomQueryParserResultTypeMap,
+  CustomQueryType,
+  VisitableParserCustomQuery,
+} from 'trace/custom_query';
+import {EntriesRange} from 'trace/index_types';
 import {TraceType} from 'trace/trace_type';
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
 
@@ -62,6 +68,17 @@ export class ParserProtolog extends AbstractParser<PropertyTreeNode> {
       this.timestampConverter,
       this.getRealToMonotonicTimeOffsetNs() !== undefined,
     );
+  }
+
+  override async customQuery<Q extends CustomQueryType>(
+    type: Q,
+    entriesRange: EntriesRange,
+  ): Promise<CustomQueryParserResultTypeMap[Q]> {
+    return new VisitableParserCustomQuery(type)
+      .visit(CustomQueryType.INITIALIZE_TRACE_SEARCH, async () => {
+        // swallow - no defaults to add or views to create
+      })
+      .getResult();
   }
 
   protected override getTableName(): string {

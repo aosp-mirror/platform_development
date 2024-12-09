@@ -16,16 +16,29 @@
 
 import {ArrayUtils} from 'common/array_utils';
 import {Timestamp} from 'common/time';
+import {ParserTimestampConverter} from 'common/timestamp_converter';
+import {TIME_UNIT_TO_NANO} from 'common/time_units';
 import {UserNotifier} from 'common/user_notifier';
 import {MonotonicScreenRecording} from 'messaging/user_warnings';
+import * as MP4Box from 'mp4box';
 import {AbstractParser} from 'parsers/legacy/abstract_parser';
 import {CoarseVersion} from 'trace/coarse_version';
 import {MediaBasedTraceEntry} from 'trace/media_based_trace_entry';
 import {ScreenRecordingUtils} from 'trace/screen_recording_utils';
+import {TraceFile} from 'trace/trace_file';
+import {ScreenRecordingOffsets, TraceMetadata} from 'trace/trace_metadata';
 import {TraceType} from 'trace/trace_type';
 
 class ParserScreenRecording extends AbstractParser {
   private realToBootTimeOffsetNs: bigint | undefined;
+
+  constructor(
+    trace: TraceFile,
+    timestampConverter: ParserTimestampConverter,
+    metadata: TraceMetadata,
+  ) {
+    super(trace, timestampConverter, metadata);
+  }
 
   override getTraceType(): TraceType {
     return TraceType.SCREEN_RECORDING;
@@ -47,8 +60,71 @@ class ParserScreenRecording extends AbstractParser {
     return this.realToBootTimeOffsetNs;
   }
 
-  override decodeTrace(videoData: Uint8Array): Array<bigint> {
+  override async decodeTrace(videoData: Uint8Array): Promise<Array<bigint>> {
     const posVersion = this.searchMagicString(videoData);
+    if (posVersion !== undefined) {
+      return this.parseTimestampsUsingEmbeddedMetadata(videoData, posVersion);
+    } else if (this.metadata?.screenRecordingOffsets !== undefined) {
+      return await this.parseTimestampsUsingExternalMetadata(
+        videoData,
+        this.metadata.screenRecordingOffsets,
+      );
+    }
+    throw new TypeError(
+      "video data doesn't contain winscope magic string and metadata json not provided",
+    );
+  }
+
+  protected override getTimestamp(decodedEntry: bigint): Timestamp {
+    return this.timestampConverter.makeTimestampFromBootTimeNs(decodedEntry);
+  }
+
+  override processDecodedEntry(
+    index: number,
+    entry: bigint,
+  ): MediaBasedTraceEntry {
+    const videoTimeSeconds = ScreenRecordingUtils.timestampToVideoTimeSeconds(
+      this.decodedEntries[0],
+      entry,
+    );
+    const videoData = this.traceFile.file;
+    return new MediaBasedTraceEntry(videoTimeSeconds, videoData);
+  }
+
+  private searchMagicString(videoData: Uint8Array): number | undefined {
+    let pos = ArrayUtils.searchSubarray(
+      videoData,
+      ParserScreenRecording.WINSCOPE_META_MAGIC_STRING,
+    );
+    if (pos === undefined) {
+      return undefined;
+    }
+    pos += ParserScreenRecording.WINSCOPE_META_MAGIC_STRING.length;
+    return pos;
+  }
+
+  private parseTimestampsUsingEmbeddedMetadata(
+    videoData: Uint8Array,
+    posVersion: number,
+  ): Array<bigint> {
+    const [posCount, timeOffsetNs] = this.getOffsetAndCountFromPosVersion(
+      videoData,
+      posVersion,
+    );
+    const [posTimestamps, count] = this.parseFramesCount(videoData, posCount);
+    this.realToBootTimeOffsetNs = timeOffsetNs;
+    const timestampsElapsedNs = this.parseTimestampsElapsedNs(
+      videoData,
+      posTimestamps,
+      count,
+    );
+    return timestampsElapsedNs;
+  }
+
+  private getOffsetAndCountFromPosVersion(
+    videoData: Uint8Array,
+    posVersion: number,
+  ): [number, bigint] {
     const [posTimeOffset, metadataVersion] = this.parseMetadataVersion(
       videoData,
       posVersion,
@@ -73,47 +149,7 @@ class ParserScreenRecording extends AbstractParser {
       UserNotifier.add(new MonotonicScreenRecording());
     }
 
-    const [posCount, timeOffsetNs] = this.parserealToBootTimeOffsetNs(
-      videoData,
-      posTimeOffset,
-    );
-    this.realToBootTimeOffsetNs = timeOffsetNs;
-    const [posTimestamps, count] = this.parseFramesCount(videoData, posCount);
-    const timestampsElapsedNs = this.parseTimestampsElapsedNs(
-      videoData,
-      posTimestamps,
-      count,
-    );
-
-    return timestampsElapsedNs;
-  }
-
-  protected override getTimestamp(decodedEntry: bigint): Timestamp {
-    return this.timestampConverter.makeTimestampFromBootTimeNs(decodedEntry);
-  }
-
-  override processDecodedEntry(
-    index: number,
-    entry: bigint,
-  ): MediaBasedTraceEntry {
-    const videoTimeSeconds = ScreenRecordingUtils.timestampToVideoTimeSeconds(
-      this.decodedEntries[0],
-      entry,
-    );
-    const videoData = this.traceFile.file;
-    return new MediaBasedTraceEntry(videoTimeSeconds, videoData);
-  }
-
-  private searchMagicString(videoData: Uint8Array): number {
-    let pos = ArrayUtils.searchSubarray(
-      videoData,
-      ParserScreenRecording.WINSCOPE_META_MAGIC_STRING,
-    );
-    if (pos === undefined) {
-      throw new TypeError("video data doesn't contain winscope magic string");
-    }
-    pos += ParserScreenRecording.WINSCOPE_META_MAGIC_STRING.length;
-    return pos;
+    return this.parseRealToBootTimeOffsetNs(videoData, posTimeOffset);
   }
 
   private parseMetadataVersion(
@@ -132,7 +168,7 @@ class ParserScreenRecording extends AbstractParser {
     return [pos, version];
   }
 
-  private parserealToBootTimeOffsetNs(
+  private parseRealToBootTimeOffsetNs(
     videoData: Uint8Array,
     pos: number,
   ): [number, bigint] {
@@ -178,6 +214,51 @@ class ParserScreenRecording extends AbstractParser {
       pos += 8;
       timestamps.push(timestamp);
     }
+    return timestamps;
+  }
+
+  private async parseTimestampsUsingExternalMetadata(
+    videoData: Uint8Array,
+    metadata: ScreenRecordingOffsets,
+  ): Promise<Array<bigint>> {
+    this.realToBootTimeOffsetNs = metadata.realToElapsedTimeOffsetNanos;
+    const timestampsElapsedNs = await this.parseTimestampsFromMp4(
+      videoData.buffer.slice(
+        videoData.byteOffset,
+        videoData.byteLength + videoData.byteOffset,
+      ),
+      metadata.elapsedRealTimeNanos,
+    );
+    return timestampsElapsedNs;
+  }
+
+  private async parseTimestampsFromMp4(
+    arrayBuffer: ArrayBuffer,
+    elapsedRealTimeNanos: bigint,
+  ): Promise<Array<bigint>> {
+    const timestamps: Array<bigint> = [];
+    const mp4File: MP4Box.MP4File = MP4Box.createFile();
+    await new Promise<void>((resolve) => {
+      mp4File.onReady = (info) => {
+        mp4File.onSamples = (id, user, samples) => {
+          let curr = elapsedRealTimeNanos;
+          samples.forEach((sample) => {
+            const timeSeconds = sample.duration / sample.timescale;
+            const timeNs = BigInt(
+              Math.floor(TIME_UNIT_TO_NANO.s * timeSeconds),
+            );
+            curr += timeNs;
+            timestamps.push(curr);
+          });
+          resolve();
+        };
+        mp4File.setExtractionOptions(info.tracks[0].id);
+      };
+      const buffer = arrayBuffer as MP4Box.MP4ArrayBuffer;
+      buffer.fileStart = 0;
+      mp4File.appendBuffer(buffer);
+      mp4File.start();
+    });
     return timestamps;
   }
 

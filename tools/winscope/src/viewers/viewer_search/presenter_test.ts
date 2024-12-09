@@ -17,10 +17,12 @@
 import {InMemoryStorage} from 'common/in_memory_storage';
 import {TraceSearchQueryAlreadyRun} from 'messaging/user_warnings';
 import {
-  NewSearchTrace,
+  InitializeTraceSearchRequest,
+  TraceAddRequest,
   TracePositionUpdate,
+  TraceRemoveRequest,
   TraceSearchFailed,
-  TraceSearchRemovalRequest,
+  TraceSearchInitialized,
   TraceSearchRequest,
 } from 'messaging/winscope_event';
 import {TimestampConverterUtils} from 'test/unit/timestamp_converter_utils';
@@ -67,7 +69,13 @@ describe('PresenterSearch', () => {
   });
 
   it('adds event listeners', () => {
-    let spy: jasmine.Spy = spyOn(presenter, 'onSearchQueryClick');
+    let spy: jasmine.Spy = spyOn(presenter, 'onGlobalSearchSectionClick');
+    element.dispatchEvent(
+      new CustomEvent(ViewerEvents.GlobalSearchSectionClick),
+    );
+    expect(spy).toHaveBeenCalled();
+
+    spy = spyOn(presenter, 'onSearchQueryClick');
     let testQuery = 'search query';
     element.dispatchEvent(
       new CustomEvent(ViewerEvents.SearchQueryClick, {
@@ -109,6 +117,21 @@ describe('PresenterSearch', () => {
     expect(spy).toHaveBeenCalledWith(deleteQueryDetail.search);
   });
 
+  it('handles trace search initialization', async () => {
+    await presenter.onGlobalSearchSectionClick();
+    expect(emitEventSpy).toHaveBeenCalledOnceWith(
+      new InitializeTraceSearchRequest(),
+    );
+    expect(uiData.initialized).toBeFalse();
+
+    await presenter.onAppEvent(new TraceSearchInitialized());
+    expect(uiData.initialized).toBeTrue();
+
+    emitEventSpy.calls.reset();
+    await presenter.onGlobalSearchSectionClick();
+    expect(emitEventSpy).not.toHaveBeenCalled();
+  });
+
   it('handles search for successful query with zero rows', async () => {
     await runSearchWithNoRowsAndCheckUiData(
       'successful empty query',
@@ -132,7 +155,7 @@ describe('PresenterSearch', () => {
       .setType(TraceType.SEARCH)
       .build();
 
-    await presenter.onAppEvent(new NewSearchTrace(trace));
+    await presenter.onAppEvent(new TraceAddRequest(trace));
     const expectedSearchResult = new SearchResult(testQuery, [], []);
     expect(uiData.currentSearches).toEqual([expectedSearchResult]);
     expect(uiData.lastTraceFailed).toEqual(false);
@@ -157,6 +180,13 @@ describe('PresenterSearch', () => {
     expect(emitEventSpy).toHaveBeenCalledOnceWith(
       TracePositionUpdate.fromTimestamp(time100, true),
     );
+  });
+
+  it('handles non-search trace added event', async () => {
+    const currData = uiData;
+    const trace = UnitTestUtils.makeEmptyTrace(TraceType.SURFACE_FLINGER);
+    await presenter.onAppEvent(new TraceAddRequest(trace));
+    expect(uiData).toEqual(currData);
   });
 
   it('handles search for query already run', () => {
@@ -206,7 +236,7 @@ describe('PresenterSearch', () => {
 
     await presenter.onResetQueryClick(testQuery);
     expect(emitEventSpy).toHaveBeenCalledOnceWith(
-      new TraceSearchRemovalRequest(trace),
+      new TraceRemoveRequest(trace),
     );
     expect(uiData.currentSearches).toEqual([]);
     expect(uiData.recentSearches).toEqual([new Search(testQuery)]);
@@ -222,7 +252,7 @@ describe('PresenterSearch', () => {
 
     await presenter.onResetQueryClick(newQuery);
     expect(emitEventSpy).toHaveBeenCalledOnceWith(
-      new TraceSearchRemovalRequest(trace),
+      new TraceRemoveRequest(trace),
     );
     expect(uiData.currentSearches).toEqual([]);
     expect(uiData.recentSearches).toEqual([
@@ -274,7 +304,7 @@ describe('PresenterSearch', () => {
     expect(emitEventSpy).toHaveBeenCalledOnceWith(
       new TraceSearchRequest(testQuery),
     );
-    await presenter.onAppEvent(new NewSearchTrace(trace));
+    await presenter.onAppEvent(new TraceAddRequest(trace));
     expect(uiData.currentSearches).toEqual([
       new SearchResult(testQuery, [], []),
     ]);

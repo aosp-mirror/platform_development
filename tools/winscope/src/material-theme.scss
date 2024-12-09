@@ -48,12 +48,15 @@ $dark-theme: mat.define-dark-theme((
   )
 ));
 
-@mixin background-color($theme) {
+@mixin background-color($theme, $contrast-theme) {
   $config: mat.get-color-config($theme);
   $background: map.get($config, background);
 
+  $contrast-config: mat.get-color-config($contrast-theme);
+  $contrast-background: map.get($contrast-config, background);
   & {
     --background-color: #{mat.get-color-from-palette($background, background)};
+    --contrast-background-color: #{mat.get-color-from-palette($contrast-background, background)};
   }
 }
 
@@ -79,7 +82,7 @@ $dark-theme: mat.define-dark-theme((
 
 body:not(.dark-mode) {
   --added-element-color: #D8EAC5;
-  @include background-color($light-theme);
+  @include background-color($light-theme, $dark-theme);
   --blue-text-color: #{map.get(mat.$indigo-palette, A200)};
   @include border-color($light-theme);
   --card-title-background-color: #f1f1f1;
@@ -114,7 +117,7 @@ body:not(.dark-mode) {
 body.dark-mode {
   @include mat.all-component-colors($dark-theme);
   --added-element-color: #6D8358;
-  @include background-color($dark-theme);
+  @include background-color($dark-theme, $light-theme);
   --blue-text-color: #b8e3fd;
   @include border-color($dark-theme);
   --card-title-background-color: #343434;

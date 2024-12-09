@@ -264,6 +264,34 @@ describe('ViewerSearchComponent', () => {
     expect(detail).toEqual(new DeleteSavedQueryClickDetail(search));
   });
 
+  it('handles trace search initialization', () => {
+    const spy = jasmine.createSpy();
+    htmlElement
+      .querySelector('viewer-search')
+      ?.addEventListener(ViewerEvents.GlobalSearchSectionClick, (event) =>
+        spy(),
+      );
+    const globalSearch = assertDefined(
+      htmlElement.querySelector<HTMLElement>('.global-search'),
+    );
+    expect(globalSearch.querySelector('.message-with-spinner')).toBeNull();
+
+    clickGlobalSearchAndCheckMessage(globalSearch);
+    clickGlobalSearchAndCheckMessage(globalSearch);
+    expect(spy).toHaveBeenCalledTimes(1);
+
+    component.inputData.initialized = true;
+    component.inputData = Object.assign({}, component.inputData);
+    fixture.detectChanges();
+    expect(globalSearch.querySelector('.message-with-spinner')).toBeNull();
+  });
+
+  function clickGlobalSearchAndCheckMessage(globalSearch: HTMLElement) {
+    globalSearch.click();
+    fixture.detectChanges();
+    expect(globalSearch.querySelector('.message-with-spinner')).toBeTruthy();
+  }
+
   function getTextInput(): HTMLTextAreaElement {
     return assertDefined(
       htmlElement.querySelector<HTMLTextAreaElement>('.query-field textarea'),

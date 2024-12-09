@@ -33,9 +33,11 @@ import {
 import {
   ActiveTraceChanged,
   ExpandedTimelineToggled,
-  NewSearchTrace,
+  TraceAddRequest,
   TracePositionUpdate,
+  TraceSearchCompleted,
   TraceSearchFailed,
+  TraceSearchInitialized,
   ViewersLoaded,
   ViewersUnloaded,
   WinscopeEvent,
@@ -43,6 +45,7 @@ import {
 } from 'messaging/winscope_event';
 import {WinscopeEventEmitter} from 'messaging/winscope_event_emitter';
 import {WinscopeEventListener} from 'messaging/winscope_event_listener';
+import {CustomQueryType} from 'trace/custom_query';
 import {TraceEntry} from 'trace/trace';
 import {TRACE_INFO} from 'trace/trace_info';
 import {TracePosition} from 'trace/trace_position';
@@ -303,15 +306,17 @@ export class Mediator {
     );
 
     await event.visit(WinscopeEventType.TRACE_SEARCH_REQUEST, async (event) => {
+      await this.timelineComponent?.onWinscopeEvent(event);
       const searchViewer = this.viewers.find(
         (viewer) => viewer.getViews()[0].type === ViewType.GLOBAL_SEARCH,
       );
       const trace = await this.tracePipeline.tryCreateSearchTrace(event.query);
+      this.timelineComponent?.onWinscopeEvent(new TraceSearchCompleted());
       if (!trace) {
         await searchViewer?.onWinscopeEvent(new TraceSearchFailed());
         return;
       }
-      const newSearchTrace = new NewSearchTrace(trace);
+      const newSearchTrace = new TraceAddRequest(trace);
       await searchViewer?.onWinscopeEvent(newSearchTrace);
       if (trace.lengthEntries > 0 && !trace.isDumpWithoutTimestamp()) {
         assertDefined(this.timelineData).getTraces().addTrace(trace);
@@ -319,14 +324,31 @@ export class Mediator {
       }
     });
 
+    await event.visit(WinscopeEventType.TRACE_REMOVE_REQUEST, async (event) => {
+      this.tracePipeline.getTraces().deleteTrace(event.trace);
+      if (this.timelineData.hasTrace(event.trace)) {
+        this.timelineData.getTraces().deleteTrace(event.trace);
+        await this.timelineComponent?.onWinscopeEvent(event);
+      }
+    });
+
     await event.visit(
-      WinscopeEventType.TRACE_SEARCH_REMOVAL_REQUEST,
+      WinscopeEventType.INITIALIZE_TRACE_SEARCH_REQUEST,
       async (event) => {
-        this.tracePipeline.getTraces().deleteTrace(event.trace);
-        if (this.timelineData.hasTrace(event.trace)) {
-          this.timelineData.getTraces().deleteTrace(event.trace);
-          await this.timelineComponent?.onWinscopeEvent(event);
-        }
+        await this.timelineComponent?.onWinscopeEvent(event);
+        const promises = this.tracePipeline.getTraces().mapTrace((trace) => {
+          if (trace.canSearch()) {
+            return trace.customQuery(CustomQueryType.INITIALIZE_TRACE_SEARCH);
+          }
+          return;
+        });
+        await Promise.all(promises);
+        const searchViewer = this.viewers.find(
+          (viewer) => viewer.getViews()[0].type === ViewType.GLOBAL_SEARCH,
+        );
+        const initializedEvent = new TraceSearchInitialized();
+        await searchViewer?.onWinscopeEvent(initializedEvent);
+        await this.timelineComponent?.onWinscopeEvent(initializedEvent);
       },
     );
   }

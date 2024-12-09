@@ -169,7 +169,7 @@ export abstract class AddDiffs<T extends DiffNode> {
 }
 
 export type IsModifiedCallbackType = (
-  newTree: TreeNode | undefined,
-  oldTree: TreeNode | undefined,
+  newTree: TreeNode,
+  oldTree: TreeNode,
   denylistProperties: string[],
 ) => Promise<boolean>;

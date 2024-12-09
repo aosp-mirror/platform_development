@@ -43,16 +43,19 @@ import {
   ExpandedTimelineToggled,
   FilterPresetApplyRequest,
   FilterPresetSaveRequest,
-  NewSearchTrace,
+  InitializeTraceSearchRequest,
   NoTraceTargetsSelected as NoTraceTargetsSelectedEvent,
   RemoteToolDownloadStart,
   RemoteToolFilesReceived,
   RemoteToolTimestampReceived,
   TabbedViewSwitched,
   TabbedViewSwitchRequest,
+  TraceAddRequest,
   TracePositionUpdate,
+  TraceRemoveRequest,
+  TraceSearchCompleted,
   TraceSearchFailed,
-  TraceSearchRemovalRequest,
+  TraceSearchInitialized,
   TraceSearchRequest,
   ViewersLoaded,
   ViewersUnloaded,
@@ -67,6 +70,7 @@ import {TimestampConverterUtils} from 'test/unit/timestamp_converter_utils';
 import {TraceBuilder} from 'test/unit/trace_builder';
 import {UserNotifierChecker} from 'test/unit/user_notifier_checker';
 import {UnitTestUtils} from 'test/unit/utils';
+import {CustomQueryType} from 'trace/custom_query';
 import {Trace} from 'trace/trace';
 import {TracePosition} from 'trace/trace_position';
 import {TraceType} from 'trace/trace_type';
@@ -248,9 +252,12 @@ describe('Mediator', () => {
 
   it('handles collected traces from Winscope', async () => {
     await mediator.onWinscopeEvent(
-      new AppFilesCollected({requested: [], collected: inputFiles}),
+      new AppFilesCollected({
+        requested: [],
+        collected: [inputFiles[0], inputFiles[1]],
+      }),
     );
-    userNotifierChecker.expectNotified([]);
+    userNotifierChecker.expectNone();
     await checkLoadTraceViewEvents(collectTracesComponent);
   });
 
@@ -326,14 +333,14 @@ describe('Mediator', () => {
         requested: [
           {
             name: 'Collected Trace',
-            types: [TraceType.EVENT_LOG, TraceType.CUJS],
+            types: [TraceType.SURFACE_FLINGER],
           },
           {
             name: 'Uncollected Trace',
             types: [TraceType.TRANSITION],
           },
         ],
-        collected: inputFiles.concat([eventLogFile]),
+        collected: [inputFiles[0]],
       }),
     );
     expect(
@@ -504,8 +511,9 @@ describe('Mediator', () => {
 
     resetSpyCalls();
     await mediator.onWinscopeEvent(new AppTraceViewRequest());
-    await checkLoadTraceViewEvents(uploadTracesComponent);
-    userNotifierChecker.expectNotified([new IncompleteFrameMapping(errorMsg)]);
+    await checkLoadTraceViewEvents(uploadTracesComponent, undefined, [
+      new IncompleteFrameMapping(errorMsg),
+    ]);
   });
 
   describe('timestamp received from remote tool', () => {
@@ -743,6 +751,27 @@ describe('Mediator', () => {
     expect(viewerStub1.onWinscopeEvent).toHaveBeenCalledOnceWith(applyRequest);
   });
 
+  it('initializes trace search', async () => {
+    const searchViewer = await loadPerfettoFilesAndReturnSearchViewer();
+    const sfTrace = assertDefined(
+      tracePipeline.getTraces().getTrace(TraceType.SURFACE_FLINGER),
+    );
+    const customQuerySpy = spyOn(sfTrace, 'customQuery');
+    const initializeRequest = new InitializeTraceSearchRequest();
+    await mediator.onWinscopeEvent(initializeRequest);
+    expect(timelineComponent.onWinscopeEvent).toHaveBeenCalledWith(
+      initializeRequest,
+    );
+    expect(customQuerySpy).toHaveBeenCalledOnceWith(
+      CustomQueryType.INITIALIZE_TRACE_SEARCH,
+    );
+    const initializedEvent = new TraceSearchInitialized();
+    expect(timelineComponent.onWinscopeEvent).toHaveBeenCalledWith(
+      initializedEvent,
+    );
+    expect(searchViewer.onWinscopeEvent).toHaveBeenCalledWith(initializedEvent);
+  });
+
   it('handles trace search request for successful queries', async () => {
     const searchViewer = await loadPerfettoFilesAndReturnSearchViewer();
     await requestSearch('select ts from surfaceflinger_layers_snapshot');
@@ -757,7 +786,9 @@ describe('Mediator', () => {
     expect(searchViewer.onWinscopeEvent).toHaveBeenCalledWith(
       new TraceSearchFailed(),
     );
-    expect(timelineComponent.onWinscopeEvent).not.toHaveBeenCalled();
+    expect(timelineComponent.onWinscopeEvent).toHaveBeenCalledWith(
+      new TraceSearchCompleted(),
+    );
   });
 
   it('handles trace removal requests', async () => {
@@ -772,7 +803,9 @@ describe('Mediator', () => {
     files = inputFiles,
     viewersToReassignTraces = [viewerStub0, viewerStub1],
   ) {
-    await mediator.onWinscopeEvent(new AppFilesUploaded(files));
+    for (const file of files) {
+      await mediator.onWinscopeEvent(new AppFilesUploaded([file]));
+    }
     userNotifierChecker.expectNone();
     viewersToReassignTraces.forEach((viewer) =>
       reassignViewerStubTrace(viewer),
@@ -809,6 +842,7 @@ describe('Mediator', () => {
   async function checkLoadTraceViewEvents(
     progressListener: ProgressListener,
     expectedViewers = viewers,
+    notifications: UserWarning[] = [],
   ) {
     expect(progressListener.onProgressUpdate).toHaveBeenCalled();
     expect(progressListener.onOperationFinished).toHaveBeenCalled();
@@ -821,7 +855,7 @@ describe('Mediator', () => {
     // by sending them a "trace position update" event
     checkTracePositionUpdateEvents(
       (expectedViewers as WinscopeEventListener[]).concat([timelineComponent]),
-      [],
+      notifications,
     );
   }
 
@@ -873,7 +907,9 @@ describe('Mediator', () => {
   }
 
   async function requestSearch(query: string) {
-    await mediator.onWinscopeEvent(new TraceSearchRequest(query));
+    const event = new TraceSearchRequest(query);
+    await mediator.onWinscopeEvent(event);
+    expect(timelineComponent.onWinscopeEvent).toHaveBeenCalledWith(event);
   }
 
   function checkNewSearchTracePropagation(
@@ -882,8 +918,11 @@ describe('Mediator', () => {
   ) {
     const searchTraces = tracePipeline.getTraces().getTraces(TraceType.SEARCH);
     const newTrace = searchTraces[searchTraces.length - 1];
-    const newTraceEvent = new NewSearchTrace(newTrace);
+    const newTraceEvent = new TraceAddRequest(newTrace);
     expect(searchViewer.onWinscopeEvent).toHaveBeenCalledWith(newTraceEvent);
+    expect(timelineComponent.onWinscopeEvent).toHaveBeenCalledWith(
+      new TraceSearchCompleted(),
+    );
     expect(timelineData.hasTrace(newTrace)).toEqual(hasTimestamps);
     const timelineComponentSpy = timelineComponent.onWinscopeEvent;
     if (hasTimestamps) {
@@ -896,7 +935,7 @@ describe('Mediator', () => {
   async function removeSearchTraceAndCheckPropagation(hasTimestamps: boolean) {
     const searchTraces = tracePipeline.getTraces().getTraces(TraceType.SEARCH);
     const newTrace = searchTraces[searchTraces.length - 1];
-    const removalRequest = new TraceSearchRemovalRequest(newTrace);
+    const removalRequest = new TraceRemoveRequest(newTrace);
     await mediator.onWinscopeEvent(removalRequest);
     expect(tracePipeline.getTraces().hasTrace(newTrace)).toBeFalse();
     expect(timelineData.hasTrace(newTrace)).toBeFalse();
