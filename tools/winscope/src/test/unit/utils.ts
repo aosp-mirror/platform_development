@@ -26,6 +26,7 @@ import {Parser} from 'trace/parser';
 import {Trace} from 'trace/trace';
 import {Traces} from 'trace/traces';
 import {TraceFile} from 'trace/trace_file';
+import {TraceMetadata} from 'trace/trace_metadata';
 import {TraceEntryTypeMap, TraceType} from 'trace/trace_type';
 import {HierarchyTreeNode} from 'trace/tree_node/hierarchy_tree_node';
 import {QueryResult, Row, RowIterator} from 'trace_processor/query_result';
@@ -74,11 +75,13 @@ class UnitTestUtils {
     filename: string,
     converter = UnitTestUtils.getTimestampConverter(),
     initializeRealToElapsedTimeOffsetNs = true,
+    metadata: TraceMetadata = {},
   ): Promise<Parser<object>> {
     const parsers = await UnitTestUtils.getParsers(
       filename,
       converter,
       initializeRealToElapsedTimeOffsetNs,
+      metadata,
     );
 
     expect(parsers.length)
@@ -92,6 +95,7 @@ class UnitTestUtils {
     filename: string,
     converter = UnitTestUtils.getTimestampConverter(),
     initializeRealToElapsedTimeOffsetNs = true,
+    metadata: TraceMetadata = {},
   ): Promise<Array<Parser<object>>> {
     const file = new TraceFile(
       await UnitTestUtils.getFixtureFile(filename),
@@ -100,7 +104,7 @@ class UnitTestUtils {
     const fileAndParsers = await new LegacyParserFactory().createParsers(
       [file],
       converter,
-      undefined,
+      metadata,
     );
 
     if (initializeRealToElapsedTimeOffsetNs) {
@@ -350,10 +354,12 @@ class UnitTestUtils {
 
   static makeEmptyTrace<T extends TraceType>(
     traceType: T,
+    descriptors: string[] = [],
   ): Trace<TraceEntryTypeMap[T]> {
     return new TraceBuilder<TraceEntryTypeMap[T]>()
       .setEntries([])
       .setTimestamps([])
+      .setDescriptors(descriptors)
       .setType(traceType)
       .build();
   }

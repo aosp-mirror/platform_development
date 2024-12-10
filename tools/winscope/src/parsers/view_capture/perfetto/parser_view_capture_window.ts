@@ -127,10 +127,6 @@ export class ParserViewCaptureWindow extends AbstractParser<HierarchyTreeNode> {
         };
         return Promise.resolve(metadata);
       })
-      .visit(CustomQueryType.INITIALIZE_TRACE_SEARCH, async () => {
-        // TODO: Create views
-        await this.createSqlTableWithDefaults('__intrinsic_viewcapture');
-      })
       .getResult();
   }
 

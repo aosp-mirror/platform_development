@@ -70,7 +70,6 @@ import {TimestampConverterUtils} from 'test/unit/timestamp_converter_utils';
 import {TraceBuilder} from 'test/unit/trace_builder';
 import {UserNotifierChecker} from 'test/unit/user_notifier_checker';
 import {UnitTestUtils} from 'test/unit/utils';
-import {CustomQueryType} from 'trace/custom_query';
 import {Trace} from 'trace/trace';
 import {TracePosition} from 'trace/trace_position';
 import {TraceType} from 'trace/trace_type';
@@ -81,6 +80,7 @@ import {ViewerStub} from 'viewers/viewer_stub';
 import {Mediator} from './mediator';
 import {TimelineData} from './timeline_data';
 import {TracePipeline} from './trace_pipeline';
+import {TraceSearchInitializer} from './trace_search/trace_search_initializer';
 
 describe('Mediator', () => {
   const TIMESTAMP_10 = TimestampConverterUtils.makeRealTimestamp(10n);
@@ -753,19 +753,17 @@ describe('Mediator', () => {
 
   it('initializes trace search', async () => {
     const searchViewer = await loadPerfettoFilesAndReturnSearchViewer();
-    const sfTrace = assertDefined(
-      tracePipeline.getTraces().getTrace(TraceType.SURFACE_FLINGER),
-    );
-    const customQuerySpy = spyOn(sfTrace, 'customQuery');
+    const spy = spyOn(
+      TraceSearchInitializer,
+      'createSearchViews',
+    ).and.returnValue(Promise.resolve(['test']));
     const initializeRequest = new InitializeTraceSearchRequest();
     await mediator.onWinscopeEvent(initializeRequest);
     expect(timelineComponent.onWinscopeEvent).toHaveBeenCalledWith(
       initializeRequest,
     );
-    expect(customQuerySpy).toHaveBeenCalledOnceWith(
-      CustomQueryType.INITIALIZE_TRACE_SEARCH,
-    );
-    const initializedEvent = new TraceSearchInitialized();
+    expect(spy).toHaveBeenCalledTimes(1);
+    const initializedEvent = new TraceSearchInitialized(['test']);
     expect(timelineComponent.onWinscopeEvent).toHaveBeenCalledWith(
       initializedEvent,
     );

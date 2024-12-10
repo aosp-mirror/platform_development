@@ -86,10 +86,6 @@ export class ParserKeyEvent extends AbstractInputEventParser {
     return 'android.input';
   }
 
-  protected override getIntrinsicTableName(): string {
-    return '__intrinsic_android_key_events';
-  }
-
   private makeKeyPropertiesTree(
     entryProto: perfetto.protos.InputEventWrapper,
   ): PropertyTreeNode {

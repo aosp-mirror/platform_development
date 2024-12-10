@@ -49,7 +49,6 @@ export enum ViewerEvents {
 
   GlobalSearchSectionClick = 'GlobalSearchSectionClick',
   SearchQueryClick = 'SearchQueryClick',
-  ResetQueryClick = 'ResetQueryClick',
   SaveQueryClick = 'SaveQueryClick',
   DeleteSavedQueryClick = 'DeleteSavedQueryClick',
 }
