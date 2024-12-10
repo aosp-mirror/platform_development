@@ -62,7 +62,7 @@ def create_argument_parser() -> argparse.ArgumentParser:
     return parser
 
 # Keep in sync with ProxyConnection#VERSION in Winscope
-VERSION = '4.0.8'
+VERSION = '5.0.0'
 
 PERFETTO_TRACE_CONFIG_FILE = '/data/misc/perfetto-configs/winscope-proxy-trace.conf'
 PERFETTO_DUMP_CONFIG_FILE = '/data/misc/perfetto-configs/winscope-proxy-dump.conf'
@@ -486,27 +486,38 @@ class MediaBasedConfig(TraceConfig):
     def get_trace_identifiers(self):
         return self.trace_identifiers
 
-    def is_valid(self, config_type: str) -> bool:
-        return config_type == "displays"
-
     def add(self, config_type: str, config_value: str | list[str] | None):
         if config_type != "displays":
-           return
+            return
         if config_value and len(config_value) > 0:
             if type(config_value) == str:
                 self.trace_identifiers = [config_value.split(" ")[0]]
             else:
                 self.trace_identifiers = list(map(lambda d: d.split(" ")[0], config_value))
 
-    def execute_command(self, server, device_id):
-        pass
-
 class ScreenRecordingConfig(MediaBasedConfig):
     """Creates display args for Screen Recording traces."""
+    show_pointer_and_touches = False
+
     def get_optional_start_args(self, identifier):
         if identifier == "active":
             return ""
         return f"--display-id {identifier}"
+
+    def is_valid(self, config_type: str) -> bool:
+        return config_type == "displays" or config_type == "pointer_and_touches"
+
+    def add(self, config_type: str, config_value: str | list[str] | None):
+        if config_type == "pointer_and_touches":
+            self.show_pointer_and_touches = True
+            return
+        super().add(config_type, config_value)
+
+    def execute_command(self, server, device_id):
+        shell = get_shell_args(device_id, "screen recording config")
+        val = "1" if self.show_pointer_and_touches else "0"
+        cmd = "settings put system show_touches {val} && settings put system pointer_location {val}".format(val=val)
+        self.execute_optional_config_command(server, device_id, shell, cmd, "screen recording pointer and touches", self.show_pointer_and_touches)
 
 class ScreenshotConfig(MediaBasedConfig):
     """Creates display args for Screenshots."""
@@ -515,6 +526,11 @@ class ScreenshotConfig(MediaBasedConfig):
             return ""
         return f"-d {identifier}"
 
+    def is_valid(self, config_type: str) -> bool:
+        return config_type == "displays"
+
+    def execute_command(self, server, device_id):
+        pass
 
 class SurfaceFlingerDumpConfig(TraceConfig):
     """Handles perfetto config for SurfaceFlinger dumps."""
@@ -647,8 +663,6 @@ echo 'SF layers trace (legacy) stopped.'
             "screen_recording_{trace_identifier}"),
         lambda res: False,
         '''
-        settings put system show_touches 1 && \
-        settings put system pointer_location 1 && \
         screenrecord --bugreport --bit-rate 8M {options} /data/local/tmp/screen_{trace_identifier}.mp4 & \
         echo "ScreenRecorder started."
         ''',
