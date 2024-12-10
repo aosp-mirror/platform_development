@@ -27,6 +27,7 @@ thiserror = "1"
 threadpool = "1"
 walkdir = "2"
 whoami = "1"
+checksum = { path = "../checksum" }
 google_metadata = { path = "../google_metadata"}
 license_checker = { path = "../license_checker" }
 name_and_version = { path = "../name_and_version" }

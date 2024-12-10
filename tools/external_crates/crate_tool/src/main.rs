@@ -137,6 +137,11 @@ enum Cmd {
         #[command(flatten)]
         crates: CrateList,
     },
+    /// Verify checksums for a crate.
+    VerifyChecksum {
+        #[command(flatten)]
+        crates: CrateList,
+    },
 }
 
 #[derive(Args)]
@@ -245,6 +250,9 @@ fn main() -> Result<()> {
         Cmd::Init {} => managed_repo.init(),
         Cmd::TestMapping { crates } => {
             managed_repo.fix_test_mapping(crates.to_list(&managed_repo)?.into_iter())
+        }
+        Cmd::VerifyChecksum { crates } => {
+            managed_repo.verify_checksums(crates.to_list(&managed_repo)?.into_iter())
         }
     }
 }
