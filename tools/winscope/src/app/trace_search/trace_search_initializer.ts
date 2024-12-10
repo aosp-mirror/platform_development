@@ -27,7 +27,7 @@ export class TraceSearchInitializer {
     const searchViews = [];
     for (const FactoryType of TraceSearchInitializer.FACTORIES) {
       const factory = new FactoryType(traceProcessor);
-      if (traces.getTrace(factory.traceType)?.canSearch()) {
+      if (traces.getTrace(factory.traceType)?.isPerfetto()) {
         const views = await factory.createSearchViews();
         searchViews.push(...views);
       }
