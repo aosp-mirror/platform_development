@@ -76,6 +76,7 @@ describe('ViewerSearchComponent', () => {
     fixture = TestBed.createComponent(TestHostComponent);
     component = fixture.componentInstance;
     htmlElement = fixture.nativeElement;
+    component.inputData.initialized = true;
     fixture.detectChanges();
   });
 
@@ -150,7 +151,7 @@ describe('ViewerSearchComponent', () => {
     expect(htmlElement.querySelector('.running-query-message')).toBeNull();
     expect(htmlElement.querySelector('.query-execution-time')).toBeTruthy();
     expect(htmlElement.querySelector('log-view')).toBeTruthy();
-    expect(getSearchQueryButton().disabled).toBeTrue();
+    expect(getSearchQueryButton().disabled).toBeFalse();
   });
 
   it('handles running query failure', () => {
@@ -161,30 +162,6 @@ describe('ViewerSearchComponent', () => {
     expect(htmlElement.querySelector('.running-query-message')).toBeNull();
     expect(htmlElement.querySelector('log-view')).toBeNull();
     expect(getSearchQueryButton().disabled).toBeFalse();
-  });
-
-  it('emits event on reset query click', () => {
-    let query: string | undefined;
-    htmlElement
-      .querySelector('viewer-search')
-      ?.addEventListener(ViewerEvents.ResetQueryClick, (event) => {
-        const detail: QueryClickDetail = (event as CustomEvent).detail;
-        query = detail.query;
-      });
-
-    const resetButton = assertDefined(
-      htmlElement.querySelector<HTMLButtonElement>('.reset-button'),
-    );
-    expect(resetButton.disabled).toBeTrue();
-
-    changeInput(getTextInput(), testQuery);
-    component.inputData.currentSearches.push(
-      new SearchResult(testQuery, [], []),
-    );
-    fixture.detectChanges();
-    resetButton.click();
-    fixture.detectChanges();
-    expect(query).toEqual(testQuery);
   });
 
   it('handles search via enter key', () => {
@@ -264,6 +241,41 @@ describe('ViewerSearchComponent', () => {
     expect(detail).toEqual(new DeleteSavedQueryClickDetail(search));
   });
 
+  it('handles trace search initialization', () => {
+    component.inputData.initialized = false;
+    fixture.detectChanges();
+    const spy = jasmine.createSpy();
+    htmlElement
+      .querySelector('viewer-search')
+      ?.addEventListener(ViewerEvents.GlobalSearchSectionClick, (event) =>
+        spy(),
+      );
+    const globalSearch = assertDefined(
+      htmlElement.querySelector<HTMLElement>('.global-search'),
+    );
+    expect(globalSearch.querySelector('.message-with-spinner')).toBeNull();
+
+    clickGlobalSearchAndCheckMessage(globalSearch);
+    clickGlobalSearchAndCheckMessage(globalSearch);
+    expect(spy).toHaveBeenCalledTimes(1);
+
+    changeInput(getTextInput(), testQuery);
+    expect(getSearchQueryButton().disabled).toBeTrue();
+
+    component.inputData.initialized = true;
+    component.inputData = Object.assign({}, component.inputData);
+    fixture.detectChanges();
+    expect(globalSearch.querySelector('.message-with-spinner')).toBeNull();
+    expect(getSearchQueryButton().disabled).toBeFalse();
+  });
+
+  function clickGlobalSearchAndCheckMessage(globalSearch: HTMLElement) {
+    globalSearch.click();
+    fixture.detectChanges();
+    expect(globalSearch.querySelector('.message-with-spinner')).toBeTruthy();
+    expect(getSearchQueryButton().disabled).toBeTrue();
+  }
+
   function getTextInput(): HTMLTextAreaElement {
     return assertDefined(
       htmlElement.querySelector<HTMLTextAreaElement>('.query-field textarea'),
@@ -327,10 +339,6 @@ describe('ViewerSearchComponent', () => {
       'timer Calculating results',
     );
     expect(runningQueryMessage.querySelector('mat-spinner')).toBeTruthy();
-    const resetButton = assertDefined(
-      htmlElement.querySelector<HTMLButtonElement>('.reset-button'),
-    );
-    expect(resetButton.disabled).toBeTrue();
   }
 
   @Component({

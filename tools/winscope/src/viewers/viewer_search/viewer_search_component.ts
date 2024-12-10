@@ -20,6 +20,7 @@ import {FormControl, ValidationErrors, Validators} from '@angular/forms';
 import {assertDefined} from 'common/assert_utils';
 import {TimeDuration} from 'common/time_duration';
 import {TIME_UNIT_TO_NANO} from 'common/time_units';
+import {Analytics} from 'logging/analytics';
 import {TraceType} from 'trace/trace_type';
 import {CollapsibleSections} from 'viewers/common/collapsible_sections';
 import {CollapsibleSectionType} from 'viewers/common/collapsible_section_type';
@@ -50,12 +51,17 @@ import {Search, UiData} from './ui_data';
 
       <div
         class="global-search"
-        [class.collapsed]="sections.isSectionCollapsed(CollapsibleSectionType.GLOBAL_SEARCH)">
+        [class.collapsed]="sections.isSectionCollapsed(CollapsibleSectionType.GLOBAL_SEARCH)"
+        (click)="onGlobalSearchClick($event)">
         <div class="title-section">
           <collapsible-section-title
             class="padded-title"
             [title]="CollapsibleSectionType.GLOBAL_SEARCH"
             (collapseButtonClicked)="sections.onCollapseStateChange(CollapsibleSectionType.GLOBAL_SEARCH, true)"></collapsible-section-title>
+            <span class="mat-body-2 message-with-spinner" *ngIf="initializing">
+              <span>Initializing</span>
+              <mat-spinner [diameter]="20"></mat-spinner>
+            </span>
         </div>
 
           <mat-tab-group class="search-tabs">
@@ -65,15 +71,6 @@ import {Search, UiData} from './ui_data';
                   {{globalSearchText}}
                 </span>
 
-                <button
-                  mat-button
-                  class="query-button end-align-button reset-button"
-                  color="primary"
-                  (click)="onResetQueryClick()"
-                  [disabled]="!currentSearchPresent()">
-                  <mat-icon> restore </mat-icon>
-                  <span>  Reset Query </span>
-                </button>
                 <mat-form-field appearance="outline" class="query-field padded-field">
                   <textarea matInput [formControl]="searchQueryControl" (keydown)="onTextAreaKeydown($event)" [readonly]="runningQuery"></textarea>
                   <mat-error *ngIf="searchQueryControl.invalid && searchQueryControl.value">Enter valid SQL query.</mat-error>
@@ -100,6 +97,10 @@ import {Search, UiData} from './ui_data';
                     [disabled]="searchQueryDisabled()"> Run Search Query </button>
                 </div>
                 <div class="current-search" *ngFor="let search of inputData.currentSearches">
+                  <span class="query">
+                    <span class="mat-body-2"> Current: </span>
+                    <span class="mat-body-1"> {{search.query}} </span>
+                  </span>
                   <ng-container
                     [ngTemplateOutlet]="saveQueryField"
                     [ngTemplateOutletContext]="{search}"></ng-container>
@@ -214,10 +215,11 @@ import {Search, UiData} from './ui_data';
         color: #FF8A00;
       }
       .current-search {
-        display: flex;
-        flex-direction: row;
-        justify-content: space-between;
         padding: 10px 0px;
+      }
+      .current-search .query {
+        display: flex;
+        flex-direction: column;
       }
       .message-with-spinner {
         display: flex;
@@ -285,20 +287,28 @@ export class ViewerSearchComponent {
   runningQuery: string | undefined;
   lastQueryExecutionTime: string | undefined;
   lastQueryStartTime: number | undefined;
-  private readonly runOption = {
-    name: 'Run Query',
-    onClickCallback: (search: Search) =>
-      this.onRunQueryFromOptionsClick(search),
-  };
+  initializing = false;
   readonly savedSearchMenuOptions: MenuOption[] = [
-    this.runOption,
+    {
+      name: 'Run Query',
+      onClickCallback: (search: Search) => {
+        Analytics.TraceSearch.logQueryRequested('saved');
+        this.onRunQueryFromOptionsClick(search);
+      },
+    },
     {
       name: 'Delete Query',
       onClickCallback: (search: Search) => this.onDeleteQueryClick(search),
     },
   ];
   readonly recentSearchMenuOptions: MenuOption[] = [
-    this.runOption,
+    {
+      name: 'Run Query',
+      onClickCallback: (search: Search) => {
+        Analytics.TraceSearch.logQueryRequested('recent');
+        this.onRunQueryFromOptionsClick(search);
+      },
+    },
     {name: 'Save Query', onClickCallback: (search: Search) => {}},
   ];
 
@@ -316,6 +326,9 @@ export class ViewerSearchComponent {
   }
 
   ngOnChanges() {
+    if (this.initializing && this.inputData?.initialized) {
+      this.initializing = false;
+    }
     const runningQueryComplete = this.inputData?.currentSearches.some(
       (search) => search.query === this.runningQuery,
     );
@@ -327,22 +340,28 @@ export class ViewerSearchComponent {
         this.searchQueryControl.setValue(this.runningQuery);
         this.saveQueryNameControl.setValue(this.runningQuery);
       }
+      const executionTimeMs =
+        Date.now() - assertDefined(this.lastQueryStartTime);
+      Analytics.TraceSearch.logQueryExecutionTime(executionTimeMs);
       this.lastQueryExecutionTime = new TimeDuration(
-        BigInt(Date.now() - assertDefined(this.lastQueryStartTime)) *
-          BigInt(TIME_UNIT_TO_NANO.ms),
+        BigInt(executionTimeMs * TIME_UNIT_TO_NANO.ms),
       ).format();
       this.lastQueryStartTime = undefined;
       this.runningQuery = undefined;
     }
   }
 
-  onResetQueryClick() {
-    this.lastQueryExecutionTime = undefined;
-    this.dispatchResetQueryEvent();
+  onGlobalSearchClick() {
+    if (!this.initializing && !this.inputData?.initialized) {
+      this.initializing = true;
+      const event = new CustomEvent(ViewerEvents.GlobalSearchSectionClick);
+      this.elementRef.nativeElement.dispatchEvent(event);
+    }
   }
 
   onSearchQueryClick() {
     this.runningQuery = assertDefined(this.searchQueryControl.value);
+    Analytics.TraceSearch.logQueryRequested('new');
     this.dispatchSearchQueryEvent();
   }
 
@@ -357,13 +376,11 @@ export class ViewerSearchComponent {
       ),
     });
     this.elementRef.nativeElement.dispatchEvent(event);
+    Analytics.TraceSearch.logQuerySaved();
     this.saveQueryNameControl.reset();
   }
 
   onRunQueryFromOptionsClick(search: Search) {
-    if (this.currentSearchPresent()) {
-      this.dispatchResetQueryEvent();
-    }
     this.runningQuery = search.query;
     this.dispatchSearchQueryEvent();
   }
@@ -379,7 +396,7 @@ export class ViewerSearchComponent {
     return (
       this.searchQueryControl.invalid ||
       !!this.runningQuery ||
-      this.currentSearchPresent()
+      !this.inputData?.initialized
     );
   }
 
@@ -414,15 +431,6 @@ export class ViewerSearchComponent {
     this.lastQueryStartTime = Date.now();
     const event = new CustomEvent(ViewerEvents.SearchQueryClick, {
       detail: new QueryClickDetail(assertDefined(this.runningQuery)),
-    });
-    this.elementRef.nativeElement.dispatchEvent(event);
-  }
-
-  private dispatchResetQueryEvent() {
-    const event = new CustomEvent(ViewerEvents.ResetQueryClick, {
-      detail: new QueryClickDetail(
-        assertDefined(this.inputData?.currentSearches[0].query),
-      ),
     });
     this.elementRef.nativeElement.dispatchEvent(event);
   }
