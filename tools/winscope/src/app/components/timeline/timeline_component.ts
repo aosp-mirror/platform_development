@@ -189,6 +189,8 @@ import {MiniTimelineComponent} from './mini-timeline/mini_timeline_component';
                     <mat-option
                       *ngFor="let trace of sortedTraces"
                       [value]="trace"
+                      [matTooltip]="trace.getDescriptors().join(', ')"
+                      matTooltipPosition="right"
                       [style]="{
                         color: 'var(--blue-text-color)',
                         opacity: isOptionDisabled(trace) ? 0.5 : 1.0
@@ -732,6 +734,9 @@ export class TimelineComponent
   }
 
   getTitle(trace: Trace<object>): string {
+    if (trace.type === TraceType.VIEW_CAPTURE) {
+      return TRACE_INFO[trace.type].name + ' ' + trace.getDescriptors()[0];
+    }
     return TRACE_INFO[trace.type].name + (trace.isDump() ? ' Dump' : '');
   }
 
@@ -976,10 +981,14 @@ export class TimelineComponent
   }
 
   getTraceTooltip(trace: Trace<object>) {
+    let tooltip = TRACE_INFO[trace.type].name;
     if (trace.type === TraceType.SCREEN_RECORDING) {
-      return trace.getDescriptors()[0].split('.')[0];
+      tooltip += ' ' + trace.getDescriptors()[0].split('.')[0];
     }
-    return TRACE_INFO[trace.type].name;
+    if (trace.type === TraceType.VIEW_CAPTURE) {
+      tooltip += ' ' + trace.getDescriptors()[0];
+    }
+    return tooltip;
   }
 
   private updateSelectedTraces(trace: Trace<object> | undefined) {

@@ -179,7 +179,7 @@ export class Trace<T> {
     return this.parser;
   }
 
-  canSearch(): boolean {
+  isPerfetto(): boolean {
     return [AbstractPerfettoParser, TracesParserInput].some(
       (ParserType) => this.parser instanceof ParserType,
     );
