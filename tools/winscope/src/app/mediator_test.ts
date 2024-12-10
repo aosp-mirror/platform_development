@@ -43,6 +43,7 @@ import {
   ExpandedTimelineToggled,
   FilterPresetApplyRequest,
   FilterPresetSaveRequest,
+  InitializeTraceSearchRequest,
   NoTraceTargetsSelected as NoTraceTargetsSelectedEvent,
   RemoteToolDownloadStart,
   RemoteToolFilesReceived,
@@ -52,7 +53,9 @@ import {
   TraceAddRequest,
   TracePositionUpdate,
   TraceRemoveRequest,
+  TraceSearchCompleted,
   TraceSearchFailed,
+  TraceSearchInitialized,
   TraceSearchRequest,
   ViewersLoaded,
   ViewersUnloaded,
@@ -77,6 +80,7 @@ import {ViewerStub} from 'viewers/viewer_stub';
 import {Mediator} from './mediator';
 import {TimelineData} from './timeline_data';
 import {TracePipeline} from './trace_pipeline';
+import {TraceSearchInitializer} from './trace_search/trace_search_initializer';
 
 describe('Mediator', () => {
   const TIMESTAMP_10 = TimestampConverterUtils.makeRealTimestamp(10n);
@@ -747,6 +751,25 @@ describe('Mediator', () => {
     expect(viewerStub1.onWinscopeEvent).toHaveBeenCalledOnceWith(applyRequest);
   });
 
+  it('initializes trace search', async () => {
+    const searchViewer = await loadPerfettoFilesAndReturnSearchViewer();
+    const spy = spyOn(
+      TraceSearchInitializer,
+      'createSearchViews',
+    ).and.returnValue(Promise.resolve(['test']));
+    const initializeRequest = new InitializeTraceSearchRequest();
+    await mediator.onWinscopeEvent(initializeRequest);
+    expect(timelineComponent.onWinscopeEvent).toHaveBeenCalledWith(
+      initializeRequest,
+    );
+    expect(spy).toHaveBeenCalledTimes(1);
+    const initializedEvent = new TraceSearchInitialized(['test']);
+    expect(timelineComponent.onWinscopeEvent).toHaveBeenCalledWith(
+      initializedEvent,
+    );
+    expect(searchViewer.onWinscopeEvent).toHaveBeenCalledWith(initializedEvent);
+  });
+
   it('handles trace search request for successful queries', async () => {
     const searchViewer = await loadPerfettoFilesAndReturnSearchViewer();
     await requestSearch('select ts from surfaceflinger_layers_snapshot');
@@ -761,7 +784,9 @@ describe('Mediator', () => {
     expect(searchViewer.onWinscopeEvent).toHaveBeenCalledWith(
       new TraceSearchFailed(),
     );
-    expect(timelineComponent.onWinscopeEvent).not.toHaveBeenCalled();
+    expect(timelineComponent.onWinscopeEvent).toHaveBeenCalledWith(
+      new TraceSearchCompleted(),
+    );
   });
 
   it('handles trace removal requests', async () => {
@@ -880,7 +905,9 @@ describe('Mediator', () => {
   }
 
   async function requestSearch(query: string) {
-    await mediator.onWinscopeEvent(new TraceSearchRequest(query));
+    const event = new TraceSearchRequest(query);
+    await mediator.onWinscopeEvent(event);
+    expect(timelineComponent.onWinscopeEvent).toHaveBeenCalledWith(event);
   }
 
   function checkNewSearchTracePropagation(
@@ -891,6 +918,9 @@ describe('Mediator', () => {
     const newTrace = searchTraces[searchTraces.length - 1];
     const newTraceEvent = new TraceAddRequest(newTrace);
     expect(searchViewer.onWinscopeEvent).toHaveBeenCalledWith(newTraceEvent);
+    expect(timelineComponent.onWinscopeEvent).toHaveBeenCalledWith(
+      new TraceSearchCompleted(),
+    );
     expect(timelineData.hasTrace(newTrace)).toEqual(hasTimestamps);
     const timelineComponentSpy = timelineComponent.onWinscopeEvent;
     if (hasTimestamps) {

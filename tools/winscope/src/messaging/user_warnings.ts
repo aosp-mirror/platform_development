@@ -324,13 +324,3 @@ export class TraceSearchQueryFailed extends UserWarning {
     return `Search query failed: ${this.errorMessage}`;
   }
 }
-
-export class TraceSearchQueryAlreadyRun extends UserWarning {
-  getDescriptor(): string {
-    return 'trace search query already run';
-  }
-
-  getMessage(): string {
-    return 'Trace search query has already been run for this trace';
-  }
-}
