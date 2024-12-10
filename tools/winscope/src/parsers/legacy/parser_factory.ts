@@ -39,6 +39,7 @@ import {ParserWindowManager} from 'parsers/window_manager/legacy/parser_window_m
 import {ParserWindowManagerDump} from 'parsers/window_manager/legacy/parser_window_manager_dump';
 import {Parser} from 'trace/parser';
 import {TraceFile} from 'trace/trace_file';
+import {TraceMetadata} from 'trace/trace_metadata';
 
 export class ParserFactory {
   static readonly PARSERS = [
@@ -62,6 +63,7 @@ export class ParserFactory {
   async createParsers(
     traceFiles: TraceFile[],
     timestampConverter: ParserTimestampConverter,
+    metadata: TraceMetadata,
     progressListener?: ProgressListener,
   ): Promise<FileAndParser[]> {
     const parsers = new Array<{file: TraceFile; parser: Parser<object>}>();
@@ -76,7 +78,7 @@ export class ParserFactory {
 
       for (const ParserType of ParserFactory.PARSERS) {
         try {
-          const p = new ParserType(traceFile, timestampConverter);
+          const p = new ParserType(traceFile, timestampConverter, metadata);
           await p.parse();
           hasFoundParser = true;
 

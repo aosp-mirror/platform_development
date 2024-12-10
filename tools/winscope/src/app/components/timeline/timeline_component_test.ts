@@ -40,9 +40,13 @@ import {TimeRange} from 'common/time';
 import {
   ActiveTraceChanged,
   ExpandedTimelineToggled,
+  InitializeTraceSearchRequest,
   TraceAddRequest,
   TracePositionUpdate,
   TraceRemoveRequest,
+  TraceSearchCompleted,
+  TraceSearchInitialized,
+  TraceSearchRequest,
   WinscopeEvent,
 } from 'messaging/winscope_event';
 import {TimestampConverterUtils} from 'test/unit/timestamp_converter_utils';
@@ -1048,6 +1052,34 @@ describe('TimelineComponent', () => {
     expect(timelineComponent.sortedTraces).toEqual(initialTraces);
   });
 
+  it('disables or enables timeline on winscope events', async () => {
+    loadSfWmTraces();
+    const timelineComponent = assertDefined(component.timeline);
+    checkTimelineEnabled();
+
+    await timelineComponent.onWinscopeEvent(new InitializeTraceSearchRequest());
+    checkTimelineDisabled();
+    await timelineComponent.onWinscopeEvent(new TraceSearchInitialized([]));
+    checkTimelineEnabled();
+
+    await timelineComponent.onWinscopeEvent(new TraceSearchRequest(''));
+    checkTimelineDisabled();
+    await timelineComponent.onWinscopeEvent(new TraceSearchCompleted());
+    checkTimelineEnabled();
+  });
+
+  it('does not handle arrow key presses if component disabled', () => {
+    loadSfWmTraces();
+    const timelineComponent = assertDefined(component.timeline);
+    timelineComponent.isDisabled = true;
+    fixture.detectChanges();
+
+    const spyNextEntry = spyOn(timelineComponent, 'moveToNextEntry');
+    document.dispatchEvent(new KeyboardEvent('keydown', {key: 'ArrowRight'}));
+    fixture.detectChanges();
+    expect(spyNextEntry).not.toHaveBeenCalled();
+  });
+
   function loadSfWmTraces(hostComponent = component, hostFixture = fixture) {
     const traces = new TracesBuilder()
       .setTimestamps(TraceType.SURFACE_FLINGER, [time100, time110])
@@ -1335,6 +1367,16 @@ describe('TimelineComponent', () => {
     );
     options.item(1).click();
     fixture.detectChanges();
+  }
+
+  function checkTimelineEnabled() {
+    expect(htmlElement.querySelector('.disabled-component')).toBeNull();
+    expect(htmlElement.querySelector('.disabled-message')).toBeNull();
+  }
+
+  function checkTimelineDisabled() {
+    expect(htmlElement.querySelector('.disabled-component')).toBeTruthy();
+    expect(htmlElement.querySelector('.disabled-message')).toBeTruthy();
   }
 
   @Component({

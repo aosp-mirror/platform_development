@@ -18,9 +18,8 @@ import {assertDefined} from 'common/assert_utils';
 import {FunctionUtils} from 'common/function_utils';
 import {PersistentStoreProxy} from 'common/persistent_store_proxy';
 import {Store} from 'common/store';
-import {UserNotifier} from 'common/user_notifier';
-import {TraceSearchQueryAlreadyRun} from 'messaging/user_warnings';
 import {
+  InitializeTraceSearchRequest,
   TracePositionUpdate,
   TraceRemoveRequest,
   TraceSearchRequest,
@@ -76,17 +75,16 @@ export class Presenter {
   addEventListeners(htmlElement: HTMLElement) {
     this.viewerElement = htmlElement;
     htmlElement.addEventListener(
+      ViewerEvents.GlobalSearchSectionClick,
+      async (event) => {
+        this.onGlobalSearchSectionClick();
+      },
+    );
+    htmlElement.addEventListener(
       ViewerEvents.SearchQueryClick,
       async (event) => {
         const detail: QueryClickDetail = (event as CustomEvent).detail;
         this.onSearchQueryClick(detail.query);
-      },
-    );
-    htmlElement.addEventListener(
-      ViewerEvents.ResetQueryClick,
-      async (event) => {
-        const detail: QueryClickDetail = (event as CustomEvent).detail;
-        await this.onResetQueryClick(detail.query);
       },
     );
     htmlElement.addEventListener(ViewerEvents.SaveQueryClick, async (event) => {
@@ -104,6 +102,14 @@ export class Presenter {
   }
 
   async onAppEvent(event: WinscopeEvent) {
+    await event.visit(
+      WinscopeEventType.TRACE_SEARCH_INITIALIZED,
+      async (event) => {
+        this.uiData.searchViews = event.views;
+        this.uiData.initialized = true;
+        this.copyUiDataAndNotifyView();
+      },
+    );
     await event.visit(WinscopeEventType.TRACE_ADD_REQUEST, async (event) => {
       if (event.trace.type === TraceType.SEARCH) {
         this.showQueryResult(event.trace as Trace<QueryResult>);
@@ -117,17 +123,21 @@ export class Presenter {
     }
   }
 
+  async onGlobalSearchSectionClick() {
+    if (!this.uiData.initialized) {
+      this.emitWinscopeEvent(new InitializeTraceSearchRequest());
+    }
+  }
+
   async onSearchQueryClick(query: string) {
-    if (this.runQueries.some((q) => q.query === query)) {
-      UserNotifier.add(new TraceSearchQueryAlreadyRun()).notify();
-      this.onTraceSearchFailed();
-      return;
+    if (this.runQueries.length > 0) {
+      this.clearQuery(this.runQueries[this.runQueries.length - 1].query);
     }
     this.runQueries.push(new QueryAndTrace(query, undefined));
     this.emitWinscopeEvent(new TraceSearchRequest(query));
   }
 
-  async onResetQueryClick(query: string) {
+  private clearQuery(query: string) {
     this.uiData.currentSearches = this.uiData.currentSearches.filter(
       (s) => s.query !== query,
     );
@@ -141,10 +151,12 @@ export class Presenter {
     });
 
     const runQueryIndex = this.runQueries.findIndex((r) => r.query === query);
-    const trace = this.runQueries[runQueryIndex].trace;
-    if (runQueryIndex !== -1 && trace) {
-      this.emitWinscopeEvent(new TraceRemoveRequest(trace));
-      this.runQueries.splice(runQueryIndex, 1);
+    if (runQueryIndex !== -1) {
+      const trace = this.runQueries[runQueryIndex].trace;
+      if (trace) {
+        this.emitWinscopeEvent(new TraceRemoveRequest(trace));
+        this.runQueries.splice(runQueryIndex, 1);
+      }
     }
   }
 
@@ -169,13 +181,16 @@ export class Presenter {
   }
 
   private async showQueryResult(newTrace: Trace<QueryResult>) {
-    const lastRunQuery = this.runQueries[this.runQueries.length - 1];
-    lastRunQuery.trace = newTrace;
+    const traceQuery = newTrace.getDescriptors()[0];
+    const runQuery = assertDefined(
+      this.runQueries.find((q) => q.query === traceQuery),
+    );
+    runQuery.trace = newTrace;
 
     if (this.uiData.recentSearches.length >= 10) {
       this.uiData.recentSearches.pop();
     }
-    this.uiData.recentSearches.unshift(new Search(lastRunQuery.query));
+    this.uiData.recentSearches.unshift(new Search(runQuery.query));
 
     this.uiData.currentSearches = [];
     for (const {query, trace} of this.runQueries) {
