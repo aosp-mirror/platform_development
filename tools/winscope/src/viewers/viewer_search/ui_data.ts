@@ -21,6 +21,8 @@ export class UiData {
   savedSearches: Search[] = [];
   recentSearches: Search[] = [];
   lastTraceFailed = false;
+  initialized = false;
+  searchViews: string[] = [];
 
   static createEmpty() {
     return new UiData();

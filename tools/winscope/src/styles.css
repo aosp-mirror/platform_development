@@ -183,3 +183,21 @@ log-view .headers .mat-form-field-infix {
 .search-tabs mat-tab-body {
     padding: 12px;
 }
+
+.user-notification {
+    color: var(--contrast-text-color);
+    background-color: var(--contrast-background-color);
+    box-shadow: 0px 3px 5px -1px rgba(0, 0, 0, 0.2), 0px 6px 10px 0px rgba(0, 0, 0, 0.14), 0px 1px 18px 0px rgba(0, 0, 0, 0.12);
+    border-radius: 4px;
+    box-sizing: border-box;
+    display: block;
+    margin: 24px;
+    padding: 14px 16px;
+    transform-origin: center;
+}
+
+.disabled-component {
+    pointer-events: none;
+    opacity: 0.5;
+    filter: grayscale(1);
+}

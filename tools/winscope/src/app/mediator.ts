@@ -35,7 +35,9 @@ import {
   ExpandedTimelineToggled,
   TraceAddRequest,
   TracePositionUpdate,
+  TraceSearchCompleted,
   TraceSearchFailed,
+  TraceSearchInitialized,
   ViewersLoaded,
   ViewersUnloaded,
   WinscopeEvent,
@@ -53,6 +55,7 @@ import {ViewerFactory} from 'viewers/viewer_factory';
 import {FilesSource} from './files_source';
 import {TimelineData} from './timeline_data';
 import {TracePipeline} from './trace_pipeline';
+import {TraceSearchInitializer} from './trace_search/trace_search_initializer';
 
 export class Mediator {
   private abtChromeExtensionProtocol: WinscopeEventEmitter &
@@ -303,10 +306,12 @@ export class Mediator {
     );
 
     await event.visit(WinscopeEventType.TRACE_SEARCH_REQUEST, async (event) => {
+      await this.timelineComponent?.onWinscopeEvent(event);
       const searchViewer = this.viewers.find(
         (viewer) => viewer.getViews()[0].type === ViewType.GLOBAL_SEARCH,
       );
       const trace = await this.tracePipeline.tryCreateSearchTrace(event.query);
+      this.timelineComponent?.onWinscopeEvent(new TraceSearchCompleted());
       if (!trace) {
         await searchViewer?.onWinscopeEvent(new TraceSearchFailed());
         return;
@@ -326,6 +331,21 @@ export class Mediator {
         await this.timelineComponent?.onWinscopeEvent(event);
       }
     });
+
+    await event.visit(
+      WinscopeEventType.INITIALIZE_TRACE_SEARCH_REQUEST,
+      async (event) => {
+        await this.timelineComponent?.onWinscopeEvent(event);
+        const traces = this.tracePipeline.getTraces();
+        const views = await TraceSearchInitializer.createSearchViews(traces);
+        const searchViewer = this.viewers.find(
+          (viewer) => viewer.getViews()[0].type === ViewType.GLOBAL_SEARCH,
+        );
+        const initializedEvent = new TraceSearchInitialized(views);
+        await searchViewer?.onWinscopeEvent(initializedEvent);
+        await this.timelineComponent?.onWinscopeEvent(initializedEvent);
+      },
+    );
   }
 
   private async loadFiles(files: File[], source: FilesSource) {

@@ -210,6 +210,18 @@ describe('TraceFileFilter', () => {
       ]);
     });
 
+    it('extracts screen recording metadata', async () => {
+      const metadataJson = await makeMetadataJsonFile();
+      const screenRecording = makeTraceFile('screen_recording.mp4');
+      const result = await filter.filter([screenRecording, metadataJson]);
+      expect(result.legacy).toEqual([screenRecording]);
+      expect(result.metadata.screenRecordingOffsets).toEqual({
+        elapsedRealTimeNanos: 0n,
+        realToElapsedTimeOffsetNanos: 1732721670187419904n,
+      });
+      userNotifierChecker.expectNone();
+    });
+
     async function checkPerfettoFilePickedWithoutErrors(
       perfettoFile: TraceFile,
     ) {
@@ -250,6 +262,13 @@ describe('TraceFileFilter', () => {
     const file = await UnitTestUtils.getFixtureFile(
       'traces/winscope.zip',
       'FS/data/misc/wmtrace/winscope.zip',
+    );
+    return new TraceFile(file, bugreportArchive);
+  }
+
+  async function makeMetadataJsonFile(): Promise<TraceFile> {
+    const file = await UnitTestUtils.getFixtureFile(
+      'traces/elapsed_and_real_timestamp/screen_recording_metadata.json',
     );
     return new TraceFile(file, bugreportArchive);
   }
