@@ -73,7 +73,7 @@ export class ParserSearch implements Parser<QueryResult> {
   }
 
   getDescriptors(): string[] {
-    return [`Search query: ${this.query}`];
+    return [this.query];
   }
 
   getRealToMonotonicTimeOffsetNs(): bigint | undefined {

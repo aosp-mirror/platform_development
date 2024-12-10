@@ -285,6 +285,10 @@ export class InitializeTraceSearchRequest extends WinscopeEvent {
 
 export class TraceSearchInitialized extends WinscopeEvent {
   override readonly type = WinscopeEventType.TRACE_SEARCH_INITIALIZED;
+
+  constructor(readonly views: string[]) {
+    super();
+  }
 }
 
 export class TraceSearchCompleted extends WinscopeEvent {

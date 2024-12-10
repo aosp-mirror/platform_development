@@ -86,10 +86,6 @@ export class ParserMotionEvent extends AbstractInputEventParser {
     return 'android.input';
   }
 
-  protected override getIntrinsicTableName(): string {
-    return '__intrinsic_android_motion_events';
-  }
-
   private makeMotionPropertiesTree(
     entryProto: perfetto.protos.InputEventWrapper,
   ): PropertyTreeNode {

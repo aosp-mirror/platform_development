@@ -45,7 +45,6 @@ import {
 } from 'messaging/winscope_event';
 import {WinscopeEventEmitter} from 'messaging/winscope_event_emitter';
 import {WinscopeEventListener} from 'messaging/winscope_event_listener';
-import {CustomQueryType} from 'trace/custom_query';
 import {TraceEntry} from 'trace/trace';
 import {TRACE_INFO} from 'trace/trace_info';
 import {TracePosition} from 'trace/trace_position';
@@ -56,6 +55,7 @@ import {ViewerFactory} from 'viewers/viewer_factory';
 import {FilesSource} from './files_source';
 import {TimelineData} from './timeline_data';
 import {TracePipeline} from './trace_pipeline';
+import {TraceSearchInitializer} from './trace_search/trace_search_initializer';
 
 export class Mediator {
   private abtChromeExtensionProtocol: WinscopeEventEmitter &
@@ -336,17 +336,12 @@ export class Mediator {
       WinscopeEventType.INITIALIZE_TRACE_SEARCH_REQUEST,
       async (event) => {
         await this.timelineComponent?.onWinscopeEvent(event);
-        const promises = this.tracePipeline.getTraces().mapTrace((trace) => {
-          if (trace.canSearch()) {
-            return trace.customQuery(CustomQueryType.INITIALIZE_TRACE_SEARCH);
-          }
-          return;
-        });
-        await Promise.all(promises);
+        const traces = this.tracePipeline.getTraces();
+        const views = await TraceSearchInitializer.createSearchViews(traces);
         const searchViewer = this.viewers.find(
           (viewer) => viewer.getViews()[0].type === ViewType.GLOBAL_SEARCH,
         );
-        const initializedEvent = new TraceSearchInitialized();
+        const initializedEvent = new TraceSearchInitialized(views);
         await searchViewer?.onWinscopeEvent(initializedEvent);
         await this.timelineComponent?.onWinscopeEvent(initializedEvent);
       },

@@ -18,12 +18,6 @@ import {AbstractParser} from 'parsers/perfetto/abstract_parser';
 import {FakeProtoBuilder} from 'parsers/perfetto/fake_proto_builder';
 import {EntryPropertiesTreeFactory} from 'parsers/transitions/entry_properties_tree_factory';
 import {perfetto} from 'protos/transitions/latest/static';
-import {
-  CustomQueryParserResultTypeMap,
-  CustomQueryType,
-  VisitableParserCustomQuery,
-} from 'trace/custom_query';
-import {EntriesRange} from 'trace/index_types';
 import {TraceType} from 'trace/trace_type';
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
 
@@ -48,18 +42,6 @@ export class ParserTransitions extends AbstractParser<PropertyTreeNode> {
 
   protected override getTableName(): string {
     return 'window_manager_shell_transitions';
-  }
-
-  override async customQuery<Q extends CustomQueryType>(
-    type: Q,
-    entriesRange: EntriesRange,
-  ): Promise<CustomQueryParserResultTypeMap[Q]> {
-    return new VisitableParserCustomQuery(type)
-      .visit(CustomQueryType.INITIALIZE_TRACE_SEARCH, async () => {
-        // TODO: Create views
-        await this.createSqlTableWithDefaults(this.getTableName());
-      })
-      .getResult();
   }
 
   private async queryEntry(

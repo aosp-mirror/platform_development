@@ -143,27 +143,6 @@ describe('Perfetto ParserSurfaceFlinger', () => {
       });
       expect(idAndNames).toContain({id: 5, name: 'HideDisplayCutout:0:14#5'});
     });
-
-    it('supports INITIALIZE_TRACE_SEARCH custom query', async () => {
-      await trace.customQuery(CustomQueryType.INITIALIZE_TRACE_SEARCH);
-      const queryResult = await UnitTestUtils.runQueryAndGetResult(`
-        SELECT * FROM sf_layer_search
-          WHERE layer_name LIKE 'Task%'
-          AND property='flags'
-          AND value!=previous_value
-      `);
-      expect(queryResult.numRows()).toEqual(2);
-
-      const queryResultEntry = await UnitTestUtils.runQueryAndGetResult(`
-        SELECT * FROM sf_entry_search
-          WHERE property LIKE 'displays[1]%'
-          AND (
-            flat_property='displays.layer_stack'
-            OR flat_property='displays.is_virtual'
-          )
-      `);
-      expect(queryResultEntry.numRows()).toEqual(40);
-    });
   });
 
   describe('invalid traces', () => {
