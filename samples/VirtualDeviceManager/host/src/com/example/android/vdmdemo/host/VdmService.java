@@ -479,6 +479,10 @@ public final class VdmService extends Hilt_VdmService {
                         .setDeviceProfile(deviceProfile)
                         .setDisplayName(mDeviceCapabilities.getDeviceName())
                         .setSelfManaged(true);
+        if (android.companion.Flags.associationDeviceIcon()) {
+            associationRequest.setDeviceIcon(Icon.createWithResource(this, R.drawable.device_icon));
+        }
+
         cdm.associate(
                 associationRequest.build(),
                 new CompanionDeviceManager.Callback() {
