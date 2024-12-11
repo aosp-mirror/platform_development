@@ -1,12 +1,15 @@
 [package]
-name = "test_mapping"
+name = "checksum"
 version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-android_bp = "0.3"
-json-strip-comments = "1"
+data-encoding = "2"
+ring = "0.17"
 serde = { version = "=1.0.210", features = ["derive"] }
 serde_json = "1"
-thiserror = "1.0"
-rooted_path = { path = "../rooted_path" }
+thiserror = "1"
+walkdir = "2"
+
+[dev-dependencies]
+tempfile = "3"

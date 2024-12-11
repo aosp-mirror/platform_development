@@ -24,10 +24,10 @@ use std::{
 };
 
 use android_bp::BluePrint;
-use owning_ref::MutexGuardRef;
 
 use crate::{blueprint::RustDeps, TestMappingError};
 
+#[derive(Clone)]
 pub(crate) struct ReverseDeps {
     // Mapping from Rust build rule target name => list of paths that depend on it.
     rdeps: HashMap<String, BTreeSet<String>>,
@@ -37,9 +37,7 @@ impl ReverseDeps {
     /// Returns a reverse dependency lookup for the Android source repo
     /// at the specified absolute path. Each lookup is created once
     /// and cached.
-    pub fn for_repo(
-        repo_root: &Path,
-    ) -> MutexGuardRef<'static, HashMap<PathBuf, ReverseDeps>, ReverseDeps> {
+    pub fn for_repo(repo_root: &Path) -> ReverseDeps {
         static RDEPS: LazyLock<Mutex<HashMap<PathBuf, ReverseDeps>>> =
             LazyLock::new(|| Mutex::new(HashMap::new()));
 
@@ -47,8 +45,8 @@ impl ReverseDeps {
             .lock()
             .unwrap()
             .entry(repo_root.to_path_buf())
-            .or_insert_with(|| ReverseDeps::grep_and_parse(repo_root).unwrap());
-        MutexGuardRef::new(RDEPS.lock().unwrap()).map(|rdeps| rdeps.get(repo_root).unwrap())
+            .or_insert_with(|| ReverseDeps::grep_and_parse(repo_root).unwrap())
+            .clone()
     }
     /// Get the paths that depend on a rust library.
     pub fn get(&self, name: &str) -> Option<&BTreeSet<String>> {
