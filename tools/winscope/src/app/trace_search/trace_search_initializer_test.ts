@@ -40,7 +40,7 @@ describe('TraceSearchInitializer', () => {
     const trace = Trace.fromParser(parser);
     traces.addTrace(trace);
     const views = await TraceSearchInitializer.createSearchViews(traces);
-    expect(views).toEqual(['sf_layer_search', 'sf_entry_search']);
+    expect(views).toEqual(['sf_layer_search', 'sf_hierarchy_root_search']);
     const queryResult = await UnitTestUtils.runQueryAndGetResult(`
       SELECT * FROM sf_layer_search
         WHERE layer_name LIKE 'Task%'
@@ -50,7 +50,7 @@ describe('TraceSearchInitializer', () => {
     expect(queryResult.numRows()).toEqual(2);
 
     const queryResultEntry = await UnitTestUtils.runQueryAndGetResult(`
-      SELECT * FROM sf_entry_search
+      SELECT * FROM sf_hierarchy_root_search
         WHERE property LIKE 'displays[1]%'
         AND (
           flat_property='displays.layer_stack'
