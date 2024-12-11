@@ -328,7 +328,11 @@ export class TraceViewComponent
   }
 
   getTabTooltip(view: View): string {
-    return view.traces.flatMap((trace) => trace.getDescriptors()).join(', ');
+    const desc = new Set();
+    view.traces.forEach((trace) =>
+      trace.getDescriptors().forEach((d) => desc.add(d)),
+    );
+    return Array.from(desc).join(', ');
   }
 
   getTitle(view: View): string {
