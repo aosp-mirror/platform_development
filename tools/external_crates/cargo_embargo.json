@@ -1,5 +1,8 @@
 {
   "package": {
+    "checksum": {
+      "device_supported": false
+    },
     "rooted_path": {
       "device_supported": false
     },

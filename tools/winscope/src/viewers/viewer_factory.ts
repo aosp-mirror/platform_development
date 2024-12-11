@@ -59,7 +59,7 @@ class ViewerFactory {
     const viewers: Viewer[] = [];
 
     for (const trace of traces) {
-      if (trace.canSearch()) {
+      if (trace.isPerfetto()) {
         viewers.push(new ViewerSearch(traces, storage));
         break;
       }
