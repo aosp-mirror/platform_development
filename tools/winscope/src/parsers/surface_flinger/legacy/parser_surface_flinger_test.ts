@@ -34,6 +34,11 @@ describe('ParserSurfaceFlinger', () => {
     userNotifierChecker = new UserNotifierChecker();
   });
 
+  afterEach(() => {
+    userNotifierChecker.expectNone();
+    userNotifierChecker.reset();
+  });
+
   describe('trace with real timestamps', () => {
     let parser: Parser<HierarchyTreeNode>;
     let trace: Trace<HierarchyTreeNode>;
