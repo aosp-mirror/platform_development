@@ -18,6 +18,7 @@ import {assertDefined} from 'common/assert_utils';
 import {INVALID_TIME_NS, Timestamp} from 'common/time';
 import {TimestampConverter} from 'common/timestamp_converter';
 import {UserNotifier} from 'common/user_notifier';
+import {Analytics} from 'logging/analytics';
 import {TraceSearchQueryFailed} from 'messaging/user_warnings';
 import {CoarseVersion} from 'trace/coarse_version';
 import {
@@ -72,7 +73,7 @@ export class ParserSearch implements Parser<QueryResult> {
   }
 
   getDescriptors(): string[] {
-    return [`Search query: ${this.query}`];
+    return [this.query];
   }
 
   getRealToMonotonicTimeOffsetNs(): bigint | undefined {
@@ -106,6 +107,7 @@ export class ParserSearch implements Parser<QueryResult> {
         this.timestamps.push(this.timestampConverter.makeZeroTimestamp());
       }
     } catch (e) {
+      Analytics.TraceSearch.logQueryFailure();
       UserNotifier.add(
         new TraceSearchQueryFailed((e as Error).message),
       ).notify();

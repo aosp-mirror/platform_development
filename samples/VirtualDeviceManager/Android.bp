@@ -18,6 +18,7 @@ android_app {
     ],
     static_libs: [
         "VdmCommonLib",
+        "android.companion.flags-aconfig-java",
         "android.companion.virtual.flags-aconfig-java",
         "android.companion.virtualdevice.flags-aconfig-java",
         "androidx.annotation_annotation",

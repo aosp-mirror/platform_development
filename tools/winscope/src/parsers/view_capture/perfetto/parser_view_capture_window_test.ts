@@ -44,6 +44,13 @@ describe('Perfetto ParserViewCaptureWindow', () => {
     expect(parser.getCoarseVersion()).toEqual(CoarseVersion.LATEST);
   });
 
+  it('has expected descriptors', () => {
+    expect(parser.getDescriptors()).toEqual([
+      'com.android.internal.policy.PhoneWindow@4f9be60',
+      'viewcapture.perfetto-trace',
+    ]);
+  });
+
   it('provides timestamps', () => {
     expect(assertDefined(parser.getTimestamps()).length).toEqual(36);
 
