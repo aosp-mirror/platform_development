@@ -15,7 +15,6 @@
  */
 
 import {assertDefined} from 'common/assert_utils';
-import {UserNotifier} from 'common/user_notifier';
 import {DuplicateLayerIds, MissingLayerIds} from 'messaging/user_warnings';
 import {perfetto} from 'protos/surfaceflinger/latest/static';
 import {android} from 'protos/surfaceflinger/udc/static';
@@ -44,7 +43,7 @@ export class EntryHierarchyTreeFactory {
     ParserSurfaceFlinger: ParserSurfaceFlinger,
   ): HierarchyTreeNode {
     const excludesCompositionState =
-      entryProto?.excludesCompositionState ?? false;
+      entryProto?.excludesCompositionState ?? true;
     const addExcludesCompositionState = excludesCompositionState
       ? COMMON_OPERATIONS.AddExcludesCompositionStateTrue
       : COMMON_OPERATIONS.AddExcludesCompositionStateFalse;
@@ -92,10 +91,6 @@ export class EntryHierarchyTreeFactory {
       },
       [] as PropertiesProvider[],
     );
-
-    if (missingLayerIds) {
-      UserNotifier.add(new MissingLayerIds());
-    }
 
     const entry = new PropertiesProviderBuilder()
       .setEagerProperties(this.makeEntryEagerPropertiesTree(entryProto))

@@ -325,12 +325,18 @@ export class TraceSearchQueryFailed extends UserWarning {
   }
 }
 
-export class TraceSearchQueryAlreadyRun extends UserWarning {
+export class PerfettoPacketLoss extends UserWarning {
+  constructor(private descriptor: string, private totalPacketLoss: number) {
+    super();
+  }
+
   getDescriptor(): string {
-    return 'trace search query already run';
+    return 'perfetto packet loss';
   }
 
   getMessage(): string {
-    return 'Trace search query has already been run for this trace';
+    return `${this.descriptor}: ${this.totalPacketLoss} packet${
+      this.totalPacketLoss > 1 ? 's' : ''
+    } lost during tracing - data may be incomplete`;
   }
 }

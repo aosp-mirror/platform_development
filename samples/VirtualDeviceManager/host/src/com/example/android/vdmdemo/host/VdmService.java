@@ -395,8 +395,8 @@ public final class VdmService extends Hilt_VdmService {
             mDisplayRepository.removeDisplayByRemoteId(event.getDisplayId());
         } else if (event.hasDisplayChangeEvent() && event.getDisplayChangeEvent().getFocused()) {
             mInputController.setFocusedRemoteDisplayId(event.getDisplayId());
-        } else if (event.hasDeviceState() && Flags.deviceAwareDisplayPower()
-                && mVirtualDevice != null) {
+        } else if (event.hasDeviceState() && VdmCompat.isAtLeastB()
+                && Flags.deviceAwareDisplayPower() && mVirtualDevice != null) {
             if (event.getDeviceState().getPowerOn()) {
                 mVirtualDevice.wakeUp();
             } else {
@@ -479,6 +479,10 @@ public final class VdmService extends Hilt_VdmService {
                         .setDeviceProfile(deviceProfile)
                         .setDisplayName(mDeviceCapabilities.getDeviceName())
                         .setSelfManaged(true);
+        if (VdmCompat.isAtLeastB() && android.companion.Flags.associationDeviceIcon()) {
+            associationRequest.setDeviceIcon(Icon.createWithResource(this, R.drawable.device_icon));
+        }
+
         cdm.associate(
                 associationRequest.build(),
                 new CompanionDeviceManager.Callback() {
@@ -542,7 +546,7 @@ public final class VdmService extends Hilt_VdmService {
             }
         }
 
-        if (Flags.deviceAwareDisplayPower()) {
+        if (VdmCompat.isAtLeastB() && Flags.deviceAwareDisplayPower()) {
             int displayTimeout = Integer.parseInt(
                     mPreferenceController.getString(R.string.pref_display_timeout));
             virtualDeviceBuilder
@@ -577,7 +581,7 @@ public final class VdmService extends Hilt_VdmService {
                         .setPower(sensor.getPower())
                         .setResolution(sensor.getResolution())
                         .setMaximumRange(sensor.getMaxRange());
-                if (Flags.deviceAwareDisplayPower()) {
+                if (VdmCompat.isAtLeastB() && Flags.deviceAwareDisplayPower()) {
                     builder.setWakeUpSensor(sensor.getIsWakeUpSensor())
                             .setReportingMode(sensor.getReportingMode());
                 }
