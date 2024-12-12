@@ -33,6 +33,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.android.compose.animation.scene.MovableElementKey
 import com.android.compose.animation.scene.MutableSceneTransitionLayoutState
+import com.android.compose.animation.scene.NestedScrollBehavior
 import com.android.compose.animation.scene.SceneKey
 import com.android.compose.animation.scene.SceneScope
 import com.android.compose.animation.scene.SceneTransitionLayout
@@ -105,16 +106,20 @@ internal fun SceneScope.Notification(
                     Modifier.fillMaxWidth()
                         .notificationClip(remember { Path() }, { topRadius }, { bottomRadius })
                         .thenIf(isInteractive) {
-                            Modifier.verticalNestedScrollToScene().clickable {
-                                viewModel.state.setTargetScene(
-                                    when (viewModel.state.transitionState.currentScene) {
-                                        Notification.Scenes.Expanded ->
-                                            Notification.Scenes.Collapsed
-                                        else -> Notification.Scenes.Expanded
-                                    },
-                                    coroutineScope,
+                            Modifier.verticalNestedScrollToScene(
+                                    topBehavior = NestedScrollBehavior.EdgeWithPreview,
+                                    bottomBehavior = NestedScrollBehavior.EdgeWithPreview,
                                 )
-                            }
+                                .clickable {
+                                    viewModel.state.setTargetScene(
+                                        when (viewModel.state.transitionState.currentScene) {
+                                            Notification.Scenes.Expanded ->
+                                                Notification.Scenes.Collapsed
+                                            else -> Notification.Scenes.Expanded
+                                        },
+                                        coroutineScope,
+                                    )
+                                }
                         }
                         .background(backgroundColor),
                 ) {
