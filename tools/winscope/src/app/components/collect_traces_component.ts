@@ -52,7 +52,7 @@ import {
   EnableConfiguration,
   makeDefaultDumpConfigMap,
   makeDefaultTraceConfigMap,
-  makeScreenRecordingConfigs,
+  makeScreenRecordingSelectionConfigs,
   SelectionConfiguration,
   TraceConfigurationMap,
 } from 'trace_collection/trace_configuration';
@@ -901,18 +901,14 @@ export class CollectTracesComponent
       selectedDevice.multiDisplayScreenRecordingAvailable &&
       !Array.isArray(displays.value)
     ) {
-      screenRecordingConfig.selectionConfigs = makeScreenRecordingConfigs(
-        selectedDevice.displays,
-        [],
-      );
+      screenRecordingConfig.selectionConfigs =
+        makeScreenRecordingSelectionConfigs(selectedDevice.displays, []);
     } else if (
       !selectedDevice.multiDisplayScreenRecordingAvailable &&
       Array.isArray(displays.value)
     ) {
-      screenRecordingConfig.selectionConfigs = makeScreenRecordingConfigs(
-        selectedDevice.displays,
-        '',
-      );
+      screenRecordingConfig.selectionConfigs =
+        makeScreenRecordingSelectionConfigs(selectedDevice.displays, '');
     } else {
       screenRecordingConfig.selectionConfigs[0].options =
         selectedDevice.displays;
