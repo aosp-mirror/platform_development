@@ -34,6 +34,11 @@ describe('Perfetto ParserSurfaceFlinger', () => {
     userNotifierChecker = new UserNotifierChecker();
   });
 
+  afterEach(() => {
+    userNotifierChecker.expectNone();
+    userNotifierChecker.reset();
+  });
+
   describe('valid trace', () => {
     let parser: Parser<HierarchyTreeNode>;
     let trace: Trace<HierarchyTreeNode>;
