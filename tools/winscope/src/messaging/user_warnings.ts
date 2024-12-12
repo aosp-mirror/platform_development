@@ -324,3 +324,19 @@ export class TraceSearchQueryFailed extends UserWarning {
     return `Search query failed: ${this.errorMessage}`;
   }
 }
+
+export class PerfettoPacketLoss extends UserWarning {
+  constructor(private descriptor: string, private totalPacketLoss: number) {
+    super();
+  }
+
+  getDescriptor(): string {
+    return 'perfetto packet loss';
+  }
+
+  getMessage(): string {
+    return `${this.descriptor}: ${this.totalPacketLoss} packet${
+      this.totalPacketLoss > 1 ? 's' : ''
+    } lost during tracing - data may be incomplete`;
+  }
+}
