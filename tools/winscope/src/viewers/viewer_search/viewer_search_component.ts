@@ -64,81 +64,81 @@ import {Search, UiData} from './ui_data';
             </span>
         </div>
 
-          <mat-tab-group class="search-tabs">
-            <mat-tab label="Search">
-             <div class="body">
-                <span class="mat-body-2">
-                  {{globalSearchText}}
-                </span>
+        <mat-tab-group class="search-tabs">
+          <mat-tab label="Search">
+            <div class="body">
+              <span class="mat-body-2">
+                {{globalSearchText}}
+              </span>
 
-                <mat-form-field appearance="outline" class="query-field padded-field">
-                  <textarea matInput [formControl]="searchQueryControl" (keydown)="onTextAreaKeydown($event)" [readonly]="runningQuery"></textarea>
-                  <mat-error *ngIf="searchQueryControl.invalid && searchQueryControl.value">Enter valid SQL query.</mat-error>
-                </mat-form-field>
+              <mat-form-field appearance="outline" class="query-field padded-field">
+                <textarea matInput [formControl]="searchQueryControl" (keydown)="onTextAreaKeydown($event)" [readonly]="runningQuery"></textarea>
+                <mat-error *ngIf="searchQueryControl.invalid && searchQueryControl.value">Enter valid SQL query.</mat-error>
+              </mat-form-field>
 
-                <div class="query-actions">
-                  <div *ngIf="runningQuery" class="running-query-message">
-                    <mat-icon class="material-symbols-outlined"> timer </mat-icon>
-                    <span class="mat-body-2 message-with-spinner">
-                      <span>Calculating results </span>
-                      <mat-spinner [diameter]="20"></mat-spinner>
-                    </span>
-                  </div>
-                  <div *ngIf="lastQueryExecutionTime" class="query-execution-time">
-                    <span class="mat-body-1">
-                      Executed in {{lastQueryExecutionTime}}
-                    </span>
-                  </div>
-                  <button
-                    mat-flat-button
-                    class="query-button"
-                    color="primary"
-                    (click)="onSearchQueryClick()"
-                    [disabled]="searchQueryDisabled()"> Run Search Query </button>
-                </div>
-                <div class="current-search" *ngFor="let search of inputData.currentSearches">
-                  <span class="query">
-                    <span class="mat-body-2"> Current: </span>
-                    <span class="mat-body-1"> {{search.query}} </span>
+              <div class="query-actions">
+                <div *ngIf="runningQuery" class="running-query-message">
+                  <mat-icon class="material-symbols-outlined"> timer </mat-icon>
+                  <span class="mat-body-2 message-with-spinner">
+                    <span>Calculating results </span>
+                    <mat-spinner [diameter]="20"></mat-spinner>
                   </span>
-                  <ng-container
-                    [ngTemplateOutlet]="saveQueryField"
-                    [ngTemplateOutletContext]="{search}"></ng-container>
                 </div>
-              </div>
-            </mat-tab>
-
-            <mat-tab label="Saved">
-              <search-list
-                class="body"
-                [searches]="inputData.savedSearches"
-                placeholderText="Saved queries will appear here."
-                [menuOptions]="savedSearchMenuOptions"></search-list>
-            </mat-tab>
-
-            <mat-tab label="Recent">
-              <search-list
-                class="body"
-                [searches]="inputData.recentSearches"
-                placeholderText="Recent queries will appear here."
-                [menuOptions]="recentSearchMenuOptions"></search-list>
-            </mat-tab>
-
-            <ng-template #saveQueryField let-search="search">
-              <div class="outline-field save-field">
-                <mat-form-field appearance="outline">
-                  <input matInput [formControl]="saveQueryNameControl" (keydown.enter)="onSaveQueryClick(search.query)"/>
-                  <mat-error *ngIf="saveQueryNameControl.invalid && saveQueryNameControl.value">Query with that name already exists.</mat-error>
-                </mat-form-field>
+                <div *ngIf="lastQueryExecutionTime" class="query-execution-time">
+                  <span class="mat-body-1">
+                    Executed in {{lastQueryExecutionTime}}
+                  </span>
+                </div>
                 <button
                   mat-flat-button
                   class="query-button"
                   color="primary"
-                  [disabled]="saveQueryNameControl.invalid"
-                  (click)="onSaveQueryClick(search.query)"> Save Query </button>
+                  (click)="onSearchQueryClick()"
+                  [disabled]="searchQueryDisabled()"> Run Search Query </button>
               </div>
-            </ng-template>
-          </mat-tab-group>
+              <div class="current-search" *ngFor="let search of inputData.currentSearches">
+                <span class="query">
+                  <span class="mat-body-2"> Current: </span>
+                  <span class="mat-body-1"> {{search.query}} </span>
+                </span>
+                <ng-container
+                  [ngTemplateOutlet]="saveQueryField"
+                  [ngTemplateOutletContext]="{search}"></ng-container>
+              </div>
+            </div>
+          </mat-tab>
+
+          <mat-tab label="Saved">
+            <search-list
+              class="body"
+              [searches]="inputData.savedSearches"
+              placeholderText="Saved queries will appear here."
+              [menuOptions]="savedSearchMenuOptions"></search-list>
+          </mat-tab>
+
+          <mat-tab label="Recent">
+            <search-list
+              class="body"
+              [searches]="inputData.recentSearches"
+              placeholderText="Recent queries will appear here."
+              [menuOptions]="recentSearchMenuOptions"></search-list>
+          </mat-tab>
+
+          <ng-template #saveQueryField let-search="search">
+            <div class="outline-field save-field">
+              <mat-form-field appearance="outline">
+                <input matInput [formControl]="saveQueryNameControl" (keydown.enter)="onSaveQueryClick(search.query)"/>
+                <mat-error *ngIf="saveQueryNameControl.invalid && saveQueryNameControl.value">Query with that name already exists.</mat-error>
+              </mat-form-field>
+              <button
+                mat-flat-button
+                class="query-button"
+                color="primary"
+                [disabled]="saveQueryNameControl.invalid"
+                (click)="onSaveQueryClick(search.query)"> Save Query </button>
+            </div>
+          </ng-template>
+        </mat-tab-group>
       </div>
 
       <div
