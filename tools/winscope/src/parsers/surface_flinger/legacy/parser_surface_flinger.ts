@@ -186,7 +186,7 @@ class ParserSurfaceFlinger extends AbstractParser<HierarchyTreeNode> {
     entryProto: android.surfaceflinger.ILayersTraceProto,
   ): HierarchyTreeNode {
     const excludesCompositionState =
-      entryProto?.excludesCompositionState ?? false;
+      entryProto?.excludesCompositionState ?? true;
     const addExcludesCompositionState = excludesCompositionState
       ? ParserSfUtils.OPERATIONS.AddExcludesCompositionStateTrue
       : ParserSfUtils.OPERATIONS.AddExcludesCompositionStateFalse;

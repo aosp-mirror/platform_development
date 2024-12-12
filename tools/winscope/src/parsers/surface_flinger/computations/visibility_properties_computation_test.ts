@@ -49,6 +49,7 @@ describe('VisibilityPropertiesComputation', () => {
             cornerRadius: 0,
             shadowRadius: 0,
             backgroundBlurRadius: 0,
+            excludesCompositionState: false,
             layerStack: 0,
             z: 0,
             transform: {
@@ -99,6 +100,7 @@ describe('VisibilityPropertiesComputation', () => {
             cornerRadius: 0,
             shadowRadius: 0,
             backgroundBlurRadius: 0,
+            excludesCompositionState: false,
             layerStack: 0,
             z: 0,
             transform: {
@@ -147,6 +149,7 @@ describe('VisibilityPropertiesComputation', () => {
             cornerRadius: 0,
             shadowRadius: 0,
             backgroundBlurRadius: 0,
+            excludesCompositionState: false,
             layerStack: 0,
             z: 0,
             transform: {
@@ -175,6 +178,7 @@ describe('VisibilityPropertiesComputation', () => {
                 cornerRadius: 0,
                 shadowRadius: 0,
                 backgroundBlurRadius: 0,
+                excludesCompositionState: false,
                 layerStack: 0,
                 z: 0,
                 zOrderRelativeOf: 3,
@@ -206,6 +210,7 @@ describe('VisibilityPropertiesComputation', () => {
             cornerRadius: 0,
             shadowRadius: 0,
             backgroundBlurRadius: 0,
+            excludesCompositionState: false,
             layerStack: 0,
             z: 0,
             transform: {
@@ -262,6 +267,7 @@ describe('VisibilityPropertiesComputation', () => {
             cornerRadius: 0,
             shadowRadius: 0,
             backgroundBlurRadius: 0,
+            excludesCompositionState: false,
             layerStack: 0,
             z: 0,
             transform: {
@@ -311,6 +317,7 @@ describe('VisibilityPropertiesComputation', () => {
             cornerRadius: 0,
             shadowRadius: 0,
             backgroundBlurRadius: 0,
+            excludesCompositionState: false,
             layerStack: 0,
             z: 0,
             transform: {
@@ -413,6 +420,7 @@ describe('VisibilityPropertiesComputation', () => {
             cornerRadius: 0,
             shadowRadius: 0,
             backgroundBlurRadius: 0,
+            excludesCompositionState: false,
             layerStack: 0,
             z: 0,
             transform: {
@@ -463,6 +471,7 @@ describe('VisibilityPropertiesComputation', () => {
             cornerRadius: 0,
             shadowRadius: 0,
             backgroundBlurRadius: 0,
+            excludesCompositionState: false,
             layerStack: 0,
             z: 0,
             transform: {
@@ -525,6 +534,7 @@ describe('VisibilityPropertiesComputation', () => {
             color: {r: 0, g: 0, b: 0, a: 1},
             shadowRadius: 0,
             backgroundBlurRadius: 0,
+            excludesCompositionState: false,
             transform: {
               type: 0,
               dsdx: 1,
@@ -553,6 +563,7 @@ describe('VisibilityPropertiesComputation', () => {
             color: {r: 0, g: 0, b: 0, a: 1},
             shadowRadius: 0,
             backgroundBlurRadius: 0,
+            excludesCompositionState: false,
             transform: {
               type: 0,
               dsdx: 1,
@@ -637,6 +648,7 @@ describe('VisibilityPropertiesComputation', () => {
             isOpaque: true,
             shadowRadius: 0,
             backgroundBlurRadius: 0,
+            excludesCompositionState: false,
             transform: {
               type: 0,
               dsdx: 1,
@@ -665,6 +677,7 @@ describe('VisibilityPropertiesComputation', () => {
             isOpaque: true,
             shadowRadius: 0,
             backgroundBlurRadius: 0,
+            excludesCompositionState: false,
             transform: {
               type: 0,
               dsdx: 1,
@@ -693,6 +706,7 @@ describe('VisibilityPropertiesComputation', () => {
             isOpaque: true,
             shadowRadius: 0,
             backgroundBlurRadius: 0,
+            excludesCompositionState: false,
             transform: {
               type: 0,
               dsdx: 1,
@@ -825,6 +839,7 @@ describe('VisibilityPropertiesComputation', () => {
             color: {r: 0, g: 0, b: 0, a: 1},
             shadowRadius: 0,
             backgroundBlurRadius: 0,
+            excludesCompositionState: false,
             transform: {
               type: 0,
               dsdx: 1,
@@ -853,6 +868,7 @@ describe('VisibilityPropertiesComputation', () => {
             color: {r: 0, g: 0, b: 0, a: 1},
             shadowRadius: 0,
             backgroundBlurRadius: 0,
+            excludesCompositionState: false,
             transform: {
               type: 0,
               dsdx: 1,
@@ -934,6 +950,7 @@ describe('VisibilityPropertiesComputation', () => {
             color: {r: 0, g: 0, b: 0, a: 1},
             shadowRadius: 0,
             backgroundBlurRadius: 0,
+            excludesCompositionState: false,
             transform: {
               type: 0,
               dsdx: 1,
@@ -962,6 +979,7 @@ describe('VisibilityPropertiesComputation', () => {
             color: {r: 0, g: 0, b: 0, a: 1},
             shadowRadius: 0,
             backgroundBlurRadius: 0,
+            excludesCompositionState: false,
             transform: {
               type: 0,
               dsdx: 1,

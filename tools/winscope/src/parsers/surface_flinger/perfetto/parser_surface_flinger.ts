@@ -185,7 +185,7 @@ export class ParserSurfaceFlinger extends AbstractParser<HierarchyTreeNode> {
     layerProtos: perfetto.protos.ILayerProto[],
   ): HierarchyTreeNode {
     const excludesCompositionState =
-      snapshotProto?.excludesCompositionState ?? false;
+      snapshotProto?.excludesCompositionState ?? true;
     const addExcludesCompositionState = excludesCompositionState
       ? ParserSfUtils.OPERATIONS.AddExcludesCompositionStateTrue
       : ParserSfUtils.OPERATIONS.AddExcludesCompositionStateFalse;
