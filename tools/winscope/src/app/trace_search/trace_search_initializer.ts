@@ -17,9 +17,13 @@
 import {Traces} from 'trace/traces';
 import {TraceProcessorFactory} from 'trace_processor/trace_processor_factory';
 import {SearchViewFactorySf} from './search_view_factory_sf';
+import {SearchViewFactoryTransactions} from './search_view_factory_transactions';
 
 export class TraceSearchInitializer {
-  private static readonly FACTORIES = [SearchViewFactorySf];
+  private static readonly FACTORIES = [
+    SearchViewFactorySf,
+    SearchViewFactoryTransactions,
+  ];
 
   static async createSearchViews(traces: Traces): Promise<string[]> {
     const traceProcessor = await TraceProcessorFactory.getSingleInstance();

@@ -59,4 +59,28 @@ describe('TraceSearchInitializer', () => {
     `);
     expect(queryResultEntry.numRows()).toEqual(40);
   });
+
+  it('initializes transactions', async () => {
+    const parser = await UnitTestUtils.getPerfettoParser(
+      TraceType.TRANSACTIONS,
+      'traces/perfetto/transactions_trace.perfetto-trace',
+    );
+    const trace = Trace.fromParser(parser);
+    traces.addTrace(trace);
+    const views = await TraceSearchInitializer.createSearchViews(traces);
+    expect(views).toEqual(['transactions_search']);
+    const queryResultTransaction = await UnitTestUtils.runQueryAndGetResult(`
+      SELECT * FROM transactions_search
+        WHERE flat_property='transactions.layer_changes.x'
+        AND value!='0.0'
+    `);
+    expect(queryResultTransaction.numRows()).toEqual(3);
+
+    const queryResultAddedLayer = await UnitTestUtils.runQueryAndGetResult(`
+      SELECT * FROM transactions_search
+        WHERE flat_property='added_layers.name'
+        AND value='ImeContainer'
+    `);
+    expect(queryResultAddedLayer.numRows()).toEqual(1);
+  });
 });
