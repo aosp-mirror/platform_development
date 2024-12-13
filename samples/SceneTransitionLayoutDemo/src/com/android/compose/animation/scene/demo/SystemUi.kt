@@ -18,7 +18,6 @@ package com.android.compose.animation.scene.demo
 
 import android.content.Context
 import androidx.activity.compose.BackHandler
-import androidx.compose.foundation.OverscrollEffect
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -371,18 +370,8 @@ fun SystemUi(
     }
 
     @Composable
-    fun SceneScope.NotificationList(
-        maxNotificationCount: Int,
-        isScrollable: Boolean = true,
-        overscrollEffect: OverscrollEffect? = null,
-    ) {
-        NotificationList(
-            notifications = notifications,
-            maxNotificationCount = maxNotificationCount,
-            demoConfiguration = configuration,
-            isScrollable = isScrollable,
-            overscrollEffect = overscrollEffect,
-        )
+    fun SceneScope.NotificationList(maxNotificationCount: Int, isScrollable: Boolean = true) {
+        NotificationList(notifications, maxNotificationCount, configuration, isScrollable)
     }
 
     if (showConfigurationDialog) {
@@ -602,10 +591,9 @@ fun SystemUi(
                             Shade.userActions(isLockscreenDismissed, lockscreenScene),
                         ) {
                             Shade(
-                                notificationList = { overscrollEffect ->
+                                notificationList = {
                                     NotificationList(
-                                        maxNotificationCount = configuration.notificationsInShade,
-                                        overscrollEffect = overscrollEffect,
+                                        maxNotificationCount = configuration.notificationsInShade
                                     )
                                 },
                                 mediaPlayer,

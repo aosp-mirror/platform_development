@@ -131,18 +131,45 @@ describe('ViewerSearchComponent', () => {
     runSearchAndCheckHandled(runSearchByQueryButton);
   });
 
-  it('handles search via run query from options click', () => {
-    const runSearch = () => {
-      component.searchComponent?.onRunQueryFromOptionsClick(
-        new Search(testQuery),
-      );
-      fixture.detectChanges();
-    };
-    runSearchAndCheckHandled(runSearch);
+  it('handles search via run query from options click from saved', async () => {
+    component.inputData.savedSearches = [new Search(testQuery, 'saved1')];
+    fixture.detectChanges();
+    await changeTab(1);
+    runSearchAndCheckHandled(runSearchFromListedSearchOption);
+  });
+
+  it('handles search via run query from options click from recents', async () => {
+    component.inputData.recentSearches = [new Search(testQuery)];
+    fixture.detectChanges();
+    await changeTab(2);
+    runSearchAndCheckHandled(runSearchFromListedSearchOption);
+  });
+
+  it('navigates to main search tab on edit query click', async () => {
+    component.inputData.recentSearches = [new Search(testQuery)];
+    fixture.detectChanges();
+    const input = getTextInput();
+    expect(input.value).toEqual('');
+
+    await changeTab(2);
+    const listedSearchButton = assertDefined(
+      htmlElement.querySelectorAll<HTMLElement>('.listed-search-option'),
+    );
+    listedSearchButton.item(1).click();
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    expect(component.searchComponent?.matTabGroup?.selectedIndex).toEqual(0);
+    expect(input.value).toEqual(testQuery);
   });
 
   it('handles running query complete', () => {
+    const placeholderCss = '.results-placeholder.placeholder-text';
+    expect(htmlElement.querySelector(placeholderCss)).toBeTruthy();
+
     runSearchByQueryButton();
+    expect(htmlElement.querySelector(placeholderCss)).toBeNull();
+
     component.inputData.currentSearches.push(
       new SearchResult(testQuery, [], []),
     );
@@ -152,6 +179,12 @@ describe('ViewerSearchComponent', () => {
     expect(htmlElement.querySelector('.query-execution-time')).toBeTruthy();
     expect(htmlElement.querySelector('log-view')).toBeTruthy();
     expect(getSearchQueryButton().disabled).toBeFalse();
+    expect(htmlElement.querySelector(placeholderCss)).toBeNull();
+    expect(
+      htmlElement.querySelector<HTMLInputElement>(
+        '.current-search .save-field input',
+      )?.value,
+    ).toEqual(testQuery);
   });
 
   it('handles running query failure', () => {
@@ -229,15 +262,22 @@ describe('ViewerSearchComponent', () => {
     expect(detail).toEqual(new SaveQueryClickDetail(testQuery, testName3));
   });
 
-  it('emits event on delete query click', () => {
+  it('emits event on delete query click', async () => {
     let detail: DeleteSavedQueryClickDetail | undefined;
     htmlElement
       .querySelector('viewer-search')
       ?.addEventListener(ViewerEvents.DeleteSavedQueryClick, (event) => {
         detail = (event as CustomEvent).detail;
       });
-    const search = new Search('');
-    component.searchComponent?.onDeleteQueryClick(search);
+    const search = new Search(testQuery);
+    component.inputData.savedSearches = [search];
+    fixture.detectChanges();
+
+    await changeTab(1);
+    const listedSearchButton = assertDefined(
+      htmlElement.querySelectorAll<HTMLElement>('.listed-search-option'),
+    );
+    listedSearchButton.item(2).click();
     expect(detail).toEqual(new DeleteSavedQueryClickDetail(search));
   });
 
@@ -307,6 +347,21 @@ describe('ViewerSearchComponent', () => {
   function runSearchByQueryButton() {
     changeInput(getTextInput(), testQuery);
     clickSearchQueryButton();
+  }
+
+  async function changeTab(index: number) {
+    const searchComponent = assertDefined(component.searchComponent);
+    assertDefined(searchComponent.matTabGroup).selectedIndex = index;
+    fixture.detectChanges();
+    await fixture.whenStable();
+  }
+
+  function runSearchFromListedSearchOption() {
+    const listedSearchButton = assertDefined(
+      htmlElement.querySelector<HTMLElement>('.listed-search-option'),
+    );
+    listedSearchButton.click();
+    fixture.detectChanges();
   }
 
   function runSearchAndCheckHandled(runSearch: () => void) {
