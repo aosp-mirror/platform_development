@@ -44,6 +44,13 @@ describe('ParserViewCapture', () => {
     expect(parser.getCoarseVersion()).toEqual(CoarseVersion.LEGACY);
   });
 
+  it('has expected descriptors', () => {
+    expect(parser.getDescriptors()).toEqual([
+      '.Taskbar',
+      'com.google.android.apps.nexuslauncher_0.vc',
+    ]);
+  });
+
   it('provides timestamps', () => {
     const expected = [
       TimestampConverterUtils.makeRealTimestamp(1691692936292808460n),

@@ -24,6 +24,8 @@ import com.android.compose.animation.scene.demo.Scenes
 
 fun SceneTransitionsBuilder.bouncerTransitions(configuration: DemoConfiguration) {
     if (configuration.useOverscrollSpec) {
-        overscrollDisabled(Scenes.Bouncer, Orientation.Vertical)
+        overscroll(Scenes.Bouncer, Orientation.Vertical) {
+            translate(Bouncer.Elements.Content, y = { absoluteDistance })
+        }
     }
 }

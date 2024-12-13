@@ -1,0 +1,137 @@
+{
+  "name": "hashbrown",
+  "vers": "0.12.3",
+  "deps": [
+    {
+      "name": "ahash",
+      "req": "^0.7.0",
+      "features": [],
+      "kind": "normal",
+      "optional": true,
+      "default_features": false
+    },
+    {
+      "name": "alloc",
+      "req": "^1.0.0",
+      "features": [],
+      "package": "rustc-std-workspace-alloc",
+      "kind": "normal",
+      "optional": true,
+      "default_features": true
+    },
+    {
+      "name": "bumpalo",
+      "req": "^3.5.0",
+      "features": [],
+      "kind": "normal",
+      "optional": true,
+      "default_features": true
+    },
+    {
+      "name": "compiler_builtins",
+      "req": "^0.1.2",
+      "features": [],
+      "kind": "normal",
+      "optional": true,
+      "default_features": true
+    },
+    {
+      "name": "core",
+      "req": "^1.0.0",
+      "features": [],
+      "package": "rustc-std-workspace-core",
+      "kind": "normal",
+      "optional": true,
+      "default_features": true
+    },
+    {
+      "name": "doc-comment",
+      "req": "^0.3.1",
+      "features": [],
+      "kind": "dev",
+      "optional": false,
+      "default_features": true
+    },
+    {
+      "name": "fnv",
+      "req": "^1.0.7",
+      "features": [],
+      "kind": "dev",
+      "optional": false,
+      "default_features": true
+    },
+    {
+      "name": "lazy_static",
+      "req": "^1.4",
+      "features": [],
+      "kind": "dev",
+      "optional": false,
+      "default_features": true
+    },
+    {
+      "name": "rand",
+      "req": "^0.8.3",
+      "features": [
+        "small_rng"
+      ],
+      "kind": "dev",
+      "optional": false,
+      "default_features": true
+    },
+    {
+      "name": "rayon",
+      "req": "^1.0",
+      "features": [],
+      "kind": "normal",
+      "optional": true,
+      "default_features": true
+    },
+    {
+      "name": "rayon",
+      "req": "^1.0",
+      "features": [],
+      "kind": "dev",
+      "optional": false,
+      "default_features": true
+    },
+    {
+      "name": "serde",
+      "req": "^1.0.25",
+      "features": [],
+      "kind": "normal",
+      "optional": true,
+      "default_features": false
+    },
+    {
+      "name": "serde_test",
+      "req": "^1.0",
+      "features": [],
+      "kind": "dev",
+      "optional": false,
+      "default_features": true
+    }
+  ],
+  "features": {
+    "ahash-compile-time-rng": [
+      "ahash/compile-time-rng"
+    ],
+    "rustc-internal-api": [],
+    "rustc-dep-of-std": [
+      "nightly",
+      "core",
+      "compiler_builtins",
+      "alloc",
+      "rustc-internal-api"
+    ],
+    "inline-more": [],
+    "raw": [],
+    "nightly": [],
+    "default": [
+      "ahash",
+      "inline-more"
+    ]
+  },
+  "rust_version": "1.56.0",
+  "cksum": "8a9ee70c43aaf417c914396645a0fa852624801b24ebb7ae78fe8272889ac888",
+  "yanked": false
+}

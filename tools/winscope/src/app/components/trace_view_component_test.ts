@@ -51,6 +51,7 @@ describe('TraceViewComponent', () => {
     .setType(TraceType.WINDOW_MANAGER)
     .setEntries([{}])
     .setTimestamps([TimestampConverterUtils.makeZeroTimestamp()])
+    .setDescriptors(['file_1', 'file_1'])
     .build();
   const traceSr = UnitTestUtils.makeEmptyTrace(TraceType.SCREEN_RECORDING);
   const traceProtolog = UnitTestUtils.makeEmptyTrace(TraceType.PROTO_LOG);
@@ -372,6 +373,18 @@ describe('TraceViewComponent', () => {
     const visibleTabContents = getVisibleTabContents();
     expect(visibleTabContents.length).toEqual(1);
     expect(visibleTabContents[0].innerHTML).toEqual('Content1');
+  });
+
+  it('shows tooltips for tabs with trace descriptors', () => {
+    const tabs = htmlElement.querySelectorAll('.tab');
+    const wmTab = tabs.item(1);
+    wmTab.dispatchEvent(new Event('mouseenter'));
+    fixture.detectChanges();
+    expect(
+      document.querySelector<HTMLElement>('.mat-tooltip-panel')?.textContent,
+    ).toEqual('file_1');
+    wmTab.dispatchEvent(new Event('mouseleave'));
+    fixture.detectChanges();
   });
 
   function getVisibleTabContents() {

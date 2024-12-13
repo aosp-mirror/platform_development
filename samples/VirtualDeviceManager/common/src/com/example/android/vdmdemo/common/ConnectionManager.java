@@ -353,6 +353,7 @@ public class ConnectionManager {
         @Override
         public void onUnavailable() {
             Log.d(TAG, "Network unavailable");
+            onError("Network unavailable");
         }
     }
 

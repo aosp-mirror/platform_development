@@ -17,9 +17,11 @@
 import {NgTemplateOutlet} from '@angular/common';
 import {Component, ElementRef, Inject, Input, ViewChild} from '@angular/core';
 import {FormControl, ValidationErrors, Validators} from '@angular/forms';
+import {MatTabGroup} from '@angular/material/tabs';
 import {assertDefined} from 'common/assert_utils';
 import {TimeDuration} from 'common/time_duration';
 import {TIME_UNIT_TO_NANO} from 'common/time_units';
+import {Analytics} from 'logging/analytics';
 import {TraceType} from 'trace/trace_type';
 import {CollapsibleSections} from 'viewers/common/collapsible_sections';
 import {CollapsibleSectionType} from 'viewers/common/collapsible_section_type';
@@ -35,7 +37,7 @@ import {
   viewerCardInnerStyle,
   viewerCardStyle,
 } from 'viewers/components/styles/viewer_card.styles';
-import {MenuOption} from './search_list_component';
+import {ListItemOption} from './search_list_component';
 import {Search, UiData} from './ui_data';
 
 @Component({
@@ -50,94 +52,94 @@ import {Search, UiData} from './ui_data';
 
       <div
         class="global-search"
-        [class.collapsed]="sections.isSectionCollapsed(CollapsibleSectionType.GLOBAL_SEARCH)">
+        [class.collapsed]="sections.isSectionCollapsed(CollapsibleSectionType.GLOBAL_SEARCH)"
+        (click)="onGlobalSearchClick($event)">
         <div class="title-section">
           <collapsible-section-title
             class="padded-title"
             [title]="CollapsibleSectionType.GLOBAL_SEARCH"
             (collapseButtonClicked)="sections.onCollapseStateChange(CollapsibleSectionType.GLOBAL_SEARCH, true)"></collapsible-section-title>
+            <span class="mat-body-2 message-with-spinner" *ngIf="initializing">
+              <span>Initializing</span>
+              <mat-spinner [diameter]="20"></mat-spinner>
+            </span>
         </div>
 
-          <mat-tab-group class="search-tabs">
-            <mat-tab label="Search">
-             <div class="body">
-                <span class="mat-body-2">
-                  {{globalSearchText}}
-                </span>
+        <mat-tab-group class="search-tabs">
+          <mat-tab label="Search">
+            <div class="body">
+              <span class="mat-body-2">
+                {{globalSearchText}}
+              </span>
 
-                <button
-                  mat-button
-                  class="query-button end-align-button reset-button"
-                  color="primary"
-                  (click)="onResetQueryClick()"
-                  [disabled]="!currentSearchPresent()">
-                  <mat-icon> restore </mat-icon>
-                  <span>  Reset Query </span>
-                </button>
-                <mat-form-field appearance="outline" class="query-field padded-field">
-                  <textarea matInput [formControl]="searchQueryControl" (keydown)="onTextAreaKeydown($event)" [readonly]="runningQuery"></textarea>
-                  <mat-error *ngIf="searchQueryControl.invalid && searchQueryControl.value">Enter valid SQL query.</mat-error>
-                </mat-form-field>
+              <mat-form-field appearance="outline" class="query-field padded-field">
+                <textarea matInput [formControl]="searchQueryControl" (keydown)="onTextAreaKeydown($event)" [readonly]="runningQuery"></textarea>
+                <mat-error *ngIf="searchQueryControl.invalid && searchQueryControl.value">Enter valid SQL query.</mat-error>
+              </mat-form-field>
 
-                <div class="query-actions">
-                  <div *ngIf="runningQuery" class="running-query-message">
-                    <mat-icon class="material-symbols-outlined"> timer </mat-icon>
-                    <span class="mat-body-2 message-with-spinner">
-                      <span>Calculating results </span>
-                      <mat-spinner [diameter]="20"></mat-spinner>
-                    </span>
-                  </div>
-                  <div *ngIf="lastQueryExecutionTime" class="query-execution-time">
-                    <span class="mat-body-1">
-                      Executed in {{lastQueryExecutionTime}}
-                    </span>
-                  </div>
-                  <button
-                    mat-flat-button
-                    class="query-button"
-                    color="primary"
-                    (click)="onSearchQueryClick()"
-                    [disabled]="searchQueryDisabled()"> Run Search Query </button>
+              <div class="query-actions">
+                <div *ngIf="runningQuery" class="running-query-message">
+                  <mat-icon class="material-symbols-outlined"> timer </mat-icon>
+                  <span class="mat-body-2 message-with-spinner">
+                    <span>Calculating results </span>
+                    <mat-spinner [diameter]="20"></mat-spinner>
+                  </span>
                 </div>
-                <div class="current-search" *ngFor="let search of inputData.currentSearches">
-                  <ng-container
-                    [ngTemplateOutlet]="saveQueryField"
-                    [ngTemplateOutletContext]="{search}"></ng-container>
+                <div *ngIf="lastQueryExecutionTime" class="query-execution-time">
+                  <span class="mat-body-1">
+                    Executed in {{lastQueryExecutionTime}}
+                  </span>
                 </div>
-              </div>
-            </mat-tab>
-
-            <mat-tab label="Saved">
-              <search-list
-                class="body"
-                [searches]="inputData.savedSearches"
-                placeholderText="Saved queries will appear here."
-                [menuOptions]="savedSearchMenuOptions"></search-list>
-            </mat-tab>
-
-            <mat-tab label="Recent">
-              <search-list
-                class="body"
-                [searches]="inputData.recentSearches"
-                placeholderText="Recent queries will appear here."
-                [menuOptions]="recentSearchMenuOptions"></search-list>
-            </mat-tab>
-
-            <ng-template #saveQueryField let-search="search">
-              <div class="outline-field save-field">
-                <mat-form-field appearance="outline">
-                  <input matInput [formControl]="saveQueryNameControl" (keydown.enter)="onSaveQueryClick(search.query)"/>
-                  <mat-error *ngIf="saveQueryNameControl.invalid && saveQueryNameControl.value">Query with that name already exists.</mat-error>
-                </mat-form-field>
                 <button
                   mat-flat-button
                   class="query-button"
                   color="primary"
-                  [disabled]="saveQueryNameControl.invalid"
-                  (click)="onSaveQueryClick(search.query)"> Save Query </button>
+                  (click)="onSearchQueryClick()"
+                  [disabled]="searchQueryDisabled()"> Run Search Query </button>
               </div>
-            </ng-template>
-          </mat-tab-group>
+              <div class="current-search" *ngFor="let search of inputData.currentSearches">
+                <span class="query">
+                  <span class="mat-body-2"> Current: </span>
+                  <span class="mat-body-1"> {{search.query}} </span>
+                </span>
+                <ng-container
+                  [ngTemplateOutlet]="saveQueryField"
+                  [ngTemplateOutletContext]="{search}"></ng-container>
+              </div>
+            </div>
+          </mat-tab>
+
+          <mat-tab label="Saved">
+            <search-list
+              class="body"
+              [searches]="inputData.savedSearches"
+              placeholderText="Saved queries will appear here."
+              [listItemOptions]="savedSearchOptions"></search-list>
+          </mat-tab>
+
+          <mat-tab label="Recent">
+            <search-list
+              class="body"
+              [searches]="inputData.recentSearches"
+              placeholderText="Recent queries will appear here."
+              [listItemOptions]="recentSearchOptions"></search-list>
+          </mat-tab>
+
+          <ng-template #saveQueryField let-search="search">
+            <div class="outline-field save-field">
+              <mat-form-field appearance="outline">
+                <input matInput [formControl]="saveQueryNameControl" (keydown.enter)="onSaveQueryClick(search.query)"/>
+                <mat-error *ngIf="saveQueryNameControl.invalid && saveQueryNameControl.value">Query with that name already exists.</mat-error>
+              </mat-form-field>
+              <button
+                mat-flat-button
+                class="query-button"
+                color="primary"
+                [disabled]="saveQueryNameControl.invalid"
+                (click)="onSaveQueryClick(search.query)"> Save Query </button>
+            </div>
+          </ng-template>
+        </mat-tab-group>
       </div>
 
       <div
@@ -149,6 +151,7 @@ import {Search, UiData} from './ui_data';
             [title]="CollapsibleSectionType.SEARCH_RESULTS"
             (collapseButtonClicked)="sections.onCollapseStateChange(CollapsibleSectionType.SEARCH_RESULTS, true)"></collapsible-section-title>
         </div>
+        <div class="results-placeholder placeholder-text mat-body-1" *ngIf="!runningQuery && inputData.currentSearches.length === 0"> Run a search to view tabulated results. </div>
         <div class="result" *ngFor="let search of inputData.currentSearches">
           <div class="results-table">
             <log-view
@@ -214,10 +217,11 @@ import {Search, UiData} from './ui_data';
         color: #FF8A00;
       }
       .current-search {
-        display: flex;
-        flex-direction: row;
-        justify-content: space-between;
         padding: 10px 0px;
+      }
+      .current-search .query {
+        display: flex;
+        flex-direction: column;
       }
       .message-with-spinner {
         display: flex;
@@ -249,6 +253,7 @@ import {Search, UiData} from './ui_data';
 export class ViewerSearchComponent {
   @Input() inputData: UiData | undefined;
   @ViewChild('saveQueryField') saveQueryField: NgTemplateOutlet | undefined;
+  @ViewChild(MatTabGroup) matTabGroup: MatTabGroup | undefined;
 
   CollapsibleSectionType = CollapsibleSectionType;
   sections = new CollapsibleSections([
@@ -285,21 +290,45 @@ export class ViewerSearchComponent {
   runningQuery: string | undefined;
   lastQueryExecutionTime: string | undefined;
   lastQueryStartTime: number | undefined;
-  private readonly runOption = {
-    name: 'Run Query',
-    onClickCallback: (search: Search) =>
-      this.onRunQueryFromOptionsClick(search),
+  initializing = false;
+  private readonly editOption: ListItemOption = {
+    name: 'Edit',
+    icon: 'edit',
+    onClickCallback: (search: Search) => {
+      this.onEditQueryClick(search);
+    },
   };
-  readonly savedSearchMenuOptions: MenuOption[] = [
-    this.runOption,
+  private readonly saveOption: ListItemOption = {
+    name: 'Save',
+    icon: 'save',
+  };
+  readonly savedSearchOptions: ListItemOption[] = [
     {
-      name: 'Delete Query',
+      name: 'Run',
+      icon: 'play_arrow',
+      onClickCallback: (search: Search) => {
+        Analytics.TraceSearch.logQueryRequested('saved');
+        this.onRunQueryFromOptionsClick(search);
+      },
+    },
+    this.editOption,
+    {
+      name: 'Delete',
+      icon: 'close',
       onClickCallback: (search: Search) => this.onDeleteQueryClick(search),
     },
   ];
-  readonly recentSearchMenuOptions: MenuOption[] = [
-    this.runOption,
-    {name: 'Save Query', onClickCallback: (search: Search) => {}},
+  readonly recentSearchOptions: ListItemOption[] = [
+    {
+      name: 'Run',
+      icon: 'play_arrow',
+      onClickCallback: (search: Search) => {
+        Analytics.TraceSearch.logQueryRequested('recent');
+        this.onRunQueryFromOptionsClick(search);
+      },
+    },
+    this.editOption,
+    this.saveOption,
   ];
 
   readonly globalSearchText = `
@@ -312,10 +341,13 @@ export class ViewerSearchComponent {
   ) {}
 
   ngAfterViewInit() {
-    this.recentSearchMenuOptions[1].innerMenu = this.saveQueryField;
+    this.saveOption.menu = this.saveQueryField;
   }
 
   ngOnChanges() {
+    if (this.initializing && this.inputData?.initialized) {
+      this.initializing = false;
+    }
     const runningQueryComplete = this.inputData?.currentSearches.some(
       (search) => search.query === this.runningQuery,
     );
@@ -324,25 +356,30 @@ export class ViewerSearchComponent {
       (runningQueryComplete || this.inputData?.lastTraceFailed)
     ) {
       if (runningQueryComplete) {
-        this.searchQueryControl.setValue(this.runningQuery);
         this.saveQueryNameControl.setValue(this.runningQuery);
       }
+      const executionTimeMs =
+        Date.now() - assertDefined(this.lastQueryStartTime);
+      Analytics.TraceSearch.logQueryExecutionTime(executionTimeMs);
       this.lastQueryExecutionTime = new TimeDuration(
-        BigInt(Date.now() - assertDefined(this.lastQueryStartTime)) *
-          BigInt(TIME_UNIT_TO_NANO.ms),
+        BigInt(executionTimeMs * TIME_UNIT_TO_NANO.ms),
       ).format();
       this.lastQueryStartTime = undefined;
       this.runningQuery = undefined;
     }
   }
 
-  onResetQueryClick() {
-    this.lastQueryExecutionTime = undefined;
-    this.dispatchResetQueryEvent();
+  onGlobalSearchClick() {
+    if (!this.initializing && !this.inputData?.initialized) {
+      this.initializing = true;
+      const event = new CustomEvent(ViewerEvents.GlobalSearchSectionClick);
+      this.elementRef.nativeElement.dispatchEvent(event);
+    }
   }
 
   onSearchQueryClick() {
     this.runningQuery = assertDefined(this.searchQueryControl.value);
+    Analytics.TraceSearch.logQueryRequested('new');
     this.dispatchSearchQueryEvent();
   }
 
@@ -357,34 +394,16 @@ export class ViewerSearchComponent {
       ),
     });
     this.elementRef.nativeElement.dispatchEvent(event);
+    Analytics.TraceSearch.logQuerySaved();
     this.saveQueryNameControl.reset();
-  }
-
-  onRunQueryFromOptionsClick(search: Search) {
-    if (this.currentSearchPresent()) {
-      this.dispatchResetQueryEvent();
-    }
-    this.runningQuery = search.query;
-    this.dispatchSearchQueryEvent();
-  }
-
-  onDeleteQueryClick(search: Search) {
-    const event = new CustomEvent(ViewerEvents.DeleteSavedQueryClick, {
-      detail: new DeleteSavedQueryClickDetail(search),
-    });
-    this.elementRef.nativeElement.dispatchEvent(event);
   }
 
   searchQueryDisabled(): boolean {
     return (
       this.searchQueryControl.invalid ||
       !!this.runningQuery ||
-      this.currentSearchPresent()
+      !this.inputData?.initialized
     );
-  }
-
-  currentSearchPresent(): boolean {
-    return (this.inputData?.currentSearches.length ?? 0) > 0;
   }
 
   onTextAreaKeydown(event: KeyboardEvent) {
@@ -397,6 +416,23 @@ export class ViewerSearchComponent {
       event.preventDefault();
       this.onSearchQueryClick();
     }
+  }
+
+  private onRunQueryFromOptionsClick(search: Search) {
+    this.runningQuery = search.query;
+    this.dispatchSearchQueryEvent();
+  }
+
+  private onEditQueryClick(search: Search) {
+    this.searchQueryControl.setValue(search.query);
+    assertDefined(this.matTabGroup).selectedIndex = 0;
+  }
+
+  private onDeleteQueryClick(search: Search) {
+    const event = new CustomEvent(ViewerEvents.DeleteSavedQueryClick, {
+      detail: new DeleteSavedQueryClickDetail(search),
+    });
+    this.elementRef.nativeElement.dispatchEvent(event);
   }
 
   private validateSearchQuerySaveName(
@@ -414,15 +450,6 @@ export class ViewerSearchComponent {
     this.lastQueryStartTime = Date.now();
     const event = new CustomEvent(ViewerEvents.SearchQueryClick, {
       detail: new QueryClickDetail(assertDefined(this.runningQuery)),
-    });
-    this.elementRef.nativeElement.dispatchEvent(event);
-  }
-
-  private dispatchResetQueryEvent() {
-    const event = new CustomEvent(ViewerEvents.ResetQueryClick, {
-      detail: new QueryClickDetail(
-        assertDefined(this.inputData?.currentSearches[0].query),
-      ),
     });
     this.elementRef.nativeElement.dispatchEvent(event);
   }

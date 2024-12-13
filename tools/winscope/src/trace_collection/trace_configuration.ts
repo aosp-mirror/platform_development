@@ -127,7 +127,7 @@ const screenshotConfigs: SelectionConfiguration[] = [
   },
 ];
 
-export function makeScreenRecordingConfigs(
+export function makeScreenRecordingSelectionConfigs(
   options: string[],
   initialValue: string | string[],
 ): SelectionConfiguration[] {
@@ -169,8 +169,14 @@ const traceDefaultConfig: TraceConfigurationMap = {
     name: TRACE_INFO[TraceType.SCREEN_RECORDING].name,
     enabled: true,
     config: {
-      enableConfigs: [],
-      selectionConfigs: makeScreenRecordingConfigs([], ''),
+      enableConfigs: [
+        {
+          name: 'pointer location and touches',
+          key: 'pointer_and_touches',
+          enabled: true,
+        },
+      ],
+      selectionConfigs: makeScreenRecordingSelectionConfigs([], ''),
     },
     available: true,
     types: [TraceType.SCREEN_RECORDING],
