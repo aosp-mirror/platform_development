@@ -16,12 +16,14 @@
 
 import {assertDefined} from 'common/assert_utils';
 import {FileUtils} from 'common/file_utils';
+import {FunctionUtils} from 'common/function_utils';
 import {ProgressListenerStub} from 'messaging/progress_listener_stub';
 import {UserWarning} from 'messaging/user_warning';
 import {
   CorruptedArchive,
   InvalidPerfettoTrace,
   NoValidFiles,
+  PerfettoPacketLoss,
   TraceOverridden,
   UnsupportedFileFormat,
 } from 'messaging/user_warnings';
@@ -30,6 +32,8 @@ import {TracesUtils} from 'test/unit/traces_utils';
 import {UserNotifierChecker} from 'test/unit/user_notifier_checker';
 import {UnitTestUtils} from 'test/unit/utils';
 import {TraceType} from 'trace/trace_type';
+import {QueryResult} from 'trace_processor/query_result';
+import {WasmEngineProxy} from 'trace_processor/wasm_engine_proxy';
 import {FilesSource} from './files_source';
 import {TracePipeline} from './trace_pipeline';
 
@@ -260,18 +264,40 @@ describe('TracePipeline', () => {
 
     await expectLoadResult(0, [
       new InvalidPerfettoTrace('invalid_protolog.perfetto-trace', [
-        'Perfetto trace has no IME Clients entries',
-        'Perfetto trace has no IME system_server entries',
-        'Perfetto trace has no IME Service entries',
-        'Perfetto trace has no ProtoLog entries',
-        'Perfetto trace has no Surface Flinger entries',
-        'Perfetto trace has no Transactions entries',
-        'Perfetto trace has no Transitions entries',
-        'Perfetto trace has no ViewCapture windows',
-        'Perfetto trace has no Window Manager entries',
-        'Perfetto trace has no Motion Events entries',
-        'Perfetto trace has no Key Events entries',
+        'Perfetto trace has no Winscope trace entries',
       ]),
+    ]);
+  });
+
+  it('shows warning for packet loss', async () => {
+    const file = [
+      await UnitTestUtils.getFixtureFile(
+        'traces/perfetto/layers_trace.perfetto-trace',
+      ),
+    ];
+    const queryResultObj = jasmine.createSpyObj<QueryResult>('result', [
+      'numRows',
+      'firstRow',
+      'waitAllRows',
+    ]);
+    queryResultObj.numRows.and.returnValue(1);
+    queryResultObj.firstRow.and.returnValue({value: 2n});
+    queryResultObj.waitAllRows.and.returnValue(Promise.resolve(queryResultObj));
+    const spyQueryResult = FunctionUtils.mixin(
+      queryResultObj,
+      Promise.resolve(queryResultObj),
+    );
+
+    const spy = spyOn(WasmEngineProxy.prototype, 'query').and.callThrough();
+    spy
+      .withArgs(
+        "select name, value from stats where name = 'traced_buf_trace_writer_packet_loss'",
+      )
+      .and.returnValue(spyQueryResult);
+
+    await loadFiles(file);
+    await expectLoadResult(1, [
+      new PerfettoPacketLoss('layers_trace.perfetto-trace', 2),
     ]);
   });
 
