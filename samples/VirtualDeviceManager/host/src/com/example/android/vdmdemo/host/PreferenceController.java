@@ -19,6 +19,7 @@ package com.example.android.vdmdemo.host;
 import static android.Manifest.permission.ADD_ALWAYS_UNLOCKED_DISPLAY;
 import static android.Manifest.permission.ADD_TRUSTED_DISPLAY;
 import static android.os.Build.VERSION.SDK_INT;
+import static android.os.Build.VERSION_CODES.BAKLAVA;
 import static android.os.Build.VERSION_CODES.TIRAMISU;
 import static android.os.Build.VERSION_CODES.UPSIDE_DOWN_CAKE;
 import static android.os.Build.VERSION_CODES.VANILLA_ICE_CREAM;
@@ -32,7 +33,6 @@ import android.util.ArrayMap;
 import android.util.Log;
 
 import androidx.annotation.StringRes;
-import androidx.core.os.BuildCompat;
 import androidx.preference.Preference;
 import androidx.preference.PreferenceManager;
 
@@ -74,8 +74,7 @@ final class PreferenceController {
                     VANILLA_ICE_CREAM, Flags::crossDeviceClipboard)
                     .withRequiredPermissions(ADD_TRUSTED_DISPLAY),
 
-            // TODO(b/379277747): Change to BAKLAVA
-            new BoolRule(R.string.pref_enable_custom_activity_policy, VANILLA_ICE_CREAM,
+            new BoolRule(R.string.pref_enable_custom_activity_policy, BAKLAVA,
                     Flags::dynamicPolicy,
                     android.companion.virtualdevice.flags.Flags::activityControlApi),
 
@@ -100,19 +99,16 @@ final class PreferenceController {
             new BoolRule(R.string.pref_enable_custom_home, VANILLA_ICE_CREAM, Flags::vdmCustomHome)
                     .withRequiredPermissions(ADD_TRUSTED_DISPLAY),
 
-            // TODO(b/379277747): Change to BAKLAVA
-            new BoolRule(R.string.pref_enable_custom_status_bar, VANILLA_ICE_CREAM,
+            new BoolRule(R.string.pref_enable_custom_status_bar, BAKLAVA,
                     android.companion.virtualdevice.flags.Flags::statusBarAndInsets)
                     .withRequiredPermissions(ADD_TRUSTED_DISPLAY),
 
-            // TODO(b/379277747): Change to BAKLAVA
-            new StringRule(R.string.pref_display_timeout, VANILLA_ICE_CREAM,
+            new StringRule(R.string.pref_display_timeout, BAKLAVA,
                     android.companion.virtualdevice.flags.Flags::deviceAwareDisplayPower,
                     android.companion.virtualdevice.flags.Flags::displayPowerManagerApis)
                     .withDefaultValue(String.valueOf(0)),
 
-            // TODO(b/379277747): Change to BAKLAVA
-            new StringRule(R.string.pref_enable_client_brightness, VANILLA_ICE_CREAM,
+            new StringRule(R.string.pref_enable_client_brightness, BAKLAVA,
                     android.companion.virtualdevice.flags.Flags::deviceAwareDisplayPower,
                     android.companion.virtualdevice.flags.Flags::displayPowerManagerApis),
 
@@ -141,14 +137,10 @@ final class PreferenceController {
             new InternalBoolRule(R.string.internal_pref_virtual_stylus_supported,
                     VANILLA_ICE_CREAM, Flags::virtualStylus),
 
-            // TODO(b/379277747): Change to BAKLAVA
-            new InternalBoolRule(R.string.internal_pref_virtual_rotary_supported,
-                    VANILLA_ICE_CREAM,
+            new InternalBoolRule(R.string.internal_pref_virtual_rotary_supported, BAKLAVA,
                     android.companion.virtualdevice.flags.Flags::virtualRotary),
 
-            // TODO(b/379277747): Change to BAKLAVA
-            new InternalBoolRule(R.string.internal_pref_display_rotation_supported,
-                    VANILLA_ICE_CREAM,
+            new InternalBoolRule(R.string.internal_pref_display_rotation_supported, BAKLAVA,
                     android.companion.virtualdevice.flags.Flags::virtualDisplayRotationApi)
     );
     // LINT.ThenChange(/samples/VirtualDeviceManager/README.md:host_options)
@@ -284,7 +276,7 @@ final class PreferenceController {
         }
 
         private boolean isSdkVersionSatisfied() {
-            return mMinSdk <= SDK_INT || (mMinSdk == VANILLA_ICE_CREAM && BuildCompat.isAtLeastV());
+            return mMinSdk <= SDK_INT || (mMinSdk == BAKLAVA && VdmCompat.isAtLeastB());
         }
 
         PrefRule<T> withDefaultValue(T defaultValue) {

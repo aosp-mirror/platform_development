@@ -48,9 +48,13 @@ fun SceneTransitionsBuilder.lockscreenTransitions(configuration: DemoConfigurati
     if (configuration.useOverscrollSpec) {
         overscrollDisabled(Scenes.Lockscreen, Orientation.Vertical)
 
-        overscrollDisabled(Scenes.StubStart, Orientation.Horizontal)
+        overscroll(Scenes.StubStart, Orientation.Horizontal) {
+            translate(Stub.Elements.TextStart, x = { absoluteDistance })
+        }
 
-        overscrollDisabled(Scenes.StubEnd, Orientation.Horizontal)
+        overscroll(Scenes.StubEnd, Orientation.Horizontal) {
+            translate(Stub.Elements.TextEnd, x = { absoluteDistance })
+        }
     }
 }
 

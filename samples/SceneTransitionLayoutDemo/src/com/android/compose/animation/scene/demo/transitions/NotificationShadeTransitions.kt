@@ -43,9 +43,17 @@ fun SceneTransitionsBuilder.notificationShadeTransitions(revealHaptics: Containe
         sharedElement(NotificationList.Elements.Notifications, enabled = false)
     }
 
-    overscrollDisabled(Overlays.Notifications, Orientation.Vertical)
+    overscroll(Overlays.Notifications, Orientation.Vertical) {
+        notifyStlThatShadeDoesNotResizeDuringThisTransition()
 
-    overscrollDisabled(Overlays.Notifications, Orientation.Horizontal)
+        translate(PartialShade.Elements.Root, y = { absoluteDistance })
+    }
+
+    overscroll(Overlays.Notifications, Orientation.Horizontal) {
+        notifyStlThatShadeDoesNotResizeDuringThisTransition()
+
+        translate(PartialShade.Elements.Root, x = { absoluteDistance })
+    }
 }
 
 val ToNotificationShadeStartFadeProgress = 0.5f

@@ -31,7 +31,7 @@ describe('VisibilityPropertiesComputation', () => {
   const rect2x2 = {left: 0, top: 0, bottom: 2, right: 2};
   const rect5x5 = {left: 0, right: 5, top: 0, bottom: 5};
 
-  const commonProperties: android.surfaceflinger.ILayerProto = {
+  const commonProperties: Proto = {
     cornerRadius: 0,
     shadowRadius: 0,
     backgroundBlurRadius: 0,
@@ -42,17 +42,17 @@ describe('VisibilityPropertiesComputation', () => {
       dsdy: 0,
       dtdy: 1,
     },
+    excludesCompositionState: false,
   };
 
-  const visibleLayerProperties: android.surfaceflinger.ILayerProto =
-    Object.assign(
-      {
-        flags: 0,
-        activeBuffer: {width: 1, height: 1, stride: 1, format: 1},
-        color: {r: 0, g: 0, b: 0, a: 1},
-      },
-      commonProperties,
-    );
+  const visibleLayerProperties: Proto = Object.assign(
+    {
+      flags: 0,
+      activeBuffer: {width: 1, height: 1, stride: 1, format: 1},
+      color: {r: 0, g: 0, b: 0, a: 1},
+    },
+    commonProperties,
+  );
 
   beforeEach(() => {
     computation = new VisibilityPropertiesComputation();
@@ -276,6 +276,22 @@ describe('VisibilityPropertiesComputation', () => {
   });
 
   it('detects non-visible layer due to empty bounds', () => {
+    const properties = Object.assign(
+      {
+        id: 1,
+        name: 'layerEmptyBounds',
+        parent: -1,
+        children: [],
+        visibleRegion: {rect: [rect1x1]},
+        bounds: {left: 0, right: 0, top: 0, bottom: 0},
+        layerStack: 0,
+        z: 0,
+        screenBounds: null,
+        isOpaque: false,
+      },
+      visibleLayerProperties,
+    );
+    properties['excludesCompositionState'] = true;
     const hierarchyRoot = new HierarchyTreeBuilder()
       .setId('LayerTraceEntry')
       .setName('root')
@@ -283,22 +299,7 @@ describe('VisibilityPropertiesComputation', () => {
         {
           id: 1,
           name: 'layerEmptyBounds',
-          properties: Object.assign(
-            {
-              id: 1,
-              name: 'layerEmptyBounds',
-              parent: -1,
-              children: [],
-              visibleRegion: {rect: [rect1x1]},
-              bounds: {left: 0, right: 0, top: 0, bottom: 0},
-              excludesCompositionState: true,
-              layerStack: 0,
-              z: 0,
-              screenBounds: null,
-              isOpaque: false,
-            } as android.surfaceflinger.ILayerProto,
-            visibleLayerProperties,
-          ),
+          properties,
         },
       ])
       .build();
@@ -822,3 +823,7 @@ describe('VisibilityPropertiesComputation', () => {
     ).toEqual(coveredBy);
   }
 });
+
+interface Proto {
+  [key: string]: number | string | boolean | null | Proto;
+}
