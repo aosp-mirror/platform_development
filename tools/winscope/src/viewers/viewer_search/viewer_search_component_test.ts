@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import {CdkAccordionModule} from '@angular/cdk/accordion';
 import {CdkMenuModule} from '@angular/cdk/menu';
 import {ScrollingModule} from '@angular/cdk/scrolling';
 import {Component, ViewChild} from '@angular/core';
@@ -71,6 +72,7 @@ describe('ViewerSearchComponent', () => {
         MatProgressSpinnerModule,
         ScrollingModule,
         MatTooltipModule,
+        CdkAccordionModule,
       ],
     }).compileComponents();
     fixture = TestBed.createComponent(TestHostComponent);
@@ -309,6 +311,26 @@ describe('ViewerSearchComponent', () => {
     expect(getSearchQueryButton().disabled).toBeFalse();
   });
 
+  it('can open SQL view descriptors in how to section', () => {
+    const accordionItems = htmlElement.querySelectorAll<HTMLElement>(
+      '.how-to-search .accordion-item',
+    );
+    expect(accordionItems.length).toEqual(2);
+    accordionItems.forEach((item) => checkAccordionItemCollapsed(item));
+
+    clickAccordionItemHeader(accordionItems.item(0));
+    checkAccordionItemExpanded(accordionItems.item(0));
+    checkAccordionItemCollapsed(accordionItems.item(1));
+
+    clickAccordionItemHeader(accordionItems.item(1));
+    checkAccordionItemExpanded(accordionItems.item(0));
+    checkAccordionItemExpanded(accordionItems.item(1));
+
+    clickAccordionItemHeader(accordionItems.item(0));
+    checkAccordionItemCollapsed(accordionItems.item(0));
+    checkAccordionItemExpanded(accordionItems.item(1));
+  });
+
   function clickGlobalSearchAndCheckMessage(globalSearch: HTMLElement) {
     globalSearch.click();
     fixture.detectChanges();
@@ -394,6 +416,30 @@ describe('ViewerSearchComponent', () => {
       'timer Calculating results',
     );
     expect(runningQueryMessage.querySelector('mat-spinner')).toBeTruthy();
+  }
+
+  function getAccordionItemHeader(item: HTMLElement) {
+    return assertDefined(
+      item.querySelector<HTMLElement>('.accordion-item-header'),
+    );
+  }
+
+  function clickAccordionItemHeader(item: HTMLElement) {
+    const header = getAccordionItemHeader(item);
+    header.click();
+    fixture.detectChanges();
+  }
+
+  function checkAccordionItemCollapsed(item: HTMLElement) {
+    const header = getAccordionItemHeader(item);
+    expect(header.textContent).toContain('chevron_right');
+    expect(item.querySelector('.accordion-item-body')).toBeNull();
+  }
+
+  function checkAccordionItemExpanded(item: HTMLElement) {
+    const header = getAccordionItemHeader(item);
+    expect(header.textContent).toContain('arrow_drop_down');
+    expect(item.querySelector('.accordion-item-body')).toBeTruthy();
   }
 
   @Component({

@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import {CdkAccordionItem} from '@angular/cdk/accordion';
 import {NgTemplateOutlet} from '@angular/common';
 import {Component, ElementRef, Inject, Input, ViewChild} from '@angular/core';
 import {FormControl, ValidationErrors, Validators} from '@angular/forms';
@@ -172,10 +173,48 @@ import {Search, UiData} from './ui_data';
         class="how-to-search"
         [class.collapsed]="sections.isSectionCollapsed(CollapsibleSectionType.HOW_TO_SEARCH)">
         <div class="title-section">
-        <collapsible-section-title
-          class="padded-title"
-          [title]="CollapsibleSectionType.HOW_TO_SEARCH"
-          (collapseButtonClicked)="sections.onCollapseStateChange(CollapsibleSectionType.HOW_TO_SEARCH, true)"></collapsible-section-title>
+          <collapsible-section-title
+            class="padded-title"
+            [title]="CollapsibleSectionType.HOW_TO_SEARCH"
+            (collapseButtonClicked)="sections.onCollapseStateChange(CollapsibleSectionType.HOW_TO_SEARCH, true)"></collapsible-section-title>
+        </div>
+
+        <div class="body">
+          <span class="mat-body-1">
+            Run custom SQL queries on Perfetto traces. Use specialized SQL views to aid with searching:
+          </span>
+
+          <cdk-accordion class="how-to-accordion" [multi]="true">
+            <cdk-accordion-item *ngFor="let searchView of searchViews" class="accordion-item" #accordionItem="cdkAccordionItem">
+              <span
+                class="mat-body-1 accordion-item-header"
+                (click)="onHeaderClick(accordionItem)">
+                <mat-icon>
+                  {{ accordionItem.expanded ? 'arrow_drop_down' : 'chevron_right' }}
+                </mat-icon>
+                <code>{{searchView.name}}</code>
+              </span>
+              <div *ngIf="accordionItem.expanded" class="accordion-item-body">
+                <span class="mat-body-1">
+                  Use to search {{searchView.dataType}} data.
+                </span>
+                <span class="mat-body-2">Spec:</span>
+                <table>
+                  <tr *ngFor="let c of searchView.spec">
+                    <td><code>{{c.name}}</code></td>
+                    <td class="mat-body-1">{{c.desc}}</td>
+                  </tr>
+                </table>
+                <span class="mat-body-2">
+                  Examples:
+                </span>
+                <ng-container *ngFor="let example of searchView.examples">
+                  <pre><code>{{example.query}}</code></pre>
+                  <span class="mat-body-1 indented"><i>{{example.desc}}</i></span>
+                </ng-container>
+              </div>
+            </cdk-accordion-item>
+          </cdk-accordion>
         </div>
       </div>
     </div>
@@ -242,6 +281,85 @@ import {Search, UiData} from './ui_data';
         border-radius: 4px;
         background-color: var(--background-color);
         flex: 1;
+      }
+
+      .how-to-search .body {
+        display: flex;
+        flex-direction: column;
+        padding: 12px;
+      }
+      .how-to-search .how-to-accordion {
+        display: flex;
+        flex-direction: column;
+        min-width: fit-content;
+      }
+      .how-to-search .accordion-item {
+        border: 1px solid var(--border-color);
+      }
+      .how-to-search .accordion-item + .accordion-item {
+        border-top: none;
+      }
+      .how-to-search .accordion-item:first-child {
+        border-top-left-radius: 4px;
+        border-top-right-radius: 4px;
+      }
+      .how-to-search .accordion-item:last-child {
+        border-bottom-left-radius: 4px;
+        border-bottom-right-radius: 4px;
+      }
+      .how-to-search .accordion-item-header {
+        width: 100%;
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        cursor: pointer;
+      }
+      .how-to-search .accordion-item-body {
+        padding: 8px;
+        display: flex;
+        flex-direction: column;
+      }
+      .how-to-search table {
+        border-spacing: 0;
+      }
+      .how-to-search table td {
+        border-left: 1px solid var(--border-color);
+        border-top: 1px solid var(--border-color);
+        padding-left: 4px;
+        padding-right: 4px;
+      }
+      .how-to-search table tr:first-child td:first-child {
+        border-top-left-radius: 4px;
+      }
+      .how-to-search table tr:first-child td:last-child {
+        border-top-right-radius: 4px;
+      }
+      .how-to-search table tr:last-child td:first-child {
+        border-bottom-left-radius: 4px;
+      }
+      .how-to-search table tr:last-child td:last-child {
+        border-bottom-right-radius: 4px;
+      }
+      .how-to-search table tr:last-child td {
+        border-bottom: 1px solid var(--border-color);
+      }
+      .how-to-search table tr td:last-child {
+        border-right: 1px solid var(--border-color);
+      }
+      .how-to-search .body .indented {
+        margin-inline-start: 5px;
+      }
+      .how-to-search code {
+        font-size: 12px;
+      }
+      .how-to-search pre {
+        white-space: pre-wrap;
+        word-break: break-word;
+        border-radius: 4px;
+        padding: 0px 4px;
+        margin: 0;
+        margin-block: 5px;
+        background: var(--drawer-block-primary);
       }
     `,
     viewerCardStyle,
@@ -335,6 +453,93 @@ export class ViewerSearchComponent {
      Write an SQL query in the field below, and run the search. \
      Results will be shown in a tabular view and you can optionally visualize them in the timeline. \
   `;
+  readonly searchViews: SearchView[] = [
+    {
+      name: 'sf_layer_search',
+      dataType: 'SurfaceFlinger layer',
+      spec: [
+        {
+          name: 'state_id',
+          desc: 'Unique id of entry to which the layer belongs',
+        },
+        {name: 'ts', desc: 'Timestamp of entry to which the layer belongs'},
+        {name: 'layer_id', desc: 'Layer id'},
+        {name: 'parent_id', desc: 'Layer id of parent'},
+        {name: 'layer_name', desc: 'Layer name'},
+        {
+          name: 'property',
+          desc: 'Property name accounting for repeated fields',
+        },
+        {
+          name: 'flat_property',
+          desc: 'Property name not accounting for repeated fields',
+        },
+        {name: 'value', desc: 'Property value in string format'},
+        {
+          name: 'previous_value',
+          desc: 'Property value from previous entry in string format',
+        },
+      ],
+      examples: [
+        {
+          query: `SELECT ts, value, previous_value FROM sf_layer_search
+  WHERE layer_name='Taskbar#97'
+  AND property='color.a'
+  AND value!=previous_value`,
+          desc: 'returns timestamp, current and previous values of alpha for Taskbar#97, for states where alpha changed from previous state',
+        },
+        {
+          query: `SELECT ts, value, previous_value FROM sf_layer_search
+  WHERE layer_name LIKE 'Wallpaper%'
+  AND property='bounds.bottom'
+  AND cast_int!(value) <= 2400`,
+          desc: 'returns timestamp, current and previous values of bottom bound for layers that start with "Wallpaper", for states where bottom bound <= 2400',
+        },
+      ],
+    },
+    {
+      name: 'sf_hierarchy_root_search',
+      dataType: 'SurfaceFlinger root',
+      spec: [
+        {
+          name: 'state_id',
+          desc: 'Unique id of entry to which the layer belongs',
+        },
+        {name: 'ts', desc: 'Timestamp of entry to which the layer belongs'},
+        {
+          name: 'property',
+          desc: 'Property name accounting for repeated fields',
+        },
+        {
+          name: 'flat_property',
+          desc: 'Property name not accounting for repeated fields',
+        },
+        {name: 'value', desc: 'Property value in string format'},
+        {
+          name: 'previous_value',
+          desc: 'Property value from previous entry in string format',
+        },
+      ],
+      examples: [
+        {
+          query: `SELECT STATE.* FROM sf_hierarchy_root_search STATE_WITH_DISPLAY_ON
+INNER JOIN sf_hierarchy_root_search STATE
+  ON STATE.state_id = STATE_WITH_DISPLAY_ON.state_id
+  AND STATE_WITH_DISPLAY_ON.flat_property='displays.layer_stack'
+  AND STATE_WITH_DISPLAY_ON.value!='4294967295'
+  AND STATE.property LIKE CONCAT(
+    SUBSTRING(
+        STATE_WITH_DISPLAY_ON.property,
+        0,
+        instr(STATE_WITH_DISPLAY_ON.property, ']')
+    ),
+    '%'
+  )`,
+          desc: 'returns all properties for displays with valid layer stack from all states',
+        },
+      ],
+    },
+  ];
 
   constructor(
     @Inject(ElementRef) private elementRef: ElementRef<HTMLElement>,
@@ -418,6 +623,10 @@ export class ViewerSearchComponent {
     }
   }
 
+  onHeaderClick(accordionItem: CdkAccordionItem) {
+    accordionItem.toggle();
+  }
+
   private onRunQueryFromOptionsClick(search: Search) {
     this.runningQuery = search.query;
     this.dispatchSearchQueryEvent();
@@ -453,4 +662,11 @@ export class ViewerSearchComponent {
     });
     this.elementRef.nativeElement.dispatchEvent(event);
   }
+}
+
+interface SearchView {
+  name: string;
+  dataType: string;
+  spec: Array<{name: string; desc: string}>;
+  examples: Array<{query: string; desc: string}>;
 }
