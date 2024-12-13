@@ -24,6 +24,7 @@ export interface SfLayerSummary {
 
 export interface SfSummaryProperty {
   key: string;
+  desc?: string;
   simpleValue?: string;
   layerValues?: SfLayerSummary[];
 }
@@ -41,7 +42,8 @@ export interface SfCuratedProperties {
   bufferTransformType: string;
   destinationFrame: string;
   z: string;
-  relativeParent: string;
+  relativeParent: string | SfLayerSummary;
+  relativeChildren: SfLayerSummary[];
   calcColor: string;
   calcShadowRadius: string;
   calcCornerRadius: string;

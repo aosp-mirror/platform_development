@@ -17,7 +17,7 @@
 import {ArrayUtils} from 'common/array_utils';
 import {Timestamp} from 'common/time';
 import {AbstractParser} from 'parsers/legacy/abstract_parser';
-import {ScreenRecordingTraceEntry} from 'trace/screen_recording';
+import {MediaBasedTraceEntry} from 'trace/media_based_trace_entry';
 import {ScreenRecordingUtils} from 'trace/screen_recording_utils';
 import {TraceType} from 'trace/trace_type';
 
@@ -51,13 +51,13 @@ class ParserScreenRecordingLegacy extends AbstractParser {
   override processDecodedEntry(
     index: number,
     entry: bigint,
-  ): ScreenRecordingTraceEntry {
+  ): MediaBasedTraceEntry {
     const videoTimeSeconds = ScreenRecordingUtils.timestampToVideoTimeSeconds(
       this.decodedEntries[0],
       entry,
     );
     const videoData = this.traceFile.file;
-    return new ScreenRecordingTraceEntry(videoTimeSeconds, videoData);
+    return new MediaBasedTraceEntry(videoTimeSeconds, videoData);
   }
 
   private searchMagicString(videoData: Uint8Array): number {

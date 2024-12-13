@@ -15,46 +15,36 @@
  */
 
 import {Timestamp} from 'common/time';
+import {TraceEntry} from 'trace/trace';
+import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
+import {TextFilter} from './text_filter';
+import {LogFieldType} from './ui_data_log';
 
-export class ViewerEvents {
-  static HighlightedNodeChange = 'HighlightedNodeChange';
-  static HighlightedIdChange = 'HighlightedIdChange';
+export enum ViewerEvents {
+  HighlightedNodeChange = 'HighlightedNodeChange',
+  HighlightedIdChange = 'HighlightedIdChange',
 
-  static HierarchyPinnedChange = 'HierarchyPinnedChange';
-  static HierarchyUserOptionsChange = 'HierarchyUserOptionsChange';
-  static HierarchyFilterChange = 'HierarchyFilterChange';
-  static RectShowStateChange = 'RectShowStateChange';
+  HierarchyPinnedChange = 'HierarchyPinnedChange',
+  HierarchyUserOptionsChange = 'HierarchyUserOptionsChange',
+  HierarchyFilterChange = 'HierarchyFilterChange',
+  RectShowStateChange = 'RectShowStateChange',
 
-  static PropertiesUserOptionsChange = 'PropertiesUserOptionsChange';
-  static PropertiesFilterChange = 'PropertiesFilterChange';
-  static HighlightedPropertyChange = 'HighlightedPropertyChange';
+  PropertiesUserOptionsChange = 'PropertiesUserOptionsChange',
+  PropertiesFilterChange = 'PropertiesFilterChange',
+  HighlightedPropertyChange = 'HighlightedPropertyChange',
 
-  static RectGroupIdChange = 'RectGroupIdChange';
-  static RectsUserOptionsChange = 'RectsUserOptionsChange';
+  RectsUserOptionsChange = 'RectsUserOptionsChange',
 
-  static AdditionalPropertySelected = 'AdditionalPropertySelected';
-  static RectsDblClick = 'RectsDblClick';
-  static MiniRectsDblClick = 'MiniRectsDblClick';
+  AdditionalPropertySelected = 'AdditionalPropertySelected',
+  RectsDblClick = 'RectsDblClick',
+  MiniRectsDblClick = 'MiniRectsDblClick',
 
-  static TimestampClick = 'TimestampClick';
-
-  static LogLevelsFilterChanged = 'LogLevelsFilterChanged';
-  static TagsFilterChanged = 'TagsFilterChanged';
-  static SourceFilesFilterChanged = 'SourceFilesFilterChanged';
-  static SearchStringFilterChanged = 'SearchStringFilterChanged';
-
-  static VSyncIdFilterChanged = 'VSyncIdFilterChanged';
-  static PidFilterChanged = 'PidFilterChanged';
-  static UidFilterChanged = 'UidFilterChanged';
-  static TypeFilterChanged = 'TypeFilterChanged';
-  static LayerIdFilterChanged = 'LayerIdFilterChanged';
-  static WhatFilterChanged = 'WhatFilterChanged';
-
-  static LogClicked = 'LogClicked';
-
-  static LogChangedByKeyPress = 'LogChangedByKeyPress';
-  static TransactionIdFilterChanged = 'TransactionIdFilterChanged';
-  static TransitionSelected = 'TransitionSelected';
+  TimestampClick = 'TimestampClick',
+  LogEntryClick = 'LogEntryClick',
+  LogFilterChange = 'LogFilterChange',
+  LogTextFilterChange = 'LogTextFilterChange',
+  ArrowDownPress = 'ArrowDownPress',
+  ArrowUpPress = 'ArrowUpPress',
 }
 
 export class RectDblClickDetail {
@@ -62,5 +52,16 @@ export class RectDblClickDetail {
 }
 
 export class TimestampClickDetail {
-  constructor(public timestamp?: Timestamp, public index?: number) {}
+  constructor(
+    public entry?: TraceEntry<PropertyTreeNode>,
+    public timestamp?: Timestamp,
+  ) {}
+}
+
+export class LogFilterChangeDetail {
+  constructor(public type: LogFieldType, public value: string[] | string) {}
+}
+
+export class LogTextFilterChangeDetail {
+  constructor(public type: LogFieldType, public filter: TextFilter) {}
 }

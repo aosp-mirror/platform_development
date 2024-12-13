@@ -15,8 +15,10 @@
  */
 import {assertDefined} from 'common/assert_utils';
 import {TimestampConverterUtils} from 'test/unit/timestamp_converter_utils';
+import {TraceBuilder} from 'test/unit/trace_builder';
 import {UnitTestUtils} from 'test/unit/utils';
 import {CoarseVersion} from 'trace/coarse_version';
+import {CustomQueryType} from 'trace/custom_query';
 import {Parser} from 'trace/parser';
 import {TraceType} from 'trace/trace_type';
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
@@ -46,8 +48,8 @@ describe('Perfetto ParserKeyEvent', () => {
     expect(timestamps.length).toEqual(2);
 
     const expected = [
-      TimestampConverterUtils.makeRealTimestamp(1718163697925999410n),
-      TimestampConverterUtils.makeRealTimestamp(1718163698025920410n),
+      TimestampConverterUtils.makeRealTimestamp(1718386905115026232n),
+      TimestampConverterUtils.makeRealTimestamp(1718386905123057319n),
     ];
     expect(timestamps).toEqual(expected);
   });
@@ -61,7 +63,7 @@ describe('Perfetto ParserKeyEvent', () => {
     const entry = await parser.getEntry(0);
     const keyEvent = assertDefined(entry.getChildByName('keyEvent'));
 
-    expect(keyEvent?.getChildByName('eventId')?.getValue()).toEqual(263024268);
+    expect(keyEvent?.getChildByName('eventId')?.getValue()).toEqual(759309047);
     expect(keyEvent?.getChildByName('action')?.formattedValue()).toEqual(
       'ACTION_DOWN',
     );
@@ -92,12 +94,24 @@ describe('Perfetto ParserKeyEvent', () => {
         ?.getChildByName('0')
         ?.getChildByName('windowId')
         ?.getValue(),
-    ).toEqual(BigInt(461));
+    ).toEqual(212n);
     expect(
       windowDispatchEvents
         ?.getChildByName('1')
         ?.getChildByName('windowId')
         ?.getValue(),
-    ).toEqual(BigInt(0));
+    ).toEqual(0n);
+  });
+
+  it('supports VSYNCID custom query', async () => {
+    const trace = new TraceBuilder()
+      .setType(TraceType.INPUT_KEY_EVENT)
+      .setParser(parser)
+      .build();
+    const entries = await trace
+      .sliceEntries(0, 2)
+      .customQuery(CustomQueryType.VSYNCID);
+    const values = entries.map((entry) => entry.getValue());
+    expect(values).toEqual([89114n, 89115n]);
   });
 });

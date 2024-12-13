@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import {INVALID_TIME_NS, Timestamp} from 'common/time';
+import {Timestamp} from 'common/time';
 import {AbstractParser} from 'parsers/legacy/abstract_parser';
 import {ParserTransitionsUtils} from 'parsers/transitions/parser_transitions_utils';
 import root from 'protos/transitions/udc/json';
@@ -73,12 +73,11 @@ export class ParserTransitionsShell extends AbstractParser<PropertyTreeNode> {
   protected override getTimestamp(
     entry: com.android.wm.shell.ITransition,
   ): Timestamp {
-    // for consistency with all transitions, elapsed nanos are defined as shell dispatch time else 0n
     return entry.dispatchTimeNs
       ? this.timestampConverter.makeTimestampFromBootTimeNs(
           BigInt(entry.dispatchTimeNs.toString()),
         )
-      : this.timestampConverter.makeTimestampFromBootTimeNs(INVALID_TIME_NS);
+      : this.timestampConverter.makeZeroTimestamp();
   }
 
   protected getMagicNumber(): number[] | undefined {
@@ -89,7 +88,7 @@ export class ParserTransitionsShell extends AbstractParser<PropertyTreeNode> {
     entry: com.android.wm.shell.ITransition,
   ) {
     if (entry.id === 0) {
-      throw new Error('Proto needs a non-null id');
+      throw new Error('Shell Transitions entry needs non-null id');
     }
     if (
       !entry.dispatchTimeNs &&
@@ -97,13 +96,15 @@ export class ParserTransitionsShell extends AbstractParser<PropertyTreeNode> {
       !entry.mergeTimeNs &&
       !entry.abortTimeNs
     ) {
-      throw new Error('Requires at least one non-null timestamp');
+      throw new Error(
+        'Shell Transitions entry requires at least one non-null timestamp',
+      );
     }
     if (this.realToBootTimeOffsetNs === undefined) {
-      throw new Error('missing realToBootTimeOffsetNs');
+      throw new Error('Shell Transitions trace missing realToBootTimeOffsetNs');
     }
     if (this.handlerMapping === undefined) {
-      throw new Error('Missing handler mapping');
+      throw new Error('Shell Transitions trace missing handler mapping');
     }
   }
 
