@@ -460,9 +460,9 @@ export class ViewerSearchComponent {
       spec: [
         {
           name: 'state_id',
-          desc: 'Unique id of entry to which the layer belongs',
+          desc: 'Unique id of entry to which layer belongs',
         },
-        {name: 'ts', desc: 'Timestamp of entry to which the layer belongs'},
+        {name: 'ts', desc: 'Timestamp of entry to which layer belongs'},
         {name: 'layer_id', desc: 'Layer id'},
         {name: 'parent_id', desc: 'Layer id of parent'},
         {name: 'layer_name', desc: 'Layer name'},
@@ -503,9 +503,9 @@ export class ViewerSearchComponent {
       spec: [
         {
           name: 'state_id',
-          desc: 'Unique id of entry to which the layer belongs',
+          desc: 'Unique id of entry',
         },
-        {name: 'ts', desc: 'Timestamp of entry to which the layer belongs'},
+        {name: 'ts', desc: 'Timestamp of entry'},
         {
           name: 'property',
           desc: 'Property name accounting for repeated fields',
@@ -536,6 +536,48 @@ INNER JOIN sf_hierarchy_root_search STATE
     '%'
   )`,
           desc: 'returns all properties for displays with valid layer stack from all states',
+        },
+      ],
+    },
+    {
+      name: 'transactions_search',
+      dataType:
+        'the Transactions trace, including transactions, added/destroyed layers and added/removed/changed displays',
+      spec: [
+        {
+          name: 'state_id',
+          desc: 'Unique id of entry to which proto property belongs',
+        },
+        {
+          name: 'ts',
+          desc: 'Timestamp of entry to which proto property belongs',
+        },
+        {
+          name: 'transaction_id',
+          desc: 'Transaction id if available',
+        },
+        {
+          name: 'property',
+          desc: 'Property name accounting for repeated fields',
+        },
+        {
+          name: 'flat_property',
+          desc: 'Property name not accounting for repeated fields',
+        },
+        {name: 'value', desc: 'Property value in string format'},
+      ],
+      examples: [
+        {
+          query: `SELECT ts, transaction_id FROM transactions_search
+  WHERE flat_property='transactions.layer_changes.x'
+  AND value='-54.0'`,
+          desc: 'returns timestamp and transaction id when layer x position was changed to -54.0',
+        },
+        {
+          query: `SELECT ts FROM transactions_search
+  WHERE flat_property='added_layers.name'
+  AND value='ImeContainer'`,
+          desc: 'returns timestamp when ImeContainer layer was added',
         },
       ],
     },
