@@ -44,6 +44,9 @@ from logging import DEBUG, INFO
 from tempfile import NamedTemporaryFile
 from typing import Callable
 
+version = sys.version_info
+assert version.major == 3 and version.minor >= 10, "This script requires Python 3.10+ and ADB installed and in system PATH."
+
 # GLOBALS #
 
 log = None
