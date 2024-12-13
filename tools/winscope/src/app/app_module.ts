@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import {CdkAccordionModule} from '@angular/cdk/accordion';
 import {ClipboardModule} from '@angular/cdk/clipboard';
 import {DragDropModule} from '@angular/cdk/drag-drop';
 import {CdkMenuModule} from '@angular/cdk/menu';
@@ -193,6 +194,7 @@ import {GlobalErrorHandler} from './global_error_handler';
     MatDialogModule,
     MatTableModule,
     OverlayModule,
+    CdkAccordionModule,
   ],
   providers: [Title, {provide: ErrorHandler, useClass: GlobalErrorHandler}],
   schemas: [CUSTOM_ELEMENTS_SCHEMA],

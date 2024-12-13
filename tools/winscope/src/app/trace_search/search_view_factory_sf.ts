@@ -116,7 +116,7 @@ export class SearchViewFactorySf extends AbstractSearchViewFactory {
           `;
     await this.traceProcessor.query(sqlCreateViewSfEntry);
 
-    const entrySearchView = 'sf_entry_search';
+    const entrySearchView = 'sf_hierarchy_root_search';
     const sqlCreateViewSfEntrySearch = `
             CREATE PERFETTO VIEW ${entrySearchView} AS
               SELECT
