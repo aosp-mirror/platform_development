@@ -15,7 +15,9 @@
  */
 
 import {Color} from 'app/colors';
-import {Point} from 'common/geometry_types';
+import {Segment} from 'app/components/timeline/segment';
+import {TimelineUtils} from 'app/components/timeline/timeline_utils';
+import {Point} from 'common/geometry/point';
 import {MouseEventButton} from 'common/mouse_event_button';
 import {Padding} from 'common/padding';
 import {Timestamp} from 'common/time';
@@ -43,6 +45,7 @@ export class MiniTimelineDrawerImpl implements MiniTimelineDrawer {
   private activePointer: DraggableCanvasObject;
   private lastMousePoint: Point | undefined;
   private static readonly MARKER_CLICK_REGION_WIDTH = 2;
+  private static readonly TRACE_ENTRY_ALPHA = 0.7;
 
   constructor(
     public canvas: HTMLCanvasElement,
@@ -57,7 +60,7 @@ export class MiniTimelineDrawerImpl implements MiniTimelineDrawer {
     const ctx = canvas.getContext('2d');
 
     if (ctx === null) {
-      throw Error('MiniTimeline canvas context was null!');
+      throw new Error('MiniTimeline canvas context was null!');
     }
 
     this.ctx = ctx;
@@ -267,7 +270,7 @@ export class MiniTimelineDrawerImpl implements MiniTimelineDrawer {
     fromTop: number,
     lineHeight: number,
   ) {
-    this.ctx.globalAlpha = 0.7;
+    this.ctx.globalAlpha = MiniTimelineDrawerImpl.TRACE_ENTRY_ALPHA;
     this.ctx.fillStyle = TRACE_INFO[trace.type].color;
     this.ctx.strokeStyle = 'blue';
 
@@ -277,8 +280,12 @@ export class MiniTimelineDrawerImpl implements MiniTimelineDrawer {
     }
 
     for (const entry of timelineTrace.segments) {
-      const width = Math.max(entry.to - entry.from, 3);
-      this.ctx.fillRect(entry.from, fromTop, width, lineHeight);
+      this.drawTransitionEntry(
+        entry,
+        fromTop,
+        TRACE_INFO[trace.type].color,
+        lineHeight,
+      );
     }
 
     this.ctx.fillStyle = Color.ACTIVE_POINTER;
@@ -289,12 +296,87 @@ export class MiniTimelineDrawerImpl implements MiniTimelineDrawer {
     }
 
     if (timelineTrace.activeSegment) {
-      const entry = timelineTrace.activeSegment;
-      const width = Math.max(entry.to - entry.from, 3);
-      this.ctx.fillRect(entry.from, fromTop, width, lineHeight);
+      this.drawTransitionEntry(
+        timelineTrace.activeSegment,
+        fromTop,
+        Color.ACTIVE_POINTER,
+        lineHeight,
+      );
     }
 
     this.ctx.globalAlpha = 1.0;
+  }
+
+  private drawTransitionEntry(
+    entry: Segment,
+    fromTop: number,
+    hexColor: string,
+    lineHeight: number,
+  ) {
+    const width = Math.max(entry.to - entry.from, 3);
+
+    if (!(entry.unknownStart || entry.unknownEnd)) {
+      this.ctx.globalAlpha = MiniTimelineDrawerImpl.TRACE_ENTRY_ALPHA;
+      this.ctx.fillStyle = hexColor;
+      this.ctx.fillRect(entry.from, fromTop, width, lineHeight);
+      return;
+    }
+
+    const rgbColor = TimelineUtils.convertHexToRgb(hexColor);
+    if (rgbColor === undefined) {
+      throw new Error('Failed to parse provided hex color');
+    }
+    const {r, g, b} = rgbColor;
+    const rgbaColor = `rgba(${r},${g},${b},${MiniTimelineDrawerImpl.TRACE_ENTRY_ALPHA})`;
+    const transparentColor = `rgba(${r},${g},${b},${0})`;
+
+    const gradientWidthOutsideEntry = 12;
+    const gradientWidthInsideEntry = Math.min(6, width);
+
+    const startGradientx0 = entry.from - gradientWidthOutsideEntry;
+    const endGradientx1 = entry.to + gradientWidthOutsideEntry;
+
+    const start = entry.unknownStart ? startGradientx0 : entry.from;
+    const end = entry.unknownEnd ? endGradientx1 : entry.to;
+
+    const gradient = this.ctx.createLinearGradient(start, 0, end, 0);
+    const gradientRatio = Math.max(
+      0,
+      Math.min(
+        (gradientWidthOutsideEntry + gradientWidthInsideEntry) / (end - start),
+        1,
+      ),
+    );
+    gradient.addColorStop(0, entry.unknownStart ? transparentColor : rgbaColor);
+    gradient.addColorStop(1, entry.unknownEnd ? transparentColor : rgbaColor);
+    gradient.addColorStop(gradientRatio, rgbaColor);
+    gradient.addColorStop(1 - gradientRatio, rgbaColor);
+    this.ctx.fillStyle = gradient;
+
+    this.ctx.globalAlpha = 1;
+    this.ctx.fillRect(start, fromTop, end - start, lineHeight);
+
+    if (entry.unknownStart) {
+      this.drawEllipsis(entry.from - 8.5, fromTop, lineHeight);
+    }
+    if (entry.unknownEnd) {
+      this.drawEllipsis(entry.from + width + 1.5, fromTop, lineHeight);
+    }
+  }
+
+  private getEllipsisColor() {
+    return this.inputGetter().isDarkMode ? 'white' : 'black';
+  }
+
+  private drawEllipsis(start: number, fromTop: number, lineHeight: number) {
+    this.ctx.fillStyle = this.getEllipsisColor();
+    let center = start;
+    for (let i = 0; i < 3; i++) {
+      this.ctx.beginPath();
+      this.ctx.arc(center, fromTop + lineHeight / 2, 1, 0, 2 * Math.PI);
+      this.ctx.fill();
+      center += 3.5;
+    }
   }
 
   private drawHoverCursor() {
@@ -342,13 +424,17 @@ export class MiniTimelineDrawerImpl implements MiniTimelineDrawer {
 
   private fillActiveTimelineBackground(fromTop: number, lineHeight: number) {
     this.ctx.globalAlpha = 1.0;
-    this.ctx.fillStyle = this.inputGetter().isDarkMode ? '#696563' : '#eeeff0'; // Keep in sync with var(--drawer-block-primary) in material-theme.scss;
+    this.ctx.fillStyle = getComputedStyle(this.canvas).getPropertyValue(
+      '--selected-element-color',
+    );
     this.ctx.fillRect(0, fromTop, this.getUsableRange().to, lineHeight);
   }
 
   private fillHoverTimelineBackground(fromTop: number, lineHeight: number) {
     this.ctx.globalAlpha = 1.0;
-    this.ctx.fillStyle = this.inputGetter().isDarkMode ? '#4e5767' : '#E8F0FE'; // Keep in sync with var(--hover-element-color) in material-theme.scss;
+    this.ctx.fillStyle = getComputedStyle(this.canvas).getPropertyValue(
+      '--hover-element-color',
+    );
     this.ctx.fillRect(0, fromTop, this.getUsableRange().to, lineHeight);
   }
 

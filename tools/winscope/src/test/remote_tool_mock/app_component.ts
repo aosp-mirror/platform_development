@@ -253,7 +253,7 @@ export class AppComponent {
     const timestampType = assertDefined(message.timestampType);
     switch (timestampType) {
       case TimestampType.UNKNOWN:
-        throw Error("Winscope shouldn't send timestamps with UNKNOWN type");
+        throw new Error("Winscope shouldn't send timestamps with UNKNOWN type");
       case TimestampType.CLOCK_BOOTTIME: {
         paragraph = document.querySelector(
           '.paragraph-received-boottime-timestamp',

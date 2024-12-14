@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-import {CujType} from 'parsers/events/cuj_type';
 import {EventTag} from 'parsers/events/event_tag';
 import {PropertyTreeBuilder} from 'test/unit/property_tree_builder';
 import {AddCujProperties} from './add_cuj_properties';
@@ -58,7 +57,7 @@ describe('AddCujProperties', () => {
           name: 'eventData',
           value: '[66,1681207048025580000,2661012903966,2661012904007,]',
         },
-        {name: 'cujType', value: CujType.CUJ_LAUNCHER_APP_SWIPE_TO_RECENTS},
+        {name: 'cujType', value: 66},
         {
           name: 'cujTimestamp',
           children: [

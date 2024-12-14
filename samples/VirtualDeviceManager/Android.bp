@@ -66,6 +66,7 @@ android_app {
     static_libs: [
         "androidx.annotation_annotation",
         "androidx.appcompat_appcompat",
+        "com.google.android.material_material",
     ],
 }
 
@@ -87,25 +88,6 @@ android_library {
     static_libs: [
         "androidx.appcompat_appcompat",
         "guava",
-        "hilt_android",
-    ],
-}
-
-android_app {
-    name: "VirtualCameraDemo",
-    manifest: "virtualcamera/AndroidManifest.xml",
-    privileged: true,
-    privapp_allowlist: "virtualcamera/com.example.android.vdmdemo.virtualcamera.xml",
-    platform_apis: true,
-    srcs: [
-        "virtualcamera/src/**/*.java",
-    ],
-    resource_dirs: [
-        "virtualcamera/res",
-    ],
-    static_libs: [
-        "androidx.annotation_annotation",
-        "androidx.appcompat_appcompat",
         "hilt_android",
     ],
 }

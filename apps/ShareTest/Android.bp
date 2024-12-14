@@ -23,7 +23,7 @@ android_app {
         "**/*.kt",
     ],
     asset_dirs: ["assets"],
-    sdk_version: "current",
+    sdk_version: "35",
     static_libs: [
         "androidx.core_core-ktx",
         "androidx.compose.runtime_runtime",

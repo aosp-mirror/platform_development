@@ -18,17 +18,12 @@ import {browser, ElementFinder} from 'protractor';
 import {E2eTestUtils} from './utils';
 
 describe('Viewer Protolog', () => {
-  const scrollSelectors = {
-    viewer: 'viewer-protolog',
-    scroll: '.scroll-messages',
-    entry: '.message',
-  };
+  const viewerSelector = 'viewer-protolog';
   const totalEntries = 7295;
   const scrollToTotalBottomOffset = 700000;
 
   beforeEach(async () => {
-    browser.manage().timeouts().implicitlyWait(1000);
-    await E2eTestUtils.checkServerIsUp('Winscope', E2eTestUtils.WINSCOPE_URL);
+    await E2eTestUtils.beforeEach(1000);
     await browser.get(E2eTestUtils.WINSCOPE_URL);
   });
 
@@ -36,17 +31,17 @@ describe('Viewer Protolog', () => {
     await E2eTestUtils.loadTraceAndCheckViewer(
       'traces/deployment_full_trace_phone.zip',
       'ProtoLog',
-      scrollSelectors.viewer,
+      viewerSelector,
     );
     await E2eTestUtils.checkTotalScrollEntries(
-      scrollSelectors,
+      viewerSelector,
       scrollViewport,
       totalEntries,
       scrollToTotalBottomOffset,
     );
     await E2eTestUtils.checkTimelineTraceSelector({
       icon: 'notes',
-      color: 'rgba(64, 165, 138, 1)',
+      color: 'rgba(52, 168, 83, 1)',
     });
     await E2eTestUtils.checkFinalRealTimestamp('2022-11-21, 18:05:18.259');
     await E2eTestUtils.checkInitialRealTimestamp('2022-11-21, 18:05:09.777');
@@ -66,14 +61,14 @@ describe('Viewer Protolog', () => {
     );
 
     await E2eTestUtils.checkTotalScrollEntries(
-      scrollSelectors,
+      viewerSelector,
       scrollViewport,
       totalEntries,
       scrollToTotalBottomOffset,
     );
     await filterByText('FREEZE');
     await E2eTestUtils.checkTotalScrollEntries(
-      scrollSelectors,
+      viewerSelector,
       scrollViewport,
       4,
     );
@@ -85,23 +80,23 @@ describe('Viewer Protolog', () => {
     expectedFilteredEntries: number,
   ) {
     await E2eTestUtils.toggleSelectFilterOptions(
-      scrollSelectors.viewer,
+      viewerSelector,
       filterSelector,
       options,
     );
     await E2eTestUtils.checkTotalScrollEntries(
-      scrollSelectors,
+      viewerSelector,
       scrollViewport,
       expectedFilteredEntries,
     );
 
     await E2eTestUtils.toggleSelectFilterOptions(
-      scrollSelectors.viewer,
+      viewerSelector,
       filterSelector,
       options,
     );
     await E2eTestUtils.checkTotalScrollEntries(
-      scrollSelectors,
+      viewerSelector,
       scrollViewport,
       totalEntries,
       scrollToTotalBottomOffset,
@@ -110,8 +105,8 @@ describe('Viewer Protolog', () => {
 
   async function filterByText(filterString: string) {
     await E2eTestUtils.updateInputField(
-      `${scrollSelectors.viewer} .filters .text`,
-      'protologTextInput',
+      `${viewerSelector} .filters .text`,
+      'Search text',
       filterString,
     );
   }

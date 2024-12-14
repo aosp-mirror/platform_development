@@ -15,6 +15,7 @@
  */
 
 import {TimestampConverterUtils} from 'test/unit/timestamp_converter_utils';
+import {UserNotifierChecker} from 'test/unit/user_notifier_checker';
 import {UnitTestUtils} from 'test/unit/utils';
 import {CoarseVersion} from 'trace/coarse_version';
 import {Parser} from 'trace/parser';
@@ -22,8 +23,11 @@ import {TraceType} from 'trace/trace_type';
 import {HierarchyTreeNode} from 'trace/tree_node/hierarchy_tree_node';
 
 describe('ParserSurfaceFlingerDump', () => {
+  let userNotifierChecker: UserNotifierChecker;
+
   beforeAll(() => {
     jasmine.addCustomEqualityTester(UnitTestUtils.timestampEqualityTester);
+    userNotifierChecker = new UserNotifierChecker();
   });
 
   describe('trace with real timestamps', () => {
@@ -33,6 +37,11 @@ describe('ParserSurfaceFlingerDump', () => {
       parser = (await UnitTestUtils.getParser(
         'traces/elapsed_and_real_timestamp/dump_SurfaceFlinger.pb',
       )) as Parser<HierarchyTreeNode>;
+    });
+
+    afterEach(() => {
+      userNotifierChecker.expectNone();
+      userNotifierChecker.reset();
     });
 
     it('has expected trace type', () => {

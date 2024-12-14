@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import {Store} from 'common/store';
 import {Trace} from 'trace/trace';
 import {Traces} from 'trace/traces';
 import {TRACE_INFO} from 'trace/trace_info';
@@ -30,11 +31,7 @@ class ViewerInputMethodService extends AbstractViewerInputMethod {
 
   override readonly view: View;
 
-  constructor(
-    trace: Trace<HierarchyTreeNode>,
-    traces: Traces,
-    storage: Storage,
-  ) {
+  constructor(trace: Trace<HierarchyTreeNode>, traces: Traces, storage: Store) {
     super(trace, traces, storage);
     this.view = new View(
       ViewType.TAB,
@@ -47,7 +44,7 @@ class ViewerInputMethodService extends AbstractViewerInputMethod {
   override initializePresenter(
     trace: Trace<HierarchyTreeNode>,
     traces: Traces,
-    storage: Storage,
+    storage: Store,
   ) {
     return new PresenterInputMethodService(
       trace,
