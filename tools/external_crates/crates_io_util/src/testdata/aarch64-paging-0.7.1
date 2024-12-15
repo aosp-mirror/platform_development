@@ -1,0 +1,37 @@
+{
+  "name": "aarch64-paging",
+  "vers": "0.7.1",
+  "deps": [
+    {
+      "name": "bitflags",
+      "req": "^2.6.0",
+      "features": [],
+      "kind": "normal",
+      "optional": false,
+      "default_features": true
+    },
+    {
+      "name": "zerocopy",
+      "req": "^0.7.35",
+      "features": [
+        "derive"
+      ],
+      "kind": "normal",
+      "optional": true,
+      "default_features": true
+    }
+  ],
+  "features": {
+    "zerocopy": [
+      "dep:zerocopy"
+    ],
+    "default": [
+      "alloc",
+      "zerocopy"
+    ],
+    "alloc": []
+  },
+  "rust_version": null,
+  "cksum": "5deefed0b0915e5675751811e91169384dbc577107374c532d0be38f083d480c",
+  "yanked": false
+}
