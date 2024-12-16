@@ -97,14 +97,19 @@ describe('SearchListComponent', () => {
   });
 
   it('formats search dates', () => {
-    spyOn(Date, 'now').and.returnValue(0);
+    spyOn(Date, 'now').and.returnValue(1000);
     component.searches = [new Search('query1', 'name1')];
     fixture.detectChanges();
+    const expectedDate = new Date(1000);
     expect(
       htmlElement
         .querySelector('.listed-search-date-options')
         ?.textContent?.trim(),
-    ).toEqual('01:00\n1/1/1970');
+    ).toEqual(
+      `${expectedDate
+        .toTimeString()
+        .slice(0, 5)}\n${expectedDate.toLocaleDateString()}`,
+    );
   });
 
   it('shows options and triggers callback on interaction', () => {
