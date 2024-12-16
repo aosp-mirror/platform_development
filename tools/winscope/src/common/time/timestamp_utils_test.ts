@@ -14,8 +14,10 @@
  * limitations under the License.
  */
 
-import {TimestampConverterUtils} from 'test/unit/timestamp_converter_utils';
-import {UnitTestUtils} from 'test/unit/utils';
+import {
+  TimestampConverterUtils,
+  timestampEqualityTester,
+} from 'common/time/test_utils';
 import {TimestampUtils} from './timestamp_utils';
 
 describe('TimestampUtils', () => {
@@ -25,7 +27,7 @@ describe('TimestampUtils', () => {
   const HOUR = BigInt(60) * MINUTE;
 
   beforeAll(() => {
-    jasmine.addCustomEqualityTester(UnitTestUtils.timestampEqualityTester);
+    jasmine.addCustomEqualityTester(timestampEqualityTester);
   });
 
   describe('compareFn', () => {

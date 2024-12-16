@@ -14,7 +14,10 @@
  * limitations under the License.
  */
 import {assertDefined} from 'common/assert_utils';
-import {TimestampConverterUtils} from 'test/unit/timestamp_converter_utils';
+import {
+  TimestampConverterUtils,
+  timestampEqualityTester,
+} from 'common/time/test_utils';
 import {UnitTestUtils} from 'test/unit/utils';
 import {Parser} from 'trace/parser';
 import {TraceFile} from 'trace/trace_file';
@@ -23,7 +26,7 @@ import {ParserFactory} from './parser_factory';
 
 describe('Parser', () => {
   beforeAll(() => {
-    jasmine.addCustomEqualityTester(UnitTestUtils.timestampEqualityTester);
+    jasmine.addCustomEqualityTester(timestampEqualityTester);
   });
 
   it('is robust to empty trace file', async () => {

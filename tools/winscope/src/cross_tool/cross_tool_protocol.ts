@@ -16,8 +16,8 @@
 
 import {assertDefined, assertUnreachable} from 'common/assert_utils';
 import {FunctionUtils} from 'common/function_utils';
-import {Timestamp} from 'common/time';
-import {RemoteToolTimestampConverter} from 'common/timestamp_converter';
+import {Timestamp} from 'common/time/time';
+import {RemoteToolTimestampConverter} from 'common/time/timestamp_converter';
 import {
   RemoteToolFilesReceived,
   RemoteToolTimestampReceived,

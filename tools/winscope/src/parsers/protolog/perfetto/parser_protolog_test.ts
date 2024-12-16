@@ -14,7 +14,10 @@
  * limitations under the License.
  */
 import {assertDefined} from 'common/assert_utils';
-import {TimestampConverterUtils} from 'test/unit/timestamp_converter_utils';
+import {
+  TimestampConverterUtils,
+  timestampEqualityTester,
+} from 'common/time/test_utils';
 import {UnitTestUtils} from 'test/unit/utils';
 import {Parser} from 'trace/parser';
 import {TraceType} from 'trace/trace_type';
@@ -24,7 +27,7 @@ describe('Perfetto ParserProtolog', () => {
   let parser: Parser<PropertyTreeNode>;
 
   beforeAll(async () => {
-    jasmine.addCustomEqualityTester(UnitTestUtils.timestampEqualityTester);
+    jasmine.addCustomEqualityTester(timestampEqualityTester);
     parser = await UnitTestUtils.getPerfettoParser(
       TraceType.PROTO_LOG,
       'traces/perfetto/protolog.perfetto-trace',

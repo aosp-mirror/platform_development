@@ -16,8 +16,8 @@
 
 import {assertDefined} from 'common/assert_utils';
 import {Store} from 'common/store';
-import {Timestamp} from 'common/time';
-import {TimeUtils} from 'common/time_utils';
+import {Timestamp} from 'common/time/time';
+import {TimeUtils} from 'common/time/time_utils';
 import {UserNotifier} from 'common/user_notifier';
 import {CrossToolProtocol} from 'cross_tool/cross_tool_protocol';
 import {Analytics} from 'logging/analytics';

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import {TimestampConverterUtils} from 'test/unit/timestamp_converter_utils';
+import {TimestampConverterUtils} from 'common/time/test_utils';
 import {TimeRange} from './time';
 import {TIME_UNIT_TO_NANO} from './time_units';
 

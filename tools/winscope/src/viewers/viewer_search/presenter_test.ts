@@ -15,6 +15,7 @@
  */
 
 import {InMemoryStorage} from 'common/in_memory_storage';
+import {TimestampConverterUtils} from 'common/time/test_utils';
 import {
   InitializeTraceSearchRequest,
   TraceAddRequest,
@@ -24,7 +25,6 @@ import {
   TraceSearchInitialized,
   TraceSearchRequest,
 } from 'messaging/winscope_event';
-import {TimestampConverterUtils} from 'test/unit/timestamp_converter_utils';
 import {TraceBuilder} from 'test/unit/trace_builder';
 import {UserNotifierChecker} from 'test/unit/user_notifier_checker';
 import {UnitTestUtils} from 'test/unit/utils';

@@ -16,7 +16,7 @@
 
 import {Transformer} from 'app/components/timeline/mini-timeline/transformer';
 import {Segment} from 'app/components/timeline/segment';
-import {TimeRange} from 'common/time';
+import {TimeRange} from 'common/time/time';
 import {Trace} from 'trace/trace';
 import {MiniTimelineDrawerOutput} from './mini_timeline_drawer_output';
 

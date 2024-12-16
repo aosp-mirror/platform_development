@@ -16,13 +16,13 @@
 
 import {assertDefined} from 'common/assert_utils';
 import {FileUtils} from 'common/file_utils';
-import {TimeRange} from 'common/time';
+import {TimestampConverterUtils} from 'common/time/test_utils';
+import {TimeRange} from 'common/time/time';
 import {UserWarning} from 'messaging/user_warning';
 import {TraceHasOldData, TraceOverridden} from 'messaging/user_warnings';
 import {FileAndParser} from 'parsers/file_and_parser';
 import {FileAndParsers} from 'parsers/file_and_parsers';
 import {ParserBuilder} from 'test/unit/parser_builder';
-import {TimestampConverterUtils} from 'test/unit/timestamp_converter_utils';
 import {UserNotifierChecker} from 'test/unit/user_notifier_checker';
 import {Parser} from 'trace/parser';
 import {TraceFile} from 'trace/trace_file';

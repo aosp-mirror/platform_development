@@ -17,6 +17,10 @@
 import {assertDefined} from 'common/assert_utils';
 import {FileUtils} from 'common/file_utils';
 import {FunctionUtils} from 'common/function_utils';
+import {
+  TimestampConverterUtils,
+  timestampEqualityTester,
+} from 'common/time/test_utils';
 import {ProgressListenerStub} from 'messaging/progress_listener_stub';
 import {UserWarning} from 'messaging/user_warning';
 import {
@@ -27,7 +31,6 @@ import {
   TraceOverridden,
   UnsupportedFileFormat,
 } from 'messaging/user_warnings';
-import {TimestampConverterUtils} from 'test/unit/timestamp_converter_utils';
 import {TracesUtils} from 'test/unit/traces_utils';
 import {UserNotifierChecker} from 'test/unit/user_notifier_checker';
 import {UnitTestUtils} from 'test/unit/utils';
@@ -89,7 +92,7 @@ describe('TracePipeline', () => {
   });
 
   beforeEach(async () => {
-    jasmine.addCustomEqualityTester(UnitTestUtils.timestampEqualityTester);
+    jasmine.addCustomEqualityTester(timestampEqualityTester);
 
     progressListener = new ProgressListenerStub();
     spyOn(progressListener, 'onProgressUpdate');

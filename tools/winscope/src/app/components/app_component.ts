@@ -37,7 +37,7 @@ import {globalConfig} from 'common/global_config';
 import {InMemoryStorage} from 'common/in_memory_storage';
 import {PersistentStore} from 'common/persistent_store';
 import {Store} from 'common/store';
-import {Timestamp} from 'common/time';
+import {Timestamp} from 'common/time/time';
 import {UrlUtils} from 'common/url_utils';
 import {UserNotifier} from 'common/user_notifier';
 import {CrossToolProtocol} from 'cross_tool/cross_tool_protocol';

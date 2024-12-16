@@ -15,9 +15,9 @@
  */
 
 import {assertDefined} from 'common/assert_utils';
+import {TimestampConverterUtils} from 'common/time/test_utils';
 import {MockLong} from 'test/unit/mock_long';
 import {PropertyTreeBuilder} from 'test/unit/property_tree_builder';
-import {TimestampConverterUtils} from 'test/unit/timestamp_converter_utils';
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
 import {TransformToTimestamp} from './transform_to_timestamp';
 

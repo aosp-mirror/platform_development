@@ -15,7 +15,7 @@
  */
 
 import {assertTrue} from 'common/assert_utils';
-import {Timestamp} from 'common/time';
+import {Timestamp} from 'common/time/time';
 import {Trace, TraceEntry} from 'trace/trace';
 import {TracePosition} from 'trace/trace_position';
 import {TraceType} from 'trace/trace_type';

@@ -15,7 +15,7 @@
  */
 
 import {assertDefined} from 'common/assert_utils';
-import {Timestamp} from 'common/time';
+import {Timestamp} from 'common/time/time';
 import {AbstractParser} from 'parsers/legacy/abstract_parser';
 import {LogMessage} from 'parsers/protolog/log_message';
 import {ParserProtologUtils} from 'parsers/protolog/parser_protolog_utils';
