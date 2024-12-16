@@ -20,6 +20,9 @@ import {AdbDevice} from './adb_device';
 import {ConnectionState} from './connection_state';
 import {TraceRequest} from './trace_request';
 
+/**
+ * Abstract class for ADB connection.
+ */
 export abstract class AdbConnection {
   abstract initialize(
     detectStateChangeInUi: () => Promise<void>,
@@ -95,6 +98,9 @@ interface AdbResponse {
   errorMsg: string | undefined;
 }
 
+/**
+ * Type for the callback function that is called when a request is successful.
+ */
 export type OnRequestSuccessCallback = (
   resp: HttpResponse,
 ) => void | Promise<void>;
