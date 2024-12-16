@@ -20,7 +20,7 @@ import {
   timestampEqualityTester,
 } from 'common/time/test_utils';
 import {TimestampConverter} from 'common/time/timestamp_converter';
-import {UnitTestUtils} from 'test/unit/utils';
+import {getFixtureFile} from 'test/unit/fixture_utils';
 import {CoarseVersion} from 'trace/coarse_version';
 import {MediaBasedTraceEntry} from 'trace/media_based_trace_entry';
 import {TraceFile} from 'trace/trace_file';
@@ -33,7 +33,7 @@ describe('ParserScreenshot', () => {
 
   beforeAll(async () => {
     jasmine.addCustomEqualityTester(timestampEqualityTester);
-    file = await UnitTestUtils.getFixtureFile('traces/screenshot.png');
+    file = await getFixtureFile('traces/screenshot.png');
     parser = new ParserScreenshot(
       new TraceFile(file),
       new TimestampConverter(TimestampConverterUtils.UTC_TIMEZONE_INFO, 0n),

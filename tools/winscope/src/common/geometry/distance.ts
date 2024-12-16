@@ -14,6 +14,9 @@
  * limitations under the License.
  */
 
+/**
+ * A class representing a distance between two points.
+ */
 export class Distance {
   constructor(public dx: number, public dy: number) {}
 }

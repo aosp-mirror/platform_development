@@ -28,7 +28,7 @@ describe('ArrayUtils', () => {
     expect(ArrayUtils.equal([], new Uint8Array(1))).toBeFalse();
     expect(ArrayUtils.equal([1], new Uint8Array(1))).toBeFalse();
 
-    expect(ArrayUtils.equal([], new Uint8Array())).toBeTrue();
+    expect(ArrayUtils.equal([], new Uint8Array(0))).toBeTrue();
     expect(ArrayUtils.equal([1, 2, 3], new Uint8Array([1, 2, 3]))).toBeTrue();
 
     expect(
@@ -55,7 +55,7 @@ describe('ArrayUtils', () => {
     expect(ArrayUtils.equal([], new Uint8Array(1), predicate)).toBeFalse();
     expect(ArrayUtils.equal([1], new Uint8Array(1), predicate)).toBeTrue();
 
-    expect(ArrayUtils.equal([], new Uint8Array(), predicate)).toBeTrue();
+    expect(ArrayUtils.equal([], new Uint8Array(0), predicate)).toBeTrue();
     expect(
       ArrayUtils.equal([1, 2, 3], new Uint8Array([1, 2, 3]), predicate),
     ).toBeFalse();

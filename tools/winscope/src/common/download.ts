@@ -14,7 +14,16 @@
  * limitations under the License.
  */
 
+/**
+ * Utility class for downloading files.
+ */
 export class Download {
+  /**
+   * Downloads a file from the given URL with the given filename.
+   *
+   * @param url The URL of the file to download.
+   * @param filename The desired filename of the downloaded file.
+   */
   static fromUrl(url: string, filename: string) {
     const a = document.createElement('a');
     document.body.appendChild(a);

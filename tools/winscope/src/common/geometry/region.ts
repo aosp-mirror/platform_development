@@ -16,6 +16,9 @@
 
 import {Rect} from './rect';
 
+/**
+ * A region is a collection of rectangles.
+ */
 export class Region {
   constructor(readonly rects: Rect[]) {}
 

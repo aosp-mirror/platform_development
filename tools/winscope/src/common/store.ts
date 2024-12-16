@@ -14,8 +14,27 @@
  * limitations under the License.
  */
 
+/**
+ * A simple key-value store interface.
+ */
 export interface Store {
+  /**
+   * Adds a key-value pair to the store.
+   * @param key The key of the key-value pair.
+   * @param value The value of the key-value pair.
+   */
   add(key: string, value: string): void;
+
+  /**
+   * Retrieves the value associated with a key.
+   * @param key The key to retrieve the value for.
+   * @return The value associated with the key, or undefined if the key is not found.
+   */
   get(key: string): string | undefined;
+
+  /**
+   * Clears all key-value pairs from the store that match a given substring.
+   * @param keySubstring The substring to match keys against. Only keys that contain this substring will be cleared.
+   */
   clear(keySubstring: string): void;
 }

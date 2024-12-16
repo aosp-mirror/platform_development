@@ -16,6 +16,9 @@
 
 import {Store} from './store';
 
+/**
+ * A persistent store implementation that uses localStorage to store data.
+ */
 export class PersistentStore implements Store {
   add(key: string, value: string) {
     localStorage.setItem(key, value);

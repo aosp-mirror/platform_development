@@ -14,7 +14,15 @@
  * limitations under the License.
  */
 
+/**
+ * Utility class for URL-related functions.
+ */
 export class UrlUtils {
+  /**
+   * Returns the root URL of the current page.
+   *
+   * @return The root URL.
+   */
   static getRootUrl(): string {
     const fullUrl = window.location.href;
     const posLastSlash = fullUrl.lastIndexOf('/');

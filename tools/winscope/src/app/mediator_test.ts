@@ -63,13 +63,14 @@ import {
   WinscopeEvent,
   WinscopeEventType,
 } from 'messaging/winscope_event';
+import {getFixtureFile} from 'test/unit/fixture_utils';
+
 import {WinscopeEventEmitter} from 'messaging/winscope_event_emitter';
 import {WinscopeEventEmitterStub} from 'messaging/winscope_event_emitter_stub';
 import {WinscopeEventListener} from 'messaging/winscope_event_listener';
 import {WinscopeEventListenerStub} from 'messaging/winscope_event_listener_stub';
 import {TraceBuilder} from 'test/unit/trace_builder';
 import {UserNotifierChecker} from 'test/unit/user_notifier_checker';
-import {UnitTestUtils} from 'test/unit/utils';
 import {Trace} from 'trace/trace';
 import {TracePosition} from 'trace/trace_position';
 import {TraceType} from 'trace/trace_type';
@@ -135,22 +136,20 @@ describe('Mediator', () => {
 
   beforeAll(async () => {
     inputFiles = [
-      await UnitTestUtils.getFixtureFile(
+      await getFixtureFile(
         'traces/elapsed_and_real_timestamp/SurfaceFlinger.pb',
       ),
-      await UnitTestUtils.getFixtureFile(
+      await getFixtureFile(
         'traces/elapsed_and_real_timestamp/WindowManager.pb',
       ),
-      await UnitTestUtils.getFixtureFile(
+      await getFixtureFile(
         'traces/elapsed_and_real_timestamp/screen_recording_metadata_v2.mp4',
       ),
     ];
-    perfettoFile = await UnitTestUtils.getFixtureFile(
+    perfettoFile = await getFixtureFile(
       'traces/perfetto/layers_trace.perfetto-trace',
     );
-    eventLogFile = await UnitTestUtils.getFixtureFile(
-      'traces/eventlog_no_cujs.winscope',
-    );
+    eventLogFile = await getFixtureFile('traces/eventlog_no_cujs.winscope');
     userNotifierChecker = new UserNotifierChecker();
   });
 
@@ -265,7 +264,7 @@ describe('Mediator', () => {
     await mediator.onWinscopeEvent(
       new AppFilesCollected({
         requested: [],
-        collected: [await UnitTestUtils.getFixtureFile('traces/empty.pb')],
+        collected: [await getFixtureFile('traces/empty.pb')],
       }),
     );
     expect(
@@ -281,9 +280,7 @@ describe('Mediator', () => {
       new AppFilesCollected({
         requested: [],
         collected: [
-          await UnitTestUtils.getFixtureFile(
-            'traces/no_entries_InputMethodClients.pb',
-          ),
+          await getFixtureFile('traces/no_entries_InputMethodClients.pb'),
         ],
       }),
     );
@@ -366,10 +363,10 @@ describe('Mediator', () => {
 
   it('handles request to refresh dumps', async () => {
     const dumpFiles = [
-      await UnitTestUtils.getFixtureFile(
+      await getFixtureFile(
         'traces/elapsed_and_real_timestamp/dump_SurfaceFlinger.pb',
       ),
-      await UnitTestUtils.getFixtureFile('traces/dump_WindowManager.pb'),
+      await getFixtureFile('traces/dump_WindowManager.pb'),
     ];
     await loadFiles(dumpFiles);
     await mediator.onWinscopeEvent(new AppTraceViewRequest());
@@ -479,9 +476,7 @@ describe('Mediator', () => {
   });
 
   it("initializes viewers' trace position also when loaded traces have no valid timestamps", async () => {
-    const dumpFile = await UnitTestUtils.getFixtureFile(
-      'traces/dump_WindowManager.pb',
-    );
+    const dumpFile = await getFixtureFile('traces/dump_WindowManager.pb');
     await mediator.onWinscopeEvent(new AppFilesUploaded([dumpFile]));
 
     resetSpyCalls();
@@ -491,7 +486,7 @@ describe('Mediator', () => {
   });
 
   it('filters traces without visualization on loading viewers', async () => {
-    const fileWithoutVisualization = await UnitTestUtils.getFixtureFile(
+    const fileWithoutVisualization = await getFixtureFile(
       'traces/elapsed_and_real_timestamp/shell_transition_trace.pb',
     );
     await loadFiles();
@@ -504,9 +499,7 @@ describe('Mediator', () => {
   it('warns user if frame mapping fails', async () => {
     const errorMsg = 'frame mapping failed';
     spyOn(tracePipeline, 'buildTraces').and.throwError(errorMsg);
-    const dumpFile = await UnitTestUtils.getFixtureFile(
-      'traces/dump_WindowManager.pb',
-    );
+    const dumpFile = await getFixtureFile('traces/dump_WindowManager.pb');
     await mediator.onWinscopeEvent(new AppFilesUploaded([dumpFile]));
 
     resetSpyCalls();
