@@ -70,18 +70,22 @@ static CUSTOMIZATIONS: &[&str] = &[
     "*.bp",
     "*.bp.fragment",
     "*.mk",
+    "android",
     "cargo_embargo.json",
     "patches",
     "METADATA",
     "TEST_MAPPING",
     "MODULE_LICENSE_*",
-    "README.android",
 ];
 
 static SYMLINKS: &[&str] = &["LICENSE", "NOTICE"];
 
-static DELETIONS: LazyLock<HashMap<&str, &[&str]>> =
-    LazyLock::new(|| HashMap::from([("libbpf-sys", ["elfutils", "zlib", "libbpf"].as_slice())]));
+static DELETIONS: LazyLock<HashMap<&str, &[&str]>> = LazyLock::new(|| {
+    HashMap::from([
+        ("libbpf-sys", ["elfutils", "zlib", "libbpf"].as_slice()),
+        ("libusb1-sys", ["libusb"].as_slice()),
+    ])
+});
 
 impl<State: ManagedCrateState> ManagedCrate<State> {
     pub fn name(&self) -> &str {
@@ -429,6 +433,7 @@ impl ManagedCrate<Vendored> {
         let android_crate_dir = staged.android_crate.path();
         remove_dir_all(android_crate_dir)?;
         rename(staged.staging_path(), android_crate_dir)?;
+        checksum::generate(android_crate_dir.abs())?;
 
         Ok(staged)
     }
@@ -455,24 +460,6 @@ impl ManagedCrate<Staged> {
         self.cargo_embargo_output()
             .success_or_error()
             .context(format!("cargo_embargo execution failed for {}", self.name()))?;
-
-        Ok(())
-    }
-    pub fn diff_staged(&self) -> Result<()> {
-        let diff_status = Command::new("diff")
-            .args(["-u", "-r", "-w", "--no-dereference"])
-            .arg(self.staging_path().rel())
-            .arg(self.android_crate.path().rel())
-            .current_dir(self.extra.vendored_crate.path().root())
-            .spawn()?
-            .wait()?;
-        if !diff_status.success() {
-            return Err(anyhow!(
-                "Found differences between {} and {}",
-                self.android_crate.path(),
-                self.staging_path()
-            ));
-        }
 
         Ok(())
     }

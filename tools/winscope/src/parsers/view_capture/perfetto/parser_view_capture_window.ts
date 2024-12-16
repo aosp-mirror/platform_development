@@ -86,6 +86,10 @@ export class ParserViewCaptureWindow extends AbstractParser<HierarchyTreeNode> {
     return TraceType.VIEW_CAPTURE;
   }
 
+  override getDescriptors(): string[] {
+    return [this.windowName, ...super.getDescriptors()];
+  }
+
   override async getEntry(index: number): Promise<HierarchyTreeNode> {
     let entry = (await Utils.queryEntry(
       this.traceProcessor,

@@ -30,18 +30,19 @@ import {LogEntry, LogHeader, UiDataLog} from 'viewers/common/ui_data_log';
 import {UiPropertyTreeNode} from 'viewers/common/ui_property_tree_node';
 import {UserOptions} from 'viewers/common/user_options';
 
-export class MockPresenter extends AbstractLogViewerPresenter<UiDataLog> {
+export class MockPresenter extends AbstractLogViewerPresenter<
+  UiDataLog,
+  PropertyTreeNode
+> {
   protected override logPresenter = new LogPresenter<LogEntry>();
   protected override propertiesPresenter = new PropertiesPresenter(
     {
       showDefaults: {
         name: 'Show defaults',
         enabled: false,
-        tooltip: `
-              If checked, shows the value of all properties.
-              Otherwise, hides all properties whose value is
-              the default for its data type.
-            `,
+        tooltip: `If checked, shows the value of all properties.
+Otherwise, hides all properties whose value is
+the default for its data type.`,
       },
     },
     new TextFilter(),
@@ -64,15 +65,8 @@ export class MockPresenter extends AbstractLogViewerPresenter<UiDataLog> {
     trace: Trace<PropertyTreeNode>,
     readonly storage: Store,
     notifyViewCallback: NotifyLogViewCallbackType<UiDataLog>,
-    withProperties: boolean,
   ) {
-    super(
-      trace,
-      notifyViewCallback,
-      withProperties
-        ? MockDataWithProperties.createEmpty()
-        : MockDataWithoutProperties.createEmpty(),
-    );
+    super(trace, notifyViewCallback, MockData.createEmpty());
   }
 
   protected override async makeUiDataEntries(): Promise<LogEntry[]> {
@@ -156,7 +150,7 @@ export class MockPresenter extends AbstractLogViewerPresenter<UiDataLog> {
   }
 }
 
-export class MockDataWithProperties implements UiDataLog {
+export class MockData implements UiDataLog {
   constructor(
     public headers: LogHeader[],
     public entries: LogEntry[],
@@ -168,36 +162,7 @@ export class MockDataWithProperties implements UiDataLog {
     public isDarkMode = false,
   ) {}
 
-  static createEmpty(): MockDataWithProperties {
-    return new MockDataWithProperties(
-      [],
-      [],
-      undefined,
-      undefined,
-      undefined,
-      undefined,
-      {},
-    );
-  }
-}
-
-export class MockDataWithoutProperties implements UiDataLog {
-  constructor(
-    public headers: LogHeader[],
-    public entries: LogEntry[],
-    public currentIndex: undefined | number,
-    public selectedIndex: undefined | number,
-    public scrollToIndex: undefined | number,
-    public isDarkMode = false,
-  ) {}
-
-  static createEmpty(): MockDataWithoutProperties {
-    return new MockDataWithoutProperties(
-      [],
-      [],
-      undefined,
-      undefined,
-      undefined,
-    );
+  static createEmpty(): MockData {
+    return new MockData([], [], undefined, undefined, undefined, undefined, {});
   }
 }

@@ -44,8 +44,10 @@ import {
 
 export type NotifyLogViewCallbackType<UiData> = (uiData: UiData) => void;
 
-export abstract class AbstractLogViewerPresenter<UiData extends UiDataLog>
-  implements WinscopeEventEmitter
+export abstract class AbstractLogViewerPresenter<
+  UiData extends UiDataLog,
+  TraceEntryType extends object,
+> implements WinscopeEventEmitter
 {
   protected static readonly VALUE_NA = 'N/A';
   protected emitAppEvent: EmitEvent = FunctionUtils.DO_NOTHING_ASYNC;
@@ -56,7 +58,7 @@ export abstract class AbstractLogViewerPresenter<UiData extends UiDataLog>
   private isInitialized = false;
 
   protected constructor(
-    protected readonly trace: Trace<PropertyTreeNode>,
+    protected readonly trace: Trace<TraceEntryType>,
     private readonly notifyViewCallback: NotifyLogViewCallbackType<UiData>,
     protected readonly uiData: UiData,
   ) {
@@ -184,7 +186,7 @@ export abstract class AbstractLogViewerPresenter<UiData extends UiDataLog>
     this.notifyViewChanged();
   }
 
-  async onLogTimestampClick(traceEntry: TraceEntry<PropertyTreeNode>) {
+  async onLogTimestampClick(traceEntry: TraceEntry<object>) {
     await this.emitAppEvent(
       TracePositionUpdate.fromTraceEntry(traceEntry, true),
     );
@@ -267,9 +269,9 @@ export abstract class AbstractLogViewerPresenter<UiData extends UiDataLog>
 
   protected async applyTracePositionUpdate(event: TracePositionUpdate) {
     await this.initializeIfNeeded();
-    let entry: TraceEntry<PropertyTreeNode> | undefined;
+    let entry: TraceEntry<TraceEntryType> | undefined;
     if (event.position.entry?.getFullTrace() === this.trace) {
-      entry = event.position.entry as TraceEntry<PropertyTreeNode>;
+      entry = event.position.entry as TraceEntry<TraceEntryType>;
     } else {
       entry = TraceEntryFinder.findCorrespondingEntry(
         this.trace,

@@ -472,6 +472,9 @@ adb shell am force-stop com.example.android.vdmdemo.host
 -   **Stylus**: A simple drawing activity that reacts on stylus input events.
     Use together with the simulated stylus input feature of the host app.
 
+-   **Recorder**: A simple activity that can start multiple audio recorders.
+    This helps test audio recording permissions and concurrent recordings.
+
 The demo activity depends on whether the **Display Category** Host preference is
 enabled or not. If enabled, it becomes equivalent to the **Home** demo activity,
 which showcases implicit intent handling.
@@ -481,6 +484,8 @@ which showcases implicit intent handling.
 ## SDK Version
 
 ### Android 16 / Baklava
+
+-   Added `COMPANION_DEVICE_NEARBY_SENSOR_STREAMING` device profile.
 
 -   Added support for custom power management.
 

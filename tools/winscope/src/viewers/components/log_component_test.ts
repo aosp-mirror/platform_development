@@ -380,7 +380,7 @@ describe('LogComponent', () => {
   }
 
   function checkEntryPropagatedOnTimestampClick(button: HTMLElement) {
-    let entry: TraceEntry<PropertyTreeNode> | undefined;
+    let entry: TraceEntry<object> | undefined;
     htmlElement.addEventListener(ViewerEvents.TimestampClick, (event) => {
       const detail: TimestampClickDetail = (event as CustomEvent).detail;
       entry = detail.entry;

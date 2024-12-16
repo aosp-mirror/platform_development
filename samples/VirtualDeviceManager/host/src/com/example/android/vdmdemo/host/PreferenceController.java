@@ -33,7 +33,6 @@ import android.util.ArrayMap;
 import android.util.Log;
 
 import androidx.annotation.StringRes;
-import androidx.core.os.BuildCompat;
 import androidx.preference.Preference;
 import androidx.preference.PreferenceManager;
 
@@ -277,7 +276,7 @@ final class PreferenceController {
         }
 
         private boolean isSdkVersionSatisfied() {
-            return mMinSdk <= SDK_INT || (mMinSdk == VANILLA_ICE_CREAM && BuildCompat.isAtLeastV());
+            return mMinSdk <= SDK_INT || (mMinSdk == BAKLAVA && VdmCompat.isAtLeastB());
         }
 
         PrefRule<T> withDefaultValue(T defaultValue) {

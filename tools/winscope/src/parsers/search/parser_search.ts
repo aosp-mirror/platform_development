@@ -18,6 +18,7 @@ import {assertDefined} from 'common/assert_utils';
 import {INVALID_TIME_NS, Timestamp} from 'common/time';
 import {TimestampConverter} from 'common/timestamp_converter';
 import {UserNotifier} from 'common/user_notifier';
+import {Analytics} from 'logging/analytics';
 import {TraceSearchQueryFailed} from 'messaging/user_warnings';
 import {CoarseVersion} from 'trace/coarse_version';
 import {
@@ -26,9 +27,9 @@ import {
 } from 'trace/custom_query';
 import {AbsoluteEntryIndex, EntriesRange} from 'trace/index_types';
 import {Parser} from 'trace/parser';
-import {TraceProcessor} from 'trace/trace_processor';
 import {TraceType} from 'trace/trace_type';
 import {QueryResult} from 'trace_processor/query_result';
+import {TraceProcessorFactory} from 'trace_processor/trace_processor_factory';
 
 export class ParserSearch implements Parser<QueryResult> {
   private queryResult?: QueryResult;
@@ -72,7 +73,7 @@ export class ParserSearch implements Parser<QueryResult> {
   }
 
   getDescriptors(): string[] {
-    return [`Search query: ${this.query}`];
+    return [this.query];
   }
 
   getRealToMonotonicTimeOffsetNs(): bigint | undefined {
@@ -88,7 +89,7 @@ export class ParserSearch implements Parser<QueryResult> {
   }
 
   async parse() {
-    const tp = await TraceProcessor.getTraceProcessor();
+    const tp = await TraceProcessorFactory.getSingleInstance();
     try {
       this.queryResult = await tp.query(this.query).waitAllRows();
       if (this.hasTimestamps() && this.queryResult.numRows() > 0) {
@@ -106,6 +107,7 @@ export class ParserSearch implements Parser<QueryResult> {
         this.timestamps.push(this.timestampConverter.makeZeroTimestamp());
       }
     } catch (e) {
+      Analytics.TraceSearch.logQueryFailure();
       UserNotifier.add(
         new TraceSearchQueryFailed((e as Error).message),
       ).notify();

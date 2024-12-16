@@ -75,7 +75,7 @@ impl TestMapping {
         let bp = BluePrint::from_file(bpfile)
             .map_err(|e: String| TestMappingError::BlueprintParseError(e))?;
         let test_mapping_path = path.join("TEST_MAPPING").unwrap();
-        let json = if path.abs().exists() {
+        let json = if test_mapping_path.abs().exists() {
             TestMappingJson::parse(read_to_string(test_mapping_path)?)?
         } else {
             TestMappingJson::default()

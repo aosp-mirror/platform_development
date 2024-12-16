@@ -64,7 +64,8 @@ export class ParserViewCaptureWindow implements Parser<HierarchyTreeNode> {
     'visibility',
     'alpha',
   ];
-  private static readonly DENYLIST_PROPERTIES = ['children'];
+  private static readonly DENYLIST_PROPERTIES =
+    ParserViewCaptureWindow.EAGER_PROPERTIES.concat(['children']); // some eager properties are overridden by calculated properties - avoid reloading them on lazy fetch
 
   private static readonly Operations = {
     SetFormattersNode: new SetFormatters(NodeField),
@@ -76,9 +77,7 @@ export class ParserViewCaptureWindow implements Parser<HierarchyTreeNode> {
     AddDefaultsNodeLazy: new AddDefaults(
       NodeField,
       undefined,
-      ParserViewCaptureWindow.EAGER_PROPERTIES.concat(
-        ParserViewCaptureWindow.DENYLIST_PROPERTIES,
-      ),
+      ParserViewCaptureWindow.DENYLIST_PROPERTIES,
     ),
     SetRootTransformProperties: new SetRootTransformProperties(),
   };
@@ -148,7 +147,7 @@ export class ParserViewCaptureWindow implements Parser<HierarchyTreeNode> {
   }
 
   getDescriptors(): string[] {
-    return this.descriptors;
+    return [this.windowName, ...this.descriptors];
   }
 
   private decodeTimestamps(): Timestamp[] {

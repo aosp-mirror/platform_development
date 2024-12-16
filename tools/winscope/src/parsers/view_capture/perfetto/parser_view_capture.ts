@@ -52,7 +52,7 @@ export class ParserViewCapture {
     const windowAndPackageNames = await this.queryWindowAndPackageNames();
     assertTrue(
       windowAndPackageNames.length > 0,
-      () => 'Perfetto trace has no ViewCapture windows',
+      () => 'Perfetto trace has no ViewCapture window entries',
     );
 
     this.windowParsers = windowAndPackageNames.map(

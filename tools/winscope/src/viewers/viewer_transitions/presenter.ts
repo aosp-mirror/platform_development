@@ -34,7 +34,10 @@ import {ColumnSpec, LogField, LogHeader} from 'viewers/common/ui_data_log';
 import {UpdateTransitionChangesNames} from './operations/update_transition_changes_names';
 import {TransitionsEntry, TransitionStatus, UiData} from './ui_data';
 
-export class Presenter extends AbstractLogViewerPresenter<UiData> {
+export class Presenter extends AbstractLogViewerPresenter<
+  UiData,
+  PropertyTreeNode
+> {
   private static readonly COLUMNS = {
     id: {name: 'Id', cssClass: 'transition-id right-align'},
     type: {name: 'Type', cssClass: 'transition-type'},
