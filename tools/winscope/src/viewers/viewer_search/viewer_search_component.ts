@@ -433,7 +433,8 @@ export class ViewerSearchComponent {
     {
       name: 'Delete',
       icon: 'close',
-      onClickCallback: (search: ListedSearch) => this.onDeleteQueryClick(search),
+      onClickCallback: (search: ListedSearch) =>
+        this.onDeleteQueryClick(search),
     },
   ];
   readonly recentSearchOptions: ListItemOption[] = [

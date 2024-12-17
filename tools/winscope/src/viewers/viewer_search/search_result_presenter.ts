@@ -36,12 +36,11 @@ export class SearchResultPresenter extends AbstractLogViewerPresenter<
 > {
   protected override logPresenter = new LogPresenter<LogEntry>();
   constructor(
-    readonly query: string,
     trace: Trace<QueryResult>,
     notifyViewCallback: NotifyLogViewCallbackType<SearchResult>,
     private readonly queryResult?: QueryResult,
   ) {
-    super(trace, notifyViewCallback, new SearchResult(query, [], []));
+    super(trace, notifyViewCallback, new SearchResult([], []));
   }
 
   onDestroy() {

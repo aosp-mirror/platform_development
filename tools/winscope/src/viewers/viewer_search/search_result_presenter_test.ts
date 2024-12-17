@@ -74,12 +74,7 @@ class SearchResultPresenterTest extends AbstractLogViewerPresenterTest<SearchRes
       UnitTestUtils.makeSearchTraceSpies(time100);
     this.spyIter = spyIter;
     const trace = UnitTestUtils.makeEmptyTrace(TraceType.SEARCH);
-    return new SearchResultPresenter(
-      'fake query',
-      trace,
-      callback,
-      spyQueryResult,
-    );
+    return new SearchResultPresenter(trace, callback, spyQueryResult);
   }
 
   override async createPresenter(
@@ -88,7 +83,6 @@ class SearchResultPresenterTest extends AbstractLogViewerPresenterTest<SearchRes
     positionUpdate = assertDefined(this.getPositionUpdate()),
   ): Promise<SearchResultPresenter> {
     const presenter = new SearchResultPresenter(
-      'successful query',
       trace,
       callback,
       await trace.getEntry(0).getValue(),

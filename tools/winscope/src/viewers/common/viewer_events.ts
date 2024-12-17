@@ -51,6 +51,7 @@ export enum ViewerEvents {
   SearchQueryClick = 'SearchQueryClick',
   SaveQueryClick = 'SaveQueryClick',
   DeleteSavedQueryClick = 'DeleteSavedQueryClick',
+  AddQueryClick = 'AddQueryClick',
   ClearQueryClick = 'ClearQueryClick',
 }
 
@@ -75,6 +76,10 @@ export class LogTextFilterChangeDetail {
 
 export class SearchQueryClickDetail {
   constructor(public query: string, public uid: number) {}
+}
+
+export class AddQueryClickDetail {
+  constructor(public query: string) {}
 }
 
 export class ClearQueryClickDetail {

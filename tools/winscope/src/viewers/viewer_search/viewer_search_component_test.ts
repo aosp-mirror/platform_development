@@ -230,7 +230,9 @@ describe('ViewerSearchComponent', () => {
         detail = (event as CustomEvent).detail;
       });
     const testName = 'Query 1';
-    component.inputData.savedSearches.push(new ListedSearch(testQuery, testName));
+    component.inputData.savedSearches.push(
+      new ListedSearch(testQuery, testName),
+    );
     fixture.detectChanges();
     component.inputData.currentSearches.push(
       new SearchResult(testQuery, [], []),
