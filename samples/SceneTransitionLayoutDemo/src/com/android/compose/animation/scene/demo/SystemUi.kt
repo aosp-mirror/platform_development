@@ -282,13 +282,8 @@ fun SystemUi(
     val hapticFeedback = LocalHapticFeedback.current
     val revealHaptics = remember(hapticFeedback) { DemoContainerRevealHaptics(hapticFeedback) }
     val transitions =
-        remember(quickSettingsPagerState, springConfiguration, configuration) {
-            systemUiTransitions(
-                quickSettingsPagerState,
-                springConfiguration,
-                configuration,
-                revealHaptics,
-            )
+        remember(quickSettingsPagerState, springConfiguration, revealHaptics) {
+            systemUiTransitions(quickSettingsPagerState, springConfiguration, revealHaptics)
         }
 
     val sceneSaver =
