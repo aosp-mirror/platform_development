@@ -15,8 +15,8 @@
  */
 
 import {assertDefined} from 'common/assert_utils';
-import {INVALID_TIME_NS, Timestamp} from 'common/time';
-import {TimestampConverter} from 'common/timestamp_converter';
+import {INVALID_TIME_NS, Timestamp} from 'common/time/time';
+import {TimestampConverter} from 'common/time/timestamp_converter';
 import {UserNotifier} from 'common/user_notifier';
 import {Analytics} from 'logging/analytics';
 import {TraceSearchQueryFailed} from 'messaging/user_warnings';

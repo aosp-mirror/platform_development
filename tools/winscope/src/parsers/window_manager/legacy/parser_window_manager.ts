@@ -15,7 +15,7 @@
  */
 
 import {assertDefined} from 'common/assert_utils';
-import {Timestamp} from 'common/time';
+import {Timestamp} from 'common/time/time';
 import {AbstractParser} from 'parsers/legacy/abstract_parser';
 import {TamperedMessageType} from 'parsers/tampered_message_type';
 import {RectsComputation} from 'parsers/window_manager/computations/rects_computation';

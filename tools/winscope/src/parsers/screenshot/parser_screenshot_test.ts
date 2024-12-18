@@ -15,8 +15,11 @@
  */
 
 import {assertDefined} from 'common/assert_utils';
-import {TimestampConverter} from 'common/timestamp_converter';
-import {TimestampConverterUtils} from 'test/unit/timestamp_converter_utils';
+import {
+  TimestampConverterUtils,
+  timestampEqualityTester,
+} from 'common/time/test_utils';
+import {TimestampConverter} from 'common/time/timestamp_converter';
 import {UnitTestUtils} from 'test/unit/utils';
 import {CoarseVersion} from 'trace/coarse_version';
 import {MediaBasedTraceEntry} from 'trace/media_based_trace_entry';
@@ -29,7 +32,7 @@ describe('ParserScreenshot', () => {
   let file: File;
 
   beforeAll(async () => {
-    jasmine.addCustomEqualityTester(UnitTestUtils.timestampEqualityTester);
+    jasmine.addCustomEqualityTester(timestampEqualityTester);
     file = await UnitTestUtils.getFixtureFile('traces/screenshot.png');
     parser = new ParserScreenshot(
       new TraceFile(file),

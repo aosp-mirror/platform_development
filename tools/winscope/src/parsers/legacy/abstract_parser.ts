@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-import {Timestamp} from 'common/time';
-import {ParserTimestampConverter} from 'common/timestamp_converter';
+import {Timestamp} from 'common/time/time';
+import {ParserTimestampConverter} from 'common/time/timestamp_converter';
 import {CoarseVersion} from 'trace/coarse_version';
 import {
   CustomQueryParamTypeMap,

@@ -17,7 +17,7 @@
 import {assertDefined} from 'common/assert_utils';
 import {PersistentStoreProxy} from 'common/persistent_store_proxy';
 import {Store} from 'common/store';
-import {Timestamp} from 'common/time';
+import {Timestamp} from 'common/time/time';
 import {Trace, TraceEntry} from 'trace/trace';
 import {Traces} from 'trace/traces';
 import {ImeTraceType, TraceType} from 'trace/trace_type';

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import {Timestamp} from 'common/time';
+import {Timestamp} from 'common/time/time';
 import {
   CustomQueryParserResultTypeMap,
   CustomQueryType,

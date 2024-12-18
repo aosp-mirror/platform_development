@@ -40,8 +40,8 @@ import {assertDefined} from 'common/assert_utils';
 import {FunctionUtils} from 'common/function_utils';
 import {PersistentStore} from 'common/persistent_store';
 import {StringUtils} from 'common/string_utils';
-import {TimeRange, Timestamp, TimestampFormatType} from 'common/time';
-import {TimestampUtils} from 'common/timestamp_utils';
+import {TimeRange, Timestamp, TimestampFormatType} from 'common/time/time';
+import {TimestampUtils} from 'common/time/timestamp_utils';
 import {Analytics} from 'logging/analytics';
 import {
   ActiveTraceChanged,

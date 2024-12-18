@@ -15,8 +15,8 @@
  */
 
 import {Segment} from 'app/components/timeline/segment';
-import {TimeRange, Timestamp} from 'common/time';
-import {ComponentTimestampConverter} from 'common/timestamp_converter';
+import {TimeRange, Timestamp} from 'common/time/time';
+import {ComponentTimestampConverter} from 'common/time/timestamp_converter';
 
 export class Transformer {
   private fromWidth: bigint;

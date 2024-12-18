@@ -28,8 +28,8 @@ import {
 import {MatSelectChange} from '@angular/material/select';
 
 import {DOMUtils} from 'common/dom_utils';
-import {Timestamp, TimestampFormatType} from 'common/time';
-import {TimeUtils} from 'common/time_utils';
+import {Timestamp, TimestampFormatType} from 'common/time/time';
+import {TimeUtils} from 'common/time/time_utils';
 import {TraceType} from 'trace/trace_type';
 import {TextFilter} from 'viewers/common/text_filter';
 import {LogEntry, LogField, LogHeader} from 'viewers/common/ui_data_log';

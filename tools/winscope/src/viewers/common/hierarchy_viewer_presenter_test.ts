@@ -17,6 +17,7 @@
 import {assertDefined} from 'common/assert_utils';
 import {IDENTITY_MATRIX} from 'common/geometry/transform_matrix';
 import {InMemoryStorage} from 'common/in_memory_storage';
+import {TimestampConverterUtils} from 'common/time/test_utils';
 import {
   DarkModeToggled,
   FilterPresetApplyRequest,
@@ -25,7 +26,6 @@ import {
 } from 'messaging/winscope_event';
 import {HierarchyTreeBuilder} from 'test/unit/hierarchy_tree_builder';
 import {MockPresenter} from 'test/unit/mock_hierarchy_viewer_presenter';
-import {TimestampConverterUtils} from 'test/unit/timestamp_converter_utils';
 import {TraceBuilder} from 'test/unit/trace_builder';
 import {TreeNodeUtils} from 'test/unit/tree_node_utils';
 import {UnitTestUtils} from 'test/unit/utils';

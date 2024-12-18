@@ -36,7 +36,8 @@ import {
 import {TimelineData} from 'app/timeline_data';
 import {assertDefined} from 'common/assert_utils';
 import {PersistentStore} from 'common/persistent_store';
-import {TimeRange} from 'common/time';
+import {TimestampConverterUtils} from 'common/time/test_utils';
+import {TimeRange} from 'common/time/time';
 import {
   ActiveTraceChanged,
   ExpandedTimelineToggled,
@@ -49,7 +50,6 @@ import {
   TraceSearchRequest,
   WinscopeEvent,
 } from 'messaging/winscope_event';
-import {TimestampConverterUtils} from 'test/unit/timestamp_converter_utils';
 import {TracesBuilder} from 'test/unit/traces_builder';
 import {TraceBuilder} from 'test/unit/trace_builder';
 import {UnitTestUtils} from 'test/unit/utils';

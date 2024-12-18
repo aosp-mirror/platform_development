@@ -15,8 +15,8 @@
  */
 
 import {assertDefined} from 'common/assert_utils';
+import {TimestampConverterUtils} from 'common/time/test_utils';
 import {HierarchyTreeBuilder} from 'test/unit/hierarchy_tree_builder';
-import {TimestampConverterUtils} from 'test/unit/timestamp_converter_utils';
 import {TraceBuilder} from 'test/unit/trace_builder';
 import {TreeNodeUtils} from 'test/unit/tree_node_utils';
 import {TraceType} from 'trace/trace_type';

@@ -1,4 +1,4 @@
-import {TimeRange, Timestamp} from 'common/time';
+import {TimeRange, Timestamp} from 'common/time/time';
 
 export class MiniTimelineDrawerOutput {
   constructor(

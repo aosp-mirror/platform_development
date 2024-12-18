@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-import {Timestamp} from 'common/time';
-import {TimeDuration} from 'common/time_duration';
+import {Timestamp} from 'common/time/time';
+import {TimeDuration} from 'common/time/time_duration';
 import {
   PropertySource,
   PropertyTreeNode,

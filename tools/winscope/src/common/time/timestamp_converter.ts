@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-import {assertDefined, assertTrue} from './assert_utils';
-import {BigintMath} from './bigint_math';
+import {assertDefined, assertTrue} from 'common/assert_utils';
+import {BigintMath} from 'common/bigint_math';
 import {
   INVALID_TIME_NS,
   Timestamp,

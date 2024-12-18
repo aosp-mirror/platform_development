@@ -29,8 +29,8 @@ import {
 import {TimelineData} from 'app/timeline_data';
 import {assertDefined} from 'common/assert_utils';
 import {PersistentStore} from 'common/persistent_store';
-import {TimeRange, Timestamp} from 'common/time';
-import {TimestampUtils} from 'common/timestamp_utils';
+import {TimeRange, Timestamp} from 'common/time/time';
+import {TimestampUtils} from 'common/time/timestamp_utils';
 import {Analytics} from 'logging/analytics';
 import {Trace} from 'trace/trace';
 import {TracePosition} from 'trace/trace_position';

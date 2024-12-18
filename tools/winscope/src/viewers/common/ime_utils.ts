@@ -15,7 +15,7 @@
  */
 import {assertDefined} from 'common/assert_utils';
 import {FilterFlag} from 'common/filter_flag';
-import {Timestamp} from 'common/time';
+import {Timestamp} from 'common/time/time';
 import {Item} from 'trace/item';
 import {HierarchyTreeNode} from 'trace/tree_node/hierarchy_tree_node';
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';

@@ -15,7 +15,7 @@
  */
 
 import {assertTrue} from 'common/assert_utils';
-import {ParserTimestampConverter} from 'common/timestamp_converter';
+import {ParserTimestampConverter} from 'common/time/timestamp_converter';
 import {UserNotifier} from 'common/user_notifier';
 import {FailedToCreateTracesParser} from 'messaging/user_warnings';
 import {TracesParserCujs} from 'parsers/events/traces_parser_cujs';

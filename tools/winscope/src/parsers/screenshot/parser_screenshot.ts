@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import {Timestamp} from 'common/time';
+import {Timestamp} from 'common/time/time';
 import {AbstractParser} from 'parsers/legacy/abstract_parser';
 import {CoarseVersion} from 'trace/coarse_version';
 import {MediaBasedTraceEntry} from 'trace/media_based_trace_entry';

@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-import {Timestamp} from 'common/time';
-import {TimeDuration} from 'common/time_duration';
+import {Timestamp} from 'common/time/time';
+import {TimeDuration} from 'common/time/time_duration';
 import {RawDataUtils} from 'parsers/raw_data_utils';
 import {TransformType} from 'parsers/surface_flinger/transform_utils';
 import {CujType} from 'trace/cuj_type';

@@ -16,9 +16,9 @@
 
 import {assertDefined} from 'common/assert_utils';
 import {InMemoryStorage} from 'common/in_memory_storage';
+import {TimestampConverterUtils} from 'common/time/test_utils';
 import {TracePositionUpdate} from 'messaging/winscope_event';
 import {PropertyTreeBuilder} from 'test/unit/property_tree_builder';
-import {TimestampConverterUtils} from 'test/unit/timestamp_converter_utils';
 import {TraceBuilder} from 'test/unit/trace_builder';
 import {UnitTestUtils} from 'test/unit/utils';
 import {Trace} from 'trace/trace';

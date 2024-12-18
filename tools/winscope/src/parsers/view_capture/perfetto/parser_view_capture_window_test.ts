@@ -14,7 +14,10 @@
  * limitations under the License.
  */
 import {assertDefined} from 'common/assert_utils';
-import {TimestampConverterUtils} from 'test/unit/timestamp_converter_utils';
+import {
+  TimestampConverterUtils,
+  timestampEqualityTester,
+} from 'common/time/test_utils';
 import {UnitTestUtils} from 'test/unit/utils';
 import {CoarseVersion} from 'trace/coarse_version';
 import {CustomQueryType} from 'trace/custom_query';
@@ -28,7 +31,7 @@ describe('Perfetto ParserViewCaptureWindow', () => {
   let trace: Trace<HierarchyTreeNode>;
 
   beforeAll(async () => {
-    jasmine.addCustomEqualityTester(UnitTestUtils.timestampEqualityTester);
+    jasmine.addCustomEqualityTester(timestampEqualityTester);
     parser = (await UnitTestUtils.getPerfettoParser(
       TraceType.VIEW_CAPTURE,
       'traces/perfetto/viewcapture.perfetto-trace',

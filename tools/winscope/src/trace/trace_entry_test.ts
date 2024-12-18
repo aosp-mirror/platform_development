@@ -14,16 +14,18 @@
  * limitations under the License.
  */
 
-import {TimestampConverterUtils} from 'test/unit/timestamp_converter_utils';
+import {
+  TimestampConverterUtils,
+  timestampEqualityTester,
+} from 'common/time/test_utils';
 import {TraceBuilder} from 'test/unit/trace_builder';
-import {UnitTestUtils} from 'test/unit/utils';
 import {Trace} from './trace';
 
 describe('TraceEntry', () => {
   let trace: Trace<string>;
 
   beforeAll(() => {
-    jasmine.addCustomEqualityTester(UnitTestUtils.timestampEqualityTester);
+    jasmine.addCustomEqualityTester(timestampEqualityTester);
     trace = new TraceBuilder<string>()
       .setTimestamps([
         TimestampConverterUtils.makeRealTimestamp(10n),
