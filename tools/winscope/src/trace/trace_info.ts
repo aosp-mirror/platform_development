@@ -30,6 +30,7 @@ const EVENT_LOG_ICON = 'description';
 const TRANSITION_ICON = 'animation';
 const CUJ_ICON = 'label';
 const INPUT_ICON = 'touch_app';
+const SEARCH_ICON = 'search';
 
 interface TraceInfoMap {
   [key: number]: {
@@ -73,14 +74,14 @@ export const TRACE_INFO: TraceInfoMap = {
   [TraceType.TRANSACTIONS]: {
     name: 'Transactions',
     icon: TRANSACTION_ICON,
-    color: '#5BB974',
+    color: '#0D652D',
     downloadArchiveDir: 'sf',
     legacyExt: '.winscope',
   },
   [TraceType.TRANSACTIONS_LEGACY]: {
     name: 'Transactions Legacy',
     icon: TRANSACTION_ICON,
-    color: '#5BB974',
+    color: '#0D652D',
     downloadArchiveDir: 'sf',
     legacyExt: '.winscope',
   },
@@ -101,7 +102,7 @@ export const TRACE_INFO: TraceInfoMap = {
   [TraceType.PROTO_LOG]: {
     name: 'ProtoLog',
     icon: PROTO_LOG_ICON,
-    color: '#40A58A',
+    color: '#34A853',
     downloadArchiveDir: 'protolog',
     legacyExt: '.winscope',
   },
@@ -115,28 +116,28 @@ export const TRACE_INFO: TraceInfoMap = {
   [TraceType.VIEW_CAPTURE]: {
     name: 'View Capture',
     icon: VIEW_CAPTURE_ICON,
-    color: '#137333',
+    color: '#59CA77',
     downloadArchiveDir: 'vc',
     legacyExt: '.winscope',
   },
   [TraceType.INPUT_METHOD_CLIENTS]: {
     name: 'IME Clients',
     icon: IME_ICON,
-    color: '#FA903E',
+    color: '#FF964B',
     downloadArchiveDir: 'ime',
     legacyExt: '.winscope',
   },
   [TraceType.INPUT_METHOD_SERVICE]: {
     name: 'IME Service',
     icon: IME_ICON,
-    color: '#F29900',
+    color: '#FFC24B',
     downloadArchiveDir: 'ime',
     legacyExt: '.winscope',
   },
   [TraceType.INPUT_METHOD_MANAGER_SERVICE]: {
     name: 'IME system_server',
     icon: IME_ICON,
-    color: '#D93025',
+    color: '#FF6B00',
     downloadArchiveDir: 'ime',
     legacyExt: '.winscope',
   },
@@ -150,28 +151,28 @@ export const TRACE_INFO: TraceInfoMap = {
   [TraceType.WM_TRANSITION]: {
     name: 'WM Transitions',
     icon: TRANSITION_ICON,
-    color: '#EC407A',
+    color: '#D01884',
     downloadArchiveDir: 'transition',
     legacyExt: '.winscope',
   },
   [TraceType.SHELL_TRANSITION]: {
     name: 'Shell Transitions',
     icon: TRANSITION_ICON,
-    color: '#EC407A',
+    color: '#D01884',
     downloadArchiveDir: 'transition',
     legacyExt: '.winscope',
   },
   [TraceType.TRANSITION]: {
     name: 'Transitions',
     icon: TRANSITION_ICON,
-    color: '#EC407A',
+    color: '#D01884',
     downloadArchiveDir: 'transition',
     legacyExt: '.winscope',
   },
   [TraceType.CUJS]: {
-    name: 'Cujs',
+    name: 'Jank CUJs',
     icon: CUJ_ICON,
-    color: '#EC407A',
+    color: '#FF63B8',
     downloadArchiveDir: 'eventlog',
     legacyExt: '.winscope',
   },
@@ -190,10 +191,17 @@ export const TRACE_INFO: TraceInfoMap = {
     legacyExt: '.winscope',
   },
   [TraceType.INPUT_EVENT_MERGED]: {
-    name: 'Input Events',
+    name: 'Input',
     icon: INPUT_ICON,
     color: '#8baef4',
     downloadArchiveDir: 'input',
     legacyExt: '.winscope',
+  },
+  [TraceType.SEARCH]: {
+    name: 'Search',
+    icon: SEARCH_ICON,
+    color: '#DEBE13',
+    downloadArchiveDir: '',
+    legacyExt: '',
   },
 };

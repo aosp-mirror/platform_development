@@ -31,7 +31,7 @@ describe('VisibilityPropertiesComputation', () => {
   const rect2x2 = {left: 0, top: 0, bottom: 2, right: 2};
   const rect5x5 = {left: 0, right: 5, top: 0, bottom: 5};
 
-  const commonProperties: android.surfaceflinger.ILayerProto = {
+  const commonProperties: Proto = {
     cornerRadius: 0,
     shadowRadius: 0,
     backgroundBlurRadius: 0,
@@ -42,17 +42,17 @@ describe('VisibilityPropertiesComputation', () => {
       dsdy: 0,
       dtdy: 1,
     },
+    excludesCompositionState: false,
   };
 
-  const visibleLayerProperties: android.surfaceflinger.ILayerProto =
-    Object.assign(
-      {
-        flags: 0,
-        activeBuffer: {width: 1, height: 1, stride: 1, format: 1},
-        color: {r: 0, g: 0, b: 0, a: 1},
-      },
-      commonProperties,
-    );
+  const visibleLayerProperties: Proto = Object.assign(
+    {
+      flags: 0,
+      activeBuffer: {width: 1, height: 1, stride: 1, format: 1},
+      color: {r: 0, g: 0, b: 0, a: 1},
+    },
+    commonProperties,
+  );
 
   beforeEach(() => {
     computation = new VisibilityPropertiesComputation();
@@ -78,7 +78,7 @@ describe('VisibilityPropertiesComputation', () => {
               children: [],
               visibleRegion: {rect: [rect1x1]},
               layerStack: 0,
-              zOrderPath: [0],
+              z: 0,
               screenBounds: null,
               isOpaque: false,
             } as android.surfaceflinger.ILayerProto,
@@ -145,7 +145,7 @@ describe('VisibilityPropertiesComputation', () => {
                 children: [],
                 visibleRegion: {rect: [rect1x1]},
                 layerStack: 0,
-                zOrderPath: [0, 0],
+                z: 0,
                 zOrderRelativeOf: 3,
                 screenBounds: null,
                 isOpaque: false,
@@ -165,7 +165,7 @@ describe('VisibilityPropertiesComputation', () => {
               children: [],
               visibleRegion: {rect: [rect1x1]},
               layerStack: 0,
-              zOrderPath: [0],
+              z: 0,
               screenBounds: null,
               isOpaque: false,
             } as android.surfaceflinger.ILayerProto,
@@ -226,7 +226,7 @@ describe('VisibilityPropertiesComputation', () => {
               flags: 0,
               color: {r: 0, g: 0, b: 0, a: 0},
               layerStack: 0,
-              zOrderPath: [0],
+              z: 0,
               screenBounds: null,
               isOpaque: false,
             } as android.surfaceflinger.ILayerProto,
@@ -276,6 +276,22 @@ describe('VisibilityPropertiesComputation', () => {
   });
 
   it('detects non-visible layer due to empty bounds', () => {
+    const properties = Object.assign(
+      {
+        id: 1,
+        name: 'layerEmptyBounds',
+        parent: -1,
+        children: [],
+        visibleRegion: {rect: [rect1x1]},
+        bounds: {left: 0, right: 0, top: 0, bottom: 0},
+        layerStack: 0,
+        z: 0,
+        screenBounds: null,
+        isOpaque: false,
+      },
+      visibleLayerProperties,
+    );
+    properties['excludesCompositionState'] = true;
     const hierarchyRoot = new HierarchyTreeBuilder()
       .setId('LayerTraceEntry')
       .setName('root')
@@ -283,22 +299,7 @@ describe('VisibilityPropertiesComputation', () => {
         {
           id: 1,
           name: 'layerEmptyBounds',
-          properties: Object.assign(
-            {
-              id: 1,
-              name: 'layerEmptyBounds',
-              parent: -1,
-              children: [],
-              visibleRegion: {rect: [rect1x1]},
-              bounds: {left: 0, right: 0, top: 0, bottom: 0},
-              excludesCompositionState: true,
-              layerStack: 0,
-              zOrderPath: [0],
-              screenBounds: null,
-              isOpaque: false,
-            } as android.surfaceflinger.ILayerProto,
-            visibleLayerProperties,
-          ),
+          properties,
         },
       ])
       .build();
@@ -331,7 +332,7 @@ describe('VisibilityPropertiesComputation', () => {
               children: [],
               visibleRegion: null,
               layerStack: 0,
-              zOrderPath: [0],
+              z: 0,
               screenBounds: null,
               isOpaque: false,
             } as android.surfaceflinger.ILayerProto,
@@ -371,7 +372,7 @@ describe('VisibilityPropertiesComputation', () => {
               children: [],
               visibleRegion: {rect: [{left: 0, right: 1, top: 0, bottom: 0}]},
               layerStack: 0,
-              zOrderPath: [0],
+              z: 0,
               screenBounds: null,
               isOpaque: false,
             } as android.surfaceflinger.ILayerProto,
@@ -408,8 +409,8 @@ describe('VisibilityPropertiesComputation', () => {
         ],
       })
       .setChildren([
-        getChildHierarchyForOpaqueLayer(1, 'occludedLayer', [0], rect1x1),
-        getChildHierarchyForOpaqueLayer(2, 'occludingLayer', [1], rect2x2),
+        getChildHierarchyForOpaqueLayer(1, 'occludedLayer', 0, rect1x1),
+        getChildHierarchyForOpaqueLayer(2, 'occludingLayer', 1, rect2x2),
       ])
       .build();
 
@@ -439,8 +440,8 @@ describe('VisibilityPropertiesComputation', () => {
         ],
       })
       .setChildren([
-        getChildHierarchyForOpaqueLayer(1, 'occludedLayer', [0], rect1x1),
-        getChildHierarchyForOpaqueLayer(2, 'occludingLayer', [1], rect2x2),
+        getChildHierarchyForOpaqueLayer(1, 'occludedLayer', 0, rect1x1),
+        getChildHierarchyForOpaqueLayer(2, 'occludingLayer', 1, rect2x2),
         {
           id: 3,
           name: 'coveringLayer',
@@ -451,7 +452,7 @@ describe('VisibilityPropertiesComputation', () => {
               parent: -1,
               children: [],
               layerStack: 0,
-              zOrderPath: [2],
+              z: 2,
               screenBounds: rect2x2,
               visibleRegion: {rect: [rect2x2]},
               activeBuffer: {width: 1, height: 1, stride: 1, format: 1},
@@ -503,8 +504,8 @@ describe('VisibilityPropertiesComputation', () => {
         ],
       })
       .setChildren([
-        getChildHierarchyForOpaqueLayer(1, 'visibleLayer1', [0], rect1x1, 0),
-        getChildHierarchyForOpaqueLayer(2, 'visibleLayer2', [0], rect1x1, 1),
+        getChildHierarchyForOpaqueLayer(1, 'visibleLayer1', 0, rect1x1, 0),
+        getChildHierarchyForOpaqueLayer(2, 'visibleLayer2', 0, rect1x1, 1),
       ])
       .build();
 
@@ -537,16 +538,16 @@ describe('VisibilityPropertiesComputation', () => {
         getChildHierarchyForOpaqueLayer(
           1,
           'partiallyOccludedLayer',
-          [0],
+          0,
           rect2x2,
         ),
         getChildHierarchyForOpaqueLayer(
           2,
           'partiallyOccludingLayer',
-          [1],
+          1,
           rect1x1,
         ),
-        getChildHierarchyForOpaqueLayer(3, 'nonOccludingLayer', [1], {
+        getChildHierarchyForOpaqueLayer(3, 'nonOccludingLayer', 1, {
           left: 3,
           top: 3,
           bottom: 4,
@@ -585,8 +586,8 @@ describe('VisibilityPropertiesComputation', () => {
         ],
       })
       .setChildren([
-        getChildHierarchyForTranslucentLayer(1, 'coveredLayer', [0], rect2x2),
-        getChildHierarchyForTranslucentLayer(2, 'coveringLayer', [1], rect1x1),
+        getChildHierarchyForTranslucentLayer(1, 'coveredLayer', 0, rect2x2),
+        getChildHierarchyForTranslucentLayer(2, 'coveringLayer', 1, rect1x1),
       ])
       .build();
 
@@ -603,7 +604,7 @@ describe('VisibilityPropertiesComputation', () => {
     checkVisibleLayer(visibleLayer, [], []);
   });
 
-  it('computes occlusion state based on z order path', () => {
+  it('computes occlusion state based on z order', () => {
     const hierarchyRoot = new HierarchyTreeBuilder()
       .setId('LayerTraceEntry')
       .setName('root')
@@ -616,8 +617,8 @@ describe('VisibilityPropertiesComputation', () => {
         ],
       })
       .setChildren([
-        getChildHierarchyForOpaqueLayer(1, 'occludingLayer', [1], rect2x2),
-        getChildHierarchyForOpaqueLayer(2, 'occludedLayer', [0], rect1x1),
+        getChildHierarchyForOpaqueLayer(1, 'occludingLayer', 1, rect2x2),
+        getChildHierarchyForOpaqueLayer(2, 'occludedLayer', 0, rect1x1),
       ])
       .build();
 
@@ -653,7 +654,7 @@ describe('VisibilityPropertiesComputation', () => {
           activeBuffer: {width: 1, height: 1, stride: 1, format: 1},
           color: {r: 0, g: 0, b: 0, a: 1},
           layerStack: 0,
-          zOrderPath: [0],
+          z: 0,
           screenBounds: null,
           isOpaque: false,
         } as android.surfaceflinger.ILayerProto,
@@ -682,7 +683,7 @@ describe('VisibilityPropertiesComputation', () => {
           color: {r: 0, g: 0, b: 0, a: 0},
           activeBuffer,
           layerStack: 0,
-          zOrderPath: [0],
+          z: 0,
           screenBounds: null,
           isOpaque: false,
         } as android.surfaceflinger.ILayerProto,
@@ -711,7 +712,7 @@ describe('VisibilityPropertiesComputation', () => {
   function getChildHierarchyForOpaqueLayer(
     id: number,
     name: string,
-    zOrderPath: number[],
+    z: number,
     bounds: android.surfaceflinger.IRectProto,
     layerStack = 0,
   ) {
@@ -726,7 +727,7 @@ describe('VisibilityPropertiesComputation', () => {
           children: [],
           layerStack,
           isOpaque: true,
-          zOrderPath,
+          z,
           screenBounds: bounds,
           visibleRegion: {rect: [bounds]},
         } as android.surfaceflinger.ILayerProto,
@@ -738,7 +739,7 @@ describe('VisibilityPropertiesComputation', () => {
   function getChildHierarchyForTranslucentLayer(
     id: number,
     name: string,
-    zOrderPath: number[],
+    z: number,
     bounds: android.surfaceflinger.IRectProto,
     layerStack = 0,
   ) {
@@ -753,7 +754,7 @@ describe('VisibilityPropertiesComputation', () => {
           children: [],
           layerStack,
           isOpaque: false,
-          zOrderPath,
+          z,
           screenBounds: bounds,
           visibleRegion: {rect: [bounds]},
         } as android.surfaceflinger.ILayerProto,
@@ -822,3 +823,7 @@ describe('VisibilityPropertiesComputation', () => {
     ).toEqual(coveredBy);
   }
 });
+
+interface Proto {
+  [key: string]: number | string | boolean | null | Proto;
+}

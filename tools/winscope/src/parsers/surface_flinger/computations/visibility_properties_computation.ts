@@ -49,15 +49,14 @@ export class VisibilityPropertiesComputation implements Computation {
     this.displays =
       this.root.getEagerPropertyByName('displays')?.getAllChildren().slice() ??
       [];
-
-    const layersOrderedByZ = LayerExtractor.extractLayersSortedByZ(
+    const topDownTraversal = LayerExtractor.extractLayersTopToBottom(
       assertDefined(this.root),
     );
 
     const opaqueLayers: HierarchyTreeNode[] = [];
     const translucentLayers: HierarchyTreeNode[] = [];
 
-    for (const layer of layersOrderedByZ) {
+    for (const layer of topDownTraversal) {
       let isVisible = this.getIsVisible(layer);
       if (!isVisible) {
         layer.addEagerProperty(
@@ -197,7 +196,7 @@ export class VisibilityPropertiesComputation implements Computation {
 
   private hasVisibleRegion(layer: HierarchyTreeNode): boolean {
     let hasVisibleRegion = false;
-    if (layer.getEagerPropertyByName('excludesCompositionState')?.getValue()) {
+    if (this.getDefinedValue(layer, 'excludesCompositionState')) {
       // Doesn't include state sent during composition like visible region and
       // composition type, so we fallback on the bounds as the visible region
       const bounds = layer.getEagerPropertyByName('bounds');
@@ -290,7 +289,7 @@ export class VisibilityPropertiesComputation implements Computation {
 
     if (
       visibleRegionNode?.getValue() === null &&
-      !layer.getEagerPropertyByName('excludesCompositionState')?.getValue()
+      !this.getDefinedValue(layer, 'excludesCompositionState')
     ) {
       reasons.push('null visible region');
     }

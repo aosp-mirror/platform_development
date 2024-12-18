@@ -16,11 +16,14 @@
 
 package com.example.android.vdmdemo.host;
 
+import static android.Manifest.permission.ADD_TRUSTED_DISPLAY;
+
 import android.annotation.SuppressLint;
 import android.app.ActivityOptions;
 import android.companion.virtual.VirtualDeviceManager.VirtualDevice;
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.graphics.Point;
 import android.graphics.PointF;
 import android.hardware.display.DisplayManager;
@@ -58,6 +61,8 @@ import android.view.Surface;
 import androidx.annotation.IntDef;
 
 import com.example.android.vdmdemo.common.RemoteEventProto;
+import com.example.android.vdmdemo.common.RemoteEventProto.BrightnessEvent;
+import com.example.android.vdmdemo.common.RemoteEventProto.DeviceState;
 import com.example.android.vdmdemo.common.RemoteEventProto.DisplayCapabilities;
 import com.example.android.vdmdemo.common.RemoteEventProto.DisplayRotation;
 import com.example.android.vdmdemo.common.RemoteEventProto.RemoteEvent;
@@ -72,6 +77,7 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.util.Collections;
 import java.util.Set;
+import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
 
@@ -86,6 +92,9 @@ class RemoteDisplay implements AutoCloseable {
             DisplayManager.VIRTUAL_DISPLAY_FLAG_TRUSTED
                     | DisplayManager.VIRTUAL_DISPLAY_FLAG_PUBLIC
                     | DisplayManager.VIRTUAL_DISPLAY_FLAG_OWN_CONTENT_ONLY;
+
+    private static final float DEFAULT_CLIENT_BRIGHTNESS = 0.3f;
+    private static final float DIM_CLIENT_BRIGHTNESS = 0.15f;
 
     static final int DISPLAY_TYPE_APP = 0;
     static final int DISPLAY_TYPE_HOME = 1;
@@ -104,6 +113,7 @@ class RemoteDisplay implements AutoCloseable {
     private final VirtualDevice mVirtualDevice;
     private final @DisplayType int mDisplayType;
     private final AtomicBoolean mClosed = new AtomicBoolean(false);
+    private StatusBar mStatusBar;
     private int mRotation;
     private int mWidth;
     private int mHeight;
@@ -116,6 +126,31 @@ class RemoteDisplay implements AutoCloseable {
     private VirtualKeyboard mKeyboard;
     private VirtualStylus mStylus;
     private VirtualRotaryEncoder mRotary;
+
+    // DisplayManager.DisplayListener#onDisplayChanged along with Display#getState() can also be
+    // used to detect power events instead of using VirtualDisplay.Callback.
+    private final VirtualDisplay.Callback mVirtualDisplayCallback = new VirtualDisplay.Callback() {
+        @Override
+        public void onPaused() {
+            Log.v(TAG, "VirtualDisplay paused");
+            mRemoteIo.sendMessage(RemoteEvent.newBuilder()
+                    .setDeviceState(DeviceState.newBuilder().setPowerOn(false))
+                    .build());
+        }
+
+        @Override
+        public void onResumed() {
+            Log.v(TAG, "VirtualDisplay resumed");
+            mRemoteIo.sendMessage(RemoteEvent.newBuilder()
+                    .setDeviceState(DeviceState.newBuilder().setPowerOn(true))
+                    .build());
+        }
+
+        @Override
+        public void onStopped() {
+            Log.v(TAG, "VirtualDisplay stopped");
+        }
+    };
 
     @SuppressLint("WrongConstant")
     RemoteDisplay(
@@ -141,6 +176,10 @@ class RemoteDisplay implements AutoCloseable {
         if (mDisplayType == DISPLAY_TYPE_MIRROR) {
             flags &= ~DisplayManager.VIRTUAL_DISPLAY_FLAG_OWN_CONTENT_ONLY;
         }
+        if (mContext.checkCallingOrSelfPermission(ADD_TRUSTED_DISPLAY)
+                == PackageManager.PERMISSION_DENIED) {
+            flags &= ~DisplayManager.VIRTUAL_DISPLAY_FLAG_TRUSTED;
+        }
 
         Set<String> displayCategories;
         if (mPreferenceController.getBoolean(R.string.pref_enable_display_category)) {
@@ -155,6 +194,18 @@ class RemoteDisplay implements AutoCloseable {
                         .setDisplayCategories(displayCategories)
                         .setFlags(flags);
 
+        if (mPreferenceController.getBoolean(R.string.pref_enable_client_brightness)) {
+            virtualDisplayBuilder
+                    .setDefaultBrightness(DEFAULT_CLIENT_BRIGHTNESS)
+                    .setDimBrightness(DIM_CLIENT_BRIGHTNESS)
+                    .setBrightnessListener(
+                            Executors.newSingleThreadExecutor(), this::onBrightnessChanged);
+        } else {
+            mRemoteIo.sendMessage(RemoteEvent.newBuilder()
+                    .setBrightnessEvent(BrightnessEvent.newBuilder().setBrightness(-1f))
+                    .build());
+        }
+
         if (mDisplayType == DISPLAY_TYPE_HOME) {
             virtualDisplayBuilder = VdmCompat.setHomeSupported(virtualDisplayBuilder, flags);
         }
@@ -162,8 +213,8 @@ class RemoteDisplay implements AutoCloseable {
         mVirtualDisplay =
                 virtualDevice.createVirtualDisplay(
                         virtualDisplayBuilder.build(),
-                        /* executor= */ Runnable::run,
-                        /* callback= */ null);
+                        Runnable::run,
+                        mVirtualDisplayCallback);
 
         VdmCompat.setDisplayImePolicy(
                 mVirtualDevice,
@@ -205,6 +256,20 @@ class RemoteDisplay implements AutoCloseable {
         mVirtualDisplay.setSurface(surface);
 
         mRotation = mVirtualDisplay.getDisplay().getRotation();
+
+        if (mPreferenceController.getBoolean(R.string.pref_enable_custom_status_bar)
+                && mDisplayType != DISPLAY_TYPE_MIRROR) {
+            // Custom status bar cannot be shown on mirror displays. Also, it needs to be recreated
+            // whenever the dimensions of the display change.
+            final Context displayContext =
+                    mContext.createDisplayContext(mVirtualDisplay.getDisplay());
+            mContext.getMainExecutor().execute(() -> {
+                if (mStatusBar != null) {
+                    mStatusBar.destroy(displayContext);
+                }
+                mStatusBar = StatusBar.create(displayContext);
+            });
+        }
 
         if (mTouchscreen != null) {
             mTouchscreen.close();
@@ -262,6 +327,13 @@ class RemoteDisplay implements AutoCloseable {
                                             .setRotationDegrees(rotationDegrees))
                             .build());
         }
+    }
+
+    private void onBrightnessChanged(float brightness) {
+        Log.v(TAG, "VirtualDisplay brightness changed to " + brightness);
+        mRemoteIo.sendMessage(RemoteEvent.newBuilder()
+                .setBrightnessEvent(BrightnessEvent.newBuilder().setBrightness(brightness))
+                .build());
     }
 
     void processRemoteEvent(RemoteEvent event) {
@@ -323,11 +395,10 @@ class RemoteDisplay implements AutoCloseable {
                 break;
             case DEVICE_TYPE_ROTARY_ENCODER:
                 processRotaryEvent(remoteEventToVirtualRotaryEncoderEvent(inputEvent));
+                break;
             default:
-                Log.e(
-                        TAG,
-                        "processInputEvent got an invalid input device type: "
-                                + inputEvent.getDeviceType().getNumber());
+                Log.e(TAG, "processInputEvent got an invalid input device type: "
+                        + inputEvent.getDeviceType().getNumber());
                 break;
         }
     }
@@ -347,10 +418,8 @@ class RemoteDisplay implements AutoCloseable {
                 processRotaryEvent(motionEventToVirtualRotaryEncoderEvent((MotionEvent) event));
                 break;
             default:
-                Log.e(
-                        TAG,
-                        "processInputEvent got an invalid input device type: "
-                                + deviceType.getNumber());
+                Log.e(TAG, "processInputEvent got an invalid input device type: "
+                        + deviceType.getNumber());
                 break;
         }
     }

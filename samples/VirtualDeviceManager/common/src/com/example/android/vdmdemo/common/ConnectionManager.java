@@ -353,6 +353,7 @@ public class ConnectionManager {
         @Override
         public void onUnavailable() {
             Log.d(TAG, "Network unavailable");
+            onError("Network unavailable");
         }
     }
 
@@ -376,6 +377,12 @@ public class ConnectionManager {
                 Log.e(TAG, "Failed to establish connection.", e);
                 onError("Failed to establish connection.");
             }
+        }
+
+        @Override
+        public void onLost(@NonNull Network network) {
+            super.onLost(network);
+            startClientSession();
         }
     }
 }

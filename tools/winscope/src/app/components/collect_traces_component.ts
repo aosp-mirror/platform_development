@@ -32,7 +32,7 @@ import {Store} from 'common/store';
 import {UserNotifier} from 'common/user_notifier';
 import {Analytics} from 'logging/analytics';
 import {ProgressListener} from 'messaging/progress_listener';
-import {ProxyTracingErrors} from 'messaging/user_warnings';
+import {ProxyTraceTimeout} from 'messaging/user_warnings';
 import {
   NoTraceTargetsSelected,
   WinscopeEvent,
@@ -52,7 +52,7 @@ import {
   EnableConfiguration,
   makeDefaultDumpConfigMap,
   makeDefaultTraceConfigMap,
-  makeScreenRecordingConfigs,
+  makeScreenRecordingSelectionConfigs,
   SelectionConfiguration,
   TraceConfigurationMap,
 } from 'trace_collection/trace_configuration';
@@ -798,7 +798,7 @@ export class CollectTracesComponent
     const connection = assertDefined(this.adbConnection);
     const state = connection.getState();
     if (state === ConnectionState.TRACE_TIMEOUT) {
-      UserNotifier.add(new ProxyTracingErrors(['tracing timed out'])).notify();
+      UserNotifier.add(new ProxyTraceTimeout());
       this.filesCollected.emit({
         requested: this.requestedTraceTypes,
         collected: await connection.fetchLastTracingSessionData(
@@ -901,18 +901,14 @@ export class CollectTracesComponent
       selectedDevice.multiDisplayScreenRecordingAvailable &&
       !Array.isArray(displays.value)
     ) {
-      screenRecordingConfig.selectionConfigs = makeScreenRecordingConfigs(
-        selectedDevice.displays,
-        [],
-      );
+      screenRecordingConfig.selectionConfigs =
+        makeScreenRecordingSelectionConfigs(selectedDevice.displays, []);
     } else if (
       !selectedDevice.multiDisplayScreenRecordingAvailable &&
       Array.isArray(displays.value)
     ) {
-      screenRecordingConfig.selectionConfigs = makeScreenRecordingConfigs(
-        selectedDevice.displays,
-        '',
-      );
+      screenRecordingConfig.selectionConfigs =
+        makeScreenRecordingSelectionConfigs(selectedDevice.displays, '');
     } else {
       screenRecordingConfig.selectionConfigs[0].options =
         selectedDevice.displays;

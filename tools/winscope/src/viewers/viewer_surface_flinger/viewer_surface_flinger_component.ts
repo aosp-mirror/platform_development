@@ -46,6 +46,7 @@ import {UiData} from './ui_data';
         [dependencies]="inputData?.dependencies ?? []"
         [userOptions]="inputData?.rectsUserOptions ?? {}"
         [pinnedItems]="inputData?.pinnedItems ?? []"
+        [isDarkMode]="inputData?.isDarkMode ?? false"
         (collapseButtonClicked)="sections.onCollapseStateChange(CollapsibleSectionType.RECTS, true)"></rects-view>
 
       <hierarchy-view
@@ -78,7 +79,6 @@ import {UiData} from './ui_data';
           [highlightedProperty]="inputData?.highlightedProperty ?? ''"
           [traceType]="${TraceType.SURFACE_FLINGER}"
           [store]="store"
-          [displayPropertyGroups]="inputData?.displayPropertyGroups"
           [isProtoDump]="true"
           placeholderText="No selected entry or layer."
           [textFilter]="inputData?.propertiesFilter"

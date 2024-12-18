@@ -88,6 +88,38 @@
             android:summary="Use a custom home activity instead of the default one on home displays"
             android:defaultValue="false"
             app:iconSpaceReserved="false" />
+        <SwitchPreferenceCompat
+            android:key="@string/pref_enable_custom_status_bar"
+            android:title="Custom status bar"
+            android:summary="Show a custom status bar on the remote displays."
+            android:defaultValue="false"
+            app:iconSpaceReserved="false" />
+        <ListPreference
+            android:key="@string/pref_display_timeout"
+            android:title="Display timeout"
+            android:entries="@array/display_timeout_labels"
+            android:entryValues="@array/display_timeouts"
+            android:defaultValue="0"
+            app:useSimpleSummaryProvider="true"
+            app:iconSpaceReserved="false" />
+        <SwitchPreferenceCompat
+            android:key="@string/pref_enable_client_brightness"
+            android:title="Enable client brightness"
+            android:summary="Propagate the virtual display brightness changes to the client display"
+            android:defaultValue="false"
+            app:iconSpaceReserved="false" />
+    </PreferenceCategory>
+
+    <PreferenceCategory
+        android:key="audio"
+        android:title="Audio"
+        app:iconSpaceReserved="false">
+    <SwitchPreferenceCompat
+        android:key="@string/pref_enable_update_audio_policy_mixes"
+        android:title="Use AudioPolicy.updateMixingRules"
+        android:summary="Updates the dynamic AudiPolicy mixing rules instead of unregistering and registering the AudioPolicy."
+        android:defaultValue="true"
+        app:iconSpaceReserved="false" />
     </PreferenceCategory>
 
     <PreferenceCategory

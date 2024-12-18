@@ -3,6 +3,7 @@ import { DataPoint, isNotFound } from './golden';
 import { VisualTimeline } from './visual-timeline';
 
 export interface Visualization {
+  height: number;
   render(
     timeline: VisualTimeline,
     dataPoints: Array<DataPoint>,
@@ -10,7 +11,7 @@ export interface Visualization {
   ): void;
 }
 
-const PROBE_COLORS = [
+export const PROBE_COLORS = [
   '#E51C23',
   '#9C27B0',
   '#5677FC',
@@ -33,17 +34,24 @@ function lighten(hex: string): string {
 }
 
 export class LineGraphVisualization implements Visualization {
-  color: string = PROBE_COLORS[0];
-  fillColor: string = lighten(this.color);
+  color: string
+  fillColor: string 
+
+  height: number = 96
 
   constructor(
     public minValue: number,
     public maxValue: number,
+     color: string|null, 
   ) {
     checkArgument(
       minValue < maxValue,
       `minValue ${minValue} >= maxValue ${maxValue}`,
     );
+
+    this.color = color ?? PROBE_COLORS[0]
+    this.fillColor  = lighten(this.color);
+
   }
 
   render(
@@ -52,10 +60,12 @@ export class LineGraphVisualization implements Visualization {
     canvas: HTMLCanvasElement,
   ) {
     const cw = canvas.width;
-    const ch = 30;
+    const ch = 90;
 
     const ctx = checkNotNull(canvas.getContext('2d'));
     ctx.clearRect(0, 0, cw, canvas.height);
+    ctx.save();
+    ctx.translate(0, 5);
 
     const min = this.minValue;
     const max = this.maxValue;
@@ -72,30 +82,17 @@ export class LineGraphVisualization implements Visualization {
       }
       const end = i;
 
-      const bottomLineWidth = 2;
-      // solid bottom line
-      ctx.fillStyle = color;
-      ctx.arc(
-        timeline.frameToPx(start),
-        ch - bottomLineWidth / 2,
-        5,
-        0,
-        2 * Math.PI,
-      );
-      ctx.arc(
-        timeline.frameToPx(end - 1),
-        ch - bottomLineWidth / 2,
-        5,
-        0,
-        2 * Math.PI,
-      );
-      ctx.fill();
+      const bottomLineWidth = 1;
+
+      const mid = min <=0 && max >= 0 ? 0 : (min > 0) ? min : max
+
+      const midY = (1 - (mid - min) / (max - min)) * ch
 
       ctx.save();
       try {
         ctx.fillStyle = this.fillColor;
         ctx.beginPath();
-        ctx.moveTo(timeline.frameToPx(start), ch - bottomLineWidth);
+        ctx.moveTo(timeline.frameToPx(start), midY);
         for (let i = start; i < end; i++) {
           const value = dataPoints.at(i);
           if (typeof value !== 'number') {
@@ -106,26 +103,53 @@ export class LineGraphVisualization implements Visualization {
             (1 - (value - min) / (max - min)) * ch,
           );
         }
-        ctx.lineTo(timeline.frameToPx(end - 1), ch - bottomLineWidth);
+        ctx.lineTo(timeline.frameToPx(end - 1), midY);
         ctx.fill();
       } finally {
         ctx.restore();
       }
+      ctx.save();
+      try {
+        ctx.beginPath();
+        ctx.strokeStyle = color;
+        ctx.lineWidth = bottomLineWidth;
 
-      ctx.beginPath();
-      ctx.strokeStyle = color;
-      ctx.lineWidth = bottomLineWidth;
+        ctx.moveTo(timeline.frameToPx(start), midY);
+        ctx.lineTo(timeline.frameToPx(end - 1), midY);
 
-      ctx.moveTo(timeline.frameToPx(start), ch - bottomLineWidth / 2);
-      ctx.lineTo(timeline.frameToPx(end - 1), ch - bottomLineWidth / 2);
+        ctx.stroke();
+      } finally {
+        ctx.restore();
+      }
 
-      ctx.stroke();
+      ctx.fillStyle = color;
+
+      for (let i = start; i < end; i++) {
+        const value = dataPoints.at(i);
+        if (typeof value !== 'number') {
+          continue;
+        }
+        ctx.beginPath();
+
+        ctx.arc(
+          timeline.frameToPx(i),
+          (1 - (value - min) / (max - min)) * ch,
+          2,
+          0,
+          2 * Math.PI,
+        );
+
+        ctx.fill();
+      }
+
+      ctx.restore();
     }
   }
 }
 
 export class DataPointVisualization implements Visualization {
   color: string = PROBE_COLORS[0];
+  height: number = 32
 
   render(
     timeline: VisualTimeline,

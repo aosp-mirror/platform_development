@@ -16,6 +16,7 @@
 
 package com.android.commands.monkey;
 
+import android.view.Display;
 import android.view.InputDevice;
 
 /**
@@ -23,7 +24,8 @@ import android.view.InputDevice;
  */
 public class MonkeyTrackballEvent extends MonkeyMotionEvent {
     public MonkeyTrackballEvent(int action) {
-        super(MonkeyEvent.EVENT_TYPE_TRACKBALL, InputDevice.SOURCE_TRACKBALL, action);
+        super(MonkeyEvent.EVENT_TYPE_TRACKBALL, InputDevice.SOURCE_TRACKBALL, action,
+                Display.INVALID_DISPLAY);
     }
 
     @Override

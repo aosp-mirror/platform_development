@@ -31,10 +31,16 @@
         android:name="android.permission.REQUEST_COMPANION_PROFILE_NEARBY_DEVICE_STREAMING"
         tools:ignore="ProtectedPermissions" />
     <uses-permission
+        android:name="android.permission.REQUEST_COMPANION_PROFILE_SENSOR_DEVICE_STREAMING"
+        tools:ignore="ProtectedPermissions" />
+    <uses-permission
         android:name="android.permission.ADD_ALWAYS_UNLOCKED_DISPLAY"
         tools:ignore="ProtectedPermissions" />
     <uses-permission
         android:name="android.permission.ADD_TRUSTED_DISPLAY"
+        tools:ignore="ProtectedPermissions" />
+    <uses-permission
+        android:name="android.permission.ADD_MIRROR_DISPLAY"
         tools:ignore="ProtectedPermissions" />
     <uses-permission
         android:name="android.permission.SUBSCRIBE_TO_KEYGUARD_LOCKED_STATE"
@@ -103,14 +109,6 @@
             <meta-data
                 android:name="android.view.im"
                 android:resource="@xml/proxy_ime" />
-        </service>
-        <service
-            android:name=".NotificationListener"
-            android:exported="false"
-            android:permission="android.permission.BIND_NOTIFICATION_LISTENER_SERVICE">
-            <intent-filter>
-                <action android:name="android.service.notification.NotificationListenerService" />
-            </intent-filter>
         </service>
     </application>
 </manifest>

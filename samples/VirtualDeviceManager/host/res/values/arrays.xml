@@ -3,10 +3,12 @@
     <string-array translatable="false" name="device_profile_labels">
         <item>App streaming</item>
         <item>Nearby device streaming</item>
+        <item>Nearby sensor streaming</item>
     </string-array>
     <string-array translatable="false" name="device_profiles">
         <item>@string/app_streaming</item>
         <item>@string/nearby_device_streaming</item>
+        <item>@string/sensor_device_streaming</item>
     </string-array>
 
     <string-array translatable="false" name="display_ime_policy_labels">
@@ -19,5 +21,16 @@
         <item>0</item>
         <item>1</item>
         <item>2</item>
+    </string-array>
+
+    <string-array translatable="false" name="display_timeout_labels">
+        <item>Always ON</item>
+        <item>5s</item>
+        <item>1m23s</item>
+    </string-array>
+    <string-array translatable="false" name="display_timeouts">
+        <item>0</item>
+        <item>5000</item>
+        <item>123000</item>
     </string-array>
 </resources>

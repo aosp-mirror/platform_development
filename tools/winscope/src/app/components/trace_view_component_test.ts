@@ -39,29 +39,22 @@ import {
 } from 'messaging/winscope_event';
 import {TimestampConverterUtils} from 'test/unit/timestamp_converter_utils';
 import {TraceBuilder} from 'test/unit/trace_builder';
+import {UnitTestUtils} from 'test/unit/utils';
 import {TraceType} from 'trace/trace_type';
 import {Viewer, ViewType} from 'viewers/viewer';
 import {ViewerStub} from 'viewers/viewer_stub';
 import {TraceViewComponent} from './trace_view_component';
 
 describe('TraceViewComponent', () => {
-  const traceSf = new TraceBuilder<object>()
-    .setType(TraceType.SURFACE_FLINGER)
-    .setEntries([])
-    .build();
+  const traceSf = UnitTestUtils.makeEmptyTrace(TraceType.SURFACE_FLINGER);
   const traceWm = new TraceBuilder<object>()
     .setType(TraceType.WINDOW_MANAGER)
     .setEntries([{}])
     .setTimestamps([TimestampConverterUtils.makeZeroTimestamp()])
+    .setDescriptors(['file_1', 'file_1'])
     .build();
-  const traceSr = new TraceBuilder<object>()
-    .setType(TraceType.SCREEN_RECORDING)
-    .setEntries([])
-    .build();
-  const traceProtolog = new TraceBuilder<object>()
-    .setType(TraceType.PROTO_LOG)
-    .setEntries([])
-    .build();
+  const traceSr = UnitTestUtils.makeEmptyTrace(TraceType.SCREEN_RECORDING);
+  const traceProtolog = UnitTestUtils.makeEmptyTrace(TraceType.PROTO_LOG);
 
   let fixture: ComponentFixture<TestHostComponent>;
   let component: TestHostComponent;
@@ -90,10 +83,10 @@ describe('TraceViewComponent', () => {
     htmlElement = fixture.nativeElement;
     component = fixture.componentInstance;
     component.viewers = [
-      new ViewerStub('Title0', 'Content0', traceSf, ViewType.TAB),
-      new ViewerStub('Title1', 'Content1', traceWm, ViewType.TAB),
+      new ViewerStub('Title0', 'Content0', traceSf, ViewType.TRACE_TAB),
+      new ViewerStub('Title1', 'Content1', traceWm, ViewType.TRACE_TAB),
       new ViewerStub('Title2', 'Content2', traceSr, ViewType.OVERLAY),
-      new ViewerStub('Title3', 'Content3', traceProtolog, ViewType.TAB),
+      new ViewerStub('Title3', 'Content3', traceProtolog, ViewType.TRACE_TAB),
     ];
     fixture.detectChanges();
   });
@@ -119,7 +112,7 @@ describe('TraceViewComponent', () => {
   it('throws error if more than one overlay present', () => {
     expect(() => {
       component.viewers = [
-        new ViewerStub('Title0', 'Content0', traceSf, ViewType.TAB),
+        new ViewerStub('Title0', 'Content0', traceSf, ViewType.TRACE_TAB),
         new ViewerStub('Title1', 'Content1', traceWm, ViewType.OVERLAY),
         new ViewerStub('Title2', 'Content2', traceSr, ViewType.OVERLAY),
       ];
@@ -369,6 +362,29 @@ describe('TraceViewComponent', () => {
         TraceType.SURFACE_FLINGER,
       ),
     );
+  });
+
+  it('does not show global tab first', () => {
+    component.viewers = [
+      new ViewerStub('Title0', 'Content0', undefined, ViewType.GLOBAL_SEARCH),
+      new ViewerStub('Title1', 'Content1', traceWm, ViewType.TRACE_TAB),
+    ];
+    fixture.detectChanges();
+    const visibleTabContents = getVisibleTabContents();
+    expect(visibleTabContents.length).toEqual(1);
+    expect(visibleTabContents[0].innerHTML).toEqual('Content1');
+  });
+
+  it('shows tooltips for tabs with trace descriptors', () => {
+    const tabs = htmlElement.querySelectorAll('.tab');
+    const wmTab = tabs.item(1);
+    wmTab.dispatchEvent(new Event('mouseenter'));
+    fixture.detectChanges();
+    expect(
+      document.querySelector<HTMLElement>('.mat-tooltip-panel')?.textContent,
+    ).toEqual('file_1');
+    wmTab.dispatchEvent(new Event('mouseleave'));
+    fixture.detectChanges();
   });
 
   function getVisibleTabContents() {

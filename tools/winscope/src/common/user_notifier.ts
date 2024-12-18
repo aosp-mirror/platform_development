@@ -15,6 +15,7 @@
  */
 
 import {SnackBarOpener} from 'app/components/snack_bar_opener';
+import {Analytics} from 'logging/analytics';
 import {UserNotification} from 'messaging/user_notification';
 
 export class UserNotifier {
@@ -29,6 +30,12 @@ export class UserNotifier {
 
   static notify() {
     if (UserNotifier.notifications.length === 0) return;
+    UserNotifier.notifications.forEach((notif) => {
+      Analytics.UserNotification.logUserWarning(
+        notif.getDescriptor(),
+        notif.getMessage(),
+      );
+    });
     UserNotifier.snackBarOpener?.onNotifications(UserNotifier.notifications);
     UserNotifier.notifications = [];
   }

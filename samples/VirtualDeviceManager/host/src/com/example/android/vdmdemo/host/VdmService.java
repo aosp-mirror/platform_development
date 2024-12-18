@@ -67,6 +67,7 @@ import androidx.annotation.Nullable;
 import androidx.core.os.BuildCompat;
 
 import com.example.android.vdmdemo.common.ConnectionManager;
+import com.example.android.vdmdemo.common.RemoteEventProto;
 import com.example.android.vdmdemo.common.RemoteEventProto.DeviceCapabilities;
 import com.example.android.vdmdemo.common.RemoteEventProto.DisplayChangeEvent;
 import com.example.android.vdmdemo.common.RemoteEventProto.RemoteEvent;
@@ -77,6 +78,8 @@ import com.google.common.util.concurrent.MoreExecutors;
 
 import dagger.hilt.android.AndroidEntryPoint;
 
+import java.time.Duration;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
@@ -100,8 +103,6 @@ public final class VdmService extends Hilt_VdmService {
 
     private static final String ACTION_STOP = "com.example.android.vdmdemo.host.VdmService.STOP";
 
-    public static final String ACTION_LOCKDOWN =
-            "com.example.android.vdmdemo.host.VdmService.LOCKDOWN";
     private int mRecordingAudioSessionId;
     private int mPlaybackAudioSessionId;
 
@@ -142,7 +143,7 @@ public final class VdmService extends Hilt_VdmService {
     private DisplayManager mDisplayManager;
     private KeyguardManager mKeyguardManager;
     private VirtualDeviceManager mVirtualDeviceManager;
-    private Consumer<Boolean> mLocalVirtualDeviceLifecycleListener;
+    private ArrayList<Consumer<Boolean>> mLocalVirtualDeviceLifecycleListeners = new ArrayList<>();
 
     private VirtualDeviceManager.VirtualDeviceListener mVirtualDeviceListener;
 
@@ -284,11 +285,6 @@ public final class VdmService extends Hilt_VdmService {
             return START_NOT_STICKY;
         }
 
-        if (intent != null && ACTION_LOCKDOWN.equals(intent.getAction())) {
-            lockdown();
-            return START_STICKY;
-        }
-
         NotificationChannel notificationChannel =
                 new NotificationChannel(
                         CHANNEL_ID, "VDM Service Channel", NotificationManager.IMPORTANCE_LOW);
@@ -365,12 +361,14 @@ public final class VdmService extends Hilt_VdmService {
         closeVirtualDevice();
         mRemoteIo.removeMessageConsumer(mRemoteEventConsumer);
         mDisplayManager.unregisterDisplayListener(mDisplayListener);
-        mAudioStreamer.stop();
-        mAudioInjector.stop();
     }
 
-    void setVirtualDeviceListener(Consumer<Boolean> listener) {
-        mLocalVirtualDeviceLifecycleListener = listener;
+    void addVirtualDeviceListener(Consumer<Boolean> listener) {
+        mLocalVirtualDeviceLifecycleListeners.add(listener);
+    }
+
+    void removeVirtualDeviceListener(Consumer<Boolean> listener) {
+        mLocalVirtualDeviceLifecycleListeners.remove(listener);
     }
 
     private void processRemoteEvent(RemoteEvent event) {
@@ -397,23 +395,55 @@ public final class VdmService extends Hilt_VdmService {
             mDisplayRepository.removeDisplayByRemoteId(event.getDisplayId());
         } else if (event.hasDisplayChangeEvent() && event.getDisplayChangeEvent().getFocused()) {
             mInputController.setFocusedRemoteDisplayId(event.getDisplayId());
+        } else if (event.hasDeviceState() && VdmCompat.isAtLeastB()
+                && Flags.deviceAwareDisplayPower() && mVirtualDevice != null) {
+            if (event.getDeviceState().getPowerOn()) {
+                mVirtualDevice.wakeUp();
+            } else {
+                mVirtualDevice.goToSleep();
+            }
         }
     }
 
     private void handleAudioCapabilities() {
         if (mPreferenceController.getBoolean(R.string.pref_enable_client_audio)) {
+            openAudio();
+        } else {
+            closeAudio();
+        }
+    }
+
+    private void openAudio() {
+        AudioManager audioManager = getSystemService(AudioManager.class);
+        if (audioManager != null) {
+            // Assuming one playback session id and one recording session id per host (for now)
+            // Reuse them if already initialized
+            if (mPlaybackAudioSessionId == 0) {
+                mPlaybackAudioSessionId = audioManager.generateAudioSessionId();
+            }
+            if (mRecordingAudioSessionId == 0) {
+                mRecordingAudioSessionId = audioManager.generateAudioSessionId();
+            }
+
             if (mVirtualDevice != null) {
                 if (mDeviceCapabilities.getSupportsAudioOutput()) {
                     mAudioStreamer.start(mVirtualDevice.getDeviceId(), mPlaybackAudioSessionId);
+                } else {
+                    mAudioStreamer.stop();
                 }
+
                 if (mDeviceCapabilities.getSupportsAudioInput()) {
                     mAudioInjector.start(mVirtualDevice.getDeviceId(), mRecordingAudioSessionId);
+                } else {
+                    mAudioInjector.stop();
                 }
             }
-        } else {
-            mAudioStreamer.stop();
-            mAudioInjector.stop();
         }
+    }
+
+    private void closeAudio() {
+        mAudioStreamer.stop();
+        mAudioInjector.stop();
     }
 
     private void associateAndCreateVirtualDevice() {
@@ -421,23 +451,26 @@ public final class VdmService extends Hilt_VdmService {
                 Objects.requireNonNull(getSystemService(CompanionDeviceManager.class));
         RoleManager rm = Objects.requireNonNull(getSystemService(RoleManager.class));
         final String deviceProfile = mPreferenceController.getString(R.string.pref_device_profile);
+        AssociationInfo existingAssociation = null;
         for (AssociationInfo associationInfo : cdm.getMyAssociations()) {
-            if (!Objects.equals(associationInfo.getDeviceProfile(), deviceProfile)
-                    || !Objects.equals(associationInfo.getPackageName(), getPackageName())
-                    || associationInfo.getDisplayName() == null
-                    || !Objects.equals(
-                    associationInfo.getDisplayName().toString(),
-                    mDeviceCapabilities.getDeviceName())) {
-                continue;
-            }
-            // It is possible that the role was revoked but the CDM association remained.
-            if (!rm.isRoleHeld(deviceProfile)) {
-                cdm.disassociate(associationInfo.getId());
-                break;
+            if (rm.isRoleHeld(deviceProfile)
+                    && Objects.equals(associationInfo.getPackageName(), getPackageName())
+                    && Objects.equals(associationInfo.getDeviceProfile(), deviceProfile)
+                    && associationInfo.getDisplayName() != null
+                    && Objects.equals(associationInfo.getDisplayName().toString(),
+                            mDeviceCapabilities.getDeviceName())) {
+                Log.d(TAG, "Reusing association " + associationInfo.getDisplayName() + " for "
+                        + deviceProfile);
+                existingAssociation = associationInfo;
             } else {
-                createVirtualDevice(associationInfo);
-                return;
+                Log.d(TAG, "Removing association " + associationInfo.getDisplayName() + " / "
+                        + associationInfo.getDeviceProfile());
+                cdm.disassociate(associationInfo.getId());
             }
+        }
+        if (existingAssociation != null) {
+            createVirtualDevice(existingAssociation);
+            return;
         }
 
         @SuppressLint("MissingPermission")
@@ -446,6 +479,10 @@ public final class VdmService extends Hilt_VdmService {
                         .setDeviceProfile(deviceProfile)
                         .setDisplayName(mDeviceCapabilities.getDeviceName())
                         .setSelfManaged(true);
+        if (VdmCompat.isAtLeastB() && android.companion.Flags.associationDeviceIcon()) {
+            associationRequest.setDeviceIcon(Icon.createWithResource(this, R.drawable.device_icon));
+        }
+
         cdm.associate(
                 associationRequest.build(),
                 new CompanionDeviceManager.Callback() {
@@ -477,15 +514,18 @@ public final class VdmService extends Hilt_VdmService {
     }
 
     private void createVirtualDevice(AssociationInfo associationInfo) {
+        Log.d(TAG, "VdmService createVirtualDevice name: "
+                + mDeviceCapabilities.getDeviceName() + " with association: " + associationInfo);
+
         VirtualDeviceParams.Builder virtualDeviceBuilder =
                 new VirtualDeviceParams.Builder()
                         .setName("VirtualDevice - " + mDeviceCapabilities.getDeviceName());
 
-        AudioManager audioManager = getSystemService(AudioManager.class);
-        mPlaybackAudioSessionId = audioManager.generateAudioSessionId();
-        mRecordingAudioSessionId = audioManager.generateAudioSessionId();
+        mPreferenceController.evaluate();
 
         if (mPreferenceController.getBoolean(R.string.pref_enable_client_audio)) {
+            openAudio();
+
             virtualDeviceBuilder.setDevicePolicy(POLICY_TYPE_AUDIO, DEVICE_POLICY_CUSTOM)
                     .setAudioPlaybackSessionId(mPlaybackAudioSessionId)
                     .setAudioRecordingSessionId(mRecordingAudioSessionId);
@@ -504,6 +544,14 @@ public final class VdmService extends Hilt_VdmService {
                 virtualDeviceBuilder.setHomeComponent(
                         new ComponentName(this, CustomLauncherActivity.class));
             }
+        }
+
+        if (VdmCompat.isAtLeastB() && Flags.deviceAwareDisplayPower()) {
+            int displayTimeout = Integer.parseInt(
+                    mPreferenceController.getString(R.string.pref_display_timeout));
+            virtualDeviceBuilder
+                    .setDimDuration(Duration.ofMillis(displayTimeout / 2))
+                    .setScreenOffTimeout(Duration.ofMillis(displayTimeout));
         }
 
         if (mPreferenceController.getBoolean(R.string.pref_hide_from_recents)) {
@@ -533,7 +581,7 @@ public final class VdmService extends Hilt_VdmService {
                         .setPower(sensor.getPower())
                         .setResolution(sensor.getResolution())
                         .setMaximumRange(sensor.getMaxRange());
-                if (Flags.deviceAwareDisplayPower()) {
+                if (VdmCompat.isAtLeastB() && Flags.deviceAwareDisplayPower()) {
                     builder.setWakeUpSensor(sensor.getIsWakeUpSensor())
                             .setReportingMode(sensor.getReportingMode());
                 }
@@ -584,24 +632,26 @@ public final class VdmService extends Hilt_VdmService {
         }
 
         Log.i(TAG, "Created virtual device");
-        if (mLocalVirtualDeviceLifecycleListener != null) {
-            mLocalVirtualDeviceLifecycleListener.accept(true);
+        for (Consumer<Boolean> listener : mLocalVirtualDeviceLifecycleListeners) {
+            listener.accept(true);
         }
-    }
-
-    private void lockdown() {
-        Log.i(TAG, "Initiating Lockdown.");
-        mDisplayRepository.clear();
+        mRemoteIo.sendMessage(RemoteEvent.newBuilder()
+                .setDeviceState(RemoteEventProto.DeviceState.newBuilder().setPowerOn(true))
+                .build());
     }
 
     private synchronized void closeVirtualDevice() {
-        if (mLocalVirtualDeviceLifecycleListener != null) {
-            mLocalVirtualDeviceLifecycleListener.accept(false);
+        for (Consumer<Boolean> listener : mLocalVirtualDeviceLifecycleListeners) {
+            listener.accept(false);
         }
+
         if (mRemoteSensorManager != null) {
             mRemoteSensorManager.close();
             mRemoteSensorManager = null;
         }
+
+        closeAudio();
+
         if (mVirtualDevice != null) {
             Log.i(TAG, "Closing virtual device");
             mDisplayRepository.clear();
@@ -694,7 +744,7 @@ public final class VdmService extends Hilt_VdmService {
         observers.put(R.string.pref_display_ime_policy,
                 s -> {
                     if (mVirtualDevice != null) {
-                        int policy = Integer.valueOf((String) s);
+                        int policy = Integer.parseInt((String) s);
                         Arrays.stream(mDisplayRepository.getDisplayIds()).forEach(
                                 displayId -> mVirtualDevice.setDisplayImePolicy(displayId, policy));
                     }
@@ -705,6 +755,7 @@ public final class VdmService extends Hilt_VdmService {
         observers.put(R.string.pref_always_unlocked_device, v -> recreateVirtualDevice());
         observers.put(R.string.pref_enable_client_native_ime, v -> recreateVirtualDevice());
         observers.put(R.string.pref_enable_custom_home, v -> recreateVirtualDevice());
+        observers.put(R.string.pref_display_timeout, v -> recreateVirtualDevice());
         observers.put(R.string.pref_enable_display_category, v -> recreateVirtualDevice());
 
         return observers;

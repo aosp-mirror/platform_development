@@ -14,65 +14,8 @@
  * limitations under the License.
  */
 
-import {StringUtils} from './string_utils';
-
 export enum FilterFlag {
   MATCH_CASE,
   MATCH_WORD,
   USE_REGEX,
-}
-
-export type StringFilterPredicate = (value: string) => boolean;
-
-export function makeFilterPredicate(
-  filterString: string,
-  flags: FilterFlag[],
-): StringFilterPredicate {
-  const matchCase = flags.includes(FilterFlag.MATCH_CASE);
-  const matchWord = flags.includes(FilterFlag.MATCH_WORD);
-  const useRegex = flags.includes(FilterFlag.USE_REGEX);
-
-  let filter: StringFilterPredicate;
-  if (useRegex) {
-    const regexFlags = useRegex && !matchCase ? 'i' : '';
-    const regexString = matchWord
-      ? '\\b(?:' + filterString + ')\\b'
-      : filterString;
-    try {
-      const regex = new RegExp(regexString, regexFlags);
-      filter = (entryString: string) => {
-        if (filterString.length === 0) return true;
-        return regex.test(entryString);
-      };
-    } catch (e) {
-      filter = (entryString: string) => false;
-    }
-  } else {
-    const testString = matchCase ? filterString : filterString.toLowerCase();
-    filter = (entryString: string) => {
-      if (filterString.length === 0) return true;
-
-      let entrySubstring = matchCase ? entryString : entryString.toLowerCase();
-      let testStringIndex = entrySubstring.indexOf(testString);
-
-      while (testStringIndex !== -1) {
-        if (!matchWord) return true;
-
-        const nextChar = entrySubstring.at(testStringIndex + testString.length);
-        if (
-          nextChar === undefined ||
-          !(StringUtils.isAlpha(nextChar) || StringUtils.isDigit(nextChar))
-        ) {
-          return true;
-        }
-
-        entrySubstring = entrySubstring.slice(
-          testStringIndex + testString.length,
-        );
-        testStringIndex = entrySubstring.indexOf(testString);
-      }
-      return false;
-    };
-  }
-  return filter;
 }

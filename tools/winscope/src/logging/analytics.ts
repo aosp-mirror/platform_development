@@ -33,6 +33,10 @@ export class Analytics {
   private static PROXY_ERROR = 'proxy_error';
   private static PROXY_SERVER_NOT_FOUND = 'proxy_server_not_found';
   private static PROXY_NO_FILES_FOUND = 'proxy_no_files_found';
+  private static TP_QUERY_EXECUTION_TIME = 'tp_query_execution_time';
+  private static TP_QUERY_REQUESTED = 'tp_query_requested';
+  private static TP_QUERY_FAILED = 'tp_query_failed';
+  private static TP_QUERY_SAVED = 'tp_query_saved';
   private static RECT_SETTINGS = 'rect_settings';
   private static REFRESH_DUMPS = 'refresh_dumps';
   private static TIME_BOOKMARK = 'time_bookmark';
@@ -172,6 +176,25 @@ export class Analytics {
     }
   };
 
+  static TraceSearch = class {
+    static logQueryExecutionTime(value: number) {
+      Analytics.doLogEvent(Analytics.TP_QUERY_EXECUTION_TIME, {
+        value,
+      } as Gtag.CustomParams);
+    }
+    static logQueryFailure() {
+      Analytics.doLogEvent(Analytics.TP_QUERY_FAILED);
+    }
+    static logQueryRequested(type: 'new' | 'saved' | 'recent') {
+      Analytics.doLogEvent(Analytics.TP_QUERY_REQUESTED, {
+        type,
+      } as Gtag.CustomParams);
+    }
+    static logQuerySaved() {
+      Analytics.doLogEvent(Analytics.TP_QUERY_SAVED);
+    }
+  };
+
   static Tracing = class {
     static logTraceLoaded(parser: Parser<object>) {
       Analytics.doLogEvent(Analytics.TRACING_LOADED_EVENT, {
@@ -206,9 +229,10 @@ export class Analytics {
   };
 
   static UserNotification = class {
-    static logUserWarning(description: string) {
+    static logUserWarning(description: string, message: string) {
       Analytics.doLogEvent(Analytics.USER_WARNING, {
         description,
+        message,
       } as Gtag.CustomParams);
     }
   };

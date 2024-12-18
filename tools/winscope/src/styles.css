@@ -32,6 +32,10 @@ app-root {
     margin: 0;
 }
 
+.mat-body-2 {
+    font: 500 14px / 20px 'Roboto', sans-serif;
+}
+
 .mat-button, .mat-icon-button, .mat-stroked-button, .mat-flat-button {
     user-select: auto !important;
 }
@@ -60,6 +64,7 @@ rects-view .displays-select .mat-form-field-flex {
 
 .mat-select-panel:has(>.select-filter) {
     max-height: 75vh;
+    max-width: unset;
 }
 
 body.dark-mode button.mat-raised-button.mat-primary,
@@ -111,4 +116,88 @@ body.dark-mode button.mat-flat-button.mat-primary {
 .outline-field .mat-form-field-infix {
     padding: 6px 0 10px 0;
     border-top: 8px solid transparent;
+}
+
+.applied-field .mat-form-field-flex {
+    border-width: 2px;
+    border-style: solid;
+    border-color: transparent;
+}
+
+.applied-field.highlighted:not(.mat-focused) .mat-form-field-flex {
+    border-color: var(--primary);
+}
+
+.applied-field.highlighted .mat-form-field-flex {
+    background-color: var(--selected-element-color);
+}
+
+.applied-field.highlighted:not(.mat-focused) .mat-form-field-underline {
+    display: none;
+}
+
+.no-padding-field .mat-form-field-wrapper {
+    padding-bottom: 0px;
+}
+
+.no-padding-field .mat-form-field-infix, .no-border-top-field .mat-form-field-infix  {
+    border-top: 0px;
+}
+
+.center-field .mat-form-field-flex {
+    align-items: center;
+}
+
+log-view .headers .mat-form-field-infix {
+    width: 100%;
+}
+
+.warning-icon {
+    color: var(--warning-color);
+}
+.error-icon {
+    color: var(--error-color);
+}
+
+.save-field {
+    display: flex;
+    align-items: center;
+    font-size: 14px;
+    width: 100%;
+}
+
+.save-field mat-form-field {
+    width: 100%;
+}
+
+.save-field button {
+    height: fit-content;
+    min-width: fit-content;
+    margin-inline-start: 10px;
+}
+
+.search-tabs .mat-tab-label {
+    min-width: 80px;
+}
+
+.search-tabs mat-tab-body {
+    padding: 12px;
+}
+
+.user-notification {
+    color: var(--contrast-text-color);
+    background-color: var(--contrast-background-color);
+    box-shadow: 0px 3px 5px -1px rgba(0, 0, 0, 0.2), 0px 6px 10px 0px rgba(0, 0, 0, 0.14), 0px 1px 18px 0px rgba(0, 0, 0, 0.12);
+    border-radius: 4px;
+    box-sizing: border-box;
+    display: block;
+    margin: 24px;
+    padding: 14px 16px;
+    transform-origin: center;
+}
+
+.disabled-component {
+    pointer-events: none;
+    opacity: 0.5;
+    filter: grayscale(1);
 }

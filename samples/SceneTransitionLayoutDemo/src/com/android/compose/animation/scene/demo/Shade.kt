@@ -24,6 +24,8 @@ import androidx.compose.animation.core.VectorConverter
 import androidx.compose.animation.core.VisibilityThreshold
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
+import androidx.compose.foundation.gestures.FlingBehavior
+import androidx.compose.foundation.gestures.ScrollableDefaults
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -210,6 +212,7 @@ private fun SceneScope.ShadeLayout(
                 { background() },
                 { underScrim() },
                 {
+                    val flingBehavior = ScrollableDefaults.flingBehavior()
                     Box(
                         Modifier.verticalNestedScrollToScene(
                                 topBehavior = NestedScrollBehavior.EdgeWithPreview
@@ -220,6 +223,7 @@ private fun SceneScope.ShadeLayout(
                                     underScrimHeight,
                                     density,
                                     scrimMinTopPadding,
+                                    flingBehavior,
                                 ) {
                                     scrimNestedScrollConnection(
                                         scrimOffset = { scrimOffset.value },
@@ -227,14 +231,15 @@ private fun SceneScope.ShadeLayout(
                                         underScrimHeight = { underScrimHeight.value },
                                         density = density,
                                         scrimMinTopPadding = scrimMinTopPadding,
+                                        flingBehavior = flingBehavior,
                                     )
                                 }
                             )
                     ) {
                         scrim()
                     }
-                }
-            )
+                },
+            ),
     ) { measurables, constraints ->
         check(measurables.size == 3)
         check(measurables[0].size == 1) { "background should compose only top-level composable" }
@@ -258,7 +263,7 @@ private fun SceneScope.ShadeLayout(
             val additionalScrimOffset = additionalScrimOffset?.value?.toPx() ?: 0f
             scrim.placeWithLayer(
                 0,
-                underScrim.height + (scrimOffset.value + additionalScrimOffset).roundToInt()
+                underScrim.height + (scrimOffset.value + additionalScrimOffset).roundToInt(),
             )
         }
     }
@@ -320,12 +325,14 @@ private fun scrimNestedScrollConnection(
     underScrimHeight: () -> Float,
     density: Density,
     scrimMinTopPadding: Dp,
+    flingBehavior: FlingBehavior,
 ): PriorityNestedScrollConnection {
     return LargeTopAppBarNestedScrollConnection(
         height = scrimOffset,
         onHeightChanged = onScrimOffsetChange,
         minHeight = { minScrimOffset(density, underScrimHeight(), scrimMinTopPadding) },
         maxHeight = { 0f },
+        flingBehavior = flingBehavior,
     )
 }
 
@@ -365,7 +372,7 @@ private fun SceneScope.UnderScrim(
                 animateSceneFloatAsState(
                     0f,
                     QuickSettingsGrid.Values.Expansion,
-                    canOverflow = false
+                    canOverflow = false,
                 )
 
             QuickSettingsGrid(
@@ -390,7 +397,7 @@ private fun SceneScope.UnderScrim(
 
 @Composable
 private fun SceneScope.Scrim(
-    notificationList: @Composable (SceneScope.() -> Unit),
+    notificationList: @Composable SceneScope.() -> Unit,
     shouldPunchHoleBehindScrim: Boolean,
     scrimMinTopPadding: Dp,
     modifier: Modifier = Modifier,
@@ -454,32 +461,34 @@ fun SceneScope.ShadeTime(scale: Float, modifier: Modifier = Modifier) {
         val layoutResult = remember(measurer, style) { measurer.measure("10:36", style = style) }
         val layoutDirection = LocalLayoutDirection.current
 
-        Spacer(
-            Modifier.layout { measurable, _ ->
-                    // Layout this element with the *target* size/scale of the element in this
-                    // scene.
-                    val width = ceil(layoutResult.size.width * scale).roundToInt()
-                    val height = ceil(layoutResult.size.height * scale).roundToInt()
-                    measurable.measure(Constraints.fixed(width, height)).run {
-                        layout(width, height) { place(0, 0) }
+        Box {
+            Spacer(
+                Modifier.layout { measurable, _ ->
+                        // Layout this element with the *target* size/scale of the element in this
+                        // scene.
+                        val width = ceil(layoutResult.size.width * scale).roundToInt()
+                        val height = ceil(layoutResult.size.height * scale).roundToInt()
+                        measurable.measure(Constraints.fixed(width, height)).run {
+                            layout(width, height) { place(0, 0) }
+                        }
                     }
-                }
-                .drawBehind {
-                    val topLeft: Offset
-                    val pivot: Offset
-                    if (layoutDirection == LayoutDirection.Ltr) {
-                        topLeft = Offset.Zero
-                        pivot = Offset.Zero
-                    } else {
-                        topLeft = Offset(size.width - layoutResult.size.width, 0f)
-                        pivot = Offset(size.width, 0f)
-                    }
+                    .drawBehind {
+                        val topLeft: Offset
+                        val pivot: Offset
+                        if (layoutDirection == LayoutDirection.Ltr) {
+                            topLeft = Offset.Zero
+                            pivot = Offset.Zero
+                        } else {
+                            topLeft = Offset(size.width - layoutResult.size.width, 0f)
+                            pivot = Offset(size.width, 0f)
+                        }
 
-                    scale(animatedScale, pivot = pivot) {
-                        drawText(layoutResult, color = color, topLeft = topLeft)
+                        scale(animatedScale, pivot = pivot) {
+                            drawText(layoutResult, color = color, topLeft = topLeft)
+                        }
                     }
-                },
-        )
+            )
+        }
     }
 }
 

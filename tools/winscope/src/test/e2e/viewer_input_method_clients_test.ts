@@ -33,7 +33,7 @@ describe('Viewer Input Method Clients', () => {
     );
     await E2eTestUtils.checkTimelineTraceSelector({
       icon: 'keyboard_alt',
-      color: 'rgba(250, 144, 62, 1)',
+      color: 'rgba(255, 150, 75, 1)',
     });
     await E2eTestUtils.checkInitialRealTimestamp('2022-11-21, 18:05:11.145');
     await E2eTestUtils.checkFinalRealTimestamp('2022-11-21, 18:05:18.245');
@@ -62,9 +62,9 @@ describe('Viewer Input Method Clients', () => {
     const nodes = await element.all(
       by.css(`${viewerSelector} hierarchy-view .node`),
     );
-    expect(nodes.length).toEqual(4);
+    expect(nodes.length).toEqual(5);
     expect(await nodes[0].getText()).toContain(
-      'InputMethodClients - 2022-11-21, 18:05:14.969 - InsetsSourceConsumer#notifyAnimationFinished',
+      'InputMethodClients - 2022-11-21, 18:05:14.970 - InsetsSourceConsumer#notifyAnimationFinished',
     );
     expect(await nodes[1].getText()).toContain('253 - SfSubtree - Task=8#253');
     expect(await nodes[2].getText()).toContain(
@@ -73,6 +73,7 @@ describe('Viewer Input Method Clients', () => {
     expect(await nodes[3].getText()).toContain(
       '786 - com.google.(...).ZeroStateSearchActivity#786 HWC V',
     );
+    expect(await nodes[4].getText()).toContain('765 - InputMethod#765 HWC V');
   }
 
   async function checkInputMethodLayerProperties() {

@@ -1,5 +1,8 @@
 {
   "package": {
+    "checksum": {
+      "device_supported": false
+    },
     "rooted_path": {
       "device_supported": false
     },
@@ -18,7 +21,8 @@
   "tests": true,
   "workspace": true,
   "workspace_excludes": [
-    "crate_health",
-    "license_checker"
+    "crate_tool",
+    "license_checker",
+    "test_mapping"
   ]
 }

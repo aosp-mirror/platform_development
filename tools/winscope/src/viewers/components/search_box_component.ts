@@ -22,7 +22,13 @@ import {TextFilter} from 'viewers/common/text_filter';
 @Component({
   selector: 'search-box',
   template: `
-    <mat-form-field class="search-box" [class.wide-field]="wideField" [appearance]="appearance" [style.font-size]="fontSize + 'px'" (keydown.enter)="$event.target.blur()">
+    <mat-form-field
+      *ngIf="textFilter"
+      [class]="getFormFieldClasses()"
+      [appearance]="appearance"
+      [style.height]="height"
+      (keydown.esc)="$event.target.blur()"
+      (keydown.enter)="$event.target.blur()">
       <mat-label>{{ label }}</mat-label>
       <input
         matInput
@@ -57,13 +63,14 @@ import {TextFilter} from 'viewers/common/text_filter';
   styles: [
     `
     .search-box {
-      height: 48px;
-    }
-    .wide-field {
-      width: 80%;
+      font-size: 14px;
+      margin-top: 4px;
     }
     .search-box .mat-icon {
       font-size: 18px;
+    }
+    .wide-field {
+      width: 100%;
     }
   `,
   ],
@@ -71,12 +78,12 @@ import {TextFilter} from 'viewers/common/text_filter';
 export class SearchBoxComponent {
   FilterFlag = FilterFlag;
 
-  @Input() textFilter: TextFilter | undefined = new TextFilter('', []);
+  @Input() textFilter: TextFilter | undefined = new TextFilter();
   @Input() label = 'Search';
   @Input() filterName = 'filter';
-  @Input() appearance: string | undefined;
-  @Input() fontSize = 14;
-  @Input() wideField = false;
+  @Input() appearance = '';
+  @Input() formFieldClass = '';
+  @Input() height = '48px';
 
   @Output() readonly filterChange = new EventEmitter<TextFilter>();
 
@@ -97,5 +104,13 @@ export class SearchBoxComponent {
 
   onFilterChange() {
     this.filterChange.emit(this.textFilter);
+  }
+
+  getFormFieldClasses(): string {
+    return (
+      'search-box ' +
+      ((this.textFilter?.filterString.length ?? 0) > 0 ? 'highlighted ' : '') +
+      this.formFieldClass
+    );
   }
 }

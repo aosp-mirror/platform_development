@@ -29,12 +29,15 @@ import {
   IncompleteFrameMapping,
   NoTraceTargetsSelected,
   NoValidFiles,
-  ProxyTracingErrors,
 } from 'messaging/user_warnings';
 import {
   ActiveTraceChanged,
   ExpandedTimelineToggled,
+  TraceAddRequest,
   TracePositionUpdate,
+  TraceSearchCompleted,
+  TraceSearchFailed,
+  TraceSearchInitialized,
   ViewersLoaded,
   ViewersUnloaded,
   WinscopeEvent,
@@ -52,6 +55,7 @@ import {ViewerFactory} from 'viewers/viewer_factory';
 import {FilesSource} from './files_source';
 import {TimelineData} from './timeline_data';
 import {TracePipeline} from './trace_pipeline';
+import {TraceSearchInitializer} from './trace_search/trace_search_initializer';
 
 export class Mediator {
   private abtChromeExtensionProtocol: WinscopeEventEmitter &
@@ -139,6 +143,7 @@ export class Mediator {
     await event.visit(WinscopeEventType.APP_FILES_UPLOADED, async (event) => {
       this.currentProgressListener = this.uploadTracesComponent;
       await this.loadFiles(event.files, FilesSource.UPLOADED);
+      UserNotifier.notify();
     });
 
     await event.visit(WinscopeEventType.APP_FILES_COLLECTED, async (event) => {
@@ -156,19 +161,16 @@ export class Mediator {
             }
           });
           if (failedTraces.length > 0) {
-            UserNotifier.add(
-              new ProxyTracingErrors([
-                `Failed to find valid files for ${failedTraces.join(', ')}`,
-              ]),
-            ).notify();
+            UserNotifier.add(new NoValidFiles(failedTraces));
           }
           await this.loadViewers();
         } else {
           this.currentProgressListener?.onOperationFinished(false);
         }
       } else {
-        UserNotifier.add(new NoValidFiles()).notify();
+        UserNotifier.add(new NoValidFiles());
       }
+      UserNotifier.notify();
     });
 
     await event.visit(WinscopeEventType.APP_RESET_REQUEST, async () => {
@@ -185,6 +187,7 @@ export class Mediator {
 
     await event.visit(WinscopeEventType.APP_TRACE_VIEW_REQUEST, async () => {
       await this.loadViewers();
+      UserNotifier.notify();
     });
 
     await event.visit(
@@ -232,16 +235,20 @@ export class Mediator {
     );
 
     await event.visit(WinscopeEventType.TABBED_VIEW_SWITCHED, async (event) => {
-      if (this.timelineData.trySetActiveTrace(event.newFocusedView.traces[0])) {
-        await this.timelineComponent?.onWinscopeEvent(
-          new ActiveTraceChanged(event.newFocusedView.traces[0]),
-        );
+      const newActiveTrace = event.newFocusedView.traces[0];
+      if (this.timelineData.trySetActiveTrace(newActiveTrace)) {
+        const activeTraceChanged = new ActiveTraceChanged(newActiveTrace);
+        await this.timelineComponent?.onWinscopeEvent(activeTraceChanged);
+        for (const viewer of this.viewers) {
+          await viewer.onWinscopeEvent(activeTraceChanged);
+        }
       }
       this.focusedTabView = event.newFocusedView;
       await this.propagateTracePosition(
         this.timelineData.getCurrentPosition(),
         false,
       );
+      UserNotifier.notify();
     });
 
     await event.visit(
@@ -251,6 +258,7 @@ export class Mediator {
           this.timelineData.setPosition(event.position);
         }
         await this.propagateTracePosition(event.position, false);
+        UserNotifier.notify();
       },
     );
 
@@ -263,11 +271,17 @@ export class Mediator {
 
     await event.visit(WinscopeEventType.ACTIVE_TRACE_CHANGED, async (event) => {
       this.timelineData.trySetActiveTrace(event.trace);
+      for (const viewer of this.viewers) {
+        await viewer.onWinscopeEvent(event);
+      }
       await this.timelineComponent?.onWinscopeEvent(event);
     });
 
     await event.visit(WinscopeEventType.DARK_MODE_TOGGLED, async (event) => {
       await this.timelineComponent?.onWinscopeEvent(event);
+      for (const viewer of this.viewers) {
+        await viewer.onWinscopeEvent(event);
+      }
     });
 
     await event.visit(
@@ -290,6 +304,48 @@ export class Mediator {
         await this.findViewerByType(event.traceType)?.onWinscopeEvent(event);
       },
     );
+
+    await event.visit(WinscopeEventType.TRACE_SEARCH_REQUEST, async (event) => {
+      await this.timelineComponent?.onWinscopeEvent(event);
+      const searchViewer = this.viewers.find(
+        (viewer) => viewer.getViews()[0].type === ViewType.GLOBAL_SEARCH,
+      );
+      const trace = await this.tracePipeline.tryCreateSearchTrace(event.query);
+      this.timelineComponent?.onWinscopeEvent(new TraceSearchCompleted());
+      if (!trace) {
+        await searchViewer?.onWinscopeEvent(new TraceSearchFailed());
+        return;
+      }
+      const newSearchTrace = new TraceAddRequest(trace);
+      await searchViewer?.onWinscopeEvent(newSearchTrace);
+      if (trace.lengthEntries > 0 && !trace.isDumpWithoutTimestamp()) {
+        assertDefined(this.timelineData).getTraces().addTrace(trace);
+        await this.timelineComponent?.onWinscopeEvent(newSearchTrace);
+      }
+    });
+
+    await event.visit(WinscopeEventType.TRACE_REMOVE_REQUEST, async (event) => {
+      this.tracePipeline.getTraces().deleteTrace(event.trace);
+      if (this.timelineData.hasTrace(event.trace)) {
+        this.timelineData.getTraces().deleteTrace(event.trace);
+        await this.timelineComponent?.onWinscopeEvent(event);
+      }
+    });
+
+    await event.visit(
+      WinscopeEventType.INITIALIZE_TRACE_SEARCH_REQUEST,
+      async (event) => {
+        await this.timelineComponent?.onWinscopeEvent(event);
+        const traces = this.tracePipeline.getTraces();
+        const views = await TraceSearchInitializer.createSearchViews(traces);
+        const searchViewer = this.viewers.find(
+          (viewer) => viewer.getViews()[0].type === ViewType.GLOBAL_SEARCH,
+        );
+        const initializedEvent = new TraceSearchInitialized(views);
+        await searchViewer?.onWinscopeEvent(initializedEvent);
+        await this.timelineComponent?.onWinscopeEvent(initializedEvent);
+      },
+    );
   }
 
   private async loadFiles(files: File[], source: FilesSource) {
@@ -298,7 +354,6 @@ export class Mediator {
       source,
       this.currentProgressListener,
     );
-    UserNotifier.notify();
   }
 
   private async propagateTracePosition(
@@ -338,7 +393,7 @@ export class Mediator {
     }
 
     if (warnings.length > 0) {
-      warnings.forEach((w) => UserNotifier.add(w).notify());
+      warnings.forEach((w) => UserNotifier.add(w));
     }
   }
 
@@ -382,12 +437,14 @@ export class Mediator {
       this.timelineData.getCurrentPosition(),
       true,
     );
+    UserNotifier.notify();
   }
 
   private async processRemoteFilesReceived(files: File[], source: FilesSource) {
     await this.resetAppToInitialState();
     this.currentProgressListener = this.uploadTracesComponent;
     await this.loadFiles(files, source);
+    UserNotifier.notify();
   }
 
   private async loadViewers() {
@@ -410,9 +467,7 @@ export class Mediator {
       await this.tracePipeline.buildTraces();
       this.currentProgressListener?.onOperationFinished(true);
     } catch (e) {
-      UserNotifier.add(
-        new IncompleteFrameMapping((e as Error).message),
-      ).notify();
+      UserNotifier.add(new IncompleteFrameMapping((e as Error).message));
       this.currentProgressListener?.onOperationFinished(false);
     }
 
@@ -433,7 +488,7 @@ export class Mediator {
       );
     } catch {
       this.currentProgressListener?.onOperationFinished(false);
-      UserNotifier.add(new FailedToInitializeTimelineData()).notify();
+      UserNotifier.add(new FailedToInitializeTimelineData());
       return;
     }
 
@@ -457,7 +512,7 @@ export class Mediator {
     await this.propagateTracePosition(initialPosition, true);
 
     this.focusedTabView = this.viewers
-      .find((v) => v.getViews()[0].type !== ViewType.OVERLAY)
+      .find((v) => v.getViews()[0].type === ViewType.TRACE_TAB)
       ?.getViews()[0];
     this.areViewersLoaded = true;
 

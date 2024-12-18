@@ -16,11 +16,13 @@
 
 package com.example.android.vdmdemo.host;
 
+import android.Manifest;
 import android.app.AlertDialog;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
+import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.util.Log;
@@ -31,10 +33,15 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.GridView;
 
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts.RequestPermission;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
+import androidx.core.content.ContextCompat;
 
 import dagger.hilt.android.AndroidEntryPoint;
+
+import java.util.function.Consumer;
 
 import javax.inject.Inject;
 
@@ -50,6 +57,19 @@ public class MainActivity extends Hilt_MainActivity {
     private Button mHomeDisplayButton = null;
     private Button mMirrorDisplayButton = null;
     private LauncherAdapter mLauncherAdapter = null;
+    private final Consumer<Boolean> mVirtualDeviceListener = this::updateLauncherVisibility;
+
+    private final ActivityResultLauncher<String> mRequestPermissionLauncher =
+            registerForActivityResult(new RequestPermission(), isGranted -> {
+                // no-op
+            });
+
+    private final ActivityResultLauncher<String> mVdmServicePermissionLauncher =
+            registerForActivityResult(new RequestPermission(), isGranted -> {
+                if (mVdmService == null) {
+                    attemptStartVdmService();
+                }
+            });
 
     private final ServiceConnection mServiceConnection =
             new ServiceConnection() {
@@ -58,8 +78,7 @@ public class MainActivity extends Hilt_MainActivity {
                 public void onServiceConnected(ComponentName className, IBinder binder) {
                     Log.i(TAG, "Connected to VDM Service");
                     mVdmService = ((VdmService.LocalBinder) binder).getService();
-                    mVdmService.setVirtualDeviceListener(
-                            MainActivity.this::updateLauncherVisibility);
+                    mVdmService.addVirtualDeviceListener(mVirtualDeviceListener);
                     updateLauncherVisibility(mVdmService.isVirtualDeviceActive());
                 }
 
@@ -83,12 +102,8 @@ public class MainActivity extends Hilt_MainActivity {
 
         mHomeDisplayButton = requireViewById(R.id.create_home_display);
         mHomeDisplayButton.setVisibility(View.GONE);
-        mHomeDisplayButton.setEnabled(
-                mPreferenceController.getBoolean(R.string.internal_pref_home_displays_supported));
         mMirrorDisplayButton = requireViewById(R.id.create_mirror_display);
         mMirrorDisplayButton.setVisibility(View.GONE);
-        mMirrorDisplayButton.setEnabled(
-                mPreferenceController.getBoolean(R.string.internal_pref_mirror_displays_supported));
 
         mLauncherAdapter = new LauncherAdapter(this, mPreferenceController);
         mLauncher = requireViewById(R.id.app_grid);
@@ -138,19 +153,45 @@ public class MainActivity extends Hilt_MainActivity {
     @Override
     protected void onStart() {
         super.onStart();
-        Intent intent = new Intent(this, VdmService.class);
-        Log.i(TAG, "Starting Vdm Host service");
-        startForegroundService(intent);
-        bindService(intent, mServiceConnection, Context.BIND_AUTO_CREATE);
+        attemptStartVdmService();
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO)
+                == PackageManager.PERMISSION_DENIED) {
+            mRequestPermissionLauncher.launch(Manifest.permission.RECORD_AUDIO);
+        }
     }
 
     @Override
     protected void onStop() {
         super.onStop();
         if (mVdmService != null) {
-            mVdmService.setVirtualDeviceListener(null);
+            mVdmService.removeVirtualDeviceListener(mVirtualDeviceListener);
         }
         unbindService(mServiceConnection);
+    }
+
+    private void attemptStartVdmService() {
+        // Need NEARBY_WIFI_DEVICES for WifiAware
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.NEARBY_WIFI_DEVICES)
+                == PackageManager.PERMISSION_DENIED) {
+            mVdmServicePermissionLauncher.launch(Manifest.permission.NEARBY_WIFI_DEVICES);
+            return;
+        }
+
+        // Need POST_NOTIFICATIONS for the foreground Service Notification
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS)
+                == PackageManager.PERMISSION_DENIED) {
+            mVdmServicePermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS);
+            return;
+        }
+        Log.i(TAG, "Starting Vdm Host service");
+        Intent intent = new Intent(this, VdmService.class);
+        startForegroundService(intent);
+        bindService(intent, mServiceConnection, Context.BIND_AUTO_CREATE);
     }
 
     private void updateLauncherVisibility(boolean virtualDeviceActive) {
@@ -159,12 +200,22 @@ public class MainActivity extends Hilt_MainActivity {
                 () -> {
                     if (mLauncher != null) {
                         mLauncherAdapter.update();
-                        mLauncher.setVisibility(visibility);
+                        if (mPreferenceController.getBoolean(
+                                R.string.internal_pref_home_displays_supported)) {
+                            mLauncher.setVisibility(visibility);
+                        } else {
+                            mLauncher.setVisibility(View.GONE);
+                        }
                     }
                     if (mHomeDisplayButton != null) {
+                        mHomeDisplayButton.setEnabled(
+                                mPreferenceController.getBoolean(
+                                        R.string.internal_pref_home_displays_supported));
                         mHomeDisplayButton.setVisibility(visibility);
                     }
                     if (mMirrorDisplayButton != null) {
+                        mMirrorDisplayButton.setEnabled(
+                                VdmCompat.isMirrorDisplaySupported(this, mPreferenceController));
                         mMirrorDisplayButton.setVisibility(visibility);
                     }
                 });

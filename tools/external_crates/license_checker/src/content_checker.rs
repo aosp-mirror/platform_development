@@ -12,10 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#[cfg(feature = "gestalt_ratio")]
 use gestalt_ratio::gestalt_ratio;
+#[cfg(feature = "gestalt_ratio")]
 use itertools::Itertools;
-use lazy_static::lazy_static;
 use spdx::{LicenseReq, Licensee};
+use std::sync::LazyLock;
 
 fn strip_punctuation(text: &str) -> String {
     let lowercase = text.to_lowercase();
@@ -42,6 +44,7 @@ pub(crate) fn classify_license_file_contents(contents: &str) -> Option<LicenseRe
     }
 
     // Fuzzy match. This is expensive, so start with licenses that are closest in length to the file.
+    #[cfg(feature = "gestalt_ratio")]
     for (req, required_text) in LICENSE_CONTENT_CLASSIFICATION.iter().sorted_by(|a, b| {
         let mut ra = a.1.len() as f32 / contents.len() as f32;
         let mut rb = b.1.len() as f32 / contents.len() as f32;
@@ -62,8 +65,8 @@ pub(crate) fn classify_license_file_contents(contents: &str) -> Option<LicenseRe
     None
 }
 
-lazy_static! {
-    static ref LICENSE_CONTENT_CLASSIFICATION: Vec<(LicenseReq, String)> = vec![
+static LICENSE_CONTENT_CLASSIFICATION: LazyLock<Vec<(LicenseReq, String)>> = LazyLock::new(|| {
+    vec![
         ("MIT", include_str!("licenses/MIT.txt")),
         ("Apache-2.0", include_str!("licenses/Apache-2.0.txt")),
         ("ISC", include_str!("licenses/ISC.txt")),
@@ -71,6 +74,7 @@ lazy_static! {
         ("BSD-2-Clause", include_str!("licenses/BSD-2-Clause.txt")),
         ("BSD-3-Clause", include_str!("licenses/BSD-3-Clause.txt")),
         ("Unlicense", include_str!("licenses/Unlicense.txt")),
+        ("Zlib", include_str!("licenses/Zlib.txt")),
     ]
     .into_iter()
     .map(|(req, tokens)| {
@@ -78,8 +82,8 @@ lazy_static! {
         assert!(!tokens.is_empty());
         (Licensee::parse(req).unwrap().into_req(), tokens)
     })
-    .collect();
-}
+    .collect()
+});
 
 #[cfg(test)]
 mod tests {
@@ -106,12 +110,17 @@ mod tests {
     fn test_classify() {
         assert!(classify_license_file_contents("foo").is_none());
         assert_eq!(
-            classify_license_file_contents(include_str!("testdata/BSD-3-Clause-bindgen.txt")),
-            Some(Licensee::parse("BSD-3-Clause").unwrap().into_req())
-        );
-        assert_eq!(
             classify_license_file_contents(include_str!("testdata/LICENSE-MIT-aarch64-paging.txt")),
             Some(Licensee::parse("MIT").unwrap().into_req())
+        );
+    }
+
+    #[cfg(feature = "gestalt_ratio")]
+    #[test]
+    fn test_classify_fuzzy() {
+        assert_eq!(
+            classify_license_file_contents(include_str!("testdata/BSD-3-Clause-bindgen.txt")),
+            Some(Licensee::parse("BSD-3-Clause").unwrap().into_req())
         );
     }
 }

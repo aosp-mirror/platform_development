@@ -15,8 +15,8 @@
  */
 
 import {assertDefined} from 'common/assert_utils';
+import {InMemoryStorage} from 'common/in_memory_storage';
 import {TracePositionUpdate} from 'messaging/winscope_event';
-import {TracesBuilder} from 'test/unit/traces_builder';
 import {TraceBuilder} from 'test/unit/trace_builder';
 import {UnitTestUtils} from 'test/unit/utils';
 import {Parser} from 'trace/parser';
@@ -26,22 +26,45 @@ import {TraceType} from 'trace/trace_type';
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
 import {NotifyLogViewCallbackType} from 'viewers/common/abstract_log_viewer_presenter';
 import {AbstractLogViewerPresenterTest} from 'viewers/common/abstract_log_viewer_presenter_test';
+import {LogHeader} from 'viewers/common/ui_data_log';
 import {Presenter} from './presenter';
 import {UiData} from './ui_data';
 
 class PresenterJankCujsTest extends AbstractLogViewerPresenterTest<UiData> {
+  override readonly expectedHeaders = [
+    {
+      header: new LogHeader({
+        name: 'Type',
+        cssClass: 'jank-cuj-type',
+      }),
+    },
+    {
+      header: new LogHeader({
+        name: 'Start Time',
+        cssClass: 'start-time time',
+      }),
+    },
+    {
+      header: new LogHeader({
+        name: 'End Time',
+        cssClass: 'end-time time',
+      }),
+    },
+    {
+      header: new LogHeader({
+        name: 'Duration',
+        cssClass: 'duration right-align',
+      }),
+    },
+    {
+      header: new LogHeader({
+        name: 'Status',
+        cssClass: 'status right-align',
+      }),
+    },
+  ];
   private trace: Trace<PropertyTreeNode> | undefined;
   private positionUpdate: TracePositionUpdate | undefined;
-  private secondPositionUpdate: TracePositionUpdate | undefined;
-
-  override readonly shouldExecuteHeaderTests = true;
-  override readonly shouldExecuteFilterTests = false;
-  override readonly shouldExecutePropertiesTests = true;
-
-  override readonly totalOutputEntries = 16;
-  override readonly expectedIndexOfFirstPositionUpdate = 0;
-  override readonly expectedIndexOfSecondPositionUpdate = 2;
-  override readonly logEntryClickIndex = 3;
 
   override async setUpTestEnvironment(): Promise<void> {
     const parser = (await UnitTestUtils.getTracesParser([
@@ -56,19 +79,13 @@ class PresenterJankCujsTest extends AbstractLogViewerPresenterTest<UiData> {
     this.positionUpdate = TracePositionUpdate.fromTraceEntry(
       this.trace.getEntry(0),
     );
-    this.secondPositionUpdate = TracePositionUpdate.fromTraceEntry(
-      this.trace.getEntry(2),
-    );
   }
 
-  override createPresenterWithEmptyTrace(
+  override async createPresenterWithEmptyTrace(
     callback: NotifyLogViewCallbackType<UiData>,
-  ): Presenter {
-    const traces = new TracesBuilder()
-      .setEntries(TraceType.TRANSITION, [])
-      .build();
-    const trace = assertDefined(traces.getTrace(TraceType.TRANSITION));
-    return new Presenter(trace, callback);
+  ): Promise<Presenter> {
+    const trace = UnitTestUtils.makeEmptyTrace(TraceType.CUJS);
+    return new Presenter(trace, new InMemoryStorage(), callback);
   }
 
   override async createPresenter(
@@ -78,17 +95,13 @@ class PresenterJankCujsTest extends AbstractLogViewerPresenterTest<UiData> {
     const traces = new Traces();
     traces.addTrace(trace);
 
-    const presenter = new Presenter(trace, callback);
+    const presenter = new Presenter(trace, new InMemoryStorage(), callback);
     await presenter.onAppEvent(this.getPositionUpdate()); // trigger initialization
     return presenter;
   }
 
   override getPositionUpdate(): TracePositionUpdate {
     return assertDefined(this.positionUpdate);
-  }
-
-  override getSecondPositionUpdate(): TracePositionUpdate {
-    return assertDefined(this.secondPositionUpdate);
   }
 
   override executePropertiesChecksAfterPositionUpdate(uiData: UiData) {

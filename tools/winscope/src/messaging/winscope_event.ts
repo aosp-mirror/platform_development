@@ -43,6 +43,13 @@ export enum WinscopeEventType {
   NO_TRACE_TARGETS_SELECTED,
   FILTER_PRESET_SAVE_REQUEST,
   FILTER_PRESET_APPLY_REQUEST,
+  TRACE_SEARCH_REQUEST,
+  TRACE_SEARCH_FAILED,
+  TRACE_SEARCH_COMPLETED,
+  TRACE_ADD_REQUEST,
+  TRACE_REMOVE_REQUEST,
+  INITIALIZE_TRACE_SEARCH_REQUEST,
+  TRACE_SEARCH_INITIALIZED,
 }
 
 interface TypeMap {
@@ -66,6 +73,13 @@ interface TypeMap {
   [WinscopeEventType.NO_TRACE_TARGETS_SELECTED]: NoTraceTargetsSelected;
   [WinscopeEventType.FILTER_PRESET_SAVE_REQUEST]: FilterPresetSaveRequest;
   [WinscopeEventType.FILTER_PRESET_APPLY_REQUEST]: FilterPresetApplyRequest;
+  [WinscopeEventType.TRACE_SEARCH_REQUEST]: TraceSearchRequest;
+  [WinscopeEventType.TRACE_SEARCH_FAILED]: TraceSearchFailed;
+  [WinscopeEventType.TRACE_ADD_REQUEST]: TraceAddRequest;
+  [WinscopeEventType.TRACE_REMOVE_REQUEST]: TraceRemoveRequest;
+  [WinscopeEventType.INITIALIZE_TRACE_SEARCH_REQUEST]: InitializeTraceSearchRequest;
+  [WinscopeEventType.TRACE_SEARCH_INITIALIZED]: TraceSearchInitialized;
+  [WinscopeEventType.TRACE_SEARCH_COMPLETED]: TraceSearchCompleted;
 }
 
 export abstract class WinscopeEvent {
@@ -143,7 +157,9 @@ export class TabbedViewSwitched extends WinscopeEvent {
 
   constructor(view: View) {
     super();
-    assertTrue(view.type === ViewType.TAB);
+    assertTrue(
+      view.type === ViewType.TRACE_TAB || view.type === ViewType.GLOBAL_SEARCH,
+    );
     this.newFocusedView = view;
   }
 }
@@ -236,4 +252,45 @@ export class FilterPresetApplyRequest extends WinscopeEvent {
   constructor(readonly name: string, readonly traceType: TraceType) {
     super();
   }
+}
+
+export class TraceSearchRequest extends WinscopeEvent {
+  override readonly type = WinscopeEventType.TRACE_SEARCH_REQUEST;
+  constructor(readonly query: string) {
+    super();
+  }
+}
+
+export class TraceSearchFailed extends WinscopeEvent {
+  override readonly type = WinscopeEventType.TRACE_SEARCH_FAILED;
+}
+
+export class TraceAddRequest extends WinscopeEvent {
+  override readonly type = WinscopeEventType.TRACE_ADD_REQUEST;
+  constructor(readonly trace: Trace<object>) {
+    super();
+  }
+}
+
+export class TraceRemoveRequest extends WinscopeEvent {
+  override readonly type = WinscopeEventType.TRACE_REMOVE_REQUEST;
+  constructor(readonly trace: Trace<object>) {
+    super();
+  }
+}
+
+export class InitializeTraceSearchRequest extends WinscopeEvent {
+  override readonly type = WinscopeEventType.INITIALIZE_TRACE_SEARCH_REQUEST;
+}
+
+export class TraceSearchInitialized extends WinscopeEvent {
+  override readonly type = WinscopeEventType.TRACE_SEARCH_INITIALIZED;
+
+  constructor(readonly views: string[]) {
+    super();
+  }
+}
+
+export class TraceSearchCompleted extends WinscopeEvent {
+  override readonly type = WinscopeEventType.TRACE_SEARCH_COMPLETED;
 }

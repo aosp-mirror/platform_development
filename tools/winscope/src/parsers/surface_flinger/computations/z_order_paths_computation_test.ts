@@ -17,7 +17,6 @@
 import {assertDefined} from 'common/assert_utils';
 import {android} from 'protos/surfaceflinger/udc/static';
 import {HierarchyTreeBuilder} from 'test/unit/hierarchy_tree_builder';
-import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
 import {ZOrderPathsComputation} from './z_order_paths_computation';
 
 describe('ZOrderPathsComputation', () => {
@@ -31,7 +30,7 @@ describe('ZOrderPathsComputation', () => {
     expect(() => computation.executeInPlace()).toThrowError();
   });
 
-  it('calculates zOrderPath for tree without rel z parent', () => {
+  it('does not affect tree without rel z parents set', () => {
     const hierarchyRoot = new HierarchyTreeBuilder()
       .setId('LayerTraceEntry')
       .setName('root')
@@ -92,34 +91,23 @@ describe('ZOrderPathsComputation', () => {
       .build();
 
     computation.setRoot(hierarchyRoot).executeInPlace();
-    const layer1WithPath = assertDefined(
-      hierarchyRoot.getChildByName('layer1'),
-    );
-    const layer2WithPath = assertDefined(
-      layer1WithPath.getChildByName('layer2'),
-    );
-    const layer3WithPath = assertDefined(
-      layer2WithPath.getChildByName('layer3'),
-    );
-    const layer4WithPath = assertDefined(
-      layer1WithPath.getChildByName('layer4'),
-    );
+    const layer1 = assertDefined(hierarchyRoot.getChildByName('layer1'));
+    const layer2 = assertDefined(layer1.getChildByName('layer2'));
+    const layer3 = assertDefined(layer2.getChildByName('layer3'));
+    const layer4 = assertDefined(layer1.getChildByName('layer4'));
 
-    expect(
-      getZOrderPathArray(layer1WithPath.getEagerPropertyByName('zOrderPath')),
-    ).toEqual([0]);
-    expect(
-      getZOrderPathArray(layer2WithPath.getEagerPropertyByName('zOrderPath')),
-    ).toEqual([0, 1]);
-    expect(
-      getZOrderPathArray(layer3WithPath.getEagerPropertyByName('zOrderPath')),
-    ).toEqual([0, 1, 1]);
-    expect(
-      getZOrderPathArray(layer4WithPath.getEagerPropertyByName('zOrderPath')),
-    ).toEqual([0, 2]);
+    expect(layer1.getRelativeChildren()).toEqual([]);
+    expect(layer2.getRelativeChildren()).toEqual([]);
+    expect(layer3.getRelativeChildren()).toEqual([]);
+    expect(layer4.getRelativeChildren()).toEqual([]);
+
+    expect(layer1.getZParent()).toEqual(layer1.getParent());
+    expect(layer2.getZParent()).toEqual(layer2.getParent());
+    expect(layer3.getZParent()).toEqual(layer3.getParent());
+    expect(layer4.getZParent()).toEqual(layer4.getParent());
   });
 
-  it('calculates zOrderPath and adds rel z children properties for tree with rel z parent', () => {
+  it('updates tree with rel z parent', () => {
     const hierarchyRoot = new HierarchyTreeBuilder()
       .setId('LayerTraceEntry')
       .setName('root')
@@ -178,47 +166,20 @@ describe('ZOrderPathsComputation', () => {
       .build();
 
     computation.setRoot(hierarchyRoot).executeInPlace();
-    const layer1WithPath = assertDefined(
-      hierarchyRoot.getChildByName('layer1'),
-    );
-    const layer2WithPath = assertDefined(
-      layer1WithPath.getChildByName('layer2'),
-    );
-    const layer4WithPath = assertDefined(
-      layer1WithPath.getChildByName('layer4'),
-    );
-    const layer5WithPath = assertDefined(
-      layer1WithPath.getChildByName('layer5'),
-    );
+    const layer1 = assertDefined(hierarchyRoot.getChildByName('layer1'));
+    const layer2 = assertDefined(layer1.getChildByName('layer2'));
+    const layer4 = assertDefined(layer1.getChildByName('layer4'));
+    const layer5 = assertDefined(layer1.getChildByName('layer5'));
 
-    expect(
-      getZOrderPathArray(layer1WithPath.getEagerPropertyByName('zOrderPath')),
-    ).toEqual([0]);
-    expect(
-      getZOrderPathArray(layer2WithPath.getEagerPropertyByName('zOrderPath')),
-    ).toEqual([0, 1]);
-    expect(
-      getZOrderPathArray(layer4WithPath.getEagerPropertyByName('zOrderPath')),
-    ).toEqual([0, 1, 2]);
-    expect(
-      getZOrderPathArray(layer5WithPath.getEagerPropertyByName('zOrderPath')),
-    ).toEqual([0, 1, 2]);
+    expect(layer1.getRelativeChildren()).toEqual([]);
+    expect(layer2.getRelativeChildren()).toEqual([layer4, layer5]);
+    expect(layer4.getRelativeChildren()).toEqual([]);
+    expect(layer5.getRelativeChildren()).toEqual([]);
 
-    expect(
-      layer1WithPath.getEagerPropertyByName('relZChildren'),
-    ).toBeUndefined();
-    expect(
-      layer2WithPath
-        .getEagerPropertyByName('relZChildren')
-        ?.getAllChildren()
-        .map((c) => c.getValue()),
-    ).toEqual([layer4WithPath.id, layer5WithPath.id]);
-    expect(
-      layer4WithPath.getEagerPropertyByName('relZChildren'),
-    ).toBeUndefined();
-    expect(
-      layer5WithPath.getEagerPropertyByName('relZChildren'),
-    ).toBeUndefined();
+    expect(layer1.getZParent()).toEqual(layer1.getParent());
+    expect(layer2.getZParent()).toEqual(layer2.getParent());
+    expect(layer4.getZParent()).toEqual(layer2);
+    expect(layer5.getZParent()).toEqual(layer2);
   });
 
   it('adds isMissingZParent chip', () => {
@@ -268,34 +229,19 @@ describe('ZOrderPathsComputation', () => {
       .build();
 
     computation.setRoot(hierarchyRoot).executeInPlace();
-    const layer1WithPath = assertDefined(
-      hierarchyRoot.getChildByName('layer1'),
-    );
-    const layer2WithPath = assertDefined(
-      layer1WithPath.getChildByName('layer2'),
-    );
-    const layer4WithPath = assertDefined(
-      layer1WithPath.getChildByName('layer4'),
-    );
-
+    const layer1 = assertDefined(hierarchyRoot.getChildByName('layer1'));
+    const layer2 = assertDefined(layer1.getChildByName('layer2'));
+    const layer4 = assertDefined(layer1.getChildByName('layer4'));
     expect(
-      getZOrderPathArray(layer1WithPath.getEagerPropertyByName('zOrderPath')),
-    ).toEqual([0]);
-    expect(
-      getZOrderPathArray(layer2WithPath.getEagerPropertyByName('zOrderPath')),
-    ).toEqual([0, 1]);
-    expect(
-      getZOrderPathArray(layer4WithPath.getEagerPropertyByName('zOrderPath')),
-    ).toEqual([0, 2]);
-    expect(
-      layer4WithPath.getEagerPropertyByName('isMissingZParent')?.getValue(),
+      layer4.getEagerPropertyByName('isMissingZParent')?.getValue(),
     ).toBeTrue();
-  });
 
-  function getZOrderPathArray(
-    property: PropertyTreeNode | undefined,
-  ): number[] {
-    if (!property) return [];
-    return property.getAllChildren().map((child) => Number(child.getValue()));
-  }
+    expect(layer1.getRelativeChildren()).toEqual([]);
+    expect(layer2.getRelativeChildren()).toEqual([]);
+    expect(layer4.getRelativeChildren()).toEqual([]);
+
+    expect(layer1.getZParent()).toEqual(layer1.getParent());
+    expect(layer2.getZParent()).toEqual(layer2.getParent());
+    expect(layer4.getZParent()).toEqual(layer4.getParent());
+  });
 });

@@ -35,12 +35,18 @@ export class CorruptedArchive extends UserWarning {
 }
 
 export class NoValidFiles extends UserWarning {
+  constructor(private traces?: string[]) {
+    super();
+  }
   getDescriptor(): string {
     return 'no valid files';
   }
 
   getMessage(): string {
-    return `No valid trace files found`;
+    return (
+      'No valid trace files found' +
+      (this.traces ? ` for ${this.traces.join(', ')}` : '')
+    );
   }
 }
 
@@ -220,6 +226,30 @@ export class MissingVsyncId extends UserWarning {
   }
 }
 
+export class ProxyTraceTimeout extends UserWarning {
+  getDescriptor(): string {
+    return 'proxy trace timeout';
+  }
+
+  getMessage(): string {
+    return 'Errors occurred during tracing: trace timed out';
+  }
+}
+
+export class ProxyTracingWarnings extends UserWarning {
+  constructor(private readonly warnings: string[]) {
+    super();
+  }
+
+  getDescriptor(): string {
+    return 'proxy tracing warnings';
+  }
+
+  getMessage(): string {
+    return `Trace collection warning: ${this.warnings.join(', ')}`;
+  }
+}
+
 export class ProxyTracingErrors extends UserWarning {
   constructor(private readonly errorMessages: string[]) {
     super();
@@ -230,7 +260,7 @@ export class ProxyTracingErrors extends UserWarning {
   }
 
   getMessage(): string {
-    return `Errors occurred during tracing: ${this.errorMessages.join(', ')}`;
+    return `Trace collection errors: ${this.errorMessages.join(', ')}`;
   }
 }
 
@@ -244,8 +274,8 @@ export class MissingLayerIds extends UserWarning {
   }
 }
 
-export class DuplicateLayerId extends UserWarning {
-  constructor(private readonly layerId: string) {
+export class DuplicateLayerIds extends UserWarning {
+  constructor(private readonly layerIds: number[]) {
     super();
   }
 
@@ -254,7 +284,9 @@ export class DuplicateLayerId extends UserWarning {
   }
 
   getMessage(): string {
-    return `Duplicate SF layer id ${this.layerId} found - adding it as "Duplicate" to the hierarchy`;
+    const optionalPlural = this.layerIds.length > 1 ? 's' : '';
+    const layerIds = this.layerIds.join(', ');
+    return `Duplicate SF layer id${optionalPlural} ${layerIds} found - adding as "Duplicate" to the hierarchy`;
   }
 }
 
@@ -276,5 +308,35 @@ export class CannotParseAllTransitions extends UserWarning {
 
   getMessage(): string {
     return 'Cannot parse all transitions. Some may be missing in Transitions viewer.';
+  }
+}
+
+export class TraceSearchQueryFailed extends UserWarning {
+  constructor(private readonly errorMessage: string) {
+    super();
+  }
+
+  getDescriptor(): string {
+    return 'trace search query failed';
+  }
+
+  getMessage(): string {
+    return `Search query failed: ${this.errorMessage}`;
+  }
+}
+
+export class PerfettoPacketLoss extends UserWarning {
+  constructor(private descriptor: string, private totalPacketLoss: number) {
+    super();
+  }
+
+  getDescriptor(): string {
+    return 'perfetto packet loss';
+  }
+
+  getMessage(): string {
+    return `${this.descriptor}: ${this.totalPacketLoss} packet${
+      this.totalPacketLoss > 1 ? 's' : ''
+    } lost during tracing - data may be incomplete`;
   }
 }

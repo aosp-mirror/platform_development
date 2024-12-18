@@ -22,8 +22,9 @@ import {WinscopeEventListener} from 'messaging/winscope_event_listener';
 import {Trace} from 'trace/trace';
 
 enum ViewType {
-  TAB,
+  TRACE_TAB,
   OVERLAY,
+  GLOBAL_SEARCH,
 }
 
 class View {

@@ -26,13 +26,14 @@
   margin-bottom: 8px;
   display: inline-block;
   padding: 4px 8px;
-  font-size: 12px;
+  left: -48px;
+  top: -96px;
 
   position: relative;
+  // transform: rotate(-90deg);
 }
 
 .graph-container {
-  position: absolute;
-  height: 64px;
+  position: relative;
   width: 100%;
 }

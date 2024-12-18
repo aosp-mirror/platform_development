@@ -29,7 +29,6 @@ rust_defaults {
         "libglob",
         "liblog_rust",
         "libnix",
-        "libonce_cell",
         "libregex",
         "libserde",
         "libserde_json",
@@ -39,6 +38,7 @@ rust_defaults {
 
 rust_binary_host {
     name: "cargo_embargo",
+    required: ["bpfmt"],
     defaults: ["cargo_embargo.defaults"],
 }
 

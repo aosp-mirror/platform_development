@@ -19,7 +19,7 @@ import {Store} from 'common/store';
 import {Trace} from 'trace/trace';
 import {Traces} from 'trace/traces';
 import {TraceType, TraceTypeUtils} from 'trace/trace_type';
-import {Viewer} from './viewer';
+import {Viewer, ViewType} from './viewer';
 import {ViewerInput} from './viewer_input/viewer_input';
 import {ViewerInputMethodClients} from './viewer_input_method_clients/viewer_input_method_clients';
 import {ViewerInputMethodManagerService} from './viewer_input_method_manager_service/viewer_input_method_manager_service';
@@ -28,6 +28,7 @@ import {ViewerJankCujs} from './viewer_jank_cujs/viewer_jank_cujs';
 import {ViewerScreenshot} from './viewer_media_based/viewer_screenshot';
 import {ViewerScreenRecording} from './viewer_media_based/viewer_screen_recording';
 import {ViewerProtoLog} from './viewer_protolog/viewer_protolog';
+import {ViewerSearch} from './viewer_search/viewer_search';
 import {ViewerSurfaceFlinger} from './viewer_surface_flinger/viewer_surface_flinger';
 import {ViewerTransactions} from './viewer_transactions/viewer_transactions';
 import {ViewerTransitions} from './viewer_transitions/viewer_transitions';
@@ -57,6 +58,13 @@ class ViewerFactory {
   createViewers(traces: Traces, storage: Store): Viewer[] {
     const viewers: Viewer[] = [];
 
+    for (const trace of traces) {
+      if (trace.isPerfetto()) {
+        viewers.push(new ViewerSearch(traces, storage));
+        break;
+      }
+    }
+
     // instantiate one viewer for one trace
     traces.forEachTrace((trace) => {
       ViewerFactory.SINGLE_TRACE_VIEWERS.forEach((Viewer) => {
@@ -83,12 +91,31 @@ class ViewerFactory {
     // Note:
     // the final order of tabs/views in the UI corresponds the order of the
     // respective viewers below
-    return viewers.sort((a, b) =>
-      TraceTypeUtils.compareByDisplayOrder(
-        a.getTraces()[0].type,
-        b.getTraces()[0].type,
-      ),
-    );
+    return viewers.sort((a, b) => {
+      const aView = a.getViews()[0];
+      const bView = b.getViews()[0];
+      if (
+        aView.type === ViewType.TRACE_TAB &&
+        bView.type === ViewType.TRACE_TAB
+      ) {
+        return TraceTypeUtils.compareByDisplayOrder(
+          a.getTraces()[0].type,
+          b.getTraces()[0].type,
+        );
+      } else if (
+        aView.type === ViewType.GLOBAL_SEARCH &&
+        bView.type !== ViewType.GLOBAL_SEARCH
+      ) {
+        return -1;
+      } else if (
+        aView.type !== ViewType.GLOBAL_SEARCH &&
+        bView.type === ViewType.GLOBAL_SEARCH
+      ) {
+        return 1;
+      } else {
+        return aView.title < bView.title ? -1 : 1;
+      }
+    });
   }
 }
 

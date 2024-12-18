@@ -10,6 +10,7 @@
     <string name="permissions_demo" translatable="false">VDM Permissions Demo</string>
     <string name="latency_demo" translatable="false">VDM Latency Demo</string>
     <string name="stylus_demo" translatable="false">VDM Stylus Demo</string>
+    <string name="recorder_demo" translatable="false">VDM Recorder Demo</string>
 
     <string name="start_opted_out_activity" translatable="false">Start opted out activity</string>
     <string name="start_blocked_activity" translatable="false">Start blocked activity</string>
@@ -17,6 +18,7 @@
     <string name="opted_out_activity" translatable="false">VDM Opted Out Activity</string>
     <string name="blocked_activity" translatable="false">VDM Blocked Activity</string>
     <string name="turn_screen_on_activity" translatable="false">VDM Turn Screen On Activity</string>
+    <string name="turn_screen_on_show_when_locked_activity" translatable="false">VDM Turn Screen On Show When Locked Activity</string>
 
     <string name="display_category" translatable="false">com.example.android.vdmdemo.DISPLAY_CATEGORY</string>
 
@@ -36,7 +38,8 @@
     <string name="opted_out_activity_text" translatable="false">This activity can not be launched on the virtual device because cas opted out via canDisplayOnRemoteDevices</string>
     <string name="blocked_activity_text" translatable="false">This activity can not be launched on the virtual device because of the activity policy of the virtual device</string>
     <string name="calculator_text" translatable="false">This \"calculator\" activity can only be shown on displays with the matching category</string>
-    <string name="turn_screen_on_activity_text" translatable="false">This activity should turn the screen on</string>
+    <string name="turn_screen_on_activity_text" translatable="false">This activity should turn the screen on if the device is not locked</string>
+    <string name="turn_screen_on_show_when_locked_activity_text" translatable="false">This activity should turn the screen on even when the device is locked</string>
 
     <string name="request_device_aware_permissions" translatable="false">Request device aware permissions</string>
     <string name="revoke_device_aware_permissions" translatable="false">Revoke device aware permissions</string>
@@ -45,4 +48,7 @@
     <string name="vibrate" translatable="false">Vibrate</string>
     <string name="perform_haptic_feedback" translatable="false">Perform haptic feedback</string>
     <string name="ringtone_vibration" translatable="false">Ringtone vibration</string>
+
+    <string name="start_record" translatable="false">Start record</string>
+    <string name="stop_record" translatable="false">Stop record</string>
 </resources>

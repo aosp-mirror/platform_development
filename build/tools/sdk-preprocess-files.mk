@@ -37,6 +37,7 @@ $(hide) sed \
 	-e 's/$${PLATFORM_VERSION_CODENAME}/$(subst REL,,$(PLATFORM_VERSION_CODENAME))/' \
 	-e 's/$${TARGET_ARCH}/$(TARGET_ARCH)/' \
 	-e 's/$${TARGET_CPU_ABI}/$(TARGET_CPU_ABI)/' \
+	-e 's/$${EMULATOR_MINIMAL_VERSION}/$(EMULATOR_MINIMAL_VERSION)/' \
 	$< > $@ && sed -i -e '/^AndroidVersion.CodeName=\s*$$/d' $@
 endef
 
@@ -82,7 +83,7 @@ ALL_SDK_FILES += $(android_jar_src_target)
 
 # ===== SDK for system modules =====
 # A subset of the public SDK to convert to system modules for use with javac -source 9 -target 9
-ALL_SDK_FILES += $(call intermediates-dir-for,JAVA_LIBRARIES,core-current-stubs-for-system-modules,,COMMON)/classes.jar
+ALL_SDK_FILES += $(call intermediates-dir-for,JAVA_LIBRARIES,core-current-stubs-for-system-modules-exportable,,COMMON)/classes.jar
 
 # ====================================================
 
