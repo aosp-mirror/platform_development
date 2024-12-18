@@ -55,7 +55,6 @@ import com.android.compose.animation.scene.Back
 import com.android.compose.animation.scene.Edge
 import com.android.compose.animation.scene.ElementKey
 import com.android.compose.animation.scene.LowestZIndexContentPicker
-import com.android.compose.animation.scene.NestedScrollBehavior
 import com.android.compose.animation.scene.SceneKey
 import com.android.compose.animation.scene.SceneScope
 import com.android.compose.animation.scene.Swipe
@@ -133,7 +132,6 @@ fun SceneScope.QuickSettings(
             Column(
                 Modifier.overscroll(verticalOverscrollEffect)
                     .overscroll(offsetOverscrollEffect)
-                    .verticalNestedScrollToScene(topBehavior = NestedScrollBehavior.EdgeAlways)
                     .verticalScroll(scrollState, overscrollEffect = offsetOverscrollEffect)
                     .padding(vertical = QuickSettings.Dimensions.Padding)
             ) {

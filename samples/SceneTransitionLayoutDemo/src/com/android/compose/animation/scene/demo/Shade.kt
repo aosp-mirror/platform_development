@@ -214,25 +214,24 @@ private fun SceneScope.ShadeLayout(
                 {
                     val flingBehavior = ScrollableDefaults.flingBehavior()
                     Box(
-                        Modifier.verticalNestedScrollToScene()
-                            .nestedScroll(
-                                remember(
-                                    scrimOffset,
-                                    underScrimHeight,
-                                    density,
-                                    scrimMinTopPadding,
-                                    flingBehavior,
-                                ) {
-                                    scrimNestedScrollConnection(
-                                        scrimOffset = { scrimOffset.value },
-                                        onScrimOffsetChange = { scrimOffset.value = it },
-                                        underScrimHeight = { underScrimHeight.value },
-                                        density = density,
-                                        scrimMinTopPadding = scrimMinTopPadding,
-                                        flingBehavior = flingBehavior,
-                                    )
-                                }
-                            )
+                        Modifier.nestedScroll(
+                            remember(
+                                scrimOffset,
+                                underScrimHeight,
+                                density,
+                                scrimMinTopPadding,
+                                flingBehavior,
+                            ) {
+                                scrimNestedScrollConnection(
+                                    scrimOffset = { scrimOffset.value },
+                                    onScrimOffsetChange = { scrimOffset.value = it },
+                                    underScrimHeight = { underScrimHeight.value },
+                                    density = density,
+                                    scrimMinTopPadding = scrimMinTopPadding,
+                                    flingBehavior = flingBehavior,
+                                )
+                            }
+                        )
                     ) {
                         scrim()
                     }

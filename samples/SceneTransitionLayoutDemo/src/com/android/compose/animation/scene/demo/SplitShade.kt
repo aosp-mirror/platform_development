@@ -125,12 +125,7 @@ fun SceneScope.SplitShade(
                         )
                     }
 
-                    Box(
-                        Modifier.weight(1f)
-                            .padding(start = 16.dp)
-                            .clip(SplitShade.Shapes.Scrim)
-                            .verticalNestedScrollToScene()
-                    ) {
+                    Box(Modifier.weight(1f).padding(start = 16.dp).clip(SplitShade.Shapes.Scrim)) {
                         Box(
                             Modifier.element(Shade.Elements.ScrimBackground)
                                 .fillMaxSize()
