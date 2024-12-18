@@ -20,6 +20,7 @@ import {LayerCompositionType} from 'trace/layer_composition_type';
 import {
   DUPLICATE_CHIP,
   GPU_CHIP,
+  HIDDEN_BY_POLICY_CHIP,
   HWC_CHIP,
   MISSING_Z_PARENT_CHIP,
   RELATIVE_Z_CHIP,
@@ -193,5 +194,26 @@ describe('AddChips', () => {
     expect(
       assertDefined(parentWithChips.getChildByName('node')).getChips(),
     ).toEqual([RELATIVE_Z_CHIP]);
+  });
+
+  it('adds HIDDEN_BY_POLICY_CHIP', () => {
+    hierarchyRoot = UiHierarchyTreeNode.from(
+      new HierarchyTreeBuilder()
+        .setId('test')
+        .setName('node')
+        .setChildren([
+          {
+            id: 1,
+            name: 'node',
+            properties: {isHiddenByPolicy: true},
+          },
+        ])
+        .build(),
+    );
+
+    operation.apply(hierarchyRoot);
+    expect(
+      assertDefined(hierarchyRoot.getChildByName('node')).getChips(),
+    ).toEqual([HIDDEN_BY_POLICY_CHIP]);
   });
 });

@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import {ClipboardModule} from '@angular/cdk/clipboard';
 import {ScrollingModule} from '@angular/cdk/scrolling';
 import {
   ComponentFixture,
@@ -23,19 +24,14 @@ import {
 import {MatDividerModule} from '@angular/material/divider';
 import {MatIconModule} from '@angular/material/icon';
 import {assertDefined} from 'common/assert_utils';
-import {TracePositionUpdate} from 'messaging/winscope_event';
 import {PropertyTreeBuilder} from 'test/unit/property_tree_builder';
 import {TimestampConverterUtils} from 'test/unit/timestamp_converter_utils';
+import {TraceBuilder} from 'test/unit/trace_builder';
 import {UnitTestUtils} from 'test/unit/utils';
-import {Parser} from 'trace/parser';
-import {Trace} from 'trace/trace';
-import {Traces} from 'trace/traces';
-import {TracePosition} from 'trace/trace_position';
-import {TraceType} from 'trace/trace_type';
-import {Transition} from 'trace/transition';
-import {TIMESTAMP_NODE_FORMATTER} from 'trace/tree_node/formatters';
+import {Trace, TraceEntry} from 'trace/trace';
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
-import {TimestampClickDetail, ViewerEvents} from 'viewers/common/viewer_events';
+import {LogComponent} from 'viewers/common/log_component';
+import {LogField, LogFieldType} from 'viewers/common/ui_data_log';
 import {CollapsedSectionsComponent} from 'viewers/components/collapsed_sections_component';
 import {CollapsibleSectionTitleComponent} from 'viewers/components/collapsible_section_title_component';
 import {PropertiesComponent} from 'viewers/components/properties_component';
@@ -43,7 +39,7 @@ import {PropertyTreeNodeDataViewComponent} from 'viewers/components/property_tre
 import {TreeComponent} from 'viewers/components/tree_component';
 import {TreeNodeComponent} from 'viewers/components/tree_node_component';
 import {Presenter} from './presenter';
-import {UiData} from './ui_data';
+import {TransitionsEntry, TransitionStatus, UiData} from './ui_data';
 import {ViewerTransitionsComponent} from './viewer_transitions_component';
 
 describe('ViewerTransitionsComponent', () => {
@@ -51,10 +47,32 @@ describe('ViewerTransitionsComponent', () => {
   let component: ViewerTransitionsComponent;
   let htmlElement: HTMLElement;
 
+  let transitionTree: PropertyTreeNode;
+  let trace: Trace<PropertyTreeNode>;
+  let entry: TraceEntry<PropertyTreeNode>;
+
+  beforeAll(() => {
+    transitionTree = new PropertyTreeBuilder()
+      .setIsRoot(true)
+      .setRootId('TransitionTraceEntry')
+      .setName('transition')
+      .build();
+    trace = new TraceBuilder<PropertyTreeNode>()
+      .setEntries([transitionTree])
+      .setTimestamps([TimestampConverterUtils.makeElapsedTimestamp(20n)])
+      .build();
+    entry = trace.getEntry(0);
+  });
+
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       providers: [{provide: ComponentFixtureAutoDetect, useValue: true}],
-      imports: [MatDividerModule, ScrollingModule, MatIconModule],
+      imports: [
+        MatDividerModule,
+        ScrollingModule,
+        MatIconModule,
+        ClipboardModule,
+      ],
       declarations: [
         ViewerTransitionsComponent,
         TreeComponent,
@@ -63,6 +81,7 @@ describe('ViewerTransitionsComponent', () => {
         PropertiesComponent,
         CollapsedSectionsComponent,
         CollapsibleSectionTitleComponent,
+        LogComponent,
       ],
       schemas: [],
     }).compileComponents();
@@ -71,7 +90,7 @@ describe('ViewerTransitionsComponent', () => {
     component = fixture.componentInstance;
     htmlElement = fixture.nativeElement;
 
-    component.uiData = makeUiData();
+    component.inputData = makeUiData();
     fixture.detectChanges();
   });
 
@@ -88,137 +107,12 @@ describe('ViewerTransitionsComponent', () => {
   });
 
   it('shows message when no transition is selected', () => {
+    assertDefined(component.inputData).propertiesTree = undefined;
+    fixture.detectChanges();
     expect(
       htmlElement.querySelector('.properties-view .placeholder-text')
         ?.innerHTML,
     ).toContain('No selected transition');
-  });
-
-  it('emits TransitionSelected event on transition clicked', () => {
-    const emitEventSpy = spyOn(component, 'emitEvent');
-
-    const entries = htmlElement.querySelectorAll('.entry.table-row');
-    const entry1 = assertDefined(entries[0]) as HTMLElement;
-    const entry2 = assertDefined(entries[1]) as HTMLElement;
-    const treeView = assertDefined(
-      htmlElement.querySelector('.properties-view'),
-    ) as HTMLElement;
-    expect(
-      assertDefined(treeView.querySelector('.placeholder-text')).textContent,
-    ).toContain('No selected transition');
-
-    expect(emitEventSpy).not.toHaveBeenCalled();
-
-    const id0 = assertDefined(entry1.querySelector('.id')).textContent;
-    expect(id0).toEqual('0');
-    entry1.click();
-    fixture.detectChanges();
-
-    expect(emitEventSpy).toHaveBeenCalled();
-    expect(emitEventSpy).toHaveBeenCalledWith(
-      ViewerEvents.TransitionSelected,
-      jasmine.any(Object),
-    );
-    expect(
-      (emitEventSpy.calls.mostRecent().args[1] as PropertyTreeNode)
-        .getChildByName('id')
-        ?.getValue(),
-    ).toEqual(0);
-
-    const id1 = assertDefined(entry2.querySelector('.id')).textContent;
-    expect(id1).toEqual('1');
-    entry2.click();
-    fixture.detectChanges();
-
-    expect(emitEventSpy).toHaveBeenCalled();
-    expect(emitEventSpy).toHaveBeenCalledWith(
-      ViewerEvents.TransitionSelected,
-      jasmine.any(Object),
-    );
-    expect(
-      (emitEventSpy.calls.mostRecent().args[1] as PropertyTreeNode)
-        .getChildByName('id')
-        ?.getValue(),
-    ).toEqual(1);
-  });
-
-  it('updates tree view on TracePositionUpdate event', async () => {
-    const parser = (await UnitTestUtils.getTracesParser([
-      'traces/elapsed_and_real_timestamp/wm_transition_trace.pb',
-      'traces/elapsed_and_real_timestamp/shell_transition_trace.pb',
-    ])) as Parser<PropertyTreeNode>;
-    const trace = Trace.fromParser(parser);
-    const traces = new Traces();
-    traces.addTrace(trace);
-
-    let treeView = assertDefined(
-      htmlElement.querySelector('.properties-view'),
-    ) as any as HTMLElement;
-    expect(
-      assertDefined(treeView.querySelector('.placeholder-text')).textContent,
-    ).toContain('No selected transition');
-
-    const presenter = new Presenter(trace, traces, (data) => {
-      component.inputData = data;
-    });
-    const selectedTransitionEntry = assertDefined(
-      traces.getTrace(TraceType.TRANSITION)?.getEntry(2),
-    );
-    const selectedTransition = await selectedTransitionEntry.getValue();
-    const selectedTransitionId = assertDefined(
-      selectedTransition.getChildByName('id'),
-    ).getValue();
-    await presenter.onAppEvent(
-      new TracePositionUpdate(
-        TracePosition.fromTraceEntry(selectedTransitionEntry),
-      ),
-    );
-
-    expect(
-      assertDefined(
-        component.uiData.selectedTransition
-          ?.getChildByName('wmData')
-          ?.getChildByName('id'),
-      ).getValue(),
-    ).toEqual(selectedTransitionId);
-
-    fixture.detectChanges();
-
-    treeView = assertDefined(
-      fixture.nativeElement.querySelector('.properties-view'),
-    ) as any as HTMLElement;
-    const textContentWithoutWhitespaces = treeView.textContent?.replace(
-      /(\s|\t|\n)*/g,
-      '',
-    );
-    expect(textContentWithoutWhitespaces).toContain(
-      `id:${selectedTransitionId}`,
-    );
-  });
-
-  it('propagates timestamp on click', () => {
-    let timestamp: string | undefined;
-    let index: number | undefined;
-    htmlElement.addEventListener(ViewerEvents.TimestampClick, (event) => {
-      const detail: TimestampClickDetail = (event as CustomEvent).detail;
-      timestamp = detail.timestamp?.format();
-      index = detail.index;
-    });
-    const sendTimeButton = assertDefined(
-      htmlElement.querySelector('.send-time button'),
-    ) as HTMLButtonElement;
-    sendTimeButton.click();
-
-    expect(index).toBeUndefined();
-    expect(timestamp).toEqual('20ns');
-
-    const dispatchTimeButton = assertDefined(
-      htmlElement.querySelector('.dispatch-time button'),
-    ) as HTMLButtonElement;
-    dispatchTimeButton.click();
-
-    expect(index).toEqual(0);
-    expect(timestamp).toEqual('25ns');
   });
 
   it('creates collapsed sections with no buttons', () => {
@@ -233,61 +127,76 @@ describe('ViewerTransitionsComponent', () => {
       'SELECTED TRANSITION',
     );
   });
+
+  function makeUiData(): UiData {
+    let mockTransitionIdCounter = 0;
+
+    const transitions = [
+      createMockTransition(entry, 20, 30, mockTransitionIdCounter++),
+      createMockTransition(
+        entry,
+        42,
+        50,
+        mockTransitionIdCounter++,
+        TransitionStatus.MERGED,
+      ),
+      createMockTransition(entry, 46, 49, mockTransitionIdCounter++),
+      createMockTransition(
+        entry,
+        58,
+        70,
+        mockTransitionIdCounter++,
+        TransitionStatus.ABORTED,
+      ),
+    ];
+
+    const uiData = UiData.createEmpty();
+    uiData.entries = transitions;
+    uiData.selectedIndex = 0;
+    uiData.headers = Presenter.FIELD_TYPES;
+    return uiData;
+  }
+
+  function createMockTransition(
+    entry: TraceEntry<PropertyTreeNode>,
+    sendTimeNanos: number,
+    finishTimeNanos: number,
+    id: number,
+    status = TransitionStatus.PLAYED,
+  ): TransitionsEntry {
+    const fields: LogField[] = [
+      {
+        type: LogFieldType.TRANSITION_ID,
+        value: id,
+      },
+      {
+        type: LogFieldType.TRANSITION_TYPE,
+        value: 'TO_FRONT',
+      },
+      {
+        type: LogFieldType.SEND_TIME,
+        value: TimestampConverterUtils.makeElapsedTimestamp(
+          BigInt(sendTimeNanos),
+        ),
+      },
+      {
+        type: LogFieldType.DISPATCH_TIME,
+        value: TimestampConverterUtils.makeElapsedTimestamp(
+          BigInt(sendTimeNanos) + 5n,
+        ),
+      },
+      {
+        type: LogFieldType.DURATION,
+        value: (finishTimeNanos - sendTimeNanos).toString() + 'ns',
+      },
+      {
+        type: LogFieldType.STATUS,
+        value: status,
+        icon: 'check',
+        iconColor: 'green',
+      },
+    ];
+
+    return new TransitionsEntry(entry, fields, transitionTree);
+  }
 });
-
-function makeUiData(): UiData {
-  let mockTransitionIdCounter = 0;
-
-  const transitions = [
-    createMockTransition(20, 30, mockTransitionIdCounter++),
-    createMockTransition(42, 50, mockTransitionIdCounter++),
-    createMockTransition(46, 49, mockTransitionIdCounter++),
-    createMockTransition(58, 70, mockTransitionIdCounter++),
-  ];
-
-  return new UiData(transitions, undefined);
-}
-
-function createMockTransition(
-  sendTimeNanos: number,
-  finishTimeNanos: number,
-  id: number,
-): Transition {
-  const transitionTree = new PropertyTreeBuilder()
-    .setIsRoot(true)
-    .setRootId('TransitionTraceEntry')
-    .setName('transition')
-    .setChildren([{name: 'id', value: id}])
-    .build();
-
-  const sendTimeNode = new PropertyTreeBuilder()
-    .setRootId(transitionTree.id)
-    .setName('sendTimeNs')
-    .setValue(
-      TimestampConverterUtils.makeElapsedTimestamp(BigInt(sendTimeNanos)),
-    )
-    .setFormatter(TIMESTAMP_NODE_FORMATTER)
-    .build();
-
-  const dispatchTimeNode = new PropertyTreeBuilder()
-    .setRootId(transitionTree.id)
-    .setName('dispatchTimeNs')
-    .setValue(
-      TimestampConverterUtils.makeElapsedTimestamp(BigInt(sendTimeNanos) + 5n),
-    )
-    .setFormatter(TIMESTAMP_NODE_FORMATTER)
-    .build();
-
-  return {
-    id,
-    type: 'TO_FRONT',
-    sendTime: sendTimeNode,
-    dispatchTime: dispatchTimeNode,
-    duration: (finishTimeNanos - sendTimeNanos).toString() + 'ns',
-    merged: false,
-    aborted: false,
-    played: false,
-    propertiesTree: transitionTree,
-    traceIndex: 0,
-  };
-}

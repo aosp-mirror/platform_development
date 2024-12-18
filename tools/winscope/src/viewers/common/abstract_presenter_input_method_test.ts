@@ -16,9 +16,11 @@
 
 import {assertDefined} from 'common/assert_utils';
 import {InMemoryStorage} from 'common/in_memory_storage';
+import {Store} from 'common/store';
 import {TracePositionUpdate} from 'messaging/winscope_event';
 import {TraceBuilder} from 'test/unit/trace_builder';
 import {TreeNodeUtils} from 'test/unit/tree_node_utils';
+import {UserNotifierChecker} from 'test/unit/user_notifier_checker';
 import {UnitTestUtils} from 'test/unit/utils';
 import {Traces} from 'trace/traces';
 import {ImeTraceType, TraceType} from 'trace/trace_type';
@@ -31,11 +33,12 @@ import {PresenterInputMethodService} from 'viewers/viewer_input_method_service/p
 import {NotifyHierarchyViewCallbackType} from './abstract_hierarchy_viewer_presenter';
 import {AbstractHierarchyViewerPresenterTest} from './abstract_hierarchy_viewer_presenter_test';
 import {AbstractPresenterInputMethod} from './abstract_presenter_input_method';
+import {TextFilter} from './text_filter';
 import {UiDataHierarchy} from './ui_data_hierarchy';
 import {UiHierarchyTreeNode} from './ui_hierarchy_tree_node';
 import {UiPropertyTreeNode} from './ui_property_tree_node';
 
-export abstract class AbstractPresenterInputMethodTest extends AbstractHierarchyViewerPresenterTest {
+export abstract class AbstractPresenterInputMethodTest extends AbstractHierarchyViewerPresenterTest<ImeUiData> {
   private traces: Traces | undefined;
   private positionUpdate: TracePositionUpdate | undefined;
   private secondPositionUpdate: TracePositionUpdate | undefined;
@@ -45,9 +48,10 @@ export abstract class AbstractPresenterInputMethodTest extends AbstractHierarchy
   override readonly shouldExecuteFlatTreeTest = true;
   override readonly shouldExecuteRectTests = false;
   override readonly shouldExecuteShowDiffTests = false;
+  override readonly shouldExecuteDumpTests = true;
   override readonly shouldExecuteSimplifyNamesTest = false;
 
-  override readonly hierarchyFilterString = 'Reject all';
+  override readonly hierarchyFilter = new TextFilter('Reject all', []);
   override readonly expectedHierarchyChildrenAfterStringFilter = 0;
 
   override async setUpTestEnvironment(): Promise<void> {
@@ -99,7 +103,7 @@ export abstract class AbstractPresenterInputMethodTest extends AbstractHierarchy
   }
 
   override createPresenterWithEmptyTrace(
-    callback: NotifyHierarchyViewCallbackType,
+    callback: NotifyHierarchyViewCallbackType<ImeUiData>,
   ): AbstractPresenterInputMethod {
     const trace = new TraceBuilder<HierarchyTreeNode>()
       .setType(this.imeTraceType)
@@ -114,18 +118,31 @@ export abstract class AbstractPresenterInputMethodTest extends AbstractHierarchy
       callback,
     );
   }
-
-  override createPresenter(
-    callback: NotifyHierarchyViewCallbackType,
+  override createPresenterWithCorruptedTrace(
+    callback: NotifyHierarchyViewCallbackType<ImeUiData>,
   ): AbstractPresenterInputMethod {
-    const traces = assertDefined(this.traces);
-    const trace = assertDefined(traces.getTrace(this.imeTraceType));
+    const trace = new TraceBuilder<HierarchyTreeNode>()
+      .setType(this.imeTraceType)
+      .setEntries([assertDefined(this.selectedTree)])
+      .setIsCorrupted(true)
+      .build();
+    const traces = new Traces();
+    traces.addTrace(trace);
     return new this.PresenterInputMethod(
       trace,
       traces,
       new InMemoryStorage(),
       callback,
     );
+  }
+
+  override createPresenter(
+    callback: NotifyHierarchyViewCallbackType<ImeUiData>,
+    storage: Store,
+  ): AbstractPresenterInputMethod {
+    const traces = assertDefined(this.traces);
+    const trace = assertDefined(traces.getTrace(this.imeTraceType));
+    return new this.PresenterInputMethod(trace, traces, storage, callback);
   }
 
   override getPositionUpdate(): TracePositionUpdate {
@@ -193,14 +210,21 @@ export abstract class AbstractPresenterInputMethodTest extends AbstractHierarchy
         | typeof PresenterInputMethodService
         | typeof PresenterInputMethodManagerService;
       let imeTraceType: ImeTraceType;
+      let userNotifierChecker: UserNotifierChecker;
 
       beforeAll(async () => {
         jasmine.addCustomEqualityTester(TreeNodeUtils.treeNodeEqualityTester);
+        userNotifierChecker = new UserNotifierChecker();
         Presenter = this.PresenterInputMethod;
         imeTraceType = this.imeTraceType;
         await this.setUpTestEnvironment();
         entries = assertDefined(this.entries);
         await loadTraces();
+      });
+
+      afterEach(() => {
+        userNotifierChecker.expectNone();
+        userNotifierChecker.reset();
       });
 
       it('is robust to traces without SF', async () => {
@@ -235,9 +259,26 @@ export abstract class AbstractPresenterInputMethodTest extends AbstractHierarchy
           name: 'Test Tree',
           treeNode: this.getSelectedTree(),
         });
-        const propertiesTree = assertDefined(uiData.propertiesTree);
-        expect(propertiesTree.getDisplayName()).toEqual('Test Tree');
+        expect(assertDefined(uiData.propertiesTree).getDisplayName()).toEqual(
+          'Test Tree',
+        );
         expect(uiData.highlightedItem).toEqual(this.getSelectedTree().id);
+      });
+
+      it('can set new properties tree and associated ui data from id', async () => {
+        setUpPresenter([imeTraceType, TraceType.WINDOW_MANAGER]);
+        expect(uiData.propertiesTree).toBeUndefined();
+        await presenter.onAppEvent(this.getPositionUpdate());
+
+        const selectedTree = this.getSelectedTree();
+        await presenter.onHighlightedIdChange(selectedTree.id);
+        const propertiesTree = assertDefined(uiData.propertiesTree);
+        expect(propertiesTree.getDisplayName()).toEqual(selectedTree.name);
+        expect(uiData.highlightedItem).toEqual(this.getSelectedTree().id);
+
+        await presenter.onHighlightedIdChange(selectedTree.id);
+        expect(uiData.propertiesTree).toEqual(propertiesTree);
+        expect(uiData.highlightedItem).toEqual('');
       });
 
       if (this.getPropertiesTree) {
@@ -261,6 +302,13 @@ export abstract class AbstractPresenterInputMethodTest extends AbstractHierarchy
             UiPropertyTreeNode.from(selectedPropertyTree),
           );
           expect(uiData.highlightedItem).toEqual(selectedPropertyTree.id);
+
+          // clears additional property tree selection
+          const selectedTree = this.getSelectedTree();
+          await presenter.onHighlightedIdChange(selectedTree.id);
+          expect(uiData.propertiesTree?.getDisplayName()).toEqual(
+            selectedTree.name,
+          );
         });
       }
 
@@ -286,7 +334,7 @@ export abstract class AbstractPresenterInputMethodTest extends AbstractHierarchy
           trace,
           traces,
           new InMemoryStorage(),
-          callback as NotifyHierarchyViewCallbackType,
+          callback as NotifyHierarchyViewCallbackType<ImeUiData>,
         );
       }
 

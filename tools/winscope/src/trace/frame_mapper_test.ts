@@ -20,7 +20,7 @@ import {TraceBuilder} from 'test/unit/trace_builder';
 import {CustomQueryType} from './custom_query';
 import {FrameMapper} from './frame_mapper';
 import {AbsoluteFrameIndex} from './index_types';
-import {ScreenRecordingTraceEntry} from './screen_recording';
+import {MediaBasedTraceEntry} from './media_based_trace_entry';
 import {Trace} from './trace';
 import {Traces} from './traces';
 import {TraceType} from './trace_type';
@@ -375,101 +375,108 @@ describe('FrameMapper', () => {
     });
   });
 
-  describe('Transactions <-> SurfaceFlinger', () => {
-    let transactions: Trace<PropertyTreeNode>;
-    let surfaceFlinger: Trace<HierarchyTreeNode>;
-    let traces: Traces;
+  const TRACES_WITH_VSYNC_IDS = [
+    TraceType.TRANSACTIONS,
+    TraceType.INPUT_EVENT_MERGED,
+  ];
 
-    beforeAll(async () => {
-      // TRANSACTIONS:   0  1--2        3  4
-      //                  \     \        \
-      //                   \     \        \
-      // SURFACE_FLINGER:   0     1        2
-      transactions = new TraceBuilder<PropertyTreeNode>()
-        .setType(TraceType.TRANSACTIONS)
-        .setEntries([
-          'entry-0' as unknown as PropertyTreeNode,
-          'entry-1' as unknown as PropertyTreeNode,
-          'entry-2' as unknown as PropertyTreeNode,
-          'entry-3' as unknown as PropertyTreeNode,
-          'entry-4' as unknown as PropertyTreeNode,
-        ])
-        .setTimestamps([time0, time1, time2, time5, time6])
-        .setParserCustomQueryResult(CustomQueryType.VSYNCID, [
-          0n,
-          10n,
-          10n,
-          20n,
-          30n,
-        ])
-        .build();
+  TRACES_WITH_VSYNC_IDS.forEach((traceType) => {
+    describe(`TraceType[${traceType}] <-> SurfaceFlinger`, () => {
+      let trace: Trace<PropertyTreeNode>;
+      let surfaceFlinger: Trace<HierarchyTreeNode>;
+      let traces: Traces;
 
-      surfaceFlinger = new TraceBuilder<HierarchyTreeNode>()
-        .setType(TraceType.SURFACE_FLINGER)
-        .setEntries([
-          'entry-0' as unknown as HierarchyTreeNode,
-          'entry-1' as unknown as HierarchyTreeNode,
-          'entry-2' as unknown as HierarchyTreeNode,
-        ])
-        .setTimestamps([time0, time1, time2])
-        .setParserCustomQueryResult(CustomQueryType.VSYNCID, [0n, 10n, 20n])
-        .build();
+      beforeAll(async () => {
+        // TRACE:          0  1--2        3  4
+        //                  \     \        \
+        //                   \     \        \
+        // SURFACE_FLINGER:   0     1        2
+        trace = new TraceBuilder<PropertyTreeNode>()
+          .setType(traceType)
+          .setEntries([
+            'entry-0' as unknown as PropertyTreeNode,
+            'entry-1' as unknown as PropertyTreeNode,
+            'entry-2' as unknown as PropertyTreeNode,
+            'entry-3' as unknown as PropertyTreeNode,
+            'entry-4' as unknown as PropertyTreeNode,
+          ])
+          .setTimestamps([time0, time1, time2, time5, time6])
+          .setParserCustomQueryResult(CustomQueryType.VSYNCID, [
+            0n,
+            10n,
+            10n,
+            20n,
+            30n,
+          ])
+          .build();
 
-      traces = new Traces();
-      traces.addTrace(transactions);
-      traces.addTrace(surfaceFlinger);
-      await new FrameMapper(traces).computeMapping();
-    });
+        surfaceFlinger = new TraceBuilder<HierarchyTreeNode>()
+          .setType(TraceType.SURFACE_FLINGER)
+          .setEntries([
+            'entry-0' as unknown as HierarchyTreeNode,
+            'entry-1' as unknown as HierarchyTreeNode,
+            'entry-2' as unknown as HierarchyTreeNode,
+          ])
+          .setTimestamps([time0, time1, time2])
+          .setParserCustomQueryResult(CustomQueryType.VSYNCID, [0n, 10n, 20n])
+          .build();
 
-    it('associates entries/frames', async () => {
-      const expectedFrames = new Map<
-        AbsoluteFrameIndex,
-        Map<TraceType, Array<{}>>
-      >();
-      expectedFrames.set(
-        0,
-        new Map<TraceType, Array<{}>>([
-          [TraceType.TRANSACTIONS, [await transactions.getEntry(0).getValue()]],
-          [
-            TraceType.SURFACE_FLINGER,
-            [await surfaceFlinger.getEntry(0).getValue()],
-          ],
-        ]),
-      );
-      expectedFrames.set(
-        1,
-        new Map<TraceType, Array<{}>>([
-          [
-            TraceType.TRANSACTIONS,
+        traces = new Traces();
+        traces.addTrace(trace);
+        traces.addTrace(surfaceFlinger);
+        await new FrameMapper(traces).computeMapping();
+      });
+
+      it('associates entries/frames', async () => {
+        const expectedFrames = new Map<
+          AbsoluteFrameIndex,
+          Map<TraceType, Array<{}>>
+        >();
+        expectedFrames.set(
+          0,
+          new Map<TraceType, Array<{}>>([
+            [traceType, [await trace.getEntry(0).getValue()]],
             [
-              await transactions.getEntry(1).getValue(),
-              await transactions.getEntry(2).getValue(),
+              TraceType.SURFACE_FLINGER,
+              [await surfaceFlinger.getEntry(0).getValue()],
             ],
-          ],
-          [
-            TraceType.SURFACE_FLINGER,
-            [await surfaceFlinger.getEntry(1).getValue()],
-          ],
-        ]),
-      );
-      expectedFrames.set(
-        2,
-        new Map<TraceType, Array<{}>>([
-          [TraceType.TRANSACTIONS, [await transactions.getEntry(3).getValue()]],
-          [
-            TraceType.SURFACE_FLINGER,
-            [await surfaceFlinger.getEntry(2).getValue()],
-          ],
-        ]),
-      );
+          ]),
+        );
+        expectedFrames.set(
+          1,
+          new Map<TraceType, Array<{}>>([
+            [
+              traceType,
+              [
+                await trace.getEntry(1).getValue(),
+                await trace.getEntry(2).getValue(),
+              ],
+            ],
+            [
+              TraceType.SURFACE_FLINGER,
+              [await surfaceFlinger.getEntry(1).getValue()],
+            ],
+          ]),
+        );
+        expectedFrames.set(
+          2,
+          new Map<TraceType, Array<{}>>([
+            [traceType, [await trace.getEntry(3).getValue()]],
+            [
+              TraceType.SURFACE_FLINGER,
+              [await surfaceFlinger.getEntry(2).getValue()],
+            ],
+          ]),
+        );
 
-      expect(await TracesUtils.extractFrames(traces)).toEqual(expectedFrames);
+        expect(await TracesUtils.extractFrames(traces)).toEqual(expectedFrames);
+      });
     });
   });
 
   describe('SurfaceFlinger <-> ScreenRecording', () => {
     let surfaceFlinger: Trace<HierarchyTreeNode>;
-    let screenRecording: Trace<ScreenRecordingTraceEntry>;
+    let screenRecording: Trace<MediaBasedTraceEntry>;
     let traces: Traces;
 
     beforeAll(async () => {
@@ -492,15 +499,15 @@ describe('FrameMapper', () => {
         .setTimestamps([time0, time1, time2, time4, time6, time7, time8])
         .build();
 
-      screenRecording = new TraceBuilder<ScreenRecordingTraceEntry>()
+      screenRecording = new TraceBuilder<MediaBasedTraceEntry>()
         .setType(TraceType.SCREEN_RECORDING)
         .setEntries([
-          'entry-0' as unknown as ScreenRecordingTraceEntry,
-          'entry-1' as unknown as ScreenRecordingTraceEntry,
-          'entry-2' as unknown as ScreenRecordingTraceEntry,
-          'entry-3' as unknown as ScreenRecordingTraceEntry,
-          'entry-4' as unknown as ScreenRecordingTraceEntry,
-          'entry-5' as unknown as ScreenRecordingTraceEntry,
+          'entry-0' as unknown as MediaBasedTraceEntry,
+          'entry-1' as unknown as MediaBasedTraceEntry,
+          'entry-2' as unknown as MediaBasedTraceEntry,
+          'entry-3' as unknown as MediaBasedTraceEntry,
+          'entry-4' as unknown as MediaBasedTraceEntry,
+          'entry-5' as unknown as MediaBasedTraceEntry,
         ])
         .setTimestamps([time0, time3, time4, time5, time8, time10seconds])
         .build();
@@ -584,9 +591,9 @@ describe('FrameMapper', () => {
       .setTimestamps([time0])
       .build();
 
-    const screenRecording = new TraceBuilder<ScreenRecordingTraceEntry>()
+    const screenRecording = new TraceBuilder<MediaBasedTraceEntry>()
       .setType(TraceType.SCREEN_RECORDING)
-      .setEntries(['entry-0' as unknown as ScreenRecordingTraceEntry])
+      .setEntries(['entry-0' as unknown as MediaBasedTraceEntry])
       .setTimestamps([time1])
       .build();
 

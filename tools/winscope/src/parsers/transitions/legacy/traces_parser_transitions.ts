@@ -17,8 +17,9 @@
 import {assertDefined} from 'common/assert_utils';
 import {Timestamp} from 'common/time';
 import {ParserTimestampConverter} from 'common/timestamp_converter';
-import {AbstractTracesParser} from 'parsers/legacy/abstract_traces_parser';
+import {AbstractTracesParser} from 'parsers/traces/abstract_traces_parser';
 import {ParserTransitionsUtils} from 'parsers/transitions/parser_transitions_utils';
+import {CoarseVersion} from 'trace/coarse_version';
 import {Trace} from 'trace/trace';
 import {Traces} from 'trace/traces';
 import {TraceType} from 'trace/trace_type';
@@ -45,6 +46,10 @@ export class TracesParserTransitions extends AbstractTracesParser<PropertyTreeNo
     }
   }
 
+  override getCoarseVersion(): CoarseVersion {
+    return CoarseVersion.LEGACY;
+  }
+
   override async parse() {
     if (this.wmTransitionTrace === undefined) {
       throw new Error('Missing WM Transition trace');
@@ -67,6 +72,32 @@ export class TracesParserTransitions extends AbstractTracesParser<PropertyTreeNo
     this.decodedEntries = this.compressEntries(allEntries);
 
     await this.createTimestamps();
+  }
+
+  override async createTimestamps() {
+    this.timestamps = [];
+    for (let index = 0; index < this.getLengthEntries(); index++) {
+      const entry = await this.getEntry(index);
+
+      const shellData = entry.getChildByName('shellData');
+      const dispatchTimestamp: Timestamp | undefined = shellData
+        ?.getChildByName('dispatchTimeNs')
+        ?.getValue();
+
+      const realToBootTimeOffsetNs: bigint =
+        shellData
+          ?.getChildByName('realToBootTimeOffsetTimestamp')
+          ?.getValue()
+          ?.getValueNs() ?? 0n;
+
+      // for consistency with all transitions, elapsed nanos are defined as shell dispatch time else 0n
+      const timestampNs: bigint = dispatchTimestamp
+        ? dispatchTimestamp.getValueNs()
+        : realToBootTimeOffsetNs;
+      const timestamp =
+        this.timestampConverter.makeTimestampFromRealNs(timestampNs);
+      this.timestamps.push(timestamp);
+    }
   }
 
   override getLengthEntries(): number {
@@ -92,25 +123,6 @@ export class TracesParserTransitions extends AbstractTracesParser<PropertyTreeNo
 
   override getRealToBootTimeOffsetNs(): bigint | undefined {
     return undefined;
-  }
-
-  protected override getTimestamp(decodedEntry: PropertyTreeNode): Timestamp {
-    // for consistency with all transitions, elapsed nanos are defined as shell dispatch time else 0n
-    const shellData = decodedEntry.getChildByName('shellData');
-    const dispatchTimestamp: Timestamp | undefined = shellData
-      ?.getChildByName('dispatchTimeNs')
-      ?.getValue();
-
-    const realToBootTimeOffsetNs: bigint =
-      shellData
-        ?.getChildByName('realToBootTimeOffsetTimestamp')
-        ?.getValue()
-        ?.getValueNs() ?? 0n;
-
-    const timestampNs: bigint = dispatchTimestamp
-      ? dispatchTimestamp.getValueNs()
-      : realToBootTimeOffsetNs;
-    return this.timestampConverter.makeTimestampFromRealNs(timestampNs);
   }
 
   private compressEntries(
@@ -171,7 +183,7 @@ export class TracesParserTransitions extends AbstractTracesParser<PropertyTreeNo
       assertDefined(transition1.getChildByName('id')).getValue() !==
       assertDefined(transition2.getChildByName('id')).getValue()
     ) {
-      throw Error("Can't merge transitions with mismatching ids");
+      throw new Error("Can't merge transitions with mismatching ids");
     }
 
     const mergedTransition = this.mergeProperties(
