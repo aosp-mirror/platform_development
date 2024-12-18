@@ -16,7 +16,7 @@
 
 import {NgTemplateOutlet} from '@angular/common';
 import {Component, Input} from '@angular/core';
-import {Search} from './ui_data';
+import {ListedSearch} from './ui_data';
 
 @Component({
   selector: 'search-list',
@@ -110,17 +110,17 @@ import {Search} from './ui_data';
   ],
 })
 export class SearchListComponent {
-  @Input() searches: Search[] = [];
+  @Input() searches: ListedSearch[] = [];
   @Input() placeholderText = '';
   @Input() listItemOptions: ListItemOption[] = [];
 
-  searchOptionsTarget: Search | undefined;
+  searchOptionsTarget: ListedSearch | undefined;
 
-  showTooltip(search: Search, el: HTMLElement) {
+  showTooltip(search: ListedSearch, el: HTMLElement) {
     return search.name !== search.query || el.scrollWidth > el.offsetWidth;
   }
 
-  getTooltip(search: Search) {
+  getTooltip(search: ListedSearch) {
     if (search.name === search.query) return search.query;
     return search.name + ': ' + search.query;
   }
@@ -134,6 +134,6 @@ export class SearchListComponent {
 export interface ListItemOption {
   name: string;
   icon: string;
-  onClickCallback?: (search: Search) => void;
+  onClickCallback?: (search: ListedSearch) => void;
   menu?: NgTemplateOutlet;
 }

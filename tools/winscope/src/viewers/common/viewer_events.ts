@@ -17,7 +17,7 @@
 import {Timestamp} from 'common/time/time';
 import {TraceEntry} from 'trace/trace';
 import {TextFilter} from 'viewers/common/text_filter';
-import {Search} from 'viewers/viewer_search/ui_data';
+import {ListedSearch} from 'viewers/viewer_search/ui_data';
 import {LogHeader} from './ui_data_log';
 
 export enum ViewerEvents {
@@ -86,5 +86,5 @@ export class SaveQueryClickDetail {
 }
 
 export class DeleteSavedQueryClickDetail {
-  constructor(public search: Search) {}
+  constructor(public search: ListedSearch) {}
 }

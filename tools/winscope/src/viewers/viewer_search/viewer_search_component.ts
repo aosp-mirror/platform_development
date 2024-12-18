@@ -39,7 +39,7 @@ import {
   viewerCardStyle,
 } from 'viewers/components/styles/viewer_card.styles';
 import {ListItemOption} from './search_list_component';
-import {Search, UiData} from './ui_data';
+import {ListedSearch, UiData} from './ui_data';
 
 @Component({
   selector: 'viewer-search',
@@ -412,7 +412,7 @@ export class ViewerSearchComponent {
   private readonly editOption: ListItemOption = {
     name: 'Edit',
     icon: 'edit',
-    onClickCallback: (search: Search) => {
+    onClickCallback: (search: ListedSearch) => {
       this.onEditQueryClick(search);
     },
   };
@@ -424,7 +424,7 @@ export class ViewerSearchComponent {
     {
       name: 'Run',
       icon: 'play_arrow',
-      onClickCallback: (search: Search) => {
+      onClickCallback: (search: ListedSearch) => {
         Analytics.TraceSearch.logQueryRequested('saved');
         this.onRunQueryFromOptionsClick(search);
       },
@@ -433,14 +433,14 @@ export class ViewerSearchComponent {
     {
       name: 'Delete',
       icon: 'close',
-      onClickCallback: (search: Search) => this.onDeleteQueryClick(search),
+      onClickCallback: (search: ListedSearch) => this.onDeleteQueryClick(search),
     },
   ];
   readonly recentSearchOptions: ListItemOption[] = [
     {
       name: 'Run',
       icon: 'play_arrow',
-      onClickCallback: (search: Search) => {
+      onClickCallback: (search: ListedSearch) => {
         Analytics.TraceSearch.logQueryRequested('recent');
         this.onRunQueryFromOptionsClick(search);
       },
@@ -669,17 +669,17 @@ INNER JOIN sf_hierarchy_root_search STATE
     accordionItem.toggle();
   }
 
-  private onRunQueryFromOptionsClick(search: Search) {
+  private onRunQueryFromOptionsClick(search: ListedSearch) {
     this.runningQuery = search.query;
     this.dispatchSearchQueryEvent();
   }
 
-  private onEditQueryClick(search: Search) {
+  private onEditQueryClick(search: ListedSearch) {
     this.searchQueryControl.setValue(search.query);
     assertDefined(this.matTabGroup).selectedIndex = 0;
   }
 
-  private onDeleteQueryClick(search: Search) {
+  private onDeleteQueryClick(search: ListedSearch) {
     const event = new CustomEvent(ViewerEvents.DeleteSavedQueryClick, {
       detail: new DeleteSavedQueryClickDetail(search),
     });
@@ -688,7 +688,7 @@ INNER JOIN sf_hierarchy_root_search STATE
 
   private validateSearchQuerySaveName(
     control: FormControl,
-    savedSearches: Search[],
+    savedSearches: ListedSearch[],
   ): ValidationErrors | null {
     const valid =
       control.value &&

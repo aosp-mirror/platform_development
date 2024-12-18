@@ -18,8 +18,8 @@ import {LogEntry, LogHeader} from 'viewers/common/ui_data_log';
 
 export class UiData {
   currentSearches: SearchResult[] = [];
-  savedSearches: Search[] = [];
-  recentSearches: Search[] = [];
+  savedSearches: ListedSearch[] = [];
+  recentSearches: ListedSearch[] = [];
   lastTraceFailed = false;
   initialized = false;
   searchViews: string[] = [];
@@ -41,7 +41,7 @@ export class SearchResult {
   ) {}
 }
 
-export class Search {
+export class ListedSearch {
   readonly timeMs: number;
   constructor(readonly query: string, readonly name = query) {
     this.timeMs = Date.now();

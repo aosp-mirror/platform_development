@@ -40,7 +40,7 @@ import {
   ViewerEvents,
 } from 'viewers/common/viewer_events';
 import {Presenter} from './presenter';
-import {Search, SearchResult, UiData} from './ui_data';
+import {ListedSearch, SearchResult, UiData} from './ui_data';
 
 describe('PresenterSearch', () => {
   let presenter: Presenter;
@@ -97,7 +97,7 @@ describe('PresenterSearch', () => {
 
     spy = spyOn(presenter, 'onDeleteSavedQueryClick');
     const deleteQueryDetail = new DeleteSavedQueryClickDetail(
-      new Search('delete query', 'bar'),
+      new ListedSearch('delete query', 'bar'),
     );
     element.dispatchEvent(
       new CustomEvent(ViewerEvents.DeleteSavedQueryClick, {
@@ -161,7 +161,7 @@ describe('PresenterSearch', () => {
     expect(uiData.currentSearches[0].headers.length).toEqual(2);
     expect(uiData.currentSearches[0].entries.length).toEqual(1);
     expect(uiData.lastTraceFailed).toEqual(false);
-    expect(uiData.recentSearches).toEqual([new Search(testQuery)]);
+    expect(uiData.recentSearches).toEqual([new ListedSearch(testQuery)]);
 
     // adds event listeners and emit event for search presenter
     emitEventSpy.calls.reset();
@@ -203,7 +203,7 @@ describe('PresenterSearch', () => {
       new TraceSearchRequest(testQuery),
     );
     expect(uiData.currentSearches).toEqual([]);
-    expect(uiData.recentSearches).toEqual([new Search(testQuery)]);
+    expect(uiData.recentSearches).toEqual([new ListedSearch(testQuery)]);
     emitEventSpy.calls.reset();
 
     const newQuery = 'new query';
@@ -220,8 +220,8 @@ describe('PresenterSearch', () => {
     expect(emitEventSpy).toHaveBeenCalledWith(new TraceSearchRequest(newQuery));
     expect(uiData.currentSearches).toEqual([]);
     expect(uiData.recentSearches).toEqual([
-      new Search(newQuery),
-      new Search(testQuery),
+      new ListedSearch(newQuery),
+      new ListedSearch(testQuery),
     ]);
   });
 
@@ -229,20 +229,20 @@ describe('PresenterSearch', () => {
     const testQuery = 'save query';
     const testName = 'save name';
     presenter.onSaveQueryClick(testQuery, testName);
-    const testSearch = new Search(testQuery, testName);
+    const testSearch = new ListedSearch(testQuery, testName);
     expect(uiData.savedSearches).toEqual([testSearch]);
 
     const newQuery = 'new save query';
     const newName = 'new save name';
     presenter.onSaveQueryClick(newQuery, newName);
-    const newSearch = new Search(newQuery, newName);
+    const newSearch = new ListedSearch(newQuery, newName);
     expect(uiData.savedSearches).toEqual([newSearch, testSearch]);
   });
 
   it('handles delete saved query click', () => {
     const testQuery = 'delete query';
     const testName = 'delete name';
-    const testSearch = new Search(testQuery, testName);
+    const testSearch = new ListedSearch(testQuery, testName);
     presenter.onDeleteSavedQueryClick(testSearch);
     expect(uiData.savedSearches).toEqual([]);
 
@@ -254,7 +254,7 @@ describe('PresenterSearch', () => {
   });
 
   function searchEqualityTester(first: any, second: any): boolean | undefined {
-    if (first instanceof Search && second instanceof Search) {
+    if (first instanceof ListedSearch && second instanceof ListedSearch) {
       return first.query === second.query && first.name === second.name;
     }
     return undefined;
@@ -273,6 +273,6 @@ describe('PresenterSearch', () => {
       new SearchResult(testQuery, [], []),
     ]);
     expect(uiData.lastTraceFailed).toEqual(false);
-    expect(uiData.recentSearches[0]).toEqual(new Search(testQuery));
+    expect(uiData.recentSearches[0]).toEqual(new ListedSearch(testQuery));
   }
 });

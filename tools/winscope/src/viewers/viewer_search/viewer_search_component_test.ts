@@ -40,7 +40,7 @@ import {CollapsedSectionsComponent} from 'viewers/components/collapsed_sections_
 import {CollapsibleSectionTitleComponent} from 'viewers/components/collapsible_section_title_component';
 import {LogComponent} from 'viewers/components/log_component';
 import {SearchListComponent} from './search_list_component';
-import {Search, SearchResult, UiData} from './ui_data';
+import {ListedSearch, SearchResult, UiData} from './ui_data';
 import {ViewerSearchComponent} from './viewer_search_component';
 
 describe('ViewerSearchComponent', () => {
@@ -134,21 +134,21 @@ describe('ViewerSearchComponent', () => {
   });
 
   it('handles search via run query from options click from saved', async () => {
-    component.inputData.savedSearches = [new Search(testQuery, 'saved1')];
+    component.inputData.savedSearches = [new ListedSearch(testQuery, 'saved1')];
     fixture.detectChanges();
     await changeTab(1);
     runSearchAndCheckHandled(runSearchFromListedSearchOption);
   });
 
   it('handles search via run query from options click from recents', async () => {
-    component.inputData.recentSearches = [new Search(testQuery)];
+    component.inputData.recentSearches = [new ListedSearch(testQuery)];
     fixture.detectChanges();
     await changeTab(2);
     runSearchAndCheckHandled(runSearchFromListedSearchOption);
   });
 
   it('navigates to main search tab on edit query click', async () => {
-    component.inputData.recentSearches = [new Search(testQuery)];
+    component.inputData.recentSearches = [new ListedSearch(testQuery)];
     fixture.detectChanges();
     const input = getTextInput();
     expect(input.value).toEqual('');
@@ -230,7 +230,7 @@ describe('ViewerSearchComponent', () => {
         detail = (event as CustomEvent).detail;
       });
     const testName = 'Query 1';
-    component.inputData.savedSearches.push(new Search(testQuery, testName));
+    component.inputData.savedSearches.push(new ListedSearch(testQuery, testName));
     fixture.detectChanges();
     component.inputData.currentSearches.push(
       new SearchResult(testQuery, [], []),
@@ -271,7 +271,7 @@ describe('ViewerSearchComponent', () => {
       ?.addEventListener(ViewerEvents.DeleteSavedQueryClick, (event) => {
         detail = (event as CustomEvent).detail;
       });
-    const search = new Search(testQuery);
+    const search = new ListedSearch(testQuery);
     component.inputData.savedSearches = [search];
     fixture.detectChanges();
 

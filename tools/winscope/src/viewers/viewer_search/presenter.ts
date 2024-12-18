@@ -38,7 +38,7 @@ import {
   ViewerEvents,
 } from 'viewers/common/viewer_events';
 import {SearchResultPresenter} from './search_result_presenter';
-import {Search, SearchResult, UiData} from './ui_data';
+import {ListedSearch, SearchResult, UiData} from './ui_data';
 
 class QueryAndTrace {
   constructor(
@@ -51,7 +51,7 @@ export class Presenter {
   private emitWinscopeEvent: EmitEvent = FunctionUtils.DO_NOTHING_ASYNC;
   private uiData = UiData.createEmpty();
   private runQueries: QueryAndTrace[] = [];
-  private savedSearches = PersistentStoreProxy.new<{searches: Search[]}>(
+  private savedSearches = PersistentStoreProxy.new<{searches: ListedSearch[]}>(
     'savedSearches',
     {searches: []},
     this.storage,
@@ -161,12 +161,12 @@ export class Presenter {
   }
 
   onSaveQueryClick(query: string, name: string) {
-    this.uiData.savedSearches.unshift(new Search(query, name));
+    this.uiData.savedSearches.unshift(new ListedSearch(query, name));
     this.savedSearches.searches = this.uiData.savedSearches;
     this.copyUiDataAndNotifyView();
   }
 
-  onDeleteSavedQueryClick(savedSearch: Search) {
+  onDeleteSavedQueryClick(savedSearch: ListedSearch) {
     this.uiData.savedSearches = this.uiData.savedSearches.filter(
       (s) => s !== savedSearch,
     );
@@ -190,7 +190,7 @@ export class Presenter {
     if (this.uiData.recentSearches.length >= 10) {
       this.uiData.recentSearches.pop();
     }
-    this.uiData.recentSearches.unshift(new Search(runQuery.query));
+    this.uiData.recentSearches.unshift(new ListedSearch(runQuery.query));
 
     this.uiData.currentSearches = [];
     for (const {query, trace} of this.runQueries) {
