@@ -38,7 +38,7 @@ import {InMemoryStorage} from 'common/store/in_memory_storage';
 import {PersistentStore} from 'common/store/persistent_store';
 import {Store} from 'common/store/store';
 import {Timestamp} from 'common/time/time';
-import {UrlUtils} from 'common/url_utils';
+import {getRootUrl} from 'common/url_utils';
 import {UserNotifier} from 'common/user_notifier';
 import {CrossToolProtocol} from 'cross_tool/cross_tool_protocol';
 import {Analytics} from 'logging/analytics';
@@ -502,7 +502,7 @@ export class AppComponent implements WinscopeEventListener {
     const logoPath = this.isDarkModeOn
       ? 'logo_dark_mode.svg'
       : 'logo_light_mode.svg';
-    return UrlUtils.getRootUrl() + logoPath;
+    return getRootUrl() + logoPath;
   }
 
   async setDarkMode(enabled: boolean) {

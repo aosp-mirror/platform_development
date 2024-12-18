@@ -34,7 +34,7 @@ import {DomSanitizer} from '@angular/platform-browser';
 import {assertDefined} from 'common/assert_utils';
 import {Distance} from 'common/geometry/distance';
 import {PersistentStore} from 'common/store/persistent_store';
-import {UrlUtils} from 'common/url_utils';
+import {getRootUrl} from 'common/url_utils';
 import {Analytics} from 'logging/analytics';
 import {TRACE_INFO} from 'trace/trace_info';
 import {TraceType} from 'trace/trace_type';
@@ -377,13 +377,13 @@ export class RectsComponent implements OnInit, OnDestroy {
     this.matIconRegistry.addSvgIcon(
       'cube_full_shade',
       this.domSanitizer.bypassSecurityTrustResourceUrl(
-        UrlUtils.getRootUrl() + 'cube_full_shade.svg',
+        getRootUrl() + 'cube_full_shade.svg',
       ),
     );
     this.matIconRegistry.addSvgIcon(
       'cube_partial_shade',
       this.domSanitizer.bypassSecurityTrustResourceUrl(
-        UrlUtils.getRootUrl() + 'cube_partial_shade.svg',
+        getRootUrl() + 'cube_partial_shade.svg',
       ),
     );
   }

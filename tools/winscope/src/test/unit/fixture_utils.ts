@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import {UrlUtils} from 'common/url_utils';
+import {getRootUrl} from 'common/url_utils';
 
 /**
  * Get a fixture file from the fixtures directory.
@@ -28,7 +28,7 @@ export async function getFixtureFile(
   srcFilename: string,
   dstFilename: string = srcFilename,
 ): Promise<File> {
-  const url = UrlUtils.getRootUrl() + 'base/src/test/fixtures/' + srcFilename;
+  const url = getRootUrl() + 'base/src/test/fixtures/' + srcFilename;
   const response = await fetch(url);
   expect(response.ok).toBeTrue();
   const blob = await response.blob();
