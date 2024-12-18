@@ -18,26 +18,27 @@ import {assertDefined} from 'common/assert_utils';
 import {Timestamp} from 'common/time';
 import {DiffType} from 'viewers/common/diff_type';
 import {UiPropertyTreeNode} from 'viewers/common/ui_property_tree_node';
-import {ViewerEvents} from 'viewers/common/viewer_events';
+import {TimestampClickDetail, ViewerEvents} from 'viewers/common/viewer_events';
 import {propertyTreeNodeDataViewStyles} from 'viewers/components/styles/tree_node_data_view.styles';
-import {timeButtonStyle} from './styles/timestamp_button.styles';
+import {timeButtonStyle} from './styles/clickable_property.styles';
 
 @Component({
   selector: 'property-tree-node-data-view',
   template: `
-    <div class="mat-body-1 node-property" *ngIf="node">
-    <span class="property-key"> {{ getKey(node) }} </span>
-    <div *ngIf="node?.formattedValue()" class="property-value" [class]="[timeClass()]">
-      <button
-        *ngIf="isTimestamp()"
-        mat-button
-        color="primary"
-        (click)="onTimestampClicked(node)">
-        {{ node.formattedValue() }}
-      </button>
-      <a *ngIf="!isTimestamp()" [class]="[valueClass()]" class="value new">{{ node.formattedValue() }}</a>
-      <s *ngIf="isModified()" class="old-value">{{ node.getOldValue() }}</s>
-    </div>
+    <div class="node-property" *ngIf="node">
+      <span class=" mat-body-1 property-key"> {{ getKey(node) }} </span>
+      <div *ngIf="node?.formattedValue()" class="property-value" [class]="[timeClass()]">
+        <button
+          *ngIf="isTimestamp()"
+          class="time-button"
+          mat-button
+          color="primary"
+          (click)="onTimestampClicked(node)">
+          {{ node.formattedValue() }}
+        </button>
+        <a *ngIf="!isTimestamp()" [class]="[valueClass()]" class="mat-body-2 value new">{{ node.formattedValue() }}</a>
+        <s *ngIf="isModified()" class="old-value">{{ node.getOldValue() }}</s>
+      </div>
     </div>
   `,
   styles: [
@@ -66,10 +67,11 @@ export class PropertyTreeNodeDataViewComponent {
     return this.node?.getValue() instanceof Timestamp;
   }
 
-  onTimestampClicked(timestamp: UiPropertyTreeNode) {
+  onTimestampClicked(timestampNode: UiPropertyTreeNode) {
+    const timestamp: Timestamp = timestampNode.getValue();
     const customEvent = new CustomEvent(ViewerEvents.TimestampClick, {
       bubbles: true,
-      detail: timestamp,
+      detail: new TimestampClickDetail(undefined, timestamp),
     });
     this.elementRef.nativeElement.dispatchEvent(customEvent);
   }

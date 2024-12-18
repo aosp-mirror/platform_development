@@ -45,8 +45,6 @@ The VDM Demo contains 3 apps:
 *   Both devices need to support
     [Wi-Fi Aware](https://developer.android.com/develop/connectivity/wifi/wifi-aware)
 
-<!-- TODO(b/314429442): Make the host app work on older Android versions. -->
-
 Note: This example app uses an Android device as a client, but there's no such
 general requirement. The client device, its capabilities, the connectivity layer
 and the communication protocol are entirely up to the virtual device owner.
@@ -65,6 +63,21 @@ run
 The interactive script will prompt you which apps to install to which of the
 available devices, build the APKs and install them.
 
+### Using adevice on the host device
+
+1.  Track the required modules.
+
+    ```shell
+    adevice track VdmHost
+    adevice track VdmDemos
+    ```
+
+1.  Update the device
+
+    ```shell
+    adevice update
+    ```
+
 ### Manually
 
 1.  Source `build/envsetup.sh` and run `lunch` or set
@@ -78,7 +91,6 @@ available devices, build the APKs and install them.
     ```
 
 1.  Install the application as a system app on the host device.
-    <!-- TODO(b/314436863): Add a bash script for easy host app install. -->
 
     ```shell
     adb root && adb disable-verity && adb reboot  # one time
@@ -159,14 +171,7 @@ show a launcher-like list of installed apps on the host device.
 
 -   The Host app has a **CREATE MIRROR DISPLAY** button, clicking it will create
     a new virtual display, mirror the default host display there and start
-    streaming the display contents to the client. Run the commands below to
-    enable this functionality.
-
-    ```shell
-    adb shell device_config put virtual_devices android.companion.virtual.flags.consistent_display_flags true
-    adb shell device_config put virtual_devices android.companion.virtual.flags.interactive_screen_mirror true
-    adb shell am force-stop com.example.android.vdmdemo.host
-    ```
+    streaming the display contents to the client.
 
 ### Settings
 
@@ -185,8 +190,8 @@ Each input screen has a "Back", "Home" and "Forward" buttons.
 -   **Remote** allows the host device to act as a pointer that controls the
     mouse movement on the focused display.
 
--   **Navigation** shows an on-screen D-Pad and touchpad for navigating the
-    activity on the focused display.
+-   **Navigation** shows an on-screen D-Pad, rotary and touchpad for navigating
+    the activity on the focused display.
 
 -   **Keyboard** shows the host device's on-screen keyboard and sends any key
     events to the activity on the focused display.
@@ -228,6 +233,20 @@ Each input screen has a "Back", "Home" and "Forward" buttons.
     adb shell am force-stop com.example.android.vdmdemo.host
     ```
 
+-   **Enable custom activity policy**: Whether to use custom user notification
+    for activities that are unable to launch on the virtual display and send
+    such activities to the default display, whenever possible. Use together with
+    the activity policy demo. The behavior of the display fallback launch is
+    different depending on whether an activity result is expected by the caller,
+    and on whether the default display keyguard is currently locked. \
+    *This can be changed dynamically.*
+
+    ```shell
+    adb shell device_config put virtual_devices android.companion.virtual.flags.dynamic_policy true
+    adb shell device_config put virtual_devices android.companion.virtualdevice.flags.activity_control_api true
+    adb shell am force-stop com.example.android.vdmdemo.host
+    ```
+
 #### Client capabilities
 
 -   **Enable client Sensors**: Enables sensor injection from the client device
@@ -235,10 +254,10 @@ Each input screen has a "Back", "Home" and "Forward" buttons.
     will access the virtual sensors by default. \
     *Changing this will recreate the virtual device.*
 
--   **Enable client Camera**: Enables front & back camera injection from the client device
-    into the host device. (WIP: Any context that is associated with the virtual device
-    will the virtual cameras by default). Run the commands below on host device \
-    to enable this functionality.
+-   **Enable client Camera**: Enables front & back camera injection from the
+    client device into the host device. (WIP: Any context that is associated
+    with the virtual device will the virtual cameras by default). Run the
+    commands below on host device to enable this functionality. \
     *Changing this will recreate the virtual device.*
 
     ```shell
@@ -259,15 +278,15 @@ Each input screen has a "Back", "Home" and "Forward" buttons.
     automatically rotate the relevant display upon such request. Disabling this
     simulates a fixed orientation display that cannot physically rotate. Then
     any streamed apps on that display will be letterboxed/pillarboxed if they
-    request orientation change. Run the commands below to enable this
-    functionality. \
+    request orientation change. \
     *This can be changed dynamically but only applies to newly created
     displays.*
 
-    ```shell
-    adb shell device_config put virtual_devices android.companion.virtual.flags.consistent_display_flags true
-    adb shell am force-stop com.example.android.vdmdemo.host
-    ```
+-   **Display category**: Whether to specify a custom display category for the
+    virtual displays. This means that only activities that have explicitly set
+    a matching `android:requiredDisplayCategory` activity attribute can be
+    launched on that display. \
+    *Changing this will recreate the virtual device.*
 
 -   **Always unlocked**: Whether the virtual displays should remain unlocked and
     interactive when the host device is locked. Disabling this will result in a
@@ -288,7 +307,23 @@ Each input screen has a "Back", "Home" and "Forward" buttons.
     adb shell am force-stop com.example.android.vdmdemo.host
     ```
 
+-   **Custom status bar**: Whether to add a custom status bar view on the
+    non-mirror virtual displays. Run the commands below to enable this
+    functionality. \
+    *This can be changed dynamically but only applies to newly created
+    displays.*
+
+    ```shell
+    adb shell device_config put virtual_devices android.companion.virtualdevice.flags.status_bar_and_insets true
+    adb shell am force-stop com.example.android.vdmdemo.host
+    ```
+
 #### Input method
+
+Note: The virtual keyboard acts like a physically connected keyboard to the host
+device. If you want the software keyboard to be shown on the virtual displays,
+you likely need to enable this in the host Settings. On a Pixel device: System
+-> Language and input -> Physical keyboard.
 
 -   **Display IME policy**: Choose the IME behavior on remote displays. Run the
     commands below to enable this functionality. \
@@ -344,10 +379,10 @@ Each input screen has a "Back", "Home" and "Forward" buttons.
 
 ### Input
 
-The input menu button enables **on-screen D-Pad and touchpad** for navigating
-the activity on the focused display. The focused display is indicated by the
-frame around its header whenever there are more than one displays. The display
-focus is based on user interaction.
+The input menu button enables **on-screen D-Pad, rotary and touchpad** for
+navigating the activity on the focused display. The focused display is indicated
+by the frame around its header whenever there are more than one displays. The
+display focus is based on user interaction.
 
 In addition, any input events generated from an **externally connected
 keyboard** are forwarded to the activity streamed on the focused display.
@@ -360,16 +395,25 @@ display, if the mouse pointer is currently positioned on a streamed display.
 
 ## Demos
 
+-   **Activity policy**: An activity showcasing blocking of activity launches on
+    the virtual device - either because the activity has opted out via
+    `android:canDisplayOnRemoteDevices` attribute, or because of the custom
+    activity policy of that device.
+
 -   **Sensors**: A simple activity balancing a beam on the screen based on the
     accelerometer events, which allows for selecting which device's sensor to
     use. By default, will use the sensors of the device it's shown on.
+
+-   **Display Power**: A simple activity showcasing the behavior of proximity
+    locks, screen brightness override and requesting the screen to be kept on
+    or turned on.
 
 -   **Rotation**: A simple activity that is in landscape by default and can send
     orientation change requests on demand. Showcases the display rotation on the
     client, which will rotate the user-visible surface.
 
 -   **Home**: A simple activity with utilities around launching HOME and
-    SECONDARY_HOME Intents.
+    SECONDARY_HOME Intents, as well as other implicit intents.
 
 -   **Secure Window**: A simple activity that declares the Window as secure.
     This showcases the FLAG_SECURE streaming policies in VDM.
@@ -391,11 +435,33 @@ display, if the mouse pointer is currently positioned on a streamed display.
 -   **Stylus**: A simple drawing activity that reacts on stylus input events.
     Use together with the simulated stylus input feature of the host app.
 
+The demo activity depends on whether the **Display Category** Host preference is
+enabled or not. If enabled, it becomes equivalent to the **Home** demo activity,
+which showcases implicit intent handling.
+
 <!-- LINT.ThenChange(README.md) -->
 
 ## SDK Version
 
+### Beyond Android 15
+
+-   Added support for custom system windows (like status bar) and insets.
+
+-   Added support for per-display activity policies.
+
+-   Added support for custom redirection of blocked activities.
+
+-   Added support for hiding the blocked activity dialog.
+
+-   Added support for virtual display cutout.
+
+-   Added support for virtual display rotation.
+
+-   Added support for virtual rotary input.
+
 ### Android 15 / Vanilla Ice Cream / SDK level 35
+
+-   Added support for virtual stylus input.
 
 -   Added support for cross-device clipboard.
 
@@ -423,6 +489,8 @@ display, if the mouse pointer is currently positioned on a streamed display.
 
 ### Android 14 / Upside Down Cake / SDK level 34
 
+-   Added support for display categories and restricted activities.
+
 -   Added support for virtual sensors.
 
 -   Added device awareness to contexts.
@@ -434,6 +502,8 @@ display, if the mouse pointer is currently positioned on a streamed display.
 -   Added `COMPANION_DEVICE_NEARBY_DEVICE_STREAMING` device profile.
 
 -   Added support for virtual navigation input: D-Pad and navigation touchpad.
+
+-   Added support for display categories and restricted activities.
 
 -   Improved support for audio, allowing routing to be based on the origin
     context.

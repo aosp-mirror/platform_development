@@ -1,16 +1,21 @@
 <resources>
+    <style name="AppTheme" parent="@style/Theme.AppCompat.Light.NoActionBar">
+    </style>
     <style name="BottomBarTheme" parent="@style/Theme.MaterialComponents.Light">
         <item name="colorPrimary">@android:color/black</item>
     </style>
     <style name="SliderTheme" parent="@style/Theme.MaterialComponents.Light">
         <item name="colorPrimary">?attr/colorSecondary</item>
     </style>
-    <style name="Theme.AppCompat.Light.NoActionBar.FullScreen" parent="@style/Theme.AppCompat.Light.NoActionBar">
+    <style name="AppTheme.FullScreen">
         <item name="android:windowNoTitle">true</item>
         <item name="android:windowActionBar">false</item>
-        <item name="android:windowFullscreen">true</item>
         <item name="android:windowIsTranslucent">true</item>
         <item name="android:windowBackground">@android:color/transparent</item>
         <item name="android:windowShowWallpaper">true</item>
+    </style>
+    <style name="SysUiTheme" parent="@style/Theme.AppCompat.Light.NoActionBar">
+        <item name="android:textColor">@color/magenta</item>
+        <item name="android:background">@color/cyan</item>
     </style>
 </resources>

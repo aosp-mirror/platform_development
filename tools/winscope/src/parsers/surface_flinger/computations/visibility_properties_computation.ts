@@ -15,17 +15,19 @@
  */
 
 import {assertDefined} from 'common/assert_utils';
-import {Rect} from 'common/rect';
+import {Rect} from 'common/geometry/rect';
 import {RawDataUtils} from 'parsers/raw_data_utils';
 import {LayerFlag} from 'parsers/surface_flinger/layer_flag';
 import {
   Transform,
-  TransformUtils,
+  TransformType,
 } from 'parsers/surface_flinger/transform_utils';
+import {GeometryFactory} from 'trace/geometry_factory';
 import {Computation} from 'trace/tree_node/computation';
 import {HierarchyTreeNode} from 'trace/tree_node/hierarchy_tree_node';
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
 import {DEFAULT_PROPERTY_TREE_NODE_FACTORY} from 'trace/tree_node/property_tree_node_factory';
+import {LayerExtractor} from './layer_extractor';
 
 export class VisibilityPropertiesComputation implements Computation {
   private root: HierarchyTreeNode | undefined;
@@ -41,25 +43,21 @@ export class VisibilityPropertiesComputation implements Computation {
 
   executeInPlace(): void {
     if (!this.root || !this.rootLayers) {
-      throw Error('root not set');
+      throw new Error('root not set in SF visibility computation');
     }
 
     this.displays =
       this.root.getEagerPropertyByName('displays')?.getAllChildren().slice() ??
       [];
 
-    const sortedLayers = this.rootLayers.sort(this.sortLayerZ);
-
-    const rootLayersOrderedByZ = sortedLayers
-      .flatMap((layer) => {
-        return this.layerTopDownTraversal(layer);
-      })
-      .reverse();
+    const layersOrderedByZ = LayerExtractor.extractLayersSortedByZ(
+      assertDefined(this.root),
+    );
 
     const opaqueLayers: HierarchyTreeNode[] = [];
-    const transparentLayers: HierarchyTreeNode[] = [];
+    const translucentLayers: HierarchyTreeNode[] = [];
 
-    for (const layer of rootLayersOrderedByZ) {
+    for (const layer of layersOrderedByZ) {
       let isVisible = this.getIsVisible(layer);
       if (!isVisible) {
         layer.addEagerProperty(
@@ -72,103 +70,102 @@ export class VisibilityPropertiesComputation implements Computation {
         layer.addEagerProperty(
           DEFAULT_PROPERTY_TREE_NODE_FACTORY.makeCalculatedProperty(
             layer.id,
-            'visibilityReason',
-            this.getVisibilityReasons(layer),
+            'isHiddenByPolicy',
+            this.isHiddenByPolicy(layer),
           ),
         );
-        continue;
+      } else {
+        const displaySize = this.getDisplaySize(layer);
+
+        const occludedBy = opaqueLayers
+          .filter((other) => {
+            if (
+              this.getDefinedValue(other, 'layerStack') !==
+              this.getDefinedValue(layer, 'layerStack')
+            ) {
+              return false;
+            }
+            if (!this.layerContains(other, layer, displaySize)) {
+              return false;
+            }
+            const cornerRadiusOther = this.getDefinedValue(
+              other,
+              'cornerRadius',
+            );
+
+            return (
+              cornerRadiusOther <= 0 ||
+              cornerRadiusOther === this.getDefinedValue(layer, 'cornerRadius')
+            );
+          })
+          .map((other) => other.id);
+
+        if (occludedBy.length > 0) {
+          isVisible = false;
+        }
+
+        layer.addEagerProperty(
+          DEFAULT_PROPERTY_TREE_NODE_FACTORY.makeCalculatedProperty(
+            layer.id,
+            'isComputedVisible',
+            isVisible,
+          ),
+        );
+        layer.addEagerProperty(
+          DEFAULT_PROPERTY_TREE_NODE_FACTORY.makeCalculatedProperty(
+            layer.id,
+            'occludedBy',
+            occludedBy,
+          ),
+        );
+
+        const partiallyOccludedBy = opaqueLayers
+          .filter((other) => {
+            if (
+              this.getDefinedValue(other, 'layerStack') !==
+              this.getDefinedValue(layer, 'layerStack')
+            ) {
+              return false;
+            }
+            if (!this.layerOverlaps(other, layer, displaySize)) {
+              return false;
+            }
+            return !occludedBy.includes(other.id);
+          })
+          .map((other) => other.id);
+
+        layer.addEagerProperty(
+          DEFAULT_PROPERTY_TREE_NODE_FACTORY.makeCalculatedProperty(
+            layer.id,
+            'partiallyOccludedBy',
+            partiallyOccludedBy,
+          ),
+        );
+
+        const coveredBy = translucentLayers
+          .filter((other) => {
+            if (
+              this.getDefinedValue(other, 'layerStack') !==
+              this.getDefinedValue(layer, 'layerStack')
+            ) {
+              return false;
+            }
+            return this.layerOverlaps(other, layer, displaySize);
+          })
+          .map((other) => other.id);
+
+        layer.addEagerProperty(
+          DEFAULT_PROPERTY_TREE_NODE_FACTORY.makeCalculatedProperty(
+            layer.id,
+            'coveredBy',
+            coveredBy,
+          ),
+        );
+
+        this.isOpaque(layer)
+          ? opaqueLayers.push(layer)
+          : translucentLayers.push(layer);
       }
-
-      const displaySize = this.getDisplaySize(layer);
-
-      const occludedBy = opaqueLayers
-        .filter((other) => {
-          if (
-            this.getDefinedValue(other, 'layerStack') !==
-            this.getDefinedValue(layer, 'layerStack')
-          ) {
-            return false;
-          }
-          if (!this.layerContains(layer, other, displaySize)) {
-            return false;
-          }
-          const cornerRadiusOther =
-            other.getEagerPropertyByName('cornerRadius')?.getValue() ?? 0;
-
-          return (
-            cornerRadiusOther <= 0 ||
-            (cornerRadiusOther ===
-              layer.getEagerPropertyByName('cornerRadius')?.getValue() ??
-              0)
-          );
-        })
-        .map((other) => this.getDefinedValue(other, 'id'));
-
-      if (occludedBy.length > 0) {
-        isVisible = false;
-      }
-
-      layer.addEagerProperty(
-        DEFAULT_PROPERTY_TREE_NODE_FACTORY.makeCalculatedProperty(
-          layer.id,
-          'isComputedVisible',
-          isVisible,
-        ),
-      );
-      layer.addEagerProperty(
-        DEFAULT_PROPERTY_TREE_NODE_FACTORY.makeCalculatedProperty(
-          layer.id,
-          'occludedBy',
-          occludedBy,
-        ),
-      );
-
-      const partiallyOccludedBy = opaqueLayers
-        .filter((other) => {
-          if (
-            this.getDefinedValue(other, 'layerStack') !==
-            this.getDefinedValue(layer, 'layerStack')
-          ) {
-            return false;
-          }
-          if (!this.layerOverlaps(layer, other, displaySize)) {
-            return false;
-          }
-          return !occludedBy.includes(this.getDefinedValue(other, 'id'));
-        })
-        .map((other) => this.getDefinedValue(other, 'id'));
-
-      layer.addEagerProperty(
-        DEFAULT_PROPERTY_TREE_NODE_FACTORY.makeCalculatedProperty(
-          layer.id,
-          'partiallyOccludedBy',
-          partiallyOccludedBy,
-        ),
-      );
-
-      const coveredBy = transparentLayers
-        .filter((other) => {
-          if (
-            this.getDefinedValue(other, 'layerStack') !==
-            this.getDefinedValue(layer, 'layerStack')
-          ) {
-            return false;
-          }
-          return this.layerOverlaps(other, layer, displaySize);
-        })
-        .map((other) => this.getDefinedValue(other, 'id'));
-
-      layer.addEagerProperty(
-        DEFAULT_PROPERTY_TREE_NODE_FACTORY.makeCalculatedProperty(
-          layer.id,
-          'coveredBy',
-          coveredBy,
-        ),
-      );
-
-      this.getDefinedValue(layer, 'isOpaque')
-        ? opaqueLayers.push(layer)
-        : transparentLayers.push(layer);
 
       if (!isVisible) {
         layer.addEagerProperty(
@@ -184,6 +181,9 @@ export class VisibilityPropertiesComputation implements Computation {
 
   private getIsVisible(layer: HierarchyTreeNode): boolean {
     if (this.isHiddenByParent(layer) || this.isHiddenByPolicy(layer)) {
+      return false;
+    }
+    if (this.hasZeroAlpha(layer)) {
       return false;
     }
     if (
@@ -242,8 +242,7 @@ export class VisibilityPropertiesComputation implements Computation {
       reasons.push('buffer is empty');
     }
 
-    const color = this.getColor(layer);
-    if (color && this.getDefinedValue(color, 'a') === 0) {
+    if (this.hasZeroAlpha(layer)) {
       reasons.push('alpha is 0');
     }
 
@@ -252,6 +251,7 @@ export class VisibilityPropertiesComputation implements Computation {
       reasons.push('bounds is 0x0');
     }
 
+    const color = this.getColor(layer);
     if (
       color &&
       bounds &&
@@ -261,10 +261,7 @@ export class VisibilityPropertiesComputation implements Computation {
       reasons.push('crop is 0x0');
     }
     const transform = layer.getEagerPropertyByName('transform');
-    if (
-      transform &&
-      !TransformUtils.isValidTransform(Transform.from(transform))
-    ) {
+    if (transform && !Transform.from(transform).matrix.isValid()) {
       reasons.push('transform is invalid');
     }
 
@@ -291,24 +288,25 @@ export class VisibilityPropertiesComputation implements Computation {
       reasons.push('visible region calculated by Composition Engine is empty');
     }
 
+    if (
+      visibleRegionNode?.getValue() === null &&
+      !layer.getEagerPropertyByName('excludesCompositionState')?.getValue()
+    ) {
+      reasons.push('null visible region');
+    }
+
+    const occludedByNode = layer.getEagerPropertyByName('occludedBy');
+    if (occludedByNode && occludedByNode.getAllChildren().length > 0) {
+      reasons.push('occluded');
+    }
+
     if (reasons.length === 0) reasons.push('unknown');
     return reasons;
   }
 
-  private layerTopDownTraversal(layer: HierarchyTreeNode): HierarchyTreeNode[] {
-    const traverseList: HierarchyTreeNode[] = [layer];
-    const children: HierarchyTreeNode[] = [
-      ...layer.getAllChildren().values(),
-    ].slice();
-    children.sort(this.sortLayerZ).forEach((child) => {
-      traverseList.push(...this.layerTopDownTraversal(child));
-    });
-    return traverseList;
-  }
-
   private getRect(rectNode: PropertyTreeNode): Rect | undefined {
     if (rectNode.getAllChildren().length === 0) return undefined;
-    return Rect.from(rectNode);
+    return GeometryFactory.makeRect(rectNode);
   }
 
   private getColor(layer: HierarchyTreeNode): PropertyTreeNode | undefined {
@@ -336,15 +334,15 @@ export class VisibilityPropertiesComputation implements Computation {
   private layerContains(
     layer: HierarchyTreeNode,
     other: HierarchyTreeNode,
-    crop = new Rect(0, 0, 0, 0),
+    crop: Rect,
   ): boolean {
     if (
-      !TransformUtils.isSimpleRotation(
+      !TransformType.isSimpleRotation(
         assertDefined(layer.getEagerPropertyByName('transform'))
           .getChildByName('type')
           ?.getValue() ?? 0,
       ) ||
-      !TransformUtils.isSimpleRotation(
+      !TransformType.isSimpleRotation(
         assertDefined(other.getEagerPropertyByName('transform'))
           .getChildByName('type')
           ?.getValue() ?? 0,
@@ -363,7 +361,7 @@ export class VisibilityPropertiesComputation implements Computation {
   private layerOverlaps(
     layer: HierarchyTreeNode,
     other: HierarchyTreeNode,
-    crop = new Rect(0, 0, 0, 0),
+    crop: Rect,
   ): boolean {
     const layerBounds = this.getCroppedScreenBounds(layer, crop);
     const otherBounds = this.getCroppedScreenBounds(other, crop);
@@ -389,7 +387,7 @@ export class VisibilityPropertiesComputation implements Computation {
   }
 
   private isHiddenByParent(layer: HierarchyTreeNode): boolean {
-    const parentLayer = assertDefined(layer.getZParent());
+    const parentLayer = assertDefined(layer.getParent());
     return (
       !parentLayer.isRoot() &&
       (this.isHiddenByPolicy(parentLayer) || this.isHiddenByParent(parentLayer))
@@ -402,6 +400,19 @@ export class VisibilityPropertiesComputation implements Computation {
       this.getDefinedValue(layer, 'id') ===
         VisibilityPropertiesComputation.OFFSCREEN_LAYER_ROOT_ID
     );
+  }
+
+  private hasZeroAlpha(layer: HierarchyTreeNode): boolean {
+    const alpha = this.getColor(layer)?.getChildByName('a')?.getValue() ?? 0;
+    return alpha === 0;
+  }
+
+  private isOpaque(layer: HierarchyTreeNode): boolean {
+    const alpha = this.getColor(layer)?.getChildByName('a')?.getValue();
+    if (alpha !== 1) {
+      return false;
+    }
+    return this.getDefinedValue(layer, 'isOpaque');
   }
 
   private isActiveBufferEmpty(buffer: PropertyTreeNode | undefined): boolean {
@@ -428,13 +439,6 @@ export class VisibilityPropertiesComputation implements Computation {
       (layer.getEagerPropertyByName('backgroundBlurRadius')?.getValue() ?? 0) >
       0
     );
-  }
-
-  private sortLayerZ(a: HierarchyTreeNode, b: HierarchyTreeNode): number {
-    return a.getEagerPropertyByName('z')?.getValue() <
-      b.getEagerPropertyByName('z')?.getValue()
-      ? -1
-      : 1;
   }
 
   private getDefinedValue(

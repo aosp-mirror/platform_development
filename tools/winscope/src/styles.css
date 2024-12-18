@@ -32,6 +32,14 @@ app-root {
     margin: 0;
 }
 
+.mat-body-2 {
+    font: 500 14px / 20px 'Roboto', sans-serif;
+}
+
+.mat-button, .mat-icon-button, .mat-stroked-button, .mat-flat-button {
+    user-select: auto !important;
+}
+
 .card-grid {
     width: 100%;
     height: 100%;
@@ -40,12 +48,75 @@ app-root {
     overflow: auto;
 }
 
-rects-view .mat-tab-label {
-    min-width: 60px;
-    height: 32px;
-    font-size: 12px;
+rects-view .mat-slider-thumb {
+    transform: scale(0.5);
 }
 
-rects-view .mat-tab-body {
+rects-view .displays-select .mat-form-field-infix {
+    border-top: 0;
+    padding-top: 4px;
+    padding-bottom: 4px;
+}
+
+rects-view .displays-select .mat-form-field-flex {
+    padding-left: 4px;
+}
+
+.mat-select-panel:has(>.select-filter) {
+    max-height: 75vh;
+}
+
+body.dark-mode button.mat-raised-button.mat-primary,
+body.dark-mode button.mat-flat-button.mat-primary {
+    color: #ffffff;
+}
+
+.context-menu, .context-menu-item-container {
+    background-color: var(--background-color);
+    border-radius: 4px;
+}
+
+.context-menu {
+    box-shadow: 0px 1px 3px rgba(0, 0, 0, 0.15), 0px 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+.context-menu-item-container {
+    padding: 8px 0px;
+}
+
+.context-menu-item {
+    cursor: pointer;
+    font: 14px 'Roboto', sans-serif;
+    min-width: 64px;
+    line-height: 36px;
+    display: flex;
+    align-items: center;
+    flex-direction: row;
+    padding: 0px 16px;
+    flex: 1;
+}
+
+.context-menu-item:hover {
+    background-color: var(--hover-element-color);
+}
+
+.mat-dialog-container {
+    border-radius: 20px !important;
+}
+
+.mat-tooltip {
+    word-break: break-word;
+}
+
+.outline-field .mat-form-field-wrapper {
     padding-bottom: 0px;
+}
+
+.outline-field .mat-form-field-infix {
+    padding: 6px 0 10px 0;
+    border-top: 8px solid transparent;
+}
+
+log-view .filters .mat-form-field-infix {
+    width: 100%;
 }

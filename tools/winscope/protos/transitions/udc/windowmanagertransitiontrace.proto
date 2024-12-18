@@ -63,8 +63,8 @@ message Transition {
 }
 
 message Target {
-  required int32 mode = 1;
-  required int32 layer_id = 2;
+  optional int32 mode = 1;
+  optional int32 layer_id = 2;
   optional int32 window_id = 3;  // Not dumped in always on tracing
   optional int32 flags = 4;
 }

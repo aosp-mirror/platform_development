@@ -1,0 +1,74 @@
+:host {
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+}
+
+.golden-card {
+  mat-card-title {
+    margin: 16px;
+  }
+}
+
+.golden-content {
+  display: flex;
+  flex-direction: row;
+
+  app-timeline-view {
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1;
+  }
+}
+
+.overlay {
+  z-index: 30;
+  position: fixed;
+  top: 0px;
+  left: 0px;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.video-card {
+  pointer-events: all;
+  width: max(250px, 15vw);
+  min-width: 165px;
+  resize: both;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  padding: 0;
+  right: -50px;
+  top: 20vh;
+}
+
+.header {
+  display: flex;
+  flex-direction: row;
+  margin: 0px;
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+}
+.button-drag {
+  flex-grow: 1;
+  cursor: grab;
+  padding: 2px;
+}
+
+.drag-icon {
+  float: left;
+  margin: 5px 0;
+}
+
+.video-container,
+app-video-view {
+  border: 1px solid var(--default-border);
+  width: 100%;
+  height: auto;
+  cursor: grab;
+  overflow: hidden;
+  min-width: 100px;
+  min-height: 100px;
+}

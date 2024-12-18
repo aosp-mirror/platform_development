@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import {Timestamp, TimestampType} from 'common/time';
+import {Timestamp} from 'common/time';
 import {
   CustomQueryParserResultTypeMap,
   CustomQueryType,
@@ -37,10 +37,10 @@ export class TraceBuilder<T> {
   private parserCustomQueryResult = new Map<CustomQueryType, {}>();
   private entries?: T[];
   private timestamps?: Timestamp[];
-  private timestampType = TimestampType.REAL;
   private frameMap?: FrameMap;
   private frameMapBuilder?: FrameMapBuilder;
   private descriptors: string[] = [];
+  private isCorrupted = false;
 
   setType(type: TraceType): TraceBuilder<T> {
     this.type = type;
@@ -59,11 +59,6 @@ export class TraceBuilder<T> {
 
   setTimestamps(timestamps: Timestamp[]): TraceBuilder<T> {
     this.timestamps = timestamps;
-    return this;
-  }
-
-  setTimestampType(type: TimestampType): TraceBuilder<T> {
-    this.timestampType = type;
     return this;
   }
 
@@ -91,6 +86,16 @@ export class TraceBuilder<T> {
     return this;
   }
 
+  setDescriptors(descriptors: string[]): TraceBuilder<T> {
+    this.descriptors = descriptors;
+    return this;
+  }
+
+  setIsCorrupted(value: boolean): TraceBuilder<T> {
+    this.isCorrupted = value;
+    return this;
+  }
+
   build(): Trace<T> {
     if (!this.parser) {
       this.parser = this.createParser();
@@ -105,7 +110,6 @@ export class TraceBuilder<T> {
       this.parser,
       this.descriptors,
       undefined,
-      this.timestampType,
       entriesRange,
     );
 
@@ -118,7 +122,9 @@ export class TraceBuilder<T> {
   }
 
   private createParser(): Parser<T> {
-    const builder = new ParserBuilder<T>().setType(this.type);
+    const builder = new ParserBuilder<T>()
+      .setType(this.type)
+      .setIsCorrupted(this.isCorrupted);
 
     if (this.timestamps) {
       builder.setTimestamps(this.timestamps);
@@ -126,6 +132,10 @@ export class TraceBuilder<T> {
 
     if (this.entries) {
       builder.setEntries(this.entries);
+    }
+
+    if (this.descriptors.length > 0) {
+      builder.setDescriptors(this.descriptors);
     }
 
     this.parserCustomQueryResult?.forEach((result, queryType) => {

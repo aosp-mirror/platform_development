@@ -17,6 +17,7 @@ const path = require('path');
 const TerserPlugin = require('terser-webpack-plugin');
 
 module.exports = {
+  devtool: 'inline-source-map',
   resolve: {
     extensions: ['.ts', '.js', '.css'],
     modules: [
@@ -34,6 +35,13 @@ module.exports = {
 
   module: {
     rules: [
+      {
+        test: /^((?!test).)*\.ts$/,
+        include: [path.resolve('src')],
+        loader: '@ephesoft/webpack.istanbul.loader', // Must be first loader
+        options: {esModules: true},
+        enforce: 'post',
+      },
       {
         test: /\.ts$/,
         use: ['ts-loader', 'angular2-template-loader'],

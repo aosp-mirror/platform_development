@@ -15,13 +15,17 @@
  */
 
 import {ChangeDetectorRef, Component, Inject} from '@angular/core';
+import {assertDefined, assertUnreachable} from 'common/assert_utils';
 import {FunctionUtils} from 'common/function_utils';
+import {TimeUtils} from 'common/time_utils';
 import {
   Message,
   MessageBugReport,
+  MessageFiles,
   MessagePing,
   MessageTimestamp,
   MessageType,
+  TimestampType,
 } from 'cross_tool/messages';
 
 @Component({
@@ -29,39 +33,54 @@ import {
   template: `
     <span class="app-title">Remote Tool Mock (simulates cross-tool protocol)</span>
 
-    <hr />
+    <hr/>
     <p>Open Winscope tab</p>
     <input
-      class="button-open-winscope"
-      type="button"
-      value="Open"
-      (click)="onButtonOpenWinscopeClick()" />
+        class="button-open-winscope"
+        type="button"
+        value="Open"
+        (click)="onButtonOpenWinscopeClick()"/>
 
-    <hr />
+    <hr/>
     <p>Send bugreport</p>
     <input
-      class="button-upload-bugreport"
-      type="file"
-      value=""
-      (change)="onUploadBugreport($event)" />
+        class="button-send-bugreport"
+        type="file"
+        value=""
+        (change)="onButtonSendBugreportClick($event)"/>
 
-    <hr />
-    <p>Send timestamp [ns]</p>
-    <input class="input-timestamp" type="number" id="name" name="name" />
+    <hr/>
+    <p>Send file</p>
     <input
-      class="button-send-timestamp"
-      type="button"
-      value="Send"
-      (click)="onButtonSendTimestampClick()" />
+        class="button-send-files"
+        type="file"
+        value=""
+        (change)="onButtonSendFilesClick($event)"/>
 
-    <hr />
-    <p>Received timestamp:</p>
-    <p class="paragraph-received-timestamp"></p>
+    <hr/>
+    <p>Send timestamp [ns]</p>
+    <input class="input-timestamp" type="number" id="name" name="name"/>
+    <input
+        class="button-send-realtime-timestamp"
+        type="button"
+        value="Send"
+        (click)="onButtonSendRealtimeTimestampClick()"/>
+    <input
+        class="button-send-boottime-timestamp"
+        type="button"
+        value="Send"
+        (click)="onButtonSendBoottimeTimestampClick()"/>
+    <hr/>
+    <p>Received realtime timestamp:</p>
+    <p class="paragraph-received-realtime-timestamp"></p>
+    <p>Received boottime timestamp:</p>
+    <p class="paragraph-received-boottime-timestamp"></p>
   `,
 })
 export class AppComponent {
   static readonly TARGET = 'http://localhost:8080';
   static readonly TIMESTAMP_IN_BUGREPORT_MESSAGE = 1670509911000000000n;
+  static readonly TIMESTAMP_IN_FILES_MESSAGE = 15725894416n;
 
   private winscope: Window | null = null;
   private isWinscopeUp = false;
@@ -80,16 +99,34 @@ export class AppComponent {
     await this.waitWinscopeUp();
   }
 
-  async onUploadBugreport(event: Event) {
-    const [file, buffer] = await this.readInputFile(event);
-    this.sendBugreport(file, buffer);
+  async onButtonSendBugreportClick(event: Event) {
+    const file = await this.readInputFile(event);
+    this.sendBugreport(file);
   }
 
-  onButtonSendTimestampClick() {
-    const inputTimestampElement = document.querySelector(
-      '.input-timestamp',
-    )! as HTMLInputElement;
-    this.sendTimestamp(BigInt(inputTimestampElement.value));
+  async onButtonSendFilesClick(event: Event) {
+    const file = await this.readInputFile(event);
+    this.sendFiles([file]);
+  }
+
+  onButtonSendRealtimeTimestampClick() {
+    const inputTimestampElement = assertDefined(
+      document.querySelector('.input-timestamp'),
+    ) as HTMLInputElement;
+    this.sendTimestamp(
+      BigInt(inputTimestampElement.value),
+      TimestampType.CLOCK_REALTIME,
+    );
+  }
+
+  onButtonSendBoottimeTimestampClick() {
+    const inputTimestampElement = assertDefined(
+      document.querySelector('.input-timestamp'),
+    ) as HTMLInputElement;
+    this.sendTimestamp(
+      BigInt(inputTimestampElement.value),
+      TimestampType.CLOCK_BOOTTIME,
+    );
   }
 
   private openWinscope() {
@@ -115,8 +152,11 @@ export class AppComponent {
 
     setTimeout(async () => {
       while (!this.isWinscopeUp) {
-        this.winscope!.postMessage(new MessagePing(), AppComponent.TARGET);
-        await this.sleep(10);
+        assertDefined(this.winscope).postMessage(
+          new MessagePing(),
+          AppComponent.TARGET,
+        );
+        await TimeUtils.sleepMs(10);
       }
     }, 0);
 
@@ -125,10 +165,10 @@ export class AppComponent {
     this.printStatus('DONE WAITING (WINSCOPE IS UP)');
   }
 
-  private sendBugreport(file: File, buffer: ArrayBuffer) {
+  private sendBugreport(file: File) {
     this.printStatus('SENDING BUGREPORT');
 
-    this.winscope!.postMessage(
+    assertDefined(this.winscope).postMessage(
       new MessageBugReport(file, AppComponent.TIMESTAMP_IN_BUGREPORT_MESSAGE),
       AppComponent.TARGET,
     );
@@ -136,11 +176,26 @@ export class AppComponent {
     this.printStatus('SENT BUGREPORT');
   }
 
-  private sendTimestamp(value: bigint) {
+  private sendFiles(files: File[]) {
+    this.printStatus('SENDING FILES');
+
+    assertDefined(this.winscope).postMessage(
+      new MessageFiles(
+        files,
+        AppComponent.TIMESTAMP_IN_FILES_MESSAGE,
+        TimestampType.CLOCK_BOOTTIME,
+      ),
+      AppComponent.TARGET,
+    );
+
+    this.printStatus('SENT FILES');
+  }
+
+  private sendTimestamp(value: bigint, type: TimestampType) {
     this.printStatus('SENDING TIMESTAMP');
 
-    this.winscope!.postMessage(
-      new MessageTimestamp(value),
+    assertDefined(this.winscope).postMessage(
+      new MessageTimestamp(value, type),
       AppComponent.TARGET,
     );
 
@@ -193,9 +248,28 @@ export class AppComponent {
   }
 
   private onMessageTimestampReceived(message: MessageTimestamp) {
-    const paragraph = document.querySelector(
-      '.paragraph-received-timestamp',
-    ) as HTMLParagraphElement;
+    let paragraph: HTMLParagraphElement | undefined;
+
+    const timestampType = assertDefined(message.timestampType);
+    switch (timestampType) {
+      case TimestampType.UNKNOWN:
+        throw new Error("Winscope shouldn't send timestamps with UNKNOWN type");
+      case TimestampType.CLOCK_BOOTTIME: {
+        paragraph = document.querySelector(
+          '.paragraph-received-boottime-timestamp',
+        ) as HTMLParagraphElement;
+        break;
+      }
+      case TimestampType.CLOCK_REALTIME: {
+        paragraph = document.querySelector(
+          '.paragraph-received-realtime-timestamp',
+        ) as HTMLParagraphElement;
+        break;
+      }
+      default:
+        assertUnreachable(timestampType);
+    }
+
     paragraph.textContent = message.timestampNs.toString();
     this.changeDetectorRef.detectChanges();
   }
@@ -204,17 +278,13 @@ export class AppComponent {
     console.log('STATUS: ' + status);
   }
 
-  private sleep(ms: number): Promise<void> {
-    return new Promise((resolve) => setTimeout(resolve, ms));
-  }
-
-  private async readInputFile(event: Event): Promise<[File, ArrayBuffer]> {
+  private async readInputFile(event: Event): Promise<File> {
     const files: FileList | null = (event?.target as HTMLInputElement)?.files;
 
     if (!files || !files[0]) {
       throw new Error('Failed to read input files');
     }
 
-    return [files[0], await files[0].arrayBuffer()];
+    return files[0];
   }
 }

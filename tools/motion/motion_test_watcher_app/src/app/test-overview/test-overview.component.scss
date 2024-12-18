@@ -1,0 +1,45 @@
+:host {
+  display: flex;
+  flex: 0 0 100%;
+  flex-direction: column;
+}
+
+.status {
+  padding: 16px;
+  display: flex;
+  flex-direction: row;
+  align-items: baseline;
+
+  .spacer {
+    flex-grow: 1;
+  }
+}
+
+.tag {
+  border-radius: 10px;
+  padding: 4px 8px;
+  color: white;
+
+  &.PASSED {
+    background-color: green;
+  }
+
+  &.MISSING_REFERENCE {
+    background-color: red;
+  }
+
+  &.updated {
+    background-color: gray;
+  }
+
+  &.FAILED {
+    background-color: red;
+  }
+}
+
+.contents {
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+  overflow: overlay;
+}

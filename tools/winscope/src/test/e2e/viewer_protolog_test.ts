@@ -14,15 +14,16 @@
  * limitations under the License.
  */
 
-import {browser, by, element, ElementFinder} from 'protractor';
+import {browser, ElementFinder} from 'protractor';
 import {E2eTestUtils} from './utils';
 
 describe('Viewer Protolog', () => {
   const viewerSelector = 'viewer-protolog';
+  const totalEntries = 7295;
+  const scrollToTotalBottomOffset = 700000;
 
   beforeEach(async () => {
-    browser.manage().timeouts().implicitlyWait(1000);
-    await E2eTestUtils.checkServerIsUp('Winscope', E2eTestUtils.WINSCOPE_URL);
+    await E2eTestUtils.beforeEach(1000);
     await browser.get(E2eTestUtils.WINSCOPE_URL);
   });
 
@@ -32,32 +33,90 @@ describe('Viewer Protolog', () => {
       'ProtoLog',
       viewerSelector,
     );
+    await E2eTestUtils.checkTotalScrollEntries(
+      viewerSelector,
+      scrollViewport,
+      totalEntries,
+      scrollToTotalBottomOffset,
+    );
     await E2eTestUtils.checkTimelineTraceSelector({
       icon: 'notes',
-      color: 'rgba(64, 165, 138, 1)',
+      color: 'rgba(52, 168, 83, 1)',
     });
-    await E2eTestUtils.checkInitialRealTimestamp(
-      '2022-11-21T18:05:09.777144978',
-    );
-    await E2eTestUtils.checkFinalRealTimestamp('2022-11-21T18:05:18.259191031');
+    await E2eTestUtils.checkFinalRealTimestamp('2022-11-21, 18:05:18.259');
+    await E2eTestUtils.checkInitialRealTimestamp('2022-11-21, 18:05:09.777');
 
-    await checkNumberOfEntries(41);
+    await checkSelectFilter(
+      '.source-file',
+      ['com/android/server/wm/ActivityStarter.java'],
+      1,
+    );
+    await checkSelectFilter(
+      '.source-file',
+      [
+        'com/android/server/wm/ActivityStarter.java',
+        'com/android/server/wm/ActivityClientController.java',
+      ],
+      4,
+    );
+
+    await E2eTestUtils.checkTotalScrollEntries(
+      viewerSelector,
+      scrollViewport,
+      totalEntries,
+      scrollToTotalBottomOffset,
+    );
     await filterByText('FREEZE');
-    await checkNumberOfEntries(4);
+    await E2eTestUtils.checkTotalScrollEntries(
+      viewerSelector,
+      scrollViewport,
+      4,
+    );
   });
+
+  async function checkSelectFilter(
+    filterSelector: string,
+    options: string[],
+    expectedFilteredEntries: number,
+  ) {
+    await E2eTestUtils.toggleSelectFilterOptions(
+      viewerSelector,
+      filterSelector,
+      options,
+    );
+    await E2eTestUtils.checkTotalScrollEntries(
+      viewerSelector,
+      scrollViewport,
+      expectedFilteredEntries,
+    );
+
+    await E2eTestUtils.toggleSelectFilterOptions(
+      viewerSelector,
+      filterSelector,
+      options,
+    );
+    await E2eTestUtils.checkTotalScrollEntries(
+      viewerSelector,
+      scrollViewport,
+      totalEntries,
+      scrollToTotalBottomOffset,
+    );
+  }
 
   async function filterByText(filterString: string) {
     await E2eTestUtils.updateInputField(
       `${viewerSelector} .filters .text`,
-      'protologTextInput',
+      'Search text',
       filterString,
     );
   }
 
-  async function checkNumberOfEntries(numberOfEntries: number) {
-    const entries: ElementFinder[] = await element.all(
-      by.css(`${viewerSelector} .scroll-messages .message`),
-    );
-    expect(entries.length).toEqual(numberOfEntries);
+  function scrollViewport(
+    viewportEl: ElementFinder,
+    offset: number,
+    done: () => void,
+  ) {
+    viewportEl['scrollTop'] = offset;
+    window.requestAnimationFrame(() => done());
   }
 });

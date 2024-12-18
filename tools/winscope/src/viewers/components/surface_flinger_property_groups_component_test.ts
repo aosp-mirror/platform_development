@@ -20,11 +20,14 @@ import {
   TestBed,
 } from '@angular/core/testing';
 import {MatDividerModule} from '@angular/material/divider';
+import {MatIconModule} from '@angular/material/icon';
 import {MatTooltipModule} from '@angular/material/tooltip';
 import {assertDefined} from 'common/assert_utils';
 import {TreeNodeUtils} from 'test/unit/tree_node_utils';
 import {EMPTY_OBJ_STRING} from 'trace/tree_node/formatters';
 import {SfCuratedProperties} from 'viewers/common/curated_properties';
+import {ViewerEvents} from 'viewers/common/viewer_events';
+import {CollapsibleSectionTitleComponent} from './collapsible_section_title_component';
 import {SurfaceFlingerPropertyGroupsComponent} from './surface_flinger_property_groups_component';
 import {TransformMatrixComponent} from './transform_matrix_component';
 
@@ -36,11 +39,12 @@ describe('SurfaceFlingerPropertyGroupsComponent', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       providers: [{provide: ComponentFixtureAutoDetect, useValue: true}],
-      imports: [MatDividerModule, MatTooltipModule],
+      imports: [MatDividerModule, MatTooltipModule, MatIconModule],
       declarations: [
         TestHostComponent,
         SurfaceFlingerPropertyGroupsComponent,
         TransformMatrixComponent,
+        CollapsibleSectionTitleComponent,
       ],
       schemas: [],
     }).compileComponents();
@@ -57,6 +61,27 @@ describe('SurfaceFlingerPropertyGroupsComponent', () => {
   it('renders flags', () => {
     const flags = assertDefined(htmlElement.querySelector('.flags'));
     expect(flags.innerHTML).toMatch('Flags:.*HIDDEN \\(0x1\\)');
+  });
+
+  it('renders simple summary property', () => {
+    const summary = htmlElement.querySelectorAll('.summary').item(0);
+    expect(summary.textContent).toMatch(
+      'Invisible due to: reason 1, reason 2, reason 3',
+    );
+  });
+
+  it('renders interactive summary property', () => {
+    const summary = htmlElement.querySelectorAll('.summary').item(1);
+    expect(summary.textContent).toContain('Covered by:');
+    const button = assertDefined(summary.querySelector<HTMLElement>('button'));
+    expect(button.textContent).toMatch('1');
+  });
+
+  it('emits highlighted id event from layer id in summary', () => {
+    checkHighlightedIdEventEmittedFromButtonClick(
+      '.summary button',
+      '1 coveringLayer',
+    );
   });
 
   it('displays calculated geometry', () => {
@@ -104,6 +129,38 @@ describe('SurfaceFlingerPropertyGroupsComponent', () => {
       '.hierarchy-info .rel-parent',
     );
     expect(assertDefined(relParentDiv).innerHTML).toContain('none');
+    const relChildrenDiv = assertDefined(
+      htmlElement.querySelector('.hierarchy-info .rel-children'),
+    );
+    expect(relChildrenDiv.innerHTML).toContain('none');
+  });
+
+  it('emits highlighted id event from layer id in rel z parent', () => {
+    component.properties.relativeParent = {
+      layerId: '1',
+      nodeId: '1 relZParent',
+      name: 'relZParent',
+    };
+    fixture.detectChanges();
+    checkHighlightedIdEventEmittedFromButtonClick(
+      '.hierarchy-info .rel-parent button',
+      '1 relZParent',
+    );
+  });
+
+  it('emits highlighted id event from layer id in rel z children', () => {
+    component.properties.relativeChildren = [
+      {
+        layerId: '2',
+        nodeId: '2 relZChild',
+        name: 'relZChild',
+      },
+    ];
+    fixture.detectChanges();
+    checkHighlightedIdEventEmittedFromButtonClick(
+      '.hierarchy-info .rel-children button',
+      '2 relZChild',
+    );
   });
 
   it('displays simple calculated effects', () => {
@@ -167,10 +224,39 @@ describe('SurfaceFlingerPropertyGroupsComponent', () => {
     ).toContain('null');
   });
 
+  it('handles collapse button click', () => {
+    expect(component.collapseButtonClicked).toBeFalse();
+    const collapseButton = assertDefined(
+      htmlElement.querySelector<HTMLElement>(
+        'collapsible-section-title button',
+      ),
+    );
+    collapseButton.click();
+    fixture.detectChanges();
+    expect(component.collapseButtonClicked).toBeTrue();
+  });
+
+  function checkHighlightedIdEventEmittedFromButtonClick(
+    selector: string,
+    expectedId: string,
+  ) {
+    let id = '';
+    htmlElement.addEventListener(ViewerEvents.HighlightedIdChange, (event) => {
+      id = (event as CustomEvent).detail.id;
+    });
+    const button = assertDefined(
+      htmlElement.querySelector<HTMLElement>(selector),
+    );
+    button.click();
+    expect(id).toEqual(expectedId);
+  }
+
   @Component({
     selector: 'host-component',
     template: `
-      <surface-flinger-property-groups [properties]="properties"></surface-flinger-property-groups>
+      <surface-flinger-property-groups
+        [properties]="properties"
+        (collapseButtonClicked)="onCollapseButtonClick()"></surface-flinger-property-groups>
     `,
   })
   class TestHostComponent {
@@ -187,7 +273,19 @@ describe('SurfaceFlingerPropertyGroupsComponent', () => {
     });
 
     properties: SfCuratedProperties = {
-      summary: [],
+      summary: [
+        {key: 'Invisible due to', simpleValue: 'reason 1, reason 2, reason 3'},
+        {
+          key: 'Covered by',
+          layerValues: [
+            {
+              layerId: '1',
+              nodeId: '1 coveringLayer',
+              name: 'coveringLayer',
+            },
+          ],
+        },
+      ],
       flags: 'HIDDEN (0x1)',
       calcTransform: this.transformNode,
       calcCrop: EMPTY_OBJ_STRING,
@@ -200,6 +298,7 @@ describe('SurfaceFlingerPropertyGroupsComponent', () => {
       destinationFrame: EMPTY_OBJ_STRING,
       z: '0',
       relativeParent: 'none',
+      relativeChildren: [],
       calcColor: `${EMPTY_OBJ_STRING}, alpha: 1`,
       calcShadowRadius: '1 px',
       calcCornerRadius: '1 px',
@@ -216,5 +315,11 @@ describe('SurfaceFlingerPropertyGroupsComponent', () => {
       hasInputChannel: false,
       ignoreDestinationFrame: true,
     };
+
+    collapseButtonClicked = false;
+
+    onCollapseButtonClick() {
+      this.collapseButtonClicked = true;
+    }
   }
 });

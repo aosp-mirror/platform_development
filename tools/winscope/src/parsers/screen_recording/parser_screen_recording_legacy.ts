@@ -15,10 +15,10 @@
  */
 
 import {ArrayUtils} from 'common/array_utils';
-import {assertDefined} from 'common/assert_utils';
-import {Timestamp, TimestampType} from 'common/time';
-import {AbstractParser} from 'parsers/abstract_parser';
-import {ScreenRecordingTraceEntry} from 'trace/screen_recording';
+import {Timestamp} from 'common/time';
+import {AbstractParser} from 'parsers/legacy/abstract_parser';
+import {MediaBasedTraceEntry} from 'trace/media_based_trace_entry';
+import {ScreenRecordingUtils} from 'trace/screen_recording_utils';
 import {TraceType} from 'trace/trace_type';
 
 class ParserScreenRecordingLegacy extends AbstractParser {
@@ -27,40 +27,37 @@ class ParserScreenRecordingLegacy extends AbstractParser {
   }
 
   override getMagicNumber(): number[] {
-    return ParserScreenRecordingLegacy.MPEG4_MAGIC_NMBER;
+    return ParserScreenRecordingLegacy.MPEG4_MAGIC_NUMBER;
   }
 
-  override decodeTrace(videoData: Uint8Array): Timestamp[] {
+  override getRealToMonotonicTimeOffsetNs(): bigint | undefined {
+    return undefined;
+  }
+
+  override getRealToBootTimeOffsetNs(): bigint | undefined {
+    return undefined;
+  }
+
+  override decodeTrace(videoData: Uint8Array): Array<bigint> {
     const posCount = this.searchMagicString(videoData);
     const [posTimestamps, count] = this.parseFramesCount(videoData, posCount);
-    return this.parseTimestamps(videoData, posTimestamps, count);
+    return this.parseVideoData(videoData, posTimestamps, count);
   }
 
-  override getTimestamp(
-    type: TimestampType,
-    decodedEntry: Timestamp,
-  ): undefined | Timestamp {
-    if (type !== TimestampType.ELAPSED) {
-      return undefined;
-    }
-    return decodedEntry;
+  protected override getTimestamp(decodedEntry: bigint): Timestamp {
+    return this.timestampConverter.makeTimestampFromMonotonicNs(decodedEntry);
   }
 
   override processDecodedEntry(
     index: number,
-    timestampType: TimestampType,
-    entry: Timestamp,
-  ): ScreenRecordingTraceEntry {
-    const currentTimestamp = entry;
-    const initialTimestamp = assertDefined(
-      this.getTimestamps(TimestampType.ELAPSED),
-    )[0];
-    const videoTimeSeconds =
-      Number(currentTimestamp.getValueNs() - initialTimestamp.getValueNs()) /
-        1000000000 +
-      ParserScreenRecordingLegacy.EPSILON;
+    entry: bigint,
+  ): MediaBasedTraceEntry {
+    const videoTimeSeconds = ScreenRecordingUtils.timestampToVideoTimeSeconds(
+      this.decodedEntries[0],
+      entry,
+    );
     const videoData = this.traceFile.file;
-    return new ScreenRecordingTraceEntry(videoTimeSeconds, videoData);
+    return new MediaBasedTraceEntry(videoTimeSeconds, videoData);
   }
 
   private searchMagicString(videoData: Uint8Array): number {
@@ -91,27 +88,27 @@ class ParserScreenRecordingLegacy extends AbstractParser {
     return [pos, framesCount];
   }
 
-  private parseTimestamps(
+  private parseVideoData(
     videoData: Uint8Array,
     pos: number,
     count: number,
-  ): Timestamp[] {
+  ): Array<bigint> {
     if (pos + count * 8 > videoData.length) {
       throw new TypeError(
         'Failed to parse timestamps. Video data is too short.',
       );
     }
-    const timestamps: Timestamp[] = [];
+    const timestamps: Array<bigint> = [];
     for (let i = 0; i < count; ++i) {
       const value =
         ArrayUtils.toUintLittleEndian(videoData, pos, pos + 8) * 1000n;
       pos += 8;
-      timestamps.push(this.timestampFactory.makeElapsedTimestamp(value));
+      timestamps.push(value);
     }
     return timestamps;
   }
 
-  private static readonly MPEG4_MAGIC_NMBER = [
+  private static readonly MPEG4_MAGIC_NUMBER = [
     0x00, 0x00, 0x00, 0x18, 0x66, 0x74, 0x79, 0x70, 0x6d, 0x70, 0x34, 0x32,
   ]; // ....ftypmp42
   private static readonly WINSCOPE_META_MAGIC_STRING = [

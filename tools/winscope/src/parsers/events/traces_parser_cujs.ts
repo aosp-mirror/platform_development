@@ -15,15 +15,17 @@
  */
 
 import {assertDefined} from 'common/assert_utils';
-import {Timestamp, TimestampType} from 'common/time';
-import {NO_TIMEZONE_OFFSET_FACTORY} from 'common/timestamp_factory';
-import {AbstractTracesParser} from 'parsers/abstract_traces_parser';
+import {Timestamp} from 'common/time';
+import {ParserTimestampConverter} from 'common/timestamp_converter';
+import {SetFormatters} from 'parsers/operations/set_formatters';
+import {AbstractTracesParser} from 'parsers/traces/abstract_traces_parser';
+import {CoarseVersion} from 'trace/coarse_version';
 import {Trace} from 'trace/trace';
 import {Traces} from 'trace/traces';
 import {TraceType} from 'trace/trace_type';
+import {CUJ_TYPE_FORMATTER} from 'trace/tree_node/formatters';
 import {PropertyTreeBuilderFromProto} from 'trace/tree_node/property_tree_builder_from_proto';
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
-import {CujType} from './cuj_type';
 import {EventTag} from './event_tag';
 import {AddCujProperties} from './operations/add_cuj_properties';
 
@@ -33,8 +35,8 @@ export class TracesParserCujs extends AbstractTracesParser<PropertyTreeNode> {
   private readonly descriptors: string[];
   private decodedEntries: PropertyTreeNode[] | undefined;
 
-  constructor(traces: Traces) {
-    super();
+  constructor(traces: Traces, timestampConverter: ParserTimestampConverter) {
+    super(timestampConverter);
 
     const eventlogTrace = traces.getTrace(TraceType.EVENT_LOG);
     if (eventlogTrace !== undefined) {
@@ -43,6 +45,10 @@ export class TracesParserCujs extends AbstractTracesParser<PropertyTreeNode> {
     } else {
       this.descriptors = [];
     }
+  }
+
+  override getCoarseVersion(): CoarseVersion {
+    return CoarseVersion.LEGACY;
   }
 
   override async parse() {
@@ -63,17 +69,23 @@ export class TracesParserCujs extends AbstractTracesParser<PropertyTreeNode> {
       );
     });
     this.decodedEntries = this.makeCujsFromEvents(cujEvents);
-    await this.parseTimestamps();
+    await this.createTimestamps();
+  }
+
+  override async createTimestamps() {
+    this.timestamps = [];
+    for (let index = 0; index < this.getLengthEntries(); index++) {
+      const entry = await this.getEntry(index);
+      const timestamp = entry?.getChildByName('startTimestamp')?.getValue();
+      this.timestamps.push(timestamp);
+    }
   }
 
   getLengthEntries(): number {
     return assertDefined(this.decodedEntries).length;
   }
 
-  getEntry(
-    index: number,
-    timestampType: TimestampType,
-  ): Promise<PropertyTreeNode> {
+  getEntry(index: number): Promise<PropertyTreeNode> {
     const entry = assertDefined(this.decodedEntries)[index];
     return Promise.resolve(entry);
   }
@@ -86,37 +98,18 @@ export class TracesParserCujs extends AbstractTracesParser<PropertyTreeNode> {
     return TraceType.CUJS;
   }
 
-  override getTimestamp(
-    type: TimestampType,
-    cuj: PropertyTreeNode,
-  ): undefined | Timestamp {
-    const cujTimestamp = assertDefined(cuj.getChildByName('startTimestamp'));
-    if (type === TimestampType.ELAPSED) {
-      const elapsedNanos = assertDefined(
-        cujTimestamp.getChildByName('elapsedNanos'),
-      ).getValue();
-      return NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(elapsedNanos);
-    } else if (type === TimestampType.REAL) {
-      const unixNanos = assertDefined(
-        cujTimestamp.getChildByName('unixNanos'),
-      ).getValue();
-      return NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(unixNanos);
-    }
+  override getRealToMonotonicTimeOffsetNs(): bigint | undefined {
     return undefined;
   }
 
-  private makeCujTimestampObject(timestamp: PropertyTreeNode): CujTimestamp {
-    return {
-      unixNanos: assertDefined(
-        timestamp.getChildByName('unixNanos'),
-      ).getValue(),
-      elapsedNanos: assertDefined(
-        timestamp.getChildByName('elapsedNanos'),
-      ).getValue(),
-      systemUptimeNanos: assertDefined(
-        timestamp.getChildByName('systemUptimeNanos'),
-      ).getValue(),
-    };
+  override getRealToBootTimeOffsetNs(): bigint | undefined {
+    return undefined;
+  }
+
+  private makeCujTimestampObject(timestamp: PropertyTreeNode): Timestamp {
+    return this.timestampConverter.makeTimestampFromRealNs(
+      assertDefined(timestamp.getChildByName('unixNanos')).getValue(),
+    );
   }
 
   private makeCujsFromEvents(events: PropertyTreeNode[]): PropertyTreeNode[] {
@@ -135,7 +128,7 @@ export class TracesParserCujs extends AbstractTracesParser<PropertyTreeNode> {
     const cujs: PropertyTreeNode[] = [];
 
     for (const startEvent of startEvents) {
-      const startCujType: CujType = assertDefined(
+      const cujType = assertDefined(
         startEvent.getChildByName('cujType'),
       ).getValue();
       const startTimestamp = assertDefined(
@@ -144,12 +137,12 @@ export class TracesParserCujs extends AbstractTracesParser<PropertyTreeNode> {
 
       const matchingEndEvent = this.findMatchingEvent(
         endEvents,
-        startCujType,
+        cujType,
         startTimestamp,
       );
       const matchingCancelEvent = this.findMatchingEvent(
         canceledEvents,
-        startCujType,
+        cujType,
         startTimestamp,
       );
 
@@ -170,7 +163,7 @@ export class TracesParserCujs extends AbstractTracesParser<PropertyTreeNode> {
         EventTag.JANK_CUJ_CANCEL_TAG;
 
       const cuj: Cuj = {
-        startCujType,
+        cujType,
         startTimestamp: this.makeCujTimestampObject(startTimestamp),
         endTimestamp: this.makeCujTimestampObject(closingEventTimestamp),
         canceled,
@@ -193,14 +186,14 @@ export class TracesParserCujs extends AbstractTracesParser<PropertyTreeNode> {
 
   private findMatchingEvent(
     events: PropertyTreeNode[],
-    startCujType: CujType,
+    targetCujType: number,
     startTimestamp: PropertyTreeNode,
   ): PropertyTreeNode | undefined {
     return events.find((event) => {
       const cujType = assertDefined(event.getChildByName('cujType')).getValue();
       const timestamp = assertDefined(event.getChildByName('cujTimestamp'));
       return (
-        startCujType === cujType &&
+        targetCujType === cujType &&
         this.cujTimestampIsGreaterThan(timestamp, startTimestamp)
       );
     });
@@ -232,7 +225,7 @@ export class TracesParserCujs extends AbstractTracesParser<PropertyTreeNode> {
     } else if (!cancelTimestamp) {
       closingEvent = endEvent;
     } else {
-      const canceledBeforeEnd = !this.cujTimestampIsGreaterThan(
+      const canceledBeforeEnd = this.cujTimestampIsGreaterThan(
         endTimestamp,
         cancelTimestamp,
       );
@@ -240,30 +233,30 @@ export class TracesParserCujs extends AbstractTracesParser<PropertyTreeNode> {
     }
 
     if (!closingEvent) {
-      throw Error('Should have found one matching closing event');
+      throw new Error('Should have found one matching closing event for CUJ');
     }
 
     return closingEvent;
   }
 
   private makeCujPropertyTree(cuj: Cuj): PropertyTreeNode {
-    return new PropertyTreeBuilderFromProto()
+    const tree = new PropertyTreeBuilderFromProto()
       .setData(cuj)
       .setRootId('CujTrace')
       .setRootName('cuj')
       .build();
+
+    new SetFormatters(
+      undefined,
+      new Map([['cujType', CUJ_TYPE_FORMATTER]]),
+    ).apply(tree);
+    return tree;
   }
 }
 
 interface Cuj {
-  startCujType: CujType;
-  startTimestamp: CujTimestamp;
-  endTimestamp: CujTimestamp;
+  cujType: number;
+  startTimestamp: Timestamp;
+  endTimestamp: Timestamp;
   canceled: boolean;
-}
-
-interface CujTimestamp {
-  unixNanos: bigint;
-  elapsedNanos: bigint;
-  systemUptimeNanos: bigint;
 }

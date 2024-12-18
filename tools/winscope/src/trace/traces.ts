@@ -20,41 +20,70 @@ import {Trace} from './trace';
 import {TraceEntryTypeMap, TraceType} from './trace_type';
 
 export class Traces {
-  private traces = new Map<TraceType, Trace<{}>>();
+  private traces = new Set<Trace<{}>>();
 
-  setTrace<T extends TraceType>(type: T, trace: Trace<TraceEntryTypeMap[T]>) {
-    this.traces.set(type, trace);
+  addTrace(trace: Trace<{}>) {
+    this.traces.add(trace);
   }
 
   getTrace<T extends TraceType>(
     type: T,
   ): Trace<TraceEntryTypeMap[T]> | undefined {
-    return this.traces.get(type) as Trace<TraceEntryTypeMap[T]> | undefined;
+    let longestTraceWithMatchingType: Trace<{}> | undefined;
+    this.traces.forEach((trace) => {
+      if (trace.type !== type) {
+        return;
+      }
+
+      // If multiple traces match the target type, return the longest one.
+      // Assuming that covering this scenario is good enough (hopefully):
+      // - Two traces have the same type because one is a dump (e.g. SF trace + dump)
+      // - A viewer needs to access another trace (e.g. IME viewers accesses SF trace)
+      if (
+        !longestTraceWithMatchingType ||
+        trace.lengthEntries > longestTraceWithMatchingType.lengthEntries
+      ) {
+        longestTraceWithMatchingType = trace;
+      }
+    });
+    return longestTraceWithMatchingType as
+      | Trace<TraceEntryTypeMap[T]>
+      | undefined;
   }
 
-  deleteTrace<T extends TraceType>(type: T) {
-    this.traces.delete(type);
+  getTraces<T extends TraceType>(type: T): Array<Trace<TraceEntryTypeMap[T]>> {
+    return Array.from(this.traces).filter(
+      (trace) => trace.type === type,
+    ) as Array<Trace<TraceEntryTypeMap[T]>>;
+  }
+
+  deleteTrace(trace: Trace<{}>) {
+    this.traces.delete(trace);
+  }
+
+  hasTrace(trace: Trace<{}>) {
+    return this.traces.has(trace);
   }
 
   sliceTime(start?: Timestamp, end?: Timestamp): Traces {
     const slice = new Traces();
-    this.traces.forEach((trace, type) => {
-      slice.setTrace(type, trace.sliceTime(start, end));
+    this.traces.forEach((trace) => {
+      slice.addTrace(trace.sliceTime(start, end));
     });
     return slice;
   }
 
   sliceFrames(start?: AbsoluteFrameIndex, end?: AbsoluteFrameIndex): Traces {
     const slice = new Traces();
-    this.traces.forEach((trace, type) => {
-      slice.setTrace(type, trace.sliceFrames(start, end));
+    this.traces.forEach((trace) => {
+      slice.addTrace(trace.sliceFrames(start, end));
     });
     return slice;
   }
 
   forEachTrace(callback: (trace: Trace<{}>, type: TraceType) => void): void {
     this.traces.forEach((trace, type) => {
-      callback(trace, type);
+      callback(trace, trace.type);
     });
   }
 

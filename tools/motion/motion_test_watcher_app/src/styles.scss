@@ -1,0 +1,29 @@
+@use "@angular/material" as mat;
+@use "./app/test-overview/test-overview-theme" as test-overview;
+@use "./app/motion-golden/theme" as golden;
+
+$theme: mat.define-theme(
+  (
+    color: (
+      theme-type: light,
+      primary: mat.$rose-palette,
+      tertiary: mat.$red-palette,
+    ),
+  )
+);
+
+@include mat.core();
+
+html {
+  @include mat.all-component-themes($theme);
+  @include test-overview.theme($theme);
+  @include golden.theme($theme);
+}
+
+html,
+body {
+  height: 100%;
+}
+body {
+  margin: 0;
+}

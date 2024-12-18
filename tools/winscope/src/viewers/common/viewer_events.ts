@@ -13,21 +13,55 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-export const ViewerEvents = {
-  HierarchyPinnedChange: 'HierarchyPinnedChange',
-  HighlightedChange: 'HighlightedChange',
-  HighlightedPropertyChange: 'HighlightedPropertyChange',
-  HierarchyUserOptionsChange: 'HierarchyUserOptionsChange',
-  HierarchyFilterChange: 'HierarchyFilterChange',
-  SelectedTreeChange: 'SelectedTreeChange',
-  PropertiesUserOptionsChange: 'PropertiesUserOptionsChange',
-  PropertiesFilterChange: 'PropertiesFilterChange',
-  AdditionalPropertySelected: 'AdditionalPropertySelected',
-  RectsDblClick: 'RectsDblClick',
-  MiniRectsDblClick: 'MiniRectsDblClick',
-  TimestampClick: 'TimestampClick',
-};
+
+import {Timestamp} from 'common/time';
+import {TraceEntry} from 'trace/trace';
+import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
+import {TextFilter} from './text_filter';
+import {LogFieldType} from './ui_data_log';
+
+export enum ViewerEvents {
+  HighlightedNodeChange = 'HighlightedNodeChange',
+  HighlightedIdChange = 'HighlightedIdChange',
+
+  HierarchyPinnedChange = 'HierarchyPinnedChange',
+  HierarchyUserOptionsChange = 'HierarchyUserOptionsChange',
+  HierarchyFilterChange = 'HierarchyFilterChange',
+  RectShowStateChange = 'RectShowStateChange',
+
+  PropertiesUserOptionsChange = 'PropertiesUserOptionsChange',
+  PropertiesFilterChange = 'PropertiesFilterChange',
+  HighlightedPropertyChange = 'HighlightedPropertyChange',
+
+  RectsUserOptionsChange = 'RectsUserOptionsChange',
+
+  AdditionalPropertySelected = 'AdditionalPropertySelected',
+  RectsDblClick = 'RectsDblClick',
+  MiniRectsDblClick = 'MiniRectsDblClick',
+
+  TimestampClick = 'TimestampClick',
+  LogEntryClick = 'LogEntryClick',
+  LogFilterChange = 'LogFilterChange',
+  LogTextFilterChange = 'LogTextFilterChange',
+  ArrowDownPress = 'ArrowDownPress',
+  ArrowUpPress = 'ArrowUpPress',
+}
 
 export class RectDblClickDetail {
   constructor(public clickedRectId: string) {}
+}
+
+export class TimestampClickDetail {
+  constructor(
+    public entry?: TraceEntry<PropertyTreeNode>,
+    public timestamp?: Timestamp,
+  ) {}
+}
+
+export class LogFilterChangeDetail {
+  constructor(public type: LogFieldType, public value: string[] | string) {}
+}
+
+export class LogTextFilterChangeDetail {
+  constructor(public type: LogFieldType, public filter: TextFilter) {}
 }

@@ -18,10 +18,18 @@ package {
 
 android_app {
     name: "ShareTest",
-    srcs: ["**/*.java", "**/*.kt"],
+    srcs: [
+        "**/*.java",
+        "**/*.kt",
+    ],
     asset_dirs: ["assets"],
-    sdk_version: "current",
+    sdk_version: "35",
     static_libs: [
         "androidx.core_core-ktx",
-    ]
+        "androidx.compose.runtime_runtime",
+        "androidx.compose.material3_material3",
+        "androidx.compose.material_material-icons-extended",
+        "androidx.activity_activity-compose",
+        "androidx.compose.animation_animation-graphics",
+    ],
 }

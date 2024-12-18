@@ -22,10 +22,10 @@ import {
   NgZone,
   Output,
 } from '@angular/core';
-import {TRACE_INFO} from 'app/trace_info';
 import {TracePipeline} from 'app/trace_pipeline';
 import {ProgressListener} from 'messaging/progress_listener';
 import {Trace} from 'trace/trace';
+import {TRACE_INFO} from 'trace/trace_info';
 import {TraceTypeUtils} from 'trace/trace_type';
 import {LoadProgressComponent} from './load_progress_component';
 
@@ -42,11 +42,15 @@ import {LoadProgressComponent} from './load_progress_component';
             color="primary"
             mat-raised-button
             class="load-btn"
-            matTooltip="Upload trace with an associated viewer to visualise"
+            matTooltip="Upload trace with an associated viewer to visualize"
             [matTooltipDisabled]="hasLoadedFilesWithViewers()"
             [disabled]="!hasLoadedFilesWithViewers()"
             (click)="onViewTracesButtonClick()">
             View traces
+          </button>
+
+          <button class="download-btn" color="primary" mat-stroked-button (click)="downloadTracesClick.emit()">
+            Download all
           </button>
 
           <button color="primary" mat-stroked-button for="fileDropRef" (click)="fileDropRef.click()">
@@ -86,17 +90,25 @@ import {LoadProgressComponent} from './load_progress_component';
         </load-progress>
 
         <mat-list
-          *ngIf="!isLoadingFiles && this.tracePipeline.getTraces().getSize() > 0"
+          *ngIf="!isLoadingFiles && tracePipeline.getTraces().getSize() > 0"
           class="uploaded-files">
-          <mat-list-item *ngFor="let trace of this.tracePipeline.getTraces()">
-            <mat-icon matListIcon>
+          <mat-list-item [class.no-visualization]="!canVisualizeTrace(trace)" [class.trace-error]="trace.isCorrupted()" *ngFor="let trace of tracePipeline.getTraces()">
+            <mat-icon
+              matListIcon
+              [style]="{color: TRACE_INFO[trace.type].color}">
               {{ TRACE_INFO[trace.type].icon }}
             </mat-icon>
 
             <p matLine>{{ TRACE_INFO[trace.type].name }}</p>
             <p matLine *ngFor="let descriptor of trace.getDescriptors()">{{ descriptor }}</p>
 
-            <button color="primary" mat-icon-button (click)="onRemoveTrace($event, trace)">
+            <mat-icon class="warning-icon" *ngIf="!canVisualizeTrace(trace)" [matTooltip]="cannotVisualizeTraceTooltip(trace)">
+              warning
+            </mat-icon>
+            <mat-icon class="trace-error-icon" *ngIf="trace.isCorrupted()" [matTooltip]="traceErrorTooltip(trace)">
+              error
+            </mat-icon>
+            <button mat-icon-button (click)="onRemoveTrace($event, trace)">
               <mat-icon>close</mat-icon>
             </button>
           </mat-list-item>
@@ -136,6 +148,7 @@ import {LoadProgressComponent} from './load_progress_component';
         flex-direction: row;
         flex-wrap: wrap;
         gap: 10px;
+        padding: 4px 0px;
       }
       .drop-box {
         display: flex;
@@ -186,6 +199,21 @@ import {LoadProgressComponent} from './load_progress_component';
       mat-card-content {
         flex-grow: 1;
       }
+      .no-visualization {
+        background-color: var(--warning-background-color);
+      }
+      .trace-error {
+        background-color: var(--error-background-color);
+      }
+      .warning-icon, .trace-error-icon {
+        flex-shrink: 0;
+      }
+      .warning-icon {
+        color: var(--warning-color);
+      }
+      .trace-error-icon {
+        color: var(--error-color);
+      }
     `,
   ],
 })
@@ -196,9 +224,10 @@ export class UploadTracesComponent implements ProgressListener {
   progressPercentage?: number;
   lastUiProgressUpdateTimeMs?: number;
 
-  @Input() tracePipeline!: TracePipeline;
+  @Input() tracePipeline: TracePipeline | undefined;
   @Output() filesUploaded = new EventEmitter<File[]>();
   @Output() viewTracesButtonClick = new EventEmitter<void>();
+  @Output() downloadTracesClick = new EventEmitter<void>();
 
   constructor(
     @Inject(ChangeDetectorRef) private changeDetectorRef: ChangeDetectorRef,
@@ -206,7 +235,7 @@ export class UploadTracesComponent implements ProgressListener {
   ) {}
 
   ngOnInit() {
-    this.tracePipeline.clear();
+    this.tracePipeline?.clear();
   }
 
   onProgressUpdate(
@@ -241,7 +270,7 @@ export class UploadTracesComponent implements ProgressListener {
   }
 
   onClearButtonClick() {
-    this.tracePipeline.clear();
+    this.tracePipeline?.clear();
     this.onOperationFinished();
   }
 
@@ -266,21 +295,37 @@ export class UploadTracesComponent implements ProgressListener {
   onRemoveTrace(event: MouseEvent, trace: Trace<object>) {
     event.preventDefault();
     event.stopPropagation();
-    this.tracePipeline.removeTrace(trace);
+    this.tracePipeline?.removeTrace(trace);
     this.onOperationFinished();
   }
 
   hasLoadedFilesWithViewers(): boolean {
     return this.ngZone.run(() => {
       let hasFilesWithViewers = false;
-      this.tracePipeline.getTraces().forEachTrace((trace) => {
-        if (TraceTypeUtils.isTraceTypeWithViewer(trace.type)) {
+      this.tracePipeline?.getTraces().forEachTrace((trace) => {
+        if (
+          !trace.isCorrupted() &&
+          TraceTypeUtils.isTraceTypeWithViewer(trace.type)
+        ) {
           hasFilesWithViewers = true;
         }
       });
 
       return hasFilesWithViewers;
     });
+  }
+
+  canVisualizeTrace(trace: Trace<object>): boolean {
+    return TraceTypeUtils.isTraceTypeWithViewer(trace.type);
+  }
+
+  cannotVisualizeTraceTooltip(trace: Trace<object>): string {
+    return TraceTypeUtils.getReasonForNoTraceVisualization(trace.type);
+  }
+
+  traceErrorTooltip(trace: Trace<object>): string {
+    const reason = trace.getCorruptedReason() ?? 'Trace is corrupted.';
+    return 'Cannot visualize trace. ' + reason;
   }
 
   private getInputFiles(event: Event): File[] {

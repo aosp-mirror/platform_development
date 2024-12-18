@@ -1,0 +1,82 @@
+<div class="status {{ testStatusClass }}">
+  <div class="count">
+    @if (totalTestCount == 0) {
+      No tests results found
+    } @else if (failingTestCount > 0) {
+      {{ failingTestCount }} of {{ totalTestCount }} test fail
+    } @else if (passingTestCount == totalTestCount) {
+      All tests passed
+    } @else {
+      {{ passingTestCount }} of {{ totalTestCount }} test passed
+    }
+  </div>
+  <div class="spacer"></div>
+  <mat-paginator [hidePageSize]="true" [pageSize]="5"></mat-paginator>
+</div>
+
+<div class="contents">
+  @if (totalTestCount > 0) {
+    <table mat-table [dataSource]="dataSource" [fixedLayout]="true" matSort>
+      <ng-container matColumnDef="select">
+        <th mat-header-cell *matHeaderCellDef></th>
+        <td mat-cell *matCellDef="let golden">
+          <mat-radio-button
+            (click)="$event.stopPropagation()"
+            (change)="goldenSelected($event ? golden : null)"
+            [checked]="selectedGoldenId == golden.id"
+          >
+          </mat-radio-button>
+        </td>
+      </ng-container>
+
+      <ng-container matColumnDef="golden">
+        <th mat-header-cell *matHeaderCellDef>Golden</th>
+        <td mat-cell *matCellDef="let golden">
+          {{ golden.label }}
+        </td>
+      </ng-container>
+
+      <ng-container matColumnDef="status">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header>Result</th>
+        <td mat-cell *matCellDef="let golden">
+          @if (golden.updated) {
+            <span class="tag updated">UPDATED</span>
+          } @else {
+            <span class="tag {{ golden.result }}">{{ golden.result }}</span>
+          }
+        </td>
+      </ng-container>
+
+      <ng-container matColumnDef="testClassName">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header>Test Class</th>
+        <td mat-cell *matCellDef="let element">{{ element.testClassName }}</td>
+      </ng-container>
+
+      <ng-container matColumnDef="testMethodName">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header>Test Method</th>
+        <td mat-cell *matCellDef="let element">{{ element.testMethodName }}</td>
+      </ng-container>
+
+      <ng-container matColumnDef="testTime">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header>Test Time</th>
+        <td mat-cell *matCellDef="let element">{{ element.testTime }}</td>
+      </ng-container>
+
+      <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+      <tr
+        mat-row
+        (click)="goldenSelected(row)"
+        [class.selected]="selectedGolden == row"
+        *matRowDef="let row; columns: displayedColumns"
+      ></tr>
+
+      <tr class="mat-row" *matNoDataRow>
+        <td class="mat-cell" colspan="*"></td>
+      </tr>
+    </table>
+
+    @if (selectedGolden) {
+      <app-motion-golden [golden]="selectedGolden"></app-motion-golden>
+    }
+  }
+</div>

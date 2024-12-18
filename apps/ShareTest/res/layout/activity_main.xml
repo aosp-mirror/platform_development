@@ -2,6 +2,7 @@
 <LinearLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/container"
     android:orientation="vertical"
     android:layout_width="match_parent"
     android:layout_height="match_parent">
@@ -54,6 +55,21 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="Enable Shareousel"
+                />
+
+            <CheckBox
+                android:id="@+id/alt_intent"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Include Alternate Share Text Intent"
+                />
+
+            <CheckBox
+                android:id="@+id/image_size_metadata"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:checked="true"
+                android:text="Report image size in metadata"
                 />
 
             <TextView
@@ -294,6 +310,81 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 style="@style/subtitle"
+                android:text="Average metadata latency"
+                />
+
+            <RadioGroup
+                android:id="@+id/image_query_latency"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+                <RadioButton
+                    android:id="@+id/image_query_latency_none"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="None"
+                    />
+                <RadioButton
+                    android:id="@+id/image_query_latency_50"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="50ms"
+                    />
+                <RadioButton
+                    android:id="@+id/image_query_latency_200"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="200ms"
+                    />
+                <RadioButton
+                    android:id="@+id/image_query_latency_800"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="800ms"
+                    />
+            </RadioGroup>
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                style="@style/subtitle"
+                android:text="Average selection latency"
+                />
+
+            <RadioGroup
+                android:id="@+id/selection_latency"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+                <RadioButton
+                    android:id="@+id/selection_latency_none"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="None"
+                    />
+                <RadioButton
+                    android:id="@+id/selection_latency_50"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="50ms"
+                    />
+                <RadioButton
+                    android:id="@+id/selection_latency_200"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="200ms"
+                    />
+                <RadioButton
+                    android:id="@+id/selection_latency_800"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="800ms"
+                    />
+            </RadioGroup>
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                style="@style/subtitle"
                 android:text="Image load failure probability"
             />
 
@@ -321,6 +412,44 @@
                     android:text="100%"
                 />
             </RadioGroup>
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                style="@style/subtitle"
+                android:text="Refinement"
+                />
+            <CheckBox
+                android:id="@+id/use_refinement"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Use Refinement"
+                />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                style="@style/subtitle"
+                android:text="Caller Target"
+                />
+            <CheckBox
+                android:id="@+id/caller_direct_target"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Include Caller Direct Target"
+                />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                style="@style/subtitle"
+                android:text="Exclude Targets"
+                />
+            <CheckBox
+                android:id="@+id/exclude_self"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Exclude self from targets (for Shareousel payload change: set for an odd number of items)"
+                />
         </LinearLayout>
     </ScrollView>
     <Button

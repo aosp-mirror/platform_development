@@ -13,13 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import {
-  Component,
-  EventEmitter,
-  Input,
-  Output,
-  SimpleChanges,
-} from '@angular/core';
+import {Component, EventEmitter, Input, Output} from '@angular/core';
 import {MatSelectChange} from '@angular/material/select';
 
 @Component({
@@ -27,12 +21,20 @@ import {MatSelectChange} from '@angular/material/select';
   template: `
     <mat-form-field appearance="fill" [style]="getOuterFormFieldStyle()">
       <mat-label>{{ label }}</mat-label>
-      <mat-select (opened)="filter.focus()" (selectionChange)="onSelectChange($event)" multiple>
+      <mat-select
+        (opened)="filter.focus()"
+        (closed)="onSelectClosed()"
+        (selectionChange)="onSelectChange($event)"
+        [multiple]="multiple"
+        [value]="value">
         <mat-form-field class="select-filter" [style]="getInnerFormFieldStyle()">
           <mat-label>Filter options</mat-label>
-          <input matInput #filter [(ngModel)]="filterString" (input)="onOptionsFilterChange()" />
+          <input matInput #filter [(ngModel)]="filterString" />
         </mat-form-field>
-        <mat-option *ngFor="let option of filteredOptions" [value]="option">
+        <mat-option
+          *ngFor="let option of options"
+          [value]="option"
+          [class.hidden-option]="hideOption(option)">
           {{ option }}
         </mat-option>
       </mat-select>
@@ -40,15 +42,13 @@ import {MatSelectChange} from '@angular/material/select';
   `,
   styles: [
     `
-      ::ng-deep .mat-select-panel-wrap {
-        overflow: scroll;
-        overflow-x: hidden;
-        max-height: 75vh;
-      }
-
       mat-form-field {
         width: 100%;
         font-size: 12px;
+      }
+
+      .hidden-option {
+        display: none;
       }
     `,
   ],
@@ -56,39 +56,24 @@ import {MatSelectChange} from '@angular/material/select';
 export class SelectWithFilterComponent {
   @Input() label: string = '';
   @Input() options: string[] = [];
-  @Input() outerFilterWidth = '75';
+  @Input() outerFilterWidth = '100px';
   @Input() innerFilterWidth = '100';
   @Input() flex = 'none';
+  @Input() multiple = true;
+  @Input() value?: string | string[] | undefined;
 
   @Output() readonly selectChange = new EventEmitter<MatSelectChange>();
 
   filterString: string = '';
-  filteredOptions: string[] = this.options;
-
-  ngOnChanges(changes: SimpleChanges) {
-    if (changes['options']) {
-      this.updateSelectOptions();
-    }
-  }
-
-  updateSelectOptions() {
-    this.filteredOptions = this.options.filter((option) =>
-      option.includes(this.filterString),
-    );
-  }
 
   onSelectChange(event: MatSelectChange) {
     this.selectChange.emit(event);
   }
 
-  onOptionsFilterChange() {
-    this.updateSelectOptions();
-  }
-
   getOuterFormFieldStyle() {
     return {
       flex: this.flex,
-      width: this.outerFilterWidth + 'px',
+      width: this.outerFilterWidth,
     };
   }
 
@@ -100,5 +85,13 @@ export class SelectWithFilterComponent {
       paddingRight: '20px',
       width: this.innerFilterWidth + 'px',
     };
+  }
+
+  onSelectClosed() {
+    this.filterString = '';
+  }
+
+  hideOption(option: string) {
+    return !option.toLowerCase().includes(this.filterString.toLowerCase());
   }
 }

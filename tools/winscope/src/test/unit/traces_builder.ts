@@ -23,15 +23,25 @@ import {TraceBuilder} from './trace_builder';
 export class TracesBuilder {
   private readonly traceBuilders = new Map<TraceType, TraceBuilder<{}>>();
 
-  setEntries(type: TraceType, entries: Array<{}>): TracesBuilder {
+  setEntries(
+    type: TraceType,
+    entries: Array<{}>,
+    descriptors?: string[],
+  ): TracesBuilder {
     const builder = this.getOrCreateTraceBuilder(type);
     builder.setEntries(entries);
+    if (descriptors) builder.setDescriptors(descriptors);
     return this;
   }
 
-  setTimestamps(type: TraceType, timestamps: Timestamp[]): TracesBuilder {
+  setTimestamps(
+    type: TraceType,
+    timestamps: Timestamp[],
+    descriptors?: string[],
+  ): TracesBuilder {
     const builder = this.getOrCreateTraceBuilder(type);
     builder.setTimestamps(timestamps);
+    if (descriptors) builder.setDescriptors(descriptors);
     return this;
   }
 
@@ -43,8 +53,8 @@ export class TracesBuilder {
 
   build(): Traces {
     const traces = new Traces();
-    this.traceBuilders.forEach((builder, type) => {
-      traces.setTrace(type, builder.build());
+    this.traceBuilders.forEach((builder) => {
+      traces.addTrace(builder.build());
     });
     return traces;
   }

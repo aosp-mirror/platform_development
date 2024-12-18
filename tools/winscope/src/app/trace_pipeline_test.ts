@@ -16,17 +16,18 @@
 
 import {assertDefined} from 'common/assert_utils';
 import {FileUtils} from 'common/file_utils';
-import {NO_TIMEZONE_OFFSET_FACTORY} from 'common/timestamp_factory';
 import {ProgressListenerStub} from 'messaging/progress_listener_stub';
+import {UserWarning} from 'messaging/user_warning';
 import {
   CorruptedArchive,
   InvalidPerfettoTrace,
-  NoInputFiles,
+  NoValidFiles,
   TraceOverridden,
   UnsupportedFileFormat,
-  WinscopeError,
-} from 'messaging/winscope_error';
+} from 'messaging/user_warnings';
+import {TimestampConverterUtils} from 'test/unit/timestamp_converter_utils';
 import {TracesUtils} from 'test/unit/traces_utils';
+import {UserNotifierChecker} from 'test/unit/user_notifier_checker';
 import {UnitTestUtils} from 'test/unit/utils';
 import {TraceType} from 'trace/trace_type';
 import {FilesSource} from './files_source';
@@ -35,24 +36,61 @@ import {TracePipeline} from './trace_pipeline';
 describe('TracePipeline', () => {
   let validSfFile: File;
   let validWmFile: File;
-  let errors: WinscopeError[];
+  let shellTransitionFile: File;
+  let wmTransitionFile: File;
+  let screenshotFile: File;
+  let screenRecordingFile: File;
+  let brMainEntryFile: File;
+  let brCodenameFile: File;
+  let brSfFile: File;
+  let jpgFile: File;
+
   let progressListener: ProgressListenerStub;
   let tracePipeline: TracePipeline;
+  let userNotifierChecker: UserNotifierChecker;
 
-  beforeEach(async () => {
-    jasmine.addCustomEqualityTester(UnitTestUtils.timestampEqualityTester);
+  beforeAll(async () => {
+    userNotifierChecker = new UserNotifierChecker();
+    wmTransitionFile = await UnitTestUtils.getFixtureFile(
+      'traces/elapsed_and_real_timestamp/wm_transition_trace.pb',
+    );
+    shellTransitionFile = await UnitTestUtils.getFixtureFile(
+      'traces/elapsed_and_real_timestamp/shell_transition_trace.pb',
+    );
     validSfFile = await UnitTestUtils.getFixtureFile(
       'traces/elapsed_and_real_timestamp/SurfaceFlinger.pb',
     );
     validWmFile = await UnitTestUtils.getFixtureFile(
       'traces/elapsed_and_real_timestamp/WindowManager.pb',
     );
+    screenshotFile = await UnitTestUtils.getFixtureFile(
+      'traces/screenshot.png',
+    );
+    screenRecordingFile = await UnitTestUtils.getFixtureFile(
+      'traces/elapsed_and_real_timestamp/screen_recording_metadata_v2.mp4',
+    );
+    brMainEntryFile = await UnitTestUtils.getFixtureFile(
+      'bugreports/main_entry.txt',
+      'main_entry.txt',
+    );
+    brCodenameFile = await UnitTestUtils.getFixtureFile(
+      'bugreports/bugreport-codename_beta-UPB2.230407.019-2023-05-30-14-33-48.txt',
+      'bugreport-codename_beta-UPB2.230407.019-2023-05-30-14-33-48.txt',
+    );
+    brSfFile = await UnitTestUtils.getFixtureFile(
+      'traces/elapsed_and_real_timestamp/SurfaceFlinger.pb',
+      'FS/data/misc/wmtrace/surface_flinger.bp',
+    );
+    jpgFile = await UnitTestUtils.getFixtureFile('winscope_homepage.jpg');
+  });
 
-    errors = [];
+  beforeEach(async () => {
+    jasmine.addCustomEqualityTester(UnitTestUtils.timestampEqualityTester);
 
     progressListener = new ProgressListenerStub();
     spyOn(progressListener, 'onProgressUpdate');
     spyOn(progressListener, 'onOperationFinished');
+    userNotifierChecker.reset();
 
     tracePipeline = new TracePipeline();
   });
@@ -79,6 +117,29 @@ describe('TracePipeline', () => {
     );
   });
 
+  it('can load valid gzipped file and archive', async () => {
+    expect(tracePipeline.getTraces().getSize()).toEqual(0);
+
+    const gzippedFile = await UnitTestUtils.getFixtureFile(
+      'traces/WindowManager.pb.gz',
+    );
+    const gzippedArchive = await UnitTestUtils.getFixtureFile(
+      'traces/WindowManager.zip.gz',
+    );
+
+    await loadFiles([gzippedFile, gzippedArchive], FilesSource.TEST);
+    await expectLoadResult(2, []);
+
+    const traces = tracePipeline.getTraces();
+    expect(traces.getSize()).toEqual(2);
+    expect(traces.getTraces(TraceType.WINDOW_MANAGER).length).toEqual(2);
+
+    const traceEntries = await TracesUtils.extractEntries(traces);
+    expect(traceEntries.get(TraceType.WINDOW_MANAGER)?.length).toBeGreaterThan(
+      0,
+    );
+  });
+
   it('can set download archive filename based on files source', async () => {
     await loadFiles([validSfFile]);
     await expectLoadResult(1, []);
@@ -95,9 +156,9 @@ describe('TracePipeline', () => {
     );
   });
 
-  xit('can convert illegal uploaded archive filename to legal name for download archive', async () => {
+  it('can convert illegal uploaded archive filename to legal name for download archive', async () => {
     const fileWithIllegalName = await UnitTestUtils.getFixtureFile(
-      'traces/SF_trace&(*_with:_illegal+_characters.pb',
+      'traces/SFtrace(with_illegal_characters).pb',
     );
     await loadFiles([fileWithIllegalName]);
     await expectLoadResult(1, []);
@@ -109,18 +170,9 @@ describe('TracePipeline', () => {
     expect(tracePipeline.getTraces().getSize()).toEqual(0);
 
     const bugreportFiles = [
-      await UnitTestUtils.getFixtureFile(
-        'bugreports/main_entry.txt',
-        'main_entry.txt',
-      ),
-      await UnitTestUtils.getFixtureFile(
-        'bugreports/bugreport-codename_beta-UPB2.230407.019-2023-05-30-14-33-48.txt',
-        'bugreport-codename_beta-UPB2.230407.019-2023-05-30-14-33-48.txt',
-      ),
-      await UnitTestUtils.getFixtureFile(
-        'traces/elapsed_and_real_timestamp/SurfaceFlinger.pb',
-        'FS/data/misc/wmtrace/surface_flinger.bp',
-      ),
+      brMainEntryFile,
+      brCodenameFile,
+      brSfFile,
       await UnitTestUtils.getFixtureFile(
         'traces/elapsed_and_real_timestamp/wm_transition_trace.pb',
         'FS/data/misc/ignored-dir/window_manager.bp',
@@ -152,25 +204,8 @@ describe('TracePipeline', () => {
     expect(traces.getTrace(TraceType.INPUT_METHOD_CLIENTS)).toBeDefined();
   });
 
-  it('detects bugreports and extracts timezone info from dumpstate_board.txt', async () => {
-    const bugreportFiles = [
-      await UnitTestUtils.getFixtureFile(
-        'bugreports/main_entry.txt',
-        'main_entry.txt',
-      ),
-      await UnitTestUtils.getFixtureFile(
-        'bugreports/dumpstate_board.txt',
-        'dumpstate_board.txt',
-      ),
-      await UnitTestUtils.getFixtureFile(
-        'bugreports/bugreport-codename_beta-UPB2.230407.019-2023-05-30-14-33-48.txt',
-        'bugreport-codename_beta-UPB2.230407.019-2023-05-30-14-33-48.txt',
-      ),
-      await UnitTestUtils.getFixtureFile(
-        'traces/elapsed_and_real_timestamp/SurfaceFlinger.pb',
-        'FS/data/misc/wmtrace/surface_flinger.bp',
-      ),
-    ];
+  it('detects bugreports and extracts timezone info, then calculates utc offset', async () => {
+    const bugreportFiles = [brMainEntryFile, brCodenameFile, brSfFile];
     const bugreportArchive = new File(
       [await FileUtils.createZipArchive(bugreportFiles)],
       'bugreport.zip',
@@ -179,14 +214,17 @@ describe('TracePipeline', () => {
     await loadFiles([bugreportArchive]);
     await expectLoadResult(1, []);
 
-    const timestampFactory = tracePipeline.getTimestampFactory();
-    expect(timestampFactory).not.toEqual(NO_TIMEZONE_OFFSET_FACTORY);
+    const timestampConverter = tracePipeline.getTimestampConverter();
+    expect(timestampConverter);
+    expect(timestampConverter.getUTCOffset()).toEqual('UTC+05:30');
 
     const expectedTimestamp =
-      NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(1659126889102062832n);
-    expect(timestampFactory.makeRealTimestamp(1659107089102062832n)).toEqual(
-      expectedTimestamp,
-    );
+      TimestampConverterUtils.makeRealTimestampWithUTCOffset(
+        1659107089102062832n,
+      );
+    expect(
+      timestampConverter.makeTimestampFromMonotonicNs(14500282843n),
+    ).toEqual(expectedTimestamp);
   });
 
   it('is robust to corrupted archive', async () => {
@@ -198,15 +236,12 @@ describe('TracePipeline', () => {
 
     await expectLoadResult(0, [
       new CorruptedArchive(corruptedArchive),
-      new NoInputFiles(),
+      new NoValidFiles(),
     ]);
   });
 
   it('is robust to invalid trace files', async () => {
-    const invalidFiles = [
-      await UnitTestUtils.getFixtureFile('winscope_homepage.jpg'),
-    ];
-
+    const invalidFiles = [jpgFile];
     await loadFiles(invalidFiles);
 
     await expectLoadResult(0, [
@@ -225,10 +260,17 @@ describe('TracePipeline', () => {
 
     await expectLoadResult(0, [
       new InvalidPerfettoTrace('invalid_protolog.perfetto-trace', [
-        "Trace processor tables don't contain entries of type 1",
-        "Trace processor tables don't contain entries of type 4",
-        "Trace processor tables don't contain entries of type 16",
-        "Trace processor tables don't contain entries of type 8",
+        'Perfetto trace has no IME Clients entries',
+        'Perfetto trace has no IME system_server entries',
+        'Perfetto trace has no IME Service entries',
+        'Perfetto trace has no ProtoLog entries',
+        'Perfetto trace has no Surface Flinger entries',
+        'Perfetto trace has no Transactions entries',
+        'Perfetto trace has no Transitions entries',
+        'Perfetto trace has no ViewCapture windows',
+        'Perfetto trace has no Window Manager entries',
+        'Perfetto trace has no Motion Events entries',
+        'Perfetto trace has no Key Events entries',
       ]),
     ]);
   });
@@ -236,7 +278,7 @@ describe('TracePipeline', () => {
   it('is robust to mixed valid and invalid trace files', async () => {
     expect(tracePipeline.getTraces().getSize()).toEqual(0);
     const files = [
-      await UnitTestUtils.getFixtureFile('winscope_homepage.jpg'),
+      jpgFile,
       await UnitTestUtils.getFixtureFile('traces/dump_WindowManager.pb'),
     ];
 
@@ -265,6 +307,63 @@ describe('TracePipeline', () => {
     await expectLoadResult(0, []);
   });
 
+  it('removes constituent traces of transitions trace but keeps for download', async () => {
+    const files = [wmTransitionFile, wmTransitionFile, shellTransitionFile];
+    await loadFiles(files);
+    await expectLoadResult(1, []);
+
+    const transitionTrace = assertDefined(
+      tracePipeline.getTraces().getTrace(TraceType.TRANSITION),
+    );
+
+    tracePipeline.removeTrace(transitionTrace);
+    await expectLoadResult(0, []);
+
+    await loadFiles([wmTransitionFile]);
+    await expectLoadResult(1, []);
+    expect(
+      tracePipeline.getTraces().getTrace(TraceType.WM_TRANSITION),
+    ).toBeDefined();
+    await expectDownloadResult([
+      'transition/shell_transition_trace.pb',
+      'transition/wm_transition_trace.pb',
+    ]);
+  });
+
+  it('removes constituent traces of CUJs trace but keeps for download', async () => {
+    const files = [
+      await UnitTestUtils.getFixtureFile('traces/eventlog.winscope'),
+    ];
+    await loadFiles(files);
+    await expectLoadResult(1, []);
+
+    const cujTrace = assertDefined(
+      tracePipeline.getTraces().getTrace(TraceType.CUJS),
+    );
+
+    tracePipeline.removeTrace(cujTrace);
+    await expectLoadResult(0, []);
+    await expectDownloadResult(['eventlog/eventlog.winscope']);
+  });
+
+  it('removes constituent traces of input trace but keeps for download', async () => {
+    const files = [
+      await UnitTestUtils.getFixtureFile(
+        'traces/perfetto/input-events.perfetto-trace',
+      ),
+    ];
+    await loadFiles(files);
+    await expectLoadResult(1, []);
+
+    const inputTrace = assertDefined(
+      tracePipeline.getTraces().getTrace(TraceType.INPUT_EVENT_MERGED),
+    );
+
+    tracePipeline.removeTrace(inputTrace);
+    await expectLoadResult(0, []);
+    await expectDownloadResult(['input-events.perfetto-trace']);
+  });
+
   it('gets loaded traces', async () => {
     await loadFiles([validSfFile, validWmFile]);
     await expectLoadResult(2, []);
@@ -283,11 +382,7 @@ describe('TracePipeline', () => {
   });
 
   it('gets screenrecording data', async () => {
-    const files = [
-      await UnitTestUtils.getFixtureFile(
-        'traces/elapsed_and_real_timestamp/screen_recording_metadata_v2.mp4',
-      ),
-    ];
+    const files = [screenRecordingFile];
     await loadFiles(files);
     await expectLoadResult(1, []);
 
@@ -297,7 +392,7 @@ describe('TracePipeline', () => {
   });
 
   it('gets screenshot data', async () => {
-    const files = [await UnitTestUtils.getFixtureFile('traces/screenshot.png')];
+    const files = [screenshotFile];
     await loadFiles(files);
     await expectLoadResult(1, []);
 
@@ -306,13 +401,8 @@ describe('TracePipeline', () => {
     expect(video?.size).toBeGreaterThan(0);
   });
 
-  it('prioritises screenrecording over screenshot data', async () => {
-    const files = [
-      await UnitTestUtils.getFixtureFile('traces/screenshot.png'),
-      await UnitTestUtils.getFixtureFile(
-        'traces/elapsed_and_real_timestamp/screen_recording_metadata_v2.mp4',
-      ),
-    ];
+  it('prioritizes screenrecording over screenshot data', async () => {
+    const files = [screenshotFile, screenRecordingFile];
     await loadFiles(files);
     await expectLoadResult(1, [
       new TraceOverridden('screenshot.png', TraceType.SCREEN_RECORDING),
@@ -335,9 +425,7 @@ describe('TracePipeline', () => {
 
   it('creates zip archive with loaded trace files', async () => {
     const files = [
-      await UnitTestUtils.getFixtureFile(
-        'traces/elapsed_and_real_timestamp/screen_recording_metadata_v2.mp4',
-      ),
+      screenRecordingFile,
       await UnitTestUtils.getFixtureFile(
         'traces/perfetto/transactions_trace.perfetto-trace',
       ),
@@ -345,21 +433,10 @@ describe('TracePipeline', () => {
     await loadFiles(files);
     await expectLoadResult(2, []);
 
-    const archiveBlob =
-      await tracePipeline.makeZipArchiveWithLoadedTraceFiles();
-    const actualFiles = await FileUtils.unzipFile(archiveBlob);
-    const actualFilenames = actualFiles
-      .map((file) => {
-        return file.name;
-      })
-      .sort();
-
-    const expectedFilenames = [
+    await expectDownloadResult([
       'screen_recording_metadata_v2.mp4',
       'transactions_trace.perfetto-trace',
-    ];
-
-    expect(actualFilenames).toEqual(expectedFilenames);
+    ]);
   });
 
   it('can be cleared', async () => {
@@ -370,30 +447,39 @@ describe('TracePipeline', () => {
     expect(tracePipeline.getTraces().getSize()).toEqual(0);
   });
 
+  it('can filter traces without visualization', async () => {
+    await loadFiles([validSfFile, shellTransitionFile]);
+    await expectLoadResult(2, []);
+
+    tracePipeline.filterTracesWithoutVisualization();
+    expect(tracePipeline.getTraces().getSize()).toEqual(1);
+    expect(
+      tracePipeline.getTraces().getTrace(TraceType.SHELL_TRANSITION),
+    ).toBeUndefined();
+  });
+
   async function loadFiles(
     files: File[],
     source: FilesSource = FilesSource.TEST,
   ) {
-    const errorListener = {
-      onError(error: WinscopeError) {
-        errors.push(error);
-      },
-    };
-    await tracePipeline.loadFiles(
-      files,
-      source,
-      errorListener,
-      progressListener,
-    );
+    await tracePipeline.loadFiles(files, source, progressListener);
     expect(progressListener.onOperationFinished).toHaveBeenCalled();
     await tracePipeline.buildTraces();
   }
 
   async function expectLoadResult(
     numberOfTraces: number,
-    expectedErrors: WinscopeError[],
+    expectedWarnings: UserWarning[],
   ) {
-    expect(errors).toEqual(expectedErrors);
+    userNotifierChecker.expectAdded(expectedWarnings);
     expect(tracePipeline.getTraces().getSize()).toEqual(numberOfTraces);
+  }
+
+  async function expectDownloadResult(expectedArchiveContents: string[]) {
+    const zipArchive = await tracePipeline.makeZipArchiveWithLoadedTraceFiles();
+    const actualArchiveContents = (await FileUtils.unzipFile(zipArchive))
+      .map((file) => file.name)
+      .sort();
+    expect(actualArchiveContents).toEqual(expectedArchiveContents);
   }
 });

@@ -1,0 +1,7 @@
+<resources>
+    <style name="AppTheme" parent="@style/Theme.AppCompat.NoActionBar">
+    </style>
+    <style name="SliderTheme" parent="@style/Theme.MaterialComponents.Light">
+        <item name="colorPrimary">?attr/colorSecondary</item>
+    </style>
+</resources>

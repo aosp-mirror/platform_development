@@ -14,20 +14,43 @@
  * limitations under the License.
  */
 
-import {TimeRange, Timestamp, TimestampType} from 'common/time';
-import {NO_TIMEZONE_OFFSET_FACTORY} from 'common/timestamp_factory';
+import {assertDefined} from 'common/assert_utils';
+import {TimeRange, Timestamp} from 'common/time';
+import {ComponentTimestampConverter} from 'common/timestamp_converter';
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
 
 export class TimelineUtils {
+  static isTransitionWithUnknownStart(transition: PropertyTreeNode): boolean {
+    const shellData = transition.getChildByName('shellData');
+    const dispatchTimestamp: Timestamp | undefined = shellData
+      ?.getChildByName('dispatchTimeNs')
+      ?.getValue();
+    return dispatchTimestamp === undefined;
+  }
+
+  static isTransitionWithUnknownEnd(transition: PropertyTreeNode): boolean {
+    const shellData = transition.getChildByName('shellData');
+    const wmData = transition.getChildByName('wmData');
+    const aborted: boolean = assertDefined(
+      transition.getChildByName('aborted'),
+    ).getValue();
+    const finishOrAbortTimestamp: Timestamp | undefined = aborted
+      ? shellData?.getChildByName('abortTimeNs')?.getValue()
+      : wmData?.getChildByName('finishTimeNs')?.getValue();
+    return finishOrAbortTimestamp === undefined;
+  }
+
   static getTimeRangeForTransition(
     transition: PropertyTreeNode,
-    timestampType: TimestampType,
     fullTimeRange: TimeRange,
+    converter: ComponentTimestampConverter,
   ): TimeRange | undefined {
     const shellData = transition.getChildByName('shellData');
     const wmData = transition.getChildByName('wmData');
 
-    const aborted = transition.getChildByName('aborted')?.getValue() ?? false;
+    const aborted: boolean = assertDefined(
+      transition.getChildByName('aborted'),
+    ).getValue();
 
     const dispatchTimestamp: Timestamp | undefined = shellData
       ?.getChildByName('dispatchTimeNs')
@@ -50,54 +73,66 @@ export class TimelineUtils {
       return undefined;
     }
 
-    let dispatchTimeNs: bigint | undefined;
-    let finishTimeNs: bigint | undefined;
-
     const timeRangeMin = fullTimeRange.from.getValueNs();
     const timeRangeMax = fullTimeRange.to.getValueNs();
 
-    if (timestampType === TimestampType.ELAPSED) {
-      const startOffset =
-        shellData
-          ?.getChildByName('realToElapsedTimeOffsetTimestamp')
-          ?.getValue()
-          .getValueNs() ?? 0n;
-      const finishOffset = aborted
-        ? startOffset
-        : shellData
-            ?.getChildByName('realToElapsedTimeOffsetTimestamp')
-            ?.getValue()
-            .getValueNs() ?? 0n;
-
-      dispatchTimeNs = dispatchTimestamp
-        ? dispatchTimestamp.getValueNs() - startOffset
-        : timeRangeMin;
-      finishTimeNs = finishOrAbortTimestamp
-        ? finishOrAbortTimestamp.getValueNs() - finishOffset
-        : timeRangeMax;
-    } else {
-      dispatchTimeNs = dispatchTimestamp
-        ? dispatchTimestamp.getValueNs()
-        : timeRangeMin;
-      finishTimeNs = finishOrAbortTimestamp
-        ? finishOrAbortTimestamp.getValueNs()
-        : timeRangeMax;
+    if (
+      finishOrAbortTimestamp &&
+      finishOrAbortTimestamp.getValueNs() < timeRangeMin
+    ) {
+      return undefined;
     }
 
-    const startTime = NO_TIMEZONE_OFFSET_FACTORY.makeTimestampFromType(
-      timestampType,
-      dispatchTimeNs > timeRangeMin ? dispatchTimeNs : timeRangeMin,
-      0n,
-    );
-    const finishTime = NO_TIMEZONE_OFFSET_FACTORY.makeTimestampFromType(
-      timestampType,
-      finishTimeNs,
-      0n,
-    );
+    if (
+      !finishOrAbortTimestamp &&
+      assertDefined(dispatchTimestamp).getValueNs() < timeRangeMin
+    ) {
+      return undefined;
+    }
 
-    return {
-      from: startTime,
-      to: finishTime,
-    };
+    if (
+      dispatchTimestamp &&
+      finishOrAbortTimestamp &&
+      dispatchTimestamp.getValueNs() > timeRangeMax
+    ) {
+      return undefined;
+    }
+
+    const dispatchTimeNs = dispatchTimestamp
+      ? dispatchTimestamp.getValueNs()
+      : assertDefined(finishOrAbortTimestamp).getValueNs() - 1n;
+
+    const finishTimeNs = finishOrAbortTimestamp
+      ? finishOrAbortTimestamp.getValueNs()
+      : dispatchTimeNs + 1n;
+
+    const startTime = converter.makeTimestampFromNs(
+      dispatchTimeNs > timeRangeMin ? dispatchTimeNs : timeRangeMin,
+    );
+    const finishTime = converter.makeTimestampFromNs(finishTimeNs);
+
+    return new TimeRange(startTime, finishTime);
+  }
+
+  static convertHexToRgb(
+    hex: string,
+  ): {r: number; g: number; b: number} | undefined {
+    // Expand shorthand form (e.g. "03F") to full form (e.g. "0033FF")
+    const shorthandRegex = /^#?([a-f\d])([a-f\d])([a-f\d])$/i;
+    hex = hex.replace(shorthandRegex, (m, r, g, b) => {
+      return r + r + g + g + b + b;
+    });
+
+    const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+    return result
+      ? {
+          // tslint:disable-next-line:ban
+          r: parseInt(result[1], 16),
+          // tslint:disable-next-line:ban
+          g: parseInt(result[2], 16),
+          // tslint:disable-next-line:ban
+          b: parseInt(result[3], 16),
+        }
+      : undefined;
   }
 }

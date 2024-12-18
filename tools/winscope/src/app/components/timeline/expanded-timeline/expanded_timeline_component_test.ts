@@ -27,8 +27,8 @@ import {MatTooltipModule} from '@angular/material/tooltip';
 import {BrowserAnimationsModule} from '@angular/platform-browser/animations';
 import {TimelineData} from 'app/timeline_data';
 import {assertDefined} from 'common/assert_utils';
-import {NO_TIMEZONE_OFFSET_FACTORY} from 'common/timestamp_factory';
 import {PropertyTreeBuilder} from 'test/unit/property_tree_builder';
+import {TimestampConverterUtils} from 'test/unit/timestamp_converter_utils';
 import {TracesBuilder} from 'test/unit/traces_builder';
 import {TracePosition} from 'trace/trace_position';
 import {TraceType} from 'trace/trace_type';
@@ -41,12 +41,12 @@ describe('ExpandedTimelineComponent', () => {
   let component: ExpandedTimelineComponent;
   let htmlElement: HTMLElement;
   let timelineData: TimelineData;
-  const time10 = NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(10n);
-  const time11 = NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(11n);
-  const time12 = NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(12n);
-  const time30 = NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(30n);
-  const time60 = NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(60n);
-  const time110 = NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(110n);
+  const time10 = TimestampConverterUtils.makeRealTimestamp(10n);
+  const time11 = TimestampConverterUtils.makeRealTimestamp(11n);
+  const time12 = TimestampConverterUtils.makeRealTimestamp(12n);
+  const time30 = TimestampConverterUtils.makeRealTimestamp(30n);
+  const time60 = TimestampConverterUtils.makeRealTimestamp(60n);
+  const time110 = TimestampConverterUtils.makeRealTimestamp(110n);
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
@@ -118,9 +118,13 @@ describe('ExpandedTimelineComponent', () => {
           .build(),
       ])
       .setTimestamps(TraceType.TRANSITION, [time10, time60])
-      .setTimestamps(TraceType.PROTO_LOG, [])
+      .setTimestamps(TraceType.PROTO_LOG, [time12])
       .build();
-    timelineData.initialize(traces, undefined);
+    await timelineData.initialize(
+      traces,
+      undefined,
+      TimestampConverterUtils.TIMESTAMP_CONVERTER,
+    );
     component.timelineData = timelineData;
   });
 

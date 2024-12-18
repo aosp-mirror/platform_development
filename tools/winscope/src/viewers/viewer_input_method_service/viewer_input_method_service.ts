@@ -14,39 +14,42 @@
  * limitations under the License.
  */
 
+import {Store} from 'common/store';
+import {Trace} from 'trace/trace';
 import {Traces} from 'trace/traces';
+import {TRACE_INFO} from 'trace/trace_info';
 import {ImeTraceType, TraceType} from 'trace/trace_type';
-import {ViewerInputMethod} from 'viewers/common/viewer_input_method';
+import {HierarchyTreeNode} from 'trace/tree_node/hierarchy_tree_node';
+import {AbstractViewerInputMethod} from 'viewers/common/abstract_viewer_input_method';
 import {View, ViewType} from 'viewers/viewer';
 import {PresenterInputMethodService} from './presenter_input_method_service';
 
-class ViewerInputMethodService extends ViewerInputMethod {
+class ViewerInputMethodService extends AbstractViewerInputMethod {
   static readonly DEPENDENCIES: ImeTraceType[] = [
     TraceType.INPUT_METHOD_SERVICE,
   ];
 
   override readonly view: View;
 
-  constructor(traces: Traces, storage: Storage) {
-    super(traces, storage);
+  constructor(trace: Trace<HierarchyTreeNode>, traces: Traces, storage: Store) {
+    super(trace, traces, storage);
     this.view = new View(
       ViewType.TAB,
-      this.getDependencies(),
+      this.getTraces(),
       this.htmlElement,
-      'Input Method Service',
-      TraceType.INPUT_METHOD_SERVICE,
+      TRACE_INFO[TraceType.INPUT_METHOD_SERVICE].name,
     );
   }
 
-  override getDependencies(): ImeTraceType[] {
-    return ViewerInputMethodService.DEPENDENCIES;
-  }
-
-  override initialisePresenter(traces: Traces, storage: Storage) {
+  override initializePresenter(
+    trace: Trace<HierarchyTreeNode>,
+    traces: Traces,
+    storage: Store,
+  ) {
     return new PresenterInputMethodService(
+      trace,
       traces,
       storage,
-      this.getDependencies(),
       this.imeUiCallback,
     );
   }

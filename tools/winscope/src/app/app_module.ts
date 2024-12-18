@@ -16,14 +16,17 @@
 
 import {ClipboardModule} from '@angular/cdk/clipboard';
 import {DragDropModule} from '@angular/cdk/drag-drop';
+import {CdkMenuModule} from '@angular/cdk/menu';
+import {OverlayModule} from '@angular/cdk/overlay';
 import {ScrollingModule} from '@angular/cdk/scrolling';
 import {CommonModule} from '@angular/common';
 import {HttpClientModule} from '@angular/common/http';
-import {CUSTOM_ELEMENTS_SCHEMA, NgModule} from '@angular/core';
+import {CUSTOM_ELEMENTS_SCHEMA, ErrorHandler, NgModule} from '@angular/core';
 import {FormsModule, ReactiveFormsModule} from '@angular/forms';
 import {MatButtonModule} from '@angular/material/button';
 import {MatCardModule} from '@angular/material/card';
 import {MatCheckboxModule} from '@angular/material/checkbox';
+import {MatDialogModule} from '@angular/material/dialog';
 import {MatDividerModule} from '@angular/material/divider';
 import {MatFormFieldModule} from '@angular/material/form-field';
 import {MatGridListModule} from '@angular/material/grid-list';
@@ -36,11 +39,15 @@ import {MatRadioModule} from '@angular/material/radio';
 import {MatSelectModule} from '@angular/material/select';
 import {MatSliderModule} from '@angular/material/slider';
 import {MatSnackBarModule} from '@angular/material/snack-bar';
+import {MatTableModule} from '@angular/material/table';
 import {MatTabsModule} from '@angular/material/tabs';
 import {MatToolbarModule} from '@angular/material/toolbar';
 import {MatTooltipModule} from '@angular/material/tooltip';
 import {BrowserModule, Title} from '@angular/platform-browser';
 import {BrowserAnimationsModule} from '@angular/platform-browser/animations';
+import {LogComponent} from 'viewers/common/log_component';
+import {CollapsedSectionsComponent} from 'viewers/components/collapsed_sections_component';
+import {CollapsibleSectionTitleComponent} from 'viewers/components/collapsible_section_title_component';
 import {CoordinatesTableComponent} from 'viewers/components/coordinates_table_component';
 import {HierarchyComponent} from 'viewers/components/hierarchy_component';
 import {HierarchyTreeNodeDataViewComponent} from 'viewers/components/hierarchy_tree_node_data_view_component';
@@ -49,16 +56,20 @@ import {PropertiesComponent} from 'viewers/components/properties_component';
 import {PropertiesTableComponent} from 'viewers/components/properties_table_component';
 import {PropertyTreeNodeDataViewComponent} from 'viewers/components/property_tree_node_data_view_component';
 import {RectsComponent} from 'viewers/components/rects/rects_component';
+import {SearchBoxComponent} from 'viewers/components/search_box_component';
 import {SelectWithFilterComponent} from 'viewers/components/select_with_filter_component';
 import {SurfaceFlingerPropertyGroupsComponent} from 'viewers/components/surface_flinger_property_groups_component';
 import {TransformMatrixComponent} from 'viewers/components/transform_matrix_component';
 import {TreeComponent} from 'viewers/components/tree_component';
 import {TreeNodeComponent} from 'viewers/components/tree_node_component';
+import {UserOptionsComponent} from 'viewers/components/user_options_component';
 import {ViewerInputMethodComponent} from 'viewers/components/viewer_input_method_component';
 import {ViewCapturePropertyGroupsComponent} from 'viewers/components/view_capture_property_groups_component';
+import {ViewerInputComponent} from 'viewers/viewer_input/viewer_input_component';
+import {ViewerJankCujsComponent} from 'viewers/viewer_jank_cujs/viewer_jank_cujs_component';
+import {ViewerMediaBasedComponent} from 'viewers/viewer_media_based/viewer_media_based_component';
 import {ProtologScrollDirective} from 'viewers/viewer_protolog/scroll_strategy/protolog_scroll_directive';
 import {ViewerProtologComponent} from 'viewers/viewer_protolog/viewer_protolog_component';
-import {ViewerScreenRecordingComponent} from 'viewers/viewer_screen_recording/viewer_screen_recording_component';
 import {ViewerSurfaceFlingerComponent} from 'viewers/viewer_surface_flinger/viewer_surface_flinger_component';
 import {TransactionsScrollDirective} from 'viewers/viewer_transactions/scroll_strategy/transactions_scroll_directive';
 import {ViewerTransactionsComponent} from 'viewers/viewer_transactions/viewer_transactions_component';
@@ -74,6 +85,7 @@ import {
 } from './components/bottomnav/bottom_drawer_component';
 import {CollectTracesComponent} from './components/collect_traces_component';
 import {LoadProgressComponent} from './components/load_progress_component';
+import {ShortcutsComponent} from './components/shortcuts_component';
 import {SnackBarComponent} from './components/snack_bar_component';
 import {DefaultTimelineRowComponent} from './components/timeline/expanded-timeline/default_timeline_row_component';
 import {ExpandedTimelineComponent} from './components/timeline/expanded-timeline/expanded_timeline_component';
@@ -84,17 +96,21 @@ import {TimelineComponent} from './components/timeline/timeline_component';
 import {TraceConfigComponent} from './components/trace_config_component';
 import {TraceViewComponent} from './components/trace_view_component';
 import {UploadTracesComponent} from './components/upload_traces_component';
+import {WarningDialogComponent} from './components/warning_dialog_component';
 import {WebAdbComponent} from './components/web_adb_component';
+import {GlobalErrorHandler} from './global_error_handler';
 
 @NgModule({
   declarations: [
     AppComponent,
     ViewerWindowManagerComponent,
     ViewerSurfaceFlingerComponent,
+    ViewerInputComponent,
     ViewerInputMethodComponent,
     ViewerProtologComponent,
+    ViewerJankCujsComponent,
     ViewerTransactionsComponent,
-    ViewerScreenRecordingComponent,
+    ViewerMediaBasedComponent,
     ViewerTransitionsComponent,
     ViewerViewCaptureComponent,
     CollectTracesComponent,
@@ -130,6 +146,13 @@ import {WebAdbComponent} from './components/web_adb_component';
     TransactionsScrollDirective,
     ViewCapturePropertyGroupsComponent,
     SelectWithFilterComponent,
+    ShortcutsComponent,
+    CollapsedSectionsComponent,
+    CollapsibleSectionTitleComponent,
+    UserOptionsComponent,
+    LogComponent,
+    WarningDialogComponent,
+    SearchBoxComponent,
   ],
   imports: [
     BrowserModule,
@@ -160,8 +183,12 @@ import {WebAdbComponent} from './components/web_adb_component';
     DragDropModule,
     ClipboardModule,
     ReactiveFormsModule,
+    CdkMenuModule,
+    MatDialogModule,
+    MatTableModule,
+    OverlayModule,
   ],
-  providers: [Title],
+  providers: [Title, {provide: ErrorHandler, useClass: GlobalErrorHandler}],
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
   bootstrap: [AppComponent],
 })

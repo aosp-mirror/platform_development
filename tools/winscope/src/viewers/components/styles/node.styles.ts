@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import {Color} from 'app/colors';
 import {selectedElementStyle} from './selected_element.styles';
 
 export const nodeStyles =
@@ -21,8 +22,12 @@ export const nodeStyles =
     .node {
         position: relative;
         display: inline-flex;
-        padding: 2px 0;
+        padding: 1px 0;
         width: 100%;
+    }
+
+    .node:not(.selected):not(.full-opacity):not(:hover) {
+        opacity: 0.5;
     }
 
     .node.clickable {
@@ -31,38 +36,47 @@ export const nodeStyles =
 
     .node:not(.selected).added,
     .node:not(.selected).addedMove {
-        background: #03ff35;
+        background-color: var(--added-element-color);
     }
 
     .node:not(.selected).deleted,
     .node:not(.selected).deletedMove {
-        background: #ff6b6b;
-    }
-
-    .node:hover:not(.selected) {
-        background-color: rgba(127, 127, 127, 0.5)
+        background-color: var(--deleted-element-color);
     }
 
     .node:not(.selected).modified {
-        background: cyan;
+        background-color: var(--modified-element-color);
+    }
+
+    .node:hover:not(.selected) {
+        background-color: var(--hover-element-color);
     }
 
     .node.addedMove:after,
     .node.deletedMove:after {
-        content: 'moved';
+        content: 'Moved';
+        font: 14px 'Roboto', sans-serif;
         margin: 0 5px;
-        background: #448aff;
-        border-radius: 5px;
+        background-color: ${Color.CHIP_BLUE};
+        color: ${Color.TEXT_BLACK};
+        border-radius: 10px;
+        height: fit-content;
         padding: 3px;
-        color: white;
     }
 ` + selectedElementStyle;
 
 // FIXME: child-hover selector is not working.
 export const treeNodeDataViewStyles = `
-    .node + .children:not(.flattened) {
+    .node + .children:not(.flattened):not(.with-gutter) {
         margin-left: 12px;
         padding-left: 11px;
+    }
+
+    .node + .children:not(.flattened).with-gutter {
+        margin-left: 23px;
+    }
+
+    .node + .children:not(.flattened) {
         border-left: 1px solid var(--border-color);
     }
 
@@ -92,7 +106,7 @@ export const nodeInnerItemStyles = `
         height: 5px;
         width: 5px;
         border-radius: 50%;
-        background-color: #9b9b9b;
+        background-color: ${Color.TEXT_GRAY};
     }
 
     .icon-wrapper, .description {
@@ -100,8 +114,20 @@ export const nodeInnerItemStyles = `
         display: inline-block;
     }
 
-    .toggle-tree-btn, .expand-tree-btn, .pin-node-btn {
+    .icon-wrapper-show-state {
+      position: absolute;
+    }
+
+    .icon-wrapper-copy {
+        right: 0;
+    }
+
+    .toggle-tree-btn, .expand-tree-btn, .pin-node-btn, .toggle-rect-show-state-btn, .copy-btn {
         padding: 0;
+    }
+
+    .toggle-rect-show-state-btn, .copy-btn {
+        transform: scale(0.75);
     }
 
     .pin-node-btn {
@@ -117,10 +143,9 @@ export const nodeInnerItemStyles = `
     }
 
     .leaf-node-icon-wrapper {
-        padding-left: 6px;
+        margin-left: 6px;
         min-height: 24px;
         width: 24px;
-        align-content: center;
     }
 
     .icon-button {
@@ -129,25 +154,36 @@ export const nodeInnerItemStyles = `
         display: inline-block;
         vertical-align: middle;
         color: inherit;
+        cursor: pointer;
+        height: 24px;
+        width: 24px;
+        line-height: 24px;
     }
 
     .expand-tree-btn {
         float: right;
-        padding-left: 0;
-        padding-right: 0;
     }
 
     .expand-tree-btn.modified {
-        background: cyan;
+        background-color: var(--modified-element-color);
     }
 
     .expand-tree-btn.deleted,
     .expand-tree-btn.deletedMove {
-        background: #ff6b6b;
+        background-color: var(--deleted-element-color);
     }
 
     .expand-tree-btn.added,
     .expand-tree-btn.addedMove {
-        background: #03ff35;
+        background-color: var(--added-element-color);
+    }
+
+    .icon-wrapper-show-state {
+        opacity: 1;
+    }
+
+    :host:not(:hover):not(.selected) .icon-wrapper-show-state,
+    :host:not(:hover) .icon-wrapper-copy {
+        visibility: hidden;
     }
 `;

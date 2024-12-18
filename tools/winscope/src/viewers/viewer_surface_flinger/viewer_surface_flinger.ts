@@ -14,127 +14,68 @@
  * limitations under the License.
  */
 
-import {FunctionUtils} from 'common/function_utils';
-import {TabbedViewSwitchRequest, WinscopeEvent} from 'messaging/winscope_event';
+import {Store} from 'common/store';
+import {WinscopeEvent} from 'messaging/winscope_event';
 import {EmitEvent} from 'messaging/winscope_event_emitter';
+import {Trace} from 'trace/trace';
 import {Traces} from 'trace/traces';
+import {TRACE_INFO} from 'trace/trace_info';
 import {TraceType} from 'trace/trace_type';
+import {HierarchyTreeNode} from 'trace/tree_node/hierarchy_tree_node';
 import {ViewerEvents} from 'viewers/common/viewer_events';
-import {ViewCaptureUtils} from 'viewers/common/view_capture_utils';
 import {View, Viewer, ViewType} from 'viewers/viewer';
 import {Presenter} from './presenter';
 import {UiData} from './ui_data';
+import {ViewerSurfaceFlingerComponent} from './viewer_surface_flinger_component';
 
-class ViewerSurfaceFlinger implements Viewer {
+export class ViewerSurfaceFlinger implements Viewer {
   static readonly DEPENDENCIES: TraceType[] = [TraceType.SURFACE_FLINGER];
 
+  private readonly trace: Trace<HierarchyTreeNode>;
   private readonly htmlElement: HTMLElement;
   private readonly presenter: Presenter;
   private readonly view: View;
-  private emitAppEvent: EmitEvent = FunctionUtils.DO_NOTHING_ASYNC;
 
-  constructor(traces: Traces, storage: Storage) {
+  constructor(trace: Trace<HierarchyTreeNode>, traces: Traces, storage: Store) {
+    this.trace = trace;
     this.htmlElement = document.createElement('viewer-surface-flinger');
 
-    this.presenter = new Presenter(traces, storage, (uiData: UiData) => {
-      (this.htmlElement as any).inputData = uiData;
-    });
+    const notifyViewCallback = (uiData: UiData) => {
+      (this.htmlElement as unknown as ViewerSurfaceFlingerComponent).inputData =
+        uiData;
+    };
+    this.presenter = new Presenter(trace, traces, storage, notifyViewCallback);
+    this.presenter.addEventListeners(this.htmlElement);
 
     this.htmlElement.addEventListener(
-      ViewerEvents.HierarchyPinnedChange,
-      (event) =>
-        this.presenter.onPinnedItemChange(
-          (event as CustomEvent).detail.pinnedItem,
-        ),
+      ViewerEvents.RectsDblClick,
+      async (event) => {
+        const rectId = (event as CustomEvent).detail.clickedRectId;
+        await this.presenter.onRectDoubleClick(rectId);
+      },
     );
-    this.htmlElement.addEventListener(ViewerEvents.HighlightedChange, (event) =>
-      this.presenter.onHighlightedItemChange(
-        `${(event as CustomEvent).detail.id}`,
-      ),
-    );
-    this.htmlElement.addEventListener(
-      ViewerEvents.HighlightedPropertyChange,
-      (event) =>
-        this.presenter.onHighlightedPropertyChange(
-          `${(event as CustomEvent).detail.id}`,
-        ),
-    );
-    this.htmlElement.addEventListener(
-      ViewerEvents.HierarchyUserOptionsChange,
-      async (event) =>
-        await this.presenter.onHierarchyUserOptionsChange(
-          (event as CustomEvent).detail.userOptions,
-        ),
-    );
-    this.htmlElement.addEventListener(
-      ViewerEvents.HierarchyFilterChange,
-      async (event) =>
-        await this.presenter.onHierarchyFilterChange(
-          (event as CustomEvent).detail.filterString,
-        ),
-    );
-    this.htmlElement.addEventListener(
-      ViewerEvents.PropertiesUserOptionsChange,
-      async (event) =>
-        await this.presenter.onPropertiesUserOptionsChange(
-          (event as CustomEvent).detail.userOptions,
-        ),
-    );
-    this.htmlElement.addEventListener(
-      ViewerEvents.PropertiesFilterChange,
-      async (event) =>
-        await this.presenter.onPropertiesFilterChange(
-          (event as CustomEvent).detail.filterString,
-        ),
-    );
-    this.htmlElement.addEventListener(
-      ViewerEvents.SelectedTreeChange,
-      async (event) =>
-        await this.presenter.onSelectedHierarchyTreeChange(
-          (event as CustomEvent).detail.selectedItem,
-        ),
-    );
-    this.htmlElement.addEventListener(ViewerEvents.RectsDblClick, (event) => {
-      if (
-        (event as CustomEvent).detail.clickedRectId.includes(
-          ViewCaptureUtils.NEXUS_LAUNCHER_PACKAGE_NAME,
-        )
-      ) {
-        this.switchToNexusLauncherViewer();
-      }
-    });
 
     this.view = new View(
       ViewType.TAB,
-      this.getDependencies(),
+      this.getTraces(),
       this.htmlElement,
-      'Surface Flinger',
-      TraceType.SURFACE_FLINGER,
+      TRACE_INFO[TraceType.SURFACE_FLINGER].name,
     );
+  }
+
+  setEmitEvent(callback: EmitEvent) {
+    this.presenter.setEmitEvent(callback);
   }
 
   async onWinscopeEvent(event: WinscopeEvent) {
     await this.presenter.onAppEvent(event);
   }
 
-  setEmitEvent(callback: EmitEvent) {
-    this.emitAppEvent = callback;
-  }
-
-  // TODO: Make this generic by package name once TraceType is not explicitly defined
-  async switchToNexusLauncherViewer() {
-    await this.emitAppEvent(
-      new TabbedViewSwitchRequest(TraceType.VIEW_CAPTURE_LAUNCHER_ACTIVITY),
-    );
-  }
-
   getViews(): View[] {
     return [this.view];
   }
 
-  getDependencies(): TraceType[] {
-    return ViewerSurfaceFlinger.DEPENDENCIES;
+  getTraces(): Array<Trace<HierarchyTreeNode>> {
+    return [this.trace];
   }
 }
-
-export {ViewerSurfaceFlinger};

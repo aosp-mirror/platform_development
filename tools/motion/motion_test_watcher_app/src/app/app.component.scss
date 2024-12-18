@@ -1,0 +1,38 @@
+:host {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  align-content: stretch;
+  align-items: stretch;
+}
+
+.header-spacer {
+  flex: 1 1 auto;
+}
+
+mat-toolbar {
+  flex: 0 0 64px;
+}
+
+mat-toolbar button {
+  margin-left: 8px;
+}
+
+.content {
+  position: relative;
+  display: flex;
+  flex-grow: 1;
+  align-content: stretch;
+  overflow: hidden;
+}
+
+mat-progress-bar {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  display: none;
+  &.show {
+    display: block;
+  }
+}

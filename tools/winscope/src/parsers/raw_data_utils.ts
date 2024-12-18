@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import {Rect} from 'common/rect';
+import {GeometryFactory} from 'trace/geometry_factory';
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
 
 export class RawDataUtils {
@@ -24,7 +24,7 @@ export class RawDataUtils {
     }
 
     if (RawDataUtils.isRect(obj)) {
-      return Rect.from(obj).isEmpty();
+      return GeometryFactory.makeRect(obj).isEmpty();
     }
 
     return false;
@@ -99,6 +99,6 @@ export class RawDataUtils {
       color.getChildByName('a')?.getValue() ?? 0,
     ];
     if (a === 0) return true;
-    return r < 0 || g < 0 || b < 0 || (r === 0 && g === 0 && b === 0);
+    return r < 0 || g < 0 || b < 0;
   }
 }

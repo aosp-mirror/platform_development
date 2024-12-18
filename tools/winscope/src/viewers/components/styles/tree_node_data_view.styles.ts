@@ -13,6 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+import {Color} from 'app/colors';
+
 export const hierarchyTreeNodeDataViewStyles = `
     .tree-view-internal-chip {
         display: inline-block;
@@ -22,24 +25,8 @@ export const hierarchyTreeNodeDataViewStyles = `
         margin: 0 5px;
         padding: 0 10px;
         border-radius: 10px;
-        background-color: #aaa;
-        color: black;
-    }
-
-    .tree-view-chip.tree-view-chip-warn {
-        background-color: #ffaa6b;
-    }
-
-    .tree-view-chip.tree-view-chip-error {
-        background-color: #ff6b6b;
-    }
-
-    .tree-view-chip.tree-view-chip-gpu {
-        background-color: #00c853;
-    }
-
-    .tree-view-chip.tree-view-chip-hwc {
-        background-color: #448aff;
+        background-color: ${Color.CHIP_BLUE};
+        color: ${Color.TEXT_BLACK};
     }
 `;
 
@@ -60,25 +47,19 @@ export const propertyTreeNodeDataViewStyles = `
         vertical-align: top;
     }
     .old-value {
-        color: #9b9b9b;
+        color: var(--gray-text-color);
         display: flex;
-    }
-    .value {
-        color: #8A2BE2;
     }
     .new {
         display: flex;
     }
     .value.null {
-        color: #e1e1e1;
-    }
-    .value.number {
-        color: #4c75fd;
+        color: var(--gray-text-color);
     }
     .value.true {
-        color: #2ECC40;
+        color: var(--green-text-color);
     }
     .value.false {
-        color: #FF4136;
+        color: var(--red-text-color);
     }
 `;

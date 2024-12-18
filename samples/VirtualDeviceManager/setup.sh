@@ -52,8 +52,7 @@ function display_help() {
   echo ""
   echo "  -s, --host):         Setup the host application on the only device connected via ADB."
   echo "  -c, --client):       Setup the client application on the only device connected via ADB."
-  echo "  -cd, --camera_demo): Setup the virtual camera demo application (not installed by default)."
-  echo "  -a, --all):          Setup all available demo apps: host, client, demos and camera."
+  echo "  -a, --all):          Setup all available demo apps: host, client, and demos."
   echo "  -i, --install-only): Only install the selected application. Will not perform any build."
   echo "  -h, --help):         Print this help."
 }
@@ -103,20 +102,24 @@ function privileged_install() {
 }
 
 
-[[ -f build/make/envsetup.sh ]] || die "Run this script from the root of the tree."
+if [[ ! -f build/make/envsetup.sh ]] ; then
+  if [[  -n ${ANDROID_BUILD_TOP} ]] ; then
+    cd ${ANDROID_BUILD_TOP}
+  else
+    die "Run this script from the root of the tree."
+  fi
+fi
 
 INSTALL_HOST=true
 INSTALL_CLIENT=true
-INSTALL_VIRTUAL_CAMERA=false
 PERFORM_BUILD=true
 while [[ "$#" -gt 0 ]]; do
     case $1 in
         -h|--help) display_help; exit ;;
-        -a|--all) INSTALL_VIRTUAL_CAMERA=true; shift ;;
+        -a|--all) shift ;;
         -s|--host) INSTALL_CLIENT=false; shift ;;
         -c|--client) INSTALL_HOST=false; shift ;;
         -i|--install-only) PERFORM_BUILD=false; shift ;;
-        -cd|--camera_demo) INSTALL_VIRTUAL_CAMERA=true; INSTALL_HOST=false; INSTALL_CLIENT=false; shift;;
         *) echo "Unknown parameter passed: $1"; display_help; exit ;;
     esac
 done
@@ -128,10 +131,8 @@ DEVICE_SERIALS=( $(adb devices -l | tail -n +2 | head -n -1 | awk '{ print $1 }'
 DEVICE_NAMES=( $(adb devices -l | tail -n +2 | head -n -1 | awk '{ print $4 }') )
 HOST_SERIAL=""
 CLIENT_SERIAL=""
-CAMERA_DEMO_SERIAL=""
 CLIENT_INDEX=$DEVICE_COUNT
 HOST_INDEX=$DEVICE_COUNT
-CAMERA_DEMO_INDEX=$DEVICE_COUNT
 
 if [[ ${INSTALL_HOST} == true ]]; then
   if [[ ${DEVICE_COUNT} -eq 1 ]]; then
@@ -151,17 +152,6 @@ if [[ ${INSTALL_CLIENT} == true ]]; then
     CLIENT_INDEX=$?
   fi
 fi
-if [[ ${INSTALL_VIRTUAL_CAMERA} == true ]]; then
-  if [[ ${DEVICE_COUNT} -eq 1 ]]; then
-    CAMERA_DEMO_INDEX=0
-  elif ((HOST_INDEX == DEVICE_COUNT)); then
-    display_available_devices
-    select_device "Virtual Camera Demo"
-    CAMERA_DEMO_INDEX=$?
-  else
-    CAMERA_DEMO_INDEX=$HOST_INDEX
-  fi
-fi
 
 if ((HOST_INDEX == DEVICE_COUNT)); then
   echo "Not installing host app."
@@ -177,18 +167,10 @@ else
   CLIENT_NAME="${CLIENT_SERIAL} ${DEVICE_NAMES[CLIENT_INDEX]}"
   echo "Installing VDM Client app to ${CLIENT_NAME}."
 fi
-if ((CAMERA_DEMO_INDEX == DEVICE_COUNT)); then
-  echo "Not installing camera demo app."
-else
-  CAMERA_DEMO_SERIAL=${DEVICE_SERIALS[CAMERA_DEMO_INDEX]}
-  CAMERA_DEMO_NAME="${CAMERA_DEMO_SERIAL} ${DEVICE_NAMES[CAMERA_DEMO_INDEX]}"
-  echo "Installing camera demo app to ${CAMERA_DEMO_NAME}."
-fi
 
 APKS_TO_BUILD=""
 [[ -n "${HOST_SERIAL}" ]] && APKS_TO_BUILD="${APKS_TO_BUILD} VdmHost VdmDemos"
 [[ -n "${CLIENT_SERIAL}" ]] && APKS_TO_BUILD="${APKS_TO_BUILD} VdmClient"
-[[ -n "${CAMERA_DEMO_SERIAL}" ]] && APKS_TO_BUILD="${APKS_TO_BUILD} VirtualCameraDemo"
 [[ -n "${APKS_TO_BUILD}" ]] || exit 0
 
 if [[ ${PERFORM_BUILD} == true ]];
@@ -216,8 +198,8 @@ if [[ -n "${HOST_SERIAL}" ]]; then
   install_app "${HOST_SERIAL}" "${OUT}/system/app/VdmDemos/VdmDemos.apk" demos
   echo
 
-  readonly HOST_PERM_BASENAME=com.example.android.vdmdemo.host.xml
-  readonly HOST_PERM_SRC="${ANDROID_BUILD_TOP}/development/samples/VirtualDeviceManager/host/${HOST_PERM_BASENAME}"
+  readonly HOST_PERM_BASENAME=VdmHost.xml
+  readonly HOST_PERM_SRC="${OUT}/system/etc/permissions/${HOST_PERM_BASENAME}"
   readonly HOST_PERM_DST="/system/etc/permissions/${HOST_PERM_BASENAME}"
   readonly HOST_APK_DIR=/system/priv-app/VdmHost
 
@@ -232,27 +214,6 @@ if [[ -n "${HOST_SERIAL}" ]]; then
   else
     privileged_install "${HOST_SERIAL}" "${HOST_NAME}" "${HOST_APK_DIR}" \
                        "VdmHost.apk" "${HOST_PERM_SRC}" "${HOST_PERM_DST}" host
-  fi
-fi
-
-if [[ -n "${CAMERA_DEMO_SERIAL}" ]]; then
-  echo
-  readonly CAMERA_PERM_BASENAME=com.example.android.vdmdemo.virtualcamera.xml
-  readonly CAMERA_PERM_SRC="${ANDROID_BUILD_TOP}/development/samples/VirtualDeviceManager/virtualcamera/${CAMERA_PERM_BASENAME}"
-  readonly CAMERA_PERM_DST="/system/etc/permissions/${CAMERA_PERM_BASENAME}"
-  readonly CAMERA_DEMO_APK_DIR=/system/priv-app/VirtualCameraDemo
-
-  echo "Preparing ${CAMERA_DEMO_NAME} for privileged VirtualCameraDemo installation..."
-  if adb -s "${CAMERA_DEMO_SERIAL}" shell ls "${CAMERA_DEMO_APK_DIR}/VirtualCameraDemo.apk" > /dev/null 2>&1 \
-      && adb -s "${CAMERA_DEMO_SERIAL}" pull "${CAMERA_PERM_DST}" "/tmp/${CAMERA_PERM_BASENAME}" > /dev/null 2>&1 \
-      && cmp --silent "/tmp/${CAMERA_PERM_BASENAME}" "${CAMERA_PERM_SRC}" \
-      && (adb -s "${CAMERA_DEMO_SERIAL}" uninstall com.example.android.vdmdemo.virtualcamera > /dev/null 2>&1 || true) \
-      && adb -s "${CAMERA_DEMO_SERIAL}" install -r -d -g "${OUT}/${CAMERA_DEMO_APK_DIR}/VirtualCameraDemo.apk" > /dev/null 2>&1; then
-    echo "A privileged installation already found, installed VirtualCameraDemo.apk to ${CAMERA_DEMO_NAME}"
-    echo
-  else
-    privileged_install "${CAMERA_DEMO_SERIAL}" "${CAMERA_DEMO_NAME}" "${CAMERA_DEMO_APK_DIR}" \
-                       "VirtualCameraDemo.apk" "${CAMERA_PERM_SRC}" "${CAMERA_PERM_DST}" virtualcamera
   fi
 fi
 

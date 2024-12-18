@@ -14,131 +14,167 @@
  * limitations under the License.
  */
 
-import {assertDefined} from 'common/assert_utils';
+import {assertDefined, assertTrue} from 'common/assert_utils';
 import {PersistentStoreProxy} from 'common/persistent_store_proxy';
-import {WinscopeEvent, WinscopeEventType} from 'messaging/winscope_event';
-import {Trace, TraceEntry} from 'trace/trace';
+import {Store} from 'common/store';
+import {
+  TabbedViewSwitchRequest,
+  WinscopeEvent,
+  WinscopeEventType,
+} from 'messaging/winscope_event';
+import {CustomQueryType} from 'trace/custom_query';
+import {Trace} from 'trace/trace';
 import {Traces} from 'trace/traces';
 import {TraceEntryFinder} from 'trace/trace_entry_finder';
-import {TraceType, ViewCaptureTraceType} from 'trace/trace_type';
+import {TraceType} from 'trace/trace_type';
 import {HierarchyTreeNode} from 'trace/tree_node/hierarchy_tree_node';
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
-import {TreeNode} from 'trace/tree_node/tree_node';
-import {IsModifiedCallbackType} from 'viewers/common/add_diffs';
-import {AddDiffsHierarchyTree} from 'viewers/common/add_diffs_hierarchy_tree';
-import {AddDiffsPropertiesTree} from 'viewers/common/add_diffs_properties_tree';
+import {
+  AbstractHierarchyViewerPresenter,
+  NotifyHierarchyViewCallbackType,
+} from 'viewers/common/abstract_hierarchy_viewer_presenter';
+import {VISIBLE_CHIP} from 'viewers/common/chip';
 import {VcCuratedProperties} from 'viewers/common/curated_properties';
-import {DiffType} from 'viewers/common/diff_type';
-import {AddChips} from 'viewers/common/operations/add_chips';
-import {Filter} from 'viewers/common/operations/filter';
+import {DisplayIdentifier} from 'viewers/common/display_identifier';
+import {HierarchyPresenter} from 'viewers/common/hierarchy_presenter';
+import {PropertiesPresenter} from 'viewers/common/properties_presenter';
+import {RectsPresenter} from 'viewers/common/rects_presenter';
+import {TextFilter} from 'viewers/common/text_filter';
 import {UiHierarchyTreeNode} from 'viewers/common/ui_hierarchy_tree_node';
-import {UiPropertyTreeNode} from 'viewers/common/ui_property_tree_node';
 import {UI_RECT_FACTORY} from 'viewers/common/ui_rect_factory';
-import {UiTreeFormatter} from 'viewers/common/ui_tree_formatter';
-import {TreeNodeFilter, UiTreeUtils} from 'viewers/common/ui_tree_utils';
 import {UserOptions} from 'viewers/common/user_options';
-import {ViewCaptureUtils} from 'viewers/common/view_capture_utils';
-import {UiRect} from 'viewers/components/rects/types2d';
-import {SimplifyNamesVc} from './operations/simplify_names';
+import {UiRect} from 'viewers/components/rects/ui_rect';
 import {UiData} from './ui_data';
 
-export class Presenter {
-  private static readonly DENYLIST_PROPERTY_NAMES = [
-    'children',
-    'isComputedVisible',
-  ];
+export class Presenter extends AbstractHierarchyViewerPresenter<UiData> {
+  static readonly DENYLIST_PROPERTY_NAMES = ['children', 'isComputedVisible'];
 
-  private readonly traces: Traces;
-  private readonly surfaceFlingerTrace: Trace<HierarchyTreeNode> | undefined;
-  private readonly viewCaptureTrace: Trace<HierarchyTreeNode>;
-  private viewCapturePackageNames: string[] = [];
-
-  private previousFrameData: TraceEntry<HierarchyTreeNode> | undefined;
-  private selectedHierarchyTree: UiHierarchyTreeNode | undefined;
-  private currentHierarchyTree: HierarchyTreeNode | undefined;
-  private previousHierarchyTree: HierarchyTreeNode | undefined;
-
-  private uiData: UiData | undefined;
-
-  private pinnedItems: UiHierarchyTreeNode[] = [];
-  private pinnedIds: string[] = [];
-
-  private highlightedItem: string = '';
-
-  private hierarchyFilter: TreeNodeFilter = UiTreeUtils.makeIdFilter('');
-  private propertiesFilter: TreeNodeFilter = UiTreeUtils.makePropertyFilter('');
-
-  private hierarchyUserOptions: UserOptions =
+  private windowNames: string[] = [];
+  protected override hierarchyPresenter = new HierarchyPresenter(
     PersistentStoreProxy.new<UserOptions>(
-      'SfHierarchyOptions',
+      'VcHierarchyOptions',
       {
         showDiff: {
-          name: 'Show diff', // TODO: PersistentStoreObject.Ignored("Show diff") or something like that to instruct to not store this info
+          name: 'Show diff',
+          enabled: false,
+          isUnavailable: false,
+        },
+        showOnlyVisible: {
+          name: 'Show only',
+          chip: VISIBLE_CHIP,
           enabled: false,
         },
         simplifyNames: {
           name: 'Simplify names',
           enabled: true,
         },
-        onlyVisible: {
-          name: 'Only visible',
+      },
+      this.storage,
+    ),
+    PersistentStoreProxy.new<TextFilter>(
+      'VcHierarchyFilter',
+      new TextFilter('', []),
+      this.storage,
+    ),
+    Presenter.DENYLIST_PROPERTY_NAMES,
+    false,
+    true,
+  );
+  protected override rectsPresenter = new RectsPresenter(
+    PersistentStoreProxy.new<UserOptions>(
+      'VcRectsOptions',
+      {
+        ignoreRectShowState: {
+          name: 'Ignore',
+          icon: 'visibility',
+          enabled: false,
+        },
+        showOnlyVisible: {
+          name: 'Show only',
+          chip: VISIBLE_CHIP,
           enabled: false,
         },
       },
       this.storage,
-    );
-
-  private propertiesUserOptions: UserOptions =
+    ),
+    (tree: HierarchyTreeNode, trace: Trace<HierarchyTreeNode>) =>
+      UI_RECT_FACTORY.makeVcUiRects(
+        tree,
+        this.getIdFromViewCaptureTrace(trace),
+      ),
+    undefined,
+  );
+  protected override propertiesPresenter = new PropertiesPresenter(
     PersistentStoreProxy.new<UserOptions>(
-      'SfPropertyOptions',
+      'VcPropertyOptions',
       {
         showDiff: {
           name: 'Show diff',
           enabled: false,
+          isUnavailable: false,
         },
         showDefaults: {
           name: 'Show defaults',
           enabled: false,
           tooltip: `
-                If checked, shows the value of all properties.
-                Otherwise, hides all properties whose value is
-                the default for its data type.
-              `,
+              If checked, shows the value of all properties.
+              Otherwise, hides all properties whose value is
+              the default for its data type.
+            `,
         },
       },
       this.storage,
-    );
+    ),
+    PersistentStoreProxy.new<TextFilter>(
+      'VcPropertiesFilter',
+      new TextFilter('', []),
+      this.storage,
+    ),
+    Presenter.DENYLIST_PROPERTY_NAMES,
+  );
+  protected override readonly multiTraceType = TraceType.VIEW_CAPTURE;
+
+  private readonly surfaceFlingerTrace: Trace<HierarchyTreeNode> | undefined;
+  private readonly viewCaptureTraces: Array<Trace<HierarchyTreeNode>>;
+
+  private viewCapturePackageNames: string[] = [];
+  private sfRects: UiRect[] | undefined;
+  private curatedProperties: VcCuratedProperties | undefined;
 
   constructor(
-    traceType: ViewCaptureTraceType,
     traces: Traces,
-    private readonly storage: Storage,
-    private readonly notifyUiDataCallback: (data: UiData) => void,
+    storage: Readonly<Store>,
+    notifyViewCallback: NotifyHierarchyViewCallbackType<UiData>,
   ) {
-    this.traces = traces;
-    this.viewCaptureTrace = assertDefined(traces.getTrace(traceType));
+    super(undefined, traces, storage, notifyViewCallback, new UiData());
+    this.viewCaptureTraces = traces.getTraces(TraceType.VIEW_CAPTURE);
     this.surfaceFlingerTrace = traces.getTrace(TraceType.SURFACE_FLINGER);
   }
 
-  async onAppEvent(event: WinscopeEvent) {
+  async onMiniRectsDoubleClick() {
+    if (!this.surfaceFlingerTrace) {
+      return;
+    }
+    await this.emitWinscopeEvent(
+      new TabbedViewSwitchRequest(this.surfaceFlingerTrace),
+    );
+  }
+
+  getTraces(): Array<Trace<HierarchyTreeNode>> {
+    return this.viewCaptureTraces;
+  }
+
+  getViewCaptureTraceFromId(id: number): Trace<HierarchyTreeNode> {
+    return assertDefined(this.viewCaptureTraces[id]);
+  }
+
+  override async onAppEvent(event: WinscopeEvent) {
+    await this.handleCommonWinscopeEvents(event);
     await event.visit(
       WinscopeEventType.TRACE_POSITION_UPDATE,
       async (event) => {
         await this.initializeIfNeeded();
-
-        const vcEntry = TraceEntryFinder.findCorrespondingEntry(
-          this.viewCaptureTrace,
-          event.position,
-        );
-        this.currentHierarchyTree = await vcEntry?.getValue();
-
-        this.previousFrameData = undefined;
-        if (vcEntry && vcEntry.getIndex() > 0) {
-          this.previousFrameData = this.viewCaptureTrace.getEntry(
-            vcEntry.getIndex() - 1,
-          );
-        }
-        this.previousHierarchyTree = undefined;
+        await this.applyTracePositionUpdate(event);
 
         if (this.uiData && this.surfaceFlingerTrace) {
           const surfaceFlingerEntry =
@@ -147,60 +183,112 @@ export class Presenter {
               event.position,
             )?.getValue()) as HierarchyTreeNode;
           if (surfaceFlingerEntry) {
-            this.uiData.sfRects = UI_RECT_FACTORY.makeUiRects(
+            this.sfRects = UI_RECT_FACTORY.makeUiRects(
               surfaceFlingerEntry,
               this.viewCapturePackageNames,
             );
           }
         }
-        await this.refreshUI();
+        this.updateCuratedProperties();
+        this.refreshUIData();
+      },
+    );
+    await event.visit(
+      WinscopeEventType.FILTER_PRESET_APPLY_REQUEST,
+      async (event) => {
+        const filterPresetName = event.name;
+        await this.applyPresetConfig(filterPresetName);
+        this.updateCuratedProperties();
+        this.refreshUIData();
       },
     );
   }
 
-  private async initializeIfNeeded() {
-    this.viewCapturePackageNames = await ViewCaptureUtils.getPackageNames(
-      this.traces,
-    );
+  override async onHighlightedNodeChange(node: UiHierarchyTreeNode) {
+    await this.applyHighlightedNodeChange(node);
+    this.updateCuratedProperties();
+    this.refreshUIData();
   }
 
-  private async refreshUI() {
-    let tree: UiHierarchyTreeNode | undefined;
-    let vcRects: UiRect[] = [];
-    if (this.currentHierarchyTree) {
-      vcRects = UI_RECT_FACTORY.makeVcUiRects(this.currentHierarchyTree);
-      this.pinnedItems = [];
-      tree = await this.formatHierarchyTreeAndUpdatePinnedItems(
-        this.currentHierarchyTree,
+  override async onHighlightedIdChange(newId: string) {
+    await this.applyHighlightedIdChange(newId);
+    this.updateCuratedProperties();
+    this.refreshUIData();
+  }
+
+  protected override getOverrideDisplayName(): undefined {
+    return undefined;
+  }
+
+  protected override keepCalculated(): boolean {
+    return true;
+  }
+
+  private async initializeIfNeeded() {
+    await this.initializePackageNamesIfNeeded();
+    await this.initializeWindowsIfNeeded();
+  }
+
+  private async initializePackageNamesIfNeeded() {
+    if (this.viewCapturePackageNames.length > 0) {
+      return;
+    }
+
+    const promisesPackageName = this.viewCaptureTraces.map(async (trace) => {
+      const packageAndWindow = await trace.customQuery(
+        CustomQueryType.VIEW_CAPTURE_METADATA,
       );
+      return packageAndWindow.packageName;
+    });
 
-      if (!this.selectedHierarchyTree) {
-        this.selectedHierarchyTree = tree;
+    this.viewCapturePackageNames = await Promise.all(promisesPackageName);
+  }
+
+  private async initializeWindowsIfNeeded() {
+    if (this.rectsPresenter.getDisplays().length > 0) {
+      return;
+    }
+
+    const shortenAndCapitalizeWindowName = (name: string) => {
+      const lastDot = name.lastIndexOf('.');
+      if (lastDot !== -1) {
+        name = name.substring(lastDot + 1);
       }
+      if (name.length > 0) {
+        name = name[0].toUpperCase() + name.slice(1);
+      }
+      return name;
+    };
+
+    const promisesWindowName = this.viewCaptureTraces.map(async (trace) => {
+      const packageAndWindow = await trace.customQuery(
+        CustomQueryType.VIEW_CAPTURE_METADATA,
+      );
+      return shortenAndCapitalizeWindowName(packageAndWindow.windowName);
+    });
+    this.windowNames = await Promise.all(promisesWindowName);
+    this.rectsPresenter.setDisplays(this.getWindows(this.windowNames));
+  }
+
+  private getWindows(windowNames: string[]): DisplayIdentifier[] {
+    return this.viewCaptureTraces.map((trace, i) => {
+      const traceId = this.getIdFromViewCaptureTrace(trace);
+      return {
+        displayId: traceId,
+        groupId: traceId,
+        name: windowNames[i],
+        isActive: true,
+      };
+    });
+  }
+
+  private updateCuratedProperties() {
+    const propertiesTree = this.propertiesPresenter.getPropertiesTree();
+    if (propertiesTree) {
+      this.curatedProperties = this.getCuratedProperties(propertiesTree);
+    } else {
+      this.curatedProperties = undefined;
     }
-
-    let formattedPropertiesTree: UiPropertyTreeNode | undefined;
-    let curatedProperties: VcCuratedProperties | undefined;
-    if (this.selectedHierarchyTree) {
-      const propertiesTree =
-        await this.selectedHierarchyTree.getAllProperties();
-      curatedProperties = this.getCuratedProperties(propertiesTree);
-      formattedPropertiesTree = await this.formatPropertiesTree(propertiesTree);
-    }
-
-    this.uiData = new UiData(
-      vcRects,
-      this.uiData?.sfRects,
-      tree,
-      this.hierarchyUserOptions,
-      this.propertiesUserOptions,
-      this.pinnedItems,
-      this.highlightedItem,
-      formattedPropertiesTree,
-      curatedProperties,
-    );
-
-    this.notifyUiDataCallback(this.uiData);
   }
 
   private getCuratedProperties(tree: PropertyTreeNode): VcCuratedProperties {
@@ -238,251 +326,15 @@ export class Presenter {
     return curated;
   }
 
-  private async formatHierarchyTreeAndUpdatePinnedItems(
-    hierarchyTree: HierarchyTreeNode | undefined,
-  ): Promise<UiHierarchyTreeNode | undefined> {
-    if (!hierarchyTree) return undefined;
-
-    const uiTree = UiHierarchyTreeNode.from(hierarchyTree);
-    uiTree.forEachNodeDfs((node) => node.setShowHeading(false));
-
-    const formatter = new UiTreeFormatter<UiHierarchyTreeNode>().setUiTree(
-      uiTree,
-    );
-
-    if (
-      this.hierarchyUserOptions['showDiff']?.enabled &&
-      !this.hierarchyUserOptions['showDiff']?.isUnavailable
-    ) {
-      if (this.previousFrameData && !this.previousHierarchyTree) {
-        this.previousHierarchyTree = await this.previousFrameData.getValue();
-      }
-      const prevEntryUiTree = this.previousHierarchyTree
-        ? UiHierarchyTreeNode.from(this.previousHierarchyTree)
-        : undefined;
-      await new AddDiffsHierarchyTree(
-        this.isHierarchyTreeModified,
-      ).executeInPlace(uiTree, prevEntryUiTree);
-    }
-
-    const predicates = [this.hierarchyFilter];
-    if (this.hierarchyUserOptions['onlyVisible']?.enabled) {
-      predicates.push(UiTreeUtils.isVisible);
-    }
-
-    formatter
-      .addOperation(new Filter(predicates, true))
-      .addOperation(new AddChips());
-
-    if (this.hierarchyUserOptions['simplifyNames']?.enabled) {
-      formatter.addOperation(new SimplifyNamesVc());
-    }
-
-    const formattedTree = formatter.format();
-    this.pinnedItems.push(...this.getPinnedItems(formattedTree));
-    return formattedTree;
+  private getIdFromViewCaptureTrace(trace: Trace<HierarchyTreeNode>): number {
+    const index = this.viewCaptureTraces.indexOf(trace);
+    assertTrue(index !== -1);
+    return index;
   }
 
-  private getPinnedItems(tree: UiHierarchyTreeNode): UiHierarchyTreeNode[] {
-    const pinnedNodes = [];
-
-    if (this.pinnedIds.includes(tree.id)) {
-      pinnedNodes.push(tree);
-    }
-
-    for (const child of tree.getAllChildren()) {
-      pinnedNodes.push(...this.getPinnedItems(child));
-    }
-
-    return pinnedNodes;
-  }
-
-  onPinnedItemChange(pinnedItem: UiHierarchyTreeNode) {
-    const pinnedId = pinnedItem.id;
-    if (this.pinnedItems.map((item) => item.id).includes(pinnedId)) {
-      this.pinnedItems = this.pinnedItems.filter(
-        (pinned) => pinned.id !== pinnedId,
-      );
-    } else {
-      this.pinnedItems.push(pinnedItem);
-    }
-    this.updatePinnedIds(pinnedId);
-    assertDefined(this.uiData).pinnedItems = this.pinnedItems;
-    this.copyUiDataAndNotifyView();
-  }
-
-  private updatePinnedIds(newId: string) {
-    if (this.pinnedIds.includes(newId)) {
-      this.pinnedIds = this.pinnedIds.filter((pinned) => pinned !== newId);
-    } else {
-      this.pinnedIds.push(newId);
-    }
-  }
-
-  onHighlightedItemChange(id: string) {
-    if (this.highlightedItem === id) {
-      this.highlightedItem = '';
-    } else {
-      this.highlightedItem = id;
-    }
-    assertDefined(this.uiData).highlightedItem = this.highlightedItem;
-    this.copyUiDataAndNotifyView();
-  }
-
-  async onHierarchyUserOptionsChange(userOptions: UserOptions) {
-    this.hierarchyUserOptions = userOptions;
-    assertDefined(this.uiData).hierarchyUserOptions = this.hierarchyUserOptions;
-    assertDefined(this.uiData).tree =
-      await this.formatHierarchyTreeAndUpdatePinnedItems(
-        this.currentHierarchyTree,
-      );
-    this.copyUiDataAndNotifyView();
-  }
-
-  async onHierarchyFilterChange(filterString: string) {
-    this.hierarchyFilter = UiTreeUtils.makeIdFilter(filterString);
-    assertDefined(this.uiData).tree =
-      await this.formatHierarchyTreeAndUpdatePinnedItems(
-        this.currentHierarchyTree,
-      );
-    this.copyUiDataAndNotifyView();
-  }
-
-  async onPropertiesUserOptionsChange(userOptions: UserOptions) {
-    this.propertiesUserOptions = userOptions;
-    assertDefined(this.uiData).propertiesUserOptions =
-      this.propertiesUserOptions;
-    await this.updateSelectedTreeUiData();
-  }
-
-  async onPropertiesFilterChange(filterString: string) {
-    this.propertiesFilter = UiTreeUtils.makePropertyFilter(filterString);
-    await this.updateSelectedTreeUiData();
-  }
-
-  async onSelectedHierarchyTreeChange(selectedTree: UiHierarchyTreeNode) {
-    if (
-      !selectedTree.isOldNode() ||
-      selectedTree.getDiff() === DiffType.DELETED
-    ) {
-      this.selectedHierarchyTree = selectedTree;
-      await this.updateSelectedTreeUiData();
-    }
-  }
-
-  private async updateSelectedTreeUiData() {
-    if (this.selectedHierarchyTree) {
-      const propertiesTree =
-        await this.selectedHierarchyTree.getAllProperties();
-      assertDefined(this.uiData).curatedProperties =
-        this.getCuratedProperties(propertiesTree);
-      assertDefined(this.uiData).propertiesTree =
-        await this.formatPropertiesTree(propertiesTree);
-    }
-    this.copyUiDataAndNotifyView();
-  }
-
-  private async formatPropertiesTree(
-    propertiesTree: PropertyTreeNode,
-  ): Promise<UiPropertyTreeNode> {
-    const uiTree = UiPropertyTreeNode.from(propertiesTree);
-
-    if (
-      this.propertiesUserOptions['showDiff']?.enabled &&
-      !this.propertiesUserOptions['showDiff']?.isUnavailable
-    ) {
-      if (this.previousFrameData && !this.previousHierarchyTree) {
-        this.previousHierarchyTree = await this.previousFrameData.getValue();
-      }
-      const prevEntryNode = this.previousHierarchyTree?.findDfs(
-        UiTreeUtils.makeIdMatchFilter(propertiesTree.id),
-      );
-      const prevEntryUiTree = prevEntryNode
-        ? UiPropertyTreeNode.from(await prevEntryNode.getAllProperties())
-        : undefined;
-      await new AddDiffsPropertiesTree(
-        this.isPropertyNodeModified,
-      ).executeInPlace(uiTree, prevEntryUiTree);
-    }
-
-    const predicatesKeepingChildren = [this.propertiesFilter];
-    const predicatesDiscardingChildren = [
-      UiTreeUtils.makeDenyListFilter(Presenter.DENYLIST_PROPERTY_NAMES),
-    ];
-
-    if (!this.propertiesUserOptions['showDefaults']?.enabled) {
-      predicatesDiscardingChildren.push(UiTreeUtils.isNotDefault);
-    }
-
-    return new UiTreeFormatter<UiPropertyTreeNode>()
-      .setUiTree(uiTree)
-      .addOperation(new Filter(predicatesDiscardingChildren, false))
-      .addOperation(new Filter(predicatesKeepingChildren, true))
-      .format();
-  }
-
-  private isHierarchyTreeModified: IsModifiedCallbackType = async (
-    newTree: TreeNode | undefined,
-    oldTree: TreeNode | undefined,
-  ) => {
-    if (!newTree && !oldTree) return false;
-    if (!newTree || !oldTree) return true;
-    if ((newTree as UiHierarchyTreeNode).isRoot()) return false;
-    const newProperties = await (
-      newTree as UiHierarchyTreeNode
-    ).getAllProperties();
-    const oldProperties = await (
-      oldTree as UiHierarchyTreeNode
-    ).getAllProperties();
-
-    return await this.isChildPropertyModified(newProperties, oldProperties);
-  };
-
-  private async isChildPropertyModified(
-    newProperties: PropertyTreeNode,
-    oldProperties: PropertyTreeNode,
-  ): Promise<boolean> {
-    for (const newProperty of newProperties.getAllChildren()) {
-      if (Presenter.DENYLIST_PROPERTY_NAMES.includes(newProperty.name)) {
-        continue;
-      }
-
-      const oldProperty = oldProperties.getChildByName(newProperty.name);
-      if (!oldProperty) {
-        return true;
-      }
-
-      if (newProperty.getAllChildren().length === 0) {
-        if (await this.isPropertyNodeModified(newProperty, oldProperty)) {
-          return true;
-        }
-      } else {
-        const childrenModified = await this.isChildPropertyModified(
-          newProperty,
-          oldProperty,
-        );
-        if (childrenModified) return true;
-      }
-    }
-    return false;
-  }
-
-  private isPropertyNodeModified: IsModifiedCallbackType = async (
-    newTree: TreeNode | undefined,
-    oldTree: TreeNode | undefined,
-  ) => {
-    if (!newTree && !oldTree) return false;
-    if (!newTree || !oldTree) return true;
-
-    const newValue = (newTree as UiPropertyTreeNode).formattedValue();
-    const oldValue = (oldTree as UiPropertyTreeNode).formattedValue();
-    return oldValue !== newValue;
-  };
-
-  private copyUiDataAndNotifyView() {
-    // Create a shallow copy of the data, otherwise the Angular OnPush change detection strategy
-    // won't detect the new input
-    const copy = Object.assign({}, this.uiData);
-    this.notifyUiDataCallback(copy);
+  private refreshUIData() {
+    this.uiData.sfRects = this.sfRects;
+    this.uiData.curatedProperties = this.curatedProperties;
+    this.refreshHierarchyViewerUiData();
   }
 }

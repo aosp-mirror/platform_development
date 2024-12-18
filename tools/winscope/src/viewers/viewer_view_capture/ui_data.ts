@@ -16,24 +16,34 @@
 
 import {TraceType} from 'trace/trace_type';
 import {VcCuratedProperties} from 'viewers/common/curated_properties';
+import {DisplayIdentifier} from 'viewers/common/display_identifier';
+import {RectShowState} from 'viewers/common/rect_show_state';
+import {TextFilter} from 'viewers/common/text_filter';
+import {UiDataHierarchy} from 'viewers/common/ui_data_hierarchy';
 import {UiHierarchyTreeNode} from 'viewers/common/ui_hierarchy_tree_node';
 import {UiPropertyTreeNode} from 'viewers/common/ui_property_tree_node';
 import {UserOptions} from 'viewers/common/user_options';
-import {UiRect} from 'viewers/components/rects/types2d';
+import {UiRect} from 'viewers/components/rects/ui_rect';
 
-export class UiData {
+export class UiData implements UiDataHierarchy {
   readonly dependencies: TraceType[] = [TraceType.VIEW_CAPTURE];
-  readonly displayPropertyGroups = false;
+  rectsToDraw: UiRect[] = [];
+  rectIdToShowState: Map<string, RectShowState> | undefined;
+  displays: DisplayIdentifier[] = [];
+  highlightedItem = '';
+  highlightedProperty = '';
+  hierarchyFilter = new TextFilter('', []);
+  propertiesFilter = new TextFilter('', []);
+  pinnedItems: UiHierarchyTreeNode[] = [];
+  rectsUserOptions: UserOptions = {};
+  hierarchyUserOptions: UserOptions = {};
+  propertiesUserOptions: UserOptions = {};
+  hierarchyTrees: UiHierarchyTreeNode[] | undefined;
+  propertiesTree: UiPropertyTreeNode | undefined;
+  isDarkMode = false;
 
   constructor(
-    readonly rects: UiRect[],
-    public sfRects: UiRect[] | undefined,
-    public tree: UiHierarchyTreeNode | undefined,
-    public hierarchyUserOptions: UserOptions,
-    public propertiesUserOptions: UserOptions,
-    public pinnedItems: UiHierarchyTreeNode[],
-    public highlightedItem: string,
-    public propertiesTree: UiPropertyTreeNode | undefined,
-    public curatedProperties: VcCuratedProperties | undefined,
+    public sfRects: UiRect[] | undefined = undefined,
+    public curatedProperties: VcCuratedProperties | undefined = undefined,
   ) {}
 }

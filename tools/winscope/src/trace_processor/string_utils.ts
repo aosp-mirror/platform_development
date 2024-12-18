@@ -22,7 +22,6 @@ import {
   read as utf8Read,
   write as utf8Write,
 } from '@protobufjs/utf8';
-
 import {assertTrue} from './logging';
 
 // TextDecoder/Decoder requires the full DOM and isn't available in all types
