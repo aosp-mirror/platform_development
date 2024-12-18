@@ -16,6 +16,7 @@
 
 import {NgTemplateOutlet} from '@angular/common';
 import {Component, Input} from '@angular/core';
+import {FormControl} from '@angular/forms';
 import {ListedSearch} from './ui_data';
 
 @Component({
@@ -60,7 +61,7 @@ import {ListedSearch} from './ui_data';
                 <span class="context-menu-item" [cdkMenuItemDisabled]="true" cdkMenuItem>
                   <ng-container
                     [ngTemplateOutlet]="opt.menu"
-                    [ngTemplateOutletContext]="{search}"></ng-container>
+                    [ngTemplateOutletContext]="{query: search.query, control}"></ng-container>
                 </span>
               </div>
             </div>
@@ -113,6 +114,7 @@ export class SearchListComponent {
   @Input() searches: ListedSearch[] = [];
   @Input() placeholderText = '';
   @Input() listItemOptions: ListItemOption[] = [];
+  @Input() control = new FormControl('');
 
   searchOptionsTarget: ListedSearch | undefined;
 

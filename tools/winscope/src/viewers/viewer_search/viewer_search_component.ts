@@ -123,7 +123,8 @@ import {ListedSearch, UiData} from './ui_data';
               class="body"
               [searches]="inputData.recentSearches"
               placeholderText="Recent queries will appear here."
-              [listItemOptions]="recentSearchOptions"></search-list>
+              [listItemOptions]="recentSearchOptions"
+              [control]="menuSaveQueryNameControl"></search-list>
           </mat-tab>
 
           <ng-template #saveQueryField let-search="search">
@@ -409,6 +410,7 @@ export class ViewerSearchComponent {
   lastQueryExecutionTime: string | undefined;
   lastQueryStartTime: number | undefined;
   initializing = false;
+  menuSaveQueryNameControl = this.makeSaveQueryNameControl();
   private readonly editOption: ListItemOption = {
     name: 'Edit',
     icon: 'edit',
@@ -685,6 +687,22 @@ INNER JOIN sf_hierarchy_root_search STATE
       detail: new DeleteSavedQueryClickDetail(search),
     });
     this.elementRef.nativeElement.dispatchEvent(event);
+  }
+
+  private makeSaveQueryNameControl() {
+    return new FormControl(
+      '',
+      assertDefined(
+        Validators.compose([
+          Validators.required,
+          (control: FormControl) =>
+            this.validateSearchQuerySaveName(
+              control,
+              this.inputData?.savedSearches ?? [],
+            ),
+        ]),
+      ),
+    );
   }
 
   private validateSearchQuerySaveName(
