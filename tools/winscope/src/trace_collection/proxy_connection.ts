@@ -22,7 +22,7 @@ import {
   HttpRequestStatus,
   HttpResponse,
 } from 'common/http_request';
-import {PersistentStore} from 'common/persistent_store';
+import {PersistentStore} from 'common/store/persistent_store';
 import {TimeUtils} from 'common/time/time_utils';
 import {UserNotifier} from 'common/user_notifier';
 import {Analytics} from 'logging/analytics';

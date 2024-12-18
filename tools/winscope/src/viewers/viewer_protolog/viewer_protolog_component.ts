@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 import {Component, Input, ViewChild} from '@angular/core';
-import {PersistentStore} from 'common/persistent_store';
+import {PersistentStore} from 'common/store/persistent_store';
 import {TraceType} from 'trace/trace_type';
 import {LogComponent} from 'viewers/components/log_component';
 import {viewerCardStyle} from 'viewers/components/styles/viewer_card.styles';

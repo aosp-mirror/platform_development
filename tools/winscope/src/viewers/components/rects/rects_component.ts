@@ -33,7 +33,7 @@ import {MatSelectChange} from '@angular/material/select';
 import {DomSanitizer} from '@angular/platform-browser';
 import {assertDefined} from 'common/assert_utils';
 import {Distance} from 'common/geometry/distance';
-import {PersistentStore} from 'common/persistent_store';
+import {PersistentStore} from 'common/store/persistent_store';
 import {UrlUtils} from 'common/url_utils';
 import {Analytics} from 'logging/analytics';
 import {TRACE_INFO} from 'trace/trace_info';

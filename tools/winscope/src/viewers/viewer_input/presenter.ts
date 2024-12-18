@@ -15,8 +15,8 @@
  */
 
 import {assertDefined} from 'common/assert_utils';
-import {PersistentStoreProxy} from 'common/persistent_store_proxy';
-import {Store} from 'common/store';
+import {PersistentStoreProxy} from 'common/store/persistent_store_proxy';
+import {Store} from 'common/store/store';
 import {TabbedViewSwitchRequest} from 'messaging/winscope_event';
 import {CustomQueryType} from 'trace/custom_query';
 import {Trace, TraceEntry, TraceEntryLazy} from 'trace/trace';

@@ -25,8 +25,8 @@ import {
 import {MatSelect, MatSelectChange} from '@angular/material/select';
 import {assertDefined} from 'common/assert_utils';
 import {globalConfig} from 'common/global_config';
-import {PersistentStoreProxy} from 'common/persistent_store_proxy';
-import {Store} from 'common/store';
+import {PersistentStoreProxy} from 'common/store/persistent_store_proxy';
+import {Store} from 'common/store/store';
 import {
   EnableConfiguration,
   SelectionConfiguration,
