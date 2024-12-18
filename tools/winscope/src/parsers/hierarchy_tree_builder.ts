@@ -14,15 +14,13 @@
  * limitations under the License.
  */
 
-import {assertDefined} from 'common/assert_utils';
 import {Computation} from 'trace/tree_node/computation';
 import {HierarchyTreeNode} from 'trace/tree_node/hierarchy_tree_node';
 import {PropertiesProvider} from 'trace/tree_node/properties_provider';
-import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
 
 export abstract class HierarchyTreeBuilder {
   protected root: PropertiesProvider | undefined;
-  private children: PropertiesProvider[] | undefined;
+  protected children: PropertiesProvider[] | undefined;
   private computations: Computation[] = [];
 
   setRoot(value: PropertiesProvider): this {
@@ -42,27 +40,18 @@ export abstract class HierarchyTreeBuilder {
 
   build(): HierarchyTreeNode {
     if (!this.root) {
-      throw Error('root not set');
+      throw new Error('root not set');
     }
 
     if (!this.children) {
-      throw Error('children not set');
+      throw new Error('children not set');
     }
 
-    const identifierToChild = this.buildIdentifierToChildMap(this.children);
-    const rootChildren = this.makeRootChildren(
+    const identifierToChildren = this.buildIdentifierToChildrenMap(
       this.children,
-      identifierToChild,
     );
 
-    const rootProperties = this.root.getEagerProperties();
-
-    const root = this.buildHierarchyTreeNode(
-      rootProperties.id,
-      rootProperties.name,
-      rootChildren,
-      this.root,
-    );
+    const root = this.buildHierarchyTree(this.root, identifierToChildren);
 
     this.computations.forEach((computation) =>
       computation.setRoot(root).executeInPlace(),
@@ -71,55 +60,39 @@ export abstract class HierarchyTreeBuilder {
     return root;
   }
 
-  protected buildSubtree(
-    child: PropertiesProvider,
-    identifierToChild: Map<string | number, PropertiesProvider[]>,
+  private buildHierarchyTree(
+    root: PropertiesProvider,
+    identifierToChildren: Map<string | number, readonly HierarchyTreeNode[]>,
   ): HierarchyTreeNode {
-    const childProperties = child.getEagerProperties();
-    const subChildren: HierarchyTreeNode[] =
-      childProperties
-        .getChildByName('children')
-        ?.getAllChildren()
-        .flatMap((identifier: PropertyTreeNode) => {
-          const key = this.getIdentifierValue(identifier);
-          return assertDefined(identifierToChild.get(key)).map((child) => {
-            return this.buildSubtree(child, identifierToChild);
-          });
-        }) ?? [];
-
-    return this.buildHierarchyTreeNode(
-      childProperties.id,
-      this.getSubtreeName(childProperties.name),
-      subChildren,
-      child,
-    );
-  }
-
-  private buildHierarchyTreeNode(
-    id: string,
-    name: string,
-    children: readonly HierarchyTreeNode[],
-    propertiesProvider: PropertiesProvider,
-  ): HierarchyTreeNode {
-    const node = new HierarchyTreeNode(id, name, propertiesProvider);
-    children.forEach((child) => {
-      node.addOrReplaceChild(child);
-      child.setZParent(node);
-    });
+    const rootProperties = root.getEagerProperties();
+    const node = this.makeNode(rootProperties.id, rootProperties.name, root);
+    this.assignParentChildRelationships(node, identifierToChildren, true);
     return node;
   }
 
-  protected abstract buildIdentifierToChildMap(
+  protected makeNode(
+    id: string,
+    name: string,
+    propertiesProvider: PropertiesProvider,
+  ): HierarchyTreeNode {
+    return new HierarchyTreeNode(id, name, propertiesProvider);
+  }
+
+  protected setParentChildRelationship(
+    parent: HierarchyTreeNode,
+    child: HierarchyTreeNode,
+  ) {
+    parent.addOrReplaceChild(child);
+    child.setParent(parent);
+  }
+
+  protected abstract buildIdentifierToChildrenMap(
     nodes: PropertiesProvider[],
-  ): Map<string | number, PropertiesProvider[]>;
+  ): Map<string | number, readonly HierarchyTreeNode[]>;
 
-  protected abstract makeRootChildren(
-    children: PropertiesProvider[],
-    identifierToChild: Map<string | number, PropertiesProvider[]>,
-  ): readonly HierarchyTreeNode[];
-
-  protected abstract getIdentifierValue(
-    identifier: PropertyTreeNode,
-  ): string | number;
-  protected abstract getSubtreeName(propertyTreeName: string): string;
+  protected abstract assignParentChildRelationships(
+    node: HierarchyTreeNode,
+    identifierToChildren: Map<string | number, readonly HierarchyTreeNode[]>,
+    isRoot?: boolean,
+  ): void;
 }

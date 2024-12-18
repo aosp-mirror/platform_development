@@ -15,7 +15,7 @@
  */
 
 import {assertDefined} from 'common/assert_utils';
-import {TransformType} from 'parsers/surface_flinger/transform_utils';
+import {TransformTypeFlags} from 'parsers/surface_flinger/transform_utils';
 import {
   TamperedMessageType,
   TamperedProtoField,
@@ -60,7 +60,7 @@ describe('SetFormatters', () => {
       .setRootId('test')
       .setName('node')
       .build();
-    propertyRoot.addOrReplaceChild(TreeNodeUtils.makeColorNode(0, 0, 0, 1));
+    propertyRoot.addOrReplaceChild(TreeNodeUtils.makeColorNode(-1, -1, -1, 1));
     operation = new SetFormatters();
     operation.apply(propertyRoot);
 
@@ -198,7 +198,7 @@ describe('SetFormatters', () => {
       .setName('node')
       .build();
     propertyRoot.addOrReplaceChild(
-      TreeNodeUtils.makeTransformNode(TransformType.EMPTY),
+      TreeNodeUtils.makeTransformNode(TransformTypeFlags.EMPTY),
     );
     operation = new SetFormatters();
     operation.apply(propertyRoot);

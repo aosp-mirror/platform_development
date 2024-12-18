@@ -15,25 +15,72 @@
  */
 
 export const viewerCardStyle = `
-    .rects-view,
-    .hierarchy-view,
-    .ime-additional-properties,
-    .properties-view {
-        flex: 1;
+    .rects-view:not(.collapsed),
+    .hierarchy-view:not(.collapsed),
+    .ime-additional-properties:not(.collapsed),
+    .properties-view:not(.collapsed),
+    .log-view:not(.collapsed),
+    .property-groups:not(.collapsed) {
         display: flex;
         flex-direction: column;
         overflow: auto;
         border-radius: 4px;
+        background-color: unset;
+        margin: 4px;
+        padding-bottom: 12px;
+        background-color: var(--background-color);
+        box-shadow: 0px 1px 3px var(--border-color), 0px 1px 2px var(--border-color);
     }
 
-    .rects-view, .hierarchy-view, .properties-view {
-        padding-top: 0px;
-        padding-bottom: 16px;
-        padding-left: 16px;
-        padding-right: 16px;
+    .rects-view:not(.collapsed),
+    .hierarchy-view:not(.collapsed),
+    .ime-additional-properties:not(.collapsed),
+    .properties-view:not(.collapsed) {
+        flex: 1;
     }
 
-    .ime-additional-properties {
-        padding: 16px;
+    .property-groups:not(.collapsed):not(.empty) {
+      flex: 2;
+    }
+
+    .property-groups.empty:not(.collapsed) {
+      flex: 0.2;
+    }
+
+    .log-view:not(.collapsed) {
+        flex: 3;
+    }
+
+    .rects-view.collapsed,
+    .hierarchy-view.collapsed,
+    .ime-additional-properties.collapsed,
+    .properties-view.collapsed,
+    .log-view.collapsed,
+    .property-groups.collapsed {
+        display: none;
+    }
+`;
+
+export const viewerCardInnerStyle = `
+    .title-section {
+        display: flex;
+        flex-direction: row;
+        flex-wrap: wrap;
+        justify-content: space-between;
+        background-color: var(--card-title-background-color);
+        padding: 0px 12px 0px 12px;
+    }
+
+    .view-controls {
+        display: flex;
+        flex-direction: row;
+        align-items: baseline;
+        padding: 8px 12px;
+        overflow-x: auto;
+        overflow-y: hidden;
+    }
+
+    .placeholder-text {
+      padding: 8px 12px;
     }
 `;

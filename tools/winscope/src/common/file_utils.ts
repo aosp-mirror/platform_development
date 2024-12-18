@@ -14,17 +14,22 @@
  * limitations under the License.
  */
 import JSZip from 'jszip';
+import {ArrayUtils} from './array_utils';
 import {FunctionUtils, OnProgressUpdateType} from './function_utils';
 
 export type OnFile = (file: File, parentArchive: File | undefined) => void;
 
-class FileUtils {
-  static getFileExtension(file: File): string | undefined {
-    const split = file.name.split('.');
-    if (split.length > 1) {
-      return split.pop();
+export class FileUtils {
+  //allow: letters/numbers/underscores with delimiters . - # (except at start and end)
+  static readonly DOWNLOAD_FILENAME_REGEX = /^\w+?((|#|-|\.)\w+)+$/;
+  static readonly ILLEGAL_FILENAME_CHARACTERS_REGEX = /[^A-Za-z0-9-#._]/g;
+
+  static getFileExtension(filename: string): string | undefined {
+    const lastDot = filename.lastIndexOf('.');
+    if (lastDot === -1) {
+      return undefined;
     }
-    return undefined;
+    return filename.slice(lastDot + 1);
   }
 
   static removeDirFromFileName(name: string): string {
@@ -45,12 +50,16 @@ class FileUtils {
     }
   }
 
-  static async createZipArchive(files: File[]): Promise<Blob> {
+  static async createZipArchive(
+    files: File[],
+    progressCallback?: OnProgressUpdateType,
+  ): Promise<Blob> {
     const zip = new JSZip();
     for (let i = 0; i < files.length; i++) {
       const file = files[i];
       const blob = await file.arrayBuffer();
       zip.file(file.name, blob);
+      if (progressCallback) progressCallback((i + 1) / files.length);
     }
     return await zip.generateAsync({type: 'blob'});
   }
@@ -72,7 +81,11 @@ class FileUtils {
       } else {
         const fileBlob = await file.async('blob');
         const unzippedFile = new File([fileBlob], filename);
-        unzippedFiles.push(unzippedFile);
+        if (await FileUtils.isZipFile(unzippedFile)) {
+          unzippedFiles.push(...(await FileUtils.unzipFile(fileBlob)));
+        } else {
+          unzippedFiles.push(unzippedFile);
+        }
       }
 
       onProgressUpdate((100 * (index + 1)) / filenames.length);
@@ -81,13 +94,32 @@ class FileUtils {
     return unzippedFiles;
   }
 
-  static isZipFile(file: File) {
-    return FileUtils.getFileExtension(file) === 'zip';
+  static async decompressGZipFile(file: File): Promise<File> {
+    const decompressionStream = new (window as any).DecompressionStream('gzip');
+    const decompressedStream = file.stream().pipeThrough(decompressionStream);
+    const fileBlob = await new Response(decompressedStream).blob();
+    return new File(
+      [fileBlob],
+      FileUtils.removeExtensionFromFilename(file.name),
+    );
   }
 
-  //allow: letters/numbers/underscores with delimeters . - # (except at start and end)
-  static readonly DOWNLOAD_FILENAME_REGEX = /^\w+?((|#|-|\.)\w+)+$/;
-  static readonly ILLEGAL_FILENAME_CHARACTERS_REGEX = /[^A-Za-z0-9-#._]/g;
-}
+  static async isZipFile(file: File): Promise<boolean> {
+    return FileUtils.isMatchForMagicNumber(file, FileUtils.PK_ZIP_MAGIC_NUMBER);
+  }
 
-export {FileUtils};
+  static async isGZipFile(file: File): Promise<boolean> {
+    return FileUtils.isMatchForMagicNumber(file, FileUtils.GZIP_MAGIC_NUMBER);
+  }
+
+  private static async isMatchForMagicNumber(
+    file: File,
+    magicNumber: number[],
+  ): Promise<boolean> {
+    const bufferStart = new Uint8Array((await file.arrayBuffer()).slice(0, 2));
+    return ArrayUtils.equal(bufferStart, magicNumber);
+  }
+
+  private static readonly GZIP_MAGIC_NUMBER = [0x1f, 0x8b];
+  private static readonly PK_ZIP_MAGIC_NUMBER = [0x50, 0x4b];
+}

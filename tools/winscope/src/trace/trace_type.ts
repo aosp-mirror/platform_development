@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import {ScreenRecordingTraceEntry} from './screen_recording';
+import {MediaBasedTraceEntry} from './media_based_trace_entry';
 import {HierarchyTreeNode} from './tree_node/hierarchy_tree_node';
 import {PropertyTreeNode} from './tree_node/property_tree_node';
 
@@ -40,26 +40,21 @@ export enum TraceType {
   TEST_TRACE_STRING,
   TEST_TRACE_NUMBER,
   VIEW_CAPTURE,
-  VIEW_CAPTURE_LAUNCHER_ACTIVITY,
-  VIEW_CAPTURE_TASKBAR_DRAG_LAYER,
-  VIEW_CAPTURE_TASKBAR_OVERLAY_DRAG_LAYER,
+  INPUT_MOTION_EVENT,
+  INPUT_KEY_EVENT,
+  INPUT_EVENT_MERGED,
 }
 
 export type ImeTraceType =
   | TraceType.INPUT_METHOD_CLIENTS
   | TraceType.INPUT_METHOD_MANAGER_SERVICE
   | TraceType.INPUT_METHOD_SERVICE;
-export type ViewCaptureTraceType =
-  | TraceType.VIEW_CAPTURE
-  | TraceType.VIEW_CAPTURE_LAUNCHER_ACTIVITY
-  | TraceType.VIEW_CAPTURE_TASKBAR_DRAG_LAYER
-  | TraceType.VIEW_CAPTURE_TASKBAR_OVERLAY_DRAG_LAYER;
 
 export interface TraceEntryTypeMap {
   [TraceType.PROTO_LOG]: PropertyTreeNode;
   [TraceType.SURFACE_FLINGER]: HierarchyTreeNode;
-  [TraceType.SCREEN_RECORDING]: ScreenRecordingTraceEntry;
-  [TraceType.SCREENSHOT]: ScreenRecordingTraceEntry;
+  [TraceType.SCREEN_RECORDING]: MediaBasedTraceEntry;
+  [TraceType.SCREENSHOT]: MediaBasedTraceEntry;
   [TraceType.SYSTEM_UI]: object;
   [TraceType.TRANSACTIONS]: PropertyTreeNode;
   [TraceType.TRANSACTIONS_LEGACY]: object;
@@ -77,13 +72,14 @@ export interface TraceEntryTypeMap {
   [TraceType.TEST_TRACE_STRING]: string;
   [TraceType.TEST_TRACE_NUMBER]: number;
   [TraceType.VIEW_CAPTURE]: HierarchyTreeNode;
-  [TraceType.VIEW_CAPTURE_LAUNCHER_ACTIVITY]: HierarchyTreeNode;
-  [TraceType.VIEW_CAPTURE_TASKBAR_DRAG_LAYER]: HierarchyTreeNode;
-  [TraceType.VIEW_CAPTURE_TASKBAR_OVERLAY_DRAG_LAYER]: HierarchyTreeNode;
+  [TraceType.INPUT_MOTION_EVENT]: PropertyTreeNode;
+  [TraceType.INPUT_KEY_EVENT]: PropertyTreeNode;
+  [TraceType.INPUT_EVENT_MERGED]: PropertyTreeNode;
 }
 
 export class TraceTypeUtils {
   private static UI_PIPELINE_ORDER = [
+    TraceType.INPUT_EVENT_MERGED,
     TraceType.INPUT_METHOD_CLIENTS,
     TraceType.INPUT_METHOD_SERVICE,
     TraceType.INPUT_METHOD_MANAGER_SERVICE,
@@ -96,19 +92,19 @@ export class TraceTypeUtils {
 
   private static TRACES_WITH_VIEWERS_DISPLAY_ORDER = [
     TraceType.SCREEN_RECORDING,
+    TraceType.SCREENSHOT,
     TraceType.SURFACE_FLINGER,
     TraceType.WINDOW_MANAGER,
+    TraceType.INPUT_EVENT_MERGED,
     TraceType.INPUT_METHOD_CLIENTS,
     TraceType.INPUT_METHOD_MANAGER_SERVICE,
     TraceType.INPUT_METHOD_SERVICE,
     TraceType.TRANSACTIONS,
     TraceType.TRANSACTIONS_LEGACY,
     TraceType.PROTO_LOG,
-    TraceType.TRANSITION,
     TraceType.VIEW_CAPTURE,
-    TraceType.VIEW_CAPTURE_LAUNCHER_ACTIVITY,
-    TraceType.VIEW_CAPTURE_TASKBAR_DRAG_LAYER,
-    TraceType.VIEW_CAPTURE_TASKBAR_OVERLAY_DRAG_LAYER,
+    TraceType.TRANSITION,
+    TraceType.CUJS,
   ];
 
   static isTraceTypeWithViewer(t: TraceType): boolean {
@@ -137,6 +133,19 @@ export class TraceTypeUtils {
       TraceTypeUtils.TRACES_WITH_VIEWERS_DISPLAY_ORDER,
     );
     return tIndex - uIndex;
+  }
+
+  static getReasonForNoTraceVisualization(t: TraceType): string {
+    switch (t) {
+      case TraceType.WM_TRANSITION:
+        return 'Must also upload a shell transitions trace to visualize transitions.';
+      case TraceType.SHELL_TRANSITION:
+        return 'Must also upload a wm transitions trace to visualize transitions.';
+      case TraceType.EVENT_LOG:
+        return 'Uploaded file does not contain CUJs. Only CUJ visualization is supported in Winscope.';
+      default:
+        return 'Visualization for this trace is not supported in Winscope.';
+    }
   }
 
   private static findIndexInOrder(

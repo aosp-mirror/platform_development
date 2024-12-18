@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 import {assertDefined} from 'common/assert_utils';
+import {FilterFlag} from 'common/filter_flag';
 import {Timestamp} from 'common/time';
-import {TimeUtils} from 'common/time_utils';
 import {Item} from 'trace/item';
 import {HierarchyTreeNode} from 'trace/tree_node/hierarchy_tree_node';
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
@@ -86,9 +86,7 @@ class ImeAdditionalPropertiesUtils {
     const displayContent = entry.getAllChildren()[0];
 
     const props: WmStateProperties = {
-      timestamp: wmEntryTimestamp
-        ? TimeUtils.format(wmEntryTimestamp)
-        : undefined,
+      timestamp: wmEntryTimestamp ? wmEntryTimestamp.format() : undefined,
       focusedApp: entry.getEagerPropertyByName('focusedApp')?.getValue(),
       focusedWindow: this.getFocusedWindowString(entry),
       focusedActivity: this.getFocusedActivityString(entry),
@@ -109,7 +107,7 @@ class ImeAdditionalPropertiesUtils {
     processedWindowManagerState: ProcessedWindowManagerState,
     sfEntryTimestamp: Timestamp | undefined,
   ): ImeLayers | undefined {
-    const isImeContainer = UiTreeUtils.makeIdFilter('ImeContainer');
+    const isImeContainer = UiTreeUtils.makeNodeFilter('ImeContainer');
     const imeContainerLayer = entryTree.findDfs(isImeContainer);
 
     if (!imeContainerLayer) {
@@ -126,7 +124,7 @@ class ImeAdditionalPropertiesUtils {
       ).getValue(),
     };
 
-    const isInputMethodSurface = UiTreeUtils.makeIdFilter('InputMethod');
+    const isInputMethodSurface = UiTreeUtils.makeNodeFilter('InputMethod');
     const inputMethodSurfaceLayer =
       imeContainerLayer.findDfs(isInputMethodSurface);
 
@@ -150,7 +148,7 @@ class ImeAdditionalPropertiesUtils {
         ?.split(' ')[0]
         .slice(1);
     if (focusedWindowToken) {
-      const isFocusedWindow = UiTreeUtils.makeIdFilter(focusedWindowToken);
+      const isFocusedWindow = UiTreeUtils.makeNodeFilter(focusedWindowToken);
       focusedWindowLayer = entryTree.findDfs(isFocusedWindow);
     }
 
@@ -162,16 +160,16 @@ class ImeAdditionalPropertiesUtils {
     // cases where both exist
     const taskLayerOfImeContainer = this.findAncestorTaskLayerOfImeLayer(
       entryTree,
-      UiTreeUtils.makeIdFilter('ImeContainer'),
+      UiTreeUtils.makeNodeFilter('ImeContainer'),
     );
 
     const taskLayerOfImeSnapshot = this.findAncestorTaskLayerOfImeLayer(
       entryTree,
-      UiTreeUtils.makeIdFilter('IME-snapshot'),
+      UiTreeUtils.makeNodeFilter('IME-snapshot'),
     );
 
     const rootProperties = sfEntryTimestamp
-      ? {timestamp: TimeUtils.format(sfEntryTimestamp)}
+      ? {timestamp: sfEntryTimestamp.format()}
       : undefined;
 
     return new ImeLayers(
@@ -263,7 +261,9 @@ class ImeAdditionalPropertiesUtils {
       return undefined;
     }
 
-    const isTaskLayer = UiTreeUtils.makeIdFilter('Task|ImePlaceholder');
+    const isTaskLayer = UiTreeUtils.makeNodeFilter('Task|ImePlaceholder', [
+      FilterFlag.USE_REGEX,
+    ]);
     const taskLayer = imeLayer.findAncestor(isTaskLayer);
     if (!taskLayer) {
       return undefined;
@@ -291,7 +291,7 @@ class ImeAdditionalPropertiesUtils {
   }
 
   private isInputMethodVisible(displayContent: HierarchyTreeNode): boolean {
-    const isInputMethod = UiTreeUtils.makeIdFilter('InputMethod');
+    const isInputMethod = UiTreeUtils.makeNodeFilter('InputMethod');
     const inputMethodWindowOrLayer = displayContent.findDfs(isInputMethod);
     return inputMethodWindowOrLayer
       ?.getEagerPropertyByName('isComputedVisible')

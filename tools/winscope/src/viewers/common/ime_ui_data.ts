@@ -14,26 +14,31 @@
  * limitations under the License.
  */
 
-import {TraceType} from 'trace/trace_type';
+import {ImeTraceType} from 'trace/trace_type';
 import {ImeAdditionalProperties} from 'viewers/common/ime_additional_properties';
 import {TableProperties} from 'viewers/common/table_properties';
 import {UserOptions} from 'viewers/common/user_options';
+import {TextFilter} from './text_filter';
+import {UiDataHierarchy} from './ui_data_hierarchy';
 import {UiHierarchyTreeNode} from './ui_hierarchy_tree_node';
 import {UiPropertyTreeNode} from './ui_property_tree_node';
 
-export class ImeUiData {
-  dependencies: TraceType[];
+export class ImeUiData implements UiDataHierarchy {
   highlightedItem = '';
   pinnedItems: UiHierarchyTreeNode[] = [];
   hierarchyUserOptions: UserOptions = {};
+  hierarchyTrees: UiHierarchyTreeNode[] | undefined;
   propertiesUserOptions: UserOptions = {};
-  tree: UiHierarchyTreeNode | undefined;
-  sfSubtrees: UiHierarchyTreeNode[] = [];
   propertiesTree: UiPropertyTreeNode | undefined;
-  hierarchyTableProperties: TableProperties | undefined;
-  additionalProperties: ImeAdditionalProperties | undefined;
+  highlightedProperty = '';
+  hierarchyFilter = new TextFilter('', []);
+  propertiesFilter = new TextFilter('', []);
 
-  constructor(dependencies?: TraceType[]) {
-    this.dependencies = dependencies ?? [];
-  }
+  constructor(
+    readonly traceType: ImeTraceType,
+    public hierarchyTableProperties: TableProperties | undefined = undefined,
+    public additionalProperties:
+      | ImeAdditionalProperties
+      | undefined = undefined,
+  ) {}
 }

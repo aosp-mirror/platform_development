@@ -17,50 +17,63 @@
 import {Inject, Injectable, NgZone} from '@angular/core';
 import {MatSnackBar} from '@angular/material/snack-bar';
 import {assertDefined} from 'common/assert_utils';
-import {UserNotificationListener} from 'messaging/user_notification_listener';
-import {WinscopeError} from 'messaging/winscope_error';
+import {NotificationType, UserNotification} from 'messaging/user_notification';
 import {SnackBarComponent} from './snack_bar_component';
 
+type Messages = string[];
+
 @Injectable({providedIn: 'root'})
-export class SnackBarOpener implements UserNotificationListener {
+export class SnackBarOpener {
+  private static CROP_THRESHOLD = 5;
+  private isOpen = false;
+  private queue: Messages[] = [];
+
   constructor(
     @Inject(NgZone) private ngZone: NgZone,
     @Inject(MatSnackBar) private snackBar: MatSnackBar,
   ) {}
 
-  onErrors(errors: WinscopeError[]) {
-    const messages = this.convertErrorsToMessages(errors);
+  onNotifications(notifications: UserNotification[]) {
+    const messages = this.convertNotificationsToMessages(notifications);
 
     if (messages.length === 0) {
       return;
     }
 
-    this.ngZone.run(() => {
-      // The snackbar needs to be opened within ngZone,
-      // otherwise it will first display on the left and then will jump to the center
-      this.snackBar.openFromComponent(SnackBarComponent, {
-        data: messages,
-        duration: 10000,
-      });
-    });
+    if (this.isOpen) {
+      this.queue.push(messages);
+      return;
+    }
+
+    this.displayMessages(messages);
   }
 
-  private convertErrorsToMessages(errors: WinscopeError[]): string[] {
-    const messages: string[] = [];
-    const groups = this.groupErrorsByType(errors);
+  private convertNotificationsToMessages(
+    notifications: UserNotification[],
+  ): Messages {
+    const messages: Messages = [];
 
-    for (const groupedErrors of groups) {
-      const CROP_THRESHOLD = 5;
-      const countUsed = Math.min(groupedErrors.length, CROP_THRESHOLD);
-      const countCropped = groupedErrors.length - countUsed;
+    const warnings = notifications.filter(
+      (n) => n.getNotificationType() === NotificationType.WARNING,
+    );
+    const groups = this.groupNotificationsByDescriptor(warnings);
 
-      groupedErrors.slice(0, countUsed).forEach((error) => {
-        messages.push(error.getMessage());
+    for (const groupedWarnings of groups) {
+      const countUsed = Math.min(
+        groupedWarnings.length,
+        SnackBarOpener.CROP_THRESHOLD,
+      );
+      const countCropped = groupedWarnings.length - countUsed;
+
+      groupedWarnings.slice(0, countUsed).forEach((warning) => {
+        messages.push(warning.getMessage());
       });
 
       if (countCropped > 0) {
         messages.push(
-          `... (cropped ${countCropped} '${groupedErrors[0].getType()}' messages)`,
+          `... (cropped ${countCropped} '${groupedWarnings[0].getDescriptor()}' message${
+            countCropped > 1 ? 's' : ''
+          })`,
         );
       }
     }
@@ -68,16 +81,37 @@ export class SnackBarOpener implements UserNotificationListener {
     return messages;
   }
 
-  private groupErrorsByType(errors: WinscopeError[]): Set<WinscopeError[]> {
-    const groups = new Map<Function, WinscopeError[]>();
+  private groupNotificationsByDescriptor(
+    warnings: UserNotification[],
+  ): Set<UserNotification[]> {
+    const groups = new Map<string, UserNotification[]>();
 
-    errors.forEach((error) => {
-      if (groups.get(error.constructor) === undefined) {
-        groups.set(error.constructor, []);
+    warnings.forEach((warning) => {
+      if (groups.get(warning.getDescriptor()) === undefined) {
+        groups.set(warning.getDescriptor(), []);
       }
-      assertDefined(groups.get(error.constructor)).push(error);
+      assertDefined(groups.get(warning.getDescriptor())).push(warning);
     });
 
     return new Set(groups.values());
+  }
+
+  private displayMessages(messages: Messages) {
+    this.ngZone.run(() => {
+      // The snackbar needs to be opened within ngZone,
+      // otherwise it will first display on the left and then will jump to the center
+      this.isOpen = true;
+      const ref = this.snackBar.openFromComponent(SnackBarComponent, {
+        data: messages,
+        duration: 5000 * messages.length,
+      });
+      ref.afterDismissed().subscribe(() => {
+        this.isOpen = false;
+        const next = this.queue.shift();
+        if (next !== undefined) {
+          this.displayMessages(next);
+        }
+      });
+    });
   }
 }

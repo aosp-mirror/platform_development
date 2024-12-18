@@ -15,11 +15,15 @@
  */
 import {Component} from '@angular/core';
 import {ComponentFixture, TestBed} from '@angular/core/testing';
+import {MatButtonModule} from '@angular/material/button';
 import {MatDividerModule} from '@angular/material/divider';
+import {MatIconModule} from '@angular/material/icon';
+import {MatTooltipModule} from '@angular/material/tooltip';
 import {assertDefined} from 'common/assert_utils';
 import {TreeNodeUtils} from 'test/unit/tree_node_utils';
 import {ImeAdditionalProperties} from 'viewers/common/ime_additional_properties';
 import {ViewerEvents} from 'viewers/common/viewer_events';
+import {CollapsibleSectionTitleComponent} from './collapsible_section_title_component';
 import {CoordinatesTableComponent} from './coordinates_table_component';
 import {ImeAdditionalPropertiesComponent} from './ime_additional_properties_component';
 
@@ -30,10 +34,16 @@ describe('ImeAdditionalPropertiesComponent', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [MatDividerModule],
+      imports: [
+        MatDividerModule,
+        MatIconModule,
+        MatButtonModule,
+        MatTooltipModule,
+      ],
       declarations: [
         ImeAdditionalPropertiesComponent,
         TestHostComponent,
+        CollapsibleSectionTitleComponent,
         CoordinatesTableComponent,
       ],
     }).compileComponents();
@@ -41,8 +51,12 @@ describe('ImeAdditionalPropertiesComponent', () => {
     component = fixture.componentInstance;
     htmlElement = fixture.nativeElement;
     htmlElement.addEventListener(
-      ViewerEvents.HighlightedChange,
-      component.onHighlightedChange,
+      ViewerEvents.HighlightedNodeChange,
+      component.onHighlightedNodeChange,
+    );
+    htmlElement.addEventListener(
+      ViewerEvents.HighlightedIdChange,
+      component.onHighlightedIdChange,
     );
     htmlElement.addEventListener(
       ViewerEvents.AdditionalPropertySelected,
@@ -58,6 +72,14 @@ describe('ImeAdditionalPropertiesComponent', () => {
   it('shows client or service sf properties', () => {
     expect(htmlElement.querySelector('.ime-container')).toBeDefined();
     expect(htmlElement.querySelector('.input-method-surface')).toBeDefined();
+  });
+
+  it('renders placeholder text', () => {
+    component.additionalProperties = undefined;
+    fixture.detectChanges();
+    expect(
+      htmlElement.querySelector('.placeholder-text')?.textContent,
+    ).toContain('No IME entry found.');
   });
 
   it('emits update additional property tree event on wm state button click', () => {
@@ -103,7 +125,7 @@ describe('ImeAdditionalPropertiesComponent', () => {
     );
     expect(
       assertDefined(imeManagerService.querySelector('.wm-state')).textContent,
-    ).toContain('1970-01-01T00:00:00.000000000');
+    ).toContain('1970-01-01, 00:00:00.000000000');
     expect(
       imeManagerService.querySelector('.ime-control-target-button'),
     ).toBeDefined();
@@ -122,56 +144,81 @@ describe('ImeAdditionalPropertiesComponent', () => {
     expect(button.className).toContain('selected');
   });
 
+  it('handles collapse button click', () => {
+    expect(component.collapseButtonClicked).toBeFalse();
+    const collapseButton = assertDefined(
+      htmlElement.querySelector('collapsible-section-title button'),
+    ) as HTMLButtonElement;
+    collapseButton.click();
+    fixture.detectChanges();
+    expect(component.collapseButtonClicked).toBeTrue();
+  });
+
   @Component({
     selector: 'host-component',
     template: `
       <ime-additional-properties
         [highlightedItem]="highlightedItem"
         [isImeManagerService]="isImeManagerService"
-        [additionalProperties]="additionalProperties"></ime-additional-properties>
+        [additionalProperties]="additionalProperties"
+        (collapseButtonClicked)="onCollapseButtonClick()"></ime-additional-properties>
     `,
   })
   class TestHostComponent {
     isImeManagerService = false;
 
-    additionalProperties = new ImeAdditionalProperties(
-      {
-        id: 'wmStateId',
-        name: 'wmState',
-        wmStateProperties: {
-          timestamp: '1970-01-01T00:00:00.000000000',
-          focusedApp: 'exampleFocusedApp',
-          focusedWindow: undefined,
-          focusedActivity: undefined,
-          isInputMethodWindowVisible: false,
-          imeControlTarget: TreeNodeUtils.makePropertyNode(
-            'DisplayContent.inputMethodControlTarget',
-            'inputMethodControlTarget',
-            null,
-          ),
-          imeInputTarget: undefined,
-          imeLayeringTarget: undefined,
-          imeInsetsSourceProvider: undefined,
+    additionalProperties: ImeAdditionalProperties | undefined =
+      new ImeAdditionalProperties(
+        {
+          id: 'wmStateId',
+          name: 'wmState',
+          wmStateProperties: {
+            timestamp: '1970-01-01, 00:00:00.000000000',
+            focusedApp: 'exampleFocusedApp',
+            focusedWindow: undefined,
+            focusedActivity: undefined,
+            isInputMethodWindowVisible: false,
+            imeControlTarget: TreeNodeUtils.makePropertyNode(
+              'DisplayContent.inputMethodControlTarget',
+              'inputMethodControlTarget',
+              null,
+            ),
+            imeInputTarget: undefined,
+            imeLayeringTarget: undefined,
+            imeInsetsSourceProvider: undefined,
+          },
+          hierarchyTree: TreeNodeUtils.makeHierarchyNode({
+            name: 'wmStateProto',
+          }),
         },
-        hierarchyTree: TreeNodeUtils.makeHierarchyNode({name: 'wmStateProto'}),
-      },
-      {
-        id: 'ime',
-        name: 'imeLayers',
-        properties: {
-          imeContainer: {id: '123', zOrderRelativeOfId: -1, z: 0},
-          inputMethodSurface: {id: '456', isVisible: false},
-          focusedWindowColor: undefined,
-          root: undefined,
+        {
+          id: 'ime',
+          name: 'imeLayers',
+          properties: {
+            imeContainer: {
+              id: '123',
+              zOrderRelativeOfId: -1,
+              z: 0,
+            },
+            inputMethodSurface: {
+              id: '456',
+              isVisible: false,
+            },
+            focusedWindowColor: undefined,
+            root: undefined,
+          },
+          taskLayerOfImeContainer: undefined,
+          taskLayerOfImeSnapshot: undefined,
         },
-        taskLayerOfImeContainer: undefined,
-        taskLayerOfImeSnapshot: undefined,
-      },
-    );
+      );
     highlightedItem = '';
     additionalPropertieTreeName: string | undefined;
+    collapseButtonClicked = false;
 
-    onHighlightedChange = (event: Event) => {
+    onHighlightedNodeChange = (event: Event) => {
+      this.highlightedItem = (event as CustomEvent).detail.node.id;
+    };
+    onHighlightedIdChange = (event: Event) => {
       this.highlightedItem = (event as CustomEvent).detail.id;
     };
     onAdditionalPropertySelectedChange = (event: Event) => {
@@ -182,5 +229,9 @@ describe('ImeAdditionalPropertiesComponent', () => {
         event as CustomEvent
       ).detail.selectedItem.name;
     };
+
+    onCollapseButtonClick() {
+      this.collapseButtonClicked = true;
+    }
   }
 });

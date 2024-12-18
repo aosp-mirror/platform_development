@@ -15,25 +15,36 @@
  */
 
 import {assertDefined} from 'common/assert_utils';
+import {UserNotifier} from 'common/user_notifier';
+import {DuplicateLayerId} from 'messaging/user_warnings';
 import {HierarchyTreeBuilder} from 'parsers/hierarchy_tree_builder';
 import {HierarchyTreeNode} from 'trace/tree_node/hierarchy_tree_node';
 import {PropertiesProvider} from 'trace/tree_node/properties_provider';
-import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
+import {
+  PropertySource,
+  PropertyTreeNode,
+} from 'trace/tree_node/property_tree_node';
 import {DEFAULT_PROPERTY_TREE_NODE_FACTORY} from 'trace/tree_node/property_tree_node_factory';
 
 export class HierarchyTreeBuilderSf extends HierarchyTreeBuilder {
-  protected override buildIdentifierToChildMap(
+  protected override buildIdentifierToChildrenMap(
     layers: PropertiesProvider[],
-  ): Map<string | number, PropertiesProvider[]> {
+  ): Map<string | number, readonly HierarchyTreeNode[]> {
     const map = layers.reduce((map, layer) => {
       const layerProperties = layer.getEagerProperties();
-      const id = assertDefined(layerProperties.getChildByName('id')).getValue();
-      const curr = map.get(id);
+      const layerNode = this.makeNode(
+        layerProperties.id,
+        layerProperties.name,
+        layer,
+      );
+      const layerId = assertDefined(
+        layerProperties.getChildByName('id'),
+      ).getValue();
+
+      const curr = map.get(layerId);
       if (curr) {
-        curr.push(layer);
-        console.warn(
-          `Duplicate layer id ${id} found. Adding it as duplicate to the hierarchy`,
-        );
+        curr.push(layerNode);
+        UserNotifier.add(new DuplicateLayerId(layerId.toString()));
         layer.addEagerProperty(
           DEFAULT_PROPERTY_TREE_NODE_FACTORY.makeCalculatedProperty(
             layerProperties.id,
@@ -42,35 +53,36 @@ export class HierarchyTreeBuilderSf extends HierarchyTreeBuilder {
           ),
         );
       } else {
-        map.set(id, [layer]);
+        map.set(layerId, [layerNode]);
       }
       return map;
-    }, new Map<string | number, PropertiesProvider[]>());
+    }, new Map<string | number, HierarchyTreeNode[]>());
     return map;
   }
 
-  protected override makeRootChildren(
-    children: PropertiesProvider[],
-    identifierToChild: Map<string | number, PropertiesProvider[]>,
-  ): readonly HierarchyTreeNode[] {
-    const rootLayers = children.filter((layer) => {
-      const hasParent =
-        assertDefined(
-          layer.getEagerProperties().getChildByName('parent'),
-        ).getValue() !== -1;
-      return !hasParent;
-    });
-
-    return rootLayers.map((layer) => {
-      return this.buildSubtree(layer, identifierToChild);
-    });
+  protected override assignParentChildRelationships(
+    root: HierarchyTreeNode,
+    identifierToChildren: Map<string | number, HierarchyTreeNode[]>,
+    isRoot?: boolean,
+  ): void {
+    for (const children of identifierToChildren.values()) {
+      children.forEach((child) => {
+        const parentIdNode = assertDefined(
+          child.getEagerPropertyByName('parent'),
+        );
+        const isDefault = parentIdNode.source === PropertySource.DEFAULT;
+        const parentId = this.getIdentifierValue(parentIdNode);
+        const parent = identifierToChildren.get(parentId)?.at(0);
+        if (!isDefault && parent) {
+          this.setParentChildRelationship(parent, child);
+        } else {
+          this.setParentChildRelationship(root, child);
+        }
+      });
+    }
   }
 
-  protected override getIdentifierValue(identifier: PropertyTreeNode): number {
+  private getIdentifierValue(identifier: PropertyTreeNode): number {
     return Number(identifier.getValue());
-  }
-
-  protected override getSubtreeName(propertyTreeName: string): string {
-    return propertyTreeName;
   }
 }

@@ -15,19 +15,23 @@
  */
 
 import {assertDefined} from 'common/assert_utils';
-import {TimestampType} from 'common/time';
-import {NO_TIMEZONE_OFFSET_FACTORY} from 'common/timestamp_factory';
 import {PropertyTreeBuilder} from 'test/unit/property_tree_builder';
+import {TimestampConverterUtils} from 'test/unit/timestamp_converter_utils';
 import {UnitTestUtils} from 'test/unit/utils';
+import {CoarseVersion} from 'trace/coarse_version';
 import {Parser} from 'trace/parser';
 import {TraceType} from 'trace/trace_type';
+import {
+  CUJ_TYPE_FORMATTER,
+  DEFAULT_PROPERTY_FORMATTER,
+} from 'trace/tree_node/formatters';
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
-import {CujType} from './cuj_type';
 
-describe('ParserCujs', () => {
+describe('TracesParserCujs', () => {
   let parser: Parser<PropertyTreeNode>;
 
   beforeAll(async () => {
+    jasmine.addCustomEqualityTester(UnitTestUtils.timestampEqualityTester);
     parser = (await UnitTestUtils.getTracesParser([
       'traces/eventlog.winscope',
     ])) as Parser<PropertyTreeNode>;
@@ -37,37 +41,28 @@ describe('ParserCujs', () => {
     expect(parser.getTraceType()).toEqual(TraceType.CUJS);
   });
 
-  it('provides elapsed timestamps', () => {
-    const timestamps = assertDefined(
-      parser.getTimestamps(TimestampType.ELAPSED),
-    );
-
-    expect(timestamps.length).toEqual(16);
-
-    const expected = [
-      NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(2661012770462n),
-      NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(2661012874914n),
-      NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(2661012903966n),
-    ];
-    expect(timestamps.slice(0, 3)).toEqual(expected);
+  it('has expected coarse version', () => {
+    expect(parser.getCoarseVersion()).toEqual(CoarseVersion.LEGACY);
   });
 
-  it('provides real timestamps', () => {
+  it('has expected descriptors', () => {
+    expect(parser.getDescriptors()).toEqual(['eventlog.winscope']);
+  });
+
+  it('provides timestamps', () => {
     const expected = [
-      NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(1681207048025446000n),
-      NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(1681207048025551000n),
-      NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(1681207048025580000n),
+      TimestampConverterUtils.makeRealTimestamp(1681207048025446000n),
+      TimestampConverterUtils.makeRealTimestamp(1681207048025551000n),
+      TimestampConverterUtils.makeRealTimestamp(1681207048025580000n),
     ];
 
-    const timestamps = parser.getTimestamps(TimestampType.REAL)!;
-
+    const timestamps = assertDefined(parser.getTimestamps());
     expect(timestamps.length).toEqual(16);
-
     expect(timestamps.slice(0, 3)).toEqual(expected);
   });
 
   it('contains parsed CUJ events', async () => {
-    const entry = await parser.getEntry(2, TimestampType.REAL);
+    const entry = await parser.getEntry(2);
 
     const expected = new PropertyTreeBuilder()
       .setRootId('CujTrace')
@@ -75,26 +70,27 @@ describe('ParserCujs', () => {
       .setIsRoot(true)
       .setChildren([
         {
-          name: 'startCujType',
-          value: CujType.CUJ_LAUNCHER_APP_SWIPE_TO_RECENTS,
+          name: 'cujType',
+          value: 66,
+          formatter: CUJ_TYPE_FORMATTER,
         },
         {
           name: 'startTimestamp',
-          children: [
-            {name: 'unixNanos', value: 1681207048025580000n},
-            {name: 'elapsedNanos', value: 2661012903966n},
-            {name: 'systemUptimeNanos', value: 2661012904007n},
-          ],
+          value:
+            TimestampConverterUtils.TIMESTAMP_CONVERTER.makeTimestampFromNs(
+              1681207048025580000n,
+            ),
+          formatter: DEFAULT_PROPERTY_FORMATTER,
         },
         {
           name: 'endTimestamp',
-          children: [
-            {name: 'unixNanos', value: 1681207048656617000n},
-            {name: 'elapsedNanos', value: 2661643941035n},
-            {name: 'systemUptimeNanos', value: 266164394123n},
-          ],
+          value:
+            TimestampConverterUtils.TIMESTAMP_CONVERTER.makeTimestampFromNs(
+              1681207048643085000n,
+            ),
+          formatter: DEFAULT_PROPERTY_FORMATTER,
         },
-        {name: 'canceled', value: false},
+        {name: 'canceled', value: true, formatter: DEFAULT_PROPERTY_FORMATTER},
       ])
       .build();
 

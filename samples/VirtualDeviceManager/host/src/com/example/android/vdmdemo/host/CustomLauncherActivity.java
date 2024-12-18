@@ -22,30 +22,25 @@ import android.os.Bundle;
 import android.widget.GridView;
 
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.view.WindowCompat;
-import androidx.core.view.WindowInsetsCompat;
-import androidx.core.view.WindowInsetsControllerCompat;
 
 import dagger.hilt.android.AndroidEntryPoint;
+
+import javax.inject.Inject;
 
 /** Simple activity that can act as a home/launcher on a virtual device. */
 @AndroidEntryPoint(AppCompatActivity.class)
 public class CustomLauncherActivity extends Hilt_CustomLauncherActivity {
+
+    @Inject PreferenceController mPreferenceController;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.custom_launcher);
 
-        WindowInsetsControllerCompat windowInsetsController =
-                WindowCompat.getInsetsController(getWindow(), getWindow().getDecorView());
-        windowInsetsController.setSystemBarsBehavior(
-                WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE);
-        windowInsetsController.hide(WindowInsetsCompat.Type.systemBars());
-
         GridView launcher = requireViewById(R.id.app_grid);
-        LauncherAdapter launcherAdapter =
-                new LauncherAdapter(getPackageManager(), WallpaperManager.getInstance(this));
+        LauncherAdapter launcherAdapter = new LauncherAdapter(
+                this, mPreferenceController, WallpaperManager.getInstance(this));
         launcher.setAdapter(launcherAdapter);
         launcher.setOnItemClickListener(
                 (parent, v, position, id) -> {

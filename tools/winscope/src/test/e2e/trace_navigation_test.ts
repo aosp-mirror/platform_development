@@ -20,12 +20,8 @@ import {E2eTestUtils} from './utils';
 describe('Trace navigation', () => {
   const DEFAULT_TIMEOUT_MS = 1000;
 
-  beforeAll(async () => {
-    await browser.manage().timeouts().implicitlyWait(DEFAULT_TIMEOUT_MS);
-    await E2eTestUtils.checkServerIsUp('Winscope', E2eTestUtils.WINSCOPE_URL);
-  });
-
   beforeEach(async () => {
+    await E2eTestUtils.beforeEach(DEFAULT_TIMEOUT_MS);
     await browser.get(E2eTestUtils.WINSCOPE_URL);
   });
 
@@ -34,7 +30,7 @@ describe('Trace navigation', () => {
       'traces/perfetto/layers_trace.perfetto-trace',
     );
     await checkHomepage();
-    await E2eTestUtils.closeSnackBarIfNeeded();
+    await E2eTestUtils.closeSnackBar();
     await E2eTestUtils.clickViewTracesButton();
     await checkTraceViewPage();
 
@@ -63,7 +59,6 @@ describe('Trace navigation', () => {
       toolbar.element(by.css('.file-descriptor')),
       toolbar.element(by.css('.upload-new')),
       toolbar.element(by.css('.save-button')),
-      toolbar.element(by.css('.trace-file-info')),
       toolbar.element(by.css('.documentation')),
       toolbar.element(by.css('.report-bug')),
       toolbar.element(by.css('.dark-mode')),

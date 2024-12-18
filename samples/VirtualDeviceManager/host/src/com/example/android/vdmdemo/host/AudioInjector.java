@@ -63,14 +63,16 @@ public final class AudioInjector implements Consumer<RemoteEvent> {
 
     @GuardedBy("mLock")
     private final List<AudioTrack> mAudioTracks = new ArrayList<>();
-    private final Context mContext;
     private final RemoteIo mRemoteIo;
-    private final AudioManager mAudioManager;
-    private final int mRecordingSessionId;
+    private int mRecordingSessionId;
     private boolean mIsPlaying;
     @GuardedBy("mLock")
     private ImmutableSet<Integer> mReroutedUids = ImmutableSet.of();
     private AudioPolicy mAudioPolicy;
+    private final Context mApplicationContext;
+    private Context mDeviceContext;
+    private AudioManager mAudioManager;
+
     private final AudioManager.AudioRecordingCallback mAudioRecordingCallback =
             new AudioManager.AudioRecordingCallback() {
                 @Override
@@ -111,10 +113,8 @@ public final class AudioInjector implements Consumer<RemoteEvent> {
 
     @Inject
     AudioInjector(@ApplicationContext Context context, RemoteIo remoteIo) {
-        mContext = context;
+        mApplicationContext = context;
         mRemoteIo = remoteIo;
-        mAudioManager = context.getSystemService(AudioManager.class);
-        mRecordingSessionId = mAudioManager.generateAudioSessionId();
     }
 
     private void playAudioFrame(AudioFrame audioFrame) {
@@ -173,10 +173,17 @@ public final class AudioInjector implements Consumer<RemoteEvent> {
     /**
      * Setup the AudioInjector
      */
-    public void start() {
-        registerAudioPolicy();
+    public void start(int deviceId, int audioSessionId) {
+        mDeviceContext = mApplicationContext.createDeviceContext(deviceId)
+                .createDeviceContext(deviceId);
+        mRecordingSessionId = audioSessionId;
+        mAudioManager = mDeviceContext.getSystemService(AudioManager.class);
+
         mRemoteIo.addMessageConsumer(this);
         mAudioManager.registerAudioRecordingCallback(mAudioRecordingCallback, null);
+        synchronized (mLock) {
+            updateAudioPolicies(mReroutedUids);
+        }
     }
 
     /**
@@ -184,7 +191,6 @@ public final class AudioInjector implements Consumer<RemoteEvent> {
      */
     public void stop() {
         synchronized (mLock) {
-            mRemoteIo.removeMessageConsumer(this);
             if (mIsPlaying) {
                 mIsPlaying = false;
                 mRemoteIo.sendMessage(RemoteEvent.newBuilder().setStopAudioInput(
@@ -196,10 +202,15 @@ public final class AudioInjector implements Consumer<RemoteEvent> {
             }
             mAudioTracks.clear();
 
-            if (mAudioPolicy != null) {
-                mAudioManager.unregisterAudioPolicy(mAudioPolicy);
+            if (mAudioManager != null) {
+                mRemoteIo.removeMessageConsumer(this);
+                mAudioManager.unregisterAudioRecordingCallback(mAudioRecordingCallback);
+
+                if (mAudioPolicy != null) {
+                    mAudioManager.unregisterAudioPolicy(mAudioPolicy);
+                }
+                mAudioManager = null;
             }
-            mAudioManager.unregisterAudioRecordingCallback(mAudioRecordingCallback);
         }
     }
 
@@ -214,13 +225,6 @@ public final class AudioInjector implements Consumer<RemoteEvent> {
         if (remoteEvent.hasStopAudio()) {
             stopPlayback();
         }
-    }
-
-    /**
-     * @return The session id used by the AudioInjector
-     */
-    public int getRecordingSessionId() {
-        return mRecordingSessionId;
     }
 
     /**
@@ -266,7 +270,7 @@ public final class AudioInjector implements Consumer<RemoteEvent> {
             AudioMix sessionIdAudioMix = getSessionIdAudioMix(mRecordingSessionId);
             AudioMix uidAudioMix = getUidAudioMix(mReroutedUids);
 
-            AudioPolicy.Builder audioPolicyBuilder = new AudioPolicy.Builder(mContext)
+            AudioPolicy.Builder audioPolicyBuilder = new AudioPolicy.Builder(mDeviceContext)
                     .addMix(sessionIdAudioMix);
             if (uidAudioMix != null) {
                 audioPolicyBuilder.addMix(uidAudioMix);

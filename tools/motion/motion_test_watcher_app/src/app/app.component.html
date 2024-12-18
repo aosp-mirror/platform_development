@@ -1,0 +1,18 @@
+<mat-toolbar color="accent">
+  <span>Motion Test Watcher</span>
+  <span class="header-spacer"></span>
+
+  <button mat-icon-button (click)="refreshGoldens(false)">
+    <mat-icon>refresh</mat-icon>
+  </button>
+  <button mat-icon-button (click)="refreshGoldens(true)">
+    <mat-icon>delete</mat-icon>
+  </button>
+</mat-toolbar>
+<mat-progress-bar
+  [class.show]="showProgress"
+  mode="indeterminate"
+></mat-progress-bar>
+<div class="content mat-app-background">
+  <app-test-overview [goldens]="goldens"></app-test-overview>
+</div>

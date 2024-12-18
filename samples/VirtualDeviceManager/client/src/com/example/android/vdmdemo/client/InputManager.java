@@ -111,6 +111,9 @@ final class InputManager {
                 case DEVICE_TYPE_MOUSE:
                     sendMouseEvent(event, displayId);
                     break;
+                case DEVICE_TYPE_ROTARY_ENCODER:
+                    sendRotaryEvent(event, displayId);
+                    break;
                 default:
                     Log.e(TAG, "sendInputEvent got invalid device type " + deviceType.getNumber());
             }
@@ -201,7 +204,7 @@ final class InputManager {
             case MotionEvent.ACTION_BUTTON_RELEASE:
                 RemoteInputEvent buttonEvent =
                         RemoteInputEvent.newBuilder()
-                                .setTimestampMs(System.currentTimeMillis())
+                                .setTimestampMs(event.getEventTime())
                                 .setDeviceType(InputDeviceType.DEVICE_TYPE_MOUSE)
                                 .setMouseButtonEvent(
                                         RemoteKeyEvent.newBuilder()
@@ -217,7 +220,7 @@ final class InputManager {
                 setFocusedDisplayId(displayId);
                 RemoteInputEvent relativeEvent =
                         RemoteInputEvent.newBuilder()
-                                .setTimestampMs(System.currentTimeMillis())
+                                .setTimestampMs(event.getEventTime())
                                 .setDeviceType(InputDeviceType.DEVICE_TYPE_MOUSE)
                                 .setMouseRelativeEvent(
                                         RemoteMotionEvent.newBuilder()
@@ -232,7 +235,7 @@ final class InputManager {
                 float scrollY = event.getAxisValue(MotionEvent.AXIS_VSCROLL);
                 RemoteInputEvent scrollEvent =
                         RemoteInputEvent.newBuilder()
-                                .setTimestampMs(System.currentTimeMillis())
+                                .setTimestampMs(event.getEventTime())
                                 .setDeviceType(InputDeviceType.DEVICE_TYPE_MOUSE)
                                 .setMouseScrollEvent(
                                         RemoteMotionEvent.newBuilder()
@@ -243,6 +246,18 @@ final class InputManager {
                 sendInputEvent(scrollEvent, displayId);
                 break;
         }
+    }
+
+    private void sendRotaryEvent(MotionEvent event, int displayId) {
+        sendInputEvent(
+                RemoteInputEvent.newBuilder()
+                        .setDeviceType(InputDeviceType.DEVICE_TYPE_ROTARY_ENCODER)
+                        .setTimestampMs(event.getEventTime())
+                        .setMouseScrollEvent(RemoteMotionEvent.newBuilder()
+                                .setX(event.getAxisValue(MotionEvent.AXIS_SCROLL))
+                                .build())
+                        .build(),
+                displayId);
     }
 
     private void sendInputEvent(RemoteInputEvent inputEvent, int displayId) {

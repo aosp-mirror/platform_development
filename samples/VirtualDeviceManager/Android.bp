@@ -9,6 +9,7 @@ android_app {
     sdk_version: "system_current",
     min_sdk_version: "34",
     privileged: true,
+    privapp_allowlist: "host/com.example.android.vdmdemo.host.xml",
     srcs: [
         "host/src/**/*.java",
     ],
@@ -65,6 +66,7 @@ android_app {
     static_libs: [
         "androidx.annotation_annotation",
         "androidx.appcompat_appcompat",
+        "com.google.android.material_material",
     ],
 }
 
@@ -86,24 +88,6 @@ android_library {
     static_libs: [
         "androidx.appcompat_appcompat",
         "guava",
-        "hilt_android",
-    ],
-}
-
-android_app {
-    name: "VirtualCameraDemo",
-    manifest: "virtualcamera/AndroidManifest.xml",
-    privileged: true,
-    platform_apis: true,
-    srcs: [
-        "virtualcamera/src/**/*.java",
-    ],
-    resource_dirs: [
-        "virtualcamera/res",
-    ],
-    static_libs: [
-        "androidx.annotation_annotation",
-        "androidx.appcompat_appcompat",
         "hilt_android",
     ],
 }

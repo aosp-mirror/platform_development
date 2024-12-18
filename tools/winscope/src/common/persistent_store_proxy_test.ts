@@ -14,12 +14,12 @@
  * limitations under the License.
  */
 
-import {MockStorage} from 'test/unit/mock_storage';
+import {InMemoryStorage} from './in_memory_storage';
 import {PersistentStoreProxy} from './persistent_store_proxy';
 
 describe('PersistentStoreObject', () => {
   it('uses defaults when no store is available', () => {
-    const mockStorage = new MockStorage();
+    const mockStorage = new InMemoryStorage();
 
     const defaultValues = {
       key1: 'value',
@@ -36,7 +36,7 @@ describe('PersistentStoreObject', () => {
   });
 
   it('can update properties', () => {
-    const mockStorage = new MockStorage();
+    const mockStorage = new InMemoryStorage();
 
     const defaultValues = {
       key1: 'value',
@@ -55,7 +55,7 @@ describe('PersistentStoreObject', () => {
   });
 
   it('uses explicitly set store data', () => {
-    const mockStorage = new MockStorage();
+    const mockStorage = new InMemoryStorage();
 
     const defaultValues = {
       key1: 'value',
@@ -79,7 +79,7 @@ describe('PersistentStoreObject', () => {
   });
 
   it('uses default values if not explicitly set', () => {
-    const mockStorage = new MockStorage();
+    const mockStorage = new InMemoryStorage();
 
     const defaultValues = {
       key1: 'value',
@@ -107,7 +107,7 @@ describe('PersistentStoreObject', () => {
   });
 
   it("can't update non leaf configs", () => {
-    const mockStorage = new MockStorage();
+    const mockStorage = new InMemoryStorage();
 
     const defaultValues = {
       key1: 'value',
@@ -124,7 +124,7 @@ describe('PersistentStoreObject', () => {
   });
 
   it('can get nested configs', () => {
-    const mockStorage = new MockStorage();
+    const mockStorage = new InMemoryStorage();
 
     const defaultValues = {
       key1: 'value',
@@ -141,7 +141,7 @@ describe('PersistentStoreObject', () => {
   });
 
   it('can update schema', () => {
-    const mockStorage = new MockStorage();
+    const mockStorage = new InMemoryStorage();
 
     const schema1 = {
       key1: 'value1',

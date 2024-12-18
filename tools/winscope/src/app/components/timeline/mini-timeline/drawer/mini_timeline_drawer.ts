@@ -14,16 +14,22 @@
  * limitations under the License.
  */
 
+import {Point} from 'common/geometry/point';
 import {Padding} from 'common/padding';
+import {Trace} from 'trace/trace';
 import {CanvasMouseHandler} from './canvas_mouse_handler';
 
 export interface MiniTimelineDrawer {
   draw(): Promise<void>;
+  updateHover(mousePoint: Point | undefined): Promise<void>;
+  getTraceClicked(mousePoint: Point): Promise<Trace<object> | undefined>;
   getXScale(): number;
   getYScale(): number;
+  getHeight(): number;
   getWidth(): number;
+  getPadding(): Padding;
+  getUsableRange(): {from: number; to: number};
+  getClickRange(clickPos: Point): {from: number; to: number};
   canvas: HTMLCanvasElement;
   handler: CanvasMouseHandler;
-  padding: Padding;
-  usableRange: {from: number; to: number};
 }

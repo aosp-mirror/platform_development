@@ -52,6 +52,8 @@ class RectVcFactory {
       node.getEagerPropertyByName('height'),
     ).getValue();
 
+    const nodeAlpha = node.getEagerPropertyByName('alpha')?.getValue() ?? 0;
+
     const rectLeft =
       leftShift +
       (nodeLeft + nodeTranslationX) * scaleX +
@@ -74,8 +76,10 @@ class RectVcFactory {
         node.getEagerPropertyByName('isComputedVisible')?.getValue() ?? false,
       )
       .setIsDisplay(false)
-      .setIsVirtual(false)
+      .setIsActiveDisplay(false)
       .setDepth(depth * RectVcFactory.DEPTH_MAGNIFICATION)
+      .setOpacity(nodeAlpha)
+      .setIsSpy(false)
       .build();
 
     return rect;
@@ -94,7 +98,7 @@ export class RectsComputation {
 
   executeInPlace(): void {
     if (!this.root) {
-      throw Error('root not set');
+      throw new Error('root not set in VC rects computation');
     }
 
     this.addRects(this.root, 0, 0, 1, 1, 0);

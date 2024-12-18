@@ -15,156 +15,65 @@
  */
 
 import {FunctionUtils} from 'common/function_utils';
-import {TabbedViewSwitchRequest, WinscopeEvent} from 'messaging/winscope_event';
+import {Store} from 'common/store';
+import {WinscopeEvent} from 'messaging/winscope_event';
 import {EmitEvent} from 'messaging/winscope_event_emitter';
+import {Trace} from 'trace/trace';
 import {Traces} from 'trace/traces';
-import {TraceType, ViewCaptureTraceType} from 'trace/trace_type';
+import {TRACE_INFO} from 'trace/trace_info';
+import {TraceType} from 'trace/trace_type';
+import {HierarchyTreeNode} from 'trace/tree_node/hierarchy_tree_node';
 import {ViewerEvents} from 'viewers/common/viewer_events';
 import {View, Viewer, ViewType} from 'viewers/viewer';
 import {Presenter} from './presenter';
 import {UiData} from './ui_data';
 
 export class ViewerViewCapture implements Viewer {
-  static readonly DEPENDENCIES: ViewCaptureTraceType[] = [
-    TraceType.VIEW_CAPTURE,
-  ];
+  static readonly DEPENDENCIES: TraceType[] = [TraceType.VIEW_CAPTURE];
 
+  private readonly traces: Traces;
   private readonly htmlElement: HTMLElement;
   private readonly presenter: Presenter;
   private readonly view: View;
   private emitAppEvent: EmitEvent = FunctionUtils.DO_NOTHING_ASYNC;
 
-  constructor(traces: Traces, storage: Storage) {
+  constructor(traces: Traces, storage: Store) {
+    this.traces = traces;
     this.htmlElement = document.createElement('viewer-view-capture');
-    this.presenter = new Presenter(
-      this.getDependencies()[0],
-      traces,
-      storage,
-      (data: UiData) => {
-        (this.htmlElement as any).inputData = data;
-      },
-    );
+    const notifyViewCallback = (uiData: UiData) => {
+      (this.htmlElement as any).inputData = uiData;
+    };
+    this.presenter = new Presenter(traces, storage, notifyViewCallback);
+    this.presenter.addEventListeners(this.htmlElement);
 
     this.htmlElement.addEventListener(
-      ViewerEvents.HierarchyPinnedChange,
-      (event) =>
-        this.presenter.onPinnedItemChange(
-          (event as CustomEvent).detail.pinnedItem,
-        ),
-    );
-    this.htmlElement.addEventListener(ViewerEvents.HighlightedChange, (event) =>
-      this.presenter.onHighlightedItemChange(
-        `${(event as CustomEvent).detail.id}`,
-      ),
-    );
-    this.htmlElement.addEventListener(
-      ViewerEvents.HierarchyUserOptionsChange,
-      async (event) =>
-        await this.presenter.onHierarchyUserOptionsChange(
-          (event as CustomEvent).detail.userOptions,
-        ),
-    );
-    this.htmlElement.addEventListener(
-      ViewerEvents.HierarchyFilterChange,
-      async (event) =>
-        await this.presenter.onHierarchyFilterChange(
-          (event as CustomEvent).detail.filterString,
-        ),
-    );
-    this.htmlElement.addEventListener(
-      ViewerEvents.PropertiesUserOptionsChange,
-      async (event) =>
-        await this.presenter.onPropertiesUserOptionsChange(
-          (event as CustomEvent).detail.userOptions,
-        ),
-    );
-    this.htmlElement.addEventListener(
-      ViewerEvents.PropertiesFilterChange,
-      async (event) =>
-        await this.presenter.onPropertiesFilterChange(
-          (event as CustomEvent).detail.filterString,
-        ),
-    );
-    this.htmlElement.addEventListener(
-      ViewerEvents.SelectedTreeChange,
-      async (event) =>
-        await this.presenter.onSelectedHierarchyTreeChange(
-          (event as CustomEvent).detail.selectedItem,
-        ),
-    );
-    this.htmlElement.addEventListener(
       ViewerEvents.MiniRectsDblClick,
-      (event) => {
-        this.switchToSurfaceFlingerView();
+      async (event) => {
+        await this.presenter.onMiniRectsDoubleClick();
       },
     );
 
     this.view = new View(
       ViewType.TAB,
-      this.getDependencies(),
+      this.getTraces(),
       this.htmlElement,
-      this.getTitle(),
-      this.getDependencies()[0],
+      TRACE_INFO[TraceType.VIEW_CAPTURE].name,
     );
+  }
+
+  setEmitEvent(callback: EmitEvent) {
+    this.presenter.setEmitEvent(callback);
   }
 
   async onWinscopeEvent(event: WinscopeEvent) {
     await this.presenter.onAppEvent(event);
   }
 
-  setEmitEvent(callback: EmitEvent) {
-    this.emitAppEvent = callback;
-  }
-
-  async switchToSurfaceFlingerView() {
-    await this.emitAppEvent(
-      new TabbedViewSwitchRequest(TraceType.SURFACE_FLINGER),
-    );
-  }
-
   getViews(): View[] {
     return [this.view];
   }
 
-  getDependencies(): ViewCaptureTraceType[] {
-    return ViewerViewCapture.DEPENDENCIES;
-  }
-
-  private getTitle(): string {
-    switch (this.getDependencies()[0]) {
-      case TraceType.VIEW_CAPTURE_TASKBAR_DRAG_LAYER:
-        return 'View Capture - Taskbar';
-      case TraceType.VIEW_CAPTURE_TASKBAR_OVERLAY_DRAG_LAYER:
-        return 'View Capture - Taskbar Overlay';
-      default:
-        return 'View Capture - Nexuslauncher';
-    }
-  }
-}
-
-export class ViewerViewCaptureLauncherActivity extends ViewerViewCapture {
-  static override readonly DEPENDENCIES: ViewCaptureTraceType[] = [
-    TraceType.VIEW_CAPTURE_LAUNCHER_ACTIVITY,
-  ];
-  override getDependencies(): ViewCaptureTraceType[] {
-    return ViewerViewCaptureLauncherActivity.DEPENDENCIES;
-  }
-}
-
-export class ViewerViewCaptureTaskbarDragLayer extends ViewerViewCapture {
-  static override readonly DEPENDENCIES: ViewCaptureTraceType[] = [
-    TraceType.VIEW_CAPTURE_TASKBAR_DRAG_LAYER,
-  ];
-  override getDependencies(): ViewCaptureTraceType[] {
-    return ViewerViewCaptureTaskbarDragLayer.DEPENDENCIES;
-  }
-}
-
-export class ViewerViewCaptureTaskbarOverlayDragLayer extends ViewerViewCapture {
-  static override readonly DEPENDENCIES: ViewCaptureTraceType[] = [
-    TraceType.VIEW_CAPTURE_TASKBAR_OVERLAY_DRAG_LAYER,
-  ];
-  override getDependencies(): ViewCaptureTraceType[] {
-    return ViewerViewCaptureTaskbarOverlayDragLayer.DEPENDENCIES;
+  getTraces(): Array<Trace<HierarchyTreeNode>> {
+    return this.presenter.getTraces();
   }
 }

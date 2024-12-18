@@ -28,13 +28,14 @@ describe('AddDiffsPropertiesTree', () => {
   const isModified = async (
     newTree: TreeNode | undefined,
     oldTree: TreeNode | undefined,
+    denylistProperties: string[],
   ) => {
     return (
       (newTree as UiPropertyTreeNode)?.getValue() !==
       (oldTree as UiPropertyTreeNode)?.getValue()
     );
   };
-  const addDiffs = new AddDiffsPropertiesTree(isModified);
+  const addDiffs = new AddDiffsPropertiesTree(isModified, []);
 
   describe('AddDiffs tests', () => {
     executeAddDiffsTests(

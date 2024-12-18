@@ -17,13 +17,31 @@
 import {HierarchyTreeBuilder} from 'test/unit/hierarchy_tree_builder';
 import {PropertyTreeBuilder} from 'test/unit/property_tree_builder';
 import {TraceType} from 'trace/trace_type';
-import {PropertySource} from 'trace/tree_node/property_tree_node';
-import {executePresenterInputMethodTests} from 'viewers/common/presenter_input_method_test_utils';
+import {HierarchyTreeNode} from 'trace/tree_node/hierarchy_tree_node';
+import {
+  PropertySource,
+  PropertyTreeNode,
+} from 'trace/tree_node/property_tree_node';
+import {AbstractPresenterInputMethodTest} from 'viewers/common/abstract_presenter_input_method_test';
+import {TextFilter} from 'viewers/common/text_filter';
 import {PresenterInputMethodManagerService} from './presenter_input_method_manager_service';
 
-describe('PresenterInputMethodManagerService', () => {
-  describe('PresenterInputMethod tests:', () => {
-    const selectedTree = new HierarchyTreeBuilder()
+class PresenterInputMethodManagerServiceTest extends AbstractPresenterInputMethodTest {
+  override readonly numberOfDefaultProperties = 1;
+  override readonly numberOfNonDefaultProperties = 2;
+  override readonly propertiesFilter = new TextFilter('elapsedNanos', []);
+  override readonly numberOfFilteredProperties = 1;
+
+  protected override readonly PresenterInputMethod =
+    PresenterInputMethodManagerService;
+  protected override readonly imeTraceType =
+    TraceType.INPUT_METHOD_MANAGER_SERVICE;
+  protected override readonly numberOfFlattenedChildren = 1;
+  protected override readonly numberOfVisibleChildren = 0;
+  protected override readonly numberOfNestedChildren = 1;
+
+  override getSelectedNode(): HierarchyTreeNode {
+    return new HierarchyTreeBuilder()
       .setId('InputMethodManagerService')
       .setName('entry')
       .setProperties({where: 'location', elapsedNanos: 0})
@@ -33,21 +51,16 @@ describe('PresenterInputMethodManagerService', () => {
         source: PropertySource.DEFAULT,
       })
       .build();
-
-    const selectedPropertyTreeNode = new PropertyTreeBuilder()
+  }
+  override getPropertiesTree(): PropertyTreeNode {
+    return new PropertyTreeBuilder()
       .setRootId('TestNode')
       .setName('input target')
       .setChildren([{name: 'test property', value: 1}])
       .build();
+  }
+}
 
-    executePresenterInputMethodTests(
-      selectedTree,
-      'elapsedNanos',
-      [2, 1, 3],
-      false,
-      PresenterInputMethodManagerService,
-      TraceType.INPUT_METHOD_MANAGER_SERVICE,
-      selectedPropertyTreeNode,
-    );
-  });
+describe('PresenterInputMethodManagerService', () => {
+  new PresenterInputMethodManagerServiceTest().execute();
 });

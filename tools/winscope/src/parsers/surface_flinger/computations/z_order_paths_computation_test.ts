@@ -27,7 +27,11 @@ describe('ZOrderPathsComputation', () => {
     computation = new ZOrderPathsComputation();
   });
 
-  it('calculates zOrderPath', () => {
+  it('throws error if root not set', () => {
+    expect(() => computation.executeInPlace()).toThrowError();
+  });
+
+  it('calculates zOrderPath for tree without rel z parent', () => {
     const hierarchyRoot = new HierarchyTreeBuilder()
       .setId('LayerTraceEntry')
       .setName('root')
@@ -79,7 +83,7 @@ describe('ZOrderPathsComputation', () => {
                 parent: 1,
                 children: [],
                 z: 2,
-                zOrderRelativeOf: 1,
+                zOrderRelativeOf: -1,
               } as android.surfaceflinger.ILayerProto,
             },
           ],
@@ -113,6 +117,179 @@ describe('ZOrderPathsComputation', () => {
     expect(
       getZOrderPathArray(layer4WithPath.getEagerPropertyByName('zOrderPath')),
     ).toEqual([0, 2]);
+  });
+
+  it('calculates zOrderPath and adds rel z children properties for tree with rel z parent', () => {
+    const hierarchyRoot = new HierarchyTreeBuilder()
+      .setId('LayerTraceEntry')
+      .setName('root')
+      .setChildren([
+        {
+          id: 1,
+          name: 'layer1',
+          properties: {
+            id: 1,
+            name: 'layer1',
+            parent: -1,
+            children: [2, 4],
+            z: 0,
+            zOrderRelativeOf: -1,
+          } as android.surfaceflinger.ILayerProto,
+          children: [
+            {
+              id: 2,
+              name: 'layer2',
+              properties: {
+                id: 2,
+                name: 'layer2',
+                parent: 1,
+                children: [3],
+                z: 1,
+                zOrderRelativeOf: -1,
+              } as android.surfaceflinger.ILayerProto,
+            },
+            {
+              id: 4,
+              name: 'layer4',
+              properties: {
+                id: 4,
+                name: 'layer4',
+                parent: 1,
+                children: [],
+                z: 2,
+                zOrderRelativeOf: 2,
+              } as android.surfaceflinger.ILayerProto,
+            },
+            {
+              id: 5,
+              name: 'layer5',
+              properties: {
+                id: 5,
+                name: 'layer5',
+                parent: 1,
+                children: [],
+                z: 2,
+                zOrderRelativeOf: 2,
+              } as android.surfaceflinger.ILayerProto,
+            },
+          ],
+        },
+      ])
+      .build();
+
+    computation.setRoot(hierarchyRoot).executeInPlace();
+    const layer1WithPath = assertDefined(
+      hierarchyRoot.getChildByName('layer1'),
+    );
+    const layer2WithPath = assertDefined(
+      layer1WithPath.getChildByName('layer2'),
+    );
+    const layer4WithPath = assertDefined(
+      layer1WithPath.getChildByName('layer4'),
+    );
+    const layer5WithPath = assertDefined(
+      layer1WithPath.getChildByName('layer5'),
+    );
+
+    expect(
+      getZOrderPathArray(layer1WithPath.getEagerPropertyByName('zOrderPath')),
+    ).toEqual([0]);
+    expect(
+      getZOrderPathArray(layer2WithPath.getEagerPropertyByName('zOrderPath')),
+    ).toEqual([0, 1]);
+    expect(
+      getZOrderPathArray(layer4WithPath.getEagerPropertyByName('zOrderPath')),
+    ).toEqual([0, 1, 2]);
+    expect(
+      getZOrderPathArray(layer5WithPath.getEagerPropertyByName('zOrderPath')),
+    ).toEqual([0, 1, 2]);
+
+    expect(
+      layer1WithPath.getEagerPropertyByName('relZChildren'),
+    ).toBeUndefined();
+    expect(
+      layer2WithPath
+        .getEagerPropertyByName('relZChildren')
+        ?.getAllChildren()
+        .map((c) => c.formattedValue()),
+    ).toEqual([layer4WithPath.id, layer5WithPath.id]);
+    expect(
+      layer4WithPath.getEagerPropertyByName('relZChildren'),
+    ).toBeUndefined();
+    expect(
+      layer5WithPath.getEagerPropertyByName('relZChildren'),
+    ).toBeUndefined();
+  });
+
+  it('adds isMissingZParent chip', () => {
+    const hierarchyRoot = new HierarchyTreeBuilder()
+      .setId('LayerTraceEntry')
+      .setName('root')
+      .setChildren([
+        {
+          id: 1,
+          name: 'layer1',
+          properties: {
+            id: 1,
+            name: 'layer1',
+            parent: -1,
+            children: [2, 4],
+            z: 0,
+            zOrderRelativeOf: -1,
+          } as android.surfaceflinger.ILayerProto,
+          children: [
+            {
+              id: 2,
+              name: 'layer2',
+              properties: {
+                id: 2,
+                name: 'layer2',
+                parent: 1,
+                children: [3],
+                z: 1,
+                zOrderRelativeOf: -1,
+              } as android.surfaceflinger.ILayerProto,
+            },
+            {
+              id: 4,
+              name: 'layer4',
+              properties: {
+                id: 4,
+                name: 'layer4',
+                parent: 1,
+                children: [],
+                z: 2,
+                zOrderRelativeOf: 5,
+              } as android.surfaceflinger.ILayerProto,
+            },
+          ],
+        },
+      ])
+      .build();
+
+    computation.setRoot(hierarchyRoot).executeInPlace();
+    const layer1WithPath = assertDefined(
+      hierarchyRoot.getChildByName('layer1'),
+    );
+    const layer2WithPath = assertDefined(
+      layer1WithPath.getChildByName('layer2'),
+    );
+    const layer4WithPath = assertDefined(
+      layer1WithPath.getChildByName('layer4'),
+    );
+
+    expect(
+      getZOrderPathArray(layer1WithPath.getEagerPropertyByName('zOrderPath')),
+    ).toEqual([0]);
+    expect(
+      getZOrderPathArray(layer2WithPath.getEagerPropertyByName('zOrderPath')),
+    ).toEqual([0, 1]);
+    expect(
+      getZOrderPathArray(layer4WithPath.getEagerPropertyByName('zOrderPath')),
+    ).toEqual([0, 2]);
+    expect(
+      layer4WithPath.getEagerPropertyByName('isMissingZParent')?.getValue(),
+    ).toBeTrue();
   });
 
   function getZOrderPathArray(

@@ -18,16 +18,21 @@ package com.example.android.vdmdemo.demos;
 
 import android.app.ActivityOptions;
 import android.app.AlertDialog;
+import android.companion.virtual.VirtualDevice;
+import android.companion.virtual.VirtualDeviceManager;
 import android.content.Intent;
+import android.content.pm.ActivityInfo;
+import android.content.pm.PackageManager;
 import android.hardware.display.DisplayManager;
 import android.os.Bundle;
 import android.view.Display;
 import android.view.View;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.os.BuildCompat;
 
 /** Demo activity for showcasing Virtual Devices with home experience. */
-public final class HomeDemoActivity extends AppCompatActivity {
+public class HomeDemoActivity extends AppCompatActivity {
 
     private DisplayManager mDisplayManager;
 
@@ -54,6 +59,11 @@ public final class HomeDemoActivity extends AppCompatActivity {
         moveTaskToBack(true);
     }
 
+    /** Handle calculator intent request. */
+    public void onCalculatorNewTask(View view) {
+        sendIntentToDisplay(Intent.CATEGORY_APP_CALCULATOR);
+    }
+
     private void sendIntentToDisplay(String category) {
         Display[] displays = mDisplayManager.getDisplays();
 
@@ -68,15 +78,60 @@ public final class HomeDemoActivity extends AppCompatActivity {
         alertDialogBuilder.setItems(
                 displayNames,
                 (dialog, which) -> {
+                    int displayId = which == 0
+                            ? Display.INVALID_DISPLAY
+                            : displays[which - 1].getDisplayId();
                     Intent intent = new Intent(Intent.ACTION_MAIN);
                     intent.addCategory(category);
+                    String requiredDisplayCategory = getRequiredDisplayCategory(displayId);
+                    if (requiredDisplayCategory != null) {
+                        intent.addCategory(requiredDisplayCategory);
+                    }
                     intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                     ActivityOptions options = ActivityOptions.makeBasic();
-                    if (which > 0) {
-                        options.setLaunchDisplayId(displays[which - 1].getDisplayId());
+                    if (displayId != Display.INVALID_DISPLAY) {
+                        options.setLaunchDisplayId(displayId);
                     }
                     startActivity(intent, options.toBundle());
                 });
         alertDialogBuilder.show();
+    }
+
+    private String getRequiredDisplayCategory(int displayId) {
+        if (displayId == Display.DEFAULT_DISPLAY || !BuildCompat.isAtLeastV()) {
+            return null;
+        }
+        if (displayId == Display.INVALID_DISPLAY) {
+            displayId = getDisplay().getDisplayId();
+        }
+        // Check if the desired display id belongs to the current virtual device (if any).
+        // If the current display has a category, assume all displays on that device have the same
+        // category (not true in the general case).
+        // There's no API to get the categories for a given display.
+        VirtualDeviceManager vdm = getSystemService(VirtualDeviceManager.class);
+        VirtualDevice virtualDevice = vdm.getVirtualDevice(getDeviceId());
+        if (virtualDevice == null) {
+            return null;
+        }
+        boolean sameDevice = false;
+        for (int deviceDisplayId : vdm.getVirtualDevice(getDeviceId()).getDisplayIds()) {
+            if (deviceDisplayId == displayId) {
+                sameDevice = true;
+                break;
+            }
+        }
+        if (!sameDevice) {
+            return null;
+        }
+
+        // We're running on a virtual device and the launch display belongs to the same device.
+        // Return the current requiredDisplayCategory.
+        try {
+            ActivityInfo ai = getPackageManager().getActivityInfo(
+                    getComponentName(), PackageManager.GET_ACTIVITIES);
+            return ai.requiredDisplayCategory;
+        } catch (PackageManager.NameNotFoundException e) {
+            return null;
+        }
     }
 }

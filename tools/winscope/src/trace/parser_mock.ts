@@ -14,7 +14,8 @@
  * limitations under the License.
  */
 
-import {Timestamp, TimestampType} from 'common/time';
+import {Timestamp} from 'common/time';
+import {CoarseVersion} from './coarse_version';
 import {CustomQueryParserResultTypeMap, CustomQueryType} from './custom_query';
 import {AbsoluteEntryIndex, EntriesRange} from './index_types';
 import {Parser} from './parser';
@@ -27,6 +28,8 @@ export class ParserMock<T> implements Parser<T> {
     private readonly entries: T[],
     private readonly customQueryResult: Map<CustomQueryType, object>,
     private readonly descriptors: string[],
+    private readonly noOffsets: boolean,
+    private readonly isCorrupted: boolean,
   ) {
     if (timestamps.length !== entries.length) {
       throw new Error(`Timestamps and entries must have the same length`);
@@ -41,14 +44,28 @@ export class ParserMock<T> implements Parser<T> {
     return this.entries.length;
   }
 
-  getTimestamps(type: TimestampType): Timestamp[] | undefined {
-    if (type !== TimestampType.REAL) {
-      throw new Error('Parser mock contains only real timestamps');
-    }
+  getCoarseVersion(): CoarseVersion {
+    return CoarseVersion.MOCK;
+  }
+
+  createTimestamps() {
+    throw new Error('Not implemented');
+  }
+
+  getRealToMonotonicTimeOffsetNs(): bigint | undefined {
+    return this.noOffsets ? undefined : 0n;
+  }
+
+  getRealToBootTimeOffsetNs(): bigint | undefined {
+    return this.noOffsets ? undefined : 0n;
+  }
+
+  getTimestamps(): Timestamp[] {
     return this.timestamps;
   }
 
   getEntry(index: AbsoluteEntryIndex): Promise<T> {
+    if (this.isCorrupted) throw new Error('Corrupted trace');
     return Promise.resolve(this.entries[index]);
   }
 
@@ -62,7 +79,10 @@ export class ParserMock<T> implements Parser<T> {
         `This mock was not configured to support custom query type '${type}'. Something missing in your test set up?`,
       );
     }
-    if (Array.isArray(result)) {
+    if (
+      type !== CustomQueryType.SF_LAYERS_ID_AND_NAME &&
+      Array.isArray(result)
+    ) {
       result = result.slice(entriesRange.start, entriesRange.end);
     }
     return Promise.resolve(result) as Promise<

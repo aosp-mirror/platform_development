@@ -21,7 +21,7 @@ import {TraceRectBuilder} from 'trace/trace_rect_builder';
 import {HierarchyTreeNode} from 'trace/tree_node/hierarchy_tree_node';
 import {RectsComputation} from './rects_computation';
 
-describe('RectsComputation', () => {
+describe('ViewCapture RectsComputation', () => {
   let hierarchyRoot: HierarchyTreeNode;
   let computation: RectsComputation;
 
@@ -41,6 +41,7 @@ describe('RectsComputation', () => {
         translationX: 0,
         translationY: 0,
         isComputedVisible: true,
+        alpha: 1,
       })
       .setChildren([
         {
@@ -57,6 +58,7 @@ describe('RectsComputation', () => {
             height: 2,
             translationX: 0,
             translationY: 0,
+            alpha: 1,
           },
           children: [
             {
@@ -73,6 +75,7 @@ describe('RectsComputation', () => {
                 height: 3,
                 translationX: 0,
                 translationY: 0,
+                alpha: 1,
               },
               children: [],
             },
@@ -97,8 +100,9 @@ describe('RectsComputation', () => {
         .setGroupId(0)
         .setIsVisible(true)
         .setIsDisplay(false)
-        .setIsVirtual(false)
         .setDepth(0)
+        .setOpacity(1)
+        .setIsSpy(false)
         .build(),
 
       new TraceRectBuilder()
@@ -112,8 +116,9 @@ describe('RectsComputation', () => {
         .setGroupId(0)
         .setIsVisible(false)
         .setIsDisplay(false)
-        .setIsVirtual(false)
         .setDepth(4)
+        .setOpacity(1)
+        .setIsSpy(false)
         .build(),
 
       new TraceRectBuilder()
@@ -127,8 +132,9 @@ describe('RectsComputation', () => {
         .setGroupId(0)
         .setIsVisible(false)
         .setIsDisplay(false)
-        .setIsVirtual(false)
         .setDepth(8)
+        .setOpacity(1)
+        .setIsSpy(false)
         .build(),
     ];
 

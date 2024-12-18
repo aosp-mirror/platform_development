@@ -13,26 +13,39 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 import {
   CdkVirtualScrollViewport,
   ScrollingModule,
 } from '@angular/cdk/scrolling';
-import {CUSTOM_ELEMENTS_SCHEMA, NO_ERRORS_SCHEMA} from '@angular/core';
+import {CUSTOM_ELEMENTS_SCHEMA} from '@angular/core';
 import {
   ComponentFixture,
   ComponentFixtureAutoDetect,
   TestBed,
 } from '@angular/core/testing';
+import {FormsModule} from '@angular/forms';
 import {MatDividerModule} from '@angular/material/divider';
+import {MatFormFieldModule} from '@angular/material/form-field';
+import {MatInputModule} from '@angular/material/input';
+import {MatSelectModule} from '@angular/material/select';
+import {BrowserAnimationsModule} from '@angular/platform-browser/animations';
 import {assertDefined} from 'common/assert_utils';
-import {NO_TIMEZONE_OFFSET_FACTORY} from 'common/timestamp_factory';
 import {PropertyTreeBuilder} from 'test/unit/property_tree_builder';
-import {TIMESTAMP_FORMATTER} from 'trace/tree_node/formatters';
-import {executeScrollComponentTests} from 'viewers/common/scroll_component_test_utils';
+import {TimestampConverterUtils} from 'test/unit/timestamp_converter_utils';
+import {TraceBuilder} from 'test/unit/trace_builder';
+import {UnitTestUtils} from 'test/unit/utils';
+import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
+import {LogComponent} from 'viewers/common/log_component';
+import {executeScrollComponentTests} from 'viewers/common/scroll_component_tests';
+import {LogFieldType} from 'viewers/common/ui_data_log';
 import {UiPropertyTreeNode} from 'viewers/common/ui_property_tree_node';
-import {ViewerEvents} from 'viewers/common/viewer_events';
+import {CollapsedSectionsComponent} from 'viewers/components/collapsed_sections_component';
+import {CollapsibleSectionTitleComponent} from 'viewers/components/collapsible_section_title_component';
+import {PropertiesComponent} from 'viewers/components/properties_component';
+import {SelectWithFilterComponent} from 'viewers/components/select_with_filter_component';
 import {TransactionsScrollDirective} from './scroll_strategy/transactions_scroll_directive';
-import {UiData, UiDataEntry} from './ui_data';
+import {TransactionsEntry, UiData} from './ui_data';
 import {ViewerTransactionsComponent} from './viewer_transactions_component';
 
 describe('ViewerTransactionsComponent', () => {
@@ -44,19 +57,32 @@ describe('ViewerTransactionsComponent', () => {
     beforeEach(async () => {
       await TestBed.configureTestingModule({
         providers: [{provide: ComponentFixtureAutoDetect, useValue: true}],
-        imports: [MatDividerModule, ScrollingModule],
+        imports: [
+          ScrollingModule,
+          MatFormFieldModule,
+          FormsModule,
+          MatInputModule,
+          BrowserAnimationsModule,
+          MatSelectModule,
+          MatDividerModule,
+        ],
         declarations: [
           ViewerTransactionsComponent,
           TransactionsScrollDirective,
+          SelectWithFilterComponent,
+          CollapsedSectionsComponent,
+          CollapsibleSectionTitleComponent,
+          PropertiesComponent,
+          LogComponent,
         ],
-        schemas: [CUSTOM_ELEMENTS_SCHEMA, NO_ERRORS_SCHEMA],
+        schemas: [CUSTOM_ELEMENTS_SCHEMA],
       }).compileComponents();
 
       fixture = TestBed.createComponent(ViewerTransactionsComponent);
       component = fixture.componentInstance;
       htmlElement = fixture.nativeElement;
 
-      component.inputData = makeUiData();
+      component.inputData = makeUiData(0);
       fixture.detectChanges();
     });
 
@@ -64,11 +90,19 @@ describe('ViewerTransactionsComponent', () => {
       expect(component).toBeTruthy();
     });
 
+    it('renders log component', () => {
+      expect(htmlElement.querySelector('.log-view')).toBeTruthy();
+    });
+
     it('renders filters', () => {
-      expect(htmlElement.querySelector('.entries .filters .pid')).toBeTruthy();
-      expect(htmlElement.querySelector('.entries .filters .uid')).toBeTruthy();
-      expect(htmlElement.querySelector('.entries .filters .type')).toBeTruthy();
-      expect(htmlElement.querySelector('.entries .filters .id')).toBeTruthy();
+      expect(htmlElement.querySelector('.filters .pid')).toBeTruthy();
+      expect(htmlElement.querySelector('.filters .uid')).toBeTruthy();
+      expect(
+        htmlElement.querySelector('.filters .transaction-type'),
+      ).toBeTruthy();
+      expect(
+        htmlElement.querySelector('.filters .transaction-id'),
+      ).toBeTruthy();
     });
 
     it('renders entries', () => {
@@ -88,84 +122,95 @@ describe('ViewerTransactionsComponent', () => {
       expect(htmlElement.querySelector('.properties-view')).toBeTruthy();
     });
 
-    it('scrolls to current entry on button click', () => {
-      const goToCurrentTimeButton = assertDefined(
-        htmlElement.querySelector('.go-to-current-time'),
-      ) as HTMLButtonElement;
-      const spy = spyOn(
-        assertDefined(component.scrollComponent),
-        'scrollToIndex',
+    it('creates collapsed sections with no buttons', () => {
+      UnitTestUtils.checkNoCollapsedSectionButtons(htmlElement);
+    });
+
+    it('handles properties section collapse/expand', () => {
+      UnitTestUtils.checkSectionCollapseAndExpand(
+        htmlElement,
+        fixture,
+        '.properties-view',
+        'PROPERTIES - PROTO DUMP',
       );
-      goToCurrentTimeButton.click();
-      expect(spy).toHaveBeenCalledWith(1);
     });
 
-    it('propagates timestamp on click', () => {
-      component.inputData = makeUiData();
-      fixture.detectChanges();
-      let timestamp = '';
-      htmlElement.addEventListener(ViewerEvents.TimestampClick, (event) => {
-        timestamp = (event as CustomEvent).detail.formattedValue();
-      });
-      const logTimestampButton = assertDefined(
-        htmlElement.querySelector('.time button'),
-      ) as HTMLButtonElement;
-      logTimestampButton.click();
-
-      expect(timestamp).toEqual('1ns');
-    });
-
-    function makeUiData(): UiData {
+    function makeUiData(selectedEntryIndex: number): UiData {
       const propertiesTree = new PropertyTreeBuilder()
         .setRootId('Transactions')
         .setName('tree')
         .setValue(null)
         .build();
 
-      const time = new PropertyTreeBuilder()
-        .setRootId(propertiesTree.id)
-        .setName('timestamp')
-        .setValue(NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(1n))
-        .setFormatter(TIMESTAMP_FORMATTER)
+      const ts = TimestampConverterUtils.makeElapsedTimestamp(1n);
+
+      const trace = new TraceBuilder<PropertyTreeNode>()
+        .setEntries([propertiesTree, propertiesTree])
+        .setTimestamps([ts, ts])
         .build();
 
-      const entry = new UiDataEntry(
-        0,
-        time,
-        -111,
-        'PID_VALUE',
-        'UID_VALUE',
-        'TYPE_VALUE',
-        'LAYER_OR_DISPLAY_ID_VALUE',
-        'TRANSACTION_ID_VALUE',
-        'flag1 | flag2',
+      const entry1 = new TransactionsEntry(
+        trace.getEntry(0),
+        [
+          {type: LogFieldType.VSYNC_ID, value: -111},
+          {type: LogFieldType.PID, value: 'PID_VALUE'},
+          {type: LogFieldType.UID, value: 'UID_VALUE'},
+          {type: LogFieldType.TRANSACTION_TYPE, value: 'TYPE_VALUE'},
+          {
+            type: LogFieldType.LAYER_OR_DISPLAY_ID,
+            value: 'LAYER_OR_DISPLAY_ID_VALUE',
+          },
+          {type: LogFieldType.TRANSACTION_ID, value: 'TRANSACTION_ID_VALUE'},
+          {type: LogFieldType.FLAGS, value: 'flag1 | flag2'},
+        ],
         propertiesTree,
       );
 
-      const entry2 = new UiDataEntry(
-        1,
-        time,
-        -222,
-        'PID_VALUE_2',
-        'UID_VALUE_2',
-        'TYPE_VALUE_2',
-        'LAYER_OR_DISPLAY_ID_VALUE_2',
-        'TRANSACTION_ID_VALUE_2',
-        'flag3 | flag4',
+      const entry2 = new TransactionsEntry(
+        trace.getEntry(1),
+        [
+          {type: LogFieldType.VSYNC_ID, value: -222},
+          {type: LogFieldType.PID, value: 'PID_VALUE_2'},
+          {type: LogFieldType.UID, value: 'UID_VALUE_2'},
+          {type: LogFieldType.TRANSACTION_TYPE, value: 'TYPE_VALUE_2'},
+          {
+            type: LogFieldType.LAYER_OR_DISPLAY_ID,
+            value: 'LAYER_OR_DISPLAY_ID_VALUE_2',
+          },
+          {type: LogFieldType.TRANSACTION_ID, value: 'TRANSACTION_ID_VALUE_2'},
+          {type: LogFieldType.FLAGS, value: 'flag3 | flag4'},
+        ],
         propertiesTree,
       );
 
       return new UiData(
-        ['-111', '-222'],
-        ['PID_VALUE', 'PID_VALUE_2'],
-        ['UID_VALUE', 'UID_VALUE_2'],
-        ['TYPE_VALUE', 'TYPE_VALUE_2'],
-        ['LAYER_OR_DISPLAY_ID_VALUE', 'LAYER_OR_DISPLAY_ID_VALUE_2'],
-        ['TRANSACTION_ID_VALUE', 'TRANSACTION_ID_VALUE_2'],
-        ['flag1', 'flag2', 'flag3', 'flag4'],
-        [entry, entry2],
+        [
+          {type: LogFieldType.VSYNC_ID, options: ['-111', '-222']},
+          {type: LogFieldType.PID, options: ['PID_VALUE', 'PID_VALUE_2']},
+          {type: LogFieldType.UID, options: ['UID_VALUE', 'UID_VALUE_2']},
+          {
+            type: LogFieldType.TRANSACTION_TYPE,
+            options: ['TYPE_VALUE', 'TYPE_VALUE_2'],
+          },
+          {
+            type: LogFieldType.LAYER_OR_DISPLAY_ID,
+            options: [
+              'LAYER_OR_DISPLAY_ID_VALUE',
+              'LAYER_OR_DISPLAY_ID_VALUE_2',
+            ],
+          },
+          {
+            type: LogFieldType.TRANSACTION_ID,
+            options: ['TRANSACTION_ID_VALUE', 'TRANSACTION_ID_VALUE_2'],
+          },
+          {
+            type: LogFieldType.FLAGS,
+            options: ['flag1', 'flag2', 'flag3', 'flag4'],
+          },
+        ],
+        [entry1, entry2],
         1,
-        0,
+        selectedEntryIndex,
         0,
         UiPropertyTreeNode.from(propertiesTree),
         {},
@@ -174,7 +219,7 @@ describe('ViewerTransactionsComponent', () => {
   });
 
   describe('Scroll component', () => {
-    executeScrollComponentTests('entry', setUpTestEnvironment);
+    executeScrollComponentTests(setUpTestEnvironment);
 
     function makeUiDataForScroll(): UiData {
       const propertiesTree = new PropertyTreeBuilder()
@@ -183,20 +228,14 @@ describe('ViewerTransactionsComponent', () => {
         .setValue(null)
         .build();
 
-      const time = new PropertyTreeBuilder()
-        .setRootId(propertiesTree.id)
-        .setName('timestamp')
-        .setValue(NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(1n))
-        .setFormatter(TIMESTAMP_FORMATTER)
+      const ts = TimestampConverterUtils.makeElapsedTimestamp(1n);
+
+      const trace = new TraceBuilder<PropertyTreeNode>()
+        .setEntries([propertiesTree, propertiesTree])
+        .setTimestamps([ts, ts])
         .build();
 
       const uiData = new UiData(
-        [],
-        [],
-        [],
-        [],
-        [],
-        [],
         [],
         [],
         0,
@@ -208,16 +247,26 @@ describe('ViewerTransactionsComponent', () => {
       const shortMessage = 'flag1 | flag2';
       const longMessage = shortMessage.repeat(20);
       for (let i = 0; i < 200; i++) {
-        const entry = new UiDataEntry(
-          0,
-          time,
-          -111,
-          'PID_VALUE',
-          'UID_VALUE',
-          'TYPE_VALUE',
-          'LAYER_OR_DISPLAY_ID_VALUE',
-          'TRANSACTION_ID_VALUE',
-          i % 2 === 0 ? shortMessage : longMessage,
+        const entry = new TransactionsEntry(
+          trace.getEntry(0),
+          [
+            {type: LogFieldType.VSYNC_ID, value: -111},
+            {type: LogFieldType.PID, value: 'PID_VALUE'},
+            {type: LogFieldType.UID, value: 'UID_VALUE'},
+            {type: LogFieldType.TRANSACTION_TYPE, value: 'TYPE_VALUE'},
+            {
+              type: LogFieldType.LAYER_OR_DISPLAY_ID,
+              value: 'LAYER_OR_DISPLAY_ID_VALUE',
+            },
+            {
+              type: LogFieldType.TRANSACTION_ID,
+              value: 'TRANSACTION_ID_VALUE',
+            },
+            {
+              type: LogFieldType.FLAGS,
+              value: i % 2 === 0 ? shortMessage : longMessage,
+            },
+          ],
           propertiesTree,
         );
         uiData.entries.push(entry);
@@ -237,15 +286,19 @@ describe('ViewerTransactionsComponent', () => {
         imports: [ScrollingModule],
         declarations: [
           ViewerTransactionsComponent,
+          LogComponent,
           TransactionsScrollDirective,
         ],
-        schemas: [CUSTOM_ELEMENTS_SCHEMA, NO_ERRORS_SCHEMA],
+        schemas: [CUSTOM_ELEMENTS_SCHEMA],
       }).compileComponents();
       const fixture = TestBed.createComponent(ViewerTransactionsComponent);
       const transactionsComponent = fixture.componentInstance;
       const htmlElement = fixture.nativeElement;
-      const viewport = assertDefined(transactionsComponent.scrollComponent);
       transactionsComponent.inputData = makeUiDataForScroll();
+      fixture.detectChanges();
+      const viewport = assertDefined(
+        transactionsComponent.logComponent?.scrollComponent,
+      );
       return [fixture, htmlElement, viewport];
     }
   });
