@@ -659,9 +659,7 @@ export class TimelineComponent
       this.sortedTraces.sort((a, b) =>
         TraceTypeUtils.compareByDisplayOrder(a.type, b.type),
       );
-      this.selectedTracesFormControl.setValue(
-        (this.selectedTracesFormControl.value ?? []).concat([event.trace]),
-      );
+      this.selectedTracesFormControl.setValue(this.sortedTraces);
       this.applyNewTraceSelection(event.trace);
       await this.miniTimeline?.drawer?.draw();
     });
@@ -734,7 +732,10 @@ export class TimelineComponent
   }
 
   getTitle(trace: Trace<object>): string {
-    if (trace.type === TraceType.VIEW_CAPTURE) {
+    if (
+      trace.type === TraceType.VIEW_CAPTURE ||
+      trace.type === TraceType.SEARCH
+    ) {
       return TRACE_INFO[trace.type].name + ' ' + trace.getDescriptors()[0];
     }
     return TRACE_INFO[trace.type].name + (trace.isDump() ? ' Dump' : '');
@@ -986,6 +987,9 @@ export class TimelineComponent
       tooltip += ' ' + trace.getDescriptors()[0].split('.')[0];
     }
     if (trace.type === TraceType.VIEW_CAPTURE) {
+      tooltip += ' ' + trace.getDescriptors()[0];
+    }
+    if (trace.type === TraceType.SEARCH) {
       tooltip += ' ' + trace.getDescriptors()[0];
     }
     return tooltip;
