@@ -71,6 +71,7 @@ import {ViewerJankCujsComponent} from 'viewers/viewer_jank_cujs/viewer_jank_cujs
 import {ViewerMediaBasedComponent} from 'viewers/viewer_media_based/viewer_media_based_component';
 import {ProtologScrollDirective} from 'viewers/viewer_protolog/scroll_strategy/protolog_scroll_directive';
 import {ViewerProtologComponent} from 'viewers/viewer_protolog/viewer_protolog_component';
+import {ActiveSearchComponent} from 'viewers/viewer_search/active_search_component';
 import {SearchListComponent} from 'viewers/viewer_search/search_list_component';
 import {ViewerSearchComponent} from 'viewers/viewer_search/viewer_search_component';
 import {ViewerSurfaceFlingerComponent} from 'viewers/viewer_surface_flinger/viewer_surface_flinger_component';
@@ -160,6 +161,7 @@ import {GlobalErrorHandler} from './global_error_handler';
     WarningDialogComponent,
     SearchBoxComponent,
     SearchListComponent,
+    ActiveSearchComponent,
   ],
   imports: [
     BrowserModule,
