@@ -59,6 +59,12 @@ describe('ParserSearch', () => {
       expect(parser.getCoarseVersion()).toEqual(CoarseVersion.LATEST);
     });
 
+    it('has expected descriptors', () => {
+      expect(parser.getDescriptors()).toEqual([
+        'SELECT * FROM surfaceflinger_layers_snapshot',
+      ]);
+    });
+
     it('has length entries equal to number of rows', () => {
       expect(parser.getLengthEntries()).toEqual(21);
     });
