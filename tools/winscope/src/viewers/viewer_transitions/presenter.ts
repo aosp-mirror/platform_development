@@ -15,102 +15,66 @@
  */
 
 import {assertDefined} from 'common/assert_utils';
-import {FunctionUtils} from 'common/function_utils';
-import {Timestamp} from 'common/time';
-import {
-  TracePositionUpdate,
-  WinscopeEvent,
-  WinscopeEventType,
-} from 'messaging/winscope_event';
-import {
-  EmitEvent,
-  WinscopeEventEmitter,
-} from 'messaging/winscope_event_emitter';
 import {CustomQueryType} from 'trace/custom_query';
-import {AbsoluteEntryIndex, Trace} from 'trace/trace';
+import {Trace} from 'trace/trace';
 import {Traces} from 'trace/traces';
-import {TraceEntryFinder} from 'trace/trace_entry_finder';
 import {TraceType} from 'trace/trace_type';
-import {Transition} from 'trace/transition';
 import {HierarchyTreeNode} from 'trace/tree_node/hierarchy_tree_node';
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
-import {Filter} from 'viewers/common/operations/filter';
-import {UiPropertyTreeNode} from 'viewers/common/ui_property_tree_node';
-import {UiTreeFormatter} from 'viewers/common/ui_tree_formatter';
-import {UiTreeUtils} from 'viewers/common/ui_tree_utils';
+import {
+  AbstractLogViewerPresenter,
+  NotifyLogViewCallbackType,
+} from 'viewers/common/abstract_log_viewer_presenter';
+import {LogPresenter} from 'viewers/common/log_presenter';
+import {PropertiesPresenter} from 'viewers/common/properties_presenter';
+import {LogField, LogFieldType} from 'viewers/common/ui_data_log';
 import {UpdateTransitionChangesNames} from './operations/update_transition_changes_names';
-import {UiData} from './ui_data';
+import {TransitionsEntry, TransitionStatus, UiData} from './ui_data';
 
-export class Presenter implements WinscopeEventEmitter {
+export class Presenter extends AbstractLogViewerPresenter<UiData> {
+  static readonly FIELD_TYPES = [
+    LogFieldType.TRANSITION_ID,
+    LogFieldType.TRANSITION_TYPE,
+    LogFieldType.SEND_TIME,
+    LogFieldType.DISPATCH_TIME,
+    LogFieldType.DURATION,
+    LogFieldType.STATUS,
+  ];
+  private static readonly VALUE_NA = 'N/A';
+
   private isInitialized = false;
   private transitionTrace: Trace<PropertyTreeNode>;
   private surfaceFlingerTrace: Trace<HierarchyTreeNode> | undefined;
   private windowManagerTrace: Trace<HierarchyTreeNode> | undefined;
   private layerIdToName = new Map<number, string>();
   private windowTokenToTitle = new Map<string, string>();
-  private uiData = UiData.EMPTY;
-  private readonly notifyUiDataCallback: (data: UiData) => void;
-  private emitAppEvent: EmitEvent = FunctionUtils.DO_NOTHING_ASYNC;
+
+  protected override keepCalculated = false;
+  protected override logPresenter = new LogPresenter<TransitionsEntry>(false);
+  protected override propertiesPresenter = new PropertiesPresenter(
+    {},
+    undefined,
+    [],
+    [
+      new UpdateTransitionChangesNames(
+        this.layerIdToName,
+        this.windowTokenToTitle,
+      ),
+    ],
+  );
 
   constructor(
     trace: Trace<PropertyTreeNode>,
     traces: Traces,
-    notifyUiDataCallback: (data: UiData) => void,
+    notifyViewCallback: NotifyLogViewCallbackType<UiData>,
   ) {
+    super(trace, notifyViewCallback, UiData.createEmpty());
     this.transitionTrace = trace;
     this.surfaceFlingerTrace = traces.getTrace(TraceType.SURFACE_FLINGER);
     this.windowManagerTrace = traces.getTrace(TraceType.WINDOW_MANAGER);
-    this.notifyUiDataCallback = notifyUiDataCallback;
   }
 
-  setEmitEvent(callback: EmitEvent) {
-    this.emitAppEvent = callback;
-  }
-
-  async onAppEvent(event: WinscopeEvent) {
-    await event.visit(
-      WinscopeEventType.TRACE_POSITION_UPDATE,
-      async (event) => {
-        await this.initializeIfNeeded();
-
-        if (this.uiData === UiData.EMPTY) {
-          this.uiData = await this.computeUiData();
-        }
-
-        const entry = TraceEntryFinder.findCorrespondingEntry(
-          this.transitionTrace,
-          event.position,
-        );
-
-        const transition = await entry?.getValue();
-        if (transition !== undefined) {
-          this.onTransitionSelected(transition);
-        }
-
-        this.notifyUiDataCallback(this.uiData);
-      },
-    );
-  }
-
-  onTransitionSelected(transition: PropertyTreeNode): void {
-    this.uiData.selectedTransition = this.makeUiPropertiesTree(transition);
-    this.notifyUiDataCallback(this.uiData);
-  }
-
-  async onRawTimestampClicked(timestamp: Timestamp) {
-    await this.emitAppEvent(TracePositionUpdate.fromTimestamp(timestamp, true));
-  }
-
-  async onLogTimestampClicked(traceIndex: AbsoluteEntryIndex) {
-    await this.emitAppEvent(
-      TracePositionUpdate.fromTraceEntry(
-        this.transitionTrace.getEntry(traceIndex),
-        true,
-      ),
-    );
-  }
-
-  private async initializeIfNeeded() {
+  protected async initializeIfNeeded() {
     if (this.isInitialized) {
       return;
     }
@@ -133,72 +97,108 @@ export class Presenter implements WinscopeEventEmitter {
       });
     }
 
+    const allEntries = await this.makeUiDataEntries();
+
+    this.logPresenter.setAllEntries(allEntries);
+    this.logPresenter.setHeaders(Presenter.FIELD_TYPES);
+    this.refreshUiData();
     this.isInitialized = true;
   }
 
-  private async computeUiData(): Promise<UiData> {
-    const entryPromises = this.transitionTrace.mapEntry((entry) => {
-      return entry.getValue();
-    });
-    const entries = await Promise.all(entryPromises);
+  private async makeUiDataEntries(): Promise<TransitionsEntry[]> {
     // TODO(b/339191691): Ideally we should refactor the parsers to
     // keep a map of time -> rowId, instead of relying on table order
-    const transitions = this.makeTransitions(entries);
+    const transitions = await this.makeTransitions();
     this.sortTransitions(transitions);
-    const selectedTransition = this.uiData?.selectedTransition ?? undefined;
-
-    return new UiData(transitions, selectedTransition);
+    return transitions;
   }
 
-  private sortTransitions(transitions: Transition[]) {
-    transitions.sort((a: Transition, b: Transition) => {
-      return a.id <= b.id ? -1 : 1;
+  private sortTransitions(transitions: TransitionsEntry[]) {
+    const getId = (a: TransitionsEntry) =>
+      assertDefined(a.fields.find((f) => f.type === LogFieldType.TRANSITION_ID))
+        .value;
+    transitions.sort((a: TransitionsEntry, b: TransitionsEntry) => {
+      return getId(a) <= getId(b) ? -1 : 1;
     });
   }
 
-  private makeTransitions(entries: PropertyTreeNode[]): Transition[] {
-    return entries.map((transitionNode, index) => {
+  private async makeTransitions(): Promise<TransitionsEntry[]> {
+    const transitions: TransitionsEntry[] = [];
+    for (
+      let traceIndex = 0;
+      traceIndex < this.transitionTrace.lengthEntries;
+      ++traceIndex
+    ) {
+      const entry = assertDefined(this.trace.getEntry(traceIndex));
+      let transitionNode: PropertyTreeNode;
+      try {
+        transitionNode = await entry.getValue();
+      } catch (e) {
+        continue;
+      }
       const wmDataNode = assertDefined(transitionNode.getChildByName('wmData'));
       const shellDataNode = assertDefined(
         transitionNode.getChildByName('shellData'),
       );
 
-      const transition: Transition = {
-        id: assertDefined(transitionNode.getChildByName('id')).getValue(),
-        type: wmDataNode.getChildByName('type')?.formattedValue() ?? 'NONE',
-        sendTime: wmDataNode.getChildByName('sendTimeNs'),
-        dispatchTime: shellDataNode.getChildByName('dispatchTimeNs'),
-        duration: transitionNode.getChildByName('duration')?.formattedValue(),
-        merged: assertDefined(
-          transitionNode.getChildByName('merged'),
-        ).getValue(),
-        aborted: assertDefined(
-          transitionNode.getChildByName('aborted'),
-        ).getValue(),
-        played: assertDefined(
-          transitionNode.getChildByName('played'),
-        ).getValue(),
-        propertiesTree: transitionNode,
-        traceIndex: index,
-      };
-      return transition;
-    });
-  }
+      let status: TransitionStatus | undefined;
+      let statusIcon: string | undefined;
+      let statusIconColor: string | undefined;
+      if (assertDefined(transitionNode.getChildByName('merged')).getValue()) {
+        status = TransitionStatus.MERGED;
+        statusIcon = 'merge';
+        statusIconColor = 'gray';
+      } else if (
+        assertDefined(transitionNode.getChildByName('aborted')).getValue()
+      ) {
+        status = TransitionStatus.ABORTED;
+        statusIcon = 'close';
+        statusIconColor = 'red';
+      } else if (
+        assertDefined(transitionNode.getChildByName('played')).getValue()
+      ) {
+        status = TransitionStatus.PLAYED;
+        statusIcon = 'check';
+        statusIconColor = 'green';
+      }
 
-  private makeUiPropertiesTree(
-    transitionNode: PropertyTreeNode,
-  ): UiPropertyTreeNode {
-    const tree = UiPropertyTreeNode.from(transitionNode);
+      const fields: LogField[] = [
+        {
+          type: LogFieldType.TRANSITION_ID,
+          value: assertDefined(transitionNode.getChildByName('id')).getValue(),
+        },
+        {
+          type: LogFieldType.TRANSITION_TYPE,
+          value: wmDataNode.getChildByName('type')?.formattedValue() ?? 'NONE',
+        },
+        {
+          type: LogFieldType.SEND_TIME,
+          value:
+            wmDataNode.getChildByName('sendTimeNs')?.getValue() ??
+            Presenter.VALUE_NA,
+        },
+        {
+          type: LogFieldType.DISPATCH_TIME,
+          value:
+            shellDataNode.getChildByName('dispatchTimeNs')?.getValue() ??
+            Presenter.VALUE_NA,
+        },
+        {
+          type: LogFieldType.DURATION,
+          value:
+            transitionNode.getChildByName('duration')?.formattedValue() ??
+            Presenter.VALUE_NA,
+        },
+        {
+          type: LogFieldType.STATUS,
+          value: status ?? Presenter.VALUE_NA,
+          icon: statusIcon,
+          iconColor: statusIconColor,
+        },
+      ];
+      transitions.push(new TransitionsEntry(entry, fields, transitionNode));
+    }
 
-    return new UiTreeFormatter<UiPropertyTreeNode>()
-      .setUiTree(tree)
-      .addOperation(new Filter([UiTreeUtils.isNotCalculated], false))
-      .addOperation(
-        new UpdateTransitionChangesNames(
-          this.layerIdToName,
-          this.windowTokenToTitle,
-        ),
-      )
-      .format();
+    return transitions;
   }
 }

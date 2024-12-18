@@ -42,8 +42,7 @@ describe('WmFileParserTransitions', () => {
   it('provides timestamps', () => {
     const timestamps = assertDefined(parser.getTimestamps());
     expect(timestamps.length).toEqual(8);
-    const expected =
-      TimestampConverterUtils.makeRealTimestamp(1683130827956652323n);
+    const expected = TimestampConverterUtils.makeZeroTimestamp();
     timestamps.forEach((timestamp) => expect(timestamp).toEqual(expected));
   });
 });

@@ -21,8 +21,7 @@ describe('Viewer Input Method Service', () => {
   const viewerSelector = 'viewer-input-method';
 
   beforeEach(async () => {
-    browser.manage().timeouts().implicitlyWait(1000);
-    await E2eTestUtils.checkServerIsUp('Winscope', E2eTestUtils.WINSCOPE_URL);
+    await E2eTestUtils.beforeEach(1000);
     await browser.get(E2eTestUtils.WINSCOPE_URL);
   });
 
@@ -34,7 +33,7 @@ describe('Viewer Input Method Service', () => {
     );
     await E2eTestUtils.checkTimelineTraceSelector({
       icon: 'keyboard_alt',
-      color: 'rgba(242, 153, 0, 1)',
+      color: 'rgba(255, 194, 75, 1)',
     });
     await E2eTestUtils.checkInitialRealTimestamp('2022-11-21, 18:05:12.497');
     await E2eTestUtils.checkFinalRealTimestamp('2022-11-21, 18:05:18.061');

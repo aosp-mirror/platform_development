@@ -23,6 +23,8 @@
         <emptyLine />
         <package name="junit" withSubpackages="true" static="true" />
         <emptyLine />
+        <package name="junitparams" withSubpackages="true" static="true" />
+        <emptyLine />
         <package name="kotlin" withSubpackages="true" static="true" />
         <emptyLine />
         <package name="net" withSubpackages="true" static="true" />
@@ -52,6 +54,8 @@
         <package name="gov" withSubpackages="true" static="false" />
         <emptyLine />
         <package name="junit" withSubpackages="true" static="false" />
+        <emptyLine />
+        <package name="junitparams" withSubpackages="true" static="false" />
         <emptyLine />
         <package name="kotlin" withSubpackages="true" static="false" />
         <emptyLine />

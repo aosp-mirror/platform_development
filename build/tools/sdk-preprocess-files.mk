@@ -37,6 +37,7 @@ $(hide) sed \
 	-e 's/$${PLATFORM_VERSION_CODENAME}/$(subst REL,,$(PLATFORM_VERSION_CODENAME))/' \
 	-e 's/$${TARGET_ARCH}/$(TARGET_ARCH)/' \
 	-e 's/$${TARGET_CPU_ABI}/$(TARGET_CPU_ABI)/' \
+	-e 's/$${EMULATOR_MINIMAL_VERSION}/$(EMULATOR_MINIMAL_VERSION)/' \
 	$< > $@ && sed -i -e '/^AndroidVersion.CodeName=\s*$$/d' $@
 endef
 

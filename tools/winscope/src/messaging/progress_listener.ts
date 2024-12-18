@@ -19,5 +19,5 @@ export interface ProgressListener {
     message: string,
     progressPercentage: number | undefined,
   ): void;
-  onOperationFinished(): void;
+  onOperationFinished(success: boolean): void;
 }

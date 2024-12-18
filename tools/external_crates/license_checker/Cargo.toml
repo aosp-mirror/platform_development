@@ -4,8 +4,11 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-gestalt_ratio = "0.2"
+gestalt_ratio = { version = "0.2", optional = true }
 glob = "0.3"
-itertools = "0.11"
+itertools = { version = "0.11", optional = true }
 spdx = "0.10"
 thiserror = "1.0"
+
+[features]
+gestalt_ratio = ["dep:gestalt_ratio", "dep:itertools"]

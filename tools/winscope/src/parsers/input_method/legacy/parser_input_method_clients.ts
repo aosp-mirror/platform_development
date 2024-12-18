@@ -94,7 +94,7 @@ class ParserInputMethodClients extends AbstractParser<HierarchyTreeNode> {
       entry.elapsedRealtimeNanos === undefined ||
       entry.elapsedRealtimeNanos === null
     ) {
-      throw Error('Missing elapsedRealtimeNanos on entry');
+      throw new Error('Missing elapsedRealtimeNanos on IME Clients entry');
     }
 
     return ParserInputMethodClients.HIERARCHY_TREE_FACTORY.makeHierarchyTree(

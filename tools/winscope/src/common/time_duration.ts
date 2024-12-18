@@ -14,7 +14,8 @@
  * limitations under the License.
  */
 
-import {TimestampUtils} from './timestamp_utils';
+import {BigintMath} from './bigint_math';
+import {TIME_UNIT_TO_NANO} from './time_units';
 
 export class TimeDuration {
   constructor(private timeDiffNs: bigint) {}
@@ -23,6 +24,10 @@ export class TimeDuration {
   }
 
   format(): string {
-    return TimestampUtils.formatElapsedNs(this.timeDiffNs);
+    const msString = BigintMath.divideAndRound(
+      this.timeDiffNs,
+      BigInt(TIME_UNIT_TO_NANO.ms),
+    );
+    return msString.toLocaleString() + ' ms';
   }
 }

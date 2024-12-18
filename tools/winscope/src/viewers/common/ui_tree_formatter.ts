@@ -34,7 +34,7 @@ export class UiTreeFormatter<T extends TreeNode> {
 
   format(): T {
     if (this.uiTree === undefined) {
-      throw Error('tree not set');
+      throw new Error('tree not set');
     }
 
     return this.operations.apply(this.uiTree);

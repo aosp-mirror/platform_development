@@ -16,15 +16,15 @@
 
 import {Trace} from 'trace/trace';
 import {HierarchyTreeNode} from 'trace/tree_node/hierarchy_tree_node';
-import {UiRect} from 'viewers/components/rects/types2d';
+import {UiRect} from 'viewers/components/rects/ui_rect';
 import {DisplayIdentifier} from './display_identifier';
 import {RectFilter} from './rect_filter';
 import {RectShowState} from './rect_show_state';
 import {UserOptions} from './user_options';
 
 export class RectsPresenter {
+  private readonly rectFilter = new RectFilter(this.convertToKey);
   private allCurrentRects: UiRect[] = [];
-  private rectFilter = new RectFilter();
   private rectsToDraw: UiRect[] = [];
   private displays: DisplayIdentifier[] = [];
   private rectIdToShowState: Map<string, RectShowState> | undefined;
@@ -36,21 +36,22 @@ export class RectsPresenter {
       trace: Trace<HierarchyTreeNode>,
     ) => UiRect[],
     private makeDisplaysStrategy?: (rects: UiRect[]) => DisplayIdentifier[],
+    private convertToKey: (rectId: string) => string = (id: string) => id,
   ) {}
 
-  getUserOptions() {
+  getUserOptions(): UserOptions {
     return this.userOptions;
   }
 
-  getRectsToDraw() {
+  getRectsToDraw(): UiRect[] {
     return this.rectsToDraw;
   }
 
-  getRectIdToShowState() {
+  getRectIdToShowState(): Map<string, RectShowState> | undefined {
     return this.rectIdToShowState;
   }
 
-  getDisplays() {
+  getDisplays(): DisplayIdentifier[] {
     return this.displays;
   }
 
@@ -83,6 +84,26 @@ export class RectsPresenter {
     this.updateRectsToDrawAndRectIdToShowState();
   }
 
+  updateRectShowStates(
+    rectIdToShowState: Map<string, RectShowState> | undefined,
+  ) {
+    this.rectFilter.clear();
+    if (rectIdToShowState) {
+      for (const [id, state] of rectIdToShowState.entries()) {
+        this.rectFilter.updateRectShowState(id, state);
+      }
+    }
+    this.updateRectsToDrawAndRectIdToShowState();
+  }
+
+  clear() {
+    this.allCurrentRects = [];
+    this.rectsToDraw = [];
+    this.displays = [];
+    this.rectIdToShowState = undefined;
+    this.rectFilter.clear();
+  }
+
   private updateRectsToDrawAndRectIdToShowState() {
     this.rectsToDraw = this.filterRects(this.allCurrentRects);
     this.rectIdToShowState = this.rectFilter.getRectIdToShowState(
@@ -94,12 +115,15 @@ export class RectsPresenter {
   private filterRects(rects: UiRect[]): UiRect[] {
     const isOnlyVisibleMode =
       this.userOptions['showOnlyVisible']?.enabled ?? false;
-    const isIgnoreHiddenMode =
-      this.userOptions['ignoreNonHidden']?.enabled ?? false;
+    const isIgnoreRectShowStateMode =
+      this.userOptions['ignoreRectShowState']?.enabled ?? false;
+    const isOnlyWithContentMode =
+      this.userOptions['showOnlyWithContent']?.enabled ?? false;
     return this.rectFilter.filterRects(
       rects,
       isOnlyVisibleMode,
-      isIgnoreHiddenMode,
+      isIgnoreRectShowStateMode,
+      isOnlyWithContentMode,
     );
   }
 }

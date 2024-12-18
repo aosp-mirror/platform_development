@@ -1,0 +1,51 @@
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:gravity="center"
+    android:orientation="vertical"
+    android:padding="10dp">
+
+    <com.google.android.material.switchmaterial.SwitchMaterial
+        android:id="@+id/proximity_lock"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:checked="false"
+        android:text="Proximity Lock" />
+
+    <com.google.android.material.switchmaterial.SwitchMaterial
+        android:id="@+id/keep_screen_on"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:checked="false"
+        android:text="Keep Screen On" />
+
+    <com.google.android.material.switchmaterial.SwitchMaterial
+        android:id="@+id/override_screen_brightness"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:checked="false"
+        android:text="Override Screen Brightness" />
+
+    <com.google.android.material.slider.Slider
+        android:id="@+id/screen_brightness"
+        android:theme="@style/SliderTheme"
+        android:enabled="false"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:value="0.5"
+        android:valueFrom="0.0"
+        android:valueTo="1.0" />
+
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:onClick="onLaunchTurnScreenOnActivity"
+        android:text="Launch Turn Screen On Activity" />
+
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:onClick="onLaunchTurnScreenOnShowWhenLockedActivity"
+        android:text="Launch Turn Screen On Show When Locked Activity" />
+
+</LinearLayout>
