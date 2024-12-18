@@ -15,7 +15,7 @@
  */
 
 import {assertTrue} from 'common/assert_utils';
-import {Store} from 'common/store';
+import {Store} from 'common/store/store';
 import {Trace} from 'trace/trace';
 import {Traces} from 'trace/traces';
 import {TraceType, TraceTypeUtils} from 'trace/trace_type';

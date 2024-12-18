@@ -14,6 +14,10 @@
  * limitations under the License.
  */
 
+/**
+ * Represents the current state of the connection between the Winscope web client
+ * and the Winscope service.
+ */
 export enum ConnectionState {
   ERROR,
   CONNECTING,

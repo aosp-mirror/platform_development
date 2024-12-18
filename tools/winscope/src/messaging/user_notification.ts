@@ -14,12 +14,18 @@
  * limitations under the License.
  */
 
+/**
+ * The type of notification.
+ */
 export enum NotificationType {
   INFO,
   WARNING,
   ERROR,
 }
 
+/**
+ * A notification to be displayed to the user.
+ */
 export interface UserNotification {
   getNotificationType(): NotificationType;
   getDescriptor(): string;

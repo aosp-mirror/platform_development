@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import {Store} from 'common/store';
+import {Store} from 'common/store/store';
 import {Trace} from 'trace/trace';
 import {Traces} from 'trace/traces';
 import {ImeTraceType, TraceType} from 'trace/trace_type';

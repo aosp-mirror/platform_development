@@ -14,6 +14,9 @@
  * limitations under the License.
  */
 
+/**
+ * Flags used for filtering data.
+ */
 export enum FilterFlag {
   MATCH_CASE,
   MATCH_WORD,

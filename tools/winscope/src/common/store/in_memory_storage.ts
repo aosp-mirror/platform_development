@@ -16,17 +16,38 @@
 
 import {Store} from './store';
 
+/**
+ * An in-memory implementation of the Store interface.
+ */
 export class InMemoryStorage implements Store {
   private store: {[key: string]: string} = {};
 
+  /**
+   * Adds a key-value pair to the store.
+   *
+   * @param key The key of the key-value pair.
+   * @param value The value of the key-value pair.
+   */
   add(key: string, value: string): void {
     this.store[key] = value;
   }
 
+  /**
+   * Retrieves the value associated with a key.
+   *
+   * @param key The key to retrieve the value for.
+   * @return The value associated with the key, or undefined if the key is not
+   *     found.
+   */
   get(key: string): string | undefined {
     return this.store[key] ?? undefined;
   }
 
+  /**
+   * Clears all key-value pairs from the store that match the given key substring.
+   *
+   * @param keySubstring The key substring to match.
+   */
   clear(keySubstring: string): void {
     delete this.store[keySubstring];
   }

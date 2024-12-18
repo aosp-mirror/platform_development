@@ -15,7 +15,7 @@
  */
 
 import {assertDefined} from 'common/assert_utils';
-import {Store} from 'common/store';
+import {Store} from 'common/store/store';
 import {Timestamp} from 'common/time/time';
 import {TimeUtils} from 'common/time/time_utils';
 import {UserNotifier} from 'common/user_notifier';

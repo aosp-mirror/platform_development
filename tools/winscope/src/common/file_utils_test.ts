@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import {UnitTestUtils} from 'test/unit/utils';
+import {getFixtureFile} from 'test/unit/fixture_utils';
 import {FileUtils} from './file_utils';
 
 describe('FileUtils', () => {
@@ -68,9 +68,7 @@ describe('FileUtils', () => {
   });
 
   it('unzips archive', async () => {
-    const validZipFile = await UnitTestUtils.getFixtureFile(
-      'traces/winscope.zip',
-    );
+    const validZipFile = await getFixtureFile('traces/winscope.zip');
     const unzippedFiles = await FileUtils.unzipFile(validZipFile);
     expect(unzippedFiles.map((f) => f.name)).toEqual([
       'Surface Flinger/SurfaceFlinger.pb',
@@ -79,9 +77,7 @@ describe('FileUtils', () => {
   });
 
   it('recursively unzips archive', async () => {
-    const validZipFile = await UnitTestUtils.getFixtureFile(
-      'traces/recursive_winscope.zip',
-    );
+    const validZipFile = await getFixtureFile('traces/recursive_winscope.zip');
     const unzippedFiles = await FileUtils.unzipFile(validZipFile);
     expect(unzippedFiles.map((f) => f.name)).toEqual([
       'Surface Flinger/SurfaceFlinger.pb',
@@ -90,18 +86,14 @@ describe('FileUtils', () => {
   });
 
   it('decompresses gzipped file', async () => {
-    const gzippedFile = await UnitTestUtils.getFixtureFile(
-      'traces/WindowManager.pb.gz',
-    );
+    const gzippedFile = await getFixtureFile('traces/WindowManager.pb.gz');
     const unzippedFile = await FileUtils.decompressGZipFile(gzippedFile);
     expect(unzippedFile.name).toEqual('traces/WindowManager.pb');
     expect(unzippedFile.size).toEqual(377137);
   });
 
   it('decompresses gzipped archive', async () => {
-    const gzippedFile = await UnitTestUtils.getFixtureFile(
-      'traces/WindowManager.zip.gz',
-    );
+    const gzippedFile = await getFixtureFile('traces/WindowManager.zip.gz');
     const unzippedFile = await FileUtils.decompressGZipFile(gzippedFile);
     expect(unzippedFile.name).toEqual('traces/WindowManager.zip');
     expect(unzippedFile.size).toEqual(10158);

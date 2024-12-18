@@ -14,10 +14,13 @@
  * limitations under the License.
  */
 
-export class UrlUtils {
-  static getRootUrl(): string {
-    const fullUrl = window.location.href;
-    const posLastSlash = fullUrl.lastIndexOf('/');
-    return fullUrl.slice(0, posLastSlash + 1);
-  }
+/**
+ * Returns the root URL of the current page.
+ *
+ * @return The root URL.
+ */
+export function getRootUrl(): string {
+  const fullUrl = window.location.href;
+  const posLastSlash = fullUrl.lastIndexOf('/');
+  return fullUrl.slice(0, posLastSlash + 1);
 }

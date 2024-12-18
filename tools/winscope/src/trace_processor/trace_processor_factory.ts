@@ -15,7 +15,7 @@
  */
 
 import {globalConfig} from 'common/global_config';
-import {UrlUtils} from 'common/url_utils';
+import {getRootUrl} from 'common/url_utils';
 import {
   initWasm,
   resetEngineWorker,
@@ -29,9 +29,9 @@ export class TraceProcessorFactory {
     if (!TraceProcessorFactory.wasmEngine) {
       const traceProcessorRootUrl =
         globalConfig.MODE === 'KARMA_TEST'
-          ? UrlUtils.getRootUrl() +
+          ? getRootUrl() +
             'base/deps_build/trace_processor/to_be_served/'
-          : UrlUtils.getRootUrl();
+          : getRootUrl();
       initWasm(traceProcessorRootUrl);
       const engineId = 'random-id';
       const enginePort = resetEngineWorker();

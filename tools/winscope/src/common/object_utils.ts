@@ -16,17 +16,37 @@
 
 import {assertDefined, assertTrue} from './assert_utils';
 
+/**
+ * Represents a key in an object, which may be a simple key or an array key.
+ */
 class Key {
+  /**
+   * @param key The key name.
+   * @param index The index of the key in an array, or undefined if it's not an array key.
+   */
   constructor(public key: string, public index?: number) {}
 
+  /**
+   * Returns true if the key is an array key.
+   */
   isArrayKey(): boolean {
     return this.index !== undefined;
   }
 }
 
+/**
+ * Utility class for working with objects.
+ */
 export class ObjectUtils {
-  static readonly ARRAY_KEY_REGEX = new RegExp('(.+)\\[(\\d+)\\]');
+  private static readonly ARRAY_KEY_REGEX = new RegExp('(.+)\\[(\\d+)\\]');
 
+  /**
+   * Gets the property at the given path in the object.
+   *
+   * @param obj The object to get the property from.
+   * @param path The path to the property, using dot notation for nested objects.
+   * @return The value of the property at the given path.
+   */
   static getProperty(obj: object, path: string): any {
     const keys = ObjectUtils.parseKeys(path);
     keys.forEach((key) => {
@@ -50,6 +70,13 @@ export class ObjectUtils {
     return obj;
   }
 
+  /**
+   * Sets the property at the given path in the object.
+   *
+   * @param obj The object to set the property on.
+   * @param path The path to the property, using dot notation for nested objects.
+   * @param value The value to set the property to.
+   */
   static setProperty(obj: object, path: string, value: any) {
     const keys = ObjectUtils.parseKeys(path);
 

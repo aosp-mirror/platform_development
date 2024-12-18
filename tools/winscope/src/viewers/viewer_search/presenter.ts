@@ -16,8 +16,8 @@
 
 import {assertDefined} from 'common/assert_utils';
 import {FunctionUtils} from 'common/function_utils';
-import {PersistentStoreProxy} from 'common/persistent_store_proxy';
-import {Store} from 'common/store';
+import {PersistentStoreProxy} from 'common/store/persistent_store_proxy';
+import {Store} from 'common/store/store';
 import {
   InitializeTraceSearchRequest,
   TracePositionUpdate,

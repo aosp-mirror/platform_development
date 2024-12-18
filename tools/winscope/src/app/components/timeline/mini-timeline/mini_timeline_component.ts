@@ -28,7 +28,7 @@ import {
 } from '@angular/core';
 import {TimelineData} from 'app/timeline_data';
 import {assertDefined} from 'common/assert_utils';
-import {PersistentStore} from 'common/persistent_store';
+import {PersistentStore} from 'common/store/persistent_store';
 import {TimeRange, Timestamp} from 'common/time/time';
 import {TimestampUtils} from 'common/time/timestamp_utils';
 import {Analytics} from 'logging/analytics';

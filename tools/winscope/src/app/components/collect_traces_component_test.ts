@@ -33,7 +33,7 @@ import {MatProgressBarModule} from '@angular/material/progress-bar';
 import {MatSnackBar, MatSnackBarModule} from '@angular/material/snack-bar';
 import {BrowserAnimationsModule} from '@angular/platform-browser/animations';
 import {assertDefined} from 'common/assert_utils';
-import {InMemoryStorage} from 'common/in_memory_storage';
+import {InMemoryStorage} from 'common/store/in_memory_storage';
 import {ProxyTraceTimeout} from 'messaging/user_warnings';
 import {NoTraceTargetsSelected, WinscopeEvent} from 'messaging/winscope_event';
 import {MockAdbConnection} from 'test/unit/mock_adb_connection';

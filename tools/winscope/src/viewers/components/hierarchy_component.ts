@@ -22,7 +22,7 @@ import {
   Output,
 } from '@angular/core';
 import {Color} from 'app/colors';
-import {PersistentStore} from 'common/persistent_store';
+import {PersistentStore} from 'common/store/persistent_store';
 import {Analytics} from 'logging/analytics';
 import {TraceType} from 'trace/trace_type';
 import {RectShowState} from 'viewers/common/rect_show_state';

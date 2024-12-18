@@ -19,12 +19,15 @@ import {Point3D} from './point3d';
 import {Rect} from './rect';
 import {Region} from './region';
 
-// These values correspond to the values from the gui::Transform class in the platform, defined in:
-//     frameworks/native/libs/ui/include/ui/Transform.h
-// The values are listed in row-major order:
-//     [ dsdx, dtdx,  tx ]
-//     [ dtdy, dsdy,  ty ]
-//     [    0,    0,   1 ]
+/**
+ * These values correspond to the values from the gui::Transform class in the
+ * platform, defined in:
+ * frameworks/native/libs/ui/include/ui/Transform.h
+ * The values are listed in row-major order:
+ *     [ dsdx, dtdx,  tx ]
+ *     [ dtdy, dsdy,  ty ]
+ *     [    0,    0,   1 ]
+ */
 export class TransformMatrix {
   constructor(
     readonly dsdx: number,
@@ -135,4 +138,7 @@ export class TransformMatrix {
   }
 }
 
+/**
+ * The identity matrix, which has no effect on any point or rect.
+ */
 export const IDENTITY_MATRIX = new TransformMatrix(1, 0, 0, 0, 1, 0);

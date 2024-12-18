@@ -38,7 +38,7 @@ import {DomSanitizer, SafeUrl} from '@angular/platform-browser';
 import {TimelineData} from 'app/timeline_data';
 import {assertDefined} from 'common/assert_utils';
 import {FunctionUtils} from 'common/function_utils';
-import {PersistentStore} from 'common/persistent_store';
+import {PersistentStore} from 'common/store/persistent_store';
 import {StringUtils} from 'common/string_utils';
 import {TimeRange, Timestamp, TimestampFormatType} from 'common/time/time';
 import {TimestampUtils} from 'common/time/timestamp_utils';
