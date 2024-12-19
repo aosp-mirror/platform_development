@@ -561,22 +561,14 @@ INNER JOIN sf_hierarchy_root_search STATE
       this.initializing = false;
     }
     this.updateSearchSections(simpleChanges);
-
     if (this.tryPropagateRunFromOptions()) {
       return;
     }
+    this.tryHandleQueryCompleted();
+  }
 
-    const sectionIndex = this.searchSections.findIndex(
-      (s) => s.uid === this.runningQueryUid,
-    );
-    const section = this.searchSections[sectionIndex];
-    const currentSearch =
-      this.runningQueryUid !== undefined
-        ? this.getCurrentSearchByUid(this.runningQueryUid)
-        : undefined;
-
-    this.handleEditRequestInNewSection(currentSearch?.query, sectionIndex);
-    this.handleQueryCompleted(currentSearch, section, sectionIndex);
+  ngAfterContentChecked() {
+    this.tryPropagateEditFromOptions();
   }
 
   onGlobalSearchClick() {
@@ -631,10 +623,8 @@ INNER JOIN sf_hierarchy_root_search STATE
   }
 
   getCurrentSearchesWithResults(): CurrentSearch[] {
-    return (
-      this.inputData?.currentSearches.filter(
-        (search) => search.result !== undefined,
-      ) ?? []
+    return assertDefined(this.inputData).currentSearches.filter(
+      (search) => search.result !== undefined,
     );
   }
 
@@ -703,27 +693,39 @@ INNER JOIN sf_hierarchy_root_search STATE
     return false;
   }
 
-  private handleEditRequestInNewSection(
-    query: string | undefined,
-    index: number,
-  ) {
-    if (this.editFromOptions && query) {
-      this.activeSearchComponents?.get(index)?.updateText(query);
-      assertDefined(this.matTabGroups).first.selectedIndex = 0;
-      this.editFromOptions = false;
+  private tryPropagateEditFromOptions() {
+    if (this.editFromOptions) {
+      const currentSearches = assertDefined(this.inputData).currentSearches;
+      if (currentSearches.length !== this.activeSearchComponents?.length) {
+        return;
+      }
+      const lastSearch = currentSearches[currentSearches.length - 1];
+      if (lastSearch.query) {
+        this.updateLastSectionTextAndShowTab(lastSearch.query);
+        this.editFromOptions = false;
+      }
     }
   }
 
-  private handleQueryCompleted(
-    currentSearch: CurrentSearch | undefined,
-    section: SearchSection,
-    sectionIndex: number,
-  ) {
-    const querySuccess = currentSearch !== undefined;
-    if (
-      this.runningQueryUid !== undefined &&
-      (querySuccess || this.inputData?.lastTraceFailed)
-    ) {
+  private updateLastSectionTextAndShowTab(text: string) {
+    assertDefined(
+      this.activeSearchComponents?.get(this.searchSections.length - 1),
+    ).updateText(text);
+    assertDefined(this.matTabGroups).first.selectedIndex = 0;
+  }
+
+  private tryHandleQueryCompleted() {
+    const currentSearch =
+      this.runningQueryUid !== undefined
+        ? this.getCurrentSearchByUid(this.runningQueryUid)
+        : undefined;
+
+    if (this.runningQueryUid !== undefined && currentSearch !== undefined) {
+      const sectionIndex = this.searchSections.findIndex(
+        (s) => s.uid === this.runningQueryUid,
+      );
+      const section = this.searchSections[sectionIndex];
+
       if (!this.inputData?.lastTraceFailed) {
         this.activeSearchComponents
           ?.get(sectionIndex)
@@ -747,9 +749,9 @@ INNER JOIN sf_hierarchy_root_search STATE
   }
 
   private onRunQueryFromOptionsClick(search: ListedSearch) {
-    this.runFromOptions = true;
     const lastUid = this.getLastUid();
     if (this.getCurrentSearchByUid(lastUid)?.result) {
+      this.runFromOptions = true;
       this.addQuery(search.query);
     } else {
       this.searchQuery(search.query, lastUid);
@@ -761,18 +763,14 @@ INNER JOIN sf_hierarchy_root_search STATE
   }
 
   private onEditQueryClick(search: ListedSearch) {
-    const curr = assertDefined(this.inputData?.currentSearches);
-    const lastCurrentSearch = curr[curr.length - 1];
+    const currentSearches = assertDefined(this.inputData).currentSearches;
+    const lastCurrentSearch = currentSearches[currentSearches.length - 1];
     if (lastCurrentSearch.result !== undefined) {
       this.editFromOptions = true;
       this.addQuery(search.query);
       return;
     }
-    const sectionIndex = this.searchSections.findIndex(
-      (s) => s.uid === lastCurrentSearch.uid,
-    );
-    this.activeSearchComponents?.get(sectionIndex)?.updateText(search.query);
-    assertDefined(this.matTabGroups).first.selectedIndex = 0;
+    this.updateLastSectionTextAndShowTab(search.query);
   }
 
   private onDeleteQueryClick(search: ListedSearch) {
