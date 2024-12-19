@@ -15,9 +15,12 @@
  */
 
 import {assertDefined} from 'common/assert_utils';
-import {TimestampConverter} from 'common/timestamp_converter';
-import {TimestampConverterUtils} from 'test/unit/timestamp_converter_utils';
-import {UnitTestUtils} from 'test/unit/utils';
+import {
+  TimestampConverterUtils,
+  timestampEqualityTester,
+} from 'common/time/test_utils';
+import {TimestampConverter} from 'common/time/timestamp_converter';
+import {getFixtureFile} from 'test/unit/fixture_utils';
 import {CoarseVersion} from 'trace/coarse_version';
 import {MediaBasedTraceEntry} from 'trace/media_based_trace_entry';
 import {TraceFile} from 'trace/trace_file';
@@ -29,8 +32,8 @@ describe('ParserScreenshot', () => {
   let file: File;
 
   beforeAll(async () => {
-    jasmine.addCustomEqualityTester(UnitTestUtils.timestampEqualityTester);
-    file = await UnitTestUtils.getFixtureFile('traces/screenshot.png');
+    jasmine.addCustomEqualityTester(timestampEqualityTester);
+    file = await getFixtureFile('traces/screenshot.png');
     parser = new ParserScreenshot(
       new TraceFile(file),
       new TimestampConverter(TimestampConverterUtils.UTC_TIMEZONE_INFO, 0n),

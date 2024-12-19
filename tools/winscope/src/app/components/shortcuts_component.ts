@@ -17,7 +17,7 @@ import {Component, Inject} from '@angular/core';
 import {MatIconRegistry} from '@angular/material/icon';
 import {DomSanitizer} from '@angular/platform-browser';
 import {overlayPanelStyles} from 'app/styles/overlay_panel.styles';
-import {UrlUtils} from 'common/url_utils';
+import {getRootUrl} from 'common/url_utils';
 
 @Component({
   selector: 'shortcuts-panel',
@@ -177,19 +177,19 @@ export class ShortcutsComponent {
     this.matIconRegistry.addSvgIcon(
       'trackpad_right_click',
       this.domSanitizer.bypassSecurityTrustResourceUrl(
-        UrlUtils.getRootUrl() + 'trackpad_right_click.svg',
+        getRootUrl() + 'trackpad_right_click.svg',
       ),
     );
     this.matIconRegistry.addSvgIcon(
       'trackpad_vertical_scroll',
       this.domSanitizer.bypassSecurityTrustResourceUrl(
-        UrlUtils.getRootUrl() + 'trackpad_vertical_scroll.svg',
+        getRootUrl() + 'trackpad_vertical_scroll.svg',
       ),
     );
     this.matIconRegistry.addSvgIcon(
       'trackpad_horizontal_scroll',
       this.domSanitizer.bypassSecurityTrustResourceUrl(
-        UrlUtils.getRootUrl() + 'trackpad_horizontal_scroll.svg',
+        getRootUrl() + 'trackpad_horizontal_scroll.svg',
       ),
     );
   }

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 The Android Open Source Project
+ * Copyright (C) 2024 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,20 +14,20 @@
  * limitations under the License.
  */
 
-import {Store} from './store';
+import {BigintMath} from 'common/bigint_math';
+import {TIME_UNIT_TO_NANO} from 'common/time/time_units';
 
-export class InMemoryStorage implements Store {
-  private store: {[key: string]: string} = {};
-
-  add(key: string, value: string): void {
-    this.store[key] = value;
+export class TimeDuration {
+  constructor(private timeDiffNs: bigint) {}
+  getValueNs(): bigint {
+    return this.timeDiffNs;
   }
 
-  get(key: string): string | undefined {
-    return this.store[key] ?? undefined;
-  }
-
-  clear(keySubstring: string): void {
-    delete this.store[keySubstring];
+  format(): string {
+    const msString = BigintMath.divideAndRound(
+      this.timeDiffNs,
+      BigInt(TIME_UNIT_TO_NANO.ms),
+    );
+    return msString.toLocaleString() + ' ms';
   }
 }

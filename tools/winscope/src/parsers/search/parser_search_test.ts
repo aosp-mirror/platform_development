@@ -15,9 +15,12 @@
  */
 
 import {assertDefined} from 'common/assert_utils';
+import {
+  TimestampConverterUtils,
+  timestampEqualityTester,
+} from 'common/time/test_utils';
 import {TraceSearchQueryFailed} from 'messaging/user_warnings';
 import {ParserSurfaceFlinger} from 'parsers/surface_flinger/perfetto/parser_surface_flinger';
-import {TimestampConverterUtils} from 'test/unit/timestamp_converter_utils';
 import {UserNotifierChecker} from 'test/unit/user_notifier_checker';
 import {UnitTestUtils} from 'test/unit/utils';
 import {CoarseVersion} from 'trace/coarse_version';
@@ -30,7 +33,7 @@ describe('ParserSearch', () => {
 
   beforeAll(() => {
     userNotifierChecker = new UserNotifierChecker();
-    jasmine.addCustomEqualityTester(UnitTestUtils.timestampEqualityTester);
+    jasmine.addCustomEqualityTester(timestampEqualityTester);
   });
 
   afterEach(() => {
@@ -54,6 +57,12 @@ describe('ParserSearch', () => {
 
     it('has expected coarse version', () => {
       expect(parser.getCoarseVersion()).toEqual(CoarseVersion.LATEST);
+    });
+
+    it('has expected descriptors', () => {
+      expect(parser.getDescriptors()).toEqual([
+        'SELECT * FROM surfaceflinger_layers_snapshot',
+      ]);
     });
 
     it('has length entries equal to number of rows', () => {

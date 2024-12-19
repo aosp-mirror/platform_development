@@ -35,8 +35,9 @@ import {
 } from 'app/components/bottomnav/bottom_drawer_component';
 import {TimelineData} from 'app/timeline_data';
 import {assertDefined} from 'common/assert_utils';
-import {PersistentStore} from 'common/persistent_store';
-import {TimeRange} from 'common/time';
+import {PersistentStore} from 'common/store/persistent_store';
+import {TimestampConverterUtils} from 'common/time/test_utils';
+import {TimeRange} from 'common/time/time';
 import {
   ActiveTraceChanged,
   ExpandedTimelineToggled,
@@ -49,14 +50,15 @@ import {
   TraceSearchRequest,
   WinscopeEvent,
 } from 'messaging/winscope_event';
-import {TimestampConverterUtils} from 'test/unit/timestamp_converter_utils';
 import {TracesBuilder} from 'test/unit/traces_builder';
+import {TraceBuilder} from 'test/unit/trace_builder';
 import {UnitTestUtils} from 'test/unit/utils';
 import {Trace} from 'trace/trace';
 import {Traces} from 'trace/traces';
 import {TRACE_INFO} from 'trace/trace_info';
 import {TracePosition} from 'trace/trace_position';
 import {TraceType} from 'trace/trace_type';
+import {QueryResult} from 'trace_processor/query_result';
 import {DefaultTimelineRowComponent} from './expanded-timeline/default_timeline_row_component';
 import {ExpandedTimelineComponent} from './expanded-timeline/expanded_timeline_component';
 import {TransitionTimelineComponent} from './expanded-timeline/transition_timeline_component';
@@ -332,6 +334,7 @@ describe('TimelineComponent', () => {
 
   it('updates trace selection using selector', async () => {
     const allTraceTypes = [
+      TraceType.SEARCH,
       TraceType.SCREEN_RECORDING,
       TraceType.SURFACE_FLINGER,
       TraceType.WINDOW_MANAGER,
@@ -339,6 +342,15 @@ describe('TimelineComponent', () => {
       TraceType.VIEW_CAPTURE,
     ];
     loadAllTraces();
+    const [spyQueryResult, spyIter] =
+      UnitTestUtils.makeSearchTraceSpies(time100);
+    const searchTrace = new TraceBuilder<QueryResult>()
+      .setEntries([spyQueryResult])
+      .setTimestamps([time100])
+      .setDescriptors(['test query', '0'])
+      .setType(TraceType.SEARCH)
+      .build();
+    await component.timeline?.onWinscopeEvent(new TraceAddRequest(searchTrace));
     expectSelectedTraceTypes(allTraceTypes);
 
     await openSelectPanel();
@@ -346,22 +358,25 @@ describe('TimelineComponent', () => {
     const matOptions =
       document.documentElement.querySelectorAll<HTMLInputElement>('mat-option');
     checkTooltips(Array.from(matOptions), [
+      'test query, 0',
       'mock_screen_recording',
       'file descriptor',
       'file descriptor',
       'file descriptor',
       'Test Window, mock_view_capture',
     ]);
-    const sfOption = matOptions.item(1);
+    expect(matOptions.item(0).textContent).toContain('Search test query');
+    const sfOption = matOptions.item(2);
     expect(sfOption.textContent).toContain('Surface Flinger');
     expect(sfOption.ariaDisabled).toEqual('true');
-    for (const i of [0, 2, 3]) {
+    for (const i of [1, 3, 4]) {
       expect(matOptions.item(i).ariaDisabled).toEqual('false');
     }
 
-    matOptions.item(2).click();
+    matOptions.item(3).click();
     fixture.detectChanges();
     const expectedTypes = [
+      TraceType.SEARCH,
       TraceType.SCREEN_RECORDING,
       TraceType.SURFACE_FLINGER,
       TraceType.PROTO_LOG,
@@ -379,13 +394,14 @@ describe('TimelineComponent', () => {
       expect(text).toEqual(TRACE_INFO[expectedType].icon);
     });
     checkTooltips(traceIcons, [
+      'Search test query',
       'Screen Recording mock_screen_recording',
       TRACE_INFO[TraceType.SURFACE_FLINGER].name,
       TRACE_INFO[TraceType.PROTO_LOG].name,
       'View Capture Test Window',
     ]);
 
-    matOptions.item(2).click();
+    matOptions.item(3).click();
     fixture.detectChanges();
     expectSelectedTraceTypes(allTraceTypes);
     const newIcons = htmlElement.querySelectorAll(

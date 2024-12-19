@@ -16,8 +16,8 @@
 
 import {assertDefined} from 'common/assert_utils';
 import {FunctionUtils} from 'common/function_utils';
-import {parseMap, stringifyMap} from 'common/persistent_store_proxy';
-import {Store} from 'common/store';
+import {parseMap, stringifyMap} from 'common/store/persistent_store_proxy';
+import {Store} from 'common/store/store';
 import {
   TracePositionUpdate,
   WinscopeEvent,

@@ -19,7 +19,7 @@ import {TimelineUtils} from 'app/components/timeline/timeline_utils';
 import {assertDefined, assertTrue} from 'common/assert_utils';
 import {Point} from 'common/geometry/point';
 import {Rect} from 'common/geometry/rect';
-import {TimeRange, Timestamp} from 'common/time';
+import {TimeRange, Timestamp} from 'common/time/time';
 import {AbsoluteEntryIndex, Trace, TraceEntry} from 'trace/trace';
 import {TraceType} from 'trace/trace_type';
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';

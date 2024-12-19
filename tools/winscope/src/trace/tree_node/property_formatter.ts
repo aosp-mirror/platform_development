@@ -14,20 +14,11 @@
  * limitations under the License.
  */
 
-import {BigintMath} from './bigint_math';
-import {TIME_UNIT_TO_NANO} from './time_units';
+import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
 
-export class TimeDuration {
-  constructor(private timeDiffNs: bigint) {}
-  getValueNs(): bigint {
-    return this.timeDiffNs;
-  }
-
-  format(): string {
-    const msString = BigintMath.divideAndRound(
-      this.timeDiffNs,
-      BigInt(TIME_UNIT_TO_NANO.ms),
-    );
-    return msString.toLocaleString() + ' ms';
-  }
+/**
+ * Interface for formatting a PropertyTreeNode.
+ */
+export interface PropertyFormatter {
+  format(node: PropertyTreeNode): string;
 }

@@ -16,6 +16,10 @@
 
 import {Store} from './store';
 
+/**
+ * A proxy class that allows you to create objects that are backed by a persistent store.
+ * The proxy will automatically save changes made to the object to the store.
+ */
 export class PersistentStoreProxy {
   static new<T extends object>(
     key: string,
@@ -143,6 +147,12 @@ function mergeDeep(target: any, ...sources: any): any {
   return mergeDeep(target, ...sources);
 }
 
+/**
+ * Stringify a Map object to an object with type and value properties.
+ * @param key the key of the Map object
+ * @param value the Map object
+ * @return the object with type and value properties
+ */
 export function stringifyMap(key: string, value: any) {
   if (value instanceof Map) {
     return {
@@ -153,6 +163,12 @@ export function stringifyMap(key: string, value: any) {
   return value;
 }
 
+/**
+ * Parse a Map object from an object with type and value properties.
+ * @param key the key of the Map object
+ * @param value the object with type and value properties
+ * @return the Map object
+ */
 export function parseMap(key: string, value: any) {
   if (value && value.type === 'Map') {
     return new Map(value.value);

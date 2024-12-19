@@ -16,7 +16,7 @@
 
 import {DOMUtils} from 'common/dom_utils';
 import {FunctionUtils} from 'common/function_utils';
-import {Timestamp} from 'common/time';
+import {Timestamp} from 'common/time/time';
 import {
   TracePositionUpdate,
   WinscopeEvent,

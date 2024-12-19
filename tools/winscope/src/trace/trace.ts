@@ -16,8 +16,8 @@
 
 import {ArrayUtils} from 'common/array_utils';
 import {assertDefined} from 'common/assert_utils';
-import {INVALID_TIME_NS, Timestamp} from 'common/time';
-import {TimestampUtils} from 'common/timestamp_utils';
+import {INVALID_TIME_NS, Timestamp} from 'common/time/time';
+import {TimestampUtils} from 'common/time/timestamp_utils';
 import {TracesParserInput} from 'parsers/input/perfetto/traces_parser_input';
 import {AbstractParser as AbstractPerfettoParser} from 'parsers/perfetto/abstract_parser';
 import {

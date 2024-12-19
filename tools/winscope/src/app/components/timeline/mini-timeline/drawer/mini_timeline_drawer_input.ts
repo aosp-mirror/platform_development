@@ -19,7 +19,7 @@ import {Segment} from 'app/components/timeline/segment';
 import {TimelineUtils} from 'app/components/timeline/timeline_utils';
 import {TimelineData} from 'app/timeline_data';
 import {assertDefined} from 'common/assert_utils';
-import {TimeRange, Timestamp} from 'common/time';
+import {TimeRange, Timestamp} from 'common/time/time';
 import {Trace, TraceEntry} from 'trace/trace';
 import {TraceType} from 'trace/trace_type';
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';

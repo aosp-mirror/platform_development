@@ -201,3 +201,7 @@ log-view .headers .mat-form-field-infix {
     opacity: 0.5;
     filter: grayscale(1);
 }
+
+.result-tabs .mat-tab-body-wrapper {
+    height: 100%;
+}

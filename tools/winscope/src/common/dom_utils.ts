@@ -14,7 +14,16 @@
  * limitations under the License.
  */
 
+/**
+ * Utility functions for DOM manipulation.
+ */
 export class DOMUtils {
+  /**
+   * Checks if an element is visible on the screen.
+   *
+   * @param element The element to check.
+   * @return True if the element is visible, false otherwise.
+   */
   static isElementVisible(element: HTMLElement) {
     const rect = element.getBoundingClientRect();
     return rect.height > 0 && rect.width > 0;

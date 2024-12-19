@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-import {TimeRange} from 'common/time';
-import {TimeDuration} from 'common/time_duration';
+import {TimeRange} from 'common/time/time';
+import {TimeDuration} from 'common/time/time_duration';
 import {TRACE_INFO} from 'trace/trace_info';
 import {TraceType} from 'trace/trace_type';
 import {UserWarning} from './user_warning';

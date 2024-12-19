@@ -14,6 +14,14 @@
  * limitations under the License.
  */
 
+/**
+ * Asserts that the given value is defined.
+ *
+ * @param value The value to assert.
+ * @param lazyErrorMessage A function that returns a message to be included in the error if the assertion fails.
+ * @throws {Error} If the value is not defined.
+ * @return The value, asserted to be defined.
+ */
 export function assertDefined<A>(
   value: A | null | undefined,
   lazyErrorMessage?: () => string,
@@ -28,6 +36,13 @@ export function assertDefined<A>(
   return value;
 }
 
+/**
+ * Asserts that the given value is true.
+ *
+ * @param value The value to assert.
+ * @param lazyErrorMessage A function that returns a message to be included in the error if the assertion fails.
+ * @throws {Error} If the value is not true.
+ */
 export function assertTrue(value: boolean, lazyErrorMessage?: () => string) {
   if (!value) {
     throw new Error(
@@ -36,8 +51,14 @@ export function assertTrue(value: boolean, lazyErrorMessage?: () => string) {
   }
 }
 
-// Ensure at compile-time that a certain line is not reachable.
-// E.g. make sure that a switch/case handles all possible input values.
+/**
+ * Ensures at compile-time that a certain line is not reachable.
+ * E.g., make sure that a switch/case handles all possible input values.
+ *
+ * @param x The value to assert.
+ * @throws {Error} If the line is reachable.
+ * @return The value, asserted to be unreachable.
+ */
 export function assertUnreachable(x: never): never {
   throw new Error('This line should never execute');
 }

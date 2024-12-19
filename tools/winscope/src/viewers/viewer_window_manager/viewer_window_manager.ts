@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import {Store} from 'common/store';
+import {Store} from 'common/store/store';
 import {WinscopeEvent} from 'messaging/winscope_event';
 import {Trace} from 'trace/trace';
 import {Traces} from 'trace/traces';

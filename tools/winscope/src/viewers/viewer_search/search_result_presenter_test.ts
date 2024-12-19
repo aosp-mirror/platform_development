@@ -15,8 +15,8 @@
  */
 
 import {assertDefined} from 'common/assert_utils';
+import {TimestampConverterUtils} from 'common/time/test_utils';
 import {TracePositionUpdate} from 'messaging/winscope_event';
-import {TimestampConverterUtils} from 'test/unit/timestamp_converter_utils';
 import {TraceBuilder} from 'test/unit/trace_builder';
 import {UnitTestUtils} from 'test/unit/utils';
 import {Trace} from 'trace/trace';
@@ -74,12 +74,7 @@ class SearchResultPresenterTest extends AbstractLogViewerPresenterTest<SearchRes
       UnitTestUtils.makeSearchTraceSpies(time100);
     this.spyIter = spyIter;
     const trace = UnitTestUtils.makeEmptyTrace(TraceType.SEARCH);
-    return new SearchResultPresenter(
-      'fake query',
-      trace,
-      callback,
-      spyQueryResult,
-    );
+    return new SearchResultPresenter(trace, callback, spyQueryResult);
   }
 
   override async createPresenter(
@@ -88,7 +83,6 @@ class SearchResultPresenterTest extends AbstractLogViewerPresenterTest<SearchRes
     positionUpdate = assertDefined(this.getPositionUpdate()),
   ): Promise<SearchResultPresenter> {
     const presenter = new SearchResultPresenter(
-      'successful query',
       trace,
       callback,
       await trace.getEntry(0).getValue(),

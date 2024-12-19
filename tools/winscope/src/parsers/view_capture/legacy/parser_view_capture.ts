@@ -15,7 +15,7 @@
  */
 
 import {assertDefined} from 'common/assert_utils';
-import {ParserTimestampConverter} from 'common/timestamp_converter';
+import {ParserTimestampConverter} from 'common/time/timestamp_converter';
 import {ParsingUtils} from 'parsers/legacy/parsing_utils';
 import {com} from 'protos/viewcapture/udc/static';
 import {Parser} from 'trace/parser';
