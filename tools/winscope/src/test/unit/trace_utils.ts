@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import {Timestamp} from 'common/time';
+import {Timestamp} from 'common/time/time';
 import {AbsoluteFrameIndex, Trace} from 'trace/trace';
 
 export class TraceUtils {

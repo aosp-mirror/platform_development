@@ -16,7 +16,8 @@
 
 import {NgTemplateOutlet} from '@angular/common';
 import {Component, Input} from '@angular/core';
-import {Search} from './ui_data';
+import {FormControl} from '@angular/forms';
+import {ListedSearch} from './ui_data';
 
 @Component({
   selector: 'search-list',
@@ -60,7 +61,7 @@ import {Search} from './ui_data';
                 <span class="context-menu-item" [cdkMenuItemDisabled]="true" cdkMenuItem>
                   <ng-container
                     [ngTemplateOutlet]="opt.menu"
-                    [ngTemplateOutletContext]="{search}"></ng-container>
+                    [ngTemplateOutletContext]="{query: search.query, control}"></ng-container>
                 </span>
               </div>
             </div>
@@ -110,17 +111,18 @@ import {Search} from './ui_data';
   ],
 })
 export class SearchListComponent {
-  @Input() searches: Search[] = [];
+  @Input() searches: ListedSearch[] = [];
   @Input() placeholderText = '';
   @Input() listItemOptions: ListItemOption[] = [];
+  @Input() control = new FormControl('');
 
-  searchOptionsTarget: Search | undefined;
+  searchOptionsTarget: ListedSearch | undefined;
 
-  showTooltip(search: Search, el: HTMLElement) {
+  showTooltip(search: ListedSearch, el: HTMLElement) {
     return search.name !== search.query || el.scrollWidth > el.offsetWidth;
   }
 
-  getTooltip(search: Search) {
+  getTooltip(search: ListedSearch) {
     if (search.name === search.query) return search.query;
     return search.name + ': ' + search.query;
   }
@@ -134,6 +136,6 @@ export class SearchListComponent {
 export interface ListItemOption {
   name: string;
   icon: string;
-  onClickCallback?: (search: Search) => void;
+  onClickCallback?: (search: ListedSearch) => void;
   menu?: NgTemplateOutlet;
 }

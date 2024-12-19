@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import {Timestamp} from 'common/time';
+import {Timestamp} from 'common/time/time';
 import {AbstractParser} from 'parsers/legacy/abstract_parser';
 import {EntryPropertiesTreeFactory} from 'parsers/transitions/entry_properties_tree_factory';
 import root from 'protos/transitions/udc/json';

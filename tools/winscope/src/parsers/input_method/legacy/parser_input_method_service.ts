@@ -15,7 +15,7 @@
  */
 
 import {assertDefined} from 'common/assert_utils';
-import {Timestamp} from 'common/time';
+import {Timestamp} from 'common/time/time';
 import {HierarchyTreeServiceFactory} from 'parsers/input_method/hierarchy_tree_service_factory';
 import {AbstractParser} from 'parsers/legacy/abstract_parser';
 import {TamperedMessageType} from 'parsers/tampered_message_type';

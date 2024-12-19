@@ -16,11 +16,17 @@
 
 import {TraceType} from 'trace/trace_type';
 
+/**
+ * Represents the files that were requested and collected from the device.
+ */
 export interface AdbFiles {
   requested: RequestedTraceTypes[];
   collected: File[];
 }
 
+/**
+ * Represents the trace types that were requested from the device.
+ */
 export interface RequestedTraceTypes {
   name: string;
   types: TraceType[];

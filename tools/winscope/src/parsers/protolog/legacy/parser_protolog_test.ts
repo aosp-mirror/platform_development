@@ -15,8 +15,11 @@
  */
 
 import {assertDefined} from 'common/assert_utils';
-import {Timestamp} from 'common/time';
-import {TimestampConverterUtils} from 'test/unit/timestamp_converter_utils';
+import {
+  TimestampConverterUtils,
+  timestampEqualityTester,
+} from 'common/time/test_utils';
+import {Timestamp} from 'common/time/time';
 import {UnitTestUtils} from 'test/unit/utils';
 import {CoarseVersion} from 'trace/coarse_version';
 import {Parser} from 'trace/parser';
@@ -42,7 +45,7 @@ const genProtoLogTest =
     let parser: Parser<PropertyTreeNode>;
 
     beforeAll(async () => {
-      jasmine.addCustomEqualityTester(UnitTestUtils.timestampEqualityTester);
+      jasmine.addCustomEqualityTester(timestampEqualityTester);
       parser = (await UnitTestUtils.getParser(
         traceFile,
       )) as Parser<PropertyTreeNode>;

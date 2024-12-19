@@ -20,7 +20,7 @@ import {TimelineUtils} from 'app/components/timeline/timeline_utils';
 import {Point} from 'common/geometry/point';
 import {MouseEventButton} from 'common/mouse_event_button';
 import {Padding} from 'common/padding';
-import {Timestamp} from 'common/time';
+import {Timestamp} from 'common/time/time';
 import {Trace} from 'trace/trace';
 import {TRACE_INFO} from 'trace/trace_info';
 import {CanvasMouseHandler} from './canvas_mouse_handler';

@@ -14,8 +14,10 @@
  * limitations under the License.
  */
 
-import {TimestampConverterUtils} from 'test/unit/timestamp_converter_utils';
-import {UnitTestUtils} from 'test/unit/utils';
+import {
+  TimestampConverterUtils,
+  timestampEqualityTester,
+} from 'common/time/test_utils';
 import {TimestampConverter} from './timestamp_converter';
 import {TIME_UNIT_TO_NANO} from './time_units';
 
@@ -32,7 +34,7 @@ describe('TimestampConverter', () => {
   const testRealToBootTimeOffsetNs = MILLISECOND;
 
   beforeAll(() => {
-    jasmine.addCustomEqualityTester(UnitTestUtils.timestampEqualityTester);
+    jasmine.addCustomEqualityTester(timestampEqualityTester);
   });
 
   describe('makes timestamps from ns without timezone info', () => {

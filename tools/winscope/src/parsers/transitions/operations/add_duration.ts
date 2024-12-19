@@ -15,8 +15,8 @@
  */
 
 import {assertDefined} from 'common/assert_utils';
-import {Timestamp} from 'common/time';
-import {TimeDuration} from 'common/time_duration';
+import {Timestamp} from 'common/time/time';
+import {TimeDuration} from 'common/time/time_duration';
 import {TIMESTAMP_NODE_FORMATTER} from 'trace/tree_node/formatters';
 import {AddOperation} from 'trace/tree_node/operations/add_operation';
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';

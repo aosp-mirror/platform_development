@@ -15,7 +15,10 @@
  */
 
 import {assertDefined} from 'common/assert_utils';
-import {TimestampConverterUtils} from 'test/unit/timestamp_converter_utils';
+import {
+  TimestampConverterUtils,
+  timestampEqualityTester,
+} from 'common/time/test_utils';
 import {UnitTestUtils} from 'test/unit/utils';
 import {CoarseVersion} from 'trace/coarse_version';
 import {Parser} from 'trace/parser';
@@ -27,7 +30,7 @@ describe('Perfetto ParserTransitions', () => {
     let parser: Parser<PropertyTreeNode>;
 
     beforeAll(async () => {
-      jasmine.addCustomEqualityTester(UnitTestUtils.timestampEqualityTester);
+      jasmine.addCustomEqualityTester(timestampEqualityTester);
       parser = await UnitTestUtils.getPerfettoParser(
         TraceType.TRANSITION,
         'traces/perfetto/shell_transitions_trace.perfetto-trace',

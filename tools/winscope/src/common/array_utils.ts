@@ -24,7 +24,18 @@ type TypedArray =
   | Float32Array
   | Float64Array;
 
+/**
+ * Utility functions for working with arrays.
+ */
 export class ArrayUtils {
+  /**
+   * Checks if two arrays are equal.
+   *
+   * @param a The first array.
+   * @param b The second array.
+   * @param predicate A function that takes two elements and returns true if they are equal. Defaults to strict equality.
+   *  True if the arrays are equal, false otherwise.
+   */
   static equal<T>(
     a: T[] | TypedArray,
     b: T[] | TypedArray,
@@ -43,6 +54,13 @@ export class ArrayUtils {
     return true;
   }
 
+  /**
+   * Searches for a subarray within an array.
+   *
+   * @param array The array to search in.
+   * @param subarray The subarray to search for.
+   * @return The index of the first occurrence of the subarray, or undefined if it is not found.
+   */
   static searchSubarray<T>(
     array: T[] | TypedArray,
     subarray: T[] | TypedArray,
@@ -65,6 +83,13 @@ export class ArrayUtils {
     return undefined;
   }
 
+  /**
+   * Performs a binary search to find the first element in the array that is greater than or equal to the target value.
+   *
+   * @param values The array to search in.
+   * @param target The value to search for.
+   * @return The index of the first element that is greater than or equal to the target value, or undefined if no such element exists.
+   */
   static binarySearchFirstGreaterOrEqual<T>(
     values: T[] | TypedArray,
     target: T,
@@ -97,6 +122,13 @@ export class ArrayUtils {
     return result;
   }
 
+  /**
+   * Performs a binary search to find the first element in the array that is greater than the target value.
+   *
+   * @param values The array to search in.
+   * @param target The value to search for.
+   * @return The index of the first element that is greater than the target value, or undefined if no such element exists.
+   */
   static binarySearchFirstGreater<T>(
     values: T[] | TypedArray,
     target: T,
@@ -128,6 +160,14 @@ export class ArrayUtils {
     return result;
   }
 
+  /**
+   * Converts an array of bytes to a bigint in little-endian order.
+   *
+   * @param buffer The array of bytes to convert.
+   * @param start The starting index of the bytes to convert.
+   * @param end The ending index of the bytes to convert.
+   * @return The bigint representation of the bytes in little-endian order.
+   */
   static toUintLittleEndian(
     buffer: Uint8Array,
     start: number,
@@ -141,6 +181,14 @@ export class ArrayUtils {
     return result;
   }
 
+  /**
+   * Converts an array of bytes to a bigint in little-endian order, treating the bytes as a signed integer.
+   *
+   * @param buffer The array of bytes to convert.
+   * @param start The starting index of the bytes to convert.
+   * @param end The ending index of the bytes to convert.
+   * @return The bigint representation of the bytes in little-endian order, treating the bytes as a signed integer.
+   */
   static toIntLittleEndian(
     buffer: Uint8Array,
     start: number,

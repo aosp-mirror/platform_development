@@ -17,9 +17,9 @@
 import {LogEntry, LogHeader} from 'viewers/common/ui_data_log';
 
 export class UiData {
-  currentSearches: SearchResult[] = [];
-  savedSearches: Search[] = [];
-  recentSearches: Search[] = [];
+  currentSearches: CurrentSearch[] = [];
+  savedSearches: ListedSearch[] = [];
+  recentSearches: ListedSearch[] = [];
   lastTraceFailed = false;
   initialized = false;
   searchViews: string[] = [];
@@ -29,19 +29,23 @@ export class UiData {
   }
 }
 
+export class CurrentSearch {
+  constructor(
+    readonly uid: number,
+    public query?: string,
+    public result?: SearchResult,
+  ) {}
+}
+
 export class SearchResult {
   selectedIndex: undefined | number;
   scrollToIndex: undefined | number;
   currentIndex: undefined | number;
 
-  constructor(
-    readonly query: string,
-    readonly headers: LogHeader[],
-    readonly entries: LogEntry[],
-  ) {}
+  constructor(readonly headers: LogHeader[], readonly entries: LogEntry[]) {}
 }
 
-export class Search {
+export class ListedSearch {
   readonly timeMs: number;
   constructor(readonly query: string, readonly name = query) {
     this.timeMs = Date.now();

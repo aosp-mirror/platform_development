@@ -16,7 +16,7 @@
 
 import {assertDefined} from 'common/assert_utils';
 import {FileUtils} from 'common/file_utils';
-import {TimezoneInfo} from 'common/time';
+import {TimezoneInfo} from 'common/time/time';
 import {UserNotifier} from 'common/user_notifier';
 import {TraceOverridden} from 'messaging/user_warnings';
 import {TraceFile} from 'trace/trace_file';

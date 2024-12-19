@@ -16,6 +16,9 @@
 
 import {NotificationType, UserNotification} from './user_notification';
 
+/**
+ * A warning message to be displayed to the user.
+ */
 export abstract class UserWarning implements UserNotification {
   getNotificationType(): NotificationType {
     return NotificationType.WARNING;

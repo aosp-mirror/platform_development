@@ -27,7 +27,7 @@ import {FormControl, ValidationErrors, Validators} from '@angular/forms';
 import {overlayPanelStyles} from 'app/styles/overlay_panel.styles';
 import {assertDefined} from 'common/assert_utils';
 import {FunctionUtils} from 'common/function_utils';
-import {Store} from 'common/store';
+import {Store} from 'common/store/store';
 import {Analytics} from 'logging/analytics';
 import {
   FilterPresetApplyRequest,

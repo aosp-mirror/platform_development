@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import {Timestamp} from 'common/time';
+import {Timestamp} from 'common/time/time';
 import {HierarchyTreeNode} from 'trace/tree_node/hierarchy_tree_node';
 import {AbstractPresenterInputMethod} from 'viewers/common/abstract_presenter_input_method';
 import {ImeAdditionalProperties} from 'viewers/common/ime_additional_properties';

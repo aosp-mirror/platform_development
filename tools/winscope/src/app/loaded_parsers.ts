@@ -17,8 +17,8 @@
 import {assertDefined} from 'common/assert_utils';
 import {FileUtils} from 'common/file_utils';
 import {OnProgressUpdateType} from 'common/function_utils';
-import {INVALID_TIME_NS, TimeRange, Timestamp} from 'common/time';
-import {TIME_UNIT_TO_NANO} from 'common/time_units';
+import {INVALID_TIME_NS, TimeRange, Timestamp} from 'common/time/time';
+import {TIME_UNIT_TO_NANO} from 'common/time/time_units';
 import {UserNotifier} from 'common/user_notifier';
 import {TraceHasOldData, TraceOverridden} from 'messaging/user_warnings';
 import {FileAndParser} from 'parsers/file_and_parser';

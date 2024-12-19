@@ -14,7 +14,11 @@
  * limitations under the License.
  */
 import {assertDefined} from 'common/assert_utils';
-import {TimestampConverterUtils} from 'test/unit/timestamp_converter_utils';
+import {
+  TimestampConverterUtils,
+  timestampEqualityTester,
+} from 'common/time/test_utils';
+import {getFixtureFile} from 'test/unit/fixture_utils';
 import {UnitTestUtils} from 'test/unit/utils';
 import {Parser} from 'trace/parser';
 import {TraceFile} from 'trace/trace_file';
@@ -23,12 +27,12 @@ import {ParserFactory} from './parser_factory';
 
 describe('Parser', () => {
   beforeAll(() => {
-    jasmine.addCustomEqualityTester(UnitTestUtils.timestampEqualityTester);
+    jasmine.addCustomEqualityTester(timestampEqualityTester);
   });
 
   it('is robust to empty trace file', async () => {
     const trace = new TraceFile(
-      await UnitTestUtils.getFixtureFile('traces/empty.pb'),
+      await getFixtureFile('traces/empty.pb'),
       undefined,
     );
     const parsers = await new ParserFactory().createParsers(
@@ -41,9 +45,7 @@ describe('Parser', () => {
 
   it('is robust to trace with no entries', async () => {
     const trace = new TraceFile(
-      await UnitTestUtils.getFixtureFile(
-        'traces/no_entries_InputMethodClients.pb',
-      ),
+      await getFixtureFile('traces/no_entries_InputMethodClients.pb'),
       undefined,
     );
     const parsers = await new ParserFactory().createParsers(
@@ -56,7 +58,7 @@ describe('Parser', () => {
 
   it('is robust to view capture trace with no entries', async () => {
     const trace = new TraceFile(
-      await UnitTestUtils.getFixtureFile('traces/no_entries_view_capture.vc'),
+      await getFixtureFile('traces/no_entries_view_capture.vc'),
       undefined,
     );
     const parsers = await new ParserFactory().createParsers(

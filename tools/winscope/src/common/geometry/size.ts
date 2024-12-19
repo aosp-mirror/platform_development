@@ -14,6 +14,9 @@
  * limitations under the License.
  */
 
+/**
+ * Represents a size with width and height.
+ */
 export interface Size {
   width: number;
   height: number;

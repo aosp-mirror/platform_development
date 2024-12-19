@@ -21,9 +21,9 @@ import {
 import {MatButtonModule} from '@angular/material/button';
 import {BrowserAnimationsModule} from '@angular/platform-browser/animations';
 import {assertDefined} from 'common/assert_utils';
-import {Timestamp} from 'common/time';
+import {TimestampConverterUtils} from 'common/time/test_utils';
+import {Timestamp} from 'common/time/time';
 import {PropertyTreeBuilder} from 'test/unit/property_tree_builder';
-import {TimestampConverterUtils} from 'test/unit/timestamp_converter_utils';
 import {TIMESTAMP_NODE_FORMATTER} from 'trace/tree_node/formatters';
 import {UiPropertyTreeNode} from 'viewers/common/ui_property_tree_node';
 import {ViewerEvents} from 'viewers/common/viewer_events';

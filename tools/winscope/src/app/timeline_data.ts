@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-import {TimeRange, Timestamp} from 'common/time';
-import {ComponentTimestampConverter} from 'common/timestamp_converter';
+import {TimeRange, Timestamp} from 'common/time/time';
+import {ComponentTimestampConverter} from 'common/time/timestamp_converter';
 import {UserNotifier} from 'common/user_notifier';
 import {CannotParseAllTransitions} from 'messaging/user_warnings';
 import {ScreenRecordingUtils} from 'trace/screen_recording_utils';

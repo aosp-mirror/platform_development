@@ -14,11 +14,11 @@
  * limitations under the License.
  */
 
+import {TimestampConverterUtils} from 'common/time/test_utils';
 import {
   ExpandedTimelineToggled,
   TracePositionUpdate,
 } from 'messaging/winscope_event';
-import {TimestampConverterUtils} from 'test/unit/timestamp_converter_utils';
 import {TraceBuilder} from 'test/unit/trace_builder';
 import {MediaBasedTraceEntry} from 'trace/media_based_trace_entry';
 import {TraceType} from 'trace/trace_type';

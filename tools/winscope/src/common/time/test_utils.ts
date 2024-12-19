@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-import {Timestamp, TimezoneInfo} from 'common/time';
-import {TimestampConverter} from 'common/timestamp_converter';
+import {Timestamp, TimezoneInfo} from 'common/time/time';
+import {TimestampConverter} from 'common/time/timestamp_converter';
 
 class TimestampConverterTestUtils {
   readonly ASIA_TIMEZONE_INFO: TimezoneInfo = {
@@ -69,6 +69,27 @@ class TimestampConverterTestUtils {
   makeZeroTimestamp(): Timestamp {
     return this.TIMESTAMP_CONVERTER_NO_RTE_OFFSET.makeZeroTimestamp();
   }
+}
+
+function testTimestamps(
+  timestamp: Timestamp,
+  expectedTimestamp: Timestamp,
+): boolean {
+  if (timestamp.format() !== expectedTimestamp.format()) return false;
+  if (timestamp.getValueNs() !== expectedTimestamp.getValueNs()) {
+    return false;
+  }
+  return true;
+}
+
+export function timestampEqualityTester(
+  first: any,
+  second: any,
+): boolean | undefined {
+  if (first instanceof Timestamp && second instanceof Timestamp) {
+    return testTimestamps(first, second);
+  }
+  return undefined;
 }
 
 export const TimestampConverterUtils = new TimestampConverterTestUtils();

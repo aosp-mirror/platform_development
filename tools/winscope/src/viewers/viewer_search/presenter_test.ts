@@ -14,7 +14,8 @@
  * limitations under the License.
  */
 
-import {InMemoryStorage} from 'common/in_memory_storage';
+import {InMemoryStorage} from 'common/store/in_memory_storage';
+import {TimestampConverterUtils} from 'common/time/test_utils';
 import {
   InitializeTraceSearchRequest,
   TraceAddRequest,
@@ -24,7 +25,6 @@ import {
   TraceSearchInitialized,
   TraceSearchRequest,
 } from 'messaging/winscope_event';
-import {TimestampConverterUtils} from 'test/unit/timestamp_converter_utils';
 import {TraceBuilder} from 'test/unit/trace_builder';
 import {UserNotifierChecker} from 'test/unit/user_notifier_checker';
 import {UnitTestUtils} from 'test/unit/utils';
@@ -33,14 +33,15 @@ import {Traces} from 'trace/traces';
 import {TraceType} from 'trace/trace_type';
 import {QueryResult} from 'trace_processor/query_result';
 import {
+  ClearQueryClickDetail,
   DeleteSavedQueryClickDetail,
-  QueryClickDetail,
   SaveQueryClickDetail,
+  SearchQueryClickDetail,
   TimestampClickDetail,
   ViewerEvents,
 } from 'viewers/common/viewer_events';
 import {Presenter} from './presenter';
-import {Search, SearchResult, UiData} from './ui_data';
+import {CurrentSearch, ListedSearch, SearchResult, UiData} from './ui_data';
 
 describe('PresenterSearch', () => {
   let presenter: Presenter;
@@ -78,10 +79,10 @@ describe('PresenterSearch', () => {
     const testQuery = 'search query';
     element.dispatchEvent(
       new CustomEvent(ViewerEvents.SearchQueryClick, {
-        detail: new QueryClickDetail(testQuery),
+        detail: new SearchQueryClickDetail(testQuery, 1),
       }),
     );
-    expect(spy).toHaveBeenCalledWith(testQuery);
+    expect(spy).toHaveBeenCalledWith(testQuery, 1);
 
     spy = spyOn(presenter, 'onSaveQueryClick');
     const saveQueryDetail = new SaveQueryClickDetail('save query', 'foo');
@@ -97,7 +98,7 @@ describe('PresenterSearch', () => {
 
     spy = spyOn(presenter, 'onDeleteSavedQueryClick');
     const deleteQueryDetail = new DeleteSavedQueryClickDetail(
-      new Search('delete query', 'bar'),
+      new ListedSearch('delete query', 'bar'),
     );
     element.dispatchEvent(
       new CustomEvent(ViewerEvents.DeleteSavedQueryClick, {
@@ -105,6 +106,19 @@ describe('PresenterSearch', () => {
       }),
     );
     expect(spy).toHaveBeenCalledWith(deleteQueryDetail.search);
+
+    spy = spyOn(presenter, 'addSearch');
+    element.dispatchEvent(new CustomEvent(ViewerEvents.AddQueryClick));
+    expect(spy).toHaveBeenCalled();
+
+    spy = spyOn(presenter, 'onClearQueryClick');
+    const clickQueryDetail = new ClearQueryClickDetail(2);
+    element.dispatchEvent(
+      new CustomEvent(ViewerEvents.ClearQueryClick, {
+        detail: clickQueryDetail,
+      }),
+    );
+    expect(spy).toHaveBeenCalledWith(2);
   });
 
   it('handles trace search initialization', async () => {
@@ -127,13 +141,13 @@ describe('PresenterSearch', () => {
     const query = 'successful empty query';
     await runSearchWithNoRowsAndCheckUiData(
       query,
-      UnitTestUtils.makeEmptyTrace(TraceType.SEARCH, [query]),
+      UnitTestUtils.makeEmptyTrace(TraceType.SEARCH, [query, '1']),
     );
   });
 
   it('handles search for successful query with non-zero rows', async () => {
     const testQuery = 'successful non-empty query';
-    presenter.onSearchQueryClick(testQuery);
+    await presenter.onSearchQueryClick(testQuery, 1);
     expect(emitEventSpy).toHaveBeenCalledOnceWith(
       new TraceSearchRequest(testQuery),
     );
@@ -149,19 +163,23 @@ describe('PresenterSearch', () => {
       .build();
 
     await presenter.onAppEvent(new TraceAddRequest(trace));
-    const expectedSearchResult = new SearchResult(testQuery, [], []);
-    expect(uiData.currentSearches).toEqual([expectedSearchResult]);
+    const expectedSearch = new CurrentSearch(
+      1,
+      testQuery,
+      new SearchResult([], []),
+    );
+    expect(uiData.currentSearches).toEqual([expectedSearch]);
     expect(uiData.lastTraceFailed).toEqual(false);
 
     await presenter.onAppEvent(
       TracePositionUpdate.fromTraceEntry(trace.getEntry(0)),
     );
     expect(uiData.currentSearches.length).toEqual(1);
-    expect(uiData.currentSearches[0].currentIndex).toEqual(0);
-    expect(uiData.currentSearches[0].headers.length).toEqual(2);
-    expect(uiData.currentSearches[0].entries.length).toEqual(1);
+    expect(uiData.currentSearches[0].result?.currentIndex).toEqual(0);
+    expect(uiData.currentSearches[0].result?.headers.length).toEqual(2);
+    expect(uiData.currentSearches[0].result?.entries.length).toEqual(1);
     expect(uiData.lastTraceFailed).toEqual(false);
-    expect(uiData.recentSearches).toEqual([new Search(testQuery)]);
+    expect(uiData.recentSearches).toEqual([new ListedSearch(testQuery)]);
 
     // adds event listeners and emit event for search presenter
     emitEventSpy.calls.reset();
@@ -175,6 +193,25 @@ describe('PresenterSearch', () => {
     );
   });
 
+  it('runs same query twice with separate uids', async () => {
+    const query = 'successful query';
+    await runSearchWithNoRowsAndCheckUiData(
+      query,
+      UnitTestUtils.makeEmptyTrace(TraceType.SEARCH, [query]),
+    );
+    emitEventSpy.calls.reset();
+    presenter.addSearch();
+    await runSearchWithNoRowsAndCheckUiData(
+      query,
+      UnitTestUtils.makeEmptyTrace(TraceType.SEARCH, [query]),
+      2,
+      [
+        new CurrentSearch(1, query, new SearchResult([], [])),
+        new CurrentSearch(2, query, new SearchResult([], [])),
+      ],
+    );
+  });
+
   it('handles non-search trace added event', async () => {
     const currData = uiData;
     const trace = UnitTestUtils.makeEmptyTrace(TraceType.SURFACE_FLINGER);
@@ -184,10 +221,10 @@ describe('PresenterSearch', () => {
 
   it('handles search for unsuccessful query', async () => {
     const testQuery = 'unsuccessful query';
-    presenter.onSearchQueryClick(testQuery);
+    presenter.onSearchQueryClick(testQuery, 1);
     await presenter.onAppEvent(new TraceSearchFailed());
     expect(uiData.lastTraceFailed).toEqual(true);
-    expect(uiData.currentSearches).toEqual([]);
+    expect(uiData.currentSearches).toEqual([new CurrentSearch(1, testQuery)]);
     expect(uiData.recentSearches).toEqual([]);
   });
 
@@ -197,13 +234,17 @@ describe('PresenterSearch', () => {
     await runSearchWithNoRowsAndCheckUiData(testQuery, trace);
     emitEventSpy.calls.reset();
 
-    await presenter.onSearchQueryClick(testQuery);
+    await presenter.onSearchQueryClick(testQuery, 1);
     expect(emitEventSpy).toHaveBeenCalledWith(new TraceRemoveRequest(trace));
     expect(emitEventSpy).toHaveBeenCalledWith(
       new TraceSearchRequest(testQuery),
     );
-    expect(uiData.currentSearches).toEqual([]);
-    expect(uiData.recentSearches).toEqual([new Search(testQuery)]);
+    expect(uiData.currentSearches.length).toEqual(1);
+    emitEventSpy.calls.reset();
+
+    await presenter.onAppEvent(new TraceSearchFailed());
+    expect(uiData.currentSearches.length).toEqual(1);
+    expect(uiData.recentSearches).toEqual([new ListedSearch(testQuery)]);
     emitEventSpy.calls.reset();
 
     const newQuery = 'new query';
@@ -215,13 +256,13 @@ describe('PresenterSearch', () => {
     element.dispatchEvent(new CustomEvent(ViewerEvents.ArrowDownPress));
     expect(uiData.currentSearches.length).toEqual(1);
 
-    await presenter.onSearchQueryClick(newQuery);
+    await presenter.onSearchQueryClick(newQuery, 1);
     expect(emitEventSpy).toHaveBeenCalledWith(new TraceRemoveRequest(newTrace));
     expect(emitEventSpy).toHaveBeenCalledWith(new TraceSearchRequest(newQuery));
-    expect(uiData.currentSearches).toEqual([]);
+    expect(uiData.currentSearches.length).toEqual(1);
     expect(uiData.recentSearches).toEqual([
-      new Search(newQuery),
-      new Search(testQuery),
+      new ListedSearch(newQuery),
+      new ListedSearch(testQuery),
     ]);
   });
 
@@ -229,20 +270,20 @@ describe('PresenterSearch', () => {
     const testQuery = 'save query';
     const testName = 'save name';
     presenter.onSaveQueryClick(testQuery, testName);
-    const testSearch = new Search(testQuery, testName);
+    const testSearch = new ListedSearch(testQuery, testName);
     expect(uiData.savedSearches).toEqual([testSearch]);
 
     const newQuery = 'new save query';
     const newName = 'new save name';
     presenter.onSaveQueryClick(newQuery, newName);
-    const newSearch = new Search(newQuery, newName);
+    const newSearch = new ListedSearch(newQuery, newName);
     expect(uiData.savedSearches).toEqual([newSearch, testSearch]);
   });
 
   it('handles delete saved query click', () => {
     const testQuery = 'delete query';
     const testName = 'delete name';
-    const testSearch = new Search(testQuery, testName);
+    const testSearch = new ListedSearch(testQuery, testName);
     presenter.onDeleteSavedQueryClick(testSearch);
     expect(uiData.savedSearches).toEqual([]);
 
@@ -253,8 +294,36 @@ describe('PresenterSearch', () => {
     expect(uiData.savedSearches).toEqual([]);
   });
 
+  it('handles clear query click', async () => {
+    const testQuery = 'clear query';
+    const trace = UnitTestUtils.makeEmptyTrace(TraceType.SEARCH, [
+      testQuery,
+      '1',
+    ]);
+    await runSearchWithNoRowsAndCheckUiData(testQuery, trace);
+
+    await presenter.onClearQueryClick(0);
+    expect(uiData.currentSearches.length).toEqual(1);
+    await presenter.onClearQueryClick(1);
+    expect(uiData.currentSearches.length).toEqual(0);
+  });
+
+  it('retains at most 10 recent searches', async () => {
+    for (let i = 0; i < 12; i++) {
+      const testQuery = 'recent query';
+      const trace = UnitTestUtils.makeEmptyTrace(TraceType.SEARCH, [
+        testQuery,
+        '1',
+      ]);
+      await presenter.onSearchQueryClick(testQuery, 1);
+      await presenter.onAppEvent(new TraceAddRequest(trace));
+    }
+    expect(uiData.currentSearches.length).toEqual(1);
+    expect(uiData.recentSearches.length).toEqual(10);
+  });
+
   function searchEqualityTester(first: any, second: any): boolean | undefined {
-    if (first instanceof Search && second instanceof Search) {
+    if (first instanceof ListedSearch && second instanceof ListedSearch) {
       return first.query === second.query && first.name === second.name;
     }
     return undefined;
@@ -263,16 +332,18 @@ describe('PresenterSearch', () => {
   async function runSearchWithNoRowsAndCheckUiData(
     testQuery: string,
     trace: Trace<QueryResult>,
+    uid = 1,
+    expectedCurrentSearches = [
+      new CurrentSearch(uid, testQuery, new SearchResult([], [])),
+    ],
   ) {
-    presenter.onSearchQueryClick(testQuery);
+    await presenter.onSearchQueryClick(testQuery, uid);
     expect(emitEventSpy).toHaveBeenCalledOnceWith(
       new TraceSearchRequest(testQuery),
     );
     await presenter.onAppEvent(new TraceAddRequest(trace));
-    expect(uiData.currentSearches).toEqual([
-      new SearchResult(testQuery, [], []),
-    ]);
+    expect(uiData.currentSearches).toEqual(expectedCurrentSearches);
     expect(uiData.lastTraceFailed).toEqual(false);
-    expect(uiData.recentSearches[0]).toEqual(new Search(testQuery));
+    expect(uiData.recentSearches[0]).toEqual(new ListedSearch(testQuery));
   }
 });

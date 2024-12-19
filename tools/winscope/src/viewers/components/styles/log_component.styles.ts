@@ -20,6 +20,8 @@ export const logComponentStyles = `
     flex-direction: column;
     flex: 1;
     overflow: auto;
+  }
+  .entries.padded {
     margin: 4px;
     padding: 12px;
   }
