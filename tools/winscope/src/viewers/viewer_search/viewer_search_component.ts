@@ -84,6 +84,7 @@ import {CurrentSearch, ListedSearch, UiData} from './ui_data';
               </span>
 
               <ng-container *ngFor="let section of searchSections; let i = index">
+                <mat-divider *ngIf="i > 0" class="section-divider"></mat-divider>
                 <active-search
                   [canClear]="searchSections.length > 1"
                   [isSearchInitialized]="inputData.initialized"
@@ -231,6 +232,9 @@ import {CurrentSearch, ListedSearch, UiData} from './ui_data';
       .global-search .body {
         display: flex;
         flex-direction: column;
+      }
+      .section-divider {
+        margin-top: 18px;
       }
       active-search {
         display: flex;
@@ -392,8 +396,9 @@ export class ViewerSearchComponent {
     {
       name: 'Delete',
       icon: 'delete',
-      onClickCallback: (search: ListedSearch) =>
-        this.onDeleteQueryClick(search),
+      onClickCallback: (search: ListedSearch) => {
+        this.onDeleteQueryClick(search);
+      },
     },
   ];
   readonly recentSearchOptions: ListItemOption[] = [
