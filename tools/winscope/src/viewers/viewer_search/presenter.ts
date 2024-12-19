@@ -32,32 +32,34 @@ import {Traces} from 'trace/traces';
 import {TraceType} from 'trace/trace_type';
 import {QueryResult} from 'trace_processor/query_result';
 import {
+  AddQueryClickDetail,
+  ClearQueryClickDetail,
   DeleteSavedQueryClickDetail,
-  QueryClickDetail,
   SaveQueryClickDetail,
+  SearchQueryClickDetail,
   ViewerEvents,
 } from 'viewers/common/viewer_events';
 import {SearchResultPresenter} from './search_result_presenter';
-import {Search, SearchResult, UiData} from './ui_data';
+import {CurrentSearch, ListedSearch, SearchResult, UiData} from './ui_data';
 
-class QueryAndTrace {
-  constructor(
-    readonly query: string,
-    public trace: Trace<QueryResult> | undefined,
-  ) {}
+interface ActiveSearch {
+  search: CurrentSearch;
+  trace?: Trace<QueryResult>;
+  resultPresenter?: SearchResultPresenter;
 }
 
 export class Presenter {
   private emitWinscopeEvent: EmitEvent = FunctionUtils.DO_NOTHING_ASYNC;
   private uiData = UiData.createEmpty();
-  private runQueries: QueryAndTrace[] = [];
-  private savedSearches = PersistentStoreProxy.new<{searches: Search[]}>(
+  private activeSearchUid = 0;
+  private activeSearches: ActiveSearch[] = [];
+  private savedSearches = PersistentStoreProxy.new<{searches: ListedSearch[]}>(
     'savedSearches',
     {searches: []},
     this.storage,
   );
-  private currentSearchPresenters: SearchResultPresenter[] = [];
   private viewerElement: HTMLElement | undefined;
+  private runningSearch: CurrentSearch | undefined;
 
   constructor(
     private traces: Traces,
@@ -65,7 +67,7 @@ export class Presenter {
     private readonly notifyViewCallback: (uiData: UiData) => void,
   ) {
     this.uiData.savedSearches = Array.from(this.savedSearches.searches);
-    this.copyUiDataAndNotifyView();
+    this.addSearch();
   }
 
   setEmitEvent(callback: EmitEvent) {
@@ -83,8 +85,8 @@ export class Presenter {
     htmlElement.addEventListener(
       ViewerEvents.SearchQueryClick,
       async (event) => {
-        const detail: QueryClickDetail = (event as CustomEvent).detail;
-        this.onSearchQueryClick(detail.query);
+        const detail: SearchQueryClickDetail = (event as CustomEvent).detail;
+        this.onSearchQueryClick(detail.query, detail.uid);
       },
     );
     htmlElement.addEventListener(ViewerEvents.SaveQueryClick, async (event) => {
@@ -97,6 +99,18 @@ export class Presenter {
         const detail: DeleteSavedQueryClickDetail = (event as CustomEvent)
           .detail;
         this.onDeleteSavedQueryClick(detail.search);
+      },
+    );
+    htmlElement.addEventListener(ViewerEvents.AddQueryClick, async (event) => {
+      const detail: AddQueryClickDetail | undefined = (event as CustomEvent)
+        .detail;
+      this.addSearch(detail?.query);
+    });
+    htmlElement.addEventListener(
+      ViewerEvents.ClearQueryClick,
+      async (event) => {
+        const detail: ClearQueryClickDetail = (event as CustomEvent).detail;
+        this.onClearQueryClick(detail.uid);
       },
     );
   }
@@ -118,8 +132,8 @@ export class Presenter {
     await event.visit(WinscopeEventType.TRACE_SEARCH_FAILED, async (event) => {
       this.onTraceSearchFailed();
     });
-    for (const p of this.currentSearchPresenters) {
-      await p.onAppEvent(event);
+    for (const activeSearch of this.activeSearches.values()) {
+      await activeSearch.resultPresenter?.onAppEvent(event);
     }
   }
 
@@ -129,44 +143,42 @@ export class Presenter {
     }
   }
 
-  async onSearchQueryClick(query: string) {
-    if (this.runQueries.length > 0) {
-      this.clearQuery(this.runQueries[this.runQueries.length - 1].query);
-    }
-    this.runQueries.push(new QueryAndTrace(query, undefined));
+  async onSearchQueryClick(query: string, uid: number) {
+    const activeSearch = assertDefined(
+      this.activeSearches.find((a) => a.search.uid === uid),
+    );
+    this.resetActiveSearch(activeSearch, query);
+    this.runningSearch = activeSearch.search;
     this.emitWinscopeEvent(new TraceSearchRequest(query));
   }
 
-  private clearQuery(query: string) {
-    this.uiData.currentSearches = this.uiData.currentSearches.filter(
-      (s) => s.query !== query,
-    );
-    this.copyUiDataAndNotifyView();
-    this.currentSearchPresenters = this.currentSearchPresenters.filter((p) => {
-      if (p.query === query) {
-        p.onDestroy();
-        return false;
-      }
-      return true;
+  addSearch(query?: string) {
+    this.activeSearchUid++;
+    this.activeSearches.push({
+      search: new CurrentSearch(this.activeSearchUid, query),
     });
+    this.updateCurrentSearches();
+  }
 
-    const runQueryIndex = this.runQueries.findIndex((r) => r.query === query);
-    if (runQueryIndex !== -1) {
-      const trace = this.runQueries[runQueryIndex].trace;
-      if (trace) {
-        this.emitWinscopeEvent(new TraceRemoveRequest(trace));
-        this.runQueries.splice(runQueryIndex, 1);
-      }
+  async onClearQueryClick(uid: number) {
+    const activeSearchIndex = this.activeSearches.findIndex(
+      (a) => a.search.uid === uid,
+    );
+    if (activeSearchIndex === -1) {
+      return;
     }
+    const activeSearch = this.activeSearches.splice(activeSearchIndex, 1)[0];
+    this.resetActiveSearch(activeSearch);
+    this.updateCurrentSearches();
   }
 
   onSaveQueryClick(query: string, name: string) {
-    this.uiData.savedSearches.unshift(new Search(query, name));
+    this.uiData.savedSearches.unshift(new ListedSearch(query, name));
     this.savedSearches.searches = this.uiData.savedSearches;
     this.copyUiDataAndNotifyView();
   }
 
-  onDeleteSavedQueryClick(savedSearch: Search) {
+  onDeleteSavedQueryClick(savedSearch: ListedSearch) {
     this.uiData.savedSearches = this.uiData.savedSearches.filter(
       (s) => s !== savedSearch,
     );
@@ -175,56 +187,76 @@ export class Presenter {
   }
 
   private onTraceSearchFailed() {
+    this.runningSearch = undefined;
     this.uiData.lastTraceFailed = true;
     this.copyUiDataAndNotifyView();
     this.uiData.lastTraceFailed = false;
   }
 
   private async showQueryResult(newTrace: Trace<QueryResult>) {
-    const traceQuery = newTrace.getDescriptors()[0];
-    const runQuery = assertDefined(
-      this.runQueries.find((q) => q.query === traceQuery),
-    );
-    runQuery.trace = newTrace;
-
+    const [traceQuery] = newTrace.getDescriptors();
     if (this.uiData.recentSearches.length >= 10) {
       this.uiData.recentSearches.pop();
     }
-    this.uiData.recentSearches.unshift(new Search(runQuery.query));
+    this.uiData.recentSearches.unshift(new ListedSearch(traceQuery));
 
-    this.uiData.currentSearches = [];
-    for (const {query, trace} of this.runQueries) {
-      if (trace) {
-        const firstEntry =
-          trace.lengthEntries > 0 ? trace.getEntry(0) : undefined;
-        const presenter = new SearchResultPresenter(
-          query,
-          trace,
-          (result: SearchResult) => {
-            const currentSearch = this.uiData.currentSearches.find(
-              (search) => search.query === result.query,
-            );
-            if (currentSearch) {
-              currentSearch.scrollToIndex = result.scrollToIndex;
-              currentSearch.selectedIndex = result.selectedIndex;
-            } else {
-              this.uiData.currentSearches.push(result);
-            }
-            this.copyUiDataAndNotifyView();
-          },
-          firstEntry ? await firstEntry.getValue() : undefined,
-        );
-        presenter.addEventListeners(assertDefined(this.viewerElement));
-        presenter.setEmitEvent(async (event) => this.emitWinscopeEvent(event));
-        this.currentSearchPresenters.push(presenter);
-        if (firstEntry) {
-          await this.emitWinscopeEvent(
-            TracePositionUpdate.fromTraceEntry(firstEntry),
-          );
-        }
-      }
-    }
+    const activeSearch = assertDefined(
+      this.activeSearches.find((a) => a.search.uid === this.runningSearch?.uid),
+    );
+    this.resetActiveSearch(activeSearch, traceQuery);
+    this.initializeResultPresenter(activeSearch, newTrace);
+    this.runningSearch = undefined;
     this.copyUiDataAndNotifyView();
+  }
+
+  private updateCurrentSearches() {
+    this.uiData.currentSearches = this.activeSearches.map((a) => a.search);
+    this.copyUiDataAndNotifyView();
+  }
+
+  private resetActiveSearch(activeSearch: ActiveSearch, newQuery?: string) {
+    activeSearch.search.query = newQuery;
+    activeSearch.search.result = undefined;
+    if (activeSearch.resultPresenter) {
+      activeSearch.resultPresenter.onDestroy();
+      activeSearch.resultPresenter = undefined;
+    }
+    if (activeSearch.trace) {
+      this.emitWinscopeEvent(new TraceRemoveRequest(activeSearch.trace));
+      activeSearch.trace = undefined;
+    }
+  }
+
+  private async initializeResultPresenter(
+    activeSearch: ActiveSearch,
+    newTrace: Trace<QueryResult>,
+  ) {
+    activeSearch.trace = newTrace;
+    const firstEntry =
+      newTrace.lengthEntries > 0 ? newTrace.getEntry(0) : undefined;
+
+    const presenter = new SearchResultPresenter(
+      newTrace,
+      (result: SearchResult) => {
+        if (activeSearch.search.result) {
+          activeSearch.search.result.scrollToIndex = result.scrollToIndex;
+          activeSearch.search.result.selectedIndex = result.selectedIndex;
+        } else {
+          activeSearch.search.result = result;
+        }
+        this.updateCurrentSearches();
+      },
+      firstEntry ? await firstEntry.getValue() : undefined,
+    );
+    presenter.addEventListeners(assertDefined(this.viewerElement));
+    presenter.setEmitEvent(async (event) => this.emitWinscopeEvent(event));
+    activeSearch.resultPresenter = presenter;
+
+    if (firstEntry) {
+      await this.emitWinscopeEvent(
+        TracePositionUpdate.fromTraceEntry(firstEntry),
+      );
+    }
   }
 
   private copyUiDataAndNotifyView() {

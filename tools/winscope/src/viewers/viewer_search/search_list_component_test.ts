@@ -24,7 +24,7 @@ import {MatTooltipModule} from '@angular/material/tooltip';
 import {BrowserAnimationsModule} from '@angular/platform-browser/animations';
 import {assertDefined} from 'common/assert_utils';
 import {ListItemOption, SearchListComponent} from './search_list_component';
-import {Search} from './ui_data';
+import {ListedSearch} from './ui_data';
 
 describe('SearchListComponent', () => {
   let fixture: ComponentFixture<TestHostComponent>;
@@ -62,8 +62,8 @@ describe('SearchListComponent', () => {
 
   it('shows search names with tooltips', () => {
     component.searches = [
-      new Search('query1', 'name1'),
-      new Search('query2', 'query2'),
+      new ListedSearch('query1', 'name1'),
+      new ListedSearch('query2', 'query2'),
     ];
     fixture.detectChanges();
 
@@ -98,7 +98,7 @@ describe('SearchListComponent', () => {
 
   it('formats search dates', () => {
     spyOn(Date, 'now').and.returnValue(1000);
-    component.searches = [new Search('query1', 'name1')];
+    component.searches = [new ListedSearch('query1', 'name1')];
     fixture.detectChanges();
     const expectedDate = new Date(1000);
     expect(
@@ -113,13 +113,13 @@ describe('SearchListComponent', () => {
   });
 
   it('shows options and triggers callback on interaction', () => {
-    let optionClicked: Search | undefined;
-    component.searches = [new Search('query1', 'name1')];
+    let optionClicked: ListedSearch | undefined;
+    component.searches = [new ListedSearch('query1', 'name1')];
     fixture.detectChanges();
     // does not show menu button if no options
     expect(htmlElement.querySelector('.listed-search-options')).toBeNull();
 
-    const onClickCallback = (search: Search) => (optionClicked = search);
+    const onClickCallback = (search: ListedSearch) => (optionClicked = search);
     component.listItemOptions = [
       {name: 'option1', icon: 'test', onClickCallback},
     ];
@@ -137,7 +137,7 @@ describe('SearchListComponent', () => {
     component.listItemOptions = [
       {name: 'option1', icon: 'test', menu: component.testTemplate},
     ];
-    component.searches = [new Search('query1', 'name1')];
+    component.searches = [new ListedSearch('query1', 'name1')];
     fixture.detectChanges();
     const option = assertDefined(
       htmlElement.querySelector<HTMLElement>('.listed-search-option'),
@@ -181,7 +181,7 @@ describe('SearchListComponent', () => {
       | undefined;
     @ViewChild('testTemplate') testTemplate: NgTemplateOutlet | undefined;
 
-    searches: Search[] = [];
+    searches: ListedSearch[] = [];
     placeholderText: string | undefined;
     listItemOptions: ListItemOption[] = [];
   }

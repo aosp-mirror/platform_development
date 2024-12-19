@@ -21,6 +21,7 @@ import {Component, ViewChild} from '@angular/core';
 import {ComponentFixture, TestBed} from '@angular/core/testing';
 import {FormsModule, ReactiveFormsModule} from '@angular/forms';
 import {MatButtonModule} from '@angular/material/button';
+import {MatDividerModule} from '@angular/material/divider';
 import {MatFormFieldModule} from '@angular/material/form-field';
 import {MatIconModule} from '@angular/material/icon';
 import {MatInputModule} from '@angular/material/input';
@@ -31,16 +32,19 @@ import {BrowserAnimationsModule} from '@angular/platform-browser/animations';
 import {assertDefined} from 'common/assert_utils';
 import {UnitTestUtils} from 'test/unit/utils';
 import {
+  AddQueryClickDetail,
+  ClearQueryClickDetail,
   DeleteSavedQueryClickDetail,
-  QueryClickDetail,
   SaveQueryClickDetail,
+  SearchQueryClickDetail,
   ViewerEvents,
 } from 'viewers/common/viewer_events';
 import {CollapsedSectionsComponent} from 'viewers/components/collapsed_sections_component';
 import {CollapsibleSectionTitleComponent} from 'viewers/components/collapsible_section_title_component';
 import {LogComponent} from 'viewers/components/log_component';
+import {ActiveSearchComponent} from './active_search_component';
 import {SearchListComponent} from './search_list_component';
-import {Search, SearchResult, UiData} from './ui_data';
+import {CurrentSearch, ListedSearch, SearchResult, UiData} from './ui_data';
 import {ViewerSearchComponent} from './viewer_search_component';
 
 describe('ViewerSearchComponent', () => {
@@ -56,6 +60,7 @@ describe('ViewerSearchComponent', () => {
         ViewerSearchComponent,
         CollapsedSectionsComponent,
         CollapsibleSectionTitleComponent,
+        ActiveSearchComponent,
         SearchListComponent,
         LogComponent,
       ],
@@ -73,12 +78,14 @@ describe('ViewerSearchComponent', () => {
         ScrollingModule,
         MatTooltipModule,
         CdkAccordionModule,
+        MatDividerModule,
       ],
     }).compileComponents();
     fixture = TestBed.createComponent(TestHostComponent);
     component = fixture.componentInstance;
     htmlElement = fixture.nativeElement;
     component.inputData.initialized = true;
+    component.inputData.currentSearches = [new CurrentSearch(1)];
     fixture.detectChanges();
   });
 
@@ -133,93 +140,159 @@ describe('ViewerSearchComponent', () => {
     runSearchAndCheckHandled(runSearchByQueryButton);
   });
 
-  it('handles search via run query from options click from saved', async () => {
-    component.inputData.savedSearches = [new Search(testQuery, 'saved1')];
+  it('handles search via run query from saved without creating new active search', async () => {
+    component.inputData.savedSearches = [new ListedSearch(testQuery, 'saved1')];
     fixture.detectChanges();
     await changeTab(1);
     runSearchAndCheckHandled(runSearchFromListedSearchOption);
   });
 
-  it('handles search via run query from options click from recents', async () => {
-    component.inputData.recentSearches = [new Search(testQuery)];
+  it('handles search via run query from recents without creating new active search', async () => {
+    component.inputData.recentSearches = [new ListedSearch(testQuery)];
     fixture.detectChanges();
     await changeTab(2);
     runSearchAndCheckHandled(runSearchFromListedSearchOption);
   });
 
-  it('navigates to main search tab on edit query click', async () => {
-    component.inputData.recentSearches = [new Search(testQuery)];
-    fixture.detectChanges();
-    const input = getTextInput();
-    expect(input.value).toEqual('');
+  it('handles search via run query from saved creating new active search', async () => {
+    component.inputData.savedSearches = [new ListedSearch(testQuery, 'saved1')];
+    await checkRunQueryFromOptionsWhenResultPresent(1);
+  });
 
-    await changeTab(2);
-    const listedSearchButton = assertDefined(
-      htmlElement.querySelectorAll<HTMLElement>('.listed-search-option'),
-    );
-    listedSearchButton.item(1).click();
-    fixture.detectChanges();
-    await fixture.whenStable();
+  it('handles search via run query from recents creating new active search', async () => {
+    component.inputData.recentSearches = [new ListedSearch(testQuery)];
+    await checkRunQueryFromOptionsWhenResultPresent(2);
+  });
 
-    expect(component.searchComponent?.matTabGroup?.selectedIndex).toEqual(0);
-    expect(input.value).toEqual(testQuery);
+  it('handles edit saved search without creating new section', async () => {
+    component.inputData.savedSearches = [new ListedSearch(testQuery, 'saved1')];
+    await checkEditQueryFromOptions(1);
+  });
+
+  it('handles edit recent search without creating new section', async () => {
+    component.inputData.recentSearches = [new ListedSearch(testQuery)];
+    await checkEditQueryFromOptions(2);
+  });
+
+  it('handles edit saved search creating new section', async () => {
+    component.inputData.savedSearches = [new ListedSearch(testQuery, 'saved1')];
+    await checkEditQueryFromOptionsWhenResultPresent(1);
+  });
+
+  it('handles edit recent search creating new section', async () => {
+    component.inputData.recentSearches = [new ListedSearch(testQuery)];
+    await checkEditQueryFromOptionsWhenResultPresent(2);
   });
 
   it('handles running query complete', () => {
     const placeholderCss = '.results-placeholder.placeholder-text';
     expect(htmlElement.querySelector(placeholderCss)).toBeTruthy();
 
+    clickSearchQueryButton();
     runSearchByQueryButton();
     expect(htmlElement.querySelector(placeholderCss)).toBeNull();
 
-    component.inputData.currentSearches.push(
-      new SearchResult(testQuery, [], []),
-    );
-    component.inputData = Object.assign({}, component.inputData);
-    fixture.detectChanges();
-    expect(htmlElement.querySelector('.running-query-message')).toBeNull();
+    addCurrentSearchWithResult();
     expect(htmlElement.querySelector('.query-execution-time')).toBeTruthy();
     expect(htmlElement.querySelector('log-view')).toBeTruthy();
-    expect(getSearchQueryButton().disabled).toBeFalse();
     expect(htmlElement.querySelector(placeholderCss)).toBeNull();
-    expect(
-      htmlElement.querySelector<HTMLInputElement>(
-        '.current-search .save-field input',
-      )?.value,
-    ).toEqual(testQuery);
+  });
+
+  it('adds search sections', () => {
+    const spy = jasmine.createSpy();
+    htmlElement
+      .querySelector('viewer-search')
+      ?.addEventListener(ViewerEvents.AddQueryClick, (event) => {
+        const detail: AddQueryClickDetail = (event as CustomEvent).detail;
+        expect(detail).toBeFalsy();
+        spy();
+      });
+
+    let addButton = assertDefined(
+      htmlElement.querySelector<HTMLButtonElement>('.add-button'),
+    );
+    expect(htmlElement.querySelector('.clear-button')).toBeNull();
+    expect(addButton.disabled).toBeTrue();
+
+    const data = structuredClone(component.inputData);
+    data.currentSearches[0].query = testQuery;
+    updateInputDataAndDetectChanges(data);
+
+    addButton.click();
+    fixture.detectChanges();
+    expect(spy).toHaveBeenCalledTimes(1);
+
+    const newData = structuredClone(component.inputData);
+    newData.currentSearches.push(new CurrentSearch(2));
+    updateInputDataAndDetectChanges(newData);
+
+    const activeSections = htmlElement.querySelectorAll('active-search');
+    expect(activeSections.length).toEqual(2);
+    expect(activeSections.item(0).querySelector('.clear-button')).toBeTruthy();
+    expect(activeSections.item(1).querySelector('.clear-button')).toBeTruthy();
+
+    expect(activeSections.item(0).querySelector('.add-button')).toBeNull();
+    addButton = assertDefined(
+      activeSections.item(1).querySelector<HTMLButtonElement>('.add-button'),
+    );
+    expect(addButton.disabled).toBeTrue();
+  });
+
+  it('handles multiple results', async () => {
+    let uid: number | undefined;
+    htmlElement
+      .querySelector('viewer-search')
+      ?.addEventListener(ViewerEvents.ClearQueryClick, (event) => {
+        const detail: ClearQueryClickDetail = (event as CustomEvent).detail;
+        uid = detail.uid;
+      });
+
+    const data = structuredClone(component.inputData);
+    data.currentSearches[0].result = new SearchResult([], []);
+    updateInputDataAndDetectChanges(data);
+    addCurrentSearchWithResult(testQuery, 2);
+    let resultTabs = htmlElement.querySelectorAll(
+      '.result-tabs .mat-tab-label',
+    );
+    let activeSections =
+      htmlElement.querySelectorAll<HTMLElement>('active-search');
+    expect(activeSections.length).toEqual(2);
+    expect(resultTabs.length).toEqual(2);
+    expect(resultTabs.item(0).textContent).toEqual('Query 1');
+    expect(resultTabs.item(1).textContent).toEqual('Query 2');
+
+    const clearButton = assertDefined(
+      htmlElement.querySelector<HTMLElement>('.clear-button'),
+    );
+    clearButton.click();
+    fixture.detectChanges();
+    expect(uid).toEqual(1);
+
+    const finalActiveSection = activeSections.item(1);
+    const spy = spyOn(finalActiveSection, 'scrollIntoView');
+
+    const newData = structuredClone(component.inputData);
+    newData.currentSearches.shift();
+    updateInputDataAndDetectChanges(newData);
+    await fixture.whenStable();
+
+    resultTabs = htmlElement.querySelectorAll('.result-tabs .mat-tab-label');
+    activeSections = htmlElement.querySelectorAll('active-search');
+    expect(resultTabs.length).toEqual(1);
+    expect(resultTabs.item(0).textContent).toEqual('Query 2');
+    expect(activeSections.length).toEqual(1);
+    expect(spy).toHaveBeenCalled();
   });
 
   it('handles running query failure', () => {
     runSearchByQueryButton();
-    component.inputData.lastTraceFailed = true;
-    component.inputData = Object.assign({}, component.inputData);
-    fixture.detectChanges();
+    const data = structuredClone(component.inputData);
+    data.lastTraceFailed = true;
+    updateInputDataAndDetectChanges(data);
+    expect(htmlElement.querySelector('.query-execution-time')).toBeTruthy();
     expect(htmlElement.querySelector('.running-query-message')).toBeNull();
     expect(htmlElement.querySelector('log-view')).toBeNull();
     expect(getSearchQueryButton().disabled).toBeFalse();
-  });
-
-  it('handles search via enter key', () => {
-    const runSearch = () => {
-      const textInput = getTextInput();
-      changeInput(textInput, testQuery);
-      pressEnter(textInput);
-    };
-    runSearchAndCheckHandled(runSearch);
-  });
-
-  it('does not handle search on enter key + shift key', () => {
-    let query: string | undefined;
-    htmlElement
-      .querySelector('viewer-search')
-      ?.addEventListener(ViewerEvents.SearchQueryClick, (event) => {
-        const detail: QueryClickDetail = (event as CustomEvent).detail;
-        query = detail.query;
-      });
-    const textInput = getTextInput();
-    changeInput(textInput, testQuery);
-    pressEnter(textInput, true);
-    expect(query).toBeUndefined();
   });
 
   it('emits event on save query click', () => {
@@ -230,13 +303,11 @@ describe('ViewerSearchComponent', () => {
         detail = (event as CustomEvent).detail;
       });
     const testName = 'Query 1';
-    component.inputData.savedSearches.push(new Search(testQuery, testName));
-    fixture.detectChanges();
-    component.inputData.currentSearches.push(
-      new SearchResult(testQuery, [], []),
+    component.inputData.savedSearches.push(
+      new ListedSearch(testQuery, testName),
     );
     fixture.detectChanges();
-
+    addCurrentSearchWithResult();
     const saveField = assertDefined(
       htmlElement.querySelector('.current-search .save-field'),
     );
@@ -264,14 +335,14 @@ describe('ViewerSearchComponent', () => {
     expect(detail).toEqual(new SaveQueryClickDetail(testQuery, testName3));
   });
 
-  it('emits event on delete query click', async () => {
+  it('emits event on delete saved query click', async () => {
     let detail: DeleteSavedQueryClickDetail | undefined;
     htmlElement
       .querySelector('viewer-search')
       ?.addEventListener(ViewerEvents.DeleteSavedQueryClick, (event) => {
         detail = (event as CustomEvent).detail;
       });
-    const search = new Search(testQuery);
+    const search = new ListedSearch(testQuery);
     component.inputData.savedSearches = [search];
     fixture.detectChanges();
 
@@ -304,9 +375,9 @@ describe('ViewerSearchComponent', () => {
     changeInput(getTextInput(), testQuery);
     expect(getSearchQueryButton().disabled).toBeTrue();
 
-    component.inputData.initialized = true;
-    component.inputData = Object.assign({}, component.inputData);
-    fixture.detectChanges();
+    const data = structuredClone(component.inputData);
+    data.initialized = true;
+    updateInputDataAndDetectChanges(data);
     expect(globalSearch.querySelector('.message-with-spinner')).toBeNull();
     expect(getSearchQueryButton().disabled).toBeFalse();
   });
@@ -338,10 +409,10 @@ describe('ViewerSearchComponent', () => {
     expect(getSearchQueryButton().disabled).toBeTrue();
   }
 
-  function getTextInput(): HTMLTextAreaElement {
-    return assertDefined(
-      htmlElement.querySelector<HTMLTextAreaElement>('.query-field textarea'),
-    );
+  function getTextInput(i = 0): HTMLTextAreaElement {
+    return htmlElement
+      .querySelectorAll<HTMLTextAreaElement>('.query-field textarea')
+      .item(i);
   }
 
   function changeInput(
@@ -353,36 +424,55 @@ describe('ViewerSearchComponent', () => {
     fixture.detectChanges();
   }
 
-  function getSearchQueryButton(): HTMLButtonElement {
-    return assertDefined(
-      htmlElement.querySelector<HTMLButtonElement>(
-        '.query-actions .query-button',
-      ),
-    );
+  function getSearchQueryButton(i = 0): HTMLButtonElement {
+    return htmlElement
+      .querySelectorAll<HTMLButtonElement>('.query-actions .search-button')
+      .item(i);
   }
 
-  function clickSearchQueryButton() {
-    getSearchQueryButton().click();
+  function clickSearchQueryButton(i = 0) {
+    getSearchQueryButton(i).click();
     fixture.detectChanges();
   }
 
-  function runSearchByQueryButton() {
-    changeInput(getTextInput(), testQuery);
-    clickSearchQueryButton();
+  function runSearchByQueryButton(i = 0) {
+    changeInput(getTextInput(i), testQuery);
+    clickSearchQueryButton(i);
   }
 
   async function changeTab(index: number) {
-    const searchComponent = assertDefined(component.searchComponent);
-    assertDefined(searchComponent.matTabGroup).selectedIndex = index;
+    const matTabGroups = assertDefined(component.searchComponent?.matTabGroups);
+    matTabGroups.first.selectedIndex = index;
     fixture.detectChanges();
     await fixture.whenStable();
   }
 
+  async function checkRunQueryFromOptionsWhenResultPresent(tabIndex: number) {
+    const data = structuredClone(component.inputData);
+    data.currentSearches[0].query = testQuery;
+    data.currentSearches[0].result = new SearchResult([], []);
+    let query: string | undefined;
+    htmlElement
+      .querySelector('viewer-search')
+      ?.addEventListener(ViewerEvents.AddQueryClick, (event) => {
+        const detail: AddQueryClickDetail = (event as CustomEvent).detail;
+        query = detail.query;
+      });
+    updateInputDataAndDetectChanges(data);
+
+    await changeTab(tabIndex);
+    runSearchFromListedSearchOption();
+    expect(query).toEqual(testQuery);
+    await changeTab(0);
+    runSearchAndCheckHandled(addCurrentSearchWithResult);
+    const activeSections = htmlElement.querySelectorAll('active-search');
+    expect(activeSections.length).toEqual(2);
+  }
+
   function runSearchFromListedSearchOption() {
-    const listedSearchButton = assertDefined(
+    assertDefined(
       htmlElement.querySelector<HTMLElement>('.listed-search-option'),
-    );
-    listedSearchButton.click();
+    ).click();
     fixture.detectChanges();
   }
 
@@ -391,23 +481,11 @@ describe('ViewerSearchComponent', () => {
     htmlElement
       .querySelector('viewer-search')
       ?.addEventListener(ViewerEvents.SearchQueryClick, (event) => {
-        const detail: QueryClickDetail = (event as CustomEvent).detail;
+        const detail: SearchQueryClickDetail = (event as CustomEvent).detail;
         query = detail.query;
       });
     runSearch();
     expect(query).toEqual(testQuery);
-    checkSearchQueryHandled();
-  }
-
-  function pressEnter(
-    input: HTMLInputElement | HTMLTextAreaElement,
-    shiftKey = false,
-  ) {
-    input.dispatchEvent(new KeyboardEvent('keydown', {key: 'Enter', shiftKey}));
-    fixture.detectChanges();
-  }
-
-  function checkSearchQueryHandled() {
     expect(getSearchQueryButton().disabled).toBeTrue();
     const runningQueryMessage = assertDefined(
       htmlElement.querySelector('.running-query-message'),
@@ -416,6 +494,69 @@ describe('ViewerSearchComponent', () => {
       'timer Calculating results',
     );
     expect(runningQueryMessage.querySelector('mat-spinner')).toBeTruthy();
+  }
+
+  function pressEnter(input: HTMLInputElement, shiftKey = false) {
+    input.dispatchEvent(new KeyboardEvent('keydown', {key: 'Enter', shiftKey}));
+    fixture.detectChanges();
+  }
+
+  async function checkEditQueryFromOptionsWhenResultPresent(tabIndex: number) {
+    component.inputData.currentSearches[0].result = new SearchResult([], []);
+    fixture.detectChanges();
+
+    let query: string | undefined;
+    htmlElement
+      .querySelector('viewer-search')
+      ?.addEventListener(ViewerEvents.AddQueryClick, (event) => {
+        const detail: AddQueryClickDetail = (event as CustomEvent).detail;
+        query = detail.query;
+      });
+
+    await changeTabAndClickEdit(tabIndex);
+    expect(
+      component.searchComponent?.matTabGroups?.first.selectedIndex,
+    ).toEqual(tabIndex);
+    expect(query).toEqual(testQuery);
+
+    const data = structuredClone(component.inputData);
+    data.currentSearches.push(new CurrentSearch(2, testQuery));
+    updateInputDataAndDetectChanges(data);
+    fixture.detectChanges();
+    await fixture.whenStable();
+    expect(
+      component.searchComponent?.matTabGroups?.first.selectedIndex,
+    ).toEqual(0);
+    expect(getTextInput(0).value).toEqual('');
+    expect(getTextInput(1).value).toEqual(testQuery);
+  }
+
+  async function checkEditQueryFromOptions(tabIndex: number) {
+    fixture.detectChanges();
+    const input = getTextInput();
+    expect(input.value).toEqual('');
+    await changeTabAndClickEdit(tabIndex);
+    expect(
+      component.searchComponent?.matTabGroups?.first.selectedIndex,
+    ).toEqual(0);
+    expect(input.value).toEqual(testQuery);
+  }
+
+  async function changeTabAndClickEdit(tabIndex: number) {
+    await changeTab(tabIndex);
+    const listedSearchButton = assertDefined(
+      htmlElement.querySelectorAll<HTMLElement>('.listed-search-option'),
+    );
+    listedSearchButton.item(1).click();
+    fixture.detectChanges();
+    await fixture.whenStable();
+  }
+
+  function addCurrentSearchWithResult(q = testQuery, uid = 2) {
+    const data = structuredClone(component.inputData);
+    const currentSearch = new CurrentSearch(uid, q, new SearchResult([], []));
+    data.currentSearches.push(currentSearch);
+    updateInputDataAndDetectChanges(data);
   }
 
   function getAccordionItemHeader(item: HTMLElement) {
@@ -440,6 +581,11 @@ describe('ViewerSearchComponent', () => {
     const header = getAccordionItemHeader(item);
     expect(header.textContent).toContain('arrow_drop_down');
     expect(item.querySelector('.accordion-item-body')).toBeTruthy();
+  }
+
+  function updateInputDataAndDetectChanges(data: UiData) {
+    component.inputData = data;
+    fixture.detectChanges();
   }
 
   @Component({

@@ -78,7 +78,7 @@ import {
       </div>
     </div>
 
-    <div class="entries">
+    <div class="entries" [class.padded]="padEntries">
       <div class="headers table-header" *ngIf="headers.length > 0">
         <div *ngIf="showTraceEntryTimes" class="time">
           <button
@@ -167,7 +167,9 @@ import {
 
       <cdk-virtual-scroll-viewport
           *ngIf="isFixedSizeScrollViewport()"
-          itemSize="36"
+          [itemSize]="36"
+          [minBufferPx]="1000"
+          [maxBufferPx]="2000"
           class="scroll">
         <ng-container
             *cdkVirtualFor="let entry of entries; let i = index"
@@ -243,6 +245,7 @@ export class LogComponent {
   @Input() traceType: TraceType | undefined;
   @Input() showTraceEntryTimes = true;
   @Input() showFiltersInTitle = false;
+  @Input() padEntries = true;
 
   @Output() collapseButtonClicked = new EventEmitter();
 
