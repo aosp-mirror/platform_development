@@ -89,10 +89,7 @@ fun SceneScope.PartialShade(
                 .background(backgroundColor)
         )
 
-        Box(
-            Modifier.verticalNestedScrollToScene().verticalScroll(rememberScrollState()),
-            content = content,
-        )
+        Box(Modifier.verticalScroll(rememberScrollState()), content = content)
     }
 }
 

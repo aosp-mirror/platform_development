@@ -105,7 +105,7 @@ internal fun SceneScope.Notification(
                     Modifier.fillMaxWidth()
                         .notificationClip(remember { Path() }, { topRadius }, { bottomRadius })
                         .thenIf(isInteractive) {
-                            Modifier.verticalNestedScrollToScene().clickable {
+                            Modifier.clickable {
                                 viewModel.state.setTargetScene(
                                     when (viewModel.state.transitionState.currentScene) {
                                         Notification.Scenes.Expanded ->
