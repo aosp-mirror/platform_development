@@ -25,7 +25,7 @@ import {Parser} from 'trace/parser';
 import {TraceType} from 'trace/trace_type';
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
 
-describe('ParserTransitions', () => {
+describe('TracesParserTransitions', () => {
   let parser: Parser<PropertyTreeNode>;
 
   beforeAll(async () => {
@@ -54,8 +54,8 @@ describe('ParserTransitions', () => {
   it('provides timestamps', () => {
     const timestamps = assertDefined(parser.getTimestamps());
     const expected = [
-      TimestampConverterUtils.makeRealTimestamp(1683130827957362976n),
-      TimestampConverterUtils.makeRealTimestamp(1683130827957362976n),
+      TimestampConverterUtils.makeRealTimestamp(0n),
+      TimestampConverterUtils.makeRealTimestamp(0n),
       TimestampConverterUtils.makeRealTimestamp(1683188477606574664n),
       TimestampConverterUtils.makeRealTimestamp(1683188479255739215n),
     ];

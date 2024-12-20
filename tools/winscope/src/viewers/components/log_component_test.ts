@@ -278,6 +278,23 @@ describe('LogComponent', () => {
     expect(timestamp).toBeDefined();
   });
 
+  it('does not show button for propagateEntryTimestamp field if entry timestamp invalid', () => {
+    expect(
+      htmlElement.querySelectorAll<HTMLButtonElement>(
+        `.${testColumn3.cssClass} .time-button`,
+      ).length,
+    ).toEqual(2);
+    spyOn(component.entries[1].traceEntry, 'hasValidTimestamp').and.returnValue(
+      false,
+    );
+    fixture.detectChanges();
+    expect(
+      htmlElement.querySelectorAll<HTMLButtonElement>(
+        `.${testColumn3.cssClass} .time-button`,
+      ).length,
+    ).toEqual(1);
+  });
+
   it('changes css class on entry click and does not scroll', () => {
     htmlElement.addEventListener(ViewerEvents.LogEntryClick, (event) => {
       const index = (event as CustomEvent).detail;
@@ -318,13 +335,13 @@ describe('LogComponent', () => {
     setComponentInputData(false);
     fixture.detectChanges();
     expect(entry.textContent?.trim()).toEqual(
-      '1970-01-01, 00:00:00.000 Test tag 21234 1970-01-01, 00:00:00.000',
+      '1970-01-01, 00:00:00.000 Test tag 21234 N/A',
     );
 
     spy.and.returnValue(false);
     fixture.detectChanges();
     expect(entry.textContent?.trim()).toEqual(
-      '00:00:00.000 Test tag 21234 00:00:00.000',
+      '00:00:00.000 Test tag 21234 N/A',
     );
   });
 
@@ -347,7 +364,7 @@ describe('LogComponent', () => {
     const fields2 = [
       {spec: testColumn1, value: 'Test tag 2'},
       {spec: testColumn2, value: 1234},
-      {spec: testColumn3, value: fieldTime, propagateEntryTimestamp: true},
+      {spec: testColumn3, value: 'N/A', propagateEntryTimestamp: true},
     ];
 
     const trace = new TraceBuilder<PropertyTreeNode>()

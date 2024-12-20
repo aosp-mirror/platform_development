@@ -71,7 +71,8 @@ export class ParserTransitionsWm extends AbstractParser<
   }
 
   protected override getTimestamp(entry: TransitionProto): Timestamp {
-    // for consistency with all transitions, elapsed nanos are defined as shell dispatch time else INVALID_TIME_NS
+    // for consistency with all transitions, elapsed nanos are defined as
+    // shell dispatch time else INVALID_TIME_NS
     return this.timestampConverter.makeZeroTimestamp();
   }
 

@@ -328,7 +328,7 @@ describe('AbstractLogViewerPresenter', () => {
     expect(emitEventSpy).not.toHaveBeenCalled();
   });
 
-  it('propagates position with prev trace entry on left arrow key press', async () => {
+  it('propagates position with first prev trace entry with valid timestamp on left arrow key press', async () => {
     const trace = assertDefined(
       lastEntryPositionUpdate.position.entry,
     ).getFullTrace();
@@ -338,14 +338,17 @@ describe('AbstractLogViewerPresenter', () => {
     presenter.setEmitEvent(emitEventSpy);
     await presenter.onAppEvent(lastEntryPositionUpdate);
 
+    const prevIndex = assertDefined(uiData.currentIndex) - 1;
+    spyOn(
+      uiData.entries[prevIndex].traceEntry,
+      'hasValidTimestamp',
+    ).and.returnValue(false);
     await presenter.onPositionChangeByKeyPress(
       new KeyboardEvent('keydown', {key: 'ArrowLeft'}),
     );
     expect(emitEventSpy).toHaveBeenCalledWith(
       new TracePositionUpdate(
-        TracePosition.fromTraceEntry(
-          uiData.entries[assertDefined(uiData.currentIndex) - 1].traceEntry,
-        ),
+        TracePosition.fromTraceEntry(uiData.entries[prevIndex - 1].traceEntry),
         true,
       ),
     );

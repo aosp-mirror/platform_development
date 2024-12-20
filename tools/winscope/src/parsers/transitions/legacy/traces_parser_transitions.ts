@@ -76,27 +76,17 @@ export class TracesParserTransitions extends AbstractTracesParser<PropertyTreeNo
 
   override async createTimestamps() {
     this.timestamps = [];
+    const zeroTs = this.timestampConverter.makeZeroTimestamp();
     for (let index = 0; index < this.getLengthEntries(); index++) {
       const entry = await this.getEntry(index);
-
       const shellData = entry.getChildByName('shellData');
+
+      // for consistency with all transitions, elapsed nanos are defined as
+      // shell dispatch time else 0n
       const dispatchTimestamp: Timestamp | undefined = shellData
         ?.getChildByName('dispatchTimeNs')
         ?.getValue();
-
-      const realToBootTimeOffsetNs: bigint =
-        shellData
-          ?.getChildByName('realToBootTimeOffsetTimestamp')
-          ?.getValue()
-          ?.getValueNs() ?? 0n;
-
-      // for consistency with all transitions, elapsed nanos are defined as shell dispatch time else 0n
-      const timestampNs: bigint = dispatchTimestamp
-        ? dispatchTimestamp.getValueNs()
-        : realToBootTimeOffsetNs;
-      const timestamp =
-        this.timestampConverter.makeTimestampFromRealNs(timestampNs);
-      this.timestamps.push(timestamp);
+      this.timestamps.push(dispatchTimestamp ?? zeroTs);
     }
   }
 
