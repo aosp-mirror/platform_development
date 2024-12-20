@@ -83,8 +83,8 @@ function testTimestamps(
 }
 
 export function timestampEqualityTester(
-  first: any,
-  second: any,
+  first: unknown,
+  second: unknown,
 ): boolean | undefined {
   if (first instanceof Timestamp && second instanceof Timestamp) {
     return testTimestamps(first, second);

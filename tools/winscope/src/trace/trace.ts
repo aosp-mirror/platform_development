@@ -524,7 +524,7 @@ export class Trace<T> {
   }
 
   private getEntryInternal<
-    EntryType extends TraceEntryLazy<T> | TraceEntryEager<T, any>,
+    EntryType extends TraceEntryLazy<T> | TraceEntryEager<T, unknown>,
   >(
     index: RelativeEntryIndex,
     makeEntry: (
@@ -618,8 +618,8 @@ export class Trace<T> {
       return undefined;
     }
     return {
-      start: this.clampEntryToSliceBounds(entries.start) as AbsoluteEntryIndex,
-      end: this.clampEntryToSliceBounds(entries.end) as AbsoluteEntryIndex,
+      start: assertDefined(this.clampEntryToSliceBounds(entries.start)),
+      end: assertDefined(this.clampEntryToSliceBounds(entries.end)),
     };
   }
 
@@ -630,8 +630,8 @@ export class Trace<T> {
       return undefined;
     }
     return {
-      start: this.clampFrameToSliceBounds(frames.start) as AbsoluteFrameIndex,
-      end: this.clampFrameToSliceBounds(frames.end) as AbsoluteFrameIndex,
+      start: assertDefined(this.clampFrameToSliceBounds(frames.start)),
+      end: assertDefined(this.clampFrameToSliceBounds(frames.end)),
     };
   }
 

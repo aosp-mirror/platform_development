@@ -24,8 +24,8 @@ import {UpdateTransforms} from './update_transforms';
 describe('UpdateTransforms', () => {
   let propertyRoot: PropertyTreeNode;
   let operation: UpdateTransforms;
-  let deprecatedProtoTransform: any;
-  let protoPosition: any;
+  let deprecatedProtoTransform: object;
+  let protoPosition: object;
 
   beforeEach(() => {
     operation = new UpdateTransforms();

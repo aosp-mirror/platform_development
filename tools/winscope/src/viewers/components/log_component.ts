@@ -417,7 +417,7 @@ export class LogComponent {
     );
   }
 
-  private emitEvent(event: ViewerEvents, data?: any) {
+  private emitEvent(event: ViewerEvents, data?: object | number) {
     const customEvent = new CustomEvent(event, {
       bubbles: true,
       detail: data,

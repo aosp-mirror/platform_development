@@ -322,7 +322,10 @@ describe('PresenterSearch', () => {
     expect(uiData.recentSearches.length).toEqual(10);
   });
 
-  function searchEqualityTester(first: any, second: any): boolean | undefined {
+  function searchEqualityTester(
+    first: unknown,
+    second: unknown,
+  ): boolean | undefined {
     if (first instanceof ListedSearch && second instanceof ListedSearch) {
       return first.query === second.query && first.name === second.name;
     }

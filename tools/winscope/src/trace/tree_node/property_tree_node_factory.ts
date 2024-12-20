@@ -128,7 +128,7 @@ export class PropertyTreeNodeFactory {
 
   private addInnerProperties(
     root: PropertyTreeNode,
-    value: any,
+    value: object | any[],
     source: PropertySource,
   ): void {
     if (Array.isArray(value)) {
@@ -140,7 +140,7 @@ export class PropertyTreeNodeFactory {
 
   private addArrayProperties(
     root: PropertyTreeNode,
-    value: any,
+    value: any[],
     source: PropertySource,
   ) {
     for (const [key, val] of Object.entries(value)) {

@@ -18,7 +18,7 @@ import {PropertyTreeBuilder} from 'test/unit/property_tree_builder';
 import {PropertyTreeBuilderFromProto} from './property_tree_builder_from_proto';
 
 describe('PropertyTreeBuilderFromProto', () => {
-  let proto: any;
+  let proto: object;
   let builder: PropertyTreeBuilderFromProto;
 
   beforeEach(() => {

@@ -21,7 +21,7 @@ import {TraceType} from 'trace/trace_type';
 import {PropertyTreeBuilderFromProto} from 'trace/tree_node/property_tree_builder_from_proto';
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
 
-class ParserEventLog extends AbstractParser<PropertyTreeNode> {
+class ParserEventLog extends AbstractParser<PropertyTreeNode, Event> {
   private static readonly MAGIC_NUMBER_STRING = 'EventLog';
   private static readonly MAGIC_NUMBER: number[] = Array.from(
     new TextEncoder().encode(ParserEventLog.MAGIC_NUMBER_STRING),

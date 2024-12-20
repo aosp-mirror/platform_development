@@ -20,7 +20,7 @@ import {CoarseVersion} from 'trace/coarse_version';
 import {MediaBasedTraceEntry} from 'trace/media_based_trace_entry';
 import {TraceType} from 'trace/trace_type';
 
-class ParserScreenshot extends AbstractParser<MediaBasedTraceEntry> {
+class ParserScreenshot extends AbstractParser<MediaBasedTraceEntry, number> {
   private static readonly MAGIC_NUMBER = [
     0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a,
   ]; // currently only support png files

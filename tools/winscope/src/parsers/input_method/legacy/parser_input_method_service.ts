@@ -24,7 +24,12 @@ import {android} from 'protos/ime/udc/static';
 import {TraceType} from 'trace/trace_type';
 import {HierarchyTreeNode} from 'trace/tree_node/hierarchy_tree_node';
 
-class ParserInputMethodService extends AbstractParser<HierarchyTreeNode> {
+type ImeProto = android.view.inputmethod.IInputMethodServiceTraceProto;
+
+class ParserInputMethodService extends AbstractParser<
+  HierarchyTreeNode,
+  ImeProto
+> {
   private static readonly MAGIC_NUMBER = [
     0x09, 0x49, 0x4d, 0x53, 0x54, 0x52, 0x41, 0x43, 0x45,
   ]; // .IMSTRACE
@@ -65,9 +70,7 @@ class ParserInputMethodService extends AbstractParser<HierarchyTreeNode> {
     return undefined;
   }
 
-  override decodeTrace(
-    buffer: Uint8Array,
-  ): android.view.inputmethod.IInputMethodServiceTraceProto[] {
+  override decodeTrace(buffer: Uint8Array): ImeProto[] {
     const decoded =
       ParserInputMethodService.InputMethodServiceTraceFileProto.decode(
         buffer,
@@ -79,9 +82,7 @@ class ParserInputMethodService extends AbstractParser<HierarchyTreeNode> {
     return decoded.entry ?? [];
   }
 
-  protected override getTimestamp(
-    entry: android.view.inputmethod.IInputMethodServiceTraceProto,
-  ): Timestamp {
+  protected override getTimestamp(entry: ImeProto): Timestamp {
     return this.timestampConverter.makeTimestampFromBootTimeNs(
       BigInt(assertDefined(entry.elapsedRealtimeNanos).toString()),
     );
@@ -89,7 +90,7 @@ class ParserInputMethodService extends AbstractParser<HierarchyTreeNode> {
 
   override processDecodedEntry(
     index: number,
-    entry: android.view.inputmethod.IInputMethodServiceTraceProto,
+    entry: ImeProto,
   ): HierarchyTreeNode {
     if (
       entry.elapsedRealtimeNanos === undefined ||

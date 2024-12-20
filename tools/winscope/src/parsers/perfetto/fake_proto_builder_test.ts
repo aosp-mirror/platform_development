@@ -107,7 +107,10 @@ describe('FakeProtoBuilder', () => {
     expect(transformed.case_64BitLsb).toEqual(14n);
   });
 
-  const makeArg = (key: string, value: any): Arg => {
+  const makeArg = (
+    key: string,
+    value: boolean | bigint | number | string,
+  ): Arg => {
     if (value === null) {
       return {key, value_type: 'null'};
     }
