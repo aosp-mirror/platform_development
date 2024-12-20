@@ -56,10 +56,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.state.ToggleableState
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import com.android.compose.animation.scene.ProgressConverter
-import com.android.compose.animation.scene.demo.DemoOverscrollProgress.Tanh
 import kotlin.math.roundToInt
-import kotlin.math.tanh
 
 data class DemoConfiguration(
     val notificationsInLockscreen: Int = 2,
@@ -71,7 +68,6 @@ data class DemoConfiguration(
     val canChangeSceneOrOverlays: Boolean = true,
     val transitionInterceptionThreshold: Float = 0.05f,
     val springConfigurations: DemoSpringConfigurations = DemoSpringConfigurations.presets[0],
-    val overscrollProgressConverter: DemoOverscrollProgress = Tanh(maxProgress = 0.2f, tilt = 3f),
     val lsToShadeRequiresFullSwipe: ToggleableState = ToggleableState.Indeterminate,
     val enableOverlays: Boolean = false,
     val transitionBorder: Boolean = true,
@@ -104,7 +100,6 @@ data class DemoConfiguration(
                         canChangeSceneOrOverlaysKey to it.canChangeSceneOrOverlays,
                         transitionInterceptionThresholdKey to it.transitionInterceptionThreshold,
                         springConfigurationsKey to it.springConfigurations.save(),
-                        overscrollProgress to it.overscrollProgressConverter.save(),
                         lsToShadeRequiresFullSwipe to it.lsToShadeRequiresFullSwipe,
                         enableOverlays to it.enableOverlays,
                         transitionBorder to it.transitionBorder,
@@ -123,8 +118,6 @@ data class DemoConfiguration(
                             it[transitionInterceptionThresholdKey] as Float,
                         springConfigurations =
                             it[springConfigurationsKey].restoreSpringConfigurations(),
-                        overscrollProgressConverter =
-                            it[overscrollProgress].restoreOverscrollProgress(),
                         lsToShadeRequiresFullSwipe =
                             it[lsToShadeRequiresFullSwipe] as ToggleableState,
                         enableOverlays = it[enableOverlays] as Boolean,
@@ -265,44 +258,6 @@ data class DemoSpringConfigurations(
     }
 }
 
-sealed class DemoOverscrollProgress(val name: String, val params: LinkedHashMap<String, Any>) :
-    ProgressConverter {
-    // Note: the order is guaranteed because we are using an ordered map (LinkedHashMap).
-    fun save(): String = "$name:${params.values.joinToString(",")}"
-
-    data object Linear : DemoOverscrollProgress("linear", linkedMapOf()) {
-        override fun convert(value: Float) = value
-    }
-
-    data class RubberBand(val factor: Float) :
-        DemoOverscrollProgress("rubberBand", linkedMapOf("factor" to factor)) {
-        override fun convert(value: Float) = value * factor
-    }
-
-    data class Tanh(val maxProgress: Float, val tilt: Float) :
-        DemoOverscrollProgress("tanh", linkedMapOf("maxValue" to maxProgress, "tilt" to tilt)) {
-        override fun convert(value: Float) = maxProgress * tanh(value / (maxProgress * tilt))
-    }
-
-    companion object {
-        // We are using "by lazy" to avoid a null pointer on "Linear", read more on
-        // https://medium.com/livefront/kotlin-a-tale-of-static-cyclical-initialization-3aea530d2053
-        val presets by lazy {
-            listOf(
-                Linear,
-                RubberBand(factor = 0.1f),
-                RubberBand(factor = 0.15f),
-                RubberBand(factor = 0.21f),
-                Tanh(maxProgress = 1f, tilt = 1f),
-                Tanh(maxProgress = 0.5f, tilt = 1f),
-                Tanh(maxProgress = 0.5f, tilt = 1.5f),
-                Tanh(maxProgress = 0.7f, tilt = 2f),
-                Tanh(maxProgress = 0.2f, tilt = 3f),
-            )
-        }
-    }
-}
-
 private fun Any?.restoreSpringConfigurations(): DemoSpringConfigurations {
     val p = (this as String).split(",").map { it.toFloat() }
     return DemoSpringConfigurations(
@@ -310,17 +265,6 @@ private fun Any?.restoreSpringConfigurations(): DemoSpringConfigurations {
         systemUiSprings = SpringConfiguration(stiffness = p[0], dampingRatio = p[1]),
         notificationSprings = SpringConfiguration(stiffness = p[2], dampingRatio = p[3]),
     )
-}
-
-private fun Any?.restoreOverscrollProgress(): DemoOverscrollProgress {
-    val (name, paramsString) = (this as String).split(":")
-    val p = paramsString.split(",")
-    return when (name) {
-        "linear" -> DemoOverscrollProgress.Linear
-        "tanh" -> DemoOverscrollProgress.Tanh(maxProgress = p[0].toFloat(), tilt = p[1].toFloat())
-        "rubberBand" -> DemoOverscrollProgress.RubberBand(factor = p[0].toFloat())
-        else -> error("Unknown OverscrollProgress $name ($paramsString)")
-    }
 }
 
 data class SpringConfiguration(val stiffness: Float, val dampingRatio: Float)
@@ -408,15 +352,6 @@ fun DemoConfigurationDialog(
                     },
                     valueRange = 0f..0.5f,
                     stepSize = 0.01f,
-                )
-
-                Text(text = "Overscroll", style = MaterialTheme.typography.titleMedium)
-
-                OverscrollProgressPicker(
-                    value = configuration.overscrollProgressConverter,
-                    onValue = {
-                        onConfigurationChange(configuration.copy(overscrollProgressConverter = it))
-                    },
                 )
 
                 Text(text = "Media", style = MaterialTheme.typography.titleMedium)
@@ -715,67 +650,4 @@ fun SpringsPicker(value: DemoSpringConfigurations, onValue: (DemoSpringConfigura
             )
         }
     }
-}
-
-@Composable
-fun OverscrollProgressPicker(
-    value: DemoOverscrollProgress,
-    onValue: (DemoOverscrollProgress) -> Unit,
-) {
-    Text(text = "Overscroll progress")
-    val presets = DemoOverscrollProgress.presets
-    Slider(
-        value = value,
-        onValueChange = onValue,
-        values = DemoOverscrollProgress.presets,
-        onValueNotFound = { presets.indexOfFirst { it.name == value.name } },
-    )
-
-    var isExpanded by remember { mutableStateOf(false) }
-    DisposableEffect(value) { onDispose { isExpanded = true } }
-
-    Column(
-        Modifier.animateContentSize()
-            .border(1.dp, color = MaterialTheme.colorScheme.primary, RoundedCornerShape(8.dp))
-            .padding(4.dp)
-            .fillMaxWidth()
-    ) {
-        Text(text = "Function name: ${value.name}")
-        when (value) {
-            DemoOverscrollProgress.Linear -> {}
-            is DemoOverscrollProgress.Tanh -> {
-                Text(text = "Max progress: ${String.format("%.2f", value.maxProgress)}")
-                if (isExpanded) {
-                    Slider(
-                        value = value.maxProgress,
-                        onValueChange = { onValue(value.copy(maxProgress = it)) },
-                        valueRange = 0.05f..3f,
-                        stepSize = 0.05f,
-                    )
-                }
-                Text(text = "Tilt: ${String.format("%.2f", value.tilt)}")
-                if (isExpanded) {
-                    Slider(
-                        value = value.tilt,
-                        onValueChange = { onValue(value.copy(tilt = it)) },
-                        valueRange = 1f..5f,
-                        stepSize = 0.1f,
-                    )
-                }
-            }
-            is DemoOverscrollProgress.RubberBand -> {
-                Text(text = "Factor: ${String.format("%.2f", value.factor)}")
-                if (isExpanded) {
-                    Slider(
-                        value = value.factor,
-                        onValueChange = { onValue(value.copy(factor = it)) },
-                        valueRange = 0.01f..1f,
-                        stepSize = 0.01f,
-                    )
-                }
-            }
-        }
-    }
-
-    if (!isExpanded) FilledTonalButton(onClick = { isExpanded = true }) { Text("Show more") }
 }
