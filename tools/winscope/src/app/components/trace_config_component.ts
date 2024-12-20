@@ -31,6 +31,7 @@ import {
   EnableConfiguration,
   SelectionConfiguration,
   TraceConfigurationMap,
+  tryMergeConfigArrays,
 } from 'trace_collection/trace_configuration';
 import {userOptionStyle} from 'viewers/components/styles/user_option.styles';
 
@@ -179,6 +180,7 @@ export class TraceConfigComponent {
         () => 'component initialized without config',
       ),
       assertDefined(this.storage),
+      tryMergeConfigArrays,
     );
     if (globalConfig.MODE !== 'KARMA_TEST') {
       this.changeDetectionWorker = window.setInterval(
