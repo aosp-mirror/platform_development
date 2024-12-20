@@ -28,12 +28,13 @@ import {DomSanitizer, SafeUrl} from '@angular/platform-browser';
 import {assertDefined} from 'common/assert_utils';
 import {Size} from 'common/geometry/size';
 import {MediaBasedTraceEntry} from 'trace/media_based_trace_entry';
+import {ViewerEvents} from 'viewers/common/viewer_events';
 
 @Component({
   selector: 'viewer-media-based',
   template: `
   <div class="overlay">
-    <mat-card class="container" cdkDrag cdkDragBoundary=".overlay">
+    <mat-card class="container" cdkDrag cdkDragBoundary=".overlay" (dblclick)="onOverlayDblClick()">
       <mat-card-title class="header">
         <button mat-button class="button-drag draggable" cdkDragHandle>
           <mat-icon class="drag-icon">drag_indicator</mat-icon>
@@ -241,6 +242,14 @@ class ViewerMediaBasedComponent {
     this.index = event.value;
     this.updateSafeUrl();
     event.source.close();
+  }
+
+  onOverlayDblClick() {
+    const event = new CustomEvent(ViewerEvents.OverlayDblClick, {
+      detail: this.index,
+      bubbles: true,
+    });
+    this.elementRef.nativeElement.dispatchEvent(event);
   }
 
   private resetFrameSizeWorker() {

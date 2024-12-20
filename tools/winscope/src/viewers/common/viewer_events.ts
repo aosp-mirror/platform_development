@@ -36,6 +36,8 @@ export enum ViewerEvents {
 
   RectsUserOptionsChange = 'RectsUserOptionsChange',
 
+  OverlayDblClick = 'OverlayDblClick',
+
   AdditionalPropertySelected = 'AdditionalPropertySelected',
   RectsDblClick = 'RectsDblClick',
   MiniRectsDblClick = 'MiniRectsDblClick',

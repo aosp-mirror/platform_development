@@ -270,11 +270,12 @@ export class Mediator {
     );
 
     await event.visit(WinscopeEventType.ACTIVE_TRACE_CHANGED, async (event) => {
-      this.timelineData.trySetActiveTrace(event.trace);
-      for (const viewer of this.viewers) {
-        await viewer.onWinscopeEvent(event);
+      if (this.timelineData.trySetActiveTrace(event.trace)) {
+        for (const viewer of this.viewers) {
+          await viewer.onWinscopeEvent(event);
+        }
+        await this.timelineComponent?.onWinscopeEvent(event);
       }
-      await this.timelineComponent?.onWinscopeEvent(event);
     });
 
     await event.visit(WinscopeEventType.DARK_MODE_TOGGLED, async (event) => {

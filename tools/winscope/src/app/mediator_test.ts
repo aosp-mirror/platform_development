@@ -694,12 +694,20 @@ describe('Mediator', () => {
     expect(timelineComponent.onWinscopeEvent).toHaveBeenCalledOnceWith(event);
   });
 
-  it('notifies timeline and viewers of active trace change', async () => {
+  it('notifies timeline and viewers of active trace change if successful', async () => {
     await loadFiles();
     await loadTraceView();
     resetSpyCalls();
 
-    const activeTraceChanged = new ActiveTraceChanged(traceWm);
+    await mediator.onWinscopeEvent(new ActiveTraceChanged(traceDump));
+    expect(timelineComponent.onWinscopeEvent).not.toHaveBeenCalled();
+    viewers.forEach((viewer) => {
+      expect(viewer.onWinscopeEvent).not.toHaveBeenCalled();
+    });
+
+    const activeTraceChanged = new ActiveTraceChanged(
+      viewerStub1.getViews()[0].traces[0],
+    );
     await mediator.onWinscopeEvent(activeTraceChanged);
     expect(timelineComponent.onWinscopeEvent).toHaveBeenCalledOnceWith(
       activeTraceChanged,

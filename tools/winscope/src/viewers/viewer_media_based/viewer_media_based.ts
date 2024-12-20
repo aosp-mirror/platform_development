@@ -47,6 +47,7 @@ export abstract class ViewerMediaBased implements Viewer {
       component.forceMinimize = uiData.forceMinimize;
     };
     this.presenter = new Presenter(this.traces, notifyViewCallback);
+    this.presenter.addEventListeners(this.htmlElement);
 
     this.view = new View(
       ViewType.OVERLAY,
