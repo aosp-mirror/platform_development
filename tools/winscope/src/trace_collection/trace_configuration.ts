@@ -34,15 +34,16 @@ export interface ConfigurationOptions {
   selectionConfigs: SelectionConfiguration[];
 }
 
-export interface EnableConfiguration {
+interface AdvancedConfiguration {
   name: string;
   key: string;
+}
+
+export interface EnableConfiguration extends AdvancedConfiguration {
   enabled: boolean;
 }
 
-export interface SelectionConfiguration {
-  key: string;
-  name: string;
+export interface SelectionConfiguration extends AdvancedConfiguration {
   options: string[];
   value: string | string[];
   desc?: string;
@@ -294,4 +295,20 @@ export function makeDefaultDumpConfigMap(): TraceConfigurationMap {
       types: [TraceType.SCREENSHOT],
     },
   });
+}
+
+export function tryMergeConfigArrays(key: string, target: any, source: any) {
+  if (key === 'enableConfigs' || key === 'selectionConfigs') {
+    const dstArr = target[key] as AdvancedConfiguration[];
+    const srcArr = source[key] as AdvancedConfiguration[];
+
+    srcArr.forEach((srcConfig) => {
+      const dstConfigIndex = dstArr.findIndex((d) => d.key === srcConfig.key);
+      if (dstConfigIndex !== -1) {
+        dstArr[dstConfigIndex] = srcConfig;
+      }
+    });
+    return;
+  }
+  Object.assign(target, {[key]: source[key]});
 }

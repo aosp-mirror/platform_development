@@ -18,9 +18,13 @@ import {InMemoryStorage} from './in_memory_storage';
 import {PersistentStoreProxy} from './persistent_store_proxy';
 
 describe('PersistentStoreObject', () => {
-  it('uses defaults when no store is available', () => {
-    const mockStorage = new InMemoryStorage();
+  let mockStorage: InMemoryStorage;
 
+  beforeEach(() => {
+    mockStorage = new InMemoryStorage();
+  });
+
+  it('uses defaults when no store is available', () => {
     const defaultValues = {
       key1: 'value',
       key2: true,
@@ -36,8 +40,6 @@ describe('PersistentStoreObject', () => {
   });
 
   it('can update properties', () => {
-    const mockStorage = new InMemoryStorage();
-
     const defaultValues = {
       key1: 'value',
       key2: true,
@@ -55,8 +57,6 @@ describe('PersistentStoreObject', () => {
   });
 
   it('uses explicitly set store data', () => {
-    const mockStorage = new InMemoryStorage();
-
     const defaultValues = {
       key1: 'value',
       key2: true,
@@ -79,8 +79,6 @@ describe('PersistentStoreObject', () => {
   });
 
   it('uses default values if not explicitly set', () => {
-    const mockStorage = new InMemoryStorage();
-
     const defaultValues = {
       key1: 'value',
       key2: true,
@@ -107,8 +105,6 @@ describe('PersistentStoreObject', () => {
   });
 
   it("can't update non leaf configs", () => {
-    const mockStorage = new InMemoryStorage();
-
     const defaultValues = {
       key1: 'value',
       key2: {
@@ -124,8 +120,6 @@ describe('PersistentStoreObject', () => {
   });
 
   it('can get nested configs', () => {
-    const mockStorage = new InMemoryStorage();
-
     const defaultValues = {
       key1: 'value',
       key2: {
@@ -141,8 +135,6 @@ describe('PersistentStoreObject', () => {
   });
 
   it('can update schema', () => {
-    const mockStorage = new InMemoryStorage();
-
     const schema1 = {
       key1: 'value1',
       key2: {
@@ -174,5 +166,25 @@ describe('PersistentStoreObject', () => {
     );
     expect(storeObject2['key1']['key3']).toBe('value2');
     expect(storeObject2['key2']).toBe(true);
+  });
+
+  it('uses custom array merge if provided', () => {
+    mockStorage.add('storeKey', JSON.stringify({key1: []}));
+
+    const defaultValues = {key1: [0, 1]};
+    const objectNoMerge = PersistentStoreProxy.new(
+      'storeKey',
+      defaultValues,
+      mockStorage,
+    );
+    expect(objectNoMerge['key1']).toEqual([]);
+
+    const objectWithMerge = PersistentStoreProxy.new(
+      'storeKey',
+      defaultValues,
+      mockStorage,
+      (a, b) => {}, // do not replace target array with source
+    );
+    expect(objectWithMerge['key1']).toEqual([0, 1]);
   });
 });

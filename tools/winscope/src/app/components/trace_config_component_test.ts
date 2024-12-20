@@ -31,6 +31,7 @@ import {TraceType} from 'trace/trace_type';
 import {TraceConfigComponent} from './trace_config_component';
 
 describe('TraceConfigComponent', () => {
+  const storeKey = 'TestConfigSettings';
   let fixture: ComponentFixture<TraceConfigComponent>;
   let component: TraceConfigComponent;
   let htmlElement: HTMLElement;
@@ -89,34 +90,43 @@ describe('TraceConfigComponent', () => {
       'multiple_selection_trace configuration',
       'optional_multiple_selection_trace configuration',
       'optional_selection_trace configuration',
+      'window_trace configuration',
     ]);
   });
 
-  it('applies stored config and emits event on init', async () => {
-    expect(
-      assertDefined(component.traceConfig)['layers_trace'].enabled,
-    ).toBeTrue();
-    const inputElement = assertDefined(
-      htmlElement.querySelector<HTMLInputElement>('.trace-checkbox input'),
-    );
-    inputElement.click();
+  it('applies stored config with tryMergeConfigArrays and emits event on init', async () => {
+    assertDefined(
+      htmlElement.querySelector<HTMLInputElement>('.enable-config-opt input'),
+    ).click();
     fixture.detectChanges();
     expect(
-      assertDefined(component.traceConfig)['layers_trace'].enabled,
-    ).toBeFalse();
+      assertDefined(component.traceConfig)['layers_trace'].config
+        ?.enableConfigs,
+    ).toEqual([{name: 'trace buffers', key: 'tracebuffers', enabled: false}]);
+
+    // remove window_trace enable configs from storage
+    const commonStorage = new InMemoryStorage();
+    const traceConfig = JSON.parse(
+      assertDefined(component.storage?.get(storeKey)),
+    );
+    assertDefined(traceConfig['window_trace'].config).enableConfigs = [];
+    commonStorage.add(storeKey, JSON.stringify(traceConfig));
 
     const newFixture = TestBed.createComponent(TraceConfigComponent);
     const newComponent = newFixture.componentInstance;
     const spy = spyOn(newComponent.traceConfigChange, 'emit');
-    await setComponentInputs(
-      newComponent,
-      newFixture,
-      assertDefined(component.storage),
-    );
+    await setComponentInputs(newComponent, newFixture, commonStorage);
     expect(spy).toHaveBeenCalledTimes(1);
-    expect(
-      assertDefined(newComponent.traceConfig)['layers_trace'].enabled,
-    ).toBeFalse();
+
+    const newConfig = assertDefined(newComponent.traceConfig);
+    // layers_trace tracebuffers set to false from storage
+    expect(newConfig['layers_trace'].config?.enableConfigs).toEqual([
+      {name: 'trace buffers', key: 'tracebuffers', enabled: false},
+    ]);
+    // window_trace enable configs retained during merge even though they are no longer in storage
+    expect(newConfig['window_trace'].config?.enableConfigs).toEqual([
+      {name: 'extra', key: 'extra', enabled: true},
+    ]);
   });
 
   it('handles proxy initial trace config', async () => {
@@ -359,7 +369,16 @@ describe('TraceConfigComponent', () => {
         enabled: false,
         available: true,
         types: [TraceType.WINDOW_MANAGER],
-        config: undefined,
+        config: {
+          enableConfigs: [
+            {
+              name: 'extra',
+              key: 'extra',
+              enabled: true,
+            },
+          ],
+          selectionConfigs: [],
+        },
       },
       unavailable_trace: {
         name: 'unavailable_trace',
@@ -422,7 +441,7 @@ describe('TraceConfigComponent', () => {
         },
       },
     };
-    c.traceConfigStoreKey = 'TestConfigSettings';
+    c.traceConfigStoreKey = storeKey;
     c.storage = storage;
     await detectNgModelChanges(f);
     f.detectChanges();

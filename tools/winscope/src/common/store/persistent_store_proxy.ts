@@ -19,16 +19,18 @@ import {Store} from './store';
 /**
  * A proxy class that allows you to create objects that are backed by a persistent store.
  * The proxy will automatically save changes made to the object to the store.
+ * @param mergeArraysStrategy Optional strategy for merging arrays - if not provided, arrays will be replaced
  */
 export class PersistentStoreProxy {
   static new<T extends object>(
     key: string,
     defaultState: T,
     storage: Store,
+    mergeArraysStrategy?: MergeArraysStrategyType,
   ): T {
     const storedState = JSON.parse(storage.get(key) ?? '{}', parseMap);
     const currentState = mergeDeep({}, structuredClone(defaultState));
-    mergeDeepKeepingStructure(currentState, storedState);
+    mergeDeepKeepingStructure(currentState, storedState, mergeArraysStrategy);
     return wrapWithPersistentStoreProxy(key, currentState, storage) as T;
   }
 }
@@ -105,9 +107,14 @@ function isObject(item: any): boolean {
  * Merge sources into the target keeping the structure of the target.
  * @param target the object we mutate by merging the data from source into, but keep the object structure of
  * @param source the object we merge into target
+ * @param mergeArraysStrategy Optional strategy for merging arrays - if not provided, arrays will be replaced
  * @return the mutated target object
  */
-function mergeDeepKeepingStructure(target: any, source: any): any {
+function mergeDeepKeepingStructure(
+  target: any,
+  source: any,
+  mergeArraysStrategy?: MergeArraysStrategyType,
+): any {
   if (isObject(target) && isObject(source)) {
     for (const key in target) {
       if (source[key] === undefined) {
@@ -115,7 +122,20 @@ function mergeDeepKeepingStructure(target: any, source: any): any {
       }
 
       if (isObject(target[key]) && isObject(source[key])) {
-        mergeDeepKeepingStructure(target[key], source[key]);
+        mergeDeepKeepingStructure(
+          target[key],
+          source[key],
+          mergeArraysStrategy,
+        );
+        continue;
+      }
+
+      if (
+        mergeArraysStrategy &&
+        Array.isArray(target[key]) &&
+        Array.isArray(source[key])
+      ) {
+        mergeArraysStrategy(key, target, source);
         continue;
       }
 
@@ -175,3 +195,5 @@ export function parseMap(key: string, value: any) {
   }
   return value;
 }
+
+type MergeArraysStrategyType = (key: string, target: any, source: any) => void;
