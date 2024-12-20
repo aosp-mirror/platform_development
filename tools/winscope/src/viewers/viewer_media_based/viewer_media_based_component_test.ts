@@ -250,9 +250,17 @@ describe('ViewerMediaBasedComponent', () => {
     htmlElement.addEventListener(ViewerEvents.OverlayDblClick, (event) => {
       index = (event as CustomEvent).detail;
     });
-    assertDefined(
+    expect(htmlElement.querySelector('.info-icon')).toBeNull();
+    const container = assertDefined(
       htmlElement.querySelector<HTMLElement>('.container'),
-    ).dispatchEvent(new MouseEvent('dblclick'));
+    );
+    container.dispatchEvent(new MouseEvent('dblclick'));
+    expect(index).toBeUndefined();
+
+    assertDefined(component.screenComponent).enableDoubleClick = true;
+    fixture.detectChanges();
+    expect(htmlElement.querySelector('.info-icon')).toBeTruthy();
+    container.dispatchEvent(new MouseEvent('dblclick'));
     expect(index).toEqual(0);
   });
 

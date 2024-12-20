@@ -39,9 +39,11 @@ export abstract class ViewerMediaBased implements Viewer {
     this.traces = traces.getTraces(type);
     this.htmlElement = document.createElement('viewer-media-based');
 
+    const component = this.htmlElement as unknown as ViewerMediaBasedComponent;
+    if (type === TraceType.SCREEN_RECORDING) {
+      component.enableDoubleClick = true;
+    }
     const notifyViewCallback = (uiData: UiData) => {
-      const component = this
-        .htmlElement as unknown as ViewerMediaBasedComponent;
       component.titles = uiData.titles;
       component.currentTraceEntries = uiData.currentTraceEntries;
       component.forceMinimize = uiData.forceMinimize;
