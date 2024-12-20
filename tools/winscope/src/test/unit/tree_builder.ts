@@ -15,7 +15,7 @@
  */
 
 export abstract class TreeBuilder<T, U> {
-  protected id: string | undefined;
+  protected id: string | number | undefined;
   protected name: string | undefined;
   protected children: U[] = [];
 

@@ -168,7 +168,7 @@ export class TreeNodeUtils {
     );
   }
 
-  static makeUiHierarchyNode(proto: any): UiHierarchyTreeNode {
+  static makeUiHierarchyNode(proto: object): UiHierarchyTreeNode {
     return UiHierarchyTreeNode.from(TreeNodeUtils.makeHierarchyNode(proto));
   }
 
@@ -182,7 +182,10 @@ export class TreeNodeUtils {
     );
   }
 
-  static treeNodeEqualityTester(first: any, second: any): boolean | undefined {
+  static treeNodeEqualityTester(
+    first: unknown,
+    second: unknown,
+  ): boolean | undefined {
     if (first instanceof TreeNode && second instanceof TreeNode) {
       return TreeNodeUtils.testTreeNodes(first, second);
     }

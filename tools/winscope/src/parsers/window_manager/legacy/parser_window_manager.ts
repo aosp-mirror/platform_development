@@ -35,7 +35,12 @@ import {HierarchyTreeNode} from 'trace/tree_node/hierarchy_tree_node';
 import {PropertiesProvider} from 'trace/tree_node/properties_provider';
 import {TAMPERED_PROTOS_UDC} from './tampered_protos_udc';
 
-export class ParserWindowManager extends AbstractParser<HierarchyTreeNode> {
+type WindowManagerProto = com.android.server.wm.IWindowManagerTraceProto;
+
+export class ParserWindowManager extends AbstractParser<
+  HierarchyTreeNode,
+  WindowManagerProto
+> {
   private static readonly MAGIC_NUMBER = [
     0x09, 0x57, 0x49, 0x4e, 0x54, 0x52, 0x41, 0x43, 0x45,
   ]; // .WINTRACE
@@ -63,9 +68,7 @@ export class ParserWindowManager extends AbstractParser<HierarchyTreeNode> {
     return undefined;
   }
 
-  override decodeTrace(
-    buffer: Uint8Array,
-  ): com.android.server.wm.IWindowManagerTraceProto[] {
+  override decodeTrace(buffer: Uint8Array): WindowManagerProto[] {
     const decoded = ParserWindowManager.WindowManagerTraceFileProto.decode(
       buffer,
     ) as com.android.server.wm.IWindowManagerTraceFileProto;
@@ -76,9 +79,7 @@ export class ParserWindowManager extends AbstractParser<HierarchyTreeNode> {
     return decoded.entry ?? [];
   }
 
-  protected override getTimestamp(
-    entry: com.android.server.wm.IWindowManagerTraceProto,
-  ): Timestamp {
+  protected override getTimestamp(entry: WindowManagerProto): Timestamp {
     return this.timestampConverter.makeTimestampFromBootTimeNs(
       BigInt(assertDefined(entry.elapsedRealtimeNanos).toString()),
     );
@@ -86,7 +87,7 @@ export class ParserWindowManager extends AbstractParser<HierarchyTreeNode> {
 
   override processDecodedEntry(
     index: number,
-    entry: com.android.server.wm.IWindowManagerTraceProto,
+    entry: WindowManagerProto,
   ): HierarchyTreeNode {
     return this.makeHierarchyTree(entry);
   }
@@ -103,8 +104,10 @@ export class ParserWindowManager extends AbstractParser<HierarchyTreeNode> {
           .slice(entriesRange.start, entriesRange.end)
           .forEach((windowManagerTraceProto) => {
             WmCustomQueryUtils.parseWindowsTokenAndTitle(
-              windowManagerTraceProto?.windowManagerService
-                ?.rootWindowContainer,
+              assertDefined(
+                windowManagerTraceProto?.windowManagerService
+                  ?.rootWindowContainer,
+              ),
               result,
             );
           });
@@ -113,9 +116,7 @@ export class ParserWindowManager extends AbstractParser<HierarchyTreeNode> {
       .getResult();
   }
 
-  private makeHierarchyTree(
-    entryProto: com.android.server.wm.IWindowManagerTraceProto,
-  ): HierarchyTreeNode {
+  private makeHierarchyTree(entryProto: WindowManagerProto): HierarchyTreeNode {
     const containers: PropertiesProvider[] =
       this.factory.makeContainerProperties(
         assertDefined(entryProto.windowManagerService),

@@ -34,7 +34,10 @@ import {ParserBuilder} from './parser_builder';
 export class TraceBuilder<T> {
   private type = TraceType.SURFACE_FLINGER;
   private parser?: Parser<T>;
-  private parserCustomQueryResult = new Map<CustomQueryType, {}>();
+  private parserCustomQueryResult = new Map<
+    CustomQueryType,
+    CustomQueryParserResultTypeMap[CustomQueryType]
+  >();
   private entries?: T[];
   private timestamps?: Timestamp[];
   private frameMap?: FrameMap;
@@ -139,7 +142,7 @@ export class TraceBuilder<T> {
     }
 
     this.parserCustomQueryResult?.forEach((result, queryType) => {
-      builder.setCustomQueryResult(queryType, result as any);
+      builder.setCustomQueryResult(queryType, result);
     });
 
     return builder.build();

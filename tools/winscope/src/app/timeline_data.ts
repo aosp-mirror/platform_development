@@ -38,7 +38,7 @@ export class TimelineData {
   private lastReturnedFullTimeRange?: TimeRange;
   private lastReturnedCurrentEntries = new Map<
     Trace<object>,
-    TraceEntry<any> | undefined
+    TraceEntry<object> | undefined
   >();
   private activeTrace: Trace<object> | undefined;
   private transitionEntries: Array<PropertyTreeNode | undefined> = []; // cached trace entries to avoid TP and object creation latencies each time transition timeline is redrawn

@@ -21,7 +21,10 @@ import {MediaBasedTraceEntry} from 'trace/media_based_trace_entry';
 import {ScreenRecordingUtils} from 'trace/screen_recording_utils';
 import {TraceType} from 'trace/trace_type';
 
-class ParserScreenRecordingLegacy extends AbstractParser {
+class ParserScreenRecordingLegacy extends AbstractParser<
+  MediaBasedTraceEntry,
+  bigint
+> {
   override getTraceType(): TraceType {
     return TraceType.SCREEN_RECORDING;
   }

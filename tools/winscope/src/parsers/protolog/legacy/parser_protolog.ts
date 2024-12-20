@@ -26,7 +26,9 @@ import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
 import configJson32 from '../../../../configs/services.core.protolog32.json'; // eslint-disable-line no-restricted-imports
 import configJson64 from '../../../../configs/services.core.protolog64.json'; // eslint-disable-line no-restricted-imports
 
-class ParserProtoLog extends AbstractParser {
+type ProtoLogMessage = com.android.internal.protolog.IProtoLogMessage;
+
+class ParserProtoLog extends AbstractParser<PropertyTreeNode, ProtoLogMessage> {
   private static readonly ProtoLogFileProto = root.lookupType(
     'com.android.internal.protolog.ProtoLogFileProto',
   );
@@ -54,9 +56,7 @@ class ParserProtoLog extends AbstractParser {
     return this.realToBootTimeOffsetNs;
   }
 
-  override decodeTrace(
-    buffer: Uint8Array,
-  ): com.android.internal.protolog.IProtoLogMessage[] {
+  override decodeTrace(buffer: Uint8Array): ProtoLogMessage[] {
     const fileProto = ParserProtoLog.ProtoLogFileProto.decode(
       buffer,
     ) as com.android.internal.protolog.IProtoLogFileProto;
@@ -88,21 +88,14 @@ class ParserProtoLog extends AbstractParser {
       return [];
     }
 
-    fileProto.log.sort(
-      (
-        a: com.android.internal.protolog.IProtoLogMessage,
-        b: com.android.internal.protolog.IProtoLogMessage,
-      ) => {
-        return Number(a.elapsedRealtimeNanos) - Number(b.elapsedRealtimeNanos);
-      },
-    );
+    fileProto.log.sort((a: ProtoLogMessage, b: ProtoLogMessage) => {
+      return Number(a.elapsedRealtimeNanos) - Number(b.elapsedRealtimeNanos);
+    });
 
     return fileProto.log;
   }
 
-  protected override getTimestamp(
-    entry: com.android.internal.protolog.IProtoLogMessage,
-  ): Timestamp {
+  protected override getTimestamp(entry: ProtoLogMessage): Timestamp {
     return this.timestampConverter.makeTimestampFromBootTimeNs(
       BigInt(assertDefined(entry.elapsedRealtimeNanos).toString()),
     );
@@ -110,7 +103,7 @@ class ParserProtoLog extends AbstractParser {
 
   override processDecodedEntry(
     index: number,
-    entry: com.android.internal.protolog.IProtoLogMessage,
+    entry: ProtoLogMessage,
   ): PropertyTreeNode {
     let messageHash = assertDefined(entry.messageHash).toString();
     let config: ProtologConfig | undefined = undefined;
@@ -135,7 +128,7 @@ class ParserProtoLog extends AbstractParser {
   }
 
   private makeLogMessage(
-    entry: com.android.internal.protolog.IProtoLogMessage,
+    entry: ProtoLogMessage,
     message: ConfigMessage | undefined,
     tag: string | undefined,
   ): LogMessage {
@@ -153,7 +146,7 @@ class ParserProtoLog extends AbstractParser {
   }
 
   private makeLogMessageWithFormat(
-    entry: com.android.internal.protolog.IProtoLogMessage,
+    entry: ProtoLogMessage,
     message: ConfigMessage,
     tag: string,
   ): LogMessage {
@@ -237,9 +230,7 @@ class ParserProtoLog extends AbstractParser {
     return arr[idx];
   }
 
-  private makeLogMessageWithoutFormat(
-    entry: com.android.internal.protolog.IProtoLogMessage,
-  ): LogMessage {
+  private makeLogMessageWithoutFormat(entry: ProtoLogMessage): LogMessage {
     const text =
       assertDefined(entry.messageHash).toString() +
       ' - [' +

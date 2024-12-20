@@ -29,7 +29,10 @@ import {TraceFile} from 'trace/trace_file';
 import {ScreenRecordingOffsets, TraceMetadata} from 'trace/trace_metadata';
 import {TraceType} from 'trace/trace_type';
 
-class ParserScreenRecording extends AbstractParser {
+class ParserScreenRecording extends AbstractParser<
+  MediaBasedTraceEntry,
+  bigint
+> {
   private realToBootTimeOffsetNs: bigint | undefined;
 
   constructor(

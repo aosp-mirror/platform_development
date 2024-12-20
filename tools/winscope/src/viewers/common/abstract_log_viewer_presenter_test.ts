@@ -85,8 +85,8 @@ export abstract class AbstractLogViewerPresenterTest<UiData extends UiDataLog> {
     });
 
     function filterEqualityTester(
-      first: any,
-      second: any,
+      first: unknown,
+      second: unknown,
     ): boolean | undefined {
       if (first instanceof LogTextFilter && second instanceof LogTextFilter) {
         return (

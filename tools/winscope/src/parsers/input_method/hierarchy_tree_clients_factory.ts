@@ -153,7 +153,7 @@ export class HierarchyTreeClientsFactory {
       | undefined,
   ): PropertyTreeNode {
     const denyList: string[] = [];
-    let data: any = clientProto;
+    let data: object | undefined = clientProto ?? undefined;
     if (clientProto) {
       Object.getOwnPropertyNames(clientProto).forEach((it) => {
         if (!HierarchyTreeClientsFactory.CLIENT_EAGER_PROPERTIES.includes(it)) {

@@ -161,7 +161,7 @@ export class HierarchyTreeManagerServiceFactory {
     serviceProto: android.server.inputmethod.IInputMethodManagerServiceProto,
   ): PropertyTreeNode {
     const denyList: string[] = [];
-    let data: any = serviceProto;
+    let data: object = serviceProto;
     if (serviceProto) {
       Object.getOwnPropertyNames(serviceProto).forEach((it) => {
         if (

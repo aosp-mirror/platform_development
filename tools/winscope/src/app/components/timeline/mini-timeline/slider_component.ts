@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import {CdkDragEnd, CdkDragMove, CdkDragStart} from '@angular/cdk/drag-drop';
 import {
   ChangeDetectorRef,
   Component,
@@ -210,14 +211,14 @@ export class SliderComponent {
   }
 
   slideStartX: number | undefined = undefined;
-  onSlideStart(e: any) {
+  onSlideStart(e: CdkDragStart) {
     this.dragging = true;
     this.slideStartX = e.source.freeDragPosition.x;
     document.body.classList.add('inheritCursors');
     document.body.style.cursor = 'grabbing';
   }
 
-  onSlideEnd(e: any) {
+  onSlideEnd(e: CdkDragEnd) {
     this.dragging = false;
     this.slideStartX = undefined;
     this.syncDragPositionTo(assertDefined(this.zoomRange));
@@ -225,9 +226,9 @@ export class SliderComponent {
     document.body.style.cursor = 'unset';
   }
 
-  onSliderMove(e: any) {
+  onSliderMove(e: CdkDragMove) {
     const zoomRange = assertDefined(this.zoomRange);
-    let newX = this.slideStartX + e.distance.x;
+    let newX = assertDefined(this.slideStartX) + e.distance.x;
     if (newX < 0) {
       newX = 0;
     }
@@ -248,7 +249,7 @@ export class SliderComponent {
     this.onZoomChanged.emit(new TimeRange(from, to));
   }
 
-  startMoveLeft(e: any) {
+  startMoveLeft(e: MouseEvent) {
     e.preventDefault();
 
     const startPos = e.pageX;
@@ -256,7 +257,7 @@ export class SliderComponent {
       assertDefined(this.zoomRange).from,
     );
 
-    const listener = (event: any) => {
+    const listener = (event: MouseEvent) => {
       const movedX = event.pageX - startPos;
       let from = this.getTransformer().untransform(startOffset + movedX);
       if (from.getValueNs() < assertDefined(this.fullRange).from.getValueNs()) {
@@ -278,7 +279,7 @@ export class SliderComponent {
     addEventListener('mouseup', mouseUpListener);
   }
 
-  startMoveRight(e: any) {
+  startMoveRight(e: MouseEvent) {
     e.preventDefault();
 
     const startPos = e.pageX;
@@ -286,7 +287,7 @@ export class SliderComponent {
       assertDefined(this.zoomRange).to,
     );
 
-    const listener = (event: any) => {
+    const listener = (event: MouseEvent) => {
       const movedX = event.pageX - startPos;
       const from = assertDefined(this.zoomRange).from;
       let to = this.getTransformer().untransform(startOffset + movedX);

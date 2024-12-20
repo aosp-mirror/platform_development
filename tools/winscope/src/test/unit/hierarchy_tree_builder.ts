@@ -29,15 +29,15 @@ export class HierarchyTreeBuilder extends TreeBuilder<
   HierarchyTreeNode,
   ChildHierarchy
 > {
-  private properties: any;
+  private properties: object | undefined;
   private additionalProperties: ChildProperty[] = [];
 
-  setId(value: any): this {
+  setId(value: string | number | undefined): this {
     this.id = value;
     return this;
   }
 
-  setProperties(value: any): this {
+  setProperties(value: object | undefined): this {
     this.properties = value;
     return this;
   }
@@ -105,7 +105,7 @@ export class HierarchyTreeBuilder extends TreeBuilder<
 export interface ChildHierarchy {
   id: string | number;
   name: string;
-  properties?: any;
+  properties?: object;
   children?: ChildHierarchy[];
   rects?: TraceRect[];
   secondaryRects?: TraceRect[];

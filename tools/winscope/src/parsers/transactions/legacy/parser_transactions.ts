@@ -33,7 +33,12 @@ import {TraceType} from 'trace/trace_type';
 import {PropertyTreeBuilderFromProto} from 'trace/tree_node/property_tree_builder_from_proto';
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
 
-class ParserTransactions extends AbstractParser<PropertyTreeNode> {
+type TraceEntryProto = android.surfaceflinger.proto.ITransactionTraceEntry;
+
+class ParserTransactions extends AbstractParser<
+  PropertyTreeNode,
+  TraceEntryProto
+> {
   private static readonly MAGIC_NUMBER = [
     0x09, 0x54, 0x4e, 0x58, 0x54, 0x52, 0x41, 0x43, 0x45,
   ]; // .TNXTRACE
@@ -69,9 +74,7 @@ class ParserTransactions extends AbstractParser<PropertyTreeNode> {
     return this.realToMonotonicTimeOffsetNs;
   }
 
-  override decodeTrace(
-    buffer: Uint8Array,
-  ): android.surfaceflinger.proto.ITransactionTraceEntry[] {
+  override decodeTrace(buffer: Uint8Array): TraceEntryProto[] {
     const decodedProto = ParserTransactions.TransactionsTraceFileProto.decode(
       buffer,
     ) as android.surfaceflinger.proto.ITransactionTraceFile;
@@ -85,9 +88,7 @@ class ParserTransactions extends AbstractParser<PropertyTreeNode> {
     return decodedProto.entry ?? [];
   }
 
-  protected override getTimestamp(
-    entryProto: android.surfaceflinger.proto.ITransactionTraceEntry,
-  ): Timestamp {
+  protected override getTimestamp(entryProto: TraceEntryProto): Timestamp {
     return this.timestampConverter.makeTimestampFromMonotonicNs(
       BigInt(assertDefined(entryProto.elapsedRealtimeNanos).toString()),
     );
@@ -95,7 +96,7 @@ class ParserTransactions extends AbstractParser<PropertyTreeNode> {
 
   override processDecodedEntry(
     index: number,
-    entryProto: android.surfaceflinger.proto.ITransactionTraceEntry,
+    entryProto: TraceEntryProto,
   ): PropertyTreeNode {
     return this.makePropertiesTree(entryProto);
   }
@@ -109,15 +110,13 @@ class ParserTransactions extends AbstractParser<PropertyTreeNode> {
         return this.decodedEntries
           .slice(entriesRange.start, entriesRange.end)
           .map((entry) => {
-            return BigInt(entry.vsyncId.toString()); // convert Long to bigint
+            return BigInt(assertDefined(entry.vsyncId?.toString())); // convert Long to bigint
           });
       })
       .getResult();
   }
 
-  private makePropertiesTree(
-    entryProto: android.surfaceflinger.proto.ITransactionTraceEntry,
-  ): PropertyTreeNode {
+  private makePropertiesTree(entryProto: TraceEntryProto): PropertyTreeNode {
     const tree = new PropertyTreeBuilderFromProto()
       .setData(entryProto)
       .setRootId('TransactionsTraceEntry')

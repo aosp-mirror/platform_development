@@ -20,12 +20,12 @@ import {PropertyTreeNodeFactory} from './property_tree_node_factory';
 export class PropertyTreeBuilderFromProto {
   private denylistProperties: string[] = [];
   private duplicateCount = 0;
-  private proto: any | undefined;
+  private proto: object | undefined;
   private rootId: string | number = 'UnknownRootId';
   private rootName: string | undefined = 'UnknownRootName';
   private visitProtoType = true;
 
-  setData(value: any): this {
+  setData(value: object | undefined): this {
     this.proto = value;
     return this;
   }

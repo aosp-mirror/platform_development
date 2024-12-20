@@ -33,7 +33,12 @@ import {HierarchyTreeNode} from 'trace/tree_node/hierarchy_tree_node';
 import {PropertiesProvider} from 'trace/tree_node/properties_provider';
 import {TAMPERED_PROTOS_UDC} from './tampered_protos_udc';
 
-class ParserWindowManagerDump extends AbstractParser {
+type DumpProto = com.android.server.wm.IWindowManagerServiceDumpProto;
+
+class ParserWindowManagerDump extends AbstractParser<
+  HierarchyTreeNode,
+  DumpProto
+> {
   private readonly factory = new PropertiesProviderFactory(TAMPERED_PROTOS_UDC);
 
   override getTraceType(): TraceType {
@@ -52,12 +57,10 @@ class ParserWindowManagerDump extends AbstractParser {
     return undefined;
   }
 
-  override decodeTrace(
-    buffer: Uint8Array,
-  ): com.android.server.wm.IWindowManagerServiceDumpProto[] {
+  override decodeTrace(buffer: Uint8Array): DumpProto[] {
     const entryProto = assertDefined(
       TAMPERED_PROTOS_UDC.windowManagerServiceField.tamperedMessageType,
-    ).decode(buffer) as com.android.server.wm.IWindowManagerServiceDumpProto;
+    ).decode(buffer) as DumpProto;
 
     // This parser is prone to accepting invalid inputs because it lacks a magic
     // number. Let's reduce the chances of accepting invalid inputs by making
@@ -69,22 +72,18 @@ class ParserWindowManagerDump extends AbstractParser {
     return [entryProto];
   }
 
-  protected override getTimestamp(
-    entryProto: com.android.server.wm.IWindowManagerServiceDumpProto,
-  ): Timestamp {
+  protected override getTimestamp(entryProto: DumpProto): Timestamp {
     return this.timestampConverter.makeZeroTimestamp();
   }
 
   override processDecodedEntry(
     index: number,
-    entryProto: com.android.server.wm.IWindowManagerServiceDumpProto,
+    entryProto: DumpProto,
   ): HierarchyTreeNode {
     return this.makeHierarchyTree(entryProto);
   }
 
-  private makeHierarchyTree(
-    entryProto: com.android.server.wm.IWindowManagerServiceDumpProto,
-  ): HierarchyTreeNode {
+  private makeHierarchyTree(entryProto: DumpProto): HierarchyTreeNode {
     const containers: PropertiesProvider[] =
       this.factory.makeContainerProperties(assertDefined(entryProto));
 
@@ -109,7 +108,7 @@ class ParserWindowManagerDump extends AbstractParser {
           .slice(entriesRange.start, entriesRange.end)
           .forEach((windowManagerServiceDumpProto) => {
             WmCustomQueryUtils.parseWindowsTokenAndTitle(
-              windowManagerServiceDumpProto?.rootWindowContainer,
+              assertDefined(windowManagerServiceDumpProto?.rootWindowContainer),
               result,
             );
           });
