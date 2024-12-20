@@ -99,7 +99,8 @@ export class SearchViewFactorySf extends AbstractSearchViewFactory {
               PREVIOUS.value as previous_value
             FROM sf_state_changes CHANGE
             INNER JOIN sf_layer_with_properties CURRENT ON CURRENT.state_id = CHANGE.state_id
-            INNER JOIN sf_layer_with_properties PREVIOUS ON PREVIOUS.state_id = CHANGE.previous_state_id AND PREVIOUS.layer_id = CURRENT.layer_id AND PREVIOUS.property = CURRENT.property;
+            INNER JOIN sf_layer_with_properties PREVIOUS ON PREVIOUS.state_id = CHANGE.previous_state_id AND PREVIOUS.layer_id = CURRENT.layer_id AND PREVIOUS.property = CURRENT.property
+            ORDER BY CURRENT.ts;
           `;
     await this.traceProcessor.query(sqlCreateViewSfLayerSearch);
 
@@ -125,7 +126,8 @@ export class SearchViewFactorySf extends AbstractSearchViewFactory {
               FROM sf_entry STATE
               INNER JOIN sf_state_changes STATE_CHANGES ON STATE_CHANGES.state_id = STATE.state_id
               LEFT JOIN sf_entry PREVIOUS ON PREVIOUS.state_id = STATE_CHANGES.previous_state_id
-                                                     AND PREVIOUS.property = STATE.property;
+                                                     AND PREVIOUS.property = STATE.property
+            ORDER BY STATE.ts;
           `;
     await this.traceProcessor.query(sqlCreateViewSfEntrySearch);
 
