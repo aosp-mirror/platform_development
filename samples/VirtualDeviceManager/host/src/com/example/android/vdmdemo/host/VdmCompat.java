@@ -39,7 +39,7 @@ public class VdmCompat {
 
     static VirtualDisplayConfig.Builder setHomeSupported(
             VirtualDisplayConfig.Builder builder, int flags) {
-        if (BuildCompat.isAtLeastV() && android.companion.virtual.flags.Flags.vdmCustomHome()) {
+        if (BuildCompat.isAtLeastV()) {
             return builder.setHomeSupported(true);
         } else {
             return builder.setFlags(flags | VIRTUAL_DISPLAY_FLAG_SHOULD_SHOW_SYSTEM_DECORATIONS);
