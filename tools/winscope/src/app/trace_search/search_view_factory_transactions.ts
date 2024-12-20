@@ -62,7 +62,8 @@ export class SearchViewFactoryTransactions extends AbstractSearchViewFactory {
         TRANS.flat_property,
         TRANS.value
       FROM surfaceflinger_transactions CURRENT
-      INNER JOIN transaction_with_properties TRANS ON CURRENT.id = TRANS.state_id;
+      INNER JOIN transaction_with_properties TRANS ON CURRENT.id = TRANS.state_id
+      ORDER BY TRANS.ts;
     `;
     await this.traceProcessor.query(sqlCreateViewTransactionSearch);
     return [transactionsSearchView];
