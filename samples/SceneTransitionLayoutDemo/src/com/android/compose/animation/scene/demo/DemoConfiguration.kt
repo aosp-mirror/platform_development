@@ -71,7 +71,6 @@ data class DemoConfiguration(
     val canChangeSceneOrOverlays: Boolean = true,
     val transitionInterceptionThreshold: Float = 0.05f,
     val springConfigurations: DemoSpringConfigurations = DemoSpringConfigurations.presets[0],
-    val useOverscrollSpec: Boolean = true,
     val overscrollProgressConverter: DemoOverscrollProgress = Tanh(maxProgress = 0.2f, tilt = 3f),
     val lsToShadeRequiresFullSwipe: ToggleableState = ToggleableState.Indeterminate,
     val enableOverlays: Boolean = false,
@@ -88,7 +87,6 @@ data class DemoConfiguration(
             val canChangeSceneOrOverlaysKey = "canChangeSceneOrOverlays"
             val transitionInterceptionThresholdKey = "transitionInterceptionThreshold"
             val springConfigurationsKey = "springConfigurations"
-            val useOverscrollSpec = "useOverscrollSpec"
             val overscrollProgress = "overscrollProgress"
             val lsToShadeRequiresFullSwipe = "lsToShadeRequiresFullSwipe"
             val enableOverlays = "enableOverlays"
@@ -106,7 +104,6 @@ data class DemoConfiguration(
                         canChangeSceneOrOverlaysKey to it.canChangeSceneOrOverlays,
                         transitionInterceptionThresholdKey to it.transitionInterceptionThreshold,
                         springConfigurationsKey to it.springConfigurations.save(),
-                        useOverscrollSpec to it.useOverscrollSpec,
                         overscrollProgress to it.overscrollProgressConverter.save(),
                         lsToShadeRequiresFullSwipe to it.lsToShadeRequiresFullSwipe,
                         enableOverlays to it.enableOverlays,
@@ -126,7 +123,6 @@ data class DemoConfiguration(
                             it[transitionInterceptionThresholdKey] as Float,
                         springConfigurations =
                             it[springConfigurationsKey].restoreSpringConfigurations(),
-                        useOverscrollSpec = it[useOverscrollSpec] as Boolean,
                         overscrollProgressConverter =
                             it[overscrollProgress].restoreOverscrollProgress(),
                         lsToShadeRequiresFullSwipe =
@@ -415,14 +411,6 @@ fun DemoConfigurationDialog(
                 )
 
                 Text(text = "Overscroll", style = MaterialTheme.typography.titleMedium)
-
-                Checkbox(
-                    label = "Use Overscroll Spec",
-                    checked = configuration.useOverscrollSpec,
-                    onCheckedChange = {
-                        onConfigurationChange(configuration.copy(useOverscrollSpec = it))
-                    },
-                )
 
                 OverscrollProgressPicker(
                     value = configuration.overscrollProgressConverter,

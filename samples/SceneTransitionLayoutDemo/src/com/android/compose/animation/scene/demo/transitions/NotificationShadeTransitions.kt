@@ -17,7 +17,6 @@
 package com.android.compose.animation.scene.demo.transitions
 
 import androidx.compose.animation.core.tween
-import androidx.compose.foundation.gestures.Orientation
 import com.android.compose.animation.scene.BaseTransitionBuilder
 import com.android.compose.animation.scene.SceneTransitionsBuilder
 import com.android.compose.animation.scene.TransitionBuilder
@@ -42,9 +41,6 @@ fun SceneTransitionsBuilder.notificationShadeTransitions(revealHaptics: Containe
         reversed { toNotificationShade(revealHaptics) }
         sharedElement(NotificationList.Elements.Notifications, enabled = false)
     }
-
-    overscrollDisabled(Overlays.Notifications, Orientation.Vertical)
-    overscrollDisabled(Overlays.Notifications, Orientation.Horizontal)
 }
 
 val ToNotificationShadeStartFadeProgress = 0.5f

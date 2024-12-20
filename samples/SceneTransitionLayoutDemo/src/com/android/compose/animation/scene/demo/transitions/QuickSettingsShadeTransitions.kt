@@ -17,7 +17,6 @@
 package com.android.compose.animation.scene.demo.transitions
 
 import androidx.compose.animation.core.tween
-import androidx.compose.foundation.gestures.Orientation
 import com.android.compose.animation.scene.SceneTransitionsBuilder
 import com.android.compose.animation.scene.and
 import com.android.compose.animation.scene.demo.Clock
@@ -71,7 +70,4 @@ fun SceneTransitionsBuilder.quickSettingsShadeTransitions(revealHaptics: Contain
             fade(NotificationList.Elements.Notifications and inContent(Overlays.Notifications))
         }
     }
-
-    overscrollDisabled(Overlays.QuickSettings, Orientation.Vertical)
-    overscrollDisabled(Overlays.QuickSettings, Orientation.Horizontal)
 }

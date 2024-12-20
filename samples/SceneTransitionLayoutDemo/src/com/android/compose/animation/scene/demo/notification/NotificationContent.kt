@@ -18,7 +18,6 @@ package com.android.compose.animation.scene.demo.notification
 
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
-import androidx.compose.foundation.gestures.Orientation
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -70,9 +69,6 @@ object NotificationContent {
                 dampingRatio = springConfiguration.dampingRatio,
                 visibilityThreshold = 0.5f,
             )
-
-        overscrollDisabled(Notification.Scenes.Collapsed, Orientation.Vertical)
-        overscrollDisabled(Notification.Scenes.Expanded, Orientation.Vertical)
 
         from(Notification.Scenes.Expanded, to = Notification.Scenes.Collapsed) {
             spec = tween(500)
