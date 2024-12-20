@@ -348,10 +348,10 @@ class Mapper3D {
   }
 
   private cropOversizedRect(rect3d: UiRect3D, maxDisplaySize: Size): UiRect3D {
-    // Arbitrary max size for a rect (2x the maximum display)
+    // Arbitrary max size for a rect (1.5x the maximum display)
     let maxDimension = Number.MAX_VALUE;
     if (maxDisplaySize.height > 0) {
-      maxDimension = Math.max(maxDisplaySize.width, maxDisplaySize.height) * 2;
+      maxDimension = Math.max(maxDisplaySize.width, maxDisplaySize.height) * 1.5;
     }
 
     const height = Math.abs(rect3d.topLeft.y - rect3d.bottomRight.y);
