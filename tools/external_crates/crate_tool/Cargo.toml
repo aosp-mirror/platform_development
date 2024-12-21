@@ -26,7 +26,7 @@ thiserror = "1"
 walkdir = "2"
 checksum = { path = "../checksum" }
 google_metadata = { path = "../google_metadata"}
-license_checker = { path = "../license_checker", features = ["gestalt_ratio"] }
+license_checker = { path = "../license_checker", features = ["fuzzy_content_match"] }
 name_and_version = { path = "../name_and_version" }
 name_and_version_proc_macros = { path = "../name_and_version_proc_macros" }
 rooted_path = { path = "../rooted_path" }
