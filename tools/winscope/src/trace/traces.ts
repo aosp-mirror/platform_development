@@ -61,15 +61,6 @@ export class Traces {
     this.traces.delete(trace);
   }
 
-  deleteTracesByType(type: TraceType) {
-    this.traces.forEach((trace) => {
-      if (trace.type !== type) {
-        return;
-      }
-      this.traces.delete(trace);
-    });
-  }
-
   hasTrace(trace: Trace<{}>) {
     return this.traces.has(trace);
   }

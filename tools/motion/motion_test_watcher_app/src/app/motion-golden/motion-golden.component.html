@@ -1,15 +1,40 @@
-<div class="wrapper">
-  <div class=".mat-app-background label">Motion Golden result</div>
-  <div class="toolbar">
-    <button mat-icon-button (click)="updateGolden()">
+<mat-card class="golden-card">
+  <mat-card-title>
+    <button
+      mat-flat-button
+      (click)="updateGolden()"
+      [matTooltip]="golden.goldenRepoPath"
+      [matTooltipPosition]="tooltipPosition"
+    >
       <mat-icon>save</mat-icon>
+      Update golden file
     </button>
-  </div>
-  <div>Repo file: {{ golden.goldenRepoPath }}</div>
+  </mat-card-title>
+  <mat-card-content>
+    @if (recordedMotion) {
+      <div class="golden-content">
+        <app-timeline-view
+          [recordedMotion]="recordedMotion"
+        ></app-timeline-view>
+      </div>
+    }
+  </mat-card-content>
+</mat-card>
 
-  @if (golden.filmstripUrl) {
-    <div class="screenshot-container">
-      <img class="screenshot" [src]="golden.filmstripUrl" />
+<div class="overlay">
+  <mat-card class="video-card" cdkDrag cdkDragBoundary=".overlay">
+    <mat-card-title class="header">
+      <div class="button-drag" cdkDragHandle>
+        <mat-icon class="drag-icon">drag_indicator</mat-icon>
+        Recording
+      </div>
+    </mat-card-title>
+    <div class="video-container" cdkDragHandle>
+      @if (recordedMotion?.videoSource) {
+        <app-video-view [source]="recordedMotion?.videoSource"></app-video-view>
+      } @else {
+        <p class="mat-body-2">No screen recording frame to show.</p>
+      }
     </div>
-  }
+  </mat-card>
 </div>

@@ -14,8 +14,9 @@
  * limitations under the License.
  */
 
+import {TimelineUtils} from 'app/components/timeline/timeline_utils';
 import {assertDefined} from 'common/assert_utils';
-import {Rect} from 'common/rect';
+import {Rect} from 'common/geometry/rect';
 
 export class CanvasDrawer {
   private canvas: HTMLCanvasElement | undefined;
@@ -30,27 +31,91 @@ export class CanvasDrawer {
     this.ctx = ctx;
   }
 
-  drawRect(rect: Rect, color: string, alpha: number) {
+  drawRect(
+    rect: Rect,
+    hexColor: string,
+    alpha: number,
+    withGradientStart = false,
+    withGradientEnd = false,
+  ) {
     if (!this.ctx) {
-      throw Error('Canvas not set');
+      throw new Error('Canvas not set');
     }
 
-    const rgbColor = this.hexToRgb(color);
+    const rgbColor = TimelineUtils.convertHexToRgb(hexColor);
     if (rgbColor === undefined) {
       throw new Error('Failed to parse provided hex color');
     }
     const {r, g, b} = rgbColor;
+    const rgbaColor = `rgba(${r},${g},${b},${alpha})`;
+    const transparentColor = `rgba(${r},${g},${b},${0})`;
 
     this.defineRectPath(rect, this.ctx);
-    this.ctx.fillStyle = `rgba(${r},${g},${b},${alpha})`;
+    if (withGradientStart || withGradientEnd) {
+      const gradient = this.ctx.createLinearGradient(
+        rect.x,
+        0,
+        rect.x + rect.w,
+        0,
+      );
+      const gradientRatio = Math.max(0, Math.min(25 / rect.w, 1));
+      gradient.addColorStop(
+        0,
+        withGradientStart ? transparentColor : rgbaColor,
+      );
+      gradient.addColorStop(1, withGradientEnd ? transparentColor : rgbaColor);
+      gradient.addColorStop(gradientRatio, rgbaColor);
+      gradient.addColorStop(1 - gradientRatio, rgbaColor);
+      this.ctx.fillStyle = gradient;
+    } else {
+      this.ctx.fillStyle = rgbaColor;
+    }
     this.ctx.fill();
+
+    this.ctx.fillStyle = 'black';
+    const centerY = rect.y + rect.h / 2;
+    const marginOffset = 5;
+    if (withGradientStart) {
+      this.drawEllipsis(centerY, rect.x + marginOffset, true, rect.x + rect.w);
+    }
+
+    if (withGradientEnd) {
+      this.drawEllipsis(centerY, rect.x + rect.w - marginOffset, false, rect.x);
+    }
 
     this.ctx.restore();
   }
 
+  private drawEllipsis(
+    centerY: number,
+    startX: number,
+    forwards: boolean,
+    xLim: number,
+  ) {
+    if (!this.ctx) {
+      return;
+    }
+    let centerX = startX;
+    let i = 0;
+    const radius = 2;
+    while (i < 3) {
+      if (forwards && centerX + radius >= xLim) {
+        break;
+      }
+      if (!forwards && centerX + radius <= xLim) {
+        break;
+      }
+      this.ctx.beginPath();
+      this.ctx.arc(centerX, centerY, radius, 0, 2 * Math.PI);
+      this.ctx.fill();
+      centerX = forwards ? centerX + 7 : centerX - 7;
+      i++;
+    }
+  }
+
   drawRectBorder(rect: Rect) {
     if (!this.ctx) {
-      throw Error('Canvas not set');
+      throw new Error('Canvas not set');
     }
     this.defineRectPath(rect, this.ctx);
     this.highlightPath(this.ctx);
@@ -101,25 +166,5 @@ export class CanvasDrawer {
     ctx.lineTo(rect.x, rect.y + rect.h);
     ctx.lineTo(rect.x, rect.y);
     ctx.closePath();
-  }
-
-  private hexToRgb(hex: string): {r: number; g: number; b: number} | undefined {
-    // Expand shorthand form (e.g. "03F") to full form (e.g. "0033FF")
-    const shorthandRegex = /^#?([a-f\d])([a-f\d])([a-f\d])$/i;
-    hex = hex.replace(shorthandRegex, (m, r, g, b) => {
-      return r + r + g + g + b + b;
-    });
-
-    const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
-    return result
-      ? {
-          // tslint:disable-next-line:ban
-          r: parseInt(result[1], 16),
-          // tslint:disable-next-line:ban
-          g: parseInt(result[2], 16),
-          // tslint:disable-next-line:ban
-          b: parseInt(result[3], 16),
-        }
-      : undefined;
   }
 }

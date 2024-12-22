@@ -29,7 +29,6 @@ describe('ArrayUtils', () => {
     expect(ArrayUtils.equal([1], new Uint8Array(1))).toBeFalse();
 
     expect(ArrayUtils.equal([], new Uint8Array())).toBeTrue();
-    expect(ArrayUtils.equal([], new Uint8Array())).toBeTrue();
     expect(ArrayUtils.equal([1, 2, 3], new Uint8Array([1, 2, 3]))).toBeTrue();
 
     expect(
@@ -43,6 +42,49 @@ describe('ArrayUtils', () => {
     expect(
       ArrayUtils.equal(new Uint8Array([1, 2, 3]), new Uint8Array([1, 2, 3])),
     ).toBeTrue();
+  });
+
+  it('equal with predicate', () => {
+    const predicate = (a: number, b: number) => a !== b;
+    expect(ArrayUtils.equal([], [1], predicate)).toBeFalse();
+    expect(ArrayUtils.equal([1], [], predicate)).toBeFalse();
+
+    expect(ArrayUtils.equal([], [], predicate)).toBeTrue();
+    expect(ArrayUtils.equal([1, 2, 3], [1, 2, 3], predicate)).toBeFalse();
+
+    expect(ArrayUtils.equal([], new Uint8Array(1), predicate)).toBeFalse();
+    expect(ArrayUtils.equal([1], new Uint8Array(1), predicate)).toBeTrue();
+
+    expect(ArrayUtils.equal([], new Uint8Array(), predicate)).toBeTrue();
+    expect(
+      ArrayUtils.equal([1, 2, 3], new Uint8Array([1, 2, 3]), predicate),
+    ).toBeFalse();
+
+    expect(
+      ArrayUtils.equal(new Uint8Array([]), new Uint8Array([1]), predicate),
+    ).toBeFalse();
+    expect(
+      ArrayUtils.equal(new Uint8Array([1]), new Uint8Array([]), predicate),
+    ).toBeFalse();
+
+    expect(
+      ArrayUtils.equal(new Uint8Array([]), new Uint8Array([]), predicate),
+    ).toBeTrue();
+    expect(
+      ArrayUtils.equal(
+        new Uint8Array([1, 2, 3]),
+        new Uint8Array([1, 2, 3]),
+        predicate,
+      ),
+    ).toBeFalse();
+
+    const predicateWithNonNumberType = (
+      a: number | undefined,
+      b: number | undefined,
+    ) => a !== b;
+    expect(
+      ArrayUtils.equal([undefined], [undefined], predicateWithNonNumberType),
+    ).toBeFalse();
   });
 
   it('searchSubarray', () => {

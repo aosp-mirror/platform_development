@@ -14,8 +14,10 @@
  * limitations under the License.
  */
 import {assertDefined} from 'common/assert_utils';
+import {DuplicateLayerId} from 'messaging/user_warnings';
 import {TimestampConverterUtils} from 'test/unit/timestamp_converter_utils';
 import {TraceBuilder} from 'test/unit/trace_builder';
+import {UserNotifierChecker} from 'test/unit/user_notifier_checker';
 import {UnitTestUtils} from 'test/unit/utils';
 import {CoarseVersion} from 'trace/coarse_version';
 import {CustomQueryType} from 'trace/custom_query';
@@ -26,6 +28,12 @@ import {HierarchyTreeNode} from 'trace/tree_node/hierarchy_tree_node';
 import {UiTreeUtils} from 'viewers/common/ui_tree_utils';
 
 describe('Perfetto ParserSurfaceFlinger', () => {
+  let userNotifierChecker: UserNotifierChecker;
+
+  beforeAll(() => {
+    userNotifierChecker = new UserNotifierChecker();
+  });
+
   describe('valid trace', () => {
     let parser: Parser<HierarchyTreeNode>;
     let trace: Trace<HierarchyTreeNode>;
@@ -170,6 +178,7 @@ describe('Perfetto ParserSurfaceFlinger', () => {
         'Input Consumer recents_animation_input_consumer#408(Mirror) duplicate(1)',
       );
       expect(dupLayer.getAllChildren().length).toEqual(0);
+      userNotifierChecker.expectNotified([new DuplicateLayerId('-2147483595')]);
     });
   });
 });
