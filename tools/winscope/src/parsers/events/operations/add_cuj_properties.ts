@@ -16,8 +16,8 @@
 
 import {assertDefined} from 'common/assert_utils';
 import {StringUtils} from 'common/string_utils';
-import {CujType} from 'parsers/events/cuj_type';
 import {EventTag} from 'parsers/events/event_tag';
+import {CujType} from 'trace/cuj_type';
 import {AddOperation} from 'trace/tree_node/operations/add_operation';
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
 import {DEFAULT_PROPERTY_TREE_NODE_FACTORY} from 'trace/tree_node/property_tree_node_factory';
@@ -78,19 +78,18 @@ export class AddCujProperties extends AddOperation<PropertyTreeNode> {
       !StringUtils.isNumeric(elapsedNs) ||
       !StringUtils.isNumeric(uptimeNs)
     ) {
-      throw Error(`Data ${data} didn't match expected format`);
+      throw new Error(`CUJ Data ${data} didn't match expected format`);
     }
 
     return data.slice(1, data.length - 2).split(',');
   }
 
-  private getCujTypeFromData(dataEntries: string[]): CujType {
+  private getCujTypeFromData(dataEntries: string[]): number {
     const eventId = Number(dataEntries[0]);
-    const cujType = Object.values(CujType).find((type) => type === eventId);
-    if (!cujType || typeof cujType === 'string') {
-      return CujType.UNKNOWN;
+    if (eventId in CujType) {
+      return eventId;
     }
-    return cujType;
+    return -1;
   }
 
   private getUnixNanosFromData(dataEntries: string[]): bigint {

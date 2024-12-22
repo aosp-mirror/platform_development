@@ -1,5 +1,6 @@
 package com.android.sharetest
 
+import android.content.ComponentName
 import android.content.ContentProvider
 import android.content.ContentValues
 import android.content.Intent
@@ -27,19 +28,19 @@ class AdditionalContentProvider : ContentProvider() {
         val cursor = MatrixCursor(arrayOf(AdditionalContentContract.Columns.URI))
         val chooserIntent =
             queryArgs?.getParcelable(Intent.EXTRA_INTENT, Intent::class.java) ?: return cursor
-        val count = runCatching {
-            uri.getQueryParameter(PARAM_COUNT)?.toInt()
-        }.getOrNull() ?: ImageContentProvider.IMAGE_COUNT
-        val includeSize = runCatching {
-            uri.getQueryParameter(PARAM_SIZE_META).toBoolean()
-        }.getOrDefault(true)
-        val mimeTypes = kotlin.runCatching {
-            uri.getQueryParameters(PARAM_MIME_TYPE)
-        }.getOrNull() ?: listOf("image/jpeg")
+        val count =
+            runCatching { uri.getQueryParameter(PARAM_COUNT)?.toInt() }.getOrNull()
+                ?: ImageContentProvider.IMAGE_COUNT
+        val includeSize =
+            runCatching { uri.getQueryParameter(PARAM_SIZE_META).toBoolean() }.getOrDefault(true)
+        val mimeTypes =
+            kotlin.runCatching { uri.getQueryParameters(PARAM_MIME_TYPE) }.getOrNull()
+                ?: listOf("image/jpeg")
         // Images are img1 ... img8
-        val uris = Array(count) { idx ->
-            ImageContentProvider.makeItemUri(idx, mimeTypes[idx % mimeTypes.size], includeSize)
-        }
+        val uris =
+            Array(count) { idx ->
+                ImageContentProvider.makeItemUri(idx, mimeTypes[idx % mimeTypes.size], includeSize)
+            }
         val callingPackage = getCallingPackage()
         for (u in uris) {
             cursor.addRow(arrayOf(u.toString()))
@@ -48,11 +49,12 @@ class AdditionalContentProvider : ContentProvider() {
         val startPos = chooserIntent.getIntExtra(CURSOR_START_POSITION, -1)
         if (startPos >= 0) {
             var cursorExtras = cursor.extras
-            cursorExtras = if (cursorExtras == null) {
-                Bundle()
-            } else {
-                Bundle(cursorExtras)
-            }
+            cursorExtras =
+                if (cursorExtras == null) {
+                    Bundle()
+                } else {
+                    Bundle(cursorExtras)
+                }
             cursorExtras.putInt(AdditionalContentContract.CursorExtraKeys.POSITION, startPos)
             cursor.extras = cursorExtras
         }
@@ -78,22 +80,22 @@ class AdditionalContentProvider : ContentProvider() {
 
         // Update alternate intent if the chooser intent has one.
         if (chooserIntent.hasExtra(Intent.EXTRA_ALTERNATE_INTENTS)) {
-            chooserIntent.getParcelableExtra(Intent.EXTRA_INTENT, Intent::class.java)
-                ?.let { targetIntent ->
-                    result.putParcelableArray(
-                        Intent.EXTRA_ALTERNATE_INTENTS,
-                        arrayOf(createAlternateIntent(targetIntent))
-                    )
-                }
+            chooserIntent.getParcelableExtra(Intent.EXTRA_INTENT, Intent::class.java)?.let {
+                targetIntent ->
+                result.putParcelableArray(
+                    Intent.EXTRA_ALTERNATE_INTENTS,
+                    arrayOf(createAlternateIntent(targetIntent))
+                )
+            }
         }
 
         if (chooserIntent.hasExtra(Intent.EXTRA_CHOOSER_MODIFY_SHARE_ACTION)) {
             result.setModifyShareAction(
                 context,
-                chooserIntent.getParcelableExtra(
-                    Intent.EXTRA_INTENT,
-                    Intent::class.java
-                )?.extraStream?.size ?: -1
+                chooserIntent
+                    .getParcelableExtra(Intent.EXTRA_INTENT, Intent::class.java)
+                    ?.extraStream
+                    ?.size ?: -1
             )
         }
 
@@ -105,12 +107,10 @@ class AdditionalContentProvider : ContentProvider() {
                         context,
                         buildString {
                             append("Modified Caller Target. Shared URIs:")
-                            chooserIntent.getParcelableExtra(
-                                Intent.EXTRA_INTENT,
-                                Intent::class.java
-                            )?.extraStream?.forEach {
-                                append("\n * $it")
-                            }
+                            chooserIntent
+                                .getParcelableExtra(Intent.EXTRA_INTENT, Intent::class.java)
+                                ?.extraStream
+                                ?.forEach { append("\n * $it") }
                         }
                     )
                 )
@@ -122,6 +122,24 @@ class AdditionalContentProvider : ContentProvider() {
                 Intent.EXTRA_CHOOSER_REFINEMENT_INTENT_SENDER,
                 createRefinementIntentSender(context, false)
             )
+        }
+
+        if (chooserIntent.hasExtra(Intent.EXTRA_EXCLUDE_COMPONENTS)) {
+            chooserIntent.getParcelableExtra(Intent.EXTRA_INTENT, Intent::class.java)?.let {
+                targetIntent ->
+                val excluded =
+                    if (targetIntent.extraStream.size % 2 == 0) {
+                        null
+                    } else {
+                        arrayOf(
+                            ComponentName(
+                                context.packageName,
+                                CallerDirectTargetActivity::class.java.name
+                            )
+                        )
+                    }
+                result.putParcelableArray(Intent.EXTRA_EXCLUDE_COMPONENTS, excluded)
+            }
         }
 
         val latency = chooserIntent.getIntExtra(EXTRA_SELECTION_LATENCY, 0)
@@ -172,4 +190,3 @@ class AdditionalContentProvider : ContentProvider() {
         val PARAM_MIME_TYPE = "mimetype"
     }
 }
-

@@ -15,16 +15,19 @@
  */
 
 import {assertTrue} from 'common/assert_utils';
+import {Store} from 'common/store';
 import {Trace} from 'trace/trace';
 import {Traces} from 'trace/traces';
 import {TraceType, TraceTypeUtils} from 'trace/trace_type';
 import {Viewer} from './viewer';
+import {ViewerInput} from './viewer_input/viewer_input';
 import {ViewerInputMethodClients} from './viewer_input_method_clients/viewer_input_method_clients';
 import {ViewerInputMethodManagerService} from './viewer_input_method_manager_service/viewer_input_method_manager_service';
 import {ViewerInputMethodService} from './viewer_input_method_service/viewer_input_method_service';
+import {ViewerJankCujs} from './viewer_jank_cujs/viewer_jank_cujs';
+import {ViewerScreenshot} from './viewer_media_based/viewer_screenshot';
+import {ViewerScreenRecording} from './viewer_media_based/viewer_screen_recording';
 import {ViewerProtoLog} from './viewer_protolog/viewer_protolog';
-import {ViewerScreenshot} from './viewer_screen_recording/viewer_screenshot';
-import {ViewerScreenRecording} from './viewer_screen_recording/viewer_screen_recording';
 import {ViewerSurfaceFlinger} from './viewer_surface_flinger/viewer_surface_flinger';
 import {ViewerTransactions} from './viewer_transactions/viewer_transactions';
 import {ViewerTransitions} from './viewer_transitions/viewer_transitions';
@@ -32,7 +35,7 @@ import {ViewerViewCapture} from './viewer_view_capture/viewer_view_capture';
 import {ViewerWindowManager} from './viewer_window_manager/viewer_window_manager';
 
 class ViewerFactory {
-  static readonly VIEWERS = [
+  static readonly SINGLE_TRACE_VIEWERS = [
     ViewerSurfaceFlinger,
     ViewerWindowManager,
     ViewerInputMethodClients,
@@ -40,17 +43,23 @@ class ViewerFactory {
     ViewerInputMethodService,
     ViewerTransactions,
     ViewerProtoLog,
-    ViewerScreenRecording,
-    ViewerScreenshot,
     ViewerTransitions,
+    ViewerJankCujs,
   ];
 
-  createViewers(traces: Traces, storage: Storage): Viewer[] {
+  static readonly MULTI_TRACE_VIEWERS = [
+    ViewerViewCapture,
+    ViewerInput,
+    ViewerScreenRecording,
+    ViewerScreenshot,
+  ];
+
+  createViewers(traces: Traces, storage: Store): Viewer[] {
     const viewers: Viewer[] = [];
 
-    // regular viewers
+    // instantiate one viewer for one trace
     traces.forEachTrace((trace) => {
-      ViewerFactory.VIEWERS.forEach((Viewer) => {
+      ViewerFactory.SINGLE_TRACE_VIEWERS.forEach((Viewer) => {
         assertTrue(Viewer.DEPENDENCIES.length === 1);
         const isViewerDepSatisfied = trace.type === Viewer.DEPENDENCIES[0];
         if (isViewerDepSatisfied) {
@@ -59,14 +68,17 @@ class ViewerFactory {
       });
     });
 
-    // ViewCapture viewer (instantiate one viewer for N ViewCapture traces)
+    // instantiate one viewer for N traces
     const availableTraceTypes = new Set(traces.mapTrace((trace) => trace.type));
-    const isViewerDepSatisfied = ViewerViewCapture.DEPENDENCIES.some(
-      (traceType: TraceType) => availableTraceTypes.has(traceType),
-    );
-    if (isViewerDepSatisfied) {
-      viewers.push(new ViewerViewCapture(traces, storage));
-    }
+
+    ViewerFactory.MULTI_TRACE_VIEWERS.forEach((Viewer) => {
+      const isViewerDepSatisfied = Viewer.DEPENDENCIES.some(
+        (traceType: TraceType) => availableTraceTypes.has(traceType),
+      );
+      if (isViewerDepSatisfied) {
+        viewers.push(new Viewer(traces, storage));
+      }
+    });
 
     // Note:
     // the final order of tabs/views in the UI corresponds the order of the

@@ -37,7 +37,7 @@ export class DraggableCanvasObjectImpl implements DraggableCanvasObject {
     private drawConfig: DrawConfig,
     private onDrag: (x: number) => void,
     private onDrop: (x: number) => void,
-    private rangeGetter: () => Segment,
+    private getRange: () => Segment,
   ) {
     this.drawer.handler.registerDraggableObject(
       this,
@@ -54,23 +54,19 @@ export class DraggableCanvasObjectImpl implements DraggableCanvasObject {
     );
   }
 
-  get range(): Segment {
-    return this.rangeGetter();
-  }
-
-  get position(): number {
-    return this.draggingPosition !== undefined
-      ? this.draggingPosition
-      : this.positionGetter();
-  }
-
   definePath(ctx: CanvasRenderingContext2D) {
-    this.definePathFunc(ctx, this.position);
+    this.definePathFunc(ctx, this.getPosition());
   }
 
   draw(ctx: CanvasRenderingContext2D) {
     this.doDraw(ctx);
     this.drawer.handler.notifyDrawnOnTop(this);
+  }
+
+  private getPosition(): number {
+    return this.draggingPosition !== undefined
+      ? this.draggingPosition
+      : this.positionGetter();
   }
 
   private doDraw(ctx: CanvasRenderingContext2D) {
@@ -82,6 +78,7 @@ export class DraggableCanvasObjectImpl implements DraggableCanvasObject {
   }
 
   private clampPositionToRange(x: number): number {
-    return MathUtils.clamp(x, this.range.from, this.range.to);
+    const range = this.getRange();
+    return MathUtils.clamp(x, range.from, range.to);
   }
 }

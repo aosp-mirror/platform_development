@@ -18,6 +18,7 @@ package com.example.android.vdmdemo.demos;
 
 import android.os.Bundle;
 import android.view.WindowManager;
+import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
 
@@ -27,7 +28,8 @@ public final class SecureWindowDemoActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.secure_window_demo_activity);
+        setContentView(R.layout.text_demo_activity);
+        ((TextView) requireViewById(R.id.text)).setText(R.string.secure_text);
         getWindow()
                 .setFlags(
                         WindowManager.LayoutParams.FLAG_SECURE,

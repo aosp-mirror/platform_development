@@ -14,27 +14,20 @@
  * limitations under the License.
  */
 
-export class InMemoryStorage implements Storage {
+import {Store} from './store';
+
+export class InMemoryStorage implements Store {
   private store: {[key: string]: string} = {};
 
-  [name: string]: any;
-  get length(): number {
-    return Object.keys(this.store).length;
+  add(key: string, value: string): void {
+    this.store[key] = value;
   }
 
-  clear(): void {
-    throw new Error('Method not implemented.');
+  get(key: string): string | undefined {
+    return this.store[key] ?? undefined;
   }
-  getItem(key: string): string | null {
-    return this.store[key];
-  }
-  key(index: number): string | null {
-    return Object.keys(this.store)[index];
-  }
-  removeItem(key: string): void {
-    delete this.store[key];
-  }
-  setItem(key: string, value: string): void {
-    this.store[key] = value;
+
+  clear(keySubstring: string): void {
+    delete this.store[keySubstring];
   }
 }
