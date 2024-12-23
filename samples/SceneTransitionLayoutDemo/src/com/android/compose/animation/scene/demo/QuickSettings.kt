@@ -60,7 +60,7 @@ import com.android.compose.animation.scene.SceneScope
 import com.android.compose.animation.scene.Swipe
 import com.android.compose.animation.scene.UserAction
 import com.android.compose.animation.scene.UserActionResult
-import com.android.compose.animation.scene.effect.rememberOffsetOverscrollEffect
+import com.android.compose.gesture.effect.rememberOffsetOverscrollEffect
 
 object QuickSettings {
     /**

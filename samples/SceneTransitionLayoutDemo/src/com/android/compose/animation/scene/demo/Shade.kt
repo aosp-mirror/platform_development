@@ -78,7 +78,7 @@ import com.android.compose.animation.scene.UserActionResult
 import com.android.compose.animation.scene.ValueKey
 import com.android.compose.animation.scene.animateElementFloatAsState
 import com.android.compose.animation.scene.animateSceneFloatAsState
-import com.android.compose.animation.scene.effect.rememberOffsetOverscrollEffect
+import com.android.compose.gesture.effect.rememberOffsetOverscrollEffect
 import com.android.compose.modifiers.thenIf
 import com.android.compose.nestedscroll.LargeTopAppBarNestedScrollConnection
 import com.android.compose.nestedscroll.PriorityNestedScrollConnection
