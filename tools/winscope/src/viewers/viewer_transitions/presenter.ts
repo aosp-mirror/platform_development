@@ -16,6 +16,7 @@
 
 import {assertDefined} from 'common/assert_utils';
 import {Store} from 'common/store/store';
+import {Timestamp} from 'common/time/time';
 import {CustomQueryType} from 'trace/custom_query';
 import {Trace} from 'trace/trace';
 import {Traces} from 'trace/traces';
@@ -214,6 +215,12 @@ export class Presenter extends AbstractLogViewerPresenter<
       const [status, statusIcon, statusIconColor] =
         this.extractAndFormatStatus(transitionNode);
 
+      const sendTs: Timestamp | undefined = wmDataNode
+        .getChildByName('sendTimeNs')
+        ?.getValue();
+      const dispatchTs: Timestamp | undefined = shellDataNode
+        .getChildByName('dispatchTimeNs')
+        ?.getValue();
       const fields: LogField[] = [
         {
           spec: Presenter.COLUMNS.id,
@@ -222,16 +229,14 @@ export class Presenter extends AbstractLogViewerPresenter<
         {spec: Presenter.COLUMNS.type, value: transitionType},
         {
           spec: Presenter.COLUMNS.sendTime,
-          value:
-            wmDataNode.getChildByName('sendTimeNs')?.getValue() ??
-            Presenter.VALUE_NA,
+          value: sendTs ?? Presenter.VALUE_NA,
+          propagateEntryTimestamp:
+            dispatchTs === undefined && sendTs !== undefined,
         },
         {
           spec: Presenter.COLUMNS.dispatchTime,
-          value:
-            shellDataNode.getChildByName('dispatchTimeNs')?.getValue() ??
-            Presenter.VALUE_NA,
-          propagateEntryTimestamp: true,
+          value: dispatchTs ?? Presenter.VALUE_NA,
+          propagateEntryTimestamp: dispatchTs !== undefined,
         },
         {
           spec: Presenter.COLUMNS.duration,

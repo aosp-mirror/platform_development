@@ -79,14 +79,8 @@ export class TracesParserTransitions extends AbstractTracesParser<PropertyTreeNo
     const zeroTs = this.timestampConverter.makeZeroTimestamp();
     for (let index = 0; index < this.getLengthEntries(); index++) {
       const entry = await this.getEntry(index);
-      const shellData = entry.getChildByName('shellData');
-
-      // for consistency with all transitions, elapsed nanos are defined as
-      // shell dispatch time else 0n
-      const dispatchTimestamp: Timestamp | undefined = shellData
-        ?.getChildByName('dispatchTimeNs')
-        ?.getValue();
-      this.timestamps.push(dispatchTimestamp ?? zeroTs);
+      const ts = this.getTimestampFromTransitionProperties(entry);
+      this.timestamps.push(ts ?? zeroTs);
     }
   }
 
@@ -141,41 +135,41 @@ export class TracesParserTransitions extends AbstractTracesParser<PropertyTreeNo
         operation.apply(transition),
       );
     });
-    return compressedTransitions.sort(this.compareByTimestamp);
+    return compressedTransitions.sort((a, b) => this.compareByTimestamp(a, b));
   }
 
   private compareByTimestamp(a: PropertyTreeNode, b: PropertyTreeNode): number {
-    const aNanos =
-      assertDefined(a.getChildByName('shellData'))
-        .getChildByName('dispatchTimeNs')
-        ?.getValue()
-        ?.getValueNs() ?? 0n;
-    const bNanos =
-      assertDefined(b.getChildByName('shellData'))
-        .getChildByName('dispatchTimeNs')
-        ?.getValue()
-        ?.getValueNs() ?? 0n;
-    if (aNanos !== bNanos) {
-      return aNanos < bNanos ? -1 : 1;
+    const aNs = this.getTimestampFromTransitionProperties(a) ?? 0n;
+    const bNs = this.getTimestampFromTransitionProperties(b) ?? 0n;
+    if (aNs !== bNs) {
+      return aNs < bNs ? -1 : 1;
     }
-    // if dispatchTimeNs not present for both, fallback to id
+    // fallback to id
     return assertDefined(a.getChildByName('id')).getValue() <
       assertDefined(b.getChildByName('id')).getValue()
       ? -1
       : 1;
   }
 
+  private getTimestampFromTransitionProperties(
+    transition: PropertyTreeNode,
+  ): Timestamp | undefined {
+    // Entry timestamps are defined as shell dispatch time - if this is
+    // null and send time is not null we fall back on send time
+    return (
+      assertDefined(transition.getChildByName('shellData'))
+        .getChildByName('dispatchTimeNs')
+        ?.getValue() ??
+      assertDefined(transition.getChildByName('wmData'))
+        .getChildByName('sendTimeNs')
+        ?.getValue()
+    );
+  }
+
   private mergePartialTransitions(
     transition1: PropertyTreeNode,
     transition2: PropertyTreeNode,
   ): PropertyTreeNode {
-    if (
-      assertDefined(transition1.getChildByName('id')).getValue() !==
-      assertDefined(transition2.getChildByName('id')).getValue()
-    ) {
-      throw new Error("Can't merge transitions with mismatching ids");
-    }
-
     const mergedTransition = this.mergeProperties(
       transition1,
       transition2,

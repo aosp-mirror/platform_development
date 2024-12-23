@@ -15,7 +15,7 @@
  */
 
 import {ComponentFixture} from '@angular/core/testing';
-import {assertDefined} from 'common/assert_utils';
+import {assertDefined, assertTrue} from 'common/assert_utils';
 import {TimestampConverterUtils} from 'common/time/test_utils';
 import {Timestamp} from 'common/time/time';
 import {TimestampConverter} from 'common/time/timestamp_converter';
@@ -203,11 +203,11 @@ class UnitTestUtils {
       traces,
       converter,
     );
-    expect(tracesParsers.length)
-      .withContext(
+    assertTrue(
+      tracesParsers.length === 1,
+      () =>
         `Should have been able to create a traces parser for [${filenames.join()}]`,
-      )
-      .toEqual(1);
+    );
     return tracesParsers[0];
   }
 

@@ -47,16 +47,17 @@ describe('Perfetto ParserTransitions', () => {
 
     it('provides timestamps', () => {
       const expected = [
-        TimestampConverterUtils.makeZeroTimestamp(),
         TimestampConverterUtils.makeRealTimestamp(1700573425448299306n),
         TimestampConverterUtils.makeRealTimestamp(1700573426522433299n),
+        TimestampConverterUtils.makeRealTimestamp(1700573433040642612n),
+        TimestampConverterUtils.makeRealTimestamp(1700573433279358351n),
       ];
-      const actual = assertDefined(parser.getTimestamps()).slice(0, 3);
+      const actual = assertDefined(parser.getTimestamps());
       expect(actual).toEqual(expected);
     });
 
     it('decodes transition properties', async () => {
-      const entry = await parser.getEntry(1);
+      const entry = await parser.getEntry(0);
       const wmDataNode = assertDefined(entry.getChildByName('wmData'));
       const shellDataNode = assertDefined(entry.getChildByName('shellData'));
 
@@ -129,7 +130,7 @@ describe('Perfetto ParserTransitions', () => {
         assertDefined(shellDataNode.getChildByName('handler')).formattedValue(),
       ).toEqual('com.android.wm.shell.transition.DefaultMixedHandler');
 
-      const entryWithFlags = await parser.getEntry(2);
+      const entryWithFlags = await parser.getEntry(1);
       const wmDataWithFlags = assertDefined(
         entryWithFlags.getChildByName('wmData'),
       );
