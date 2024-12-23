@@ -27,7 +27,6 @@ import {
 import {MatDialog} from '@angular/material/dialog';
 import {assertDefined} from 'common/assert_utils';
 import {FunctionUtils} from 'common/function_utils';
-import {PersistentStoreProxy} from 'common/store/persistent_store_proxy';
 import {Store} from 'common/store/store';
 import {UserNotifier} from 'common/user_notifier';
 import {Analytics} from 'logging/analytics';
@@ -49,12 +48,13 @@ import {AdbFiles, RequestedTraceTypes} from 'trace_collection/adb_files';
 import {ConnectionState} from 'trace_collection/connection_state';
 import {ProxyConnection} from 'trace_collection/proxy_connection';
 import {
-  EnableConfiguration,
+  CheckboxConfiguration,
   makeDefaultDumpConfigMap,
   makeDefaultTraceConfigMap,
   makeScreenRecordingSelectionConfigs,
   SelectionConfiguration,
   TraceConfigurationMap,
+  updateConfigsFromStore,
 } from 'trace_collection/trace_configuration';
 import {TraceRequest, TraceRequestConfig} from 'trace_collection/trace_request';
 import {LoadProgressComponent} from './load_progress_component';
@@ -162,7 +162,7 @@ import {
                     title="Trace targets"
                     [initialTraceConfig]="traceConfig"
                     [storage]="storage"
-                    traceConfigStoreKey="TraceSettings"
+                    [traceConfigStoreKey]="storeKeyPrefixTraceConfig"
                     (traceConfigChange)="onTraceConfigChange($event)"></trace-config>
                   <div class="start-btn">
                     <button color="primary" mat-raised-button (click)="startTracing()">
@@ -226,7 +226,7 @@ import {
                     title="Dump targets"
                     [initialTraceConfig]="dumpConfig"
                     [storage]="storage"
-                    [traceConfigStoreKey]="storeKeyDumpConfig"
+                    [traceConfigStoreKey]="storeKeyPrefixDumpConfig"
                     (traceConfigChange)="onDumpConfigChange($event)"></trace-config>
                   <div class="dump-btn" *ngIf="!refreshDumps">
                     <button color="primary" mat-raised-button (click)="dumpState()">
@@ -423,9 +423,10 @@ export class CollectTracesComponent
   dumpConfig: TraceConfigurationMap;
   requestedTraceTypes: RequestedTraceTypes[] = [];
 
+  readonly storeKeyPrefixTraceConfig = 'TraceSettings.';
+  readonly storeKeyPrefixDumpConfig = 'DumpSettings.';
   private readonly storeKeyImeWarning = 'doNotShowImeWarningDialog';
   private readonly storeKeyLastDevice = 'adb.lastDevice';
-  private readonly storeKeyDumpConfig = 'DumpSettings';
 
   private selectedDevice: AdbDevice | undefined;
   private emitEvent: EmitEvent = FunctionUtils.DO_NOTHING_ASYNC;
@@ -480,12 +481,10 @@ export class CollectTracesComponent
       WinscopeEventType.APP_REFRESH_DUMPS_REQUEST,
       async (event) => {
         this.selectedTabIndex = 1;
-        this.dumpConfig = PersistentStoreProxy.new<TraceConfigurationMap>(
-          assertDefined('DumpSettings'),
-          assertDefined(
-            JSON.parse(JSON.stringify(assertDefined(this.dumpConfig))),
-          ),
+        this.dumpConfig = updateConfigsFromStore(
+          JSON.parse(JSON.stringify(assertDefined(this.dumpConfig))),
           assertDefined(this.storage),
+          this.storeKeyPrefixDumpConfig,
         );
         this.refreshDumps = true;
       },
@@ -827,20 +826,14 @@ export class CollectTracesComponent
   private getRequestedTraces(): string[] {
     const tracingConfig = assertDefined(this.traceConfig);
     return Object.keys(tracingConfig).filter((traceKey: string) => {
-      return tracingConfig[traceKey].enabled;
+      return tracingConfig[traceKey].config.enabled;
     });
   }
 
   private getRequestedDumps(): string[] {
-    let dumpConfig = assertDefined(this.dumpConfig);
-    if (this.refreshDumps && this.storage) {
-      const storedConfig = this.storage.get(this.storeKeyDumpConfig);
-      if (storedConfig) {
-        dumpConfig = JSON.parse(storedConfig);
-      }
-    }
+    const dumpConfig = assertDefined(this.dumpConfig);
     return Object.keys(dumpConfig).filter((dumpKey: string) => {
-      return dumpConfig[dumpKey].enabled;
+      return dumpConfig[dumpKey].config.enabled;
     });
   }
 
@@ -850,8 +843,8 @@ export class CollectTracesComponent
   ): TraceRequestConfig[] {
     const req: TraceRequestConfig[] = [];
     const trace = configMap[traceName];
-    if (trace?.enabled) {
-      trace.config?.enableConfigs?.forEach((con: EnableConfiguration) => {
+    if (trace?.config.enabled) {
+      trace.config.checkboxConfigs.forEach((con: CheckboxConfiguration) => {
         if (con.enabled) {
           req.push({key: con.key});
         }
@@ -865,14 +858,12 @@ export class CollectTracesComponent
     configMap: TraceConfigurationMap,
   ): TraceRequestConfig[] {
     const trace = configMap[traceName];
-    if (!trace?.enabled) {
+    if (!trace?.config.enabled) {
       return [];
     }
-    return (
-      trace.config?.selectionConfigs.map((con: SelectionConfiguration) => {
-        return {key: con.key, value: con.value};
-      }) ?? []
-    );
+    return trace.config.selectionConfigs.map((con: SelectionConfiguration) => {
+      return {key: con.key, value: con.value};
+    });
   }
 
   private toggleAvailabilityOfTraces = (traces: string[]) =>
@@ -891,11 +882,11 @@ export class CollectTracesComponent
     if (!selectedDevice) {
       return;
     }
-    const screenRecordingConfig = assertDefined(
-      this.traceConfig['screen_recording'].config,
-    );
+    const screenRecordingConfig = assertDefined(this.traceConfig)[
+      'screen_recording'
+    ].config;
     const displays = assertDefined(
-      screenRecordingConfig?.selectionConfigs.find((c) => c.key === 'displays'),
+      screenRecordingConfig.selectionConfigs.find((c) => c.key === 'displays'),
     );
     if (
       selectedDevice.multiDisplayScreenRecordingAvailable &&
@@ -917,7 +908,7 @@ export class CollectTracesComponent
     const screenshotConfig = assertDefined(this.dumpConfig)['screenshot']
       .config;
     assertDefined(
-      screenshotConfig?.selectionConfigs.find((c) => c.key === 'displays'),
+      screenshotConfig.selectionConfigs.find((c) => c.key === 'displays'),
     ).options = selectedDevice.displays;
 
     this.changeDetectorRef.detectChanges();
