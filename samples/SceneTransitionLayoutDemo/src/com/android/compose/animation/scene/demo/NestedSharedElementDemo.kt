@@ -57,6 +57,7 @@ object ChildSTL {
 
 object Elements {
     val Shared = ElementKey("Shared")
+    val NotShared = ElementKey("NotShared")
 }
 
 @Composable
@@ -66,7 +67,12 @@ fun NestedSharedElementDemo(modifier: Modifier = Modifier) {
             MutableSceneTransitionLayoutState(
                 ParentSTL.Scenes.Left,
                 transitions {
-                    from(ParentSTL.Scenes.Left, to = ParentSTL.Scenes.Right) { spec = tween(500) }
+                    from(ParentSTL.Scenes.Left, to = ParentSTL.Scenes.Right) {
+                        spec = tween(1500)
+                        translate(Elements.NotShared, y = (-100).dp)
+                        fade(Elements.NotShared)
+                        scaleSize(Elements.NotShared, 0.5f, 0.5f)
+                    }
                 },
             )
         }
@@ -74,7 +80,12 @@ fun NestedSharedElementDemo(modifier: Modifier = Modifier) {
             MutableSceneTransitionLayoutState(
                 ChildSTL.Scenes.Top,
                 transitions {
-                    from(ChildSTL.Scenes.Top, to = ChildSTL.Scenes.Bottom) { spec = tween(500) }
+                    from(ChildSTL.Scenes.Top, to = ChildSTL.Scenes.Bottom) {
+                        spec = tween(1500)
+                        translate(Elements.NotShared, x = 100.dp)
+                        fade(Elements.NotShared)
+                        scaleSize(Elements.NotShared, 0.5f, 0.5f)
+                    }
                 },
             )
         }
@@ -129,7 +140,15 @@ private fun ContentScope.ChildSTL(
         },
     ) {
         scene(ChildSTL.Scenes.Top) {
-            Box(Modifier.fillMaxSize()) { SharedElement(Modifier.size(100.dp)) }
+            Box(Modifier.fillMaxSize()) {
+                Box(
+                    Modifier.align(Alignment.TopEnd)
+                        .element(Elements.NotShared)
+                        .size(80.dp)
+                        .background(Color.Blue)
+                )
+                SharedElement(Modifier.size(100.dp))
+            }
         }
         scene(ChildSTL.Scenes.Bottom) {
             Box(Modifier.fillMaxSize()) {
