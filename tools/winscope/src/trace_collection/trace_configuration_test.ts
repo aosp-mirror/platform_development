@@ -14,38 +14,127 @@
  * limitations under the License.
  */
 
-import {tryMergeConfigArrays} from './trace_configuration';
+import {InMemoryStorage} from 'common/store/in_memory_storage';
+import {TraceType} from 'trace/trace_type';
+import {
+  TraceConfigurationMap,
+  updateConfigsFromStore,
+} from './trace_configuration';
 
-describe('tryMergeConfigArrays', () => {
-  it('replaces entire array if key not enabledConfigs or selectionConfigs', () => {
-    const target = {
-      otherConfigs: [{name: 'test1', key: 'test1'}],
+describe('updateConfigsFromStore', () => {
+  const traceKey = 'test_trace';
+  const testKeyPrefix = 'test key';
+  const testKey = testKeyPrefix + traceKey;
+  let target: TraceConfigurationMap;
+
+  beforeEach(() => {
+    target = {
+      'test_trace': {
+        name: 'Test Trace',
+        config: {
+          enabled: true,
+          checkboxConfigs: [{name: 'test1', key: 'test1', enabled: false}],
+          selectionConfigs: [
+            {name: 'test2', key: 'test2', options: [], value: '1'},
+            {name: 'test3', key: 'test3', options: [], value: ['1']},
+          ],
+        },
+        available: true,
+        types: [TraceType.TEST_TRACE_NUMBER],
+      },
     };
-    const source = {
-      otherConfigs: [{name: 'test2', key: 'test2'}],
-    };
-    tryMergeConfigArrays('otherConfigs', target, source);
-    expect(target.otherConfigs).toEqual([{name: 'test2', key: 'test2'}]);
   });
 
-  it('replaces only configs that are present in destination already', () => {
-    const target = {
-      enableConfigs: [{name: 'test1', key: 'test1', enabled: false}],
-      selectionConfigs: [{name: 'test1', key: 'test1', value: '1'}],
+  it('updates target enabled field', () => {
+    const sourceConfig = {enabled: false};
+    updateConfigs(sourceConfig);
+    expect(target[traceKey].config.enabled).toBeFalse();
+  });
+
+  it('does not override names or options of advanced config', () => {
+    const sourceConfig = {
+      checkboxConfigs: [{name: 'new1', key: 'test1', enabled: false}],
+      selectionConfigs: [{name: 'new2', key: 'test2', options: ['1']}],
     };
-    const source = {
-      enableConfigs: [
+    updateConfigs(sourceConfig);
+    expect(target[traceKey].config.checkboxConfigs[0].name).toEqual('test1');
+    const newSelectionConfig = target[traceKey].config.selectionConfigs[0];
+    expect(newSelectionConfig.name).toEqual('test2');
+    expect(newSelectionConfig.options).toEqual([]);
+  });
+
+  it('updates only configs that are present in target already', () => {
+    updateSelectionConfigOptions();
+    const sourceConfig = {
+      checkboxConfigs: [
         {name: 'test1', key: 'test1', enabled: true},
         {name: 'test2', key: 'test2', enabled: false},
       ],
-      selectionConfigs: [],
+      selectionConfigs: [{name: 'test4', key: 'test4', value: ['1']}],
     };
-    tryMergeConfigArrays('enableConfigs', target, source);
-    expect(target.enableConfigs).toEqual([
-      {name: 'test1', key: 'test1', enabled: true},
-    ]);
-    expect(target.selectionConfigs).toEqual([
-      {name: 'test1', key: 'test1', value: '1'},
+    updateConfigs(sourceConfig);
+    expect(target[traceKey].config).toEqual({
+      enabled: true,
+      checkboxConfigs: [{name: 'test1', key: 'test1', enabled: true}],
+      selectionConfigs: [
+        {name: 'test2', key: 'test2', options: ['1', '2'], value: '1'},
+        {name: 'test3', key: 'test3', options: ['1', '2'], value: ['1']},
+      ],
+    });
+  });
+
+  it('updates select config values', () => {
+    updateSelectionConfigOptions();
+    const sourceConfig = {
+      selectionConfigs: [
+        {name: 'test2', key: 'test2', value: '2'},
+        {name: 'test3', key: 'test3', value: ['1', '2']},
+      ],
+    };
+    updateConfigs(sourceConfig);
+    expect(target[traceKey].config.selectionConfigs).toEqual([
+      {name: 'test2', key: 'test2', options: ['1', '2'], value: '2'},
+      {name: 'test3', key: 'test3', options: ['1', '2'], value: ['1', '2']},
     ]);
   });
+
+  it('does not update select config if stored value not in options', () => {
+    const sourceConfig = {
+      selectionConfigs: [
+        {name: 'test2', key: 'test2', value: '2'},
+        {name: 'test3', key: 'test3', value: ['1', '2']},
+      ],
+    };
+    updateConfigs(sourceConfig);
+    expect(target[traceKey].config.selectionConfigs).toEqual([
+      {name: 'test2', key: 'test2', options: [], value: '1'},
+      {name: 'test3', key: 'test3', options: [], value: ['1']},
+    ]);
+  });
+
+  it('does not update select config if stored value different type to default value', () => {
+    updateSelectionConfigOptions();
+    const sourceConfig = {
+      selectionConfigs: [
+        {name: 'test2', key: 'test2', value: ['1']},
+        {name: 'test3', key: 'test3', value: '1'},
+      ],
+    };
+    updateConfigs(sourceConfig);
+    expect(target[traceKey].config.selectionConfigs).toEqual([
+      {name: 'test2', key: 'test2', options: ['1', '2'], value: '1'},
+      {name: 'test3', key: 'test3', options: ['1', '2'], value: ['1']},
+    ]);
+  });
+
+  function updateSelectionConfigOptions() {
+    target[traceKey].config.selectionConfigs[0].options = ['1', '2'];
+    target[traceKey].config.selectionConfigs[1].options = ['1', '2'];
+  }
+
+  function updateConfigs(sourceConfig: object) {
+    const storage = new InMemoryStorage();
+    storage.add(testKey, JSON.stringify(sourceConfig));
+    updateConfigsFromStore(target, storage, testKeyPrefix);
+  }
 });
