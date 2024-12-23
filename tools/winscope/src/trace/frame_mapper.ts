@@ -301,17 +301,25 @@ export class FrameMapper {
     const promises = this.traces
       .getTraces(dstTraceType)
       .map(async (dstTrace) => {
-        const framesRange = srcTrace.getFramesRange();
-        const lengthFrames = framesRange ? framesRange.end : 0;
+        const srcRange = srcTrace.getFramesRange();
+        if (srcRange === undefined) {
+          // only propagate valid mapping from source
+          return;
+        }
         const frameMapBuilder = new FrameMapBuilder(
           dstTrace.lengthEntries,
-          lengthFrames,
+          srcRange.end,
         );
 
         await mappingLogic(srcTrace, dstTrace, frameMapBuilder);
 
         const frameMap = frameMapBuilder.build();
-        dstTrace.setFrameInfo(frameMap, frameMap.getFullTraceFramesRange());
+        const range = frameMap.getFullTraceFramesRange();
+        if (range === undefined) {
+          // only propagate valid mapping after custom mapping logic
+          return;
+        }
+        dstTrace.setFrameInfo(frameMap, range);
       });
 
     await Promise.all(promises);

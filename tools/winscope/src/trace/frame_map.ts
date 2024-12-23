@@ -73,6 +73,7 @@ export class FrameMap {
 
   getFramesRange(entries: EntriesRange): FramesRange | undefined {
     entries = this.clampEntriesRangeToFitBounds(entries);
+
     if (entries.start >= entries.end) {
       return undefined;
     }

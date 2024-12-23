@@ -249,7 +249,7 @@ export class Trace<T> {
 
   getFrame(frame: AbsoluteFrameIndex): Trace<T> {
     this.checkTraceCanBeAccessedInFrameDomain();
-    const entries = this.frameMap!.getEntriesRange({
+    const entries = assertDefined(this.frameMap).getEntriesRange({
       start: frame,
       end: frame + 1,
     });
