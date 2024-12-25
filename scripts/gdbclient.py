@@ -119,6 +119,12 @@ def parse_args() -> argparse.Namespace:
                      between these lines, replacing any text that is already there."""))
 
     parser.add_argument(
+        "--extra-cmds-file", default=None,
+        help=f"""Path to file with extra commands to run at lldb startup/attachment.
+                 One command per line. Commands prefixed with '#' will be ignored"""
+    )
+
+    parser.add_argument(
         "--env", nargs=1, action="append", metavar="VAR=VALUE",
         help="set environment variable when running a binary")
     parser.add_argument(
@@ -332,7 +338,7 @@ def generate_vscode_lldb_script(root: str, sysroot: str, binary_name: str, port:
     merge_launch_dict(res, extra_props)
     return json.dumps(res, indent=4)
 
-def generate_lldb_script(root: str, sysroot: str, binary_name: str, port: str | int, solib_search_path: list[str]) -> str:
+def generate_lldb_script(root: str, sysroot: str, binary_name: str, port: str | int, solib_search_path: list[str], extra_cmds: list[str]) -> str:
     commands = []
     commands.append(
         'settings append target.exec-search-paths {}'.format(' '.join(solib_search_path)))
@@ -345,10 +351,13 @@ def generate_lldb_script(root: str, sysroot: str, binary_name: str, port: str | 
     commands.append('# If the below `gdb-remote` fails, run the command manually, '
                     + 'as it may have raced with lldbserver startup.')
     commands.append('gdb-remote {}'.format(str(port)))
+    for cmd in extra_cmds:
+        if not cmd.startswith('#'):
+            commands.append(cmd)
     return '\n'.join(commands)
 
 
-def generate_setup_script(sysroot: str, linker_search_dir: str | None, binary_name: str, is64bit: bool, port: str | int, debugger: str, vscode_launch_props: dict[str, Any] | None) -> str:
+def generate_setup_script(sysroot: str, linker_search_dir: str | None, binary_name: str, is64bit: bool, port: str | int, debugger: str, vscode_launch_props: dict[str, Any] | None, extra_cmds : list[str] | None) -> str:
     # Generate a setup script.
     root = os.environ["ANDROID_BUILD_TOP"]
     symbols_dir = os.path.join(sysroot, "system", "lib64" if is64bit else "lib")
@@ -367,7 +376,7 @@ def generate_setup_script(sysroot: str, linker_search_dir: str | None, binary_na
             root, sysroot, binary_name, port, solib_search_path, vscode_launch_props)
     elif debugger == 'lldb':
         return generate_lldb_script(
-            root, sysroot, binary_name, port, solib_search_path)
+            root, sysroot, binary_name, port, solib_search_path, extra_cmds)
     else:
         raise Exception("Unknown debugger type " + debugger)
 
@@ -500,6 +509,13 @@ def do_main() -> None:
                 'vscode-launch-file requires --setup-forwarding=vscode-lldb')
         vscode_launch_file = args.vscode_launch_file
 
+    extra_cmds = None
+    if args.extra_cmds_file:
+        if not os.path.exists(args.extra_cmds_file):
+            raise ValueError(f'--extra-cmds-file {args.extra_cmds_file}: file does not exist')
+        with open(args.extra_cmds_file, 'rt') as cmds_file:
+            extra_cmds = [l.strip() for l in cmds_file.readlines()]
+
     with binary_file:
         if sys.platform.startswith("linux"):
             platform_name = "linux-x86"
@@ -550,7 +566,8 @@ def do_main() -> None:
                                                is64bit=is64bit,
                                                port=args.port,
                                                debugger=debugger,
-                                               vscode_launch_props=vscode_launch_props)
+                                               vscode_launch_props=vscode_launch_props,
+                                               extra_cmds=extra_cmds)
 
         if not args.setup_forwarding:
             # Print a newline to separate our messages from the GDB session.
