@@ -127,13 +127,13 @@ describe('ViewerInputComponent', () => {
     expect(component).toBeTruthy();
   });
 
-  it('renders filter in title', () => {
-    expect(htmlElement.querySelector('.headers .filter')).toBeNull();
+  it('renders filters in header', () => {
     expect(
       htmlElement.querySelector(
-        `.title-section .filter.${testSpec.cssClass.split(' ')[0]}`,
+        `.headers .filter.${testSpec.cssClass.split(' ')[0]}`,
       ),
     ).toBeTruthy();
+    expect(htmlElement.querySelector(`.title-section .filter`)).toBeNull();
   });
 
   it('renders entries with field values and no trace timestamp', () => {

@@ -34,7 +34,7 @@ import {LogPresenter} from 'viewers/common/log_presenter';
 import {PropertiesPresenter} from 'viewers/common/properties_presenter';
 import {RectsPresenter} from 'viewers/common/rects_presenter';
 import {TextFilter} from 'viewers/common/text_filter';
-import {LogHeader} from 'viewers/common/ui_data_log';
+import {ColumnSpec, LogEntry, LogHeader} from 'viewers/common/ui_data_log';
 import {UI_RECT_FACTORY} from 'viewers/common/ui_rect_factory';
 import {UserOptions} from 'viewers/common/user_options';
 import {ViewerEvents} from 'viewers/common/viewer_events';
@@ -89,7 +89,6 @@ export class Presenter extends AbstractLogViewerPresenter<
   private readonly traces: Traces;
   private readonly surfaceFlingerTrace: Trace<HierarchyTreeNode> | undefined;
   protected override uiData: UiData = UiData.createEmpty();
-  private allEntries: InputEntry[] | undefined;
 
   private readonly layerIdToName = new Map<number, string>();
   private readonly allInputLayerIds = new Set<number>();
@@ -168,15 +167,30 @@ export class Presenter extends AbstractLogViewerPresenter<
 
   protected override makeHeaders(): LogHeader[] {
     return [
-      new LogHeader(Presenter.COLUMNS.type),
-      new LogHeader(Presenter.COLUMNS.source),
-      new LogHeader(Presenter.COLUMNS.action),
-      new LogHeader(Presenter.COLUMNS.deviceId),
-      new LogHeader(Presenter.COLUMNS.displayId),
+      new LogHeader(
+        Presenter.COLUMNS.type,
+        new LogSelectFilter([], false, '80'),
+      ),
+      new LogHeader(
+        Presenter.COLUMNS.source,
+        new LogSelectFilter([], false, '200'),
+      ),
+      new LogHeader(
+        Presenter.COLUMNS.action,
+        new LogSelectFilter([], false, '100'),
+      ),
+      new LogHeader(
+        Presenter.COLUMNS.deviceId,
+        new LogSelectFilter([], false, '80'),
+      ),
+      new LogHeader(
+        Presenter.COLUMNS.displayId,
+        new LogSelectFilter([], false, '80'),
+      ),
       new LogHeader(Presenter.COLUMNS.details),
       new LogHeader(
         Presenter.COLUMNS.dispatchWindows,
-        new LogSelectFilter([], true, '300', '300px'),
+        new LogSelectFilter([], true, '300'),
       ),
     ];
   }
@@ -191,14 +205,47 @@ export class Presenter extends AbstractLogViewerPresenter<
     return Promise.resolve(entries);
   }
 
-  protected override updateFiltersInHeaders(headers: LogHeader[]) {
-    const dispatchWindowsHeader = headers.find(
-      (header) => header.spec === Presenter.COLUMNS.dispatchWindows,
-    );
-    (assertDefined(dispatchWindowsHeader?.filter) as LogSelectFilter).options =
-      [...this.allInputLayerIds.values()].map((layerId) => {
-        return this.getLayerDisplayName(layerId);
+  private static getUniqueFieldValues(
+    headers: LogHeader[],
+    entries: LogEntry[],
+  ): Map<ColumnSpec, Set<string>> {
+    const uniqueFieldValues = new Map<ColumnSpec, Set<string>>();
+    headers.forEach((header) => {
+      if (!header.filter || header.spec === Presenter.COLUMNS.dispatchWindows) {
+        return;
+      }
+      uniqueFieldValues.set(header.spec, new Set());
+    });
+    entries.forEach((entry) => {
+      entry.fields.forEach((field) => {
+        uniqueFieldValues.get(field.spec)?.add(field.value.toString());
       });
+    });
+    return uniqueFieldValues;
+  }
+
+  protected override updateFiltersInHeaders(
+    headers: LogHeader[],
+    entries: LogEntry[],
+  ) {
+    const uniqueFieldValues = Presenter.getUniqueFieldValues(headers, entries);
+    headers.forEach((header) => {
+      if (!(header.filter instanceof LogSelectFilter)) {
+        return;
+      }
+      if (header.spec === Presenter.COLUMNS.dispatchWindows) {
+        header.filter.options = [...this.allInputLayerIds.values()].map(
+          (layerId) => {
+            return this.getLayerDisplayName(layerId);
+          },
+        );
+        return;
+      }
+      header.filter.options = Array.from(
+        assertDefined(uniqueFieldValues.get(header.spec)),
+      );
+      header.filter.options.sort();
+    });
   }
 
   private async makeInputEntry(

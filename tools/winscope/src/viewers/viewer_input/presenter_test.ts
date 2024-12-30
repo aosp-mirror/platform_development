@@ -48,34 +48,54 @@ import {UiData} from './ui_data';
 class PresenterInputTest extends AbstractLogViewerPresenterTest<UiData> {
   override readonly expectedHeaders = [
     {
-      header: new LogHeader({
-        name: 'Type',
-        cssClass: 'input-type inline',
-      }),
+      header: new LogHeader(
+        {
+          name: 'Type',
+          cssClass: 'input-type inline',
+        },
+        new LogSelectFilter(['MOTION', 'KEY'], false, '80', '100%'),
+      ),
     },
     {
-      header: new LogHeader({
-        name: 'Source',
-        cssClass: 'input-source',
-      }),
+      header: new LogHeader(
+        {
+          name: 'Source',
+          cssClass: 'input-source',
+        },
+        new LogSelectFilter(['TOUCHSCREEN', 'KEYBOARD'], false, '200', '100%'),
+      ),
     },
     {
-      header: new LogHeader({
-        name: 'Action',
-        cssClass: 'input-action',
-      }),
+      header: new LogHeader(
+        {
+          name: 'Action',
+          cssClass: 'input-action',
+        },
+        new LogSelectFilter(
+          ['DOWN', 'OUTSIDE', 'MOVE', 'UP'],
+          false,
+          '100',
+          '100%',
+        ),
+      ),
     },
     {
-      header: new LogHeader({
-        name: 'Device',
-        cssClass: 'input-device-id right-align',
-      }),
+      header: new LogHeader(
+        {
+          name: 'Device',
+          cssClass: 'input-device-id right-align',
+        },
+        new LogSelectFilter(['4', '2'], false, '80', '100%'),
+      ),
     },
     {
-      header: new LogHeader({
-        name: 'Display',
-        cssClass: 'input-display-id right-align',
-      }),
+      header: new LogHeader(
+        {
+          name: 'Display',
+          cssClass: 'input-display-id right-align',
+        },
+        new LogSelectFilter(['0', '-1'], false, '80', '100%'),
+      ),
     },
     {
       header: new LogHeader({
