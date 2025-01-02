@@ -110,7 +110,7 @@ describe('HierarchyPresenter', () => {
 
   it('updates current and previous entries for trace', async () => {
     expect(presenter.getAllCurrentHierarchyTrees()?.length).toEqual(0);
-    expect(presenter.getAllFormattedTrees()).toBeUndefined();
+    expect(presenter.getAllFormattedTrees()?.length).toEqual(0);
 
     await presenter.applyTracePositionUpdate(
       [trace.getEntry(1), secondTrace.getEntry(0)],
@@ -142,14 +142,18 @@ describe('HierarchyPresenter', () => {
 
   it('explicitly sets selected tree', async () => {
     expect(presenter.getSelectedTree()).toBeUndefined();
-    presenter.setSelectedTree([trace, tree1]);
-    expect(presenter.getSelectedTree()).toEqual([trace, tree1]);
+    const selectedTree = {trace, tree: tree1, index: 0};
+    presenter.setSelectedTree(selectedTree);
+    expect(presenter.getSelectedTree()).toEqual(selectedTree);
     presenter.setSelectedTree(undefined);
     expect(presenter.getSelectedTree()).toBeUndefined();
   });
 
   it('adds current hierarchy trees', async () => {
-    await presenter.addCurrentHierarchyTrees([trace, [tree1]], undefined);
+    await presenter.addCurrentHierarchyTrees(
+      {trace, trees: [tree1]},
+      undefined,
+    );
     expect(presenter.getCurrentEntryForTrace(trace)).toBeUndefined();
     expect(presenter.getCurrentHierarchyTreesForTrace(trace)?.length).toEqual(
       1,
@@ -158,18 +162,40 @@ describe('HierarchyPresenter', () => {
     expect(presenter.getAllFormattedTrees()?.length).toEqual(1);
     expect(presenter.getFormattedTreesByTrace(trace)?.length).toEqual(1);
 
-    await presenter.addCurrentHierarchyTrees([secondTrace, [tree3]], tree3.id);
-    expect(presenter.getSelectedTree()).toEqual([secondTrace, tree3]);
+    const entry = secondTrace.getEntry(0);
+    await presenter.addCurrentHierarchyTrees(
+      {trace: secondTrace, trees: [tree3], entry},
+      tree3.id,
+    );
+    expect(presenter.getSelectedTree()).toEqual({
+      trace: secondTrace,
+      tree: tree3,
+      index: 1,
+    });
 
-    await presenter.addCurrentHierarchyTrees([trace, [tree2]], undefined);
+    await presenter.addCurrentHierarchyTrees(
+      {trace, trees: [tree2]},
+      undefined,
+    );
     expect(presenter.getCurrentHierarchyTreesForTrace(trace)?.length).toEqual(
       2,
     );
+    const formattedTrees = assertDefined(presenter.getAllFormattedTrees());
     expect(presenter.getAllCurrentHierarchyTrees()).toEqual([
-      [trace, [tree1, tree2]],
-      [secondTrace, [tree3]],
+      {
+        trace,
+        trees: [tree1, tree2],
+        formattedTrees: formattedTrees.slice(0, 2),
+        entry: undefined,
+      },
+      {
+        trace: secondTrace,
+        trees: [tree3],
+        formattedTrees: formattedTrees.slice(2),
+        entry,
+      },
     ]);
-    expect(presenter.getAllFormattedTrees()?.length).toEqual(3);
+    expect(formattedTrees.length).toEqual(3);
     expect(presenter.getFormattedTreesByTrace(trace)?.length).toEqual(2);
   });
 
@@ -315,10 +341,11 @@ describe('HierarchyPresenter', () => {
 
   it('propagates item selection to new entry', async () => {
     await applyTracePositionUpdate(0, '1 Parent1');
-    expect(presenter.getSelectedTree()).toEqual([
+    expect(presenter.getSelectedTree()).toEqual({
       trace,
-      assertDefined(tree1.getChildByName('Parent1')),
-    ]);
+      tree: assertDefined(tree1.getChildByName('Parent1')),
+      index: 0,
+    });
   });
 
   it('handles pinned item change', () => {
@@ -405,18 +432,22 @@ describe('HierarchyPresenter', () => {
 
   it('applies highlighted node change', async () => {
     await applyTracePositionUpdate();
-    const node = getFormattedTree();
-    node.setIsOldNode(true);
-    presenter.applyHighlightedNodeChange(node);
+    const tree = getFormattedTree();
+    tree.setIsOldNode(true);
+    presenter.applyHighlightedNodeChange(tree);
     expect(presenter.getSelectedTree()).toBeUndefined();
 
-    node.setDiff(DiffType.DELETED);
-    presenter.applyHighlightedNodeChange(node);
-    expect(presenter.getSelectedTree()).toEqual([trace, node]);
+    tree.setDiff(DiffType.DELETED);
+    presenter.applyHighlightedNodeChange(tree);
+    expect(presenter.getSelectedTree()).toEqual({trace, tree, index: 0});
 
-    const newNode = assertDefined(node.getChildByName('Parent1'));
+    const newNode = assertDefined(tree.getChildByName('Parent1'));
     presenter.applyHighlightedNodeChange(newNode);
-    expect(presenter.getSelectedTree()).toEqual([trace, newNode]);
+    expect(presenter.getSelectedTree()).toEqual({
+      trace,
+      tree: newNode,
+      index: 0,
+    });
   });
 
   it('can be cleared and re-populated', async () => {
@@ -445,7 +476,10 @@ describe('HierarchyPresenter', () => {
     expect(presenter.getSelectedTree()).toBeUndefined();
     expect(presenter.getCurrentHierarchyTreeNames(trace)).toBeUndefined();
 
-    await presenter.addCurrentHierarchyTrees([trace, [tree1]], '1 Parent1');
+    await presenter.addCurrentHierarchyTrees(
+      {trace, trees: [tree1]},
+      '1 Parent1',
+    );
     expect(presenter.getAllCurrentHierarchyTrees()).toBeDefined();
     expect(presenter.getAllFormattedTrees()).toBeDefined();
     expect(presenter.getSelectedTree()).toBeDefined();

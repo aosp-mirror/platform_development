@@ -38,7 +38,7 @@ import {RectsPresenter} from 'viewers/common/rects_presenter';
 import {TextFilter} from 'viewers/common/text_filter';
 import {UiHierarchyTreeNode} from 'viewers/common/ui_hierarchy_tree_node';
 import {UserOptions} from 'viewers/common/user_options';
-import {HierarchyPresenter} from './hierarchy_presenter';
+import {HierarchyPresenter, SelectedTree} from './hierarchy_presenter';
 import {PresetHierarchy, TextFilterValues} from './preset_hierarchy';
 import {RectShowState} from './rect_show_state';
 import {UiDataHierarchy} from './ui_data_hierarchy';
@@ -366,7 +366,7 @@ export abstract class AbstractHierarchyViewerPresenter<
     }
     const selected = this.hierarchyPresenter.getSelectedTree();
     if (selected) {
-      const [trace, selectedTree] = selected;
+      const {trace, tree: selectedTree} = selected;
       const propertiesTree = await selectedTree.getAllProperties();
       if (
         this.propertiesPresenter.getUserOptions()['showDiff']?.enabled &&
@@ -446,7 +446,7 @@ export abstract class AbstractHierarchyViewerPresenter<
   abstract onHighlightedIdChange(id: string): Promise<void>;
   protected abstract keepCalculated(tree: HierarchyTreeNode): boolean;
   protected abstract getOverrideDisplayName(
-    selected: [Trace<HierarchyTreeNode>, HierarchyTreeNode],
+    selected: SelectedTree,
   ): string | undefined;
   protected abstract refreshUIData(): void;
   protected initializeIfNeeded?(event: TracePositionUpdate): Promise<void>;

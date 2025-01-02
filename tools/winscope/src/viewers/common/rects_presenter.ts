@@ -18,6 +18,7 @@ import {Trace} from 'trace/trace';
 import {HierarchyTreeNode} from 'trace/tree_node/hierarchy_tree_node';
 import {UiRect} from 'viewers/components/rects/ui_rect';
 import {DisplayIdentifier} from './display_identifier';
+import {TraceAndTrees} from './hierarchy_presenter';
 import {RectFilter} from './rect_filter';
 import {RectShowState} from './rect_show_state';
 import {UserOptions} from './user_options';
@@ -59,11 +60,9 @@ export class RectsPresenter {
     this.displays = displays;
   }
 
-  applyHierarchyTreesChange(
-    hierarchyTrees: Array<[Trace<HierarchyTreeNode>, HierarchyTreeNode[]]>,
-  ) {
+  applyHierarchyTreesChange(hierarchyTrees: TraceAndTrees[]) {
     this.allCurrentRects = [];
-    for (const [trace, trees] of hierarchyTrees) {
+    for (const {trace, trees} of hierarchyTrees) {
       trees.forEach((tree) => {
         this.allCurrentRects.push(...this.makeUiRectsStrategy(tree, trace));
       });

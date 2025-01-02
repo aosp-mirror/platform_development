@@ -26,7 +26,10 @@ import {
 } from 'viewers/common/abstract_hierarchy_viewer_presenter';
 import {VISIBLE_CHIP} from 'viewers/common/chip';
 import {DisplayIdentifier} from 'viewers/common/display_identifier';
-import {HierarchyPresenter} from 'viewers/common/hierarchy_presenter';
+import {
+  HierarchyPresenter,
+  SelectedTree,
+} from 'viewers/common/hierarchy_presenter';
 import {PropertiesPresenter} from 'viewers/common/properties_presenter';
 import {RectsPresenter} from 'viewers/common/rects_presenter';
 import {TextFilter} from 'viewers/common/text_filter';
@@ -142,13 +145,13 @@ the default for its data type.`,
   }
 
   protected override getOverrideDisplayName(
-    selected: [Trace<HierarchyTreeNode>, HierarchyTreeNode],
+    selected: SelectedTree,
   ): string | undefined {
-    if (!selected[1].isRoot()) {
+    if (!selected.tree.isRoot()) {
       return undefined;
     }
     return this.hierarchyPresenter
-      .getCurrentHierarchyTreeNames(selected[0])
+      .getCurrentHierarchyTreeNames(selected.trace)
       ?.at(0);
   }
 

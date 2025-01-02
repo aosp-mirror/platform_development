@@ -368,7 +368,7 @@ export class Presenter extends AbstractLogViewerPresenter<
     if (inputEntry?.surfaceFlingerEntry !== undefined) {
       const node = await inputEntry.surfaceFlingerEntry.getValue();
       this.rectsPresenter.applyHierarchyTreesChange([
-        [this.surfaceFlingerTrace, [node]],
+        {trace: this.surfaceFlingerTrace, trees: [node]},
       ]);
       this.uiData.rectsToDraw = this.rectsPresenter.getRectsToDraw();
       this.uiData.rectIdToShowState =
