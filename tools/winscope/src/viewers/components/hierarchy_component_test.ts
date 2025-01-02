@@ -30,6 +30,7 @@ import {MatTooltipModule} from '@angular/material/tooltip';
 import {BrowserAnimationsModule} from '@angular/platform-browser/animations';
 import {assertDefined} from 'common/assert_utils';
 import {FilterFlag} from 'common/filter_flag';
+import {InMemoryStorage} from 'common/store/in_memory_storage';
 import {PersistentStore} from 'common/store/persistent_store';
 import {DuplicateLayerIds, MissingLayerIds} from 'messaging/user_warnings';
 import {HierarchyTreeBuilder} from 'test/unit/hierarchy_tree_builder';
@@ -289,4 +290,28 @@ describe('HierarchyComponent', () => {
       document.querySelector<HTMLElement>('.mat-tooltip-panel')?.textContent,
     ).toEqual(warning.getMessage());
   });
+
+  it('handles arrow down key press', () => {
+    testArrowKeyPress(ViewerEvents.ArrowDownPress, 'ArrowDown');
+  });
+
+  it('handles arrow up key press', () => {
+    testArrowKeyPress(ViewerEvents.ArrowUpPress, 'ArrowUp');
+  });
+
+  function testArrowKeyPress(viewerEvent: string, key: string) {
+    let storage: InMemoryStorage | undefined;
+    htmlElement.addEventListener(viewerEvent, (event) => {
+      storage = (event as CustomEvent).detail;
+    });
+    const event = new KeyboardEvent('keydown', {key});
+    document.dispatchEvent(event);
+    expect(storage).toEqual(component.treeStorage);
+
+    storage = undefined;
+    htmlElement.style.height = '0px';
+    fixture.detectChanges();
+    document.dispatchEvent(event);
+    expect(storage).toBeUndefined();
+  }
 });

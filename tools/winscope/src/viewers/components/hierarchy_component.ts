@@ -18,11 +18,13 @@ import {
   Component,
   ElementRef,
   EventEmitter,
+  HostListener,
   Inject,
   Input,
   Output,
 } from '@angular/core';
 import {Color} from 'app/colors';
+import {InMemoryStorage} from 'common/store/in_memory_storage';
 import {PersistentStore} from 'common/store/persistent_store';
 import {Analytics} from 'logging/analytics';
 import {UserWarning} from 'messaging/user_warning';
@@ -162,6 +164,7 @@ export class HierarchyComponent {
   isHighlighted = UiTreeUtils.isHighlighted;
   ViewerEvents = ViewerEvents;
   Analytics = Analytics;
+  treeStorage = new InMemoryStorage();
 
   @Input() trees: UiHierarchyTreeNode[] = [];
   @Input() tableProperties: TableProperties | undefined;
@@ -176,7 +179,9 @@ export class HierarchyComponent {
 
   @Output() collapseButtonClicked = new EventEmitter();
 
-  constructor(@Inject(ElementRef) private elementRef: ElementRef) {}
+  constructor(
+    @Inject(ElementRef) private elementRef: ElementRef<HTMLElement>,
+  ) {}
 
   trackById(index: number, child: UiHierarchyTreeNode): string {
     return child.id;
@@ -228,5 +233,28 @@ export class HierarchyComponent {
 
   disableTooltip(el: HTMLElement) {
     return el.scrollWidth === el.clientWidth;
+  }
+
+  @HostListener('document:keydown', ['$event'])
+  async handleKeyboardEvent(event: KeyboardEvent) {
+    const domRect = this.elementRef.nativeElement.getBoundingClientRect();
+    const componentVisible = domRect.height > 0 && domRect.width > 0;
+    if (
+      componentVisible &&
+      (event.key === 'ArrowDown' || event.key === 'ArrowUp')
+    ) {
+      event.preventDefault();
+      const details = {bubbles: true, detail: this.treeStorage};
+      if (event.key === 'ArrowDown') {
+        const arrowEvent = new CustomEvent(
+          ViewerEvents.ArrowDownPress,
+          details,
+        );
+        this.elementRef.nativeElement.dispatchEvent(arrowEvent);
+      } else {
+        const arrowEvent = new CustomEvent(ViewerEvents.ArrowUpPress, details);
+        this.elementRef.nativeElement.dispatchEvent(arrowEvent);
+      }
+    }
   }
 }
