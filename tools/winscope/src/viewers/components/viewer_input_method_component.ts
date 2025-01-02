@@ -34,8 +34,7 @@ import {viewerCardStyle} from './styles/viewer_card.styles';
       <div class="left-views" *ngIf="!areLeftViewsCollapsed()">
         <hierarchy-view
           class="hierarchy-view"
-          [tree]="inputData?.hierarchyTrees?.at(0)"
-          [subtrees]="getSfSubtrees()"
+          [trees]="this.inputData?.hierarchyTrees ?? []"
           [dependencies]="inputData ? [inputData.traceType] : []"
           [highlightedItem]="inputData?.highlightedItem"
           [pinnedItems]="inputData?.pinnedItems ?? []"
@@ -114,15 +113,5 @@ export class ViewerInputMethodComponent {
         CollapsibleSectionType.IME_ADDITIONAL_PROPERTIES,
       )
     );
-  }
-
-  getSfSubtrees() {
-    if (
-      !this.inputData?.hierarchyTrees ||
-      this.inputData.hierarchyTrees.length <= 1
-    ) {
-      return [];
-    }
-    return this.inputData.hierarchyTrees.slice(1);
   }
 }

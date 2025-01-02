@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 import {
   Component,
   ElementRef,
@@ -24,6 +25,7 @@ import {
 import {Color} from 'app/colors';
 import {PersistentStore} from 'common/store/persistent_store';
 import {Analytics} from 'logging/analytics';
+import {UserWarning} from 'messaging/user_warning';
 import {TraceType} from 'trace/trace_type';
 import {RectShowState} from 'viewers/common/rect_show_state';
 import {TableProperties} from 'viewers/common/table_properties';
@@ -56,9 +58,9 @@ import {viewerCardInnerStyle} from './styles/viewer_card.styles';
         [traceType]="dependencies[0]"
         [logCallback]="Analytics.Navigation.logHierarchySettingsChanged">
       </user-options>
-      <ng-container *ngIf="tree && tree.getWarnings().length > 0">
+      <ng-container *ngIf="getWarnings().length > 0">
         <span
-          *ngFor="let warning of tree.getWarnings()"
+          *ngFor="let warning of getWarnings()"
           class="mat-body-1 warning"
           [matTooltip]="warning.getMessage()"
           [matTooltipDisabled]="disableTooltip(warningEl)">
@@ -88,30 +90,18 @@ import {viewerCardInnerStyle} from './styles/viewer_card.styles';
     <mat-divider></mat-divider>
     <span class="mat-body-1 placeholder-text" *ngIf="showPlaceholderText()"> {{ placeholderText }} </span>
     <div class="hierarchy-content tree-wrapper">
-      <tree-view
-        *ngIf="tree"
-        [isFlattened]="isFlattened()"
-        [node]="tree"
-        [useStoredExpandedState]="true"
-        [itemsClickable]="true"
-        [highlightedItem]="highlightedItem"
-        [pinnedItems]="pinnedItems"
-        [rectIdToShowState]="rectIdToShowState"
-        (highlightedChange)="onHighlightedItemChange($event)"
-        (pinnedItemChange)="onPinnedItemChange($event)"
-        (selectedTreeChange)="onSelectedTreeChange($event)"></tree-view>
-
-      <div class="subtrees">
+      <div class="trees">
         <tree-view
-          *ngFor="let subtree of subtrees; trackBy: trackById"
-          class="subtree"
-          [node]="subtree"
+          *ngFor="let tree of trees; trackBy: trackById"
+          class="tree"
+          [node]="tree"
           [isFlattened]="isFlattened()"
           [useStoredExpandedState]="true"
           [highlightedItem]="highlightedItem"
           [pinnedItems]="pinnedItems"
           [itemsClickable]="true"
           [rectIdToShowState]="rectIdToShowState"
+          [store]="treeStorage"
           (highlightedChange)="onHighlightedItemChange($event)"
           (pinnedItemChange)="onPinnedItemChange($event)"
           (selectedTreeChange)="onSelectedTreeChange($event)"></tree-view>
@@ -173,8 +163,7 @@ export class HierarchyComponent {
   ViewerEvents = ViewerEvents;
   Analytics = Analytics;
 
-  @Input() tree: UiHierarchyTreeNode | undefined;
-  @Input() subtrees: UiHierarchyTreeNode[] = [];
+  @Input() trees: UiHierarchyTreeNode[] = [];
   @Input() tableProperties: TableProperties | undefined;
   @Input() dependencies: TraceType[] = [];
   @Input() highlightedItem = '';
@@ -198,7 +187,11 @@ export class HierarchyComponent {
   }
 
   showPlaceholderText(): boolean {
-    return !this.tree && (this.subtrees?.length ?? 0) === 0;
+    return this.trees.length === 0 && !!this.placeholderText;
+  }
+
+  getWarnings(): UserWarning[] {
+    return this.trees.flatMap((tree) => tree.getWarnings());
   }
 
   onPinnedNodeClick(event: MouseEvent, pinnedItem: UiHierarchyTreeNode) {
