@@ -25,7 +25,7 @@ import {Parser} from 'trace/parser';
 import {TraceType} from 'trace/trace_type';
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
 
-describe('ParserTransitions', () => {
+describe('TracesParserTransitions', () => {
   let parser: Parser<PropertyTreeNode>;
 
   beforeAll(async () => {
@@ -54,11 +54,53 @@ describe('ParserTransitions', () => {
   it('provides timestamps', () => {
     const timestamps = assertDefined(parser.getTimestamps());
     const expected = [
-      TimestampConverterUtils.makeRealTimestamp(1683130827957362976n),
-      TimestampConverterUtils.makeRealTimestamp(1683130827957362976n),
       TimestampConverterUtils.makeRealTimestamp(1683188477606574664n),
+      TimestampConverterUtils.makeRealTimestamp(1683188477784695636n),
       TimestampConverterUtils.makeRealTimestamp(1683188479255739215n),
+      TimestampConverterUtils.makeRealTimestamp(1683188481345218790n),
     ];
     expect(timestamps).toEqual(expected);
+  });
+
+  it('provides entries', async () => {
+    const entryIds = [
+      (await parser.getEntry(0)).getChildByName('id')?.getValue(),
+      (await parser.getEntry(1)).getChildByName('id')?.getValue(),
+      (await parser.getEntry(2)).getChildByName('id')?.getValue(),
+      (await parser.getEntry(3)).getChildByName('id')?.getValue(),
+    ];
+    expect(entryIds).toEqual([6, 7, 8, 9]);
+  });
+
+  it('sets zero timestamp if both dispatch and send time unavailable', async () => {
+    const parser = (await UnitTestUtils.getTracesParser([
+      'traces/elapsed_and_real_timestamp/wm_transition_trace.pb',
+      'traces/elapsed_and_real_timestamp/shell_transition_trace.pb',
+    ])) as Parser<PropertyTreeNode>;
+    const entry = await parser.getEntry(1);
+    entry
+      .getChildByName('shellData')
+      ?.removeChild(entry.id + '.shellData.dispatchTimeNs');
+    entry
+      .getChildByName('wmData')
+      ?.removeChild(entry.id + '.wmData.sendTimeNs');
+
+    await parser.createTimestamps();
+    expect(parser.getTimestamps()?.at(1)).toEqual(
+      TimestampConverterUtils.makeRealTimestamp(0n),
+    );
+  });
+
+  it('fails to parse without both wm and shell transition traces', async () => {
+    await expectAsync(
+      UnitTestUtils.getTracesParser([
+        'traces/elapsed_and_real_timestamp/wm_transition_trace.pb',
+      ]),
+    ).toBeRejected();
+    await expectAsync(
+      UnitTestUtils.getTracesParser([
+        'traces/elapsed_and_real_timestamp/shell_transition_trace.pb',
+      ]),
+    ).toBeRejected();
   });
 });

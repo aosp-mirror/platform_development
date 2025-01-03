@@ -352,6 +352,7 @@ export class TimelineData {
 
   clear() {
     this.traces = new Traces();
+    this.transitionEntries = [];
     this.firstEntry = undefined;
     this.lastEntry = undefined;
     this.explicitlySetPosition = undefined;

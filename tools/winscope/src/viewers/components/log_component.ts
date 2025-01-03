@@ -196,9 +196,9 @@ import {
           </div>
 
           <div [class]="field.spec.cssClass" *ngFor="let field of entry.fields; index as i">
-            <span class="mat-body-1" *ngIf="!showFieldButton(field)">{{ field.value }}</span>
+            <span class="mat-body-1" *ngIf="!showFieldButton(entry, field)">{{ field.value }}</span>
             <button
-                *ngIf="showFieldButton(field)"
+                *ngIf="showFieldButton(entry, field)"
                 mat-button
                 class="time-button"
                 color="primary"
@@ -264,8 +264,10 @@ export class LogComponent {
     return header.filter !== undefined;
   }
 
-  showFieldButton(field: LogField) {
-    return field.value instanceof Timestamp || field.propagateEntryTimestamp;
+  showFieldButton(entry: LogEntry, field: LogField): boolean {
+    const propagateEntryTimestamp =
+      !!field.propagateEntryTimestamp && entry.traceEntry.hasValidTimestamp();
+    return field.value instanceof Timestamp || propagateEntryTimestamp;
   }
 
   formatFieldButton(field: LogField): string | number {

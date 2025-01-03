@@ -175,14 +175,21 @@ class PresenterTransitionsTest extends AbstractLogViewerPresenterTest<UiData> {
 
     const selectedTransition = assertDefined(uiData.propertiesTree);
     const wmData = assertDefined(selectedTransition.getChildByName('wmData'));
-    expect(wmData.getChildByName('id')?.formattedValue()).toEqual('35');
+    expect(wmData.getChildByName('id')?.formattedValue()).toEqual('32');
     expect(wmData.getChildByName('type')?.formattedValue()).toEqual('OPEN');
     expect(wmData.getChildByName('createTimeNs')?.formattedValue()).toEqual(
-      '2023-11-21, 13:30:33.176',
+      '2023-11-21, 13:30:25.429',
     );
 
-    const dispatchTime = uiData.entries[0].fields[3];
-    expect(dispatchTime?.propagateEntryTimestamp).toBeTrue();
+    const dispatchTimeEntryTs = uiData.entries[0].fields[3];
+    expect(dispatchTimeEntryTs?.propagateEntryTimestamp).toBeTrue();
+    const sendTimeNotEntryTs = uiData.entries[0].fields[2];
+    expect(sendTimeNotEntryTs?.propagateEntryTimestamp).toBeFalse();
+
+    const dispatchTimeNotEntryTs = uiData.entries[3].fields[3];
+    expect(dispatchTimeNotEntryTs?.propagateEntryTimestamp).toBeFalse();
+    const sendTimeEntryTs = uiData.entries[3].fields[2];
+    expect(sendTimeEntryTs?.propagateEntryTimestamp).toBeTrue();
   }
 
   override executeSpecializedTests() {
