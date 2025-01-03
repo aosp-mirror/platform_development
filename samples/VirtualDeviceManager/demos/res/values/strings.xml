@@ -51,4 +51,5 @@
 
     <string name="start_record" translatable="false">Start record</string>
     <string name="stop_record" translatable="false">Stop record</string>
+    <string name="recorder_status" translatable="false">Recorder Status</string>
 </resources>

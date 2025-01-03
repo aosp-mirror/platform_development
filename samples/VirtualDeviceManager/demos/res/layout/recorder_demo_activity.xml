@@ -14,6 +14,19 @@
         android:onClick="onFirstButtonClick"
         android:text="@string/start_record" />
 
+    <TextView
+        android:id="@+id/first_recorder_status"
+        android:layout_width="300dp"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:padding="10dp"
+        android:text="@string/recorder_status"
+        android:textStyle="bold" />
+
+    <Space
+        android:layout_width="match_parent"
+        android:layout_height="50dp" />
+
     <Button
         android:id="@+id/second_recorder_button"
         android:layout_width="match_parent"
@@ -21,5 +34,14 @@
         android:layout_margin="20dp"
         android:onClick="onSecondButtonClick"
         android:text="@string/start_record" />
+
+    <TextView
+        android:id="@+id/second_recorder_status"
+        android:layout_width="300dp"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:padding="10dp"
+        android:text="@string/recorder_status"
+        android:textStyle="bold" />
 
 </LinearLayout>

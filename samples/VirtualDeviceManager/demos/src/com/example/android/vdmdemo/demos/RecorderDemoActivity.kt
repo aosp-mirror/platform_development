@@ -23,11 +23,12 @@ import android.media.AudioFormat
 import android.media.AudioManager
 import android.media.AudioRecord
 import android.media.AudioRecordingConfiguration
-import android.media.MediaRecorder
+import android.media.MediaRecorder.AudioSource
 import android.os.Bundle
 import android.util.Log
 import android.view.View
 import android.widget.Button
+import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
@@ -42,6 +43,7 @@ class RecorderDemoActivity :
     private var audioManager: AudioManager? = null
 
     private val recorders = MutableList<AudioRecord?>(NUMBER_OF_RECORDERS) { null }
+    private lateinit var recorderStatusTextViews: List<TextView>
 
     private val audioRecordingCallback =
         object : AudioManager.AudioRecordingCallback() {
@@ -54,6 +56,12 @@ class RecorderDemoActivity :
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.recorder_demo_activity)
+
+        recorderStatusTextViews =
+            listOf(
+                requireViewById(R.id.first_recorder_status),
+                requireViewById(R.id.second_recorder_status),
+            )
 
         audioManager = getSystemService(AudioManager::class.java)
         audioManager?.registerAudioRecordingCallback(audioRecordingCallback, null)
@@ -100,6 +108,8 @@ class RecorderDemoActivity :
                 button.setBackgroundColor(Color.GRAY)
             }
         }
+
+        recorderStatusTextViews[index].text = getRecorderStatus(recorders[index])
     }
 
     @SuppressLint("MissingPermission")
@@ -172,6 +182,18 @@ class RecorderDemoActivity :
         }
     }
 
+    private fun getRecorderStatus(audioRecord: AudioRecord?) =
+        audioRecord?.let {
+            val state =
+                if (it.recordingState == AudioRecord.RECORDSTATE_RECORDING) {
+                    "Recording"
+                } else {
+                    "Stopped"
+                }
+
+            "$state source ${friendlyAudioSource(it.audioSource)} device address ${it.routedDevice?.address}"
+        } ?: "Recorder uninitialized!"
+
     @SuppressLint("MissingPermission")
     private fun toLog(config: AudioRecordingConfiguration) =
         with(config) {
@@ -197,12 +219,12 @@ class RecorderDemoActivity :
         const val NUMBER_OF_RECORDERS = 2
 
         // some defaults for easy instantiation of AudioRecorder objects
-        const val FIRST_RECORDER_SOURCE = MediaRecorder.AudioSource.MIC
+        const val FIRST_RECORDER_SOURCE = AudioSource.MIC
         const val FIRST_RECORDER_SAMPLE_RATE: Int = 8000
         const val FIRST_RECORDER_CHANNELS: Int = AudioFormat.CHANNEL_IN_MONO
         const val FIRST_RECORDER_AUDIO_ENCODING: Int = AudioFormat.ENCODING_PCM_16BIT
 
-        const val SECOND_RECORDER_SOURCE = MediaRecorder.AudioSource.MIC
+        const val SECOND_RECORDER_SOURCE = AudioSource.MIC
         const val SECOND_RECORDER_SAMPLE_RATE: Int = 48000
         const val SECOND_RECORDER_CHANNELS: Int = AudioFormat.CHANNEL_IN_STEREO
         const val SECOND_RECORDER_AUDIO_ENCODING: Int = AudioFormat.ENCODING_PCM_16BIT
@@ -222,5 +244,26 @@ class RecorderDemoActivity :
                     SECOND_RECORDER_AUDIO_ENCODING,
                 ),
             )
+
+        private fun friendlyAudioSource(source: Int) =
+            when (source) {
+                AudioSource.DEFAULT -> "DEFAULT"
+                AudioSource.MIC -> "MIC"
+                AudioSource.VOICE_UPLINK -> "VOICE_UPLINK"
+                AudioSource.VOICE_DOWNLINK -> "VOICE_DOWNLINK"
+                AudioSource.VOICE_CALL -> "VOICE_CALL"
+                AudioSource.CAMCORDER -> "CAMCORDER"
+                AudioSource.VOICE_RECOGNITION -> "VOICE_RECOGNITION"
+                AudioSource.VOICE_COMMUNICATION -> "VOICE_COMMUNICATION"
+                AudioSource.REMOTE_SUBMIX -> "REMOTE_SUBMIX"
+                AudioSource.UNPROCESSED -> "UNPROCESSED"
+                /* AudioSource.ECHO_REFERENCE */ 1997 -> "ECHO_REFERENCE"
+                AudioSource.VOICE_PERFORMANCE -> "VOICE_PERFORMANCE"
+                /* AudioSource.RADIO_TUNER */ 1998 -> "RADIO_TUNER"
+                /* AudioSource.HOTWORD */ 1999 -> "HOTWORD"
+                /* AudioSource.ULTRASOUND */ 2000 -> "ULTRASOUND"
+                /* AudioSource.AUDIO_SOURCE_INVALID */ -1 -> "AUDIO_SOURCE_INVALID"
+                else -> "unknown source $source"
+            }
     }
 }
