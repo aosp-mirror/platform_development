@@ -14,13 +14,14 @@
  * limitations under the License.
  */
 
-import {Component, Input, ViewChild} from '@angular/core';
+import {Component, ViewChild} from '@angular/core';
 import {TraceType} from 'trace/trace_type';
 import {CollapsibleSections} from 'viewers/common/collapsible_sections';
 import {CollapsibleSectionType} from 'viewers/common/collapsible_section_type';
 import {LogComponent} from 'viewers/components/log_component';
 import {selectedElementStyle} from 'viewers/components/styles/selected_element.styles';
 import {viewerCardStyle} from 'viewers/components/styles/viewer_card.styles';
+import {ViewerComponent} from 'viewers/components/viewer_component';
 import {UiData} from './ui_data';
 
 @Component({
@@ -67,11 +68,8 @@ import {UiData} from './ui_data';
     viewerCardStyle,
   ],
 })
-export class ViewerTransitionsComponent {
-  @Input() inputData: UiData | undefined;
-
-  @ViewChild(LogComponent)
-  logComponent?: LogComponent;
+export class ViewerTransitionsComponent extends ViewerComponent<UiData> {
+  @ViewChild(LogComponent) logComponent?: LogComponent;
 
   propertiesTitle = 'SELECTED TRANSITION';
   CollapsibleSectionType = CollapsibleSectionType;

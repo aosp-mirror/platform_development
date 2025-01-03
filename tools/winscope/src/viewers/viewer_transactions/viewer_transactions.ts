@@ -22,6 +22,7 @@ import {Traces} from 'trace/traces';
 import {TRACE_INFO} from 'trace/trace_info';
 import {TraceType} from 'trace/trace_type';
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
+import {ViewerComponent} from 'viewers/components/viewer_component';
 import {View, Viewer, ViewType} from 'viewers/viewer';
 import {Presenter} from './presenter';
 import {UiData} from './ui_data';
@@ -38,7 +39,7 @@ class ViewerTransactions implements Viewer {
     this.trace = trace;
     this.htmlElement = document.createElement('viewer-transactions');
     const notifyViewCallback = (data: UiData) => {
-      (this.htmlElement as any).inputData = data;
+      (this.htmlElement as unknown as ViewerComponent<UiData>).inputData = data;
     };
     this.presenter = new Presenter(trace, storage, notifyViewCallback);
     this.presenter.addEventListeners(this.htmlElement);

@@ -22,6 +22,7 @@ import {TRACE_INFO} from 'trace/trace_info';
 import {HierarchyTreeNode} from 'trace/tree_node/hierarchy_tree_node';
 import {AbstractPresenterInputMethod} from 'viewers/common/abstract_presenter_input_method';
 import {ImeUiData} from 'viewers/common/ime_ui_data';
+import {ViewerComponent} from 'viewers/components/viewer_component';
 import {View, Viewer, ViewType} from 'viewers/viewer';
 
 export abstract class AbstractViewerInputMethod implements Viewer {
@@ -31,7 +32,8 @@ export abstract class AbstractViewerInputMethod implements Viewer {
   protected readonly view: View;
 
   protected imeUiCallback = (uiData: ImeUiData) => {
-    (this.htmlElement as any).inputData = uiData;
+    (this.htmlElement as unknown as ViewerComponent<ImeUiData>).inputData =
+      uiData;
   };
 
   constructor(trace: Trace<HierarchyTreeNode>, traces: Traces, storage: Store) {

@@ -21,6 +21,7 @@ import {Traces} from 'trace/traces';
 import {TRACE_INFO} from 'trace/trace_info';
 import {TraceType} from 'trace/trace_type';
 import {HierarchyTreeNode} from 'trace/tree_node/hierarchy_tree_node';
+import {ViewerComponent} from 'viewers/components/viewer_component';
 import {View, Viewer, ViewType} from 'viewers/viewer';
 import {Presenter} from './presenter';
 import {UiData} from './ui_data';
@@ -38,7 +39,8 @@ export class ViewerWindowManager implements Viewer {
     this.htmlElement = document.createElement('viewer-window-manager');
 
     const notifyViewCallback = (uiData: UiData) => {
-      (this.htmlElement as any).inputData = uiData;
+      (this.htmlElement as unknown as ViewerComponent<UiData>).inputData =
+        uiData;
     };
     this.presenter = new Presenter(trace, traces, storage, notifyViewCallback);
     this.presenter.addEventListeners(this.htmlElement);

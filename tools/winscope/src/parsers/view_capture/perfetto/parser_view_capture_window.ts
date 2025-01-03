@@ -19,6 +19,7 @@ import {ParserTimestampConverter} from 'common/time/timestamp_converter';
 import {AddDefaults} from 'parsers/operations/add_defaults';
 import {SetFormatters} from 'parsers/operations/set_formatters';
 import {AbstractParser} from 'parsers/perfetto/abstract_parser';
+import {FakeProto} from 'parsers/perfetto/fake_proto_builder';
 import {FakeProtoTransformer} from 'parsers/perfetto/fake_proto_transformer';
 import {Utils} from 'parsers/perfetto/utils';
 import {TamperedMessageType} from 'parsers/tampered_message_type';
@@ -182,7 +183,7 @@ export class ParserViewCaptureWindow extends AbstractParser<HierarchyTreeNode> {
   private makeViewPropertyTree(
     view: perfetto.protos.ViewCapture.IView,
   ): PropertyTreeNode {
-    const rootName = `${(view as any).className}@${view.hashcode}`;
+    const rootName = `${(view as FakeProto).className}@${view.hashcode}`;
 
     const nodeProperties = new PropertyTreeBuilderFromProto()
       .setData(view)

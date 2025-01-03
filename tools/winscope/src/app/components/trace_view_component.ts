@@ -44,6 +44,7 @@ import {WinscopeEventListener} from 'messaging/winscope_event_listener';
 import {TRACE_INFO} from 'trace/trace_info';
 import {TraceType} from 'trace/trace_type';
 import {inlineButtonStyle} from 'viewers/components/styles/clickable_property.styles';
+import {ViewerComponent} from 'viewers/components/viewer_component';
 import {View, Viewer, ViewType} from 'viewers/viewer';
 
 interface Tab {
@@ -430,9 +431,8 @@ export class TraceViewComponent
       });
 
     this.tabs.forEach((tab) => {
-      // TODO: setting "store" this way is a hack.
-      //       Store should be part of View's interface.
-      (tab.view.htmlElement as any).store = this.store;
+      (tab.view.htmlElement as unknown as ViewerComponent<object>).store =
+        this.store;
     });
 
     if (this.tabs.length > 0) {
