@@ -139,12 +139,6 @@ available devices, build the APKs and install them.
 
 ## Host Options
 
-NOTE: Any flag changes require device reboot or "Force stop" of the host app
-because the flag values are cached and evaluated only when the host app is
-starting. Alternatively, run: \
-\
-`adb shell am force-stop com.example.android.vdmdemo.host`
-
 ### Launcher
 
 Once the connection with the client device is established, the Host app will
@@ -161,13 +155,7 @@ show a launcher-like list of installed apps on the host device.
     new virtual display, launch the secondary home activity there and start
     streaming the display contents to the client. The display on the Client app
     will have a home button, clicking it will navigate the streaming experience
-    back to the home activity. Run the commands below to enable this
-    functionality.
-
-    ```shell
-    adb shell device_config put virtual_devices android.companion.virtual.flags.vdm_custom_home true
-    adb shell am force-stop com.example.android.vdmdemo.host
-    ```
+    back to the home activity.
 
 -   The Host app has a **CREATE MIRROR DISPLAY** button, clicking it will create
     a new virtual display, mirror the default host display there and start
@@ -197,13 +185,7 @@ Each input screen has a "Back", "Home" and "Forward" buttons.
     events to the activity on the focused display.
 
 -   **Stylus** allows for injecting simulated stylus events into the focused
-    display. Use together with the stylus demo. Run the commands below to enable
-    this functionality.
-
-    ```shell
-    adb shell device_config put virtual_devices android.companion.virtual.flags.virtual_stylus true
-    adb shell am force-stop com.example.android.vdmdemo.host
-    ```
+    display. Use together with the stylus demo.
 
 #### General
 
@@ -212,26 +194,13 @@ Each input screen has a "Back", "Home" and "Forward" buttons.
     *Changing this will recreate the virtual device.*
 
 -   **Hide streamed app from recents**: Whether streamed apps should show up in
-    the host device's recent apps. Run the commands below to make this
-    functionality dynamic. \
+    the host device's recent apps. \
     *This can be changed dynamically starting with Android V.*
-
-    ```shell
-    adb shell device_config put virtual_devices android.companion.virtual.flags.dynamic_policy true
-    adb shell am force-stop com.example.android.vdmdemo.host
-    ```
 
 -   **Enable cross-device clipboard**: Whether to share the clipboard between
     the host and the virtual device. If disabled, both devices will have their
-    own isolated clipboards. Run the commands below to enable this
-    functionality. \
+    own isolated clipboards. \
     *This can be changed dynamically.*
-
-    ```shell
-    adb shell device_config put virtual_devices android.companion.virtual.flags.dynamic_policy true
-    adb shell device_config put virtual_devices android.companion.virtual.flags.cross_device_clipboard true
-    adb shell am force-stop com.example.android.vdmdemo.host
-    ```
 
 -   **Enable custom activity policy**: Whether to use custom user notification
     for activities that are unable to launch on the virtual display and send
@@ -242,9 +211,7 @@ Each input screen has a "Back", "Home" and "Forward" buttons.
     *This can be changed dynamically.*
 
     ```shell
-    adb shell device_config put virtual_devices android.companion.virtual.flags.dynamic_policy true
-    adb shell device_config put virtual_devices android.companion.virtualdevice.flags.activity_control_api true
-    adb shell am force-stop com.example.android.vdmdemo.host
+    adb shell aflags enable android.companion.virtual.flags.activity_control_api && adb reboot
     ```
 
 #### Client capabilities
@@ -256,15 +223,8 @@ Each input screen has a "Back", "Home" and "Forward" buttons.
 
 -   **Enable client Camera**: Enables front & back camera injection from the
     client device into the host device. (WIP: Any context that is associated
-    with the virtual device will the virtual cameras by default). Run the
-    commands below on host device to enable this functionality. \
+    with the virtual device will the virtual cameras by default). \
     *Changing this will recreate the virtual device.*
-
-    ```shell
-    adb shell device_config put virtual_devices android.companion.virtual.flags.virtual_camera true
-    adb shell device_config put virtual_devices android.companion.virtualdevice.flags.virtual_camera_service_discovery true
-    adb shell am force-stop com.example.android.vdmdemo.host
-    ```
 
 -   **Enable client Audio**: Enables audio output on the client device. Any
     context that is associated with the virtual device will play audio on the
@@ -298,14 +258,8 @@ Each input screen has a "Back", "Home" and "Forward" buttons.
     *This can be changed dynamically.*
 
 -   **Custom home**: Whether to use a custom activity as home on home displays,
-    or use the device-default secondary home activity. Run the commands below to
-    enable this functionality. \
+    or use the device-default secondary home activity. \
     *Changing this will recreate the virtual device.*
-
-    ```shell
-    adb shell device_config put virtual_devices android.companion.virtual.flags.vdm_custom_home true
-    adb shell am force-stop com.example.android.vdmdemo.host
-    ```
 
 -   **Custom status bar**: Whether to add a custom status bar view on the
     non-mirror virtual displays. Run the commands below to enable this
@@ -314,8 +268,7 @@ Each input screen has a "Back", "Home" and "Forward" buttons.
     displays.*
 
     ```shell
-    adb shell device_config put virtual_devices android.companion.virtualdevice.flags.status_bar_and_insets true
-    adb shell am force-stop com.example.android.vdmdemo.host
+    adb shell aflags enable android.companion.virtual.flags.status_bar_and_insets && adb reboot
     ```
 
 -   **Display timeout**: Whether to keep the displays always awake or to put
@@ -324,8 +277,7 @@ Each input screen has a "Back", "Home" and "Forward" buttons.
     *Changing this will recreate the virtual device.*
 
     ```shell
-    adb shell device_config put virtual_devices android.companion.virtualdevice.flags.device_aware_display_power true
-    adb shell am force-stop com.example.android.vdmdemo.host
+    adb shell aflags enable android.companion.virtual.flags.device_aware_display_power && adb reboot
     ```
 
 -   **Enable client brightness**: Whether to propagate any brightness changes
@@ -335,8 +287,7 @@ Each input screen has a "Back", "Home" and "Forward" buttons.
     displays.*
 
     ```shell
-    adb shell device_config put virtual_devices android.companion.virtualdevice.flags.device_aware_display_power true
-    adb shell am force-stop com.example.android.vdmdemo.host
+    adb shell aflags enable android.companion.virtual.flags.device_aware_display_power && adb reboot
     ```
 
 #### Audio
@@ -351,25 +302,13 @@ device. If you want the software keyboard to be shown on the virtual displays,
 you likely need to enable this in the host Settings. On a Pixel device: System
 -> Language and input -> Physical keyboard.
 
--   **Display IME policy**: Choose the IME behavior on remote displays. Run the
-    commands below to enable this functionality. \
+-   **Display IME policy**: Choose the IME behavior on remote displays. \
     *This can be changed dynamically.*
-
-    ```shell
-    adb shell device_config put virtual_devices android.companion.virtual.flags.vdm_custom_ime true
-    adb shell am force-stop com.example.android.vdmdemo.host
-    ```
 
 -   **Use the native client IME**: Enables the native client IME instead of
     streaming the host's IME on the virtual displays. Requires the *Display IME
-    Policy* to be set to *Show IME on the remote display*. Run the commands
-    below to enable this functionality. \
+    Policy* to be set to *Show IME on the remote display*. \
     *Changing this will recreate the virtual device.*
-
-    ```shell
-    adb shell device_config put virtual_devices android.companion.virtual.flags.vdm_custom_ime true
-    adb shell am force-stop com.example.android.vdmdemo.host
-    ```
 
 #### Debug
 
@@ -423,8 +362,7 @@ of the virtual device and all its displays between ON and OFF.
 Run the commands below on the host device to enable this functionality.
 
 ```shell
-adb shell device_config put virtual_devices android.companion.virtual.flags.device_aware_display_power true
-adb shell am force-stop com.example.android.vdmdemo.host
+adb shell aflags enable android.companion.virtual.flags.device_aware_display_power && adb reboot
 ```
 
 <!-- LINT.ThenChange(README.md) -->
