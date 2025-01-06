@@ -101,9 +101,6 @@ describe('SurfaceFlingerPropertyGroupsComponent', () => {
       htmlElement.querySelector('.geometry .right-column'),
     );
     expect(requestedDiv.querySelector('transform-matrix')).toBeTruthy();
-    expect(
-      assertDefined(requestedDiv.querySelector('.crop')).innerHTML,
-    ).toContain(EMPTY_OBJ_STRING);
   });
 
   it('displays buffer info', () => {
@@ -290,7 +287,6 @@ describe('SurfaceFlingerPropertyGroupsComponent', () => {
       calcCrop: EMPTY_OBJ_STRING,
       finalBounds: EMPTY_OBJ_STRING,
       reqTransform: this.transformNode,
-      reqCrop: EMPTY_OBJ_STRING,
       bufferSize: EMPTY_OBJ_STRING,
       frameNumber: '0',
       bufferTransformType: 'IDENTITY',

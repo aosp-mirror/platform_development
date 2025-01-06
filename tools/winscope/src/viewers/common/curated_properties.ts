@@ -36,7 +36,6 @@ export interface SfCuratedProperties {
   calcCrop: string;
   finalBounds: string;
   reqTransform: PropertyTreeNode | undefined;
-  reqCrop: string;
   bufferSize: string;
   frameNumber: string;
   bufferTransformType: string;

@@ -571,7 +571,7 @@ the default for its data type.`,
         expect(uiData.curatedProperties?.destinationFrame).toEqual(
           '(0, 0) - (1, 1)',
         );
-        expect(uiData.curatedProperties?.reqCrop).toEqual(EMPTY_OBJ_STRING);
+        expect(uiData.curatedProperties?.calcCrop).toEqual(EMPTY_OBJ_STRING);
       });
 
       async function checkColorAndTransform(

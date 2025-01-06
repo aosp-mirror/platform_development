@@ -288,12 +288,11 @@ the default for its data type.`,
       summary: this.getSummaryOfVisibility(pTree),
       flags: curatedFlags,
       calcTransform: pTree.getChildByName('transform'),
-      calcCrop: assertDefined(pTree.getChildByName('bounds')).formattedValue(),
+      calcCrop: this.getCropPropertyValue(pTree, 'bounds'),
       finalBounds: assertDefined(
         pTree.getChildByName('screenBounds'),
       ).formattedValue(),
       reqTransform: pTree.getChildByName('requestedTransform'),
-      reqCrop: this.getCropPropertyValue(pTree, 'bounds'),
       bufferSize: assertDefined(
         pTree.getChildByName('activeBuffer'),
       ).formattedValue(),
