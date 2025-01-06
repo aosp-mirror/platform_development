@@ -125,6 +125,7 @@ export abstract class AbstractLogViewerPresenter<
       if (!isViewerVisible || !isPositionChange) {
         return;
       }
+      event.preventDefault();
       await this.onPositionChangeByKeyPress(event);
     });
   }

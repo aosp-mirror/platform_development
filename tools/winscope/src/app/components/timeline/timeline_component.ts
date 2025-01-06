@@ -773,8 +773,10 @@ export class TimelineComponent
       return;
     }
     if (event.key === 'ArrowLeft') {
+      event.preventDefault();
       await this.moveToPreviousEntry();
     } else if (event.key === 'ArrowRight') {
+      event.preventDefault();
       await this.moveToNextEntry();
     }
   }
