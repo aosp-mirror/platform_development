@@ -303,9 +303,16 @@ class UnitTestUtils {
     sectionTitle: string,
   ) {
     const section = assertDefined(htmlElement.querySelector(selector));
+    expect(
+      assertDefined(
+        section.querySelector<HTMLElement>(
+          'collapsible-section-title .mat-title',
+        ),
+      ).textContent,
+    ).toEqual(sectionTitle);
     const collapseButton = assertDefined(
-      section.querySelector('collapsible-section-title button'),
-    ) as HTMLElement;
+      section.querySelector<HTMLElement>('collapsible-section-title button'),
+    );
     collapseButton.click();
     fixture.detectChanges();
     expect(section.classList).toContain('collapsed');
@@ -315,7 +322,9 @@ class UnitTestUtils {
     const collapsedSection = assertDefined(
       collapsedSections.querySelector('.collapsed-section'),
     ) as HTMLElement;
-    expect(collapsedSection.textContent).toContain(sectionTitle);
+    expect(collapsedSection.textContent?.trim()).toEqual(
+      sectionTitle + '  arrow_right',
+    );
     collapsedSection.click();
     fixture.detectChanges();
     UnitTestUtils.checkNoCollapsedSectionButtons(htmlElement);
@@ -376,6 +385,22 @@ class UnitTestUtils {
   static async runQueryAndGetResult(query: string): Promise<QueryResult> {
     const tp = await TraceProcessorFactory.getSingleInstance();
     return tp.query(query).waitAllRows();
+  }
+
+  static checkTooltips<T>(
+    elements: HTMLElement[],
+    expTooltips: string[],
+    fixture: ComponentFixture<T>,
+  ) {
+    elements.forEach((el, index) => {
+      el.dispatchEvent(new Event('mouseenter'));
+      fixture.detectChanges();
+      expect(
+        document.querySelector<HTMLElement>('.mat-tooltip-panel')?.textContent,
+      ).toEqual(expTooltips[index]);
+      el.dispatchEvent(new Event('mouseleave'));
+      fixture.detectChanges();
+    });
   }
 }
 

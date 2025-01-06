@@ -31,11 +31,13 @@ import {Box3D} from 'common/geometry/box3d';
 import {TransformMatrix} from 'common/geometry/transform_matrix';
 import {PersistentStore} from 'common/store/persistent_store';
 import {HierarchyTreeBuilder} from 'test/unit/hierarchy_tree_builder';
+import {UnitTestUtils} from 'test/unit/utils';
 import {waitToBeCalled} from 'test/utils';
 import {TraceType} from 'trace/trace_type';
 import {VISIBLE_CHIP} from 'viewers/common/chip';
 import {DisplayIdentifier} from 'viewers/common/display_identifier';
 import {UiHierarchyTreeNode} from 'viewers/common/ui_hierarchy_tree_node';
+import {RectType, UiRectType} from 'viewers/common/ui_rect_type';
 import {RectDblClickDetail, ViewerEvents} from 'viewers/common/viewer_events';
 import {CollapsibleSectionTitleComponent} from 'viewers/components/collapsible_section_title_component';
 import {RectsComponent} from 'viewers/components/rects/rects_component';
@@ -823,6 +825,43 @@ describe('RectsComponent', () => {
     expect(updateLabelsSpy.calls.mostRecent().args[0].length).toEqual(1);
   });
 
+  it('handles rect type button click', async () => {
+    let clicks = 0;
+    htmlElement.addEventListener(ViewerEvents.RectTypeButtonClick, () => {
+      clicks++;
+    });
+    expect(htmlElement.querySelector('.rect-type')).toBeNull();
+    component.rectType = {type: RectType.LAYERS, icon: 'layers'};
+    fixture.detectChanges();
+    const button = assertDefined(
+      htmlElement.querySelector<HTMLElement>('.rect-type'),
+    );
+    expect(button.textContent?.trim()).toEqual('layers');
+    UnitTestUtils.checkTooltips([button], ['Showing layers'], fixture);
+    button.click();
+    fixture.detectChanges();
+    expect(clicks).toEqual(1);
+  });
+
+  it('shows warning for any rect type set after the first', async () => {
+    component.rectType = {type: RectType.LAYERS, icon: 'layers'};
+    fixture.detectChanges();
+    expect(htmlElement.querySelector('.warning')).toBeNull();
+
+    component.rectType = {type: RectType.INPUT_WINDOWS, icon: 'touch_app'};
+    fixture.detectChanges();
+    const warning = assertDefined(htmlElement.querySelector('.warning'));
+    expect(
+      warning.querySelector('.warning-message')?.textContent?.trim(),
+    ).toEqual(
+      'Showing input windows - change type by clicking  touch_app  icon above',
+    );
+
+    component.rectType = {type: RectType.LAYERS, icon: 'layers'};
+    fixture.detectChanges();
+    expect(htmlElement.querySelector('.warning')).toBeNull();
+  });
+
   function resetSpies() {
     [
       updateViewPositionSpy,
@@ -1011,7 +1050,8 @@ describe('RectsComponent', () => {
         [dependencies]="dependencies"
         [pinnedItems]="pinnedItems"
         [isDarkMode]="isDarkMode"
-        [highlightedItem]="highlightedItem"></rects-view>
+        [highlightedItem]="highlightedItem"
+        [rectType]="rectType"></rects-view>
     `,
   })
   class TestHostComponent {
@@ -1036,6 +1076,7 @@ describe('RectsComponent', () => {
     pinnedItems: UiHierarchyTreeNode[] = [];
     isDarkMode = false;
     highlightedItem = '';
+    rectType: UiRectType | undefined;
 
     @ViewChild(RectsComponent)
     rectsComponent: RectsComponent | undefined;

@@ -40,6 +40,7 @@ import {TRACE_INFO} from 'trace/trace_info';
 import {TraceType} from 'trace/trace_type';
 import {DisplayIdentifier} from 'viewers/common/display_identifier';
 import {UiHierarchyTreeNode} from 'viewers/common/ui_hierarchy_tree_node';
+import {RectType, UiRectType} from 'viewers/common/ui_rect_type';
 import {UserOptions} from 'viewers/common/user_options';
 import {RectDblClickDetail, ViewerEvents} from 'viewers/common/viewer_events';
 import {UiRect} from 'viewers/components/rects/ui_rect';
@@ -159,6 +160,17 @@ import {ShadingMode} from './shading_mode';
         </user-options>
 
         <div class="displays-section">
+          <button
+            *ngIf="rectType"
+            color="accent"
+            class="rect-type"
+            (mouseenter)="onInteractionStart([rectTypeButton])"
+            (mouseleave)="onInteractionEnd([rectTypeButton])"
+            mat-icon-button
+            [matTooltip]="'Showing ' + rectType.type"
+            (click)="onUiRectTypeButtonClicked()" #rectTypeButton>
+            <mat-icon class="material-symbols-outlined"> {{rectType.icon}} </mat-icon>
+          </button>
           <span class="mat-body-1"> {{groupLabel}}: </span>
           <mat-form-field appearance="none" class="displays-select">
             <mat-select
@@ -192,6 +204,16 @@ import {ShadingMode} from './shading_mode';
       </div>
     </div>
     <mat-divider></mat-divider>
+    <span
+      *ngIf="showRectTypeWarning()"
+      class="mat-body-1 warning">
+      <mat-icon class="warning-icon"> warning </mat-icon>
+      <span class="warning-message">
+        Showing {{rectType.type}} - change type by clicking
+        <mat-icon class="material-symbols-outlined inline-icon"> {{rectType.icon}} </mat-icon>
+        icon above
+      </span>
+    </span>
     <span class="mat-body-1 placeholder-text" *ngIf="rects.length===0"> No rects found. </span>
     <span class="mat-body-1 placeholder-text" *ngIf="currentDisplays.length===0"> No displays selected. </span>
     <div class="rects-content">
@@ -338,6 +360,7 @@ export class RectsComponent implements OnInit, OnDestroy {
   @Input() groupLabel = 'Displays';
   @Input() isStackBased = false;
   @Input() shadingModes: ShadingMode[] = [ShadingMode.GRADIENT];
+  @Input() rectType: UiRectType | undefined;
   @Input() userOptions: UserOptions = {};
   @Input() dependencies: TraceType[] = [];
   @Input() pinnedItems: UiHierarchyTreeNode[] = [];
@@ -366,6 +389,7 @@ export class RectsComponent implements OnInit, OnDestroy {
   private mouseMoveListener = (event: MouseEvent) => this.onMouseMove(event);
   private mouseUpListener = (event: MouseEvent) => this.onMouseUp(event);
   private panning = false;
+  private defaultRectType: RectType | undefined;
 
   private static readonly ZOOM_SCROLL_RATIO = 0.3;
 
@@ -435,6 +459,7 @@ export class RectsComponent implements OnInit, OnDestroy {
       this.internalMiniRects = this.miniRects;
       this.drawMiniRects();
     }
+    this.defaultRectType = this.rectType?.type;
   }
 
   ngOnChanges(simpleChanges: SimpleChanges) {
@@ -719,6 +744,21 @@ export class RectsComponent implements OnInit, OnDestroy {
 
   onInteractionEnd(components: CanColor[]) {
     components.forEach((c) => (c.color = 'accent'));
+  }
+
+  onUiRectTypeButtonClicked() {
+    this.elementRef.nativeElement.dispatchEvent(
+      new CustomEvent(ViewerEvents.RectTypeButtonClick, {
+        bubbles: true,
+      }),
+    );
+  }
+
+  showRectTypeWarning() {
+    return (
+      this.defaultRectType !== undefined &&
+      this.defaultRectType !== this.rectType?.type
+    );
   }
 
   private getActiveDisplay(displays: DisplayIdentifier[]): DisplayIdentifier {

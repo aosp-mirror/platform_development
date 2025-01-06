@@ -87,4 +87,29 @@ export const viewerCardInnerStyle = `
   .padded-title {
     padding-bottom: 8px;
   }
+
+  .warning {
+    display: flex;
+    align-items: center;
+    padding: 2px 12px;
+    background-color: var(--warning-background-color);
+  }
+  .warning-message {
+    padding-inline-start: 2px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: flex;
+    align-items: center;
+    width: 100%;
+  }
+  .warning-icon, .inline-icon {
+    font-size: 18px;
+    width: 18px;
+    height: 18px;
+    padding-inline-end: 4px;
+  }
+  .inline-icon {
+    padding-inline-start: 4px;
+  }
 `;

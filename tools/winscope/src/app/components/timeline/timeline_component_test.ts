@@ -357,14 +357,18 @@ describe('TimelineComponent', () => {
 
     const matOptions =
       document.documentElement.querySelectorAll<HTMLInputElement>('mat-option');
-    checkTooltips(Array.from(matOptions), [
-      'test query, 0',
-      'mock_screen_recording',
-      'file descriptor',
-      'file descriptor',
-      'file descriptor',
-      'Test Window, mock_view_capture',
-    ]);
+    UnitTestUtils.checkTooltips(
+      Array.from(matOptions),
+      [
+        'test query, 0',
+        'mock_screen_recording',
+        'file descriptor',
+        'file descriptor',
+        'file descriptor',
+        'Test Window, mock_view_capture',
+      ],
+      fixture,
+    );
     expect(matOptions.item(0).textContent).toContain('Search test query');
     const sfOption = matOptions.item(2);
     expect(sfOption.textContent).toContain('Surface Flinger');
@@ -393,13 +397,17 @@ describe('TimelineComponent', () => {
       const expectedType = expectedTypes[index];
       expect(text).toEqual(TRACE_INFO[expectedType].icon);
     });
-    checkTooltips(traceIcons, [
-      'Search test query',
-      'Screen Recording mock_screen_recording',
-      TRACE_INFO[TraceType.SURFACE_FLINGER].name,
-      TRACE_INFO[TraceType.PROTO_LOG].name,
-      'View Capture Test Window',
-    ]);
+    UnitTestUtils.checkTooltips(
+      traceIcons,
+      [
+        'Search test query',
+        'Screen Recording mock_screen_recording',
+        TRACE_INFO[TraceType.SURFACE_FLINGER].name,
+        TRACE_INFO[TraceType.PROTO_LOG].name,
+        'View Capture Test Window',
+      ],
+      fixture,
+    );
 
     matOptions.item(3).click();
     fixture.detectChanges();
@@ -1412,18 +1420,6 @@ describe('TimelineComponent', () => {
   function checkTimelineDisabled() {
     expect(htmlElement.querySelector('.disabled-component')).toBeTruthy();
     expect(htmlElement.querySelector('.disabled-message')).toBeTruthy();
-  }
-
-  function checkTooltips(elements: HTMLElement[], expectedNames: string[]) {
-    elements.forEach((el, index) => {
-      el.dispatchEvent(new Event('mouseenter'));
-      fixture.detectChanges();
-      expect(
-        document.querySelector<HTMLElement>('.mat-tooltip-panel')?.textContent,
-      ).toEqual(expectedNames[index]);
-      el.dispatchEvent(new Event('mouseleave'));
-      fixture.detectChanges();
-    });
   }
 
   @Component({

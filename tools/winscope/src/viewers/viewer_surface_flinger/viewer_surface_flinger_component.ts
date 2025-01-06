@@ -14,7 +14,8 @@
  * limitations under the License.
  */
 
-import {Component, Input} from '@angular/core';
+import {Component, Input, SimpleChanges} from '@angular/core';
+import {assertDefined} from 'common/assert_utils';
 import {TraceType} from 'trace/trace_type';
 import {CollapsibleSections} from 'viewers/common/collapsible_sections';
 import {CollapsibleSectionType} from 'viewers/common/collapsible_section_type';
@@ -47,6 +48,7 @@ import {UiData} from './ui_data';
         [userOptions]="inputData?.rectsUserOptions ?? {}"
         [pinnedItems]="inputData?.pinnedItems ?? []"
         [isDarkMode]="inputData?.isDarkMode ?? false"
+        [rectType]="inputData?.rectType"
         (collapseButtonClicked)="sections.onCollapseStateChange(CollapsibleSectionType.RECTS, true)"></rects-view>
 
       <hierarchy-view
@@ -140,5 +142,17 @@ export class ViewerSurfaceFlingerComponent extends ViewerComponent<UiData> {
         CollapsibleSectionType.CURATED_PROPERTIES,
       )
     );
+  }
+
+  ngOnChanges(simpleChanges: SimpleChanges) {
+    const data = simpleChanges['inputData'];
+    if (data?.currentValue?.rectType !== data?.previousValue?.rectType) {
+      this.rectsTitle = assertDefined(
+        this.inputData?.rectType,
+      ).type.toUpperCase();
+      assertDefined(
+        this.sections.getSection(CollapsibleSectionType.RECTS),
+      ).label = this.rectsTitle;
+    }
   }
 }
