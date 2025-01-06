@@ -26,6 +26,7 @@ export class Analytics {
   private static DARK_MODE_ENABLED = 'dark_mode_enabled';
   private static DOCUMENTATION_OPENED = 'documentation_opened';
   private static EXPANDED_TIMELINE_OPENED = 'expanded_timeline_opened';
+  private static FRAME_MAP_ERROR = 'frame_map_error';
   private static GLOBAL_EXCEPTION = 'global_exception';
   private static HIERARCHY_SETTINGS = 'hierarchy_settings';
   private static NAVIGATION_ZOOM_EVENT = 'navigation_zoom';
@@ -58,6 +59,11 @@ export class Analytics {
     }
     static logProxyError(description: string) {
       Analytics.doLogEvent(Analytics.PROXY_ERROR, {
+        description,
+      } as Gtag.CustomParams);
+    }
+    static logFrameMapError(description: string) {
+      Analytics.doLogEvent(Analytics.FRAME_MAP_ERROR, {
         description,
       } as Gtag.CustomParams);
     }
