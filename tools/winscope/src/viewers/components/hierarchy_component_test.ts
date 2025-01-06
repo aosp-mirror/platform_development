@@ -30,6 +30,7 @@ import {MatTooltipModule} from '@angular/material/tooltip';
 import {BrowserAnimationsModule} from '@angular/platform-browser/animations';
 import {assertDefined} from 'common/assert_utils';
 import {FilterFlag} from 'common/filter_flag';
+import {InMemoryStorage} from 'common/store/in_memory_storage';
 import {PersistentStore} from 'common/store/persistent_store';
 import {DuplicateLayerIds, MissingLayerIds} from 'messaging/user_warnings';
 import {HierarchyTreeBuilder} from 'test/unit/hierarchy_tree_builder';
@@ -80,13 +81,15 @@ describe('HierarchyComponent', () => {
     component = fixture.componentInstance;
     htmlElement = fixture.nativeElement;
 
-    component.tree = UiHierarchyTreeNode.from(
-      new HierarchyTreeBuilder()
-        .setId('RootNode1')
-        .setName('Root node')
-        .setChildren([{id: 'Child1', name: 'Child node'}])
-        .build(),
-    );
+    component.trees = [
+      UiHierarchyTreeNode.from(
+        new HierarchyTreeBuilder()
+          .setId('RootNode1')
+          .setName('Root node')
+          .setChildren([{id: 'Child1', name: 'Child node'}])
+          .build(),
+      ),
+    ];
 
     component.store = new PersistentStore();
     component.userOptions = {
@@ -125,31 +128,33 @@ describe('HierarchyComponent', () => {
     expect(assertDefined(treeView).innerHTML).toContain('Child node');
   });
 
-  it('renders subtrees', () => {
-    component.subtrees = [
+  it('renders multiple trees', () => {
+    component.trees = [
+      component.trees[0],
       UiHierarchyTreeNode.from(
         new HierarchyTreeBuilder().setId('subtree').setName('subtree').build(),
       ),
     ];
     fixture.detectChanges();
-    const subtree = assertDefined(
-      htmlElement.querySelector('.tree-wrapper .subtrees tree-view'),
+    const trees = assertDefined(
+      htmlElement.querySelectorAll('.tree-wrapper .tree'),
     );
-    expect(assertDefined(subtree).innerHTML).toContain('subtree');
+    expect(trees.length).toEqual(2);
+    expect(trees.item(1).textContent).toContain('subtree');
   });
 
   it('renders pinned nodes', () => {
     const pinnedNodesDiv = htmlElement.querySelector('.pinned-items');
     expect(pinnedNodesDiv).toBeFalsy();
 
-    component.pinnedItems = [assertDefined(component.tree)];
+    component.pinnedItems = assertDefined(component.trees);
     fixture.detectChanges();
     const pinnedNodeEl = htmlElement.querySelector('.pinned-items tree-node');
     expect(pinnedNodeEl).toBeTruthy();
   });
 
   it('renders placeholder text', () => {
-    component.tree = undefined;
+    component.trees = [];
     component.placeholderText = 'Placeholder text';
     fixture.detectChanges();
     expect(
@@ -158,7 +163,7 @@ describe('HierarchyComponent', () => {
   });
 
   it('handles pinned node click', () => {
-    const node = assertDefined(component.tree);
+    const node = assertDefined(component.trees[0]);
     component.pinnedItems = [node];
     fixture.detectChanges();
 
@@ -187,7 +192,9 @@ describe('HierarchyComponent', () => {
         pinnedItem = (event as CustomEvent).detail.pinnedItem;
       },
     );
-    const child = assertDefined(component.tree?.getChildByName('Child node'));
+    const child = assertDefined(
+      component.trees[0].getChildByName('Child node'),
+    );
     component.pinnedItems = [child];
     fixture.detectChanges();
 
@@ -233,13 +240,18 @@ describe('HierarchyComponent', () => {
     expect(spy).toHaveBeenCalled();
   });
 
-  it('shows warnings', () => {
+  it('shows warnings from all trees', () => {
     expect(htmlElement.querySelectorAll('.warning').length).toEqual(0);
 
+    component.trees = [
+      component.trees[0],
+      UiHierarchyTreeNode.from(component.trees[0]),
+    ];
+    fixture.detectChanges();
     const warning1 = new DuplicateLayerIds([123]);
-    component.tree?.addWarning(warning1);
+    component.trees[0].addWarning(warning1);
     const warning2 = new MissingLayerIds();
-    component.tree?.addWarning(warning2);
+    component.trees[1].addWarning(warning2);
     fixture.detectChanges();
     const warnings = htmlElement.querySelectorAll('.warning');
     expect(warnings.length).toEqual(2);
@@ -253,7 +265,7 @@ describe('HierarchyComponent', () => {
 
   it('shows warning tooltip if text overflowing', () => {
     const warning = new DuplicateLayerIds([123]);
-    component.tree?.addWarning(warning);
+    component.trees[0].addWarning(warning);
     fixture.detectChanges();
 
     const warningEl = assertDefined(htmlElement.querySelector('.warning'));
@@ -278,4 +290,28 @@ describe('HierarchyComponent', () => {
       document.querySelector<HTMLElement>('.mat-tooltip-panel')?.textContent,
     ).toEqual(warning.getMessage());
   });
+
+  it('handles arrow down key press', () => {
+    testArrowKeyPress(ViewerEvents.ArrowDownPress, 'ArrowDown');
+  });
+
+  it('handles arrow up key press', () => {
+    testArrowKeyPress(ViewerEvents.ArrowUpPress, 'ArrowUp');
+  });
+
+  function testArrowKeyPress(viewerEvent: string, key: string) {
+    let storage: InMemoryStorage | undefined;
+    htmlElement.addEventListener(viewerEvent, (event) => {
+      storage = (event as CustomEvent).detail;
+    });
+    const event = new KeyboardEvent('keydown', {key});
+    document.dispatchEvent(event);
+    expect(storage).toEqual(component.treeStorage);
+
+    storage = undefined;
+    htmlElement.style.height = '0px';
+    fixture.detectChanges();
+    document.dispatchEvent(event);
+    expect(storage).toBeUndefined();
+  }
 });

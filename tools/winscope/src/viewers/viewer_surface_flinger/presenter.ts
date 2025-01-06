@@ -44,7 +44,10 @@ import {
   SfSummaryProperty,
 } from 'viewers/common/curated_properties';
 import {DisplayIdentifier} from 'viewers/common/display_identifier';
-import {HierarchyPresenter} from 'viewers/common/hierarchy_presenter';
+import {
+  HierarchyPresenter,
+  SelectedTree,
+} from 'viewers/common/hierarchy_presenter';
 import {PropertiesPresenter} from 'viewers/common/properties_presenter';
 import {RectsPresenter} from 'viewers/common/rects_presenter';
 import {TextFilter} from 'viewers/common/text_filter';
@@ -186,10 +189,12 @@ the default for its data type.`,
   }
 
   protected override getOverrideDisplayName(
-    selected: [Trace<HierarchyTreeNode>, HierarchyTreeNode],
+    selected: SelectedTree,
   ): string | undefined {
-    return selected[1].isRoot()
-      ? this.hierarchyPresenter.getCurrentHierarchyTreeNames(selected[0])?.at(0)
+    return selected.tree.isRoot()
+      ? this.hierarchyPresenter
+          .getCurrentHierarchyTreeNames(selected.trace)
+          ?.at(0)
       : undefined;
   }
 
@@ -225,11 +230,11 @@ the default for its data type.`,
     const propertiesTree = this.propertiesPresenter.getPropertiesTree();
 
     if (selectedHierarchyTree && propertiesTree) {
-      if (selectedHierarchyTree[1].isRoot()) {
+      if (selectedHierarchyTree.tree.isRoot()) {
         this.curatedProperties = undefined;
       } else {
         this.curatedProperties = this.getCuratedProperties(
-          selectedHierarchyTree[1],
+          selectedHierarchyTree.tree,
           propertiesTree,
         );
       }

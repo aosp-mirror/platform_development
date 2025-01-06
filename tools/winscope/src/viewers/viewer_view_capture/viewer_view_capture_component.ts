@@ -57,7 +57,7 @@ import {UiData} from './ui_data';
       <hierarchy-view
         class="hierarchy-view"
         [class.collapsed]="sections.isSectionCollapsed(CollapsibleSectionType.HIERARCHY)"
-        [subtrees]="inputData?.hierarchyTrees"
+        [trees]="inputData?.hierarchyTrees ?? []"
         [dependencies]="inputData?.dependencies ?? []"
         [highlightedItem]="inputData?.highlightedItem ?? ''"
         [pinnedItems]="inputData?.pinnedItems ?? []"

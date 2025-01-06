@@ -15,6 +15,7 @@
  */
 
 import {assertDefined} from 'common/assert_utils';
+import {InMemoryStorage} from 'common/store/in_memory_storage';
 import {TimestampConverterUtils} from 'common/time/test_utils';
 import {HierarchyTreeBuilder} from 'test/unit/hierarchy_tree_builder';
 import {TraceBuilder} from 'test/unit/trace_builder';
@@ -85,12 +86,30 @@ describe('HierarchyPresenter', () => {
   const tree3 = new HierarchyTreeBuilder()
     .setId('Test Trace 2')
     .setName('entry')
+    .setChildren([
+      {
+        id: '2',
+        name: 'Parent2',
+        properties: {isComputedVisible: false},
+        children: [
+          {
+            id: '3',
+            name: 'Child3',
+            properties: {isComputedVisible: true},
+            children: [
+              {id: '4', name: 'Child4', properties: {isComputedVisible: false}},
+            ],
+          },
+        ],
+      },
+    ])
     .build();
   const secondTrace = new TraceBuilder<HierarchyTreeNode>()
     .setType(TraceType.SURFACE_FLINGER)
     .setEntries([tree3])
     .setTimestamps([timestamp1])
     .build();
+
   let presenter: HierarchyPresenter;
 
   beforeAll(async () => {
@@ -110,7 +129,7 @@ describe('HierarchyPresenter', () => {
 
   it('updates current and previous entries for trace', async () => {
     expect(presenter.getAllCurrentHierarchyTrees()?.length).toEqual(0);
-    expect(presenter.getAllFormattedTrees()).toBeUndefined();
+    expect(presenter.getAllFormattedTrees()?.length).toEqual(0);
 
     await presenter.applyTracePositionUpdate(
       [trace.getEntry(1), secondTrace.getEntry(0)],
@@ -142,14 +161,18 @@ describe('HierarchyPresenter', () => {
 
   it('explicitly sets selected tree', async () => {
     expect(presenter.getSelectedTree()).toBeUndefined();
-    presenter.setSelectedTree([trace, tree1]);
-    expect(presenter.getSelectedTree()).toEqual([trace, tree1]);
+    const selectedTree = {trace, tree: tree1, index: 0};
+    presenter.setSelectedTree(selectedTree);
+    expect(presenter.getSelectedTree()).toEqual(selectedTree);
     presenter.setSelectedTree(undefined);
     expect(presenter.getSelectedTree()).toBeUndefined();
   });
 
   it('adds current hierarchy trees', async () => {
-    await presenter.addCurrentHierarchyTrees([trace, [tree1]], undefined);
+    await presenter.addCurrentHierarchyTrees(
+      {trace, trees: [tree1]},
+      undefined,
+    );
     expect(presenter.getCurrentEntryForTrace(trace)).toBeUndefined();
     expect(presenter.getCurrentHierarchyTreesForTrace(trace)?.length).toEqual(
       1,
@@ -158,18 +181,40 @@ describe('HierarchyPresenter', () => {
     expect(presenter.getAllFormattedTrees()?.length).toEqual(1);
     expect(presenter.getFormattedTreesByTrace(trace)?.length).toEqual(1);
 
-    await presenter.addCurrentHierarchyTrees([secondTrace, [tree3]], tree3.id);
-    expect(presenter.getSelectedTree()).toEqual([secondTrace, tree3]);
+    const entry = secondTrace.getEntry(0);
+    await presenter.addCurrentHierarchyTrees(
+      {trace: secondTrace, trees: [tree3], entry},
+      tree3.id,
+    );
+    expect(presenter.getSelectedTree()).toEqual({
+      trace: secondTrace,
+      tree: tree3,
+      index: 1,
+    });
 
-    await presenter.addCurrentHierarchyTrees([trace, [tree2]], undefined);
+    await presenter.addCurrentHierarchyTrees(
+      {trace, trees: [tree2]},
+      undefined,
+    );
     expect(presenter.getCurrentHierarchyTreesForTrace(trace)?.length).toEqual(
       2,
     );
+    const formattedTrees = assertDefined(presenter.getAllFormattedTrees());
     expect(presenter.getAllCurrentHierarchyTrees()).toEqual([
-      [trace, [tree1, tree2]],
-      [secondTrace, [tree3]],
+      {
+        trace,
+        trees: [tree1, tree2],
+        formattedTrees: formattedTrees.slice(0, 2),
+        entry: undefined,
+      },
+      {
+        trace: secondTrace,
+        trees: [tree3],
+        formattedTrees: formattedTrees.slice(2),
+        entry,
+      },
     ]);
-    expect(presenter.getAllFormattedTrees()?.length).toEqual(3);
+    expect(formattedTrees.length).toEqual(3);
     expect(presenter.getFormattedTreesByTrace(trace)?.length).toEqual(2);
   });
 
@@ -315,10 +360,11 @@ describe('HierarchyPresenter', () => {
 
   it('propagates item selection to new entry', async () => {
     await applyTracePositionUpdate(0, '1 Parent1');
-    expect(presenter.getSelectedTree()).toEqual([
+    expect(presenter.getSelectedTree()).toEqual({
       trace,
-      assertDefined(tree1.getChildByName('Parent1')),
-    ]);
+      tree: assertDefined(tree1.getChildByName('Parent1')),
+      index: 0,
+    });
   });
 
   it('handles pinned item change', () => {
@@ -361,6 +407,9 @@ describe('HierarchyPresenter', () => {
     await presenter.applyHierarchyUserOptionsChange(userOptions);
     expect(getTotalHierarchyChildren()).toEqual(2);
     expect(presenter.getPinnedItems()).toEqual([nonVisibleNode]); // keeps pinned node
+
+    presenter.clear(); // robust to no current entries
+    await presenter.applyHierarchyUserOptionsChange(userOptions);
   });
 
   it('filters hierarchy tree by search string', async () => {
@@ -382,6 +431,9 @@ describe('HierarchyPresenter', () => {
     expect(presenter.getTextFilter()).toEqual(filter);
     expect(getTotalHierarchyChildren()).toEqual(2);
     expect(presenter.getPinnedItems()).toEqual([nonMatchNode]); // keeps pinned node
+
+    presenter.clear(); // robust to no current entries
+    await presenter.applyHierarchyFilterChange(filter);
   });
 
   it('simplifies names in hierarchy tree based on user option', async () => {
@@ -401,22 +453,31 @@ describe('HierarchyPresenter', () => {
     expect(presenter.getSelectedTree()).toBeUndefined();
     presenter.applyHighlightedIdChange('1 Parent1');
     expect(presenter.getSelectedTree()).toBeDefined();
+    presenter.clear(); // robust to no current entries
+    presenter.applyHighlightedIdChange('1 Parent1');
   });
 
   it('applies highlighted node change', async () => {
     await applyTracePositionUpdate();
-    const node = getFormattedTree();
-    node.setIsOldNode(true);
-    presenter.applyHighlightedNodeChange(node);
+    const tree = getFormattedTree();
+    tree.setIsOldNode(true);
+    presenter.applyHighlightedNodeChange(tree);
     expect(presenter.getSelectedTree()).toBeUndefined();
 
-    node.setDiff(DiffType.DELETED);
-    presenter.applyHighlightedNodeChange(node);
-    expect(presenter.getSelectedTree()).toEqual([trace, node]);
+    tree.setDiff(DiffType.DELETED);
+    presenter.applyHighlightedNodeChange(tree);
+    expect(presenter.getSelectedTree()).toEqual({trace, tree, index: 0});
 
-    const newNode = assertDefined(node.getChildByName('Parent1'));
+    const newNode = assertDefined(tree.getChildByName('Parent1'));
     presenter.applyHighlightedNodeChange(newNode);
-    expect(presenter.getSelectedTree()).toEqual([trace, newNode]);
+    expect(presenter.getSelectedTree()).toEqual({
+      trace,
+      tree: newNode,
+      index: 0,
+    });
+
+    presenter.clear(); // robust to no current entries
+    presenter.applyHighlightedNodeChange(tree);
   });
 
   it('can be cleared and re-populated', async () => {
@@ -445,7 +506,10 @@ describe('HierarchyPresenter', () => {
     expect(presenter.getSelectedTree()).toBeUndefined();
     expect(presenter.getCurrentHierarchyTreeNames(trace)).toBeUndefined();
 
-    await presenter.addCurrentHierarchyTrees([trace, [tree1]], '1 Parent1');
+    await presenter.addCurrentHierarchyTrees(
+      {trace, trees: [tree1]},
+      '1 Parent1',
+    );
     expect(presenter.getAllCurrentHierarchyTrees()).toBeDefined();
     expect(presenter.getAllFormattedTrees()).toBeDefined();
     expect(presenter.getSelectedTree()).toBeDefined();
@@ -454,15 +518,156 @@ describe('HierarchyPresenter', () => {
     expect(presenter.getCurrentHierarchyTreeNames(trace)).toBeUndefined();
   });
 
-  async function applyTracePositionUpdate(index = 0, highlightedItem = '') {
-    await presenter.applyTracePositionUpdate(
-      [trace.getEntry(index)],
-      highlightedItem,
+  it('get adjacent node robust to no current trees', () => {
+    const storage = new InMemoryStorage();
+    expect(presenter.getAdjacentVisibleNode(storage, false)).toBeUndefined();
+    expect(presenter.getAdjacentVisibleNode(storage, true)).toBeUndefined();
+  });
+
+  it('gets next visible node via DFS', async () => {
+    await applyTracePositionUpdate();
+    const p1 = assertDefined(getFormattedTree().getChildByName('Parent1'));
+    presenter.applyHighlightedNodeChange(p1);
+
+    const storage = new InMemoryStorage();
+    const adj = presenter.getAdjacentVisibleNode(storage, false);
+    expect(adj?.id).toEqual('3 Child3');
+
+    // next node is hidden so recursively finds next visible node
+    storage.add(p1.id + '.collapsedState', 'true');
+    expect(presenter.getAdjacentVisibleNode(storage, false)?.id).toEqual(
+      '2 Parent2',
     );
+  });
+
+  it('gets next visible node as first root if no node selected', async () => {
+    await applyTracePositionUpdate();
+    const adj = presenter.getAdjacentVisibleNode(new InMemoryStorage(), false);
+    expect(adj?.id).toEqual('Test Trace entry');
+  });
+
+  it('gets next visible node if selected node is final node of tree', async () => {
+    await applyTracePositionUpdate(0, undefined, secondTrace);
+    const p2 = assertDefined(
+      getFormattedTree(secondTrace).getChildByName('Parent2'),
+    );
+    presenter.applyHighlightedNodeChange(
+      assertDefined(p2.getChildByName('Child3')?.getChildByName('Child4')),
+    );
+    const storage = new InMemoryStorage();
+    // already at final node of tree - returns undefined
+    expect(presenter.getAdjacentVisibleNode(storage, false)).toBeUndefined();
+
+    // already at final node of tree - node is hidden so returns non-hidden parent
+    const storeKey = p2.id + '.collapsedState';
+    storage.add(storeKey, 'true');
+    expect(presenter.getAdjacentVisibleNode(storage, false)?.id).toEqual(p2.id);
+    storage.clear(storeKey);
+
+    // already at final node of first tree - returns next tree root
+    await presenter.applyTracePositionUpdate(
+      [trace.getEntry(0), secondTrace.getEntry(0)],
+      '',
+    );
+    presenter.applyHighlightedNodeChange(
+      assertDefined(getFormattedTree().getChildByName('Parent2')),
+    );
+    expect(presenter.getAdjacentVisibleNode(storage, false)?.id).toEqual(
+      'Test Trace 2 entry',
+    );
+  });
+
+  it('gets next visible node if selected node is not formatted', async () => {
+    await applyTracePositionUpdate();
+    const storage = new InMemoryStorage();
+    // selected tree id present in current trees so returns next non hidden node
+    presenter.applyHighlightedIdChange('1 Parent1');
+    expect(presenter.getAdjacentVisibleNode(storage, false)?.id).toEqual(
+      '3 Child3',
+    );
+    // selected tree id not present in current trees so returns first tree root
+    presenter.setSelectedTree({trace: secondTrace, tree: tree3, index: 0});
+    expect(presenter.getAdjacentVisibleNode(storage, false)?.id).toEqual(
+      'Test Trace entry',
+    );
+  });
+
+  it('gets prev visible node via DFS', async () => {
+    await applyTracePositionUpdate(0, undefined, secondTrace);
+    const p2 = getFormattedTree(secondTrace).getChildByName('Parent2');
+    const c4 = assertDefined(
+      p2?.getChildByName('Child3')?.getChildByName('Child4'),
+    );
+    presenter.applyHighlightedNodeChange(c4);
+
+    const storage = new InMemoryStorage();
+    const adj = presenter.getAdjacentVisibleNode(storage, true);
+    expect(adj?.id).toEqual('3 Child3');
+
+    // prev node is hidden so recursively finds prev visible node
+    storage.add(p2?.id + '.collapsedState', 'true');
+    expect(presenter.getAdjacentVisibleNode(storage, true)?.id).toEqual(
+      '2 Parent2',
+    );
+  });
+
+  it('gets prev visible node as first root if no node selected', async () => {
+    await applyTracePositionUpdate();
+    const adj = presenter.getAdjacentVisibleNode(new InMemoryStorage(), true);
+    expect(adj?.id).toEqual('Test Trace entry');
+  });
+
+  it('gets prev visible node if selected node is first node of tree', async () => {
+    await presenter.applyTracePositionUpdate(
+      [trace.getEntry(0), secondTrace.getEntry(0)],
+      '',
+    );
+    const formattedTree = getFormattedTree();
+    presenter.applyHighlightedNodeChange(formattedTree);
+    const storage = new InMemoryStorage();
+
+    // already at first node of first tree - returns undefined
+    expect(presenter.getAdjacentVisibleNode(storage, true)).toBeUndefined();
+
+    // already at first node of second tree - returns final child of previous tree
+    presenter.applyHighlightedNodeChange(getFormattedTree(secondTrace));
+    expect(presenter.getAdjacentVisibleNode(storage, true)?.id).toEqual(
+      '2 Parent2',
+    );
+
+    // already at first node of second tree - returns final non-collapsed child of previous tree
+    storage.add(formattedTree.id + '.collapsedState', 'true');
+    expect(presenter.getAdjacentVisibleNode(storage, true)?.id).toEqual(
+      'Test Trace entry',
+    );
+  });
+
+  it('gets prev visible node if selected node is not formatted', async () => {
+    await applyTracePositionUpdate();
+    const selectedTree = assertDefined(
+      getFormattedTree().getChildByName('Parent1')?.getChildByName('Child3'),
+    );
+    presenter.applyHighlightedIdChange(selectedTree.id);
+    const storage = new InMemoryStorage();
+
+    // selected tree id present in current trees so returns prev non hidden node
+    expect(presenter.getAdjacentVisibleNode(storage, true)?.id).toEqual(
+      '1 Parent1',
+    );
+
+    // selected tree id not present in current trees so returns first tree root
+    presenter.setSelectedTree({trace: secondTrace, tree: tree3, index: 0});
+    expect(presenter.getAdjacentVisibleNode(storage, true)?.id).toEqual(
+      'Test Trace entry',
+    );
+  });
+
+  async function applyTracePositionUpdate(index = 0, item = '', t = trace) {
+    await presenter.applyTracePositionUpdate([t.getEntry(index)], item);
   }
 
-  function getFormattedTree() {
-    return assertDefined(presenter.getFormattedTreesByTrace(trace))[0];
+  function getFormattedTree(t = trace) {
+    return assertDefined(presenter.getFormattedTreesByTrace(t))[0];
   }
 
   function getTotalHierarchyChildren() {

@@ -15,6 +15,7 @@
  */
 
 import {assertDefined} from 'common/assert_utils';
+import {InMemoryStorage} from 'common/store/in_memory_storage';
 import {Trace, TraceEntry} from 'trace/trace';
 import {TraceType} from 'trace/trace_type';
 import {HierarchyTreeNode} from 'trace/tree_node/hierarchy_tree_node';
@@ -43,35 +44,31 @@ export type GetHierarchyTreeNameType = (
   tree: HierarchyTreeNode,
 ) => string;
 
+type FormattedTreeIndex = number;
+
+export interface SelectedTree {
+  trace: Trace<HierarchyTreeNode>;
+  tree: HierarchyTreeNode;
+  index: FormattedTreeIndex;
+}
+
+export interface TraceAndTrees {
+  trace: Trace<HierarchyTreeNode>;
+  trees: HierarchyTreeNode[];
+  entry?: TraceEntry<HierarchyTreeNode>;
+  formattedTrees?: UiHierarchyTreeNode[];
+  displayNames?: string[];
+}
+
 export class HierarchyPresenter {
   private hierarchyFilter: TreeNodeFilter;
   private pinnedItems: UiHierarchyTreeNode[] = [];
   private pinnedIds: string[] = [];
 
-  private previousEntries:
-    | Map<Trace<HierarchyTreeNode>, TraceEntry<HierarchyTreeNode>>
-    | undefined;
-  private previousHierarchyTrees? = new Map<
-    Trace<HierarchyTreeNode>,
-    HierarchyTreeNode
-  >();
-
-  private currentEntries:
-    | Map<Trace<HierarchyTreeNode>, TraceEntry<HierarchyTreeNode>>
-    | undefined;
-  private currentHierarchyTrees? = new Map<
-    Trace<HierarchyTreeNode>,
-    HierarchyTreeNode[]
-  >();
-  private currentHierarchyTreeNames:
-    | Map<Trace<HierarchyTreeNode>, string[]>
-    | undefined;
-  private currentFormattedTrees:
-    | Map<Trace<HierarchyTreeNode>, UiHierarchyTreeNode[]>
-    | undefined;
-  private selectedHierarchyTree:
-    | [Trace<HierarchyTreeNode>, HierarchyTreeNode]
-    | undefined;
+  private previousTrees?: TraceAndTrees[] = [];
+  private currentTrees?: TraceAndTrees[] = [];
+  private selectedTree: SelectedTree | undefined;
+  private treeStore: InMemoryStorage | undefined;
 
   constructor(
     private userOptions: UserOptions,
@@ -96,49 +93,43 @@ export class HierarchyPresenter {
   getCurrentEntryForTrace(
     trace: Trace<HierarchyTreeNode>,
   ): TraceEntry<HierarchyTreeNode> | undefined {
-    return this.currentEntries?.get(trace);
+    return this.getCurrentTreesByTrace(trace)?.entry;
   }
 
   getCurrentHierarchyTreesForTrace(
     trace: Trace<HierarchyTreeNode>,
   ): HierarchyTreeNode[] | undefined {
-    return this.currentHierarchyTrees?.get(trace);
+    return this.getCurrentTreesByTrace(trace)?.trees;
   }
 
-  getAllCurrentHierarchyTrees():
-    | Array<[Trace<HierarchyTreeNode>, HierarchyTreeNode[]]>
-    | undefined {
-    return this.currentHierarchyTrees
-      ? Array.from(this.currentHierarchyTrees.entries())
-      : undefined;
+  getAllCurrentHierarchyTrees(): TraceAndTrees[] | undefined {
+    return this.currentTrees;
   }
 
   getCurrentHierarchyTreeNames(
     trace: Trace<HierarchyTreeNode>,
   ): string[] | undefined {
-    return this.currentHierarchyTreeNames?.get(trace);
+    return this.getCurrentTreesByTrace(trace)?.displayNames;
   }
 
   async addCurrentHierarchyTrees(
-    value: [Trace<HierarchyTreeNode>, HierarchyTreeNode[]],
+    value: TraceAndTrees,
     highlightedItem: string | undefined,
   ) {
-    const [trace, trees] = value;
-    if (!this.currentHierarchyTrees) {
-      this.currentHierarchyTrees = new Map();
+    const {trace, trees, entry} = value;
+    if (!this.currentTrees) {
+      this.currentTrees = [];
     }
-    const curr = this.currentHierarchyTrees.get(trace);
+    let curr = this.getCurrentTreesByTrace(trace);
     if (curr) {
-      curr.push(...trees);
+      curr.trees.push(...trees);
     } else {
-      this.currentHierarchyTrees.set(trace, trees);
+      curr = {trace, trees, entry};
+      this.currentTrees.push(curr);
     }
 
-    if (!this.currentFormattedTrees) {
-      this.currentFormattedTrees = new Map();
-    }
-    if (!this.currentFormattedTrees.get(trace)) {
-      this.currentFormattedTrees.set(trace, []);
+    if (!curr.formattedTrees) {
+      curr.formattedTrees = [];
     }
 
     for (let i = 0; i < trees.length; i++) {
@@ -148,10 +139,10 @@ export class HierarchyPresenter {
         tree,
         i,
       );
-      assertDefined(this.currentFormattedTrees.get(trace)).push(formattedTree);
+      curr.formattedTrees.push(formattedTree);
     }
 
-    if (!this.selectedHierarchyTree && highlightedItem) {
+    if (!this.selectedTree && highlightedItem) {
       this.applyHighlightedIdChange(highlightedItem);
     }
   }
@@ -159,7 +150,7 @@ export class HierarchyPresenter {
   getPreviousHierarchyTreeForTrace(
     trace: Trace<HierarchyTreeNode>,
   ): HierarchyTreeNode | undefined {
-    return this.previousHierarchyTrees?.get(trace);
+    return this.previousTrees?.find((p) => p.trace === trace)?.trees[0];
   }
 
   getPinnedItems(): UiHierarchyTreeNode[] {
@@ -167,164 +158,163 @@ export class HierarchyPresenter {
   }
 
   getAllFormattedTrees(): UiHierarchyTreeNode[] | undefined {
-    if (!this.currentFormattedTrees || this.currentFormattedTrees.size === 0) {
+    if (!this.currentTrees) {
       return undefined;
     }
-    return Array.from(this.currentFormattedTrees.values()).flat();
+    const trees: UiHierarchyTreeNode[] = [];
+    this.currentTrees.forEach((curr) => {
+      if (curr.formattedTrees) {
+        trees.push(...curr.formattedTrees);
+      }
+    });
+    return trees;
   }
 
   getFormattedTreesByTrace(
     trace: Trace<HierarchyTreeNode>,
   ): UiHierarchyTreeNode[] | undefined {
-    return this.currentFormattedTrees?.get(trace);
+    return this.getCurrentTreesByTrace(trace)?.formattedTrees;
   }
 
-  getSelectedTree(): [Trace<HierarchyTreeNode>, HierarchyTreeNode] | undefined {
-    return this.selectedHierarchyTree;
+  getSelectedTree(): SelectedTree | undefined {
+    return this.selectedTree;
   }
 
-  setSelectedTree(
-    value: [Trace<HierarchyTreeNode>, HierarchyTreeNode] | undefined,
-  ) {
-    this.selectedHierarchyTree = value;
+  setSelectedTree(value: SelectedTree | undefined) {
+    this.selectedTree = value;
+  }
+
+  getAdjacentVisibleNode(
+    treeStore: InMemoryStorage,
+    getPrevious: boolean,
+  ): UiHierarchyTreeNode | undefined {
+    if (!this.selectedTree) {
+      return this.currentTrees?.at(0)?.formattedTrees?.at(0);
+    }
+    let selectedTree: UiHierarchyTreeNode;
+    if (this.selectedTree.tree instanceof UiHierarchyTreeNode) {
+      selectedTree = this.selectedTree.tree;
+    } else {
+      selectedTree =
+        (this.findSelectedTreeById(this.selectedTree.tree.id, true)
+          ?.tree as UiHierarchyTreeNode) ?? undefined;
+      if (!selectedTree) {
+        return this.currentTrees?.at(0)?.formattedTrees?.at(0);
+      }
+    }
+
+    this.treeStore = treeStore;
+    const adjNode = this.findAdjacentNonHiddenNode(
+      selectedTree,
+      getPrevious ? (n) => n.getPrevDfs() : (n) => n.getNextDfs(),
+    );
+    if (adjNode) {
+      return adjNode;
+    }
+    const adjacentNode = getPrevious
+      ? this.getPrevNonHiddenNode(this.selectedTree.index)
+      : this.getNextNonHiddenNode(selectedTree, this.selectedTree.index);
+    this.treeStore = undefined;
+    return adjacentNode;
   }
 
   async updatePreviousHierarchyTrees() {
-    if (!this.previousEntries) {
-      this.previousHierarchyTrees = undefined;
+    if (!this.previousTrees) {
       return;
     }
-    const previousTrees = new Map<
-      Trace<HierarchyTreeNode>,
-      HierarchyTreeNode
-    >();
-    for (const previousEntry of this.previousEntries.values()) {
-      const trace = previousEntry.getFullTrace();
+    for (const prev of this.previousTrees) {
+      const previousEntry = assertDefined(prev.entry);
       const previousTree = await previousEntry.getValue();
-      previousTrees.set(trace, previousTree);
+      prev.trees = [previousTree];
     }
-    this.previousHierarchyTrees = previousTrees;
   }
 
   async applyTracePositionUpdate(
     entries: Array<TraceEntry<HierarchyTreeNode>>,
     highlightedItem: string | undefined,
   ): Promise<void> {
-    const currEntries = new Map<
-      Trace<HierarchyTreeNode>,
-      TraceEntry<HierarchyTreeNode>
-    >();
-    const currTrees = new Map<Trace<HierarchyTreeNode>, HierarchyTreeNode[]>();
-    const prevEntries = new Map<
-      Trace<HierarchyTreeNode>,
-      TraceEntry<HierarchyTreeNode>
-    >();
+    const currTrees: TraceAndTrees[] = [];
+    const prevTrees: TraceAndTrees[] = [];
 
     for (const entry of entries) {
       const trace = entry.getFullTrace();
-      currEntries.set(trace, entry);
-
       const tree = await entry.getValue();
-      currTrees.set(trace, [tree]);
+      currTrees.push({trace, trees: [tree], entry});
 
       const entryIndex = entry.getIndex();
       if (entryIndex > 0) {
-        prevEntries.set(trace, trace.getEntry(entryIndex - 1));
+        prevTrees.push({
+          trace,
+          trees: [],
+          entry: trace.getEntry(entryIndex - 1),
+        });
       }
     }
-    this.currentEntries = currEntries.size > 0 ? currEntries : undefined;
-    this.currentHierarchyTrees = currTrees.size > 0 ? currTrees : undefined;
-    this.previousEntries = prevEntries.size > 0 ? prevEntries : undefined;
-    this.previousHierarchyTrees =
-      prevEntries.size > 0
-        ? new Map<Trace<HierarchyTreeNode>, HierarchyTreeNode>()
-        : undefined;
-    this.selectedHierarchyTree = undefined;
+    this.currentTrees = currTrees.length > 0 ? currTrees : undefined;
+    this.previousTrees = prevTrees.length > 0 ? prevTrees : undefined;
+    this.selectedTree = undefined;
 
-    const names = new Map<Trace<HierarchyTreeNode>, string[]>();
     if (this.getHierarchyTreeNameStrategy && entries.length > 0) {
       entries.forEach((entry) => {
         const trace = entry.getFullTrace();
-        const trees = this.currentHierarchyTrees?.get(trace);
-        if (trees) {
-          names.set(
-            entry.getFullTrace(),
-            trees.map((tree) =>
-              assertDefined(this.getHierarchyTreeNameStrategy)(entry, tree),
-            ),
+        const curr = this.getCurrentTreesByTrace(trace);
+        if (curr) {
+          curr.displayNames = curr.trees.map((tree) =>
+            assertDefined(this.getHierarchyTreeNameStrategy)(entry, tree),
           );
         }
       });
     }
-    this.currentHierarchyTreeNames = names;
 
     if (this.userOptions['showDiff']?.isUnavailable !== undefined) {
       this.userOptions['showDiff'].isUnavailable =
-        this.previousEntries === undefined;
+        this.previousTrees === undefined;
     }
 
-    if (this.currentHierarchyTrees) {
-      this.currentFormattedTrees = assertDefined(
-        await this.formatHierarchyTreesAndUpdatePinnedItems(
-          this.currentHierarchyTrees,
-        ),
-      );
+    if (this.currentTrees) {
+      await this.formatHierarchyTreesAndUpdatePinnedItems();
 
       if (!highlightedItem && this.forceSelectFirstNode) {
-        const firstTrees = Array.from(this.currentHierarchyTrees.entries())[0];
-        this.selectedHierarchyTree = [firstTrees[0], firstTrees[1][0]];
-      } else if (highlightedItem && this.currentFormattedTrees) {
+        const {trace, trees: firstTrees} = this.currentTrees[0];
+        this.selectedTree = {
+          trace,
+          tree: firstTrees[0],
+          index: 0,
+        };
+      } else if (highlightedItem) {
         this.applyHighlightedIdChange(highlightedItem);
       }
     }
   }
 
   applyHighlightedIdChange(newId: string) {
-    if (!this.currentHierarchyTrees) {
-      return;
-    }
-    const idMatchFilter = UiTreeUtils.makeIdMatchFilter(newId);
-    for (const [trace, trees] of this.currentHierarchyTrees) {
-      let highlightedNode: HierarchyTreeNode | undefined;
-      trees.find((t) => {
-        const target = t.findDfs(idMatchFilter);
-        if (target) {
-          highlightedNode = target;
-          return true;
-        }
-        return false;
-      });
-      if (highlightedNode) {
-        this.selectedHierarchyTree = [trace, highlightedNode];
-        break;
-      }
+    const tree = this.findSelectedTreeById(newId, false);
+    if (tree) {
+      this.selectedTree = tree;
     }
   }
 
-  applyHighlightedNodeChange(selectedTree: UiHierarchyTreeNode) {
-    if (!this.currentHierarchyTrees) {
+  applyHighlightedNodeChange(tree: UiHierarchyTreeNode) {
+    if (!this.currentTrees) {
       return;
     }
-    if (UiTreeUtils.shouldGetProperties(selectedTree)) {
-      const idMatchFilter = UiTreeUtils.makeIdMatchFilter(selectedTree.id);
-      for (const [trace, trees] of this.currentHierarchyTrees) {
-        const hasTree = trees.find((t) => t.findDfs(idMatchFilter));
-        if (hasTree) {
-          this.selectedHierarchyTree = [trace, selectedTree];
+    if (UiTreeUtils.shouldGetProperties(tree)) {
+      const idMatchFilter = UiTreeUtils.makeIdMatchFilter(tree.id);
+      let offset = 0;
+      for (const {trace, trees} of this.currentTrees) {
+        const treeIndex = trees.findIndex((t) => t.findDfs(idMatchFilter));
+        if (treeIndex !== -1) {
+          this.selectedTree = {trace, tree, index: offset + treeIndex};
           break;
         }
+        offset += trees.length;
       }
     }
   }
 
   async applyHierarchyUserOptionsChange(userOptions: UserOptions) {
     this.userOptions = userOptions;
-    if (this.currentHierarchyTrees) {
-      this.currentFormattedTrees =
-        await this.formatHierarchyTreesAndUpdatePinnedItems(
-          this.currentHierarchyTrees,
-        );
-    }
+    await this.formatHierarchyTreesAndUpdatePinnedItems();
   }
 
   async applyHierarchyFilterChange(textFilter: TextFilter) {
@@ -332,12 +322,7 @@ export class HierarchyPresenter {
     this.hierarchyFilter = UiTreeUtils.makeNodeFilter(
       textFilter.getFilterPredicate(),
     );
-    if (this.currentHierarchyTrees) {
-      this.currentFormattedTrees =
-        await this.formatHierarchyTreesAndUpdatePinnedItems(
-          this.currentHierarchyTrees,
-        );
-    }
+    await this.formatHierarchyTreesAndUpdatePinnedItems();
   }
 
   getTextFilter(): TextFilter {
@@ -358,13 +343,9 @@ export class HierarchyPresenter {
   }
 
   clear() {
-    this.previousEntries = undefined;
-    this.previousHierarchyTrees = undefined;
-    this.currentEntries = undefined;
-    this.currentHierarchyTrees = undefined;
-    this.currentHierarchyTreeNames = undefined;
-    this.currentFormattedTrees = undefined;
-    this.selectedHierarchyTree = undefined;
+    this.previousTrees = undefined;
+    this.currentTrees = undefined;
+    this.selectedTree = undefined;
   }
 
   private updatePinnedIds(newId: string) {
@@ -375,16 +356,14 @@ export class HierarchyPresenter {
     }
   }
 
-  private async formatHierarchyTreesAndUpdatePinnedItems(
-    hierarchyTrees: Map<Trace<HierarchyTreeNode>, HierarchyTreeNode[]>,
-  ): Promise<Map<Trace<HierarchyTreeNode>, UiHierarchyTreeNode[]> | undefined> {
+  private async formatHierarchyTreesAndUpdatePinnedItems(): Promise<void> {
+    if (!this.currentTrees) {
+      return;
+    }
     this.pinnedItems = [];
-    const formattedTrees = new Map<
-      Trace<HierarchyTreeNode>,
-      UiHierarchyTreeNode[]
-    >();
 
-    for (const [trace, trees] of hierarchyTrees.entries()) {
+    for (const curr of this.currentTrees) {
+      const {trees, trace} = curr;
       const formatted = [];
       for (let i = 0; i < trees.length; i++) {
         const tree = trees[i];
@@ -395,9 +374,8 @@ export class HierarchyPresenter {
         );
         formatted.push(formattedTree);
       }
-      formattedTrees.set(trace, formatted);
+      curr.formattedTrees = formatted;
     }
-    return formattedTrees;
   }
 
   private async formatTreeAndUpdatePinnedItems(
@@ -412,6 +390,7 @@ export class HierarchyPresenter {
     );
     this.pinnedItems.push(...this.extractPinnedItems(formattedTree));
     const filteredTree = this.filterTree(formattedTree);
+    filteredTree.assignDfsOrder();
     return filteredTree;
   }
 
@@ -426,9 +405,8 @@ export class HierarchyPresenter {
       uiTree.forEachNodeDfs((node) => node.setShowHeading(false));
     }
     if (hierarchyTreeIndex !== undefined) {
-      const displayName = this.currentHierarchyTreeNames
-        ?.get(trace)
-        ?.at(hierarchyTreeIndex);
+      const displayName =
+        this.getCurrentHierarchyTreeNames(trace)?.at(hierarchyTreeIndex);
       if (displayName) uiTree.setDisplayName(displayName);
     }
 
@@ -440,10 +418,11 @@ export class HierarchyPresenter {
       this.userOptions['showDiff']?.enabled &&
       !this.userOptions['showDiff']?.isUnavailable
     ) {
-      let prevTree = this.previousHierarchyTrees?.get(trace);
-      if (this.previousHierarchyTrees && !prevTree) {
-        prevTree = await this.previousEntries?.get(trace)?.getValue();
-        if (prevTree) this.previousHierarchyTrees.set(trace, prevTree);
+      const prev = this.previousTrees?.find((p) => p.trace === trace);
+      let prevTree = prev?.trees[0];
+      if (this.previousTrees && prev?.entry && !prevTree) {
+        prevTree = (await prev.entry.getValue()) as HierarchyTreeNode;
+        prev.trees = [prevTree];
       }
       const prevEntryUiTree = prevTree
         ? UiHierarchyTreeNode.from(prevTree)
@@ -500,6 +479,115 @@ export class HierarchyPresenter {
       predicates.push(UiTreeUtils.isVisible);
     }
     return formatter.addOperation(new Filter(predicates, true)).format();
+  }
+
+  private findSelectedTreeById(
+    id: string,
+    searchFormatted: boolean,
+  ): SelectedTree | undefined {
+    if (!this.currentTrees) {
+      return undefined;
+    }
+    const idMatchFilter = UiTreeUtils.makeIdMatchFilter(id);
+    let indexOffset = 0;
+    for (const curr of this.currentTrees) {
+      const treesToSearch = searchFormatted
+        ? curr.formattedTrees ?? []
+        : curr.trees;
+      let target: HierarchyTreeNode | undefined;
+      const treeIndex = treesToSearch.findIndex((t) => {
+        target = t.findDfs(idMatchFilter);
+        if (target) {
+          return true;
+        }
+        return false;
+      });
+      if (target) {
+        return {
+          trace: curr.trace,
+          tree: target,
+          index: indexOffset + treeIndex,
+        };
+      }
+      indexOffset += treesToSearch.length;
+    }
+    return undefined;
+  }
+
+  private findAdjacentNonHiddenNode(
+    node: UiHierarchyTreeNode,
+    getAdj: (n: UiHierarchyTreeNode) => UiHierarchyTreeNode | undefined,
+  ): UiHierarchyTreeNode | undefined {
+    const adjNode = getAdj(node);
+    if (adjNode && this.isHidden(adjNode)) {
+      return this.findAdjacentNonHiddenNode(adjNode, getAdj);
+    }
+    return adjNode;
+  }
+
+  private getPrevNonHiddenNode(
+    index: FormattedTreeIndex,
+  ): UiHierarchyTreeNode | undefined {
+    if (index > 0) {
+      const trees = assertDefined(this.getAllFormattedTrees());
+      return this.findFinalChild(trees[index - 1]);
+    }
+    return undefined;
+  }
+
+  private findFinalChild(node: UiHierarchyTreeNode): UiHierarchyTreeNode {
+    const children = node.getAllChildren();
+    if (this.isCollapsed(node) || children.length === 0) {
+      return node;
+    }
+    return this.findFinalChild(children[children.length - 1]);
+  }
+
+  private getNextNonHiddenNode(
+    tree: UiHierarchyTreeNode,
+    index: FormattedTreeIndex,
+  ): UiHierarchyTreeNode | undefined {
+    const trees = assertDefined(this.getAllFormattedTrees());
+    if (index < trees.length - 1) {
+      return trees[index + 1];
+    }
+    if (this.isHidden(tree)) {
+      return this.findFirstNonHiddenParent(tree);
+    }
+    return undefined;
+  }
+
+  private findFirstNonHiddenParent(
+    node: UiHierarchyTreeNode,
+  ): UiHierarchyTreeNode | undefined {
+    const parent = assertDefined(node.getParent());
+    if (!this.isHidden(parent)) {
+      return parent;
+    }
+    return this.findFirstNonHiddenParent(parent);
+  }
+
+  private isHidden(node: UiHierarchyTreeNode): boolean {
+    const parent = node.getParent();
+    if (!parent) {
+      return false;
+    }
+    if (this.isCollapsed(parent)) {
+      return true;
+    }
+    return this.isHidden(parent);
+  }
+
+  private isCollapsed(node: UiHierarchyTreeNode): boolean {
+    return (
+      assertDefined(this.treeStore).get(`${node.id}.collapsedState`) === 'true'
+    );
+  }
+
+  private getCurrentTreesByTrace(
+    trace: Trace<HierarchyTreeNode>,
+  ): TraceAndTrees | undefined {
+    return this.currentTrees?.find((c) => c.trace === trace);
   }
 
   static isHierarchyTreeModified: IsModifiedCallbackType = async (

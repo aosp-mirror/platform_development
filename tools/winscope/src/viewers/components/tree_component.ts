@@ -335,7 +335,7 @@ export class TreeComponent {
 
   private isCollapsedInStore(): boolean {
     return (
-      assertDefined(this.store).get(this.storeKeyCollapsedState) === 'true'
+      assertDefined(this.store).get(this.storeKeyCollapsedState) !== undefined
     );
   }
 }

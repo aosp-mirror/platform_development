@@ -25,6 +25,8 @@ export class UiHierarchyTreeNode extends HierarchyTreeNode implements DiffNode {
   private displayName: string = this.name;
   private isOldNodeInternal = false;
   private showHeading = true;
+  private nextNodeDfs: this | undefined;
+  private prevNodeDfs: this | undefined;
 
   static from(
     node: HierarchyTreeNode,
@@ -95,5 +97,37 @@ export class UiHierarchyTreeNode extends HierarchyTreeNode implements DiffNode {
 
   isOldNode() {
     return this.isOldNodeInternal;
+  }
+
+  getNextDfs(): this | undefined {
+    return this.nextNodeDfs;
+  }
+
+  getPrevDfs(): this | undefined {
+    return this.prevNodeDfs;
+  }
+
+  assignDfsOrder() {
+    if (!this.isRoot()) {
+      console.warn('Attempted to assign DFS order from non-root node.');
+      return;
+    }
+
+    let prev: this | undefined;
+    this.forEachNodeDfs((node) => {
+      if (prev) {
+        prev.setNextDfs(node);
+        node.setPrevDfs(prev);
+      }
+      prev = node;
+    });
+  }
+
+  private setNextDfs(node: this) {
+    this.nextNodeDfs = node;
+  }
+
+  private setPrevDfs(node: this) {
+    this.prevNodeDfs = node;
   }
 }
