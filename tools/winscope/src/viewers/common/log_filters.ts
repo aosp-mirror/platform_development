@@ -37,7 +37,7 @@ export class LogTextFilter extends LogFilter {
   }
 
   override updateFilterValue(value: string[]): void {
-    this.textFilter.values.filterString = value.at(0) ?? '';
+    this.textFilter.filterString = value.at(0) ?? '';
   }
 
   override getFilterPredicate(): StringFilterPredicate {

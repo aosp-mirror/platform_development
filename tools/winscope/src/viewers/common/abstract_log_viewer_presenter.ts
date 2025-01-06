@@ -16,7 +16,7 @@
 
 import {DOMUtils} from 'common/dom_utils';
 import {FunctionUtils} from 'common/function_utils';
-import {Timestamp} from 'common/time';
+import {Timestamp} from 'common/time/time';
 import {
   TracePositionUpdate,
   WinscopeEvent,
@@ -44,8 +44,10 @@ import {
 
 export type NotifyLogViewCallbackType<UiData> = (uiData: UiData) => void;
 
-export abstract class AbstractLogViewerPresenter<UiData extends UiDataLog>
-  implements WinscopeEventEmitter
+export abstract class AbstractLogViewerPresenter<
+  UiData extends UiDataLog,
+  TraceEntryType extends object,
+> implements WinscopeEventEmitter
 {
   protected static readonly VALUE_NA = 'N/A';
   protected emitAppEvent: EmitEvent = FunctionUtils.DO_NOTHING_ASYNC;
@@ -56,7 +58,7 @@ export abstract class AbstractLogViewerPresenter<UiData extends UiDataLog>
   private isInitialized = false;
 
   protected constructor(
-    protected readonly trace: Trace<PropertyTreeNode>,
+    protected readonly trace: Trace<TraceEntryType>,
     private readonly notifyViewCallback: NotifyLogViewCallbackType<UiData>,
     protected readonly uiData: UiData,
   ) {
@@ -184,7 +186,7 @@ export abstract class AbstractLogViewerPresenter<UiData extends UiDataLog>
     this.notifyViewChanged();
   }
 
-  async onLogTimestampClick(traceEntry: TraceEntry<PropertyTreeNode>) {
+  async onLogTimestampClick(traceEntry: TraceEntry<object>) {
     await this.emitAppEvent(
       TracePositionUpdate.fromTraceEntry(traceEntry, true),
     );
@@ -238,14 +240,19 @@ export abstract class AbstractLogViewerPresenter<UiData extends UiDataLog>
       } else {
         event.stopImmediatePropagation();
         if (currIndex > 0) {
-          return this.emitAppEvent(
-            new TracePositionUpdate(
-              TracePosition.fromTraceEntry(
-                this.uiData.entries[currIndex - 1].traceEntry,
-              ),
-              true,
-            ),
-          );
+          let prev = currIndex - 1;
+          while (prev >= 0) {
+            const prevEntry = this.uiData.entries[prev].traceEntry;
+            if (prevEntry.hasValidTimestamp()) {
+              return this.emitAppEvent(
+                new TracePositionUpdate(
+                  TracePosition.fromTraceEntry(prevEntry),
+                  true,
+                ),
+              );
+            }
+            prev--;
+          }
         }
       }
     }
@@ -267,9 +274,9 @@ export abstract class AbstractLogViewerPresenter<UiData extends UiDataLog>
 
   protected async applyTracePositionUpdate(event: TracePositionUpdate) {
     await this.initializeIfNeeded();
-    let entry: TraceEntry<PropertyTreeNode> | undefined;
+    let entry: TraceEntry<TraceEntryType> | undefined;
     if (event.position.entry?.getFullTrace() === this.trace) {
-      entry = event.position.entry as TraceEntry<PropertyTreeNode>;
+      entry = event.position.entry as TraceEntry<TraceEntryType>;
     } else {
       entry = TraceEntryFinder.findCorrespondingEntry(
         this.trace,

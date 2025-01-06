@@ -15,11 +15,11 @@
  */
 
 import {assertDefined} from 'common/assert_utils';
-import {InMemoryStorage} from 'common/in_memory_storage';
+import {InMemoryStorage} from 'common/store/in_memory_storage';
+import {TimestampConverterUtils} from 'common/time/test_utils';
 import {TracePositionUpdate} from 'messaging/winscope_event';
 import {ParserBuilder} from 'test/unit/parser_builder';
 import {PropertyTreeBuilder} from 'test/unit/property_tree_builder';
-import {TimestampConverterUtils} from 'test/unit/timestamp_converter_utils';
 import {TracesBuilder} from 'test/unit/traces_builder';
 import {TraceBuilder} from 'test/unit/trace_builder';
 import {UnitTestUtils} from 'test/unit/utils';
@@ -175,14 +175,21 @@ class PresenterTransitionsTest extends AbstractLogViewerPresenterTest<UiData> {
 
     const selectedTransition = assertDefined(uiData.propertiesTree);
     const wmData = assertDefined(selectedTransition.getChildByName('wmData'));
-    expect(wmData.getChildByName('id')?.formattedValue()).toEqual('35');
+    expect(wmData.getChildByName('id')?.formattedValue()).toEqual('32');
     expect(wmData.getChildByName('type')?.formattedValue()).toEqual('OPEN');
     expect(wmData.getChildByName('createTimeNs')?.formattedValue()).toEqual(
-      '2023-11-21, 13:30:33.176',
+      '2023-11-21, 13:30:25.429',
     );
 
-    const dispatchTime = uiData.entries[0].fields[3];
-    expect(dispatchTime?.propagateEntryTimestamp).toBeTrue();
+    const dispatchTimeEntryTs = uiData.entries[0].fields[3];
+    expect(dispatchTimeEntryTs?.propagateEntryTimestamp).toBeTrue();
+    const sendTimeNotEntryTs = uiData.entries[0].fields[2];
+    expect(sendTimeNotEntryTs?.propagateEntryTimestamp).toBeFalse();
+
+    const dispatchTimeNotEntryTs = uiData.entries[3].fields[3];
+    expect(dispatchTimeNotEntryTs?.propagateEntryTimestamp).toBeFalse();
+    const sendTimeEntryTs = uiData.entries[3].fields[2];
+    expect(sendTimeEntryTs?.propagateEntryTimestamp).toBeTrue();
   }
 
   override executeSpecializedTests() {

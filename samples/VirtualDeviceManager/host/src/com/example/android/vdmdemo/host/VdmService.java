@@ -361,8 +361,6 @@ public final class VdmService extends Hilt_VdmService {
         closeVirtualDevice();
         mRemoteIo.removeMessageConsumer(mRemoteEventConsumer);
         mDisplayManager.unregisterDisplayListener(mDisplayListener);
-        mAudioStreamer.stop();
-        mAudioInjector.stop();
     }
 
     void addVirtualDeviceListener(Consumer<Boolean> listener) {
@@ -397,8 +395,8 @@ public final class VdmService extends Hilt_VdmService {
             mDisplayRepository.removeDisplayByRemoteId(event.getDisplayId());
         } else if (event.hasDisplayChangeEvent() && event.getDisplayChangeEvent().getFocused()) {
             mInputController.setFocusedRemoteDisplayId(event.getDisplayId());
-        } else if (event.hasDeviceState() && Flags.deviceAwareDisplayPower()
-                && mVirtualDevice != null) {
+        } else if (event.hasDeviceState() && VdmCompat.isAtLeastB()
+                && Flags.deviceAwareDisplayPower() && mVirtualDevice != null) {
             if (event.getDeviceState().getPowerOn()) {
                 mVirtualDevice.wakeUp();
             } else {
@@ -409,18 +407,43 @@ public final class VdmService extends Hilt_VdmService {
 
     private void handleAudioCapabilities() {
         if (mPreferenceController.getBoolean(R.string.pref_enable_client_audio)) {
+            openAudio();
+        } else {
+            closeAudio();
+        }
+    }
+
+    private void openAudio() {
+        AudioManager audioManager = getSystemService(AudioManager.class);
+        if (audioManager != null) {
+            // Assuming one playback session id and one recording session id per host (for now)
+            // Reuse them if already initialized
+            if (mPlaybackAudioSessionId == 0) {
+                mPlaybackAudioSessionId = audioManager.generateAudioSessionId();
+            }
+            if (mRecordingAudioSessionId == 0) {
+                mRecordingAudioSessionId = audioManager.generateAudioSessionId();
+            }
+
             if (mVirtualDevice != null) {
                 if (mDeviceCapabilities.getSupportsAudioOutput()) {
                     mAudioStreamer.start(mVirtualDevice.getDeviceId(), mPlaybackAudioSessionId);
+                } else {
+                    mAudioStreamer.stop();
                 }
+
                 if (mDeviceCapabilities.getSupportsAudioInput()) {
                     mAudioInjector.start(mVirtualDevice.getDeviceId(), mRecordingAudioSessionId);
+                } else {
+                    mAudioInjector.stop();
                 }
             }
-        } else {
-            mAudioStreamer.stop();
-            mAudioInjector.stop();
         }
+    }
+
+    private void closeAudio() {
+        mAudioStreamer.stop();
+        mAudioInjector.stop();
     }
 
     private void associateAndCreateVirtualDevice() {
@@ -456,6 +479,10 @@ public final class VdmService extends Hilt_VdmService {
                         .setDeviceProfile(deviceProfile)
                         .setDisplayName(mDeviceCapabilities.getDeviceName())
                         .setSelfManaged(true);
+        if (VdmCompat.isAtLeastB() && android.companion.Flags.associationDeviceIcon()) {
+            associationRequest.setDeviceIcon(Icon.createWithResource(this, R.drawable.device_icon));
+        }
+
         cdm.associate(
                 associationRequest.build(),
                 new CompanionDeviceManager.Callback() {
@@ -487,16 +514,18 @@ public final class VdmService extends Hilt_VdmService {
     }
 
     private void createVirtualDevice(AssociationInfo associationInfo) {
+        Log.d(TAG, "VdmService createVirtualDevice name: "
+                + mDeviceCapabilities.getDeviceName() + " with association: " + associationInfo);
+
         VirtualDeviceParams.Builder virtualDeviceBuilder =
                 new VirtualDeviceParams.Builder()
                         .setName("VirtualDevice - " + mDeviceCapabilities.getDeviceName());
 
-        AudioManager audioManager = getSystemService(AudioManager.class);
-        mPlaybackAudioSessionId = audioManager.generateAudioSessionId();
-        mRecordingAudioSessionId = audioManager.generateAudioSessionId();
         mPreferenceController.evaluate();
 
         if (mPreferenceController.getBoolean(R.string.pref_enable_client_audio)) {
+            openAudio();
+
             virtualDeviceBuilder.setDevicePolicy(POLICY_TYPE_AUDIO, DEVICE_POLICY_CUSTOM)
                     .setAudioPlaybackSessionId(mPlaybackAudioSessionId)
                     .setAudioRecordingSessionId(mRecordingAudioSessionId);
@@ -517,10 +546,12 @@ public final class VdmService extends Hilt_VdmService {
             }
         }
 
-        if (Flags.deviceAwareDisplayPower()) {
+        if (VdmCompat.isAtLeastB() && Flags.deviceAwareDisplayPower()) {
             int displayTimeout = Integer.parseInt(
                     mPreferenceController.getString(R.string.pref_display_timeout));
-            virtualDeviceBuilder.setScreenOffTimeout(Duration.ofMillis(displayTimeout));
+            virtualDeviceBuilder
+                    .setDimDuration(Duration.ofMillis(displayTimeout / 2))
+                    .setScreenOffTimeout(Duration.ofMillis(displayTimeout));
         }
 
         if (mPreferenceController.getBoolean(R.string.pref_hide_from_recents)) {
@@ -550,7 +581,7 @@ public final class VdmService extends Hilt_VdmService {
                         .setPower(sensor.getPower())
                         .setResolution(sensor.getResolution())
                         .setMaximumRange(sensor.getMaxRange());
-                if (Flags.deviceAwareDisplayPower()) {
+                if (VdmCompat.isAtLeastB() && Flags.deviceAwareDisplayPower()) {
                     builder.setWakeUpSensor(sensor.getIsWakeUpSensor())
                             .setReportingMode(sensor.getReportingMode());
                 }
@@ -613,10 +644,14 @@ public final class VdmService extends Hilt_VdmService {
         for (Consumer<Boolean> listener : mLocalVirtualDeviceLifecycleListeners) {
             listener.accept(false);
         }
+
         if (mRemoteSensorManager != null) {
             mRemoteSensorManager.close();
             mRemoteSensorManager = null;
         }
+
+        closeAudio();
+
         if (mVirtualDevice != null) {
             Log.i(TAG, "Closing virtual device");
             mDisplayRepository.clear();

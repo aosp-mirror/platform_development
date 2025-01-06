@@ -16,9 +16,10 @@
 
 import {assertDefined} from 'common/assert_utils';
 import {FunctionUtils} from 'common/function_utils';
-import {InMemoryStorage} from 'common/in_memory_storage';
-import {TimezoneInfo} from 'common/time';
-import {TimestampConverter} from 'common/timestamp_converter';
+import {InMemoryStorage} from 'common/store/in_memory_storage';
+import {TimestampConverterUtils} from 'common/time/test_utils';
+import {TimezoneInfo} from 'common/time/time';
+import {TimestampConverter} from 'common/time/timestamp_converter';
 import {CrossToolProtocol} from 'cross_tool/cross_tool_protocol';
 import {ProgressListener} from 'messaging/progress_listener';
 import {ProgressListenerStub} from 'messaging/progress_listener_stub';
@@ -43,26 +44,33 @@ import {
   ExpandedTimelineToggled,
   FilterPresetApplyRequest,
   FilterPresetSaveRequest,
+  InitializeTraceSearchRequest,
   NoTraceTargetsSelected as NoTraceTargetsSelectedEvent,
   RemoteToolDownloadStart,
   RemoteToolFilesReceived,
   RemoteToolTimestampReceived,
   TabbedViewSwitched,
   TabbedViewSwitchRequest,
+  TraceAddRequest,
   TracePositionUpdate,
+  TraceRemoveRequest,
+  TraceSearchCompleted,
+  TraceSearchFailed,
+  TraceSearchInitialized,
+  TraceSearchRequest,
   ViewersLoaded,
   ViewersUnloaded,
   WinscopeEvent,
   WinscopeEventType,
 } from 'messaging/winscope_event';
+import {getFixtureFile} from 'test/unit/fixture_utils';
+
 import {WinscopeEventEmitter} from 'messaging/winscope_event_emitter';
 import {WinscopeEventEmitterStub} from 'messaging/winscope_event_emitter_stub';
 import {WinscopeEventListener} from 'messaging/winscope_event_listener';
 import {WinscopeEventListenerStub} from 'messaging/winscope_event_listener_stub';
-import {TimestampConverterUtils} from 'test/unit/timestamp_converter_utils';
 import {TraceBuilder} from 'test/unit/trace_builder';
 import {UserNotifierChecker} from 'test/unit/user_notifier_checker';
-import {UnitTestUtils} from 'test/unit/utils';
 import {Trace} from 'trace/trace';
 import {TracePosition} from 'trace/trace_position';
 import {TraceType} from 'trace/trace_type';
@@ -73,6 +81,7 @@ import {ViewerStub} from 'viewers/viewer_stub';
 import {Mediator} from './mediator';
 import {TimelineData} from './timeline_data';
 import {TracePipeline} from './trace_pipeline';
+import {TraceSearchInitializer} from './trace_search/trace_search_initializer';
 
 describe('Mediator', () => {
   const TIMESTAMP_10 = TimestampConverterUtils.makeRealTimestamp(10n);
@@ -96,6 +105,7 @@ describe('Mediator', () => {
 
   let inputFiles: File[];
   let eventLogFile: File;
+  let perfettoFile: File;
   let tracePipeline: TracePipeline;
   let timelineData: TimelineData;
   let abtChromeExtensionProtocol: WinscopeEventEmitter & WinscopeEventListener;
@@ -110,6 +120,7 @@ describe('Mediator', () => {
   let mediator: Mediator;
   let spies: Array<jasmine.Spy<jasmine.Func>>;
   let userNotifierChecker: UserNotifierChecker;
+  let createViewersSpy: jasmine.Spy;
 
   const viewerStub0 = new ViewerStub('Title0', undefined, traceSf);
   const viewerStub1 = new ViewerStub('Title1', undefined, traceWm);
@@ -125,19 +136,20 @@ describe('Mediator', () => {
 
   beforeAll(async () => {
     inputFiles = [
-      await UnitTestUtils.getFixtureFile(
+      await getFixtureFile(
         'traces/elapsed_and_real_timestamp/SurfaceFlinger.pb',
       ),
-      await UnitTestUtils.getFixtureFile(
+      await getFixtureFile(
         'traces/elapsed_and_real_timestamp/WindowManager.pb',
       ),
-      await UnitTestUtils.getFixtureFile(
+      await getFixtureFile(
         'traces/elapsed_and_real_timestamp/screen_recording_metadata_v2.mp4',
       ),
     ];
-    eventLogFile = await UnitTestUtils.getFixtureFile(
-      'traces/eventlog_no_cujs.winscope',
+    perfettoFile = await getFixtureFile(
+      'traces/perfetto/layers_trace.perfetto-trace',
     );
+    eventLogFile = await getFixtureFile('traces/eventlog_no_cujs.winscope');
     userNotifierChecker = new UserNotifierChecker();
   });
 
@@ -189,7 +201,10 @@ describe('Mediator', () => {
       crossToolProtocol,
     ];
 
-    spyOn(ViewerFactory.prototype, 'createViewers').and.returnValue(viewers);
+    createViewersSpy = spyOn(
+      ViewerFactory.prototype,
+      'createViewers',
+    ).and.returnValue(viewers);
 
     spies = [
       spyOn(abtChromeExtensionProtocol, 'onWinscopeEvent'),
@@ -236,9 +251,12 @@ describe('Mediator', () => {
 
   it('handles collected traces from Winscope', async () => {
     await mediator.onWinscopeEvent(
-      new AppFilesCollected({requested: [], collected: inputFiles}),
+      new AppFilesCollected({
+        requested: [],
+        collected: [inputFiles[0], inputFiles[1]],
+      }),
     );
-    userNotifierChecker.expectNotified([]);
+    userNotifierChecker.expectNone();
     await checkLoadTraceViewEvents(collectTracesComponent);
   });
 
@@ -246,7 +264,7 @@ describe('Mediator', () => {
     await mediator.onWinscopeEvent(
       new AppFilesCollected({
         requested: [],
-        collected: [await UnitTestUtils.getFixtureFile('traces/empty.pb')],
+        collected: [await getFixtureFile('traces/empty.pb')],
       }),
     );
     expect(
@@ -262,9 +280,7 @@ describe('Mediator', () => {
       new AppFilesCollected({
         requested: [],
         collected: [
-          await UnitTestUtils.getFixtureFile(
-            'traces/no_entries_InputMethodClients.pb',
-          ),
+          await getFixtureFile('traces/no_entries_InputMethodClients.pb'),
         ],
       }),
     );
@@ -314,14 +330,14 @@ describe('Mediator', () => {
         requested: [
           {
             name: 'Collected Trace',
-            types: [TraceType.EVENT_LOG, TraceType.CUJS],
+            types: [TraceType.SURFACE_FLINGER],
           },
           {
             name: 'Uncollected Trace',
             types: [TraceType.TRANSITION],
           },
         ],
-        collected: inputFiles.concat([eventLogFile]),
+        collected: [inputFiles[0]],
       }),
     );
     expect(
@@ -347,10 +363,10 @@ describe('Mediator', () => {
 
   it('handles request to refresh dumps', async () => {
     const dumpFiles = [
-      await UnitTestUtils.getFixtureFile(
+      await getFixtureFile(
         'traces/elapsed_and_real_timestamp/dump_SurfaceFlinger.pb',
       ),
-      await UnitTestUtils.getFixtureFile('traces/dump_WindowManager.pb'),
+      await getFixtureFile('traces/dump_WindowManager.pb'),
     ];
     await loadFiles(dumpFiles);
     await mediator.onWinscopeEvent(new AppTraceViewRequest());
@@ -460,9 +476,7 @@ describe('Mediator', () => {
   });
 
   it("initializes viewers' trace position also when loaded traces have no valid timestamps", async () => {
-    const dumpFile = await UnitTestUtils.getFixtureFile(
-      'traces/dump_WindowManager.pb',
-    );
+    const dumpFile = await getFixtureFile('traces/dump_WindowManager.pb');
     await mediator.onWinscopeEvent(new AppFilesUploaded([dumpFile]));
 
     resetSpyCalls();
@@ -472,7 +486,7 @@ describe('Mediator', () => {
   });
 
   it('filters traces without visualization on loading viewers', async () => {
-    const fileWithoutVisualization = await UnitTestUtils.getFixtureFile(
+    const fileWithoutVisualization = await getFixtureFile(
       'traces/elapsed_and_real_timestamp/shell_transition_trace.pb',
     );
     await loadFiles();
@@ -485,15 +499,14 @@ describe('Mediator', () => {
   it('warns user if frame mapping fails', async () => {
     const errorMsg = 'frame mapping failed';
     spyOn(tracePipeline, 'buildTraces').and.throwError(errorMsg);
-    const dumpFile = await UnitTestUtils.getFixtureFile(
-      'traces/dump_WindowManager.pb',
-    );
+    const dumpFile = await getFixtureFile('traces/dump_WindowManager.pb');
     await mediator.onWinscopeEvent(new AppFilesUploaded([dumpFile]));
 
     resetSpyCalls();
     await mediator.onWinscopeEvent(new AppTraceViewRequest());
-    await checkLoadTraceViewEvents(uploadTracesComponent);
-    userNotifierChecker.expectNotified([new IncompleteFrameMapping(errorMsg)]);
+    await checkLoadTraceViewEvents(uploadTracesComponent, undefined, [
+      new IncompleteFrameMapping(errorMsg),
+    ]);
   });
 
   describe('timestamp received from remote tool', () => {
@@ -681,12 +694,20 @@ describe('Mediator', () => {
     expect(timelineComponent.onWinscopeEvent).toHaveBeenCalledOnceWith(event);
   });
 
-  it('notifies timeline and viewers of active trace change', async () => {
+  it('notifies timeline and viewers of active trace change if successful', async () => {
     await loadFiles();
     await loadTraceView();
     resetSpyCalls();
 
-    const activeTraceChanged = new ActiveTraceChanged(traceWm);
+    await mediator.onWinscopeEvent(new ActiveTraceChanged(traceDump));
+    expect(timelineComponent.onWinscopeEvent).not.toHaveBeenCalled();
+    viewers.forEach((viewer) => {
+      expect(viewer.onWinscopeEvent).not.toHaveBeenCalled();
+    });
+
+    const activeTraceChanged = new ActiveTraceChanged(
+      viewerStub1.getViews()[0].traces[0],
+    );
     await mediator.onWinscopeEvent(activeTraceChanged);
     expect(timelineComponent.onWinscopeEvent).toHaveBeenCalledOnceWith(
       activeTraceChanged,
@@ -731,11 +752,63 @@ describe('Mediator', () => {
     expect(viewerStub1.onWinscopeEvent).toHaveBeenCalledOnceWith(applyRequest);
   });
 
-  async function loadFiles(files = inputFiles) {
-    await mediator.onWinscopeEvent(new AppFilesUploaded(files));
+  it('initializes trace search', async () => {
+    const searchViewer = await loadPerfettoFilesAndReturnSearchViewer();
+    const spy = spyOn(
+      TraceSearchInitializer,
+      'createSearchViews',
+    ).and.returnValue(Promise.resolve(['test']));
+    const initializeRequest = new InitializeTraceSearchRequest();
+    await mediator.onWinscopeEvent(initializeRequest);
+    expect(timelineComponent.onWinscopeEvent).toHaveBeenCalledWith(
+      initializeRequest,
+    );
+    expect(spy).toHaveBeenCalledTimes(1);
+    const initializedEvent = new TraceSearchInitialized(['test']);
+    expect(timelineComponent.onWinscopeEvent).toHaveBeenCalledWith(
+      initializedEvent,
+    );
+    expect(searchViewer.onWinscopeEvent).toHaveBeenCalledWith(initializedEvent);
+  });
+
+  it('handles trace search request for successful queries', async () => {
+    const searchViewer = await loadPerfettoFilesAndReturnSearchViewer();
+    await requestSearch('select ts from surfaceflinger_layers_snapshot');
+    checkNewSearchTracePropagation(searchViewer, true);
+    await requestSearch('select id from surfaceflinger_layers_snapshot');
+    checkNewSearchTracePropagation(searchViewer, false);
+  });
+
+  it('handles trace search request for unsuccessful query', async () => {
+    const searchViewer = await loadPerfettoFilesAndReturnSearchViewer();
+    await requestSearch('select * from fake_table');
+    expect(searchViewer.onWinscopeEvent).toHaveBeenCalledWith(
+      new TraceSearchFailed(),
+    );
+    expect(timelineComponent.onWinscopeEvent).toHaveBeenCalledWith(
+      new TraceSearchCompleted(),
+    );
+  });
+
+  it('handles trace removal requests', async () => {
+    await loadPerfettoFilesAndReturnSearchViewer();
+    await requestSearch('select ts from surfaceflinger_layers_snapshot');
+    removeSearchTraceAndCheckPropagation(true);
+    await requestSearch('select id from surfaceflinger_layers_snapshot');
+    removeSearchTraceAndCheckPropagation(false);
+  });
+
+  async function loadFiles(
+    files = inputFiles,
+    viewersToReassignTraces = [viewerStub0, viewerStub1],
+  ) {
+    for (const file of files) {
+      await mediator.onWinscopeEvent(new AppFilesUploaded([file]));
+    }
     userNotifierChecker.expectNone();
-    reassignViewerStubTrace(viewerStub0);
-    reassignViewerStubTrace(viewerStub1);
+    viewersToReassignTraces.forEach((viewer) =>
+      reassignViewerStubTrace(viewer),
+    );
   }
 
   function reassignViewerStubTrace(viewerStub: ViewerStub) {
@@ -745,12 +818,12 @@ describe('Mediator', () => {
       .getTrace(viewerStubTraces[0].type) as Trace<object>;
   }
 
-  async function loadTraceView() {
+  async function loadTraceView(expectedViewers = viewers) {
     // Simulate "View traces" button click
     resetSpyCalls();
     await mediator.onWinscopeEvent(new AppTraceViewRequest());
 
-    await checkLoadTraceViewEvents(uploadTracesComponent);
+    await checkLoadTraceViewEvents(uploadTracesComponent, expectedViewers);
 
     // Simulate notification of TraceViewComponent about initially selected/focused tab
     resetSpyCalls();
@@ -765,19 +838,23 @@ describe('Mediator', () => {
     userNotifierChecker.expectNotified([]);
   }
 
-  async function checkLoadTraceViewEvents(progressListener: ProgressListener) {
+  async function checkLoadTraceViewEvents(
+    progressListener: ProgressListener,
+    expectedViewers = viewers,
+    notifications: UserWarning[] = [],
+  ) {
     expect(progressListener.onProgressUpdate).toHaveBeenCalled();
     expect(progressListener.onOperationFinished).toHaveBeenCalled();
     expect(timelineData.initialize).toHaveBeenCalledTimes(1);
     expect(appComponent.onWinscopeEvent).toHaveBeenCalledOnceWith(
-      new ViewersLoaded([viewerStub0, viewerStub1, viewerOverlay, viewerDump]),
+      new ViewersLoaded(expectedViewers),
     );
 
     // Mediator triggers the viewers initialization
     // by sending them a "trace position update" event
     checkTracePositionUpdateEvents(
-      [viewerStub0, viewerStub1, viewerOverlay, viewerDump, timelineComponent],
-      [],
+      (expectedViewers as WinscopeEventListener[]).concat([timelineComponent]),
+      notifications,
     );
   }
 
@@ -810,6 +887,63 @@ describe('Mediator', () => {
       spy.calls.reset();
     });
     userNotifierChecker.reset();
+  }
+
+  async function loadPerfettoFilesAndReturnSearchViewer(): Promise<ViewerStub> {
+    await loadFiles([perfettoFile], [viewerStub0]);
+    const searchViewer = new ViewerStub(
+      'search',
+      undefined,
+      undefined,
+      ViewType.GLOBAL_SEARCH,
+    );
+    spyOn(searchViewer, 'onWinscopeEvent');
+    const expectedViewers = [viewerStub0, searchViewer];
+    createViewersSpy.and.returnValue(expectedViewers);
+    await loadTraceView(expectedViewers);
+    resetSpyCalls();
+    return searchViewer;
+  }
+
+  async function requestSearch(query: string) {
+    const event = new TraceSearchRequest(query);
+    await mediator.onWinscopeEvent(event);
+    expect(timelineComponent.onWinscopeEvent).toHaveBeenCalledWith(event);
+  }
+
+  function checkNewSearchTracePropagation(
+    searchViewer: ViewerStub,
+    hasTimestamps: boolean,
+  ) {
+    const searchTraces = tracePipeline.getTraces().getTraces(TraceType.SEARCH);
+    const newTrace = searchTraces[searchTraces.length - 1];
+    const newTraceEvent = new TraceAddRequest(newTrace);
+    expect(searchViewer.onWinscopeEvent).toHaveBeenCalledWith(newTraceEvent);
+    expect(timelineComponent.onWinscopeEvent).toHaveBeenCalledWith(
+      new TraceSearchCompleted(),
+    );
+    expect(timelineData.hasTrace(newTrace)).toEqual(hasTimestamps);
+    const timelineComponentSpy = timelineComponent.onWinscopeEvent;
+    if (hasTimestamps) {
+      expect(timelineComponentSpy).toHaveBeenCalledWith(newTraceEvent);
+    } else {
+      expect(timelineComponentSpy).not.toHaveBeenCalledWith(newTraceEvent);
+    }
+  }
+
+  async function removeSearchTraceAndCheckPropagation(hasTimestamps: boolean) {
+    const searchTraces = tracePipeline.getTraces().getTraces(TraceType.SEARCH);
+    const newTrace = searchTraces[searchTraces.length - 1];
+    const removalRequest = new TraceRemoveRequest(newTrace);
+    await mediator.onWinscopeEvent(removalRequest);
+    expect(tracePipeline.getTraces().hasTrace(newTrace)).toBeFalse();
+    expect(timelineData.hasTrace(newTrace)).toBeFalse();
+    const timelineComponentSpy = timelineComponent.onWinscopeEvent;
+    if (hasTimestamps) {
+      expect(timelineComponentSpy).toHaveBeenCalledWith(removalRequest);
+    } else {
+      expect(timelineComponentSpy).not.toHaveBeenCalledWith(removalRequest);
+    }
   }
 
   function makeExpectedTracePositionUpdate(

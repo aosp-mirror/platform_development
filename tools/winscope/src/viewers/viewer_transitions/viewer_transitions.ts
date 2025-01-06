@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import {Store} from 'common/store';
+import {Store} from 'common/store/store';
 import {WinscopeEvent} from 'messaging/winscope_event';
 import {EmitEvent} from 'messaging/winscope_event_emitter';
 import {Trace} from 'trace/trace';
@@ -43,7 +43,7 @@ export class ViewerTransitions implements Viewer {
     this.presenter.addEventListeners(this.htmlElement);
 
     this.view = new View(
-      ViewType.TAB,
+      ViewType.TRACE_TAB,
       this.getTraces(),
       this.htmlElement,
       TRACE_INFO[TraceType.TRANSITION].name,

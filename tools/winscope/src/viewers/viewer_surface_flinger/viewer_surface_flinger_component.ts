@@ -15,7 +15,7 @@
  */
 
 import {Component, Input} from '@angular/core';
-import {PersistentStore} from 'common/persistent_store';
+import {PersistentStore} from 'common/store/persistent_store';
 import {TraceType} from 'trace/trace_type';
 import {CollapsibleSections} from 'viewers/common/collapsible_sections';
 import {CollapsibleSectionType} from 'viewers/common/collapsible_section_type';
@@ -52,7 +52,7 @@ import {UiData} from './ui_data';
       <hierarchy-view
         class="hierarchy-view"
         [class.collapsed]="sections.isSectionCollapsed(CollapsibleSectionType.HIERARCHY)"
-        [tree]="inputData?.hierarchyTrees?.at(0)"
+        [trees]="inputData?.hierarchyTrees ?? []"
         [dependencies]="inputData?.dependencies ?? []"
         [highlightedItem]="inputData?.highlightedItem ?? ''"
         [pinnedItems]="inputData?.pinnedItems ?? []"
@@ -79,7 +79,6 @@ import {UiData} from './ui_data';
           [highlightedProperty]="inputData?.highlightedProperty ?? ''"
           [traceType]="${TraceType.SURFACE_FLINGER}"
           [store]="store"
-          [displayPropertyGroups]="inputData?.displayPropertyGroups"
           [isProtoDump]="true"
           placeholderText="No selected entry or layer."
           [textFilter]="inputData?.propertiesFilter"

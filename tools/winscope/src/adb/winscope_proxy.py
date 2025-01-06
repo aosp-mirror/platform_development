@@ -62,7 +62,7 @@ def create_argument_parser() -> argparse.ArgumentParser:
     return parser
 
 # Keep in sync with ProxyConnection#VERSION in Winscope
-VERSION = '4.0.6'
+VERSION = '5.0.0'
 
 PERFETTO_TRACE_CONFIG_FILE = '/data/misc/perfetto-configs/winscope-proxy-trace.conf'
 PERFETTO_DUMP_CONFIG_FILE = '/data/misc/perfetto-configs/winscope-proxy-dump.conf'
@@ -486,27 +486,38 @@ class MediaBasedConfig(TraceConfig):
     def get_trace_identifiers(self):
         return self.trace_identifiers
 
-    def is_valid(self, config_type: str) -> bool:
-        return config_type == "displays"
-
     def add(self, config_type: str, config_value: str | list[str] | None):
         if config_type != "displays":
-           return
+            return
         if config_value and len(config_value) > 0:
             if type(config_value) == str:
                 self.trace_identifiers = [config_value.split(" ")[0]]
             else:
                 self.trace_identifiers = list(map(lambda d: d.split(" ")[0], config_value))
 
-    def execute_command(self, server, device_id):
-        pass
-
 class ScreenRecordingConfig(MediaBasedConfig):
     """Creates display args for Screen Recording traces."""
+    show_pointer_and_touches = False
+
     def get_optional_start_args(self, identifier):
         if identifier == "active":
             return ""
         return f"--display-id {identifier}"
+
+    def is_valid(self, config_type: str) -> bool:
+        return config_type == "displays" or config_type == "pointer_and_touches"
+
+    def add(self, config_type: str, config_value: str | list[str] | None):
+        if config_type == "pointer_and_touches":
+            self.show_pointer_and_touches = True
+            return
+        super().add(config_type, config_value)
+
+    def execute_command(self, server, device_id):
+        shell = get_shell_args(device_id, "screen recording config")
+        val = "1" if self.show_pointer_and_touches else "0"
+        cmd = "settings put system show_touches {val} && settings put system pointer_location {val}".format(val=val)
+        self.execute_optional_config_command(server, device_id, shell, cmd, "screen recording pointer and touches", self.show_pointer_and_touches)
 
 class ScreenshotConfig(MediaBasedConfig):
     """Creates display args for Screenshots."""
@@ -515,6 +526,11 @@ class ScreenshotConfig(MediaBasedConfig):
             return ""
         return f"-d {identifier}"
 
+    def is_valid(self, config_type: str) -> bool:
+        return config_type == "displays"
+
+    def execute_command(self, server, device_id):
+        pass
 
 class SurfaceFlingerDumpConfig(TraceConfig):
     """Handles perfetto config for SurfaceFlinger dumps."""
@@ -592,6 +608,7 @@ class TraceTarget:
         self.trace_start = trace_start
         self.trace_stop = trace_stop
         self.get_trace_config = get_trace_config
+        self.status_filename = WINSCOPE_STATUS + "_" + trace_name
 
 
 # Order of files matters as they will be expected in that order and decoded in that order
@@ -646,8 +663,6 @@ echo 'SF layers trace (legacy) stopped.'
             "screen_recording_{trace_identifier}"),
         lambda res: False,
         '''
-        settings put system show_touches 1 && \
-        settings put system pointer_location 1 && \
         screenrecord --bugreport --bit-rate 8M {options} /data/local/tmp/screen_{trace_identifier}.mp4 & \
         echo "ScreenRecorder started."
         ''',
@@ -1209,10 +1224,11 @@ class FetchFilesEndpoint(DeviceRequestEndpoint):
 TRACE_THREADS = {}
 
 class TraceThread(threading.Thread):
-    def __init__(self, trace_name: str, device_id: str, command: str, trace_identifier: str):
+    def __init__(self, trace_name: str, device_id: str, command: str, trace_identifier: str, status_filename: str):
         self.trace_command = command
         self.trace_name = trace_name
         self.trace_identifier = trace_identifier
+        self.status_filename = status_filename
         self._device_id = device_id
         self._keep_alive_timer = None
         self.out = None,
@@ -1269,12 +1285,11 @@ class TraceThread(threading.Thread):
         log.info("Trace {} ended on {}, waiting for cleanup".format(self.trace_name, self._device_id))
         time.sleep(0.2)
         for i in range(int(COMMAND_TIMEOUT_S / retry_interval)):
-            if call_adb(f"shell su root cat {WINSCOPE_STATUS}", device=self._device_id) == 'TRACE_OK\n':
+            if call_adb(f"shell su root cat {self.status_filename}", device=self._device_id) == 'TRACE_OK\n':
                 log.info("Trace {} finished on {}".format(
                     self.trace_name,
                     self._device_id))
                 if self.trace_name == "perfetto_trace":
-                    log.info("Perfetto trace stderr output: {}".format(self.err.decode("utf-8")))
                     self._success = True
                 else:
                     self._success = len(self.err) == 0
@@ -1342,14 +1357,14 @@ while true; do sleep 0.1; done
                     start_cmd = t.trace_start
 
                 command = StartTraceEndpoint.TRACE_COMMAND.format(
-                    winscope_status=WINSCOPE_STATUS,
+                    winscope_status=t.status_filename,
                     signal_handler_log=SIGNAL_HANDLER_LOG,
                     stop_commands=t.trace_stop,
                     perfetto_config_file=PERFETTO_TRACE_CONFIG_FILE,
                     start_commands=start_cmd,
                 )
                 log.debug(f"Executing start command for {t.trace_name} on {device_id}...")
-                thread = TraceThread(t.trace_name, device_id, command.encode('utf-8'), trace_identifier)
+                thread = TraceThread(t.trace_name, device_id, command.encode('utf-8'), trace_identifier, t.status_filename)
                 if device_id not in TRACE_THREADS:
                     TRACE_THREADS[device_id] = [thread]
                 else:
@@ -1387,30 +1402,31 @@ class EndTraceEndpoint(DeviceRequestEndpoint):
                 thread.end_trace()
             success = thread.success()
             signal_handler_log = call_adb(f"shell su root cat {SIGNAL_HANDLER_LOG}", device=device_id).encode('utf-8')
-            out = b"### Shell script's stdout ###\n" + \
-                (thread.out if thread.out else b'<no stdout>') + \
-                b"\n### Shell script's stderr ###\n" + \
-                (thread.err if thread.err else b'<no stderr>') + \
-                b"\n### Signal handler log:\n" + \
-                (signal_handler_log if signal_handler_log else b'<no signal handler logs>') + \
-                b"\n"
+
             if (thread.timed_out()):
                 timeout_message = "Trace {} timed out during cleanup".format(thread.trace_name)
                 errors.append(timeout_message)
                 log.error(timeout_message)
+
             if not success:
-                log.error(
-                    "Error ending trace {} on the device\n### Output ###\n".format(thread.trace_name) + out.decode(
-                        "utf-8")
-                )
+                log.error("Error ending trace {} on the device".format(thread.trace_name))
                 errors.append("Error ending trace {} on the device: {}".format(thread.trace_name, thread.err))
+
+            out = b"### Shell script's stdout ###\n" + \
+                (thread.out if thread.out else b'<no stdout>') + \
+                b"\n### Shell script's stderr ###\n" + \
+                (thread.err if thread.err else b'<no stderr>') + \
+                b"\n### Signal handler log ###\n" + \
+                (signal_handler_log if signal_handler_log else b'<no signal handler logs>') + \
+                b"\n"
+            log.debug("### Output ###\n".format(thread.trace_name) + out.decode("utf-8"))
             if thread.trace_name in TRACE_TARGETS:
                 files = TRACE_TARGETS[thread.trace_name].files
                 move_collected_files(files, device_id, thread.trace_identifier)
             else:
                 errors.append(f"File location unknown for {thread.trace_name}")
 
-        call_adb(f"shell su root rm {WINSCOPE_STATUS}", device=device_id)
+        call_adb(f"shell su root rm {thread.status_filename}", device=device_id)
         TRACE_THREADS.pop(device_id)
         server.respond(HTTPStatus.OK, json.dumps(errors).encode("utf-8"), "text/plain")
 

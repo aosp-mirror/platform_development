@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-import {TimeDuration} from 'common/time_duration';
+import {TimestampConverterUtils} from 'common/time/test_utils';
+import {TimeDuration} from 'common/time/time_duration';
 import {PropertyTreeBuilder} from 'test/unit/property_tree_builder';
-import {TimestampConverterUtils} from 'test/unit/timestamp_converter_utils';
 import {TIMESTAMP_NODE_FORMATTER} from 'trace/tree_node/formatters';
 import {PropertySource} from 'trace/tree_node/property_tree_node';
 import {AddDuration} from './add_duration';

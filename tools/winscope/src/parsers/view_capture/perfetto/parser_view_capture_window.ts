@@ -15,7 +15,7 @@
  */
 
 import {assertDefined} from 'common/assert_utils';
-import {ParserTimestampConverter} from 'common/timestamp_converter';
+import {ParserTimestampConverter} from 'common/time/timestamp_converter';
 import {AddDefaults} from 'parsers/operations/add_defaults';
 import {SetFormatters} from 'parsers/operations/set_formatters';
 import {AbstractParser} from 'parsers/perfetto/abstract_parser';
@@ -84,6 +84,10 @@ export class ParserViewCaptureWindow extends AbstractParser<HierarchyTreeNode> {
 
   override getTraceType(): TraceType {
     return TraceType.VIEW_CAPTURE;
+  }
+
+  override getDescriptors(): string[] {
+    return [this.windowName, ...super.getDescriptors()];
   }
 
   override async getEntry(index: number): Promise<HierarchyTreeNode> {

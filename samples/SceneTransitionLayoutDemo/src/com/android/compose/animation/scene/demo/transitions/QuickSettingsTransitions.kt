@@ -17,9 +17,7 @@
 package com.android.compose.animation.scene.demo.transitions
 
 import androidx.compose.animation.core.tween
-import androidx.compose.foundation.gestures.Orientation
 import com.android.compose.animation.scene.SceneTransitionsBuilder
-import com.android.compose.animation.scene.demo.DemoConfiguration
 import com.android.compose.animation.scene.demo.MediaPlayer
 import com.android.compose.animation.scene.demo.QuickSettings
 import com.android.compose.animation.scene.demo.QuickSettingsGrid
@@ -28,7 +26,7 @@ import com.android.compose.animation.scene.demo.Shade
 
 val QuickSettingsBackgroundEndProgress = 0.5f
 
-fun SceneTransitionsBuilder.quickSettingsTransitions(configuration: DemoConfiguration) {
+fun SceneTransitionsBuilder.quickSettingsTransitions() {
     to(Scenes.QuickSettings) {
         spec = tween(durationMillis = 500)
 
@@ -52,14 +50,6 @@ fun SceneTransitionsBuilder.quickSettingsTransitions(configuration: DemoConfigur
             fade(MediaPlayer.Elements.MediaPlayer)
 
             scaleSize(QuickSettingsGrid.Elements.Tiles, height = 0.5f)
-        }
-    }
-
-    if (configuration.useOverscrollSpec) {
-        overscroll(Scenes.QuickSettings, Orientation.Vertical) {
-            translate(QuickSettings.Elements.BrightnessSlider, y = { absoluteDistance })
-            translate(QuickSettings.Elements.ExpandedGrid, y = { absoluteDistance })
-            translate(MediaPlayer.Elements.MediaPlayer, y = { absoluteDistance })
         }
     }
 }

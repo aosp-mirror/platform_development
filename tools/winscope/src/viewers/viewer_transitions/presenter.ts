@@ -15,8 +15,8 @@
  */
 
 import {assertDefined} from 'common/assert_utils';
-import {PersistentStoreProxy} from 'common/persistent_store_proxy';
-import {Store} from 'common/store';
+import {Store} from 'common/store/store';
+import {Timestamp} from 'common/time/time';
 import {CustomQueryType} from 'trace/custom_query';
 import {Trace} from 'trace/trace';
 import {Traces} from 'trace/traces';
@@ -30,12 +30,15 @@ import {
 import {LogSelectFilter} from 'viewers/common/log_filters';
 import {LogPresenter} from 'viewers/common/log_presenter';
 import {PropertiesPresenter} from 'viewers/common/properties_presenter';
-import {TextFilter, TextFilterValues} from 'viewers/common/text_filter';
+import {TextFilter} from 'viewers/common/text_filter';
 import {ColumnSpec, LogField, LogHeader} from 'viewers/common/ui_data_log';
 import {UpdateTransitionChangesNames} from './operations/update_transition_changes_names';
 import {TransitionsEntry, TransitionStatus, UiData} from './ui_data';
 
-export class Presenter extends AbstractLogViewerPresenter<UiData> {
+export class Presenter extends AbstractLogViewerPresenter<
+  UiData,
+  PropertyTreeNode
+> {
   private static readonly COLUMNS = {
     id: {name: 'Id', cssClass: 'transition-id right-align'},
     type: {name: 'Type', cssClass: 'transition-type'},
@@ -62,13 +65,7 @@ export class Presenter extends AbstractLogViewerPresenter<UiData> {
   protected override logPresenter = new LogPresenter<TransitionsEntry>(false);
   protected override propertiesPresenter = new PropertiesPresenter(
     {},
-    new TextFilter(
-      PersistentStoreProxy.new<TextFilterValues>(
-        'TransitionsPropertiesFilter',
-        new TextFilterValues('', []),
-        this.storage,
-      ),
-    ),
+    new TextFilter(),
     [],
   );
 
@@ -218,6 +215,12 @@ export class Presenter extends AbstractLogViewerPresenter<UiData> {
       const [status, statusIcon, statusIconColor] =
         this.extractAndFormatStatus(transitionNode);
 
+      const sendTs: Timestamp | undefined = wmDataNode
+        .getChildByName('sendTimeNs')
+        ?.getValue();
+      const dispatchTs: Timestamp | undefined = shellDataNode
+        .getChildByName('dispatchTimeNs')
+        ?.getValue();
       const fields: LogField[] = [
         {
           spec: Presenter.COLUMNS.id,
@@ -226,16 +229,14 @@ export class Presenter extends AbstractLogViewerPresenter<UiData> {
         {spec: Presenter.COLUMNS.type, value: transitionType},
         {
           spec: Presenter.COLUMNS.sendTime,
-          value:
-            wmDataNode.getChildByName('sendTimeNs')?.getValue() ??
-            Presenter.VALUE_NA,
+          value: sendTs ?? Presenter.VALUE_NA,
+          propagateEntryTimestamp:
+            dispatchTs === undefined && sendTs !== undefined,
         },
         {
           spec: Presenter.COLUMNS.dispatchTime,
-          value:
-            shellDataNode.getChildByName('dispatchTimeNs')?.getValue() ??
-            Presenter.VALUE_NA,
-          propagateEntryTimestamp: true,
+          value: dispatchTs ?? Presenter.VALUE_NA,
+          propagateEntryTimestamp: dispatchTs !== undefined,
         },
         {
           spec: Presenter.COLUMNS.duration,

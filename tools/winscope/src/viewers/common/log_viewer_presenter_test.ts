@@ -15,7 +15,8 @@
  */
 
 import {assertDefined} from 'common/assert_utils';
-import {InMemoryStorage} from 'common/in_memory_storage';
+import {InMemoryStorage} from 'common/store/in_memory_storage';
+import {TimestampConverterUtils} from 'common/time/test_utils';
 import {
   ActiveTraceChanged,
   DarkModeToggled,
@@ -23,8 +24,8 @@ import {
 } from 'messaging/winscope_event';
 import {MockPresenter} from 'test/unit/mock_log_viewer_presenter';
 import {PropertyTreeBuilder} from 'test/unit/property_tree_builder';
-import {TimestampConverterUtils} from 'test/unit/timestamp_converter_utils';
 import {TraceBuilder} from 'test/unit/trace_builder';
+import {UnitTestUtils} from 'test/unit/utils';
 import {Trace} from 'trace/trace';
 import {TracePosition} from 'trace/trace_position';
 import {TraceType} from 'trace/trace_type';
@@ -33,7 +34,7 @@ import {
   PropertySource,
   PropertyTreeNode,
 } from 'trace/tree_node/property_tree_node';
-import {TextFilter, TextFilterValues} from 'viewers/common/text_filter';
+import {TextFilter} from 'viewers/common/text_filter';
 import {LogSelectFilter, LogTextFilter} from './log_filters';
 import {LogHeader, UiDataLog} from './ui_data_log';
 import {UserOptions} from './user_options';
@@ -112,14 +113,9 @@ describe('AbstractLogViewerPresenter', () => {
   });
 
   beforeEach(() => {
-    presenter = new MockPresenter(
-      trace,
-      new InMemoryStorage(),
-      (newData) => {
-        uiData = newData;
-      },
-      true,
-    );
+    presenter = new MockPresenter(trace, new InMemoryStorage(), (newData) => {
+      uiData = newData;
+    });
   });
 
   it('adds events listeners', async () => {
@@ -280,7 +276,9 @@ describe('AbstractLogViewerPresenter', () => {
     expect(listenerSpy).toHaveBeenCalledTimes(2);
 
     await presenter.onAppEvent(
-      new ActiveTraceChanged(new TraceBuilder<object>().setEntries([]).build()),
+      new ActiveTraceChanged(
+        UnitTestUtils.makeEmptyTrace(TraceType.TRANSACTIONS),
+      ),
     );
     pressRightArrowKey();
     expect(listenerSpy).toHaveBeenCalledTimes(3);
@@ -330,7 +328,7 @@ describe('AbstractLogViewerPresenter', () => {
     expect(emitEventSpy).not.toHaveBeenCalled();
   });
 
-  it('propagates position with prev trace entry on left arrow key press', async () => {
+  it('propagates position with first prev trace entry with valid timestamp on left arrow key press', async () => {
     const trace = assertDefined(
       lastEntryPositionUpdate.position.entry,
     ).getFullTrace();
@@ -340,14 +338,17 @@ describe('AbstractLogViewerPresenter', () => {
     presenter.setEmitEvent(emitEventSpy);
     await presenter.onAppEvent(lastEntryPositionUpdate);
 
+    const prevIndex = assertDefined(uiData.currentIndex) - 1;
+    spyOn(
+      uiData.entries[prevIndex].traceEntry,
+      'hasValidTimestamp',
+    ).and.returnValue(false);
     await presenter.onPositionChangeByKeyPress(
       new KeyboardEvent('keydown', {key: 'ArrowLeft'}),
     );
     expect(emitEventSpy).toHaveBeenCalledWith(
       new TracePositionUpdate(
-        TracePosition.fromTraceEntry(
-          uiData.entries[assertDefined(uiData.currentIndex) - 1].traceEntry,
-        ),
+        TracePosition.fromTraceEntry(uiData.entries[prevIndex - 1].traceEntry),
         true,
       ),
     );
@@ -506,9 +507,7 @@ describe('AbstractLogViewerPresenter', () => {
     expect(
       assertDefined(uiData.propertiesTree).getAllChildren().length,
     ).toEqual(3);
-    await presenter.onPropertiesFilterChange(
-      new TextFilter(new TextFilterValues('pass', [])),
-    );
+    await presenter.onPropertiesFilterChange(new TextFilter('pass'));
     expect(
       assertDefined(uiData.propertiesTree).getAllChildren().length,
     ).toEqual(2);
@@ -539,16 +538,11 @@ describe('AbstractLogViewerPresenter', () => {
   });
 
   it('is robust to empty trace', async () => {
-    const trace = new TraceBuilder<PropertyTreeNode>()
-      .setType(TraceType.TRANSACTIONS)
-      .setEntries([])
-      .setTimestamps([])
-      .build();
+    const trace = UnitTestUtils.makeEmptyTrace(TraceType.TRANSACTIONS);
     const presenter = new MockPresenter(
       trace,
       new InMemoryStorage(),
       (newData) => (uiData = newData),
-      true,
     );
 
     await presenter.onAppEvent(

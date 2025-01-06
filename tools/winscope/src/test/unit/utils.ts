@@ -15,10 +15,10 @@
  */
 
 import {ComponentFixture} from '@angular/core/testing';
-import {assertDefined} from 'common/assert_utils';
-import {Timestamp} from 'common/time';
-import {TimestampConverter} from 'common/timestamp_converter';
-import {UrlUtils} from 'common/url_utils';
+import {assertDefined, assertTrue} from 'common/assert_utils';
+import {TimestampConverterUtils} from 'common/time/test_utils';
+import {Timestamp} from 'common/time/time';
+import {TimestampConverter} from 'common/time/timestamp_converter';
 import {ParserFactory as LegacyParserFactory} from 'parsers/legacy/parser_factory';
 import {ParserFactory as PerfettoParserFactory} from 'parsers/perfetto/parser_factory';
 import {TracesParserFactory} from 'parsers/traces/traces_parser_factory';
@@ -26,24 +26,15 @@ import {Parser} from 'trace/parser';
 import {Trace} from 'trace/trace';
 import {Traces} from 'trace/traces';
 import {TraceFile} from 'trace/trace_file';
+import {TraceMetadata} from 'trace/trace_metadata';
 import {TraceEntryTypeMap, TraceType} from 'trace/trace_type';
 import {HierarchyTreeNode} from 'trace/tree_node/hierarchy_tree_node';
-import {TimestampConverterUtils} from './timestamp_converter_utils';
+import {QueryResult, Row, RowIterator} from 'trace_processor/query_result';
+import {TraceProcessorFactory} from 'trace_processor/trace_processor_factory';
+import {getFixtureFile} from './fixture_utils';
 import {TraceBuilder} from './trace_builder';
 
 class UnitTestUtils {
-  static async getFixtureFile(
-    srcFilename: string,
-    dstFilename: string = srcFilename,
-  ): Promise<File> {
-    const url = UrlUtils.getRootUrl() + 'base/src/test/fixtures/' + srcFilename;
-    const response = await fetch(url);
-    expect(response.ok).toBeTrue();
-    const blob = await response.blob();
-    const file = new File([blob], dstFilename);
-    return file;
-  }
-
   static async getTrace<T extends TraceType>(
     type: T,
     filename: string,
@@ -72,11 +63,13 @@ class UnitTestUtils {
     filename: string,
     converter = UnitTestUtils.getTimestampConverter(),
     initializeRealToElapsedTimeOffsetNs = true,
+    metadata: TraceMetadata = {},
   ): Promise<Parser<object>> {
     const parsers = await UnitTestUtils.getParsers(
       filename,
       converter,
       initializeRealToElapsedTimeOffsetNs,
+      metadata,
     );
 
     expect(parsers.length)
@@ -90,15 +83,13 @@ class UnitTestUtils {
     filename: string,
     converter = UnitTestUtils.getTimestampConverter(),
     initializeRealToElapsedTimeOffsetNs = true,
+    metadata: TraceMetadata = {},
   ): Promise<Array<Parser<object>>> {
-    const file = new TraceFile(
-      await UnitTestUtils.getFixtureFile(filename),
-      undefined,
-    );
+    const file = new TraceFile(await getFixtureFile(filename), undefined);
     const fileAndParsers = await new LegacyParserFactory().createParsers(
       [file],
       converter,
-      undefined,
+      metadata,
     );
 
     if (initializeRealToElapsedTimeOffsetNs) {
@@ -147,7 +138,7 @@ class UnitTestUtils {
     fixturePath: string,
     withUTCOffset = false,
   ): Promise<Array<Parser<object>>> {
-    const file = await UnitTestUtils.getFixtureFile(fixturePath);
+    const file = await getFixtureFile(fixturePath);
     const traceFile = new TraceFile(file);
     const converter = UnitTestUtils.getTimestampConverter(withUTCOffset);
     const parsers = await new PerfettoParserFactory().createParsers(
@@ -212,11 +203,11 @@ class UnitTestUtils {
       traces,
       converter,
     );
-    expect(tracesParsers.length)
-      .withContext(
+    assertTrue(
+      tracesParsers.length === 1,
+      () =>
         `Should have been able to create a traces parser for [${filenames.join()}]`,
-      )
-      .toEqual(1);
+    );
     return tracesParsers[0];
   }
 
@@ -305,13 +296,6 @@ class UnitTestUtils {
     return parser.getEntry(index);
   }
 
-  static timestampEqualityTester(first: any, second: any): boolean | undefined {
-    if (first instanceof Timestamp && second instanceof Timestamp) {
-      return UnitTestUtils.testTimestamps(first, second);
-    }
-    return undefined;
-  }
-
   static checkSectionCollapseAndExpand<T>(
     htmlElement: HTMLElement,
     fixture: ComponentFixture<T>,
@@ -346,15 +330,52 @@ class UnitTestUtils {
     ).toEqual(0);
   }
 
-  private static testTimestamps(
-    timestamp: Timestamp,
-    expectedTimestamp: Timestamp,
-  ): boolean {
-    if (timestamp.format() !== expectedTimestamp.format()) return false;
-    if (timestamp.getValueNs() !== expectedTimestamp.getValueNs()) {
-      return false;
+  static makeEmptyTrace<T extends TraceType>(
+    traceType: T,
+    descriptors: string[] = [],
+  ): Trace<TraceEntryTypeMap[T]> {
+    return new TraceBuilder<TraceEntryTypeMap[T]>()
+      .setEntries([])
+      .setTimestamps([])
+      .setDescriptors(descriptors)
+      .setType(traceType)
+      .build();
+  }
+
+  static makeSearchTraceSpies(
+    ts?: Timestamp,
+  ): [jasmine.SpyObj<QueryResult>, jasmine.SpyObj<RowIterator<Row>>] {
+    const spyQueryResult = jasmine.createSpyObj<QueryResult>('result', [
+      'numRows',
+      'columns',
+      'iter',
+    ]);
+    spyQueryResult.numRows.and.returnValue(1);
+    spyQueryResult.columns.and.returnValue(
+      ts === undefined ? ['property'] : ['ts', 'property'],
+    );
+
+    const spyIter = jasmine.createSpyObj<RowIterator<Row>>('iter', [
+      'valid',
+      'next',
+      'get',
+    ]);
+    if (ts) {
+      spyIter.get.withArgs('ts').and.returnValue(ts.getValueNs());
     }
-    return true;
+    spyIter.get.withArgs('property').and.returnValue('test_value');
+    spyIter.valid.and.returnValue(true);
+    spyIter.next.and.callFake(() =>
+      assertDefined(spyIter).valid.and.returnValue(false),
+    );
+    spyQueryResult.iter.and.returnValue(spyIter);
+
+    return [spyQueryResult, spyIter];
+  }
+
+  static async runQueryAndGetResult(query: string): Promise<QueryResult> {
+    const tp = await TraceProcessorFactory.getSingleInstance();
+    return tp.query(query).waitAllRows();
   }
 }
 

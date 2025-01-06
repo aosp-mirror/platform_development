@@ -51,12 +51,14 @@
     <string name="pref_enable_display_category" translatable="false">enable_display_category</string>
     <string name="pref_always_unlocked_device" translatable="false">always_unlocked_device</string>
     <string name="pref_display_timeout" translatable="false">display_timeout</string>
+    <string name="pref_enable_client_brightness" translatable="false">enable_client_brightness</string>
     <string name="pref_show_pointer_icon" translatable="false">show_pointer_icon</string>
     <string name="pref_enable_custom_home" translatable="false">enable_custom_home</string>
     <string name="pref_enable_custom_status_bar" translatable="false">enable_custom_status_bar</string>
     <string name="pref_display_ime_policy" translatable="false">display_ime_policy</string>
     <string name="pref_enable_client_native_ime" translatable="false">enable_client_native_ime</string>
     <string name="pref_record_encoder_output" translatable="false">record_encoder_output</string>
+    <string name="pref_enable_update_audio_policy_mixes" translatable="false">enable_update_mixing_rules</string>
 
     <string name="internal_pref_home_displays_supported" translatable="false">home_displays_supported</string>
     <string name="internal_pref_mirror_displays_supported" translatable="false">mirror_displays_supported</string>
@@ -66,4 +68,5 @@
 
     <string name="app_streaming" translatable="false">android.app.role.COMPANION_DEVICE_APP_STREAMING</string>
     <string name="nearby_device_streaming" translatable="false">android.app.role.COMPANION_DEVICE_NEARBY_DEVICE_STREAMING</string>
+    <string name="sensor_device_streaming" translatable="false">android.app.role.COMPANION_DEVICE_SENSOR_DEVICE_STREAMING</string>
 </resources>

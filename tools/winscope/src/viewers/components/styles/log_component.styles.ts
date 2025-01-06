@@ -20,6 +20,8 @@ export const logComponentStyles = `
     flex-direction: column;
     flex: 1;
     overflow: auto;
+  }
+  .entries.padded {
     margin: 4px;
     padding: 12px;
   }
@@ -187,30 +189,43 @@ export const logComponentStyles = `
   }
 
   .input-type {
-    flex: 2;
+    display: block;
+    width: 60px;
   }
   .input-source {
     flex: 3;
+    min-width: 50px;
   }
   .input-action {
     flex: 2;
+    min-width: 50px;
   }
   .input-device-id {
     flex: 1;
+    min-width: 50px;
   }
   .input-display-id {
     flex: 1;
     min-width: 50px;
   }
-  .input-details {
+  .entry .input-details {
     flex: 4;
+    min-width: 50px;
+  }
+  .headers .input-details {
+    display: none;
+    flex: 0;
   }
   .entry .input-windows {
     display: none;
     flex: 0;
   }
-  .filters .input-windows {
-    display: flex;
-    flex: 10;
+  .headers .input-windows {
+    flex: 4;
+    min-width: 50px;
+  }
+
+  .search-result {
+    flex: 1;
   }
 `;

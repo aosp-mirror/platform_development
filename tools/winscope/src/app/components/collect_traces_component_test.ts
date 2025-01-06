@@ -33,9 +33,13 @@ import {MatProgressBarModule} from '@angular/material/progress-bar';
 import {MatSnackBar, MatSnackBarModule} from '@angular/material/snack-bar';
 import {BrowserAnimationsModule} from '@angular/platform-browser/animations';
 import {assertDefined} from 'common/assert_utils';
-import {InMemoryStorage} from 'common/in_memory_storage';
+import {InMemoryStorage} from 'common/store/in_memory_storage';
 import {ProxyTraceTimeout} from 'messaging/user_warnings';
-import {NoTraceTargetsSelected, WinscopeEvent} from 'messaging/winscope_event';
+import {
+  AppRefreshDumpsRequest,
+  NoTraceTargetsSelected,
+  WinscopeEvent,
+} from 'messaging/winscope_event';
 import {MockAdbConnection} from 'test/unit/mock_adb_connection';
 import {UserNotifierChecker} from 'test/unit/user_notifier_checker';
 import {TraceType} from 'trace/trace_type';
@@ -299,7 +303,7 @@ describe('CollectTracesComponent', () => {
     });
 
     Object.values(collectTracesComponent.traceConfig).forEach(
-      (c) => (c.enabled = false),
+      (c) => (c.config.enabled = false),
     );
     const spy = spyOn(getConnection(), 'startTrace');
     await clickStartTraceButton();
@@ -334,7 +338,7 @@ describe('CollectTracesComponent', () => {
     });
 
     Object.values(collectTracesComponent.dumpConfig).forEach(
-      (c) => (c.enabled = false),
+      (c) => (c.config.enabled = false),
     );
     const filesSpy = spyOn(getCollectTracesComponent().filesCollected, 'emit');
     await clickDumpStateButton();
@@ -641,7 +645,7 @@ describe('CollectTracesComponent', () => {
     fixture.detectChanges();
     const newComponent = getCollectTracesComponent(1);
     const spy = spyOn(getConnection(), 'dumpState');
-    newComponent.refreshDumps = true;
+    await newComponent.onWinscopeEvent(new AppRefreshDumpsRequest());
     fixture.detectChanges();
 
     getConnection().setState(ConnectionState.IDLE);
@@ -738,8 +742,8 @@ describe('CollectTracesComponent', () => {
     const collectTracesComponent = getCollectTracesComponent();
     expect(
       isDump
-        ? collectTracesComponent.dumpConfig[key].enabled
-        : collectTracesComponent.traceConfig[key].enabled,
+        ? collectTracesComponent.dumpConfig[key].config.enabled
+        : collectTracesComponent.traceConfig[key].config.enabled,
     ).toBeTrue();
 
     const checkboxSection = assertDefined(
@@ -762,8 +766,8 @@ describe('CollectTracesComponent', () => {
     fixture.detectChanges();
     expect(
       isDump
-        ? collectTracesComponent.dumpConfig[key].enabled
-        : collectTracesComponent.traceConfig[key].enabled,
+        ? collectTracesComponent.dumpConfig[key].config.enabled
+        : collectTracesComponent.traceConfig[key].config.enabled,
     ).toBeFalse();
   }
 
@@ -779,8 +783,8 @@ describe('CollectTracesComponent', () => {
 
   function updateTraceConfigToInvalidIMEFrameMapping() {
     const config = assertDefined(getCollectTracesComponent().traceConfig);
-    config['ime'].enabled = true;
-    config['layers_trace'].enabled = false;
+    config['ime'].config.enabled = true;
+    config['layers_trace'].config.enabled = false;
   }
 
   async function clickStartTraceButton() {

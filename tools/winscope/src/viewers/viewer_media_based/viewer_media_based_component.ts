@@ -28,12 +28,13 @@ import {DomSanitizer, SafeUrl} from '@angular/platform-browser';
 import {assertDefined} from 'common/assert_utils';
 import {Size} from 'common/geometry/size';
 import {MediaBasedTraceEntry} from 'trace/media_based_trace_entry';
+import {ViewerEvents} from 'viewers/common/viewer_events';
 
 @Component({
   selector: 'viewer-media-based',
   template: `
   <div class="overlay">
-    <mat-card class="container" cdkDrag cdkDragBoundary=".overlay">
+    <mat-card class="container" cdkDrag cdkDragBoundary=".overlay" (dblclick)="onOverlayDblClick()">
       <mat-card-title class="header">
         <button mat-button class="button-drag draggable" cdkDragHandle>
           <mat-icon class="drag-icon">drag_indicator</mat-icon>
@@ -63,11 +64,21 @@ import {MediaBasedTraceEntry} from 'trace/media_based_trace_entry';
           </mat-option>
         </mat-select>
 
-        <button mat-button class="button-minimize" [disabled]="forceMinimize" (click)="onMinimizeButtonClick()">
-          <mat-icon>
-            {{ isMinimized() ? 'maximize' : 'minimize' }}
+        <span class="header-end">
+          <mat-icon
+            class="info-icon material-symbols-outlined"
+            *ngIf="enableDoubleClick"
+            matTooltip="Double click overlay to change active trace to this screen recording"
+            matTooltipPosition="above">
+            info
           </mat-icon>
-        </button>
+
+          <button mat-button class="button-minimize" [disabled]="forceMinimize" (click)="onMinimizeButtonClick()">
+            <mat-icon>
+              {{ isMinimized() ? 'maximize' : 'minimize' }}
+            </mat-icon>
+          </button>
+        </span>
       </mat-card-title>
       <div class="video-container" cdkDragHandle [style.height]="isMinimized() ? '0px' : ''">
         <ng-container *ngIf="hasFrameToShow(); then video; else noVideo"> </ng-container>
@@ -147,6 +158,17 @@ import {MediaBasedTraceEntry} from 'trace/media_based_trace_entry';
         align-items: center;
       }
 
+      .header-end {
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+      }
+
+      .info-icon {
+        transform: scale(0.75);
+        cursor: pointer;
+      }
+
       .button-minimize {
         flex-grow: 0;
         padding: 2px;
@@ -183,6 +205,7 @@ class ViewerMediaBasedComponent {
   @Input() currentTraceEntries: MediaBasedTraceEntry[] = [];
   @Input() titles: string[] = [];
   @Input() forceMinimize = false;
+  @Input() enableDoubleClick = false;
 
   private frameSize: Size = {width: 720, height: 1280}; // default for Flicker
   private frameSizeWorker: number | undefined;
@@ -241,6 +264,16 @@ class ViewerMediaBasedComponent {
     this.index = event.value;
     this.updateSafeUrl();
     event.source.close();
+  }
+
+  onOverlayDblClick() {
+    if (this.enableDoubleClick) {
+      const event = new CustomEvent(ViewerEvents.OverlayDblClick, {
+        detail: this.index,
+        bubbles: true,
+      });
+      this.elementRef.nativeElement.dispatchEvent(event);
+    }
   }
 
   private resetFrameSizeWorker() {

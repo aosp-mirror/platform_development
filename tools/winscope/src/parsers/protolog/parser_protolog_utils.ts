@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import {ParserTimestampConverter} from 'common/timestamp_converter';
+import {ParserTimestampConverter} from 'common/time/timestamp_converter';
 import {SetFormatters} from 'parsers/operations/set_formatters';
 import {
   MakeTimestampStrategyType,

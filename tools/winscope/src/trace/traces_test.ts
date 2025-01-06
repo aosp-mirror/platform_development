@@ -16,11 +16,12 @@
 
 import {assertDefined} from 'common/assert_utils';
 import {FunctionUtils} from 'common/function_utils';
-import {TimestampConverterUtils} from 'test/unit/timestamp_converter_utils';
+import {TimestampConverterUtils} from 'common/time/test_utils';
 import {TracesBuilder} from 'test/unit/traces_builder';
 import {TracesUtils} from 'test/unit/traces_utils';
 import {TraceBuilder} from 'test/unit/trace_builder';
 import {TraceUtils} from 'test/unit/trace_utils';
+import {UnitTestUtils} from 'test/unit/utils';
 import {FrameMapBuilder} from './frame_map_builder';
 import {AbsoluteFrameIndex} from './index_types';
 import {Traces} from './traces';
@@ -164,14 +165,8 @@ describe('Traces', () => {
   });
 
   it('deleteTrace()', () => {
-    const trace0 = new TraceBuilder<string>()
-      .setType(TraceType.TEST_TRACE_STRING)
-      .setEntries([])
-      .build();
-    const trace1 = new TraceBuilder<number>()
-      .setType(TraceType.TEST_TRACE_NUMBER)
-      .setEntries([])
-      .build();
+    const trace0 = UnitTestUtils.makeEmptyTrace(TraceType.TEST_TRACE_STRING);
+    const trace1 = UnitTestUtils.makeEmptyTrace(TraceType.TEST_TRACE_NUMBER);
 
     const traces = new Traces();
     traces.addTrace(trace0);
@@ -190,14 +185,8 @@ describe('Traces', () => {
   });
 
   it('hasTrace()', () => {
-    const trace0 = new TraceBuilder<string>()
-      .setType(TraceType.TEST_TRACE_STRING)
-      .setEntries([])
-      .build();
-    const trace1 = new TraceBuilder<number>()
-      .setType(TraceType.TEST_TRACE_NUMBER)
-      .setEntries([])
-      .build();
+    const trace0 = UnitTestUtils.makeEmptyTrace(TraceType.TEST_TRACE_STRING);
+    const trace1 = UnitTestUtils.makeEmptyTrace(TraceType.TEST_TRACE_NUMBER);
 
     const traces = new Traces();
     traces.addTrace(trace0);

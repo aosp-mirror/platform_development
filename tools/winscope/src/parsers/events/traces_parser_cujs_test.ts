@@ -15,8 +15,11 @@
  */
 
 import {assertDefined} from 'common/assert_utils';
+import {
+  TimestampConverterUtils,
+  timestampEqualityTester,
+} from 'common/time/test_utils';
 import {PropertyTreeBuilder} from 'test/unit/property_tree_builder';
-import {TimestampConverterUtils} from 'test/unit/timestamp_converter_utils';
 import {UnitTestUtils} from 'test/unit/utils';
 import {CoarseVersion} from 'trace/coarse_version';
 import {Parser} from 'trace/parser';
@@ -31,7 +34,7 @@ describe('TracesParserCujs', () => {
   let parser: Parser<PropertyTreeNode>;
 
   beforeAll(async () => {
-    jasmine.addCustomEqualityTester(UnitTestUtils.timestampEqualityTester);
+    jasmine.addCustomEqualityTester(timestampEqualityTester);
     parser = (await UnitTestUtils.getTracesParser([
       'traces/eventlog.winscope',
     ])) as Parser<PropertyTreeNode>;

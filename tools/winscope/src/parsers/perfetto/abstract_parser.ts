@@ -15,8 +15,8 @@
  */
 
 import {assertDefined, assertTrue} from 'common/assert_utils';
-import {INVALID_TIME_NS, Timestamp} from 'common/time';
-import {ParserTimestampConverter} from 'common/timestamp_converter';
+import {INVALID_TIME_NS, Timestamp} from 'common/time/time';
+import {ParserTimestampConverter} from 'common/time/timestamp_converter';
 import {CoarseVersion} from 'trace/coarse_version';
 import {
   CustomQueryParamTypeMap,
@@ -35,6 +35,7 @@ export abstract class AbstractParser<T> implements Parser<T> {
   protected realToBootTimeOffsetNs?: bigint;
   protected timestampConverter: ParserTimestampConverter;
   protected entryIndexToRowIdMap: number[] = [];
+  protected preProcessTrace?(): Promise<void>;
 
   private lengthEntries = 0;
   private traceFile: TraceFile;
@@ -57,6 +58,10 @@ export abstract class AbstractParser<T> implements Parser<T> {
       await this.traceProcessor.query(`INCLUDE PERFETTO MODULE ${module};`);
     }
 
+    if (this.preProcessTrace) {
+      await this.preProcessTrace();
+    }
+
     this.entryIndexToRowIdMap = await this.buildEntryIndexToRowIdMap();
     const rowBootTimeTimestampsNs = await this.queryRowBootTimeTimestamps();
     this.bootTimeTimestampsNs = this.entryIndexToRowIdMap.map(
@@ -71,7 +76,7 @@ export abstract class AbstractParser<T> implements Parser<T> {
 
     let lastNonZeroTimestamp: bigint | undefined;
     for (let i = this.bootTimeTimestampsNs.length - 1; i >= 0; i--) {
-      if (this.bootTimeTimestampsNs[i] !== 0n) {
+      if (this.bootTimeTimestampsNs[i] !== INVALID_TIME_NS) {
         lastNonZeroTimestamp = this.bootTimeTimestampsNs[i];
         break;
       }
@@ -139,7 +144,7 @@ export abstract class AbstractParser<T> implements Parser<T> {
     return entryIndexToRowId;
   }
 
-  async queryRowBootTimeTimestamps(): Promise<Array<bigint>> {
+  private async queryRowBootTimeTimestamps(): Promise<Array<bigint>> {
     const sql = `SELECT ts FROM ${this.getTableName()} ORDER BY id;`;
     const result = await this.traceProcessor.query(sql).waitAllRows();
     const timestamps: Array<bigint> = [];

@@ -15,10 +15,9 @@
  */
 
 import {assertDefined} from 'common/assert_utils';
-import {PersistentStoreProxy} from 'common/persistent_store_proxy';
-import {Store} from 'common/store';
-import {Timestamp} from 'common/time';
-import {WinscopeEvent, WinscopeEventType} from 'messaging/winscope_event';
+import {PersistentStoreProxy} from 'common/store/persistent_store_proxy';
+import {Store} from 'common/store/store';
+import {Timestamp} from 'common/time/time';
 import {Trace, TraceEntry} from 'trace/trace';
 import {Traces} from 'trace/traces';
 import {ImeTraceType, TraceType} from 'trace/trace_type';
@@ -33,7 +32,7 @@ import {
   ProcessedWindowManagerState,
 } from 'viewers/common/ime_utils';
 import {TableProperties} from 'viewers/common/table_properties';
-import {TextFilter, TextFilterValues} from 'viewers/common/text_filter';
+import {TextFilter} from 'viewers/common/text_filter';
 import {UserOptions} from 'viewers/common/user_options';
 import {
   AbstractHierarchyViewerPresenter,
@@ -74,13 +73,7 @@ export abstract class AbstractPresenterInputMethod extends AbstractHierarchyView
       },
       this.storage,
     ),
-    new TextFilter(
-      PersistentStoreProxy.new<TextFilterValues>(
-        'ImeHierarchyFilter',
-        new TextFilterValues('', []),
-        this.storage,
-      ),
-    ),
+    new TextFilter(),
     [],
     true,
     false,
@@ -94,22 +87,14 @@ export abstract class AbstractPresenterInputMethod extends AbstractHierarchyView
         showDefaults: {
           name: 'Show defaults',
           enabled: false,
-          tooltip: `
-                If checked, shows the value of all properties.
-                Otherwise, hides all properties whose value is
-                the default for its data type.
-              `,
+          tooltip: `If checked, shows the value of all properties.
+Otherwise, hides all properties whose value is
+the default for its data type.`,
         },
       },
       this.storage,
     ),
-    new TextFilter(
-      PersistentStoreProxy.new<TextFilterValues>(
-        'ImePropertiesFilter',
-        new TextFilterValues('', []),
-        this.storage,
-      ),
-    ),
+    new TextFilter(),
     [],
   );
   protected override multiTraceType = undefined;
@@ -139,69 +124,6 @@ export abstract class AbstractPresenterInputMethod extends AbstractHierarchyView
     this.wmTrace = traces.getTrace(TraceType.WINDOW_MANAGER);
   }
 
-  async onAppEvent(event: WinscopeEvent) {
-    await this.handleCommonWinscopeEvents(event);
-    await event.visit(
-      WinscopeEventType.TRACE_POSITION_UPDATE,
-      async (event) => {
-        this.clearOverridePropertiesTreeSelection();
-        await this.applyTracePositionUpdate(event);
-
-        const imeEntry = this.hierarchyPresenter.getCurrentEntryForTrace(
-          this.imeTrace,
-        );
-        const [sfEntry, wmEntry] = this.findSfWmTraceEntries(imeEntry);
-
-        if (imeEntry) {
-          this.additionalProperties = await this.getAdditionalProperties(
-            await wmEntry?.getValue(),
-            await sfEntry?.getValue(),
-            wmEntry?.getTimestamp(),
-            sfEntry?.getTimestamp(),
-          );
-          this.hierarchyTableProperties = this.getHierarchyTableProperties();
-
-          await this.updateOverridePropertiesTree(this.additionalProperties);
-
-          const highlightedItem = this.getHighlightedItem();
-          const selected = this.hierarchyPresenter.getSelectedTree();
-
-          if (!selected && highlightedItem !== undefined) {
-            const isHighlightedFilter = (node: HierarchyTreeNode) =>
-              UiTreeUtils.isHighlighted(node, highlightedItem);
-            let selectedTree =
-              this.additionalProperties?.sf?.taskLayerOfImeContainer?.findDfs(
-                isHighlightedFilter,
-              );
-            if (!selectedTree) {
-              selectedTree =
-                this.additionalProperties?.sf?.taskLayerOfImeSnapshot?.findDfs(
-                  isHighlightedFilter,
-                );
-            }
-
-            if (selectedTree) {
-              this.hierarchyPresenter.setSelectedTree([
-                assertDefined(this.sfTrace),
-                selectedTree,
-              ]);
-              await this.updatePropertiesTree();
-            }
-          }
-        }
-        this.refreshUIData();
-      },
-    );
-    await event.visit(
-      WinscopeEventType.FILTER_PRESET_APPLY_REQUEST,
-      async (event) => {
-        const filterPresetName = event.name;
-        await this.applyPresetConfig(filterPresetName);
-        this.refreshUIData();
-      },
-    );
-  }
-
   async onHighlightedNodeChange(node: UiHierarchyTreeNode) {
     this.clearOverridePropertiesTreeSelection();
     await this.applyHighlightedNodeChange(node);
@@ -210,7 +132,7 @@ export abstract class AbstractPresenterInputMethod extends AbstractHierarchyView
 
   async onHighlightedIdChange(newId: string) {
     const selectedHierarchyTree = this.hierarchyPresenter.getSelectedTree();
-    if (!selectedHierarchyTree || selectedHierarchyTree[1].id !== newId) {
+    if (!selectedHierarchyTree || selectedHierarchyTree.tree.id !== newId) {
       this.clearOverridePropertiesTreeSelection();
     }
     await this.applyHighlightedIdChange(newId);
@@ -224,10 +146,11 @@ export abstract class AbstractPresenterInputMethod extends AbstractHierarchyView
     this.updateHighlightedItem(selectedItem.treeNode.id);
     if (selectedItem.treeNode instanceof HierarchyTreeNode) {
       this.clearOverridePropertiesTreeSelection();
-      this.hierarchyPresenter.setSelectedTree([
-        assertDefined(this.wmTrace),
-        selectedItem.treeNode,
-      ]);
+      this.hierarchyPresenter.setSelectedTree({
+        trace: assertDefined(this.wmTrace),
+        tree: selectedItem.treeNode,
+        index: 0,
+      });
     } else if (selectedItem.treeNode instanceof PropertyTreeNode) {
       this.hierarchyPresenter.setSelectedTree(undefined);
       this.overridePropertiesTree = selectedItem.treeNode;
@@ -273,10 +196,58 @@ export abstract class AbstractPresenterInputMethod extends AbstractHierarchyView
     return false;
   }
 
-  protected override getOverrideDisplayName(
-    selected: [Trace<HierarchyTreeNode>, HierarchyTreeNode],
-  ): string | undefined {
+  protected override getOverrideDisplayName(): string | undefined {
     return this.overridePropertiesTreeName;
+  }
+
+  protected override async initializeIfNeeded(): Promise<void> {
+    this.clearOverridePropertiesTreeSelection();
+  }
+
+  protected override async processDataAfterPositionUpdate(): Promise<void> {
+    const imeEntry = this.hierarchyPresenter.getCurrentEntryForTrace(
+      this.imeTrace,
+    );
+    const [sfEntry, wmEntry] = this.findSfWmTraceEntries(imeEntry);
+
+    if (imeEntry) {
+      this.additionalProperties = await this.getAdditionalProperties(
+        await wmEntry?.getValue(),
+        await sfEntry?.getValue(),
+        wmEntry?.getTimestamp(),
+        sfEntry?.getTimestamp(),
+      );
+      this.hierarchyTableProperties = this.getHierarchyTableProperties();
+
+      await this.updateOverridePropertiesTree(this.additionalProperties);
+
+      const highlightedItem = this.getHighlightedItem();
+      const selected = this.hierarchyPresenter.getSelectedTree();
+
+      if (!selected && highlightedItem !== undefined) {
+        const isHighlightedFilter = (node: HierarchyTreeNode) =>
+          UiTreeUtils.isHighlighted(node, highlightedItem);
+        let selectedTree =
+          this.additionalProperties?.sf?.taskLayerOfImeContainer?.findDfs(
+            isHighlightedFilter,
+          );
+        if (!selectedTree) {
+          selectedTree =
+            this.additionalProperties?.sf?.taskLayerOfImeSnapshot?.findDfs(
+              isHighlightedFilter,
+            );
+        }
+
+        if (selectedTree) {
+          this.hierarchyPresenter.setSelectedTree({
+            trace: assertDefined(this.sfTrace),
+            tree: selectedTree,
+            index: 1,
+          });
+          await this.updatePropertiesTree();
+        }
+      }
+    }
   }
 
   private async makeSfSubtrees(
@@ -292,7 +263,7 @@ export abstract class AbstractPresenterInputMethod extends AbstractHierarchyView
     }
     if (sfHierarchyTrees.length > 0) {
       await this.hierarchyPresenter.addCurrentHierarchyTrees(
-        [sfTrace, sfHierarchyTrees],
+        {trace: sfTrace, trees: sfHierarchyTrees},
         this.getHighlightedItem(),
       );
     }
@@ -349,7 +320,11 @@ export abstract class AbstractPresenterInputMethod extends AbstractHierarchyView
       const wmHierarchyTree = additionalProperties.wm?.hierarchyTree;
       this.hierarchyPresenter.setSelectedTree(
         wmHierarchyTree
-          ? [assertDefined(this.wmTrace), wmHierarchyTree]
+          ? {
+              trace: assertDefined(this.wmTrace),
+              tree: wmHierarchyTree,
+              index: 0,
+            }
           : undefined,
       );
       this.overridePropertiesTreeName = wmHierarchyTree
@@ -392,7 +367,7 @@ export abstract class AbstractPresenterInputMethod extends AbstractHierarchyView
     await this.updatePropertiesTree();
   }
 
-  private refreshUIData() {
+  protected override refreshUIData() {
     this.uiData.hierarchyTableProperties = this.hierarchyTableProperties;
     this.uiData.additionalProperties = this.additionalProperties;
     this.refreshHierarchyViewerUiData();

@@ -14,8 +14,11 @@
  * limitations under the License.
  */
 
-import {Point} from 'common/geometry/point';
+import {Point} from './point';
 
+/**
+ * A rectangle class in 2D space.
+ */
 export class Rect {
   constructor(
     readonly x: number,

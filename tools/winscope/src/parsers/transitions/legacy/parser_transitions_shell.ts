@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import {Timestamp} from 'common/time';
+import {Timestamp} from 'common/time/time';
 import {AbstractParser} from 'parsers/legacy/abstract_parser';
 import {EntryPropertiesTreeFactory} from 'parsers/transitions/entry_properties_tree_factory';
 import root from 'protos/transitions/udc/json';
@@ -22,7 +22,12 @@ import {com} from 'protos/transitions/udc/static';
 import {TraceType} from 'trace/trace_type';
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
 
-export class ParserTransitionsShell extends AbstractParser<PropertyTreeNode> {
+type TransitionProto = com.android.wm.shell.ITransition;
+
+export class ParserTransitionsShell extends AbstractParser<
+  PropertyTreeNode,
+  TransitionProto
+> {
   private static readonly WmShellTransitionsTraceProto = root.lookupType(
     'com.android.wm.shell.WmShellTransitionTraceProto',
   );
@@ -42,9 +47,7 @@ export class ParserTransitionsShell extends AbstractParser<PropertyTreeNode> {
     return undefined;
   }
 
-  override decodeTrace(
-    traceBuffer: Uint8Array,
-  ): com.android.wm.shell.ITransition[] {
+  override decodeTrace(traceBuffer: Uint8Array): TransitionProto[] {
     const decodedProto =
       ParserTransitionsShell.WmShellTransitionsTraceProto.decode(
         traceBuffer,
@@ -65,14 +68,12 @@ export class ParserTransitionsShell extends AbstractParser<PropertyTreeNode> {
 
   override processDecodedEntry(
     index: number,
-    entryProto: com.android.wm.shell.ITransition,
+    entryProto: TransitionProto,
   ): PropertyTreeNode {
     return this.makePropertiesTree(entryProto);
   }
 
-  protected override getTimestamp(
-    entry: com.android.wm.shell.ITransition,
-  ): Timestamp {
+  protected override getTimestamp(entry: TransitionProto): Timestamp {
     return entry.dispatchTimeNs
       ? this.timestampConverter.makeTimestampFromBootTimeNs(
           BigInt(entry.dispatchTimeNs.toString()),
@@ -84,9 +85,7 @@ export class ParserTransitionsShell extends AbstractParser<PropertyTreeNode> {
     return [0x09, 0x57, 0x4d, 0x53, 0x54, 0x52, 0x41, 0x43, 0x45]; // .WMSTRACE
   }
 
-  private validateShellTransitionEntry(
-    entry: com.android.wm.shell.ITransition,
-  ) {
+  private validateShellTransitionEntry(entry: TransitionProto) {
     if (entry.id === 0) {
       throw new Error('Shell Transitions entry needs non-null id');
     }
@@ -108,9 +107,7 @@ export class ParserTransitionsShell extends AbstractParser<PropertyTreeNode> {
     }
   }
 
-  private makePropertiesTree(
-    entryProto: com.android.wm.shell.ITransition,
-  ): PropertyTreeNode {
+  private makePropertiesTree(entryProto: TransitionProto): PropertyTreeNode {
     this.validateShellTransitionEntry(entryProto);
 
     const shellEntryTree = EntryPropertiesTreeFactory.makeShellPropertiesTree({

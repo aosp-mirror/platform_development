@@ -15,8 +15,8 @@
  */
 
 import {assertDefined} from 'common/assert_utils';
-import {TimeRange, Timestamp} from 'common/time';
-import {ComponentTimestampConverter} from 'common/timestamp_converter';
+import {TimeRange, Timestamp} from 'common/time/time';
+import {ComponentTimestampConverter} from 'common/time/timestamp_converter';
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
 
 export class TimelineUtils {

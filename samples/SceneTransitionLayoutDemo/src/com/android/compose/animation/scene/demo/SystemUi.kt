@@ -18,6 +18,7 @@ package com.android.compose.animation.scene.demo
 
 import android.content.Context
 import androidx.activity.compose.BackHandler
+import androidx.compose.foundation.OverscrollEffect
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -70,11 +71,13 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toComposeRect
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.testTagsAsResourceId
@@ -263,7 +266,7 @@ fun SystemUi(
                 else -> error("Unknown size class: ${windowSizeClass.widthSizeClass}")
             }
         }
-    val nQuickSettingsRow = 4
+    val nQuickSettingsRow = configuration.quickSettingsRows
     val nQuickSettingsSplitShadeRows = nQuickSettingsColumns
 
     // The state of the quick settings pager in the phone (one column) layout.
@@ -276,9 +279,11 @@ fun SystemUi(
     val quickSettingsPagerState = rememberPagerState { nQuickSettingsPages }
 
     val springConfiguration = configuration.springConfigurations.systemUiSprings
+    val hapticFeedback = LocalHapticFeedback.current
+    val revealHaptics = remember(hapticFeedback) { DemoContainerRevealHaptics(hapticFeedback) }
     val transitions =
-        remember(quickSettingsPagerState, springConfiguration, configuration) {
-            systemUiTransitions(quickSettingsPagerState, springConfiguration, configuration)
+        remember(quickSettingsPagerState, springConfiguration, revealHaptics) {
+            systemUiTransitions(quickSettingsPagerState, springConfiguration, revealHaptics)
         }
 
     val sceneSaver =
@@ -361,8 +366,18 @@ fun SystemUi(
     }
 
     @Composable
-    fun SceneScope.NotificationList(maxNotificationCount: Int, isScrollable: Boolean = true) {
-        NotificationList(notifications, maxNotificationCount, configuration, isScrollable)
+    fun SceneScope.NotificationList(
+        maxNotificationCount: Int,
+        isScrollable: Boolean = true,
+        overscrollEffect: OverscrollEffect? = null,
+    ) {
+        NotificationList(
+            notifications = notifications,
+            maxNotificationCount = maxNotificationCount,
+            demoConfiguration = configuration,
+            isScrollable = isScrollable,
+            overscrollEffect = overscrollEffect,
+        )
     }
 
     if (showConfigurationDialog) {
@@ -421,7 +436,19 @@ fun SystemUi(
 
         Box(
             Modifier.thenIf(!configuration.isFullscreen) {
-                    Modifier.padding(3.dp).border(1.dp, borderColor, shape).clip(shape)
+                    Modifier.padding(3.dp)
+                        .then(
+                            if (configuration.transitionBorder) {
+                                Modifier.border(
+                                    5.dp,
+                                    if (layoutState.isTransitioning()) Color.Red else Color.Green,
+                                    shape,
+                                )
+                            } else {
+                                Modifier.border(1.dp, borderColor, shape)
+                            }
+                        )
+                        .clip(shape)
                 }
                 .background(MaterialTheme.colorScheme.surfaceVariant)
         ) {
@@ -462,8 +489,16 @@ fun SystemUi(
                             Modifier.semantics { testTagsAsResourceId = true }
                                 .testTag("SystemUiSceneTransitionLayout"),
                         swipeSourceDetector =
-                            if (configuration.enableOverlays) HorizontalHalfScreenDetector
-                            else DefaultEdgeDetector,
+                            if (configuration.enableOverlays) {
+                                remember {
+                                    SplitEdgeDetector(
+                                        topEdgeSplitFraction = { 0.5f },
+                                        edgeSize = 60.dp,
+                                    )
+                                }
+                            } else {
+                                DefaultEdgeDetector
+                            },
                     ) {
                         scene(Scenes.Launcher, Launcher.userActions(shadeScene, configuration)) {
                             Launcher(launcherColumns)
@@ -562,9 +597,10 @@ fun SystemUi(
                             Shade.userActions(isLockscreenDismissed, lockscreenScene),
                         ) {
                             Shade(
-                                notificationList = {
+                                notificationList = { overscrollEffect ->
                                     NotificationList(
-                                        maxNotificationCount = configuration.notificationsInShade
+                                        maxNotificationCount = configuration.notificationsInShade,
+                                        overscrollEffect = overscrollEffect,
                                     )
                                 },
                                 mediaPlayer,
@@ -596,6 +632,14 @@ fun SystemUi(
                         }
 
                         overlay(
+                            Overlays.QuickSettings,
+                            userActions = QuickSettingsShade.UserActions,
+                            alignment = Alignment.TopEnd,
+                        ) {
+                            QuickSettingsShade(qsPager, mediaPlayer)
+                        }
+
+                        overlay(
                             Overlays.Notifications,
                             userActions = NotificationShade.UserActions,
                             alignment = Alignment.TopEnd,
@@ -608,13 +652,6 @@ fun SystemUi(
                                     )
                                 }
                             )
-                        }
-                        overlay(
-                            Overlays.QuickSettings,
-                            userActions = QuickSettingsShade.UserActions,
-                            alignment = Alignment.TopStart,
-                        ) {
-                            QuickSettingsShade(qsPager, mediaPlayer)
                         }
                     }
                 }

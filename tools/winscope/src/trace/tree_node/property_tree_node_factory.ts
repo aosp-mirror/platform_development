@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-import {Timestamp} from 'common/time';
-import {TimeDuration} from 'common/time_duration';
+import {Timestamp} from 'common/time/time';
+import {TimeDuration} from 'common/time/time_duration';
 import {
   PropertySource,
   PropertyTreeNode,
@@ -128,7 +128,7 @@ export class PropertyTreeNodeFactory {
 
   private addInnerProperties(
     root: PropertyTreeNode,
-    value: any,
+    value: object | any[],
     source: PropertySource,
   ): void {
     if (Array.isArray(value)) {
@@ -140,7 +140,7 @@ export class PropertyTreeNodeFactory {
 
   private addArrayProperties(
     root: PropertyTreeNode,
-    value: any,
+    value: any[],
     source: PropertySource,
   ) {
     for (const [key, val] of Object.entries(value)) {

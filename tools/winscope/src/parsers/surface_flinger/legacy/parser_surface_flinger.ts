@@ -15,7 +15,7 @@
  */
 
 import {assertDefined} from 'common/assert_utils';
-import {Timestamp} from 'common/time';
+import {Timestamp} from 'common/time/time';
 import {AbstractParser} from 'parsers/legacy/abstract_parser';
 import {AddDefaults} from 'parsers/operations/add_defaults';
 import {SetFormatters} from 'parsers/operations/set_formatters';
@@ -36,7 +36,12 @@ import {TraceType} from 'trace/trace_type';
 import {EnumFormatter, LAYER_ID_FORMATTER} from 'trace/tree_node/formatters';
 import {HierarchyTreeNode} from 'trace/tree_node/hierarchy_tree_node';
 
-class ParserSurfaceFlinger extends AbstractParser<HierarchyTreeNode> {
+type LayerTraceProto = android.surfaceflinger.ILayersTraceProto;
+
+class ParserSurfaceFlinger extends AbstractParser<
+  HierarchyTreeNode,
+  LayerTraceProto
+> {
   private static readonly MAGIC_NUMBER = [
     0x09, 0x4c, 0x59, 0x52, 0x54, 0x52, 0x41, 0x43, 0x45,
   ]; // .LYRTRACE
@@ -109,9 +114,7 @@ class ParserSurfaceFlinger extends AbstractParser<HierarchyTreeNode> {
     return this.realToMonotonicTimeOffsetNs;
   }
 
-  override decodeTrace(
-    buffer: Uint8Array,
-  ): android.surfaceflinger.ILayersTraceProto[] {
+  override decodeTrace(buffer: Uint8Array): LayerTraceProto[] {
     const decoded = ParserSurfaceFlinger.LayersTraceFileProto.decode(
       buffer,
     ) as android.surfaceflinger.ILayersTraceFileProto;
@@ -129,9 +132,7 @@ class ParserSurfaceFlinger extends AbstractParser<HierarchyTreeNode> {
     return decoded.entry ?? [];
   }
 
-  protected override getTimestamp(
-    entry: android.surfaceflinger.ILayersTraceProto,
-  ): Timestamp {
+  protected override getTimestamp(entry: LayerTraceProto): Timestamp {
     if (this.isDump) {
       return this.timestampConverter.makeZeroTimestamp();
     }
@@ -142,7 +143,7 @@ class ParserSurfaceFlinger extends AbstractParser<HierarchyTreeNode> {
 
   override processDecodedEntry(
     index: number,
-    entry: android.surfaceflinger.ILayersTraceProto,
+    entry: LayerTraceProto,
   ): HierarchyTreeNode {
     return this.factory.makeEntryHierarchyTree(
       entry,
@@ -160,7 +161,7 @@ class ParserSurfaceFlinger extends AbstractParser<HierarchyTreeNode> {
         const result = this.decodedEntries
           .slice(entriesRange.start, entriesRange.end)
           .map((entry) => {
-            return BigInt(entry.vsyncId.toString()); // convert Long to bigint
+            return BigInt(assertDefined(entry.vsyncId?.toString())); // convert Long to bigint
           });
         return Promise.resolve(result);
       })
@@ -168,7 +169,7 @@ class ParserSurfaceFlinger extends AbstractParser<HierarchyTreeNode> {
         const result: Array<{id: number; name: string}> = [];
         this.decodedEntries
           .slice(entriesRange.start, entriesRange.end)
-          .forEach((entry: android.surfaceflinger.ILayersTraceProto) => {
+          .forEach((entry: LayerTraceProto) => {
             entry.layers?.layers?.forEach(
               (layer: android.surfaceflinger.ILayerProto) => {
                 result.push({

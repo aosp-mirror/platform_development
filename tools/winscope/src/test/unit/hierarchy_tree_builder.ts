@@ -15,6 +15,7 @@
  */
 
 import {assertDefined} from 'common/assert_utils';
+import {SetFormatters} from 'parsers/operations/set_formatters';
 import {TraceRect} from 'trace/trace_rect';
 import {HierarchyTreeNode} from 'trace/tree_node/hierarchy_tree_node';
 import {OperationChain} from 'trace/tree_node/operations/operation_chain';
@@ -28,15 +29,15 @@ export class HierarchyTreeBuilder extends TreeBuilder<
   HierarchyTreeNode,
   ChildHierarchy
 > {
-  private properties: any;
+  private properties: object | undefined;
   private additionalProperties: ChildProperty[] = [];
 
-  setId(value: any): this {
+  setId(value: string | number | undefined): this {
     this.id = value;
     return this;
   }
 
-  setProperties(value: any): this {
+  setProperties(value: object | undefined): this {
     this.properties = value;
     return this;
   }
@@ -51,7 +52,7 @@ export class HierarchyTreeBuilder extends TreeBuilder<
 
     const propertiesTree = new PropertyTreeNodeFactory().makeProtoProperty(
       rootId,
-      assertDefined(this.name),
+      '',
       this.properties,
     );
     this.additionalProperties.forEach((property) => {
@@ -64,6 +65,7 @@ export class HierarchyTreeBuilder extends TreeBuilder<
         .build();
       propertiesTree.addOrReplaceChild(childNode);
     });
+    new SetFormatters().apply(propertiesTree);
     const provider = new PropertiesProvider(
       propertiesTree,
       async () => propertiesTree,
@@ -103,7 +105,7 @@ export class HierarchyTreeBuilder extends TreeBuilder<
 export interface ChildHierarchy {
   id: string | number;
   name: string;
-  properties?: any;
+  properties?: object;
   children?: ChildHierarchy[];
   rects?: TraceRect[];
   secondaryRects?: TraceRect[];

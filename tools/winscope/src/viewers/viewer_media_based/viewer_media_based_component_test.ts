@@ -23,8 +23,9 @@ import {MatSelectModule} from '@angular/material/select';
 import {MatTooltipModule} from '@angular/material/tooltip';
 import {BrowserAnimationsModule} from '@angular/platform-browser/animations';
 import {assertDefined} from 'common/assert_utils';
-import {UnitTestUtils} from 'test/unit/utils';
+import {getFixtureFile} from 'test/unit/fixture_utils';
 import {MediaBasedTraceEntry} from 'trace/media_based_trace_entry';
+import {ViewerEvents} from 'viewers/common/viewer_events';
 import {ViewerMediaBasedComponent} from './viewer_media_based_component';
 
 describe('ViewerMediaBasedComponent', () => {
@@ -115,7 +116,7 @@ describe('ViewerMediaBasedComponent', () => {
 
   it('shows video', async () => {
     const initialMaxWidth = getContainerMaxWidth();
-    const videoFile = await UnitTestUtils.getFixtureFile(
+    const videoFile = await getFixtureFile(
       'traces/elapsed_and_real_timestamp/screen_recording_metadata_v2.mp4',
     );
     component.currentTraceEntries = [new MediaBasedTraceEntry(1, videoFile)];
@@ -131,9 +132,7 @@ describe('ViewerMediaBasedComponent', () => {
 
   it('shows screenshot image', async () => {
     const initialMaxWidth = getContainerMaxWidth();
-    const screenshotFile = await UnitTestUtils.getFixtureFile(
-      'traces/screenshot_2.png',
-    );
+    const screenshotFile = await getFixtureFile('traces/screenshot_2.png');
     component.currentTraceEntries = [
       new MediaBasedTraceEntry(0, screenshotFile, true),
     ];
@@ -226,9 +225,7 @@ describe('ViewerMediaBasedComponent', () => {
   });
 
   it('updates max container size on window resize', async () => {
-    const screenshotFile = await UnitTestUtils.getFixtureFile(
-      'traces/screenshot.png',
-    );
+    const screenshotFile = await getFixtureFile('traces/screenshot.png');
     component.currentTraceEntries = [
       new MediaBasedTraceEntry(0, screenshotFile, true),
     ];
@@ -246,6 +243,25 @@ describe('ViewerMediaBasedComponent', () => {
     spyOnProperty(window, 'innerWidth').and.returnValue(newWindowWidth);
     resizeWindow();
     expect(getContainerMaxWidth() < maxWidthAfterNewWindowHeight).toBeTrue();
+  });
+
+  it('emits event on double click', () => {
+    let index: number | undefined;
+    htmlElement.addEventListener(ViewerEvents.OverlayDblClick, (event) => {
+      index = (event as CustomEvent).detail;
+    });
+    expect(htmlElement.querySelector('.info-icon')).toBeNull();
+    const container = assertDefined(
+      htmlElement.querySelector<HTMLElement>('.container'),
+    );
+    container.dispatchEvent(new MouseEvent('dblclick'));
+    expect(index).toBeUndefined();
+
+    assertDefined(component.screenComponent).enableDoubleClick = true;
+    fixture.detectChanges();
+    expect(htmlElement.querySelector('.info-icon')).toBeTruthy();
+    container.dispatchEvent(new MouseEvent('dblclick'));
+    expect(index).toEqual(0);
   });
 
   function getContainerMaxWidth(): number {

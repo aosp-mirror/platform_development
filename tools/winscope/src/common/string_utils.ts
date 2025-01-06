@@ -15,7 +15,10 @@
  */
 import {assertTrue} from './assert_utils';
 
-class StringUtils {
+/**
+ * String utility functions.
+ */
+export class StringUtils {
   static parseBigIntStrippingUnit(s: string): bigint {
     const match = s.match(/^\s*(-?\d+)\D*.*$/);
     if (!match) {
@@ -103,5 +106,3 @@ class StringUtils {
     return word[0].toUpperCase() + word.slice(1);
   }
 }
-
-export {StringUtils};

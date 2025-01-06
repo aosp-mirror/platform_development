@@ -23,9 +23,9 @@ import {MatTooltipModule} from '@angular/material/tooltip';
 import {FilesSource} from 'app/files_source';
 import {TracePipeline} from 'app/trace_pipeline';
 import {assertDefined} from 'common/assert_utils';
-import {TimestampConverterUtils} from 'test/unit/timestamp_converter_utils';
+import {TimestampConverterUtils} from 'common/time/test_utils';
+import {getFixtureFile} from 'test/unit/fixture_utils';
 import {TraceBuilder} from 'test/unit/trace_builder';
-import {UnitTestUtils} from 'test/unit/utils';
 import {Traces} from 'trace/traces';
 import {LoadProgressComponent} from './load_progress_component';
 import {UploadTracesComponent} from './upload_traces_component';
@@ -54,10 +54,10 @@ describe('UploadTracesComponent', () => {
     component = fixture.componentInstance;
     htmlElement = fixture.nativeElement;
     component.tracePipeline = new TracePipeline();
-    validSfFile = await UnitTestUtils.getFixtureFile(
+    validSfFile = await getFixtureFile(
       'traces/elapsed_and_real_timestamp/SurfaceFlinger.pb',
     );
-    validWmFile = await UnitTestUtils.getFixtureFile(
+    validWmFile = await getFixtureFile(
       'traces/elapsed_and_real_timestamp/WindowManager.pb',
     );
     fixture.detectChanges();
@@ -158,7 +158,7 @@ describe('UploadTracesComponent', () => {
   });
 
   it('shows warning elements for traces without visualization', async () => {
-    const shellTransitionFile = await UnitTestUtils.getFixtureFile(
+    const shellTransitionFile = await getFixtureFile(
       'traces/elapsed_and_real_timestamp/shell_transition_trace.pb',
     );
     await loadFiles([shellTransitionFile]);
@@ -188,7 +188,7 @@ describe('UploadTracesComponent', () => {
       htmlElement.querySelector<HTMLButtonElement>('.load-btn'),
     );
 
-    expect(htmlElement.querySelector('.trace-error-icon')).toBeTruthy();
+    expect(htmlElement.querySelector('.error-icon')).toBeTruthy();
     expect(viewTracesButton.disabled).toBeTrue();
   });
 

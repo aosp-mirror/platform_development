@@ -19,6 +19,7 @@ package com.android.compose.animation.scene.demo
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.Orientation
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -29,6 +30,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.overscroll
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -53,13 +55,12 @@ import com.android.compose.animation.scene.Back
 import com.android.compose.animation.scene.Edge
 import com.android.compose.animation.scene.ElementKey
 import com.android.compose.animation.scene.LowestZIndexContentPicker
-import com.android.compose.animation.scene.NestedScrollBehavior
 import com.android.compose.animation.scene.SceneKey
 import com.android.compose.animation.scene.SceneScope
 import com.android.compose.animation.scene.Swipe
-import com.android.compose.animation.scene.SwipeDirection
 import com.android.compose.animation.scene.UserAction
 import com.android.compose.animation.scene.UserActionResult
+import com.android.compose.gesture.effect.rememberOffsetOverscrollEffect
 
 object QuickSettings {
     /**
@@ -80,8 +81,8 @@ object QuickSettings {
         return mapOf(
             Back to shadeScene,
             Swipe.Up to shadeScene,
-            Swipe(SwipeDirection.Up, pointerCount = 2) to fastSwipeUpScene,
-            Swipe(SwipeDirection.Up, fromSource = Edge.Bottom) to fastSwipeUpScene,
+            Swipe.Up(pointerCount = 2) to fastSwipeUpScene,
+            Swipe.Up(fromSource = Edge.Bottom) to fastSwipeUpScene,
         )
     }
 
@@ -127,9 +128,11 @@ fun SceneScope.QuickSettings(
         CompositionLocalProvider(LocalContentColor provides Color.White) {
             val scrollState = rememberScrollState()
 
+            val offsetOverscrollEffect = rememberOffsetOverscrollEffect(Orientation.Vertical)
             Column(
-                Modifier.verticalNestedScrollToScene(topBehavior = NestedScrollBehavior.EdgeAlways)
-                    .verticalScroll(scrollState)
+                Modifier.overscroll(verticalOverscrollEffect)
+                    .overscroll(offsetOverscrollEffect)
+                    .verticalScroll(scrollState, overscrollEffect = offsetOverscrollEffect)
                     .padding(vertical = QuickSettings.Dimensions.Padding)
             ) {
                 val horizontalPaddingModifier = QuickSettings.Modifiers.HorizontalPadding

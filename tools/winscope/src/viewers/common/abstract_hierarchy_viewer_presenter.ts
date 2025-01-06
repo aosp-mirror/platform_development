@@ -16,8 +16,9 @@
 
 import {assertDefined} from 'common/assert_utils';
 import {FunctionUtils} from 'common/function_utils';
-import {parseMap, stringifyMap} from 'common/persistent_store_proxy';
-import {Store} from 'common/store';
+import {InMemoryStorage} from 'common/store/in_memory_storage';
+import {parseMap, stringifyMap} from 'common/store/persistent_store_proxy';
+import {Store} from 'common/store/store';
 import {
   TracePositionUpdate,
   WinscopeEvent,
@@ -38,8 +39,8 @@ import {RectsPresenter} from 'viewers/common/rects_presenter';
 import {TextFilter} from 'viewers/common/text_filter';
 import {UiHierarchyTreeNode} from 'viewers/common/ui_hierarchy_tree_node';
 import {UserOptions} from 'viewers/common/user_options';
-import {HierarchyPresenter} from './hierarchy_presenter';
-import {PresetHierarchy} from './preset_hierarchy';
+import {HierarchyPresenter, SelectedTree} from './hierarchy_presenter';
+import {PresetHierarchy, TextFilterValues} from './preset_hierarchy';
 import {RectShowState} from './rect_show_state';
 import {UiDataHierarchy} from './ui_data_hierarchy';
 import {ViewerEvents} from './viewer_events';
@@ -82,6 +83,16 @@ export abstract class AbstractHierarchyViewerPresenter<
       ViewerEvents.HighlightedIdChange,
       async (event) =>
         await this.onHighlightedIdChange((event as CustomEvent).detail.id),
+    );
+    htmlElement.addEventListener(
+      ViewerEvents.ArrowDownPress,
+      async (event) =>
+        await this.onArrowPress((event as CustomEvent).detail, false),
+    );
+    htmlElement.addEventListener(
+      ViewerEvents.ArrowUpPress,
+      async (event) =>
+        await this.onArrowPress((event as CustomEvent).detail, true),
     );
     htmlElement.addEventListener(
       ViewerEvents.HighlightedPropertyChange,
@@ -146,6 +157,16 @@ export abstract class AbstractHierarchyViewerPresenter<
     this.copyUiDataAndNotifyView();
   }
 
+  async onArrowPress(storage: InMemoryStorage, getPrevious: boolean) {
+    const newNode = this.hierarchyPresenter.getAdjacentVisibleNode(
+      storage,
+      getPrevious,
+    );
+    if (newNode) {
+      await this.onHighlightedNodeChange(newNode);
+    }
+  }
+
   onHighlightedPropertyChange(id: string) {
     this.propertiesPresenter.applyHighlightedPropertyChange(id);
     this.uiData.highlightedProperty =
@@ -208,7 +229,18 @@ export abstract class AbstractHierarchyViewerPresenter<
     this.copyUiDataAndNotifyView();
   }
 
-  protected async handleCommonWinscopeEvents(event: WinscopeEvent) {
+  async onAppEvent(event: WinscopeEvent) {
+    await event.visit(
+      WinscopeEventType.TRACE_POSITION_UPDATE,
+      async (event) => {
+        if (this.initializeIfNeeded) await this.initializeIfNeeded(event);
+        await this.applyTracePositionUpdate(event);
+        if (this.processDataAfterPositionUpdate) {
+          await this.processDataAfterPositionUpdate(event);
+        }
+        this.refreshUIData();
+      },
+    );
     await event.visit(
       WinscopeEventType.FILTER_PRESET_SAVE_REQUEST,
       async (event) => {
@@ -219,14 +251,26 @@ export abstract class AbstractHierarchyViewerPresenter<
       this.uiData.isDarkMode = event.isDarkMode;
       this.copyUiDataAndNotifyView();
     });
+    await event.visit(
+      WinscopeEventType.FILTER_PRESET_APPLY_REQUEST,
+      async (event) => {
+        const filterPresetName = event.name;
+        await this.applyPresetConfig(filterPresetName);
+        this.refreshUIData();
+      },
+    );
   }
 
   protected saveConfigAsPreset(storeKey: string) {
     const preset: PresetHierarchy = {
       hierarchyUserOptions: this.uiData.hierarchyUserOptions,
-      hierarchyFilter: this.uiData.hierarchyFilter.values,
+      hierarchyFilter: TextFilterValues.fromTextFilter(
+        this.uiData.hierarchyFilter,
+      ),
       propertiesUserOptions: this.uiData.propertiesUserOptions,
-      propertiesFilter: this.uiData.propertiesFilter.values,
+      propertiesFilter: TextFilterValues.fromTextFilter(
+        this.uiData.propertiesFilter,
+      ),
       rectsUserOptions: this.uiData.rectsUserOptions,
       rectIdToShowState: this.uiData.rectIdToShowState,
     };
@@ -241,14 +285,20 @@ export abstract class AbstractHierarchyViewerPresenter<
         parsedPreset.hierarchyUserOptions,
       );
       await this.hierarchyPresenter.applyHierarchyFilterChange(
-        new TextFilter(parsedPreset.hierarchyFilter),
+        new TextFilter(
+          parsedPreset.hierarchyFilter.filterString,
+          parsedPreset.hierarchyFilter.flags,
+        ),
       );
 
       this.propertiesPresenter.applyPropertiesUserOptionsChange(
         parsedPreset.propertiesUserOptions,
       );
       this.propertiesPresenter.applyPropertiesFilterChange(
-        new TextFilter(parsedPreset.propertiesFilter),
+        new TextFilter(
+          parsedPreset.propertiesFilter.filterString,
+          parsedPreset.propertiesFilter.flags,
+        ),
       );
       await this.updatePropertiesTree();
 
@@ -337,7 +387,7 @@ export abstract class AbstractHierarchyViewerPresenter<
     }
     const selected = this.hierarchyPresenter.getSelectedTree();
     if (selected) {
-      const [trace, selectedTree] = selected;
+      const {trace, tree: selectedTree} = selected;
       const propertiesTree = await selectedTree.getAllProperties();
       if (
         this.propertiesPresenter.getUserOptions()['showDiff']?.enabled &&
@@ -413,11 +463,15 @@ export abstract class AbstractHierarchyViewerPresenter<
     this.notifyViewCallback(copy);
   }
 
-  abstract onAppEvent(event: WinscopeEvent): Promise<void>;
   abstract onHighlightedNodeChange(node: UiHierarchyTreeNode): Promise<void>;
   abstract onHighlightedIdChange(id: string): Promise<void>;
   protected abstract keepCalculated(tree: HierarchyTreeNode): boolean;
   protected abstract getOverrideDisplayName(
-    selected: [Trace<HierarchyTreeNode>, HierarchyTreeNode],
+    selected: SelectedTree,
   ): string | undefined;
+  protected abstract refreshUIData(): void;
+  protected initializeIfNeeded?(event: TracePositionUpdate): Promise<void>;
+  protected processDataAfterPositionUpdate?(
+    event: TracePositionUpdate,
+  ): Promise<void>;
 }

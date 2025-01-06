@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-import {TimeRange} from 'common/time';
-import {TimestampConverterUtils} from 'test/unit/timestamp_converter_utils';
+import {TimestampConverterUtils} from 'common/time/test_utils';
+import {TimeRange} from 'common/time/time';
 import {Transformer} from './transformer';
 
 describe('Transformer', () => {

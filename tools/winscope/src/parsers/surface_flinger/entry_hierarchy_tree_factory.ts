@@ -15,8 +15,7 @@
  */
 
 import {assertDefined} from 'common/assert_utils';
-import {UserNotifier} from 'common/user_notifier';
-import {MissingLayerIds} from 'messaging/user_warnings';
+import {DuplicateLayerIds, MissingLayerIds} from 'messaging/user_warnings';
 import {perfetto} from 'protos/surfaceflinger/latest/static';
 import {android} from 'protos/surfaceflinger/udc/static';
 import {HierarchyTreeNode} from 'trace/tree_node/hierarchy_tree_node';
@@ -44,7 +43,7 @@ export class EntryHierarchyTreeFactory {
     ParserSurfaceFlinger: ParserSurfaceFlinger,
   ): HierarchyTreeNode {
     const excludesCompositionState =
-      entryProto?.excludesCompositionState ?? false;
+      entryProto?.excludesCompositionState ?? true;
     const addExcludesCompositionState = excludesCompositionState
       ? COMMON_OPERATIONS.AddExcludesCompositionStateTrue
       : COMMON_OPERATIONS.AddExcludesCompositionStateFalse;
@@ -93,10 +92,6 @@ export class EntryHierarchyTreeFactory {
       [] as PropertiesProvider[],
     );
 
-    if (missingLayerIds) {
-      UserNotifier.add(new MissingLayerIds());
-    }
-
     const entry = new PropertiesProviderBuilder()
       .setEagerProperties(this.makeEntryEagerPropertiesTree(entryProto))
       .setLazyPropertiesStrategy(
@@ -122,7 +117,17 @@ export class EntryHierarchyTreeFactory {
         new RectsComputation(),
       ])
       .build();
-    UserNotifier.notify();
+
+    if (missingLayerIds) {
+      tree.addWarning(new MissingLayerIds());
+    }
+    const duplicateIds = Array.from(processed.keys()).filter(
+      (layerId) => assertDefined(processed.get(layerId)) > 1,
+    );
+    if (duplicateIds.length > 0) {
+      tree.addWarning(new DuplicateLayerIds(duplicateIds));
+    }
+
     return tree;
   }
 

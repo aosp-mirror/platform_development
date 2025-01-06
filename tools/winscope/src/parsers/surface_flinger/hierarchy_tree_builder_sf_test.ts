@@ -14,10 +14,8 @@
  * limitations under the License.
  */
 
-import {DuplicateLayerId} from 'messaging/user_warnings';
 import {PropertyTreeBuilder} from 'test/unit/property_tree_builder';
 import {TreeNodeUtils} from 'test/unit/tree_node_utils';
-import {UserNotifierChecker} from 'test/unit/user_notifier_checker';
 import {HierarchyTreeNode} from 'trace/tree_node/hierarchy_tree_node';
 import {OperationChain} from 'trace/tree_node/operations/operation_chain';
 import {PropertiesProvider} from 'trace/tree_node/properties_provider';
@@ -144,7 +142,6 @@ describe('HierarchyTreeBuilderSf', () => {
   });
 
   it('builds root with duplicate id layers', () => {
-    const userNotifierChecker = new UserNotifierChecker();
     const layer1Props = new PropertyTreeBuilder()
       .setIsRoot(true)
       .setRootId('1')
@@ -221,7 +218,6 @@ describe('HierarchyTreeBuilderSf', () => {
     expectedRoot.addOrReplaceChild(expectedRootLayer);
 
     expect(root).toEqual(expectedRoot);
-    userNotifierChecker.expectAdded([new DuplicateLayerId('2')]);
   });
 
   it('builds root with default parent values correctly', () => {

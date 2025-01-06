@@ -15,7 +15,7 @@
  */
 
 import {Component, Input} from '@angular/core';
-import {PersistentStore} from 'common/persistent_store';
+import {PersistentStore} from 'common/store/persistent_store';
 import {TraceType} from 'trace/trace_type';
 import {CollapsibleSections} from 'viewers/common/collapsible_sections';
 import {CollapsibleSectionType} from 'viewers/common/collapsible_section_type';
@@ -61,7 +61,7 @@ import {UiData} from './ui_data';
           [currentIndex]="inputData?.currentIndex"
           [entries]="inputData?.entries"
           [headers]="inputData?.headers"
-          [showFiltersInTitle]="true"
+          [showFiltersInTitle]="false"
           [traceType]="${TraceType.INPUT_EVENT_MERGED}"
           [showTraceEntryTimes]="false"
           [showCurrentTimeButton]="false"

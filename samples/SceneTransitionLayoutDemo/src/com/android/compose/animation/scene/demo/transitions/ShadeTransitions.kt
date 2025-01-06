@@ -19,13 +19,12 @@ package com.android.compose.animation.scene.demo.transitions
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.gestures.Orientation
 import androidx.compose.foundation.pager.PagerState
-import androidx.compose.ui.unit.IntSize
+import com.android.compose.animation.scene.ContentKey
 import com.android.compose.animation.scene.Edge
 import com.android.compose.animation.scene.SceneTransitionsBuilder
 import com.android.compose.animation.scene.TransitionBuilder
 import com.android.compose.animation.scene.UserActionDistance
 import com.android.compose.animation.scene.UserActionDistanceScope
-import com.android.compose.animation.scene.demo.DemoConfiguration
 import com.android.compose.animation.scene.demo.MediaPlayer
 import com.android.compose.animation.scene.demo.QuickSettings
 import com.android.compose.animation.scene.demo.QuickSettingsGrid
@@ -34,15 +33,13 @@ import com.android.compose.animation.scene.demo.Shade
 import com.android.compose.animation.scene.demo.notification.NotificationList
 import com.android.compose.animation.scene.inScene
 
-fun SceneTransitionsBuilder.shadeTransitions(
-    qsPagerState: PagerState,
-    configuration: DemoConfiguration,
-) {
+fun SceneTransitionsBuilder.shadeTransitions(qsPagerState: PagerState) {
     // The distance when swiping the Shade from/to a scene (except QuickSettings).
     val swipeDistance =
         object : UserActionDistance {
             override fun UserActionDistanceScope.absoluteDistance(
-                fromSceneSize: IntSize,
+                fromContent: ContentKey,
+                toContent: ContentKey,
                 orientation: Orientation,
             ): Float {
                 val distance = Shade.Elements.Scrim.targetOffset(Scenes.Shade)?.y ?: return 0f
@@ -87,7 +84,8 @@ fun SceneTransitionsBuilder.shadeTransitions(
     val qsSwipeDistance =
         object : UserActionDistance {
             override fun UserActionDistanceScope.absoluteDistance(
-                fromSceneSize: IntSize,
+                fromContent: ContentKey,
+                toContent: ContentKey,
                 orientation: Orientation,
             ): Float {
                 val scrimOffsetInShade =
@@ -154,12 +152,6 @@ fun SceneTransitionsBuilder.shadeTransitions(
             fade(QuickSettings.Elements.Date)
         }
         timestampRange(startMillis = 350) { fade(Shade.Elements.Date) }
-    }
-
-    if (configuration.useOverscrollSpec) {
-        overscroll(Scenes.Shade, Orientation.Vertical) {
-            translate(Shade.Elements.Scrim, y = { absoluteDistance })
-        }
     }
 }
 

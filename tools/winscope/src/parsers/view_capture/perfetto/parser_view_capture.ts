@@ -15,7 +15,7 @@
  */
 
 import {assertTrue} from 'common/assert_utils';
-import {ParserTimestampConverter} from 'common/timestamp_converter';
+import {ParserTimestampConverter} from 'common/time/timestamp_converter';
 import {TraceFile} from 'trace/trace_file';
 import {WasmEngineProxy} from 'trace_processor/wasm_engine_proxy';
 import {ParserViewCaptureWindow} from './parser_view_capture_window';
@@ -52,7 +52,7 @@ export class ParserViewCapture {
     const windowAndPackageNames = await this.queryWindowAndPackageNames();
     assertTrue(
       windowAndPackageNames.length > 0,
-      () => 'Perfetto trace has no ViewCapture windows',
+      () => 'Perfetto trace has no ViewCapture window entries',
     );
 
     this.windowParsers = windowAndPackageNames.map(

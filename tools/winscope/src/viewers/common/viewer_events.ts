@@ -14,10 +14,10 @@
  * limitations under the License.
  */
 
-import {Timestamp} from 'common/time';
+import {Timestamp} from 'common/time/time';
 import {TraceEntry} from 'trace/trace';
-import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
 import {TextFilter} from 'viewers/common/text_filter';
+import {ListedSearch} from 'viewers/viewer_search/ui_data';
 import {LogHeader} from './ui_data_log';
 
 export enum ViewerEvents {
@@ -36,6 +36,8 @@ export enum ViewerEvents {
 
   RectsUserOptionsChange = 'RectsUserOptionsChange',
 
+  OverlayDblClick = 'OverlayDblClick',
+
   AdditionalPropertySelected = 'AdditionalPropertySelected',
   RectsDblClick = 'RectsDblClick',
   MiniRectsDblClick = 'MiniRectsDblClick',
@@ -46,6 +48,13 @@ export enum ViewerEvents {
   LogTextFilterChange = 'LogTextFilterChange',
   ArrowDownPress = 'ArrowDownPress',
   ArrowUpPress = 'ArrowUpPress',
+
+  GlobalSearchSectionClick = 'GlobalSearchSectionClick',
+  SearchQueryClick = 'SearchQueryClick',
+  SaveQueryClick = 'SaveQueryClick',
+  DeleteSavedQueryClick = 'DeleteSavedQueryClick',
+  AddQueryClick = 'AddQueryClick',
+  ClearQueryClick = 'ClearQueryClick',
 }
 
 export class RectDblClickDetail {
@@ -54,7 +63,7 @@ export class RectDblClickDetail {
 
 export class TimestampClickDetail {
   constructor(
-    public entry?: TraceEntry<PropertyTreeNode>,
+    public entry?: TraceEntry<object>,
     public timestamp?: Timestamp,
   ) {}
 }
@@ -65,4 +74,24 @@ export class LogFilterChangeDetail {
 
 export class LogTextFilterChangeDetail {
   constructor(public header: LogHeader, public filter: TextFilter) {}
+}
+
+export class SearchQueryClickDetail {
+  constructor(public query: string, public uid: number) {}
+}
+
+export class AddQueryClickDetail {
+  constructor(public query: string) {}
+}
+
+export class ClearQueryClickDetail {
+  constructor(public uid: number) {}
+}
+
+export class SaveQueryClickDetail {
+  constructor(public query: string, public name: string) {}
+}
+
+export class DeleteSavedQueryClickDetail {
+  constructor(public search: ListedSearch) {}
 }

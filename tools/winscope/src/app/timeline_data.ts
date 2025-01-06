@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-import {TimeRange, Timestamp} from 'common/time';
-import {ComponentTimestampConverter} from 'common/timestamp_converter';
+import {TimeRange, Timestamp} from 'common/time/time';
+import {ComponentTimestampConverter} from 'common/time/timestamp_converter';
 import {UserNotifier} from 'common/user_notifier';
 import {CannotParseAllTransitions} from 'messaging/user_warnings';
 import {ScreenRecordingUtils} from 'trace/screen_recording_utils';
@@ -38,7 +38,7 @@ export class TimelineData {
   private lastReturnedFullTimeRange?: TimeRange;
   private lastReturnedCurrentEntries = new Map<
     Trace<object>,
-    TraceEntry<any> | undefined
+    TraceEntry<object> | undefined
   >();
   private activeTrace: Trace<object> | undefined;
   private transitionEntries: Array<PropertyTreeNode | undefined> = []; // cached trace entries to avoid TP and object creation latencies each time transition timeline is redrawn
@@ -88,12 +88,11 @@ export class TimelineData {
 
     const tracesSortedByDisplayOrder = traces
       .mapTrace((trace) => trace)
-      .filter(
-        (trace) =>
-          TraceTypeUtils.isTraceTypeWithViewer(trace.type) &&
-          trace.type !== TraceType.SCREEN_RECORDING,
-      )
+      .filter((trace) => TraceTypeUtils.isTraceTypeWithViewer(trace.type))
       .sort((a, b) => {
+        // do not set screen recording as active unless it is the only trace
+        if (a.type === TraceType.SCREEN_RECORDING) return 1;
+        if (b.type === TraceType.SCREEN_RECORDING) return -1;
         return TraceTypeUtils.compareByDisplayOrder(a.type, b.type);
       });
     if (tracesSortedByDisplayOrder.length > 0) {
@@ -353,6 +352,7 @@ export class TimelineData {
 
   clear() {
     this.traces = new Traces();
+    this.transitionEntries = [];
     this.firstEntry = undefined;
     this.lastEntry = undefined;
     this.explicitlySetPosition = undefined;

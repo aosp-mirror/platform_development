@@ -18,7 +18,6 @@ package com.example.android.vdmdemo.host;
 
 import android.Manifest;
 import android.app.AlertDialog;
-import android.companion.AssociationRequest;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
@@ -201,20 +200,22 @@ public class MainActivity extends Hilt_MainActivity {
                 () -> {
                     if (mLauncher != null) {
                         mLauncherAdapter.update();
-                        mLauncher.setVisibility(visibility);
+                        if (mPreferenceController.getBoolean(
+                                R.string.internal_pref_home_displays_supported)) {
+                            mLauncher.setVisibility(visibility);
+                        } else {
+                            mLauncher.setVisibility(View.GONE);
+                        }
                     }
                     if (mHomeDisplayButton != null) {
                         mHomeDisplayButton.setEnabled(
-                                mPreferenceController.getBoolean(R
-                                        .string.internal_pref_home_displays_supported));
+                                mPreferenceController.getBoolean(
+                                        R.string.internal_pref_home_displays_supported));
                         mHomeDisplayButton.setVisibility(visibility);
                     }
                     if (mMirrorDisplayButton != null) {
                         mMirrorDisplayButton.setEnabled(
-                                mPreferenceController.getString(R.string.pref_device_profile)
-                                        .equals(AssociationRequest.DEVICE_PROFILE_APP_STREAMING)
-                                        && mPreferenceController.getBoolean(
-                                                R.string.internal_pref_mirror_displays_supported));
+                                VdmCompat.isMirrorDisplaySupported(this, mPreferenceController));
                         mMirrorDisplayButton.setVisibility(visibility);
                     }
                 });

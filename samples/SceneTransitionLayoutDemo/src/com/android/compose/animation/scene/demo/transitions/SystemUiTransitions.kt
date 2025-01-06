@@ -22,15 +22,15 @@ import com.android.compose.animation.scene.InterruptionHandler
 import com.android.compose.animation.scene.InterruptionResult
 import com.android.compose.animation.scene.SceneKey
 import com.android.compose.animation.scene.content.state.TransitionState
-import com.android.compose.animation.scene.demo.DemoConfiguration
 import com.android.compose.animation.scene.demo.Scenes
 import com.android.compose.animation.scene.demo.SpringConfiguration
+import com.android.compose.animation.scene.reveal.ContainerRevealHaptics
 import com.android.compose.animation.scene.transitions
 
 fun systemUiTransitions(
     qsPagerState: PagerState,
     springConfiguration: SpringConfiguration,
-    configuration: DemoConfiguration,
+    revealHaptics: ContainerRevealHaptics,
 ) = transitions {
     interruptionHandler = DemoInterruptionHandler
     defaultSwipeSpec =
@@ -39,17 +39,15 @@ fun systemUiTransitions(
             dampingRatio = springConfiguration.dampingRatio,
             visibilityThreshold = 0.5f,
         )
-    defaultOverscrollProgressConverter = configuration.overscrollProgressConverter
 
     alwaysOnDisplayTransitions()
-    shadeTransitions(qsPagerState, configuration)
+    shadeTransitions(qsPagerState)
     splitShadeTransitions()
-    quickSettingsTransitions(configuration)
-    lockscreenTransitions(configuration)
-    bouncerTransitions(configuration)
+    quickSettingsTransitions()
+    lockscreenTransitions()
     launcherTransitions()
-    notificationShadeTransitions()
-    quickSettingsShadeTransitions()
+    notificationShadeTransitions(revealHaptics)
+    quickSettingsShadeTransitions(revealHaptics)
 }
 
 object DemoInterruptionHandler : InterruptionHandler {

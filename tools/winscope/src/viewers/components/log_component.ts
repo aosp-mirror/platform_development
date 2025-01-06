@@ -28,8 +28,8 @@ import {
 import {MatSelectChange} from '@angular/material/select';
 
 import {DOMUtils} from 'common/dom_utils';
-import {Timestamp, TimestampFormatType} from 'common/time';
-import {TimeUtils} from 'common/time_utils';
+import {Timestamp, TimestampFormatType} from 'common/time/time';
+import {TimeUtils} from 'common/time/time_utils';
 import {TraceType} from 'trace/trace_type';
 import {TextFilter} from 'viewers/common/text_filter';
 import {LogEntry, LogField, LogHeader} from 'viewers/common/ui_data_log';
@@ -78,7 +78,7 @@ import {
       </div>
     </div>
 
-    <div class="entries">
+    <div class="entries" [class.padded]="padEntries">
       <div class="headers table-header" *ngIf="headers.length > 0">
         <div *ngIf="showTraceEntryTimes" class="time">
           <button
@@ -122,7 +122,7 @@ import {
               [formFieldClass]="
                 'wide-field no-padding-field center-field '
                  + header.spec.cssClass
-                 + (header.filter.textFilter.values.filterString?.length === 0 ? ' mat-body-2' : '')
+                 + (header.filter.textFilter.filterString?.length === 0 ? ' mat-body-2' : '')
               "
               height="fit-content"
               (filterChange)="onSearchBoxChange($event, header)"></search-box>
@@ -167,7 +167,9 @@ import {
 
       <cdk-virtual-scroll-viewport
           *ngIf="isFixedSizeScrollViewport()"
-          itemSize="36"
+          [itemSize]="36"
+          [minBufferPx]="1000"
+          [maxBufferPx]="2000"
           class="scroll">
         <ng-container
             *cdkVirtualFor="let entry of entries; let i = index"
@@ -194,9 +196,9 @@ import {
           </div>
 
           <div [class]="field.spec.cssClass" *ngFor="let field of entry.fields; index as i">
-            <span class="mat-body-1" *ngIf="!showFieldButton(field)">{{ field.value }}</span>
+            <span class="mat-body-1" *ngIf="!showFieldButton(entry, field)">{{ field.value }}</span>
             <button
-                *ngIf="showFieldButton(field)"
+                *ngIf="showFieldButton(entry, field)"
                 mat-button
                 class="time-button"
                 color="primary"
@@ -243,6 +245,7 @@ export class LogComponent {
   @Input() traceType: TraceType | undefined;
   @Input() showTraceEntryTimes = true;
   @Input() showFiltersInTitle = false;
+  @Input() padEntries = true;
 
   @Output() collapseButtonClicked = new EventEmitter();
 
@@ -261,8 +264,10 @@ export class LogComponent {
     return header.filter !== undefined;
   }
 
-  showFieldButton(field: LogField) {
-    return field.value instanceof Timestamp || field.propagateEntryTimestamp;
+  showFieldButton(entry: LogEntry, field: LogField): boolean {
+    const propagateEntryTimestamp =
+      !!field.propagateEntryTimestamp && entry.traceEntry.hasValidTimestamp();
+    return field.value instanceof Timestamp || propagateEntryTimestamp;
   }
 
   formatFieldButton(field: LogField): string | number {
@@ -414,7 +419,7 @@ export class LogComponent {
     );
   }
 
-  private emitEvent(event: ViewerEvents, data?: any) {
+  private emitEvent(event: ViewerEvents, data?: object | number) {
     const customEvent = new CustomEvent(event, {
       bubbles: true,
       detail: data,

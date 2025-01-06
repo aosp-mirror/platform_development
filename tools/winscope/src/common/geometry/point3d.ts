@@ -16,6 +16,9 @@
 
 import {Point} from './point';
 
+/**
+ * A 3D point.
+ */
 export class Point3D implements Point {
   constructor(public x: number, public y: number, public z: number) {}
 

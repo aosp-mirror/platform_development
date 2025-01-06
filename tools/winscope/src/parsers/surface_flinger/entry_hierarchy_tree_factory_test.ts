@@ -14,26 +14,21 @@
  * limitations under the License.
  */
 
-import {MissingLayerIds} from 'messaging/user_warnings';
-import {UserNotifierChecker} from 'test/unit/user_notifier_checker';
+import {DuplicateLayerIds, MissingLayerIds} from 'messaging/user_warnings';
 import {EntryHierarchyTreeFactory} from './entry_hierarchy_tree_factory';
 import {ParserSurfaceFlinger} from './legacy/parser_surface_flinger';
 
 describe('EntryHierarchyTreeFactory', () => {
   const factory = new EntryHierarchyTreeFactory();
-  let userNotifierChecker: UserNotifierChecker;
-
-  beforeEach(() => {
-    userNotifierChecker = new UserNotifierChecker();
-  });
+  const testLayer = {
+    id: 0,
+    name: 'Test layer',
+  };
 
   it('handles missing layer ids', () => {
     const entryProto = {};
     const layerProtos = [
-      {
-        id: 0,
-        name: 'Test layer',
-      },
+      testLayer,
       {
         id: undefined,
         name: 'Second test layer',
@@ -45,7 +40,40 @@ describe('EntryHierarchyTreeFactory', () => {
       ParserSurfaceFlinger,
     );
     expect(tree.getAllChildren().length).toEqual(1);
-    expect(tree.getChildByName('Test layer')).toBeDefined();
-    userNotifierChecker.expectNotified([new MissingLayerIds()]);
+    expect(tree.getChildByName(testLayer.name)).toBeDefined();
+    expect(tree.getWarnings()).toEqual([new MissingLayerIds()]);
   });
+
+  it('handles duplicate layer ids', () => {
+    const entryProto = {};
+    const layerProtos = [testLayer, testLayer];
+    const tree = factory.makeEntryHierarchyTree(
+      entryProto,
+      layerProtos,
+      ParserSurfaceFlinger,
+    );
+    expect(tree.getAllChildren().length).toEqual(2);
+    expect(tree.getChildByName(testLayer.name)).toBeDefined();
+    expect(tree.getChildByName(testLayer.name + ' duplicate(1)')).toBeDefined();
+    expect(tree.getWarnings()).toEqual([new DuplicateLayerIds([0])]);
+  });
+
+  it('defaults excludesCompositionState to true', () => {
+    checkExcludesCompositionState({excludesCompositionState: false}, false);
+    checkExcludesCompositionState({excludesCompositionState: null}, true);
+    checkExcludesCompositionState({}, true);
+  });
+
+  function checkExcludesCompositionState(entry: object, expected: boolean) {
+    const tree = factory.makeEntryHierarchyTree(
+      entry,
+      [testLayer],
+      ParserSurfaceFlinger,
+    );
+    const excludesCompositionState = tree
+      .getChildByName(testLayer.name)
+      ?.getEagerPropertyByName('excludesCompositionState')
+      ?.getValue();
+    expect(excludesCompositionState).toEqual(expected);
+  }
 });

@@ -30,10 +30,10 @@ import {MatTooltipModule} from '@angular/material/tooltip';
 import {BrowserAnimationsModule} from '@angular/platform-browser/animations';
 import {assertDefined} from 'common/assert_utils';
 import {FilterFlag} from 'common/filter_flag';
-import {PersistentStore} from 'common/persistent_store';
+import {PersistentStore} from 'common/store/persistent_store';
 import {PropertyTreeBuilder} from 'test/unit/property_tree_builder';
 import {TraceType} from 'trace/trace_type';
-import {TextFilter, TextFilterValues} from 'viewers/common/text_filter';
+import {TextFilter} from 'viewers/common/text_filter';
 import {UiPropertyTreeNode} from 'viewers/common/ui_property_tree_node';
 import {ViewerEvents} from 'viewers/common/viewer_events';
 import {CollapsibleSectionTitleComponent} from './collapsible_section_title_component';
@@ -180,9 +180,7 @@ describe('PropertiesComponent', () => {
     inputEl.value = 'Root';
     inputEl.dispatchEvent(new Event('input'));
     fixture.detectChanges();
-    expect(textFilter).toEqual(
-      new TextFilter(new TextFilterValues('Root', [FilterFlag.MATCH_CASE])),
-    );
+    expect(textFilter).toEqual(new TextFilter('Root', [FilterFlag.MATCH_CASE]));
   });
 
   it('handles collapse button click', () => {

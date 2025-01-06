@@ -22,8 +22,8 @@ import {
   HttpRequestStatus,
   HttpResponse,
 } from 'common/http_request';
-import {PersistentStore} from 'common/persistent_store';
-import {TimeUtils} from 'common/time_utils';
+import {PersistentStore} from 'common/store/persistent_store';
+import {TimeUtils} from 'common/time/time_utils';
 import {UserNotifier} from 'common/user_notifier';
 import {Analytics} from 'logging/analytics';
 import {
@@ -36,8 +36,11 @@ import {ConnectionState} from './connection_state';
 import {ProxyEndpoint} from './proxy_endpoint';
 import {TraceRequest} from './trace_request';
 
+/**
+ * A connection to the Winscope Proxy server.
+ */
 export class ProxyConnection extends AdbConnection {
-  static readonly VERSION = '4.0.6';
+  static readonly VERSION = '5.0.0';
   static readonly WINSCOPE_PROXY_URL = 'http://localhost:5544';
 
   private static readonly MULTI_DISPLAY_SCREENRECORD_VERSION = '1.4';
@@ -246,7 +249,9 @@ export class ProxyConnection extends AdbConnection {
       case ConnectionState.DUMPING_STATE:
         await this.postToProxy(
           `${ProxyEndpoint.DUMP}${assertDefined(this.selectedDevice).id}/`,
-          (response: HttpResponse) => this.tryProcessWarnings(response),
+          (response: HttpResponse) => {
+            this.tryProcessWarnings(response);
+          },
           this.requestedTraces,
         );
         return;

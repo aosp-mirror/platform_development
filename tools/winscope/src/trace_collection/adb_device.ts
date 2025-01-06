@@ -14,6 +14,9 @@
  * limitations under the License.
  */
 
+/**
+ * Represents an ADB device.
+ */
 export interface AdbDevice {
   id: string;
   authorized: boolean;

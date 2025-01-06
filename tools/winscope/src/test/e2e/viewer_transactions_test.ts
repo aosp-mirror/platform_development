@@ -14,16 +14,15 @@
  * limitations under the License.
  */
 
-import {browser, by, element, ElementFinder} from 'protractor';
+import {browser, by, element} from 'protractor';
 import {E2eTestUtils} from './utils';
 
 describe('Viewer Transactions', () => {
   const viewerSelector = 'viewer-transactions';
   const totalEntries = 9534;
-  const scrollToTotalBottomOffset = 1000000;
 
   beforeEach(async () => {
-    await E2eTestUtils.beforeEach(1000);
+    await E2eTestUtils.beforeEach(2000);
     await browser.get(E2eTestUtils.WINSCOPE_URL);
   });
 
@@ -35,9 +34,8 @@ describe('Viewer Transactions', () => {
     );
     await E2eTestUtils.checkTotalScrollEntries(
       viewerSelector,
-      scrollViewport,
       totalEntries,
-      scrollToTotalBottomOffset,
+      true,
     );
     await E2eTestUtils.checkTimelineTraceSelector({
       icon: 'show_chart',
@@ -51,10 +49,10 @@ describe('Viewer Transactions', () => {
     );
     await E2eTestUtils.checkWinscopeRealTimestamp('18:05:17.505');
     await checkSelectedEntry();
-
     await checkSelectFilter('.pid', ['6914'], 2);
     await checkSelectFilter('.uid', ['10161'], 16);
     await checkSelectFilter('.flags', ['eBackgroundBlurRadiusChanged'], 10);
+    await new Promise<void>((resolve) => setTimeout(resolve, 1000));
   });
 
   async function checkSelectedEntry() {
@@ -110,7 +108,6 @@ describe('Viewer Transactions', () => {
     );
     await E2eTestUtils.checkTotalScrollEntries(
       viewerSelector,
-      scrollViewport,
       expectedFilteredEntries,
     );
 
@@ -121,18 +118,8 @@ describe('Viewer Transactions', () => {
     );
     await E2eTestUtils.checkTotalScrollEntries(
       viewerSelector,
-      scrollViewport,
       totalEntries,
-      scrollToTotalBottomOffset,
+      true,
     );
-  }
-
-  function scrollViewport(
-    viewportEl: ElementFinder,
-    offset: number,
-    done: () => void,
-  ) {
-    viewportEl['scrollTop'] = offset;
-    window.requestAnimationFrame(() => done());
   }
 });

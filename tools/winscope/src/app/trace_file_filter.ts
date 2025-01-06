@@ -16,13 +16,15 @@
 
 import {assertDefined} from 'common/assert_utils';
 import {FileUtils} from 'common/file_utils';
-import {TimezoneInfo} from 'common/time';
+import {TimezoneInfo} from 'common/time/time';
 import {UserNotifier} from 'common/user_notifier';
 import {TraceOverridden} from 'messaging/user_warnings';
 import {TraceFile} from 'trace/trace_file';
+import {TraceMetadata} from 'trace/trace_metadata';
 
 export interface FilterResult {
   legacy: TraceFile[];
+  metadata: TraceMetadata;
   perfetto?: TraceFile;
   timezoneInfo?: TimezoneInfo;
 }
@@ -49,12 +51,17 @@ export class TraceFileFilter {
     );
 
     const perfettoFiles = files.filter((file) => this.isPerfettoFile(file));
-    const legacyFiles = files.filter((file) => !this.isPerfettoFile(file));
+    const {mFiles, metadata} = await this.extractAndAnalyzeMetadata(files);
+    const legacyFiles = files.filter(
+      (file) => !this.isPerfettoFile(file) && !mFiles.includes(file),
+    );
+
     if (!(await this.isBugreport(bugreportMainEntry, files))) {
       const perfettoFile = this.pickLargestFile(perfettoFiles);
       return {
         perfetto: perfettoFile,
         legacy: legacyFiles,
+        metadata,
       };
     }
 
@@ -67,6 +74,7 @@ export class TraceFileFilter {
       assertDefined(bugreportMainEntry),
       perfettoFiles,
       legacyFiles,
+      metadata,
       timezoneInfo,
     );
   }
@@ -131,6 +139,7 @@ export class TraceFileFilter {
     bugreportMainEntry: TraceFile,
     perfettoFiles: TraceFile[],
     legacyFiles: TraceFile[],
+    metadata: TraceMetadata,
     timezoneInfo?: TimezoneInfo,
   ): Promise<FilterResult> {
     const isFileAllowlisted = (file: TraceFile) => {
@@ -169,7 +178,12 @@ export class TraceFileFilter {
     const perfettoFile = perfettoFiles.find(
       (file) => file.file.name === TraceFileFilter.BUGREPORT_SYSTRACE_PATH,
     );
-    return {perfetto: perfettoFile, legacy: unzippedLegacyFiles, timezoneInfo};
+    return {
+      perfetto: perfettoFile,
+      legacy: unzippedLegacyFiles,
+      metadata,
+      timezoneInfo,
+    };
   }
 
   private isPerfettoFile(file: TraceFile): boolean {
@@ -179,6 +193,36 @@ export class TraceFileFilter {
         file.file.name.endsWith(`${perfettoExt}.gz`)
       );
     });
+  }
+
+  private async extractAndAnalyzeMetadata(
+    files: TraceFile[],
+  ): Promise<{mFiles: TraceFile[]; metadata: TraceMetadata}> {
+    const mFiles = [];
+    const metadata: TraceMetadata = {};
+    for (const file of files) {
+      const buffer = new Uint8Array(await file.file.arrayBuffer());
+      const text = new TextDecoder().decode(buffer);
+      try {
+        const data = JSON.parse(text);
+        if (
+          data.realToElapsedTimeOffsetNanos !== undefined &&
+          data.elapsedRealTimeNanos !== undefined
+        ) {
+          metadata.screenRecordingOffsets = {
+            realToElapsedTimeOffsetNanos: BigInt(
+              data.realToElapsedTimeOffsetNanos,
+            ),
+            elapsedRealTimeNanos: BigInt(data.elapsedRealTimeNanos),
+          };
+          mFiles.push(file);
+          break;
+        }
+      } catch (e) {
+        // swallow - looking for metadata json
+      }
+    }
+    return {metadata, mFiles};
   }
 
   private pickLargestFile(files: TraceFile[]): TraceFile | undefined {

@@ -47,6 +47,7 @@ import {Title} from '@angular/platform-browser';
 import {BrowserAnimationsModule} from '@angular/platform-browser/animations';
 import {assertDefined} from 'common/assert_utils';
 import {FileUtils} from 'common/file_utils';
+import {TimestampConverterUtils} from 'common/time/test_utils';
 import {UserNotifier} from 'common/user_notifier';
 import {
   FailedToInitializeTimelineData,
@@ -57,7 +58,6 @@ import {
   ViewersLoaded,
   ViewersUnloaded,
 } from 'messaging/winscope_event';
-import {TimestampConverterUtils} from 'test/unit/timestamp_converter_utils';
 import {TracesBuilder} from 'test/unit/traces_builder';
 import {waitToBeCalled} from 'test/utils';
 import {ViewerSurfaceFlingerComponent} from 'viewers/viewer_surface_flinger/viewer_surface_flinger_component';
@@ -469,6 +469,7 @@ describe('AppComponent', () => {
     expect(htmlElement.querySelector('.upload-traces-card')).toBeTruthy();
     expect(htmlElement.querySelector('.viewers')).toBeFalsy();
     expect(htmlElement.querySelector('.upload-new')).toBeFalsy();
+    expect(htmlElement.querySelector('timeline')).toBeFalsy();
     checkPermanentHeaderItems();
   }
 
@@ -479,6 +480,7 @@ describe('AppComponent', () => {
     expect(htmlElement.querySelector('.upload-traces-card')).toBeFalsy();
     expect(htmlElement.querySelector('.viewers')).toBeTruthy();
     expect(htmlElement.querySelector('.upload-new')).toBeTruthy();
+    expect(htmlElement.querySelector('timeline')).toBeTruthy();
     checkPermanentHeaderItems();
   }
 

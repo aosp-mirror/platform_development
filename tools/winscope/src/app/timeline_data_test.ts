@@ -15,14 +15,15 @@
  */
 
 import {assertDefined} from 'common/assert_utils';
-import {TimeRange} from 'common/time';
+import {TimestampConverterUtils} from 'common/time/test_utils';
+import {TimeRange} from 'common/time/time';
 import {CannotParseAllTransitions} from 'messaging/user_warnings';
 import {ParserBuilder} from 'test/unit/parser_builder';
 import {PropertyTreeBuilder} from 'test/unit/property_tree_builder';
-import {TimestampConverterUtils} from 'test/unit/timestamp_converter_utils';
 import {TracesBuilder} from 'test/unit/traces_builder';
 import {TraceBuilder} from 'test/unit/trace_builder';
 import {UserNotifierChecker} from 'test/unit/user_notifier_checker';
+import {UnitTestUtils} from 'test/unit/utils';
 import {Traces} from 'trace/traces';
 import {TracePosition} from 'trace/trace_position';
 import {TraceType} from 'trace/trace_type';
@@ -42,12 +43,14 @@ describe('TimelineData', () => {
     .setTimestamps(TraceType.PROTO_LOG, [timestamp9])
     .setTimestamps(TraceType.EVENT_LOG, [timestamp9])
     .setTimestamps(TraceType.SURFACE_FLINGER, [timestamp10])
+    .setTimestamps(TraceType.SCREEN_RECORDING, [timestamp5])
     .setTimestamps(TraceType.WINDOW_MANAGER, [timestamp11])
     .setTimestamps(TraceType.TRANSACTIONS, [])
     .build();
 
   const traceSf = assertDefined(traces.getTrace(TraceType.SURFACE_FLINGER));
   const traceWm = assertDefined(traces.getTrace(TraceType.WINDOW_MANAGER));
+  const traceSr = assertDefined(traces.getTrace(TraceType.SCREEN_RECORDING));
 
   const position10 = TracePosition.fromTraceEntry(
     assertDefined(traces.getTrace(TraceType.SURFACE_FLINGER)).getEntry(0),
@@ -130,13 +133,25 @@ describe('TimelineData', () => {
     expect(timelineData.getFullTimeRange().from).toEqual(timestamp9);
   });
 
-  it('uses first entry of first active trace by default', () => {
+  it('uses first entry of first active trace by default, excluding screen recording', () => {
     timelineData.initialize(
       traces,
       undefined,
       TimestampConverterUtils.TIMESTAMP_CONVERTER,
     );
+    expect(timelineData.getActiveTrace()).toEqual(traceSf);
     expect(timelineData.getCurrentPosition()).toEqual(position10);
+  });
+
+  it('defaults active trace to screen recording if it is the only trace', () => {
+    const tracesOnlySr = new Traces();
+    tracesOnlySr.addTrace(traceSr);
+    timelineData.initialize(
+      tracesOnlySr,
+      undefined,
+      TimestampConverterUtils.TIMESTAMP_CONVERTER,
+    );
+    expect(timelineData.getActiveTrace()).toEqual(traceSr);
   });
 
   it('uses explicit position if set and valid within time range', () => {
@@ -169,9 +184,7 @@ describe('TimelineData', () => {
 
     timelineData.setPosition(TracePosition.fromTimestamp(timestamp0));
     expect(timelineData.getCurrentPosition()).toEqual(
-      TracePosition.fromTraceEntry(
-        assertDefined(traces.getTrace(TraceType.PROTO_LOG)).getEntry(0),
-      ),
+      TracePosition.fromTraceEntry(traceSr.getEntry(0)),
     );
 
     timelineData.setPosition(position1000);
@@ -212,10 +225,7 @@ describe('TimelineData', () => {
     expect(success).toBeFalse();
 
     success = timelineData.trySetActiveTrace(
-      new TraceBuilder<{}>()
-        .setType(TraceType.SURFACE_FLINGER)
-        .setEntries([])
-        .build(),
+      UnitTestUtils.makeEmptyTrace(TraceType.SURFACE_FLINGER),
     );
     expect(timelineData.getActiveTrace()).toEqual(traceWm);
     expect(success).toBeFalse();

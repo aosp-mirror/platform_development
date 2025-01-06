@@ -33,8 +33,8 @@ import {MatSelectChange} from '@angular/material/select';
 import {DomSanitizer} from '@angular/platform-browser';
 import {assertDefined} from 'common/assert_utils';
 import {Distance} from 'common/geometry/distance';
-import {PersistentStore} from 'common/persistent_store';
-import {UrlUtils} from 'common/url_utils';
+import {PersistentStore} from 'common/store/persistent_store';
+import {getRootUrl} from 'common/url_utils';
 import {Analytics} from 'logging/analytics';
 import {TRACE_INFO} from 'trace/trace_info';
 import {TraceType} from 'trace/trace_type';
@@ -215,12 +215,10 @@ import {ShadingMode} from './shading_mode';
         display: flex;
         flex-direction: column;
       }
-      .mat-title {
-        padding-top: 8px;
-      }
       .right-btn-container {
         display: flex;
         align-items: center;
+        padding: 2px 0px;
       }
       .right-btn-container .mat-slider-horizontal {
         min-width: 64px !important;
@@ -379,13 +377,13 @@ export class RectsComponent implements OnInit, OnDestroy {
     this.matIconRegistry.addSvgIcon(
       'cube_full_shade',
       this.domSanitizer.bypassSecurityTrustResourceUrl(
-        UrlUtils.getRootUrl() + 'cube_full_shade.svg',
+        getRootUrl() + 'cube_full_shade.svg',
       ),
     );
     this.matIconRegistry.addSvgIcon(
       'cube_partial_shade',
       this.domSanitizer.bypassSecurityTrustResourceUrl(
-        UrlUtils.getRootUrl() + 'cube_partial_shade.svg',
+        getRootUrl() + 'cube_partial_shade.svg',
       ),
     );
   }

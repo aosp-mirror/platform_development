@@ -16,6 +16,9 @@
 
 import {Point3D} from './point3d';
 
+/**
+ * A 3D rectangle.
+ */
 export interface Rect3D {
   topLeft: Point3D;
   bottomRight: Point3D;

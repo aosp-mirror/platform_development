@@ -13,20 +13,23 @@
 // limitations under the License.
 
 use std::{
+    collections::HashMap,
     fs::{copy, read_dir, read_link, read_to_string, remove_dir_all, rename, write},
     os::unix::fs::symlink,
     path::PathBuf,
     process::{Command, Output},
     str::from_utf8,
+    sync::LazyLock,
 };
 
-use anyhow::{anyhow, Context, Result};
+use anyhow::{anyhow, ensure, Context, Result};
 use glob::glob;
 use google_metadata::GoogleMetadata;
 use license_checker::find_licenses;
 use name_and_version::NamedAndVersioned;
 use rooted_path::RootedPath;
 use semver::Version;
+use test_mapping::TestMapping;
 
 use crate::{
     android_bp::run_cargo_embargo,
@@ -67,15 +70,22 @@ static CUSTOMIZATIONS: &[&str] = &[
     "*.bp",
     "*.bp.fragment",
     "*.mk",
+    "android",
     "cargo_embargo.json",
     "patches",
     "METADATA",
     "TEST_MAPPING",
     "MODULE_LICENSE_*",
-    "README.android",
 ];
 
 static SYMLINKS: &[&str] = &["LICENSE", "NOTICE"];
+
+static DELETIONS: LazyLock<HashMap<&str, &[&str]>> = LazyLock::new(|| {
+    HashMap::from([
+        ("libbpf-sys", ["elfutils", "zlib", "libbpf"].as_slice()),
+        ("libusb1-sys", ["libusb"].as_slice()),
+    ])
+});
 
 impl<State: ManagedCrateState> ManagedCrate<State> {
     pub fn name(&self) -> &str {
@@ -217,6 +227,14 @@ impl<State: ManagedCrateState> ManagedCrate<State> {
         metadata.write()?;
         Ok(())
     }
+    pub fn fix_test_mapping(&self) -> Result<()> {
+        let mut tm = TestMapping::read(self.android_crate_path().clone())?;
+        println!("{}", self.name());
+        if tm.fix_import_paths() || tm.add_new_tests_to_postsubmit()? {
+            tm.write()?;
+        }
+        Ok(())
+    }
 }
 
 impl ManagedCrate<New> {
@@ -346,6 +364,11 @@ impl ManagedCrate<Vendored> {
                 symlink(dest, dest_dir.join(link)?)?;
             }
         }
+        for deletion in *DELETIONS.get(self.name()).unwrap_or(&[].as_slice()) {
+            let dir = self.staging_path().join(deletion)?;
+            ensure!(dir.abs().is_dir(), "{dir} is not a directory");
+            remove_dir_all(dir)?;
+        }
         Ok(())
     }
     fn apply_patches(&self) -> Result<Vec<(String, Output)>> {
@@ -410,6 +433,7 @@ impl ManagedCrate<Vendored> {
         let android_crate_dir = staged.android_crate.path();
         remove_dir_all(android_crate_dir)?;
         rename(staged.staging_path(), android_crate_dir)?;
+        checksum::generate(android_crate_dir.abs())?;
 
         Ok(staged)
     }
@@ -436,24 +460,6 @@ impl ManagedCrate<Staged> {
         self.cargo_embargo_output()
             .success_or_error()
             .context(format!("cargo_embargo execution failed for {}", self.name()))?;
-
-        Ok(())
-    }
-    pub fn diff_staged(&self) -> Result<()> {
-        let diff_status = Command::new("diff")
-            .args(["-u", "-r", "-w", "--no-dereference"])
-            .arg(self.staging_path().rel())
-            .arg(self.android_crate.path().rel())
-            .current_dir(self.extra.vendored_crate.path().root())
-            .spawn()?
-            .wait()?;
-        if !diff_status.success() {
-            return Err(anyhow!(
-                "Found differences between {} and {}",
-                self.android_crate.path(),
-                self.staging_path()
-            ));
-        }
 
         Ok(())
     }

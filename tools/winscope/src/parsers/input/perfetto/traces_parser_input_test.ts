@@ -15,7 +15,10 @@
  */
 
 import {assertDefined} from 'common/assert_utils';
-import {TimestampConverterUtils} from 'test/unit/timestamp_converter_utils';
+import {
+  TimestampConverterUtils,
+  timestampEqualityTester,
+} from 'common/time/test_utils';
 import {TraceBuilder} from 'test/unit/trace_builder';
 import {UserNotifierChecker} from 'test/unit/user_notifier_checker';
 import {UnitTestUtils} from 'test/unit/utils';
@@ -34,7 +37,7 @@ describe('TracesParserInput', () => {
   });
 
   beforeEach(async () => {
-    jasmine.addCustomEqualityTester(UnitTestUtils.timestampEqualityTester);
+    jasmine.addCustomEqualityTester(timestampEqualityTester);
     parser = (await UnitTestUtils.getTracesParser([
       'traces/perfetto/input-events.perfetto-trace',
     ])) as Parser<PropertyTreeNode>;

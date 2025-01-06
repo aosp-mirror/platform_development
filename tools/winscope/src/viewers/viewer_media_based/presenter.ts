@@ -14,17 +14,24 @@
  * limitations under the License.
  */
 
-import {WinscopeEvent, WinscopeEventType} from 'messaging/winscope_event';
+import {FunctionUtils} from 'common/function_utils';
+import {
+  ActiveTraceChanged,
+  WinscopeEvent,
+  WinscopeEventType,
+} from 'messaging/winscope_event';
 import {EmitEvent} from 'messaging/winscope_event_emitter';
 import {MediaBasedTraceEntry} from 'trace/media_based_trace_entry';
 import {Trace, TraceEntry} from 'trace/trace';
 import {TraceEntryFinder} from 'trace/trace_entry_finder';
+import {ViewerEvents} from 'viewers/common/viewer_events';
 import {UiData} from './ui_data';
 
 export type NotifyHierarchyViewCallbackType<UiData> = (uiData: UiData) => void;
 
 export class Presenter {
   private readonly uiData: UiData;
+  private emitWinscopeEvent: EmitEvent = FunctionUtils.DO_NOTHING_ASYNC;
 
   constructor(
     private readonly traces: Array<Trace<MediaBasedTraceEntry>>,
@@ -37,7 +44,16 @@ export class Presenter {
   }
 
   setEmitEvent(callback: EmitEvent) {
-    // do nothing
+    this.emitWinscopeEvent = callback;
+  }
+
+  addEventListeners(htmlElement: HTMLElement) {
+    htmlElement.addEventListener(
+      ViewerEvents.OverlayDblClick,
+      async (event) => {
+        this.onOverlayDblClick((event as CustomEvent).detail);
+      },
+    );
   }
 
   async onAppEvent(event: WinscopeEvent) {
@@ -67,5 +83,12 @@ export class Presenter {
         this.notifyViewCallback(this.uiData);
       },
     );
+  }
+
+  async onOverlayDblClick(index: number) {
+    const currTrace = this.traces.at(index);
+    if (currTrace) {
+      this.emitWinscopeEvent(new ActiveTraceChanged(currTrace));
+    }
   }
 }

@@ -14,7 +14,10 @@
  * limitations under the License.
  */
 import {assertDefined} from 'common/assert_utils';
-import {TimestampConverterUtils} from 'test/unit/timestamp_converter_utils';
+import {
+  TimestampConverterUtils,
+  timestampEqualityTester,
+} from 'common/time/test_utils';
 import {UnitTestUtils} from 'test/unit/utils';
 import {CoarseVersion} from 'trace/coarse_version';
 import {CustomQueryType} from 'trace/custom_query';
@@ -22,13 +25,14 @@ import {Parser} from 'trace/parser';
 import {Trace} from 'trace/trace';
 import {TraceType} from 'trace/trace_type';
 import {HierarchyTreeNode} from 'trace/tree_node/hierarchy_tree_node';
+import {PropertySource} from 'trace/tree_node/property_tree_node';
 
 describe('ParserViewCapture', () => {
   let parser: Parser<HierarchyTreeNode>;
   let trace: Trace<HierarchyTreeNode>;
 
   beforeAll(async () => {
-    jasmine.addCustomEqualityTester(UnitTestUtils.timestampEqualityTester);
+    jasmine.addCustomEqualityTester(timestampEqualityTester);
     parser = (await UnitTestUtils.getParser(
       'traces/elapsed_and_real_timestamp/com.google.android.apps.nexuslauncher_0.vc',
     )) as Parser<HierarchyTreeNode>;
@@ -41,6 +45,13 @@ describe('ParserViewCapture', () => {
 
   it('has expected coarse version', () => {
     expect(parser.getCoarseVersion()).toEqual(CoarseVersion.LEGACY);
+  });
+
+  it('has expected descriptors', () => {
+    expect(parser.getDescriptors()).toEqual([
+      '.Taskbar',
+      'com.google.android.apps.nexuslauncher_0.vc',
+    ]);
   });
 
   it('provides timestamps', () => {
@@ -57,6 +68,10 @@ describe('ParserViewCapture', () => {
     expect(entry.id).toEqual(
       'ViewNode com.android.launcher3.taskbar.TaskbarDragLayer@265160962',
     );
+    // check calculated properties not overridden by lazily fetched properties
+    expect(
+      (await entry.getAllProperties()).getChildByName('translationX')?.source,
+    ).toEqual(PropertySource.CALCULATED);
   });
 
   it('supports VIEW_CAPTURE_METADATA custom query', async () => {

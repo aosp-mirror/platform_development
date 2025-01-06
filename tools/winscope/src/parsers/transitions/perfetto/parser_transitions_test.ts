@@ -15,7 +15,10 @@
  */
 
 import {assertDefined} from 'common/assert_utils';
-import {TimestampConverterUtils} from 'test/unit/timestamp_converter_utils';
+import {
+  TimestampConverterUtils,
+  timestampEqualityTester,
+} from 'common/time/test_utils';
 import {UnitTestUtils} from 'test/unit/utils';
 import {CoarseVersion} from 'trace/coarse_version';
 import {Parser} from 'trace/parser';
@@ -27,7 +30,7 @@ describe('Perfetto ParserTransitions', () => {
     let parser: Parser<PropertyTreeNode>;
 
     beforeAll(async () => {
-      jasmine.addCustomEqualityTester(UnitTestUtils.timestampEqualityTester);
+      jasmine.addCustomEqualityTester(timestampEqualityTester);
       parser = await UnitTestUtils.getPerfettoParser(
         TraceType.TRANSITION,
         'traces/perfetto/shell_transitions_trace.perfetto-trace',
@@ -44,16 +47,17 @@ describe('Perfetto ParserTransitions', () => {
 
     it('provides timestamps', () => {
       const expected = [
-        TimestampConverterUtils.makeZeroTimestamp(),
         TimestampConverterUtils.makeRealTimestamp(1700573425448299306n),
         TimestampConverterUtils.makeRealTimestamp(1700573426522433299n),
+        TimestampConverterUtils.makeRealTimestamp(1700573433040642612n),
+        TimestampConverterUtils.makeRealTimestamp(1700573433279358351n),
       ];
-      const actual = assertDefined(parser.getTimestamps()).slice(0, 3);
+      const actual = assertDefined(parser.getTimestamps());
       expect(actual).toEqual(expected);
     });
 
     it('decodes transition properties', async () => {
-      const entry = await parser.getEntry(1);
+      const entry = await parser.getEntry(0);
       const wmDataNode = assertDefined(entry.getChildByName('wmData'));
       const shellDataNode = assertDefined(entry.getChildByName('shellData'));
 
@@ -126,7 +130,7 @@ describe('Perfetto ParserTransitions', () => {
         assertDefined(shellDataNode.getChildByName('handler')).formattedValue(),
       ).toEqual('com.android.wm.shell.transition.DefaultMixedHandler');
 
-      const entryWithFlags = await parser.getEntry(2);
+      const entryWithFlags = await parser.getEntry(1);
       const wmDataWithFlags = assertDefined(
         entryWithFlags.getChildByName('wmData'),
       );

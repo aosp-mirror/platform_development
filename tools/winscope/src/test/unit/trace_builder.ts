@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import {Timestamp} from 'common/time';
+import {Timestamp} from 'common/time/time';
 import {
   CustomQueryParserResultTypeMap,
   CustomQueryType,
@@ -34,7 +34,10 @@ import {ParserBuilder} from './parser_builder';
 export class TraceBuilder<T> {
   private type = TraceType.SURFACE_FLINGER;
   private parser?: Parser<T>;
-  private parserCustomQueryResult = new Map<CustomQueryType, {}>();
+  private parserCustomQueryResult = new Map<
+    CustomQueryType,
+    CustomQueryParserResultTypeMap[CustomQueryType]
+  >();
   private entries?: T[];
   private timestamps?: Timestamp[];
   private frameMap?: FrameMap;
@@ -82,7 +85,7 @@ export class TraceBuilder<T> {
     type: Q,
     result: CustomQueryParserResultTypeMap[Q],
   ): TraceBuilder<T> {
-    this.parserCustomQueryResult.set(type, result);
+    this.parserCustomQueryResult.set(type, result ?? {});
     return this;
   }
 
@@ -139,7 +142,7 @@ export class TraceBuilder<T> {
     }
 
     this.parserCustomQueryResult?.forEach((result, queryType) => {
-      builder.setCustomQueryResult(queryType, result as any);
+      builder.setCustomQueryResult(queryType, result);
     });
 
     return builder.build();

@@ -15,7 +15,7 @@
  */
 
 import {assertDefined} from 'common/assert_utils';
-import {Timestamp} from 'common/time';
+import {Timestamp} from 'common/time/time';
 import {HierarchyTreeClientsFactory} from 'parsers/input_method/hierarchy_tree_clients_factory';
 import {AbstractParser} from 'parsers/legacy/abstract_parser';
 import {TamperedMessageType} from 'parsers/tampered_message_type';
@@ -24,7 +24,12 @@ import {android} from 'protos/ime/udc/static';
 import {TraceType} from 'trace/trace_type';
 import {HierarchyTreeNode} from 'trace/tree_node/hierarchy_tree_node';
 
-class ParserInputMethodClients extends AbstractParser<HierarchyTreeNode> {
+type ImeProto = android.view.inputmethod.IInputMethodClientsTraceProto;
+
+class ParserInputMethodClients extends AbstractParser<
+  HierarchyTreeNode,
+  ImeProto
+> {
   private static readonly MAGIC_NUMBER = [
     0x09, 0x49, 0x4d, 0x43, 0x54, 0x52, 0x41, 0x43, 0x45,
   ]; // .IMCTRACE
@@ -64,9 +69,7 @@ class ParserInputMethodClients extends AbstractParser<HierarchyTreeNode> {
     return undefined;
   }
 
-  override decodeTrace(
-    buffer: Uint8Array,
-  ): android.view.inputmethod.IInputMethodClientsTraceProto[] {
+  override decodeTrace(buffer: Uint8Array): ImeProto[] {
     const decoded =
       ParserInputMethodClients.InputMethodClientsTraceFileProto.decode(
         buffer,
@@ -78,9 +81,7 @@ class ParserInputMethodClients extends AbstractParser<HierarchyTreeNode> {
     return decoded.entry ?? [];
   }
 
-  protected override getTimestamp(
-    entry: android.view.inputmethod.IInputMethodClientsTraceProto,
-  ): Timestamp {
+  protected override getTimestamp(entry: ImeProto): Timestamp {
     return this.timestampConverter.makeTimestampFromBootTimeNs(
       BigInt(assertDefined(entry.elapsedRealtimeNanos).toString()),
     );
@@ -88,7 +89,7 @@ class ParserInputMethodClients extends AbstractParser<HierarchyTreeNode> {
 
   override processDecodedEntry(
     index: number,
-    entry: android.view.inputmethod.IInputMethodClientsTraceProto,
+    entry: ImeProto,
   ): HierarchyTreeNode {
     if (
       entry.elapsedRealtimeNanos === undefined ||

@@ -15,7 +15,7 @@
  */
 import {Component, EventEmitter, Input, Output} from '@angular/core';
 import {Download} from 'common/download';
-import {UrlUtils} from 'common/url_utils';
+import {getRootUrl} from 'common/url_utils';
 import {ConnectionState} from 'trace_collection/connection_state';
 import {ProxyConnection} from 'trace_collection/proxy_connection';
 
@@ -157,8 +157,7 @@ export class AdbProxyComponent {
   @Input() state: ConnectionState | undefined;
   @Output() readonly retryConnection = new EventEmitter<string>();
 
-  readonly downloadProxyUrl: string =
-    UrlUtils.getRootUrl() + 'winscope_proxy.py';
+  readonly downloadProxyUrl: string = getRootUrl() + 'winscope_proxy.py';
   readonly proxyCommand: string =
     'python3 $ANDROID_BUILD_TOP/development/tools/winscope/src/adb/winscope_proxy.py';
   readonly proxyVersion = ProxyConnection.VERSION;

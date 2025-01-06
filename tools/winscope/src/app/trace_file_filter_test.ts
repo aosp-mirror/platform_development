@@ -15,8 +15,8 @@
  */
 
 import {TraceOverridden} from 'messaging/user_warnings';
+import {getFixtureFile} from 'test/unit/fixture_utils';
 import {UserNotifierChecker} from 'test/unit/user_notifier_checker';
-import {UnitTestUtils} from 'test/unit/utils';
 import {TraceFile} from 'trace/trace_file';
 import {TraceFileFilter} from './trace_file_filter';
 
@@ -210,6 +210,18 @@ describe('TraceFileFilter', () => {
       ]);
     });
 
+    it('extracts screen recording metadata', async () => {
+      const metadataJson = await makeMetadataJsonFile();
+      const screenRecording = makeTraceFile('screen_recording.mp4');
+      const result = await filter.filter([screenRecording, metadataJson]);
+      expect(result.legacy).toEqual([screenRecording]);
+      expect(result.metadata.screenRecordingOffsets).toEqual({
+        elapsedRealTimeNanos: 0n,
+        realToElapsedTimeOffsetNanos: 1732721670187419904n,
+      });
+      userNotifierChecker.expectNone();
+    });
+
     async function checkPerfettoFilePickedWithoutErrors(
       perfettoFile: TraceFile,
     ) {
@@ -231,7 +243,7 @@ describe('TraceFileFilter', () => {
   }
 
   async function makeBugreportMainEntryTraceFile(): Promise<TraceFile> {
-    const file = await UnitTestUtils.getFixtureFile(
+    const file = await getFixtureFile(
       'bugreports/main_entry.txt',
       'main_entry.txt',
     );
@@ -239,7 +251,7 @@ describe('TraceFileFilter', () => {
   }
 
   async function makeBugreportCodenameTraceFile(): Promise<TraceFile> {
-    const file = await UnitTestUtils.getFixtureFile(
+    const file = await getFixtureFile(
       'bugreports/bugreport-codename_beta-UPB2.230407.019-2023-05-30-14-33-48.txt',
       'bugreport-codename_beta-UPB2.230407.019-2023-05-30-14-33-48.txt',
     );
@@ -247,9 +259,16 @@ describe('TraceFileFilter', () => {
   }
 
   async function makeZippedTraceFile(): Promise<TraceFile> {
-    const file = await UnitTestUtils.getFixtureFile(
+    const file = await getFixtureFile(
       'traces/winscope.zip',
       'FS/data/misc/wmtrace/winscope.zip',
+    );
+    return new TraceFile(file, bugreportArchive);
+  }
+
+  async function makeMetadataJsonFile(): Promise<TraceFile> {
+    const file = await getFixtureFile(
+      'traces/elapsed_and_real_timestamp/screen_recording_metadata.json',
     );
     return new TraceFile(file, bugreportArchive);
   }

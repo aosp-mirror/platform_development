@@ -14,9 +14,8 @@
  * limitations under the License.
  */
 
-import {PersistentStoreProxy} from 'common/persistent_store_proxy';
-import {Store} from 'common/store';
-import {WinscopeEvent, WinscopeEventType} from 'messaging/winscope_event';
+import {PersistentStoreProxy} from 'common/store/persistent_store_proxy';
+import {Store} from 'common/store/store';
 import {Trace} from 'trace/trace';
 import {Traces} from 'trace/traces';
 import {TraceType} from 'trace/trace_type';
@@ -27,10 +26,13 @@ import {
 } from 'viewers/common/abstract_hierarchy_viewer_presenter';
 import {VISIBLE_CHIP} from 'viewers/common/chip';
 import {DisplayIdentifier} from 'viewers/common/display_identifier';
-import {HierarchyPresenter} from 'viewers/common/hierarchy_presenter';
+import {
+  HierarchyPresenter,
+  SelectedTree,
+} from 'viewers/common/hierarchy_presenter';
 import {PropertiesPresenter} from 'viewers/common/properties_presenter';
 import {RectsPresenter} from 'viewers/common/rects_presenter';
-import {TextFilter, TextFilterValues} from 'viewers/common/text_filter';
+import {TextFilter} from 'viewers/common/text_filter';
 import {UiHierarchyTreeNode} from 'viewers/common/ui_hierarchy_tree_node';
 import {UI_RECT_FACTORY} from 'viewers/common/ui_rect_factory';
 import {UserOptions} from 'viewers/common/user_options';
@@ -71,13 +73,7 @@ export class Presenter extends AbstractHierarchyViewerPresenter<UiData> {
       },
       this.storage,
     ),
-    new TextFilter(
-      PersistentStoreProxy.new<TextFilterValues>(
-        'WmHierarchyFilter',
-        new TextFilterValues('', []),
-        this.storage,
-      ),
-    ),
+    new TextFilter(),
     Presenter.DENYLIST_PROPERTY_NAMES,
     true,
     false,
@@ -117,22 +113,14 @@ export class Presenter extends AbstractHierarchyViewerPresenter<UiData> {
         showDefaults: {
           name: 'Show defaults',
           enabled: false,
-          tooltip: `
-                If checked, shows the value of all properties.
-                Otherwise, hides all properties whose value is
-                the default for its data type.
-              `,
+          tooltip: `If checked, shows the value of all properties.
+Otherwise, hides all properties whose value is
+the default for its data type.`,
         },
       },
       this.storage,
     ),
-    new TextFilter(
-      PersistentStoreProxy.new<TextFilterValues>(
-        'WmPropertiesFilter',
-        new TextFilterValues('', []),
-        this.storage,
-      ),
-    ),
+    new TextFilter(),
     Presenter.DENYLIST_PROPERTY_NAMES,
   );
   protected override multiTraceType = undefined;
@@ -146,25 +134,6 @@ export class Presenter extends AbstractHierarchyViewerPresenter<UiData> {
     super(trace, traces, storage, notifyViewCallback, new UiData());
   }
 
-  override async onAppEvent(event: WinscopeEvent) {
-    await this.handleCommonWinscopeEvents(event);
-    await event.visit(
-      WinscopeEventType.TRACE_POSITION_UPDATE,
-      async (event) => {
-        await this.applyTracePositionUpdate(event);
-        this.refreshUIData();
-      },
-    );
-    await event.visit(
-      WinscopeEventType.FILTER_PRESET_APPLY_REQUEST,
-      async (event) => {
-        const filterPresetName = event.name;
-        await this.applyPresetConfig(filterPresetName);
-        this.refreshUIData();
-      },
-    );
-  }
-
   override async onHighlightedNodeChange(item: UiHierarchyTreeNode) {
     await this.applyHighlightedNodeChange(item);
     this.refreshUIData();
@@ -176,18 +145,22 @@ export class Presenter extends AbstractHierarchyViewerPresenter<UiData> {
   }
 
   protected override getOverrideDisplayName(
-    selected: [Trace<HierarchyTreeNode>, HierarchyTreeNode],
+    selected: SelectedTree,
   ): string | undefined {
-    if (!selected[1].isRoot()) {
+    if (!selected.tree.isRoot()) {
       return undefined;
     }
     return this.hierarchyPresenter
-      .getCurrentHierarchyTreeNames(selected[0])
+      .getCurrentHierarchyTreeNames(selected.trace)
       ?.at(0);
   }
 
   protected override keepCalculated(tree: HierarchyTreeNode): boolean {
-    return tree.isRoot();
+    return false;
+  }
+
+  protected override refreshUIData() {
+    this.refreshHierarchyViewerUiData();
   }
 
   private getDisplays(rects: UiRect[]): DisplayIdentifier[] {
@@ -208,9 +181,5 @@ export class Presenter extends AbstractHierarchyViewerPresenter<UiData> {
   private convertRectIdtoContainerName(id: string) {
     const parts = id.split(' ');
     return parts.slice(2).join(' ');
-  }
-
-  private refreshUIData() {
-    this.refreshHierarchyViewerUiData();
   }
 }

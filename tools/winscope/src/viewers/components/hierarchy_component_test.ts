@@ -30,10 +30,12 @@ import {MatTooltipModule} from '@angular/material/tooltip';
 import {BrowserAnimationsModule} from '@angular/platform-browser/animations';
 import {assertDefined} from 'common/assert_utils';
 import {FilterFlag} from 'common/filter_flag';
-import {PersistentStore} from 'common/persistent_store';
+import {InMemoryStorage} from 'common/store/in_memory_storage';
+import {PersistentStore} from 'common/store/persistent_store';
+import {DuplicateLayerIds, MissingLayerIds} from 'messaging/user_warnings';
 import {HierarchyTreeBuilder} from 'test/unit/hierarchy_tree_builder';
 import {TraceType} from 'trace/trace_type';
-import {TextFilter, TextFilterValues} from 'viewers/common/text_filter';
+import {TextFilter} from 'viewers/common/text_filter';
 import {UiHierarchyTreeNode} from 'viewers/common/ui_hierarchy_tree_node';
 import {ViewerEvents} from 'viewers/common/viewer_events';
 import {HierarchyTreeNodeDataViewComponent} from 'viewers/components/hierarchy_tree_node_data_view_component';
@@ -79,13 +81,15 @@ describe('HierarchyComponent', () => {
     component = fixture.componentInstance;
     htmlElement = fixture.nativeElement;
 
-    component.tree = UiHierarchyTreeNode.from(
-      new HierarchyTreeBuilder()
-        .setId('RootNode1')
-        .setName('Root node')
-        .setChildren([{id: 'Child1', name: 'Child node'}])
-        .build(),
-    );
+    component.trees = [
+      UiHierarchyTreeNode.from(
+        new HierarchyTreeBuilder()
+          .setId('RootNode1')
+          .setName('Root node')
+          .setChildren([{id: 'Child1', name: 'Child node'}])
+          .build(),
+      ),
+    ];
 
     component.store = new PersistentStore();
     component.userOptions = {
@@ -124,31 +128,33 @@ describe('HierarchyComponent', () => {
     expect(assertDefined(treeView).innerHTML).toContain('Child node');
   });
 
-  it('renders subtrees', () => {
-    component.subtrees = [
+  it('renders multiple trees', () => {
+    component.trees = [
+      component.trees[0],
       UiHierarchyTreeNode.from(
         new HierarchyTreeBuilder().setId('subtree').setName('subtree').build(),
       ),
     ];
     fixture.detectChanges();
-    const subtree = assertDefined(
-      htmlElement.querySelector('.tree-wrapper .subtrees tree-view'),
+    const trees = assertDefined(
+      htmlElement.querySelectorAll('.tree-wrapper .tree'),
     );
-    expect(assertDefined(subtree).innerHTML).toContain('subtree');
+    expect(trees.length).toEqual(2);
+    expect(trees.item(1).textContent).toContain('subtree');
   });
 
   it('renders pinned nodes', () => {
     const pinnedNodesDiv = htmlElement.querySelector('.pinned-items');
     expect(pinnedNodesDiv).toBeFalsy();
 
-    component.pinnedItems = [assertDefined(component.tree)];
+    component.pinnedItems = assertDefined(component.trees);
     fixture.detectChanges();
     const pinnedNodeEl = htmlElement.querySelector('.pinned-items tree-node');
     expect(pinnedNodeEl).toBeTruthy();
   });
 
   it('renders placeholder text', () => {
-    component.tree = undefined;
+    component.trees = [];
     component.placeholderText = 'Placeholder text';
     fixture.detectChanges();
     expect(
@@ -157,7 +163,7 @@ describe('HierarchyComponent', () => {
   });
 
   it('handles pinned node click', () => {
-    const node = assertDefined(component.tree);
+    const node = assertDefined(component.trees[0]);
     component.pinnedItems = [node];
     fixture.detectChanges();
 
@@ -186,7 +192,9 @@ describe('HierarchyComponent', () => {
         pinnedItem = (event as CustomEvent).detail.pinnedItem;
       },
     );
-    const child = assertDefined(component.tree?.getChildByName('Child node'));
+    const child = assertDefined(
+      component.trees[0].getChildByName('Child node'),
+    );
     component.pinnedItems = [child];
     fixture.detectChanges();
 
@@ -219,9 +227,7 @@ describe('HierarchyComponent', () => {
     inputEl.value = 'Root';
     inputEl.dispatchEvent(new Event('input'));
     fixture.detectChanges();
-    expect(textFilter).toEqual(
-      new TextFilter(new TextFilterValues('Root', [FilterFlag.MATCH_CASE])),
-    );
+    expect(textFilter).toEqual(new TextFilter('Root', [FilterFlag.MATCH_CASE]));
   });
 
   it('handles collapse button click', () => {
@@ -233,4 +239,79 @@ describe('HierarchyComponent', () => {
     fixture.detectChanges();
     expect(spy).toHaveBeenCalled();
   });
+
+  it('shows warnings from all trees', () => {
+    expect(htmlElement.querySelectorAll('.warning').length).toEqual(0);
+
+    component.trees = [
+      component.trees[0],
+      UiHierarchyTreeNode.from(component.trees[0]),
+    ];
+    fixture.detectChanges();
+    const warning1 = new DuplicateLayerIds([123]);
+    component.trees[0].addWarning(warning1);
+    const warning2 = new MissingLayerIds();
+    component.trees[1].addWarning(warning2);
+    fixture.detectChanges();
+    const warnings = htmlElement.querySelectorAll('.warning');
+    expect(warnings.length).toEqual(2);
+    expect(warnings[0].textContent?.trim()).toEqual(
+      'warning ' + warning1.getMessage(),
+    );
+    expect(warnings[1].textContent?.trim()).toEqual(
+      'warning ' + warning2.getMessage(),
+    );
+  });
+
+  it('shows warning tooltip if text overflowing', () => {
+    const warning = new DuplicateLayerIds([123]);
+    component.trees[0].addWarning(warning);
+    fixture.detectChanges();
+
+    const warningEl = assertDefined(htmlElement.querySelector('.warning'));
+    const msgEl = assertDefined(warningEl.querySelector('.warning-message'));
+
+    const spy = spyOnProperty(msgEl, 'scrollWidth').and.returnValue(
+      msgEl.clientWidth,
+    );
+    warningEl.dispatchEvent(new Event('mouseenter'));
+    fixture.detectChanges();
+    expect(
+      document.querySelector<HTMLElement>('.mat-tooltip-panel'),
+    ).toBeNull();
+    warningEl.dispatchEvent(new Event('mouseleave'));
+    fixture.detectChanges();
+
+    spy.and.returnValue(msgEl.clientWidth + 1);
+    fixture.detectChanges();
+    warningEl.dispatchEvent(new Event('mouseenter'));
+    fixture.detectChanges();
+    expect(
+      document.querySelector<HTMLElement>('.mat-tooltip-panel')?.textContent,
+    ).toEqual(warning.getMessage());
+  });
+
+  it('handles arrow down key press', () => {
+    testArrowKeyPress(ViewerEvents.ArrowDownPress, 'ArrowDown');
+  });
+
+  it('handles arrow up key press', () => {
+    testArrowKeyPress(ViewerEvents.ArrowUpPress, 'ArrowUp');
+  });
+
+  function testArrowKeyPress(viewerEvent: string, key: string) {
+    let storage: InMemoryStorage | undefined;
+    htmlElement.addEventListener(viewerEvent, (event) => {
+      storage = (event as CustomEvent).detail;
+    });
+    const event = new KeyboardEvent('keydown', {key});
+    document.dispatchEvent(event);
+    expect(storage).toEqual(component.treeStorage);
+
+    storage = undefined;
+    htmlElement.style.height = '0px';
+    fixture.detectChanges();
+    document.dispatchEvent(event);
+    expect(storage).toBeUndefined();
+  }
 });

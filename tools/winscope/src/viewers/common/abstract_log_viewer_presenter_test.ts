@@ -15,8 +15,8 @@
  */
 
 import {assertDefined} from 'common/assert_utils';
+import {TimestampConverterUtils} from 'common/time/test_utils';
 import {TracePositionUpdate} from 'messaging/winscope_event';
-import {TimestampConverterUtils} from 'test/unit/timestamp_converter_utils';
 import {
   AbstractLogViewerPresenter,
   NotifyLogViewCallbackType,
@@ -28,7 +28,8 @@ export abstract class AbstractLogViewerPresenterTest<UiData extends UiDataLog> {
   execute() {
     describe('Common tests', () => {
       let uiData: UiData;
-      let presenter: AbstractLogViewerPresenter<UiData>;
+      let presenter: AbstractLogViewerPresenter<UiData, object>;
+
       beforeAll(async () => {
         await this.setUpTestEnvironment();
       });
@@ -38,6 +39,9 @@ export abstract class AbstractLogViewerPresenterTest<UiData extends UiDataLog> {
         presenter = await this.createPresenter((newData) => {
           uiData = newData;
         });
+        if (this.resetTestEnvironment) {
+          this.resetTestEnvironment();
+        }
       });
 
       it('is robust to empty trace', async () => {
@@ -81,17 +85,15 @@ export abstract class AbstractLogViewerPresenterTest<UiData extends UiDataLog> {
     });
 
     function filterEqualityTester(
-      first: any,
-      second: any,
+      first: unknown,
+      second: unknown,
     ): boolean | undefined {
       if (first instanceof LogTextFilter && second instanceof LogTextFilter) {
         return (
-          first.textFilter.values.filterString ===
-            second.textFilter.values.filterString &&
-          first.textFilter.values.flags.length ===
-            second.textFilter.values.flags.length &&
-          first.textFilter.values.flags.every(
-            (flag, index) => flag === second.textFilter.values.flags[index],
+          first.textFilter.filterString === second.textFilter.filterString &&
+          first.textFilter.flags.length === second.textFilter.flags.length &&
+          first.textFilter.flags.every(
+            (flag, index) => flag === second.textFilter.flags[index],
           )
         );
       }
@@ -120,12 +122,13 @@ export abstract class AbstractLogViewerPresenterTest<UiData extends UiDataLog> {
   abstract setUpTestEnvironment(): Promise<void>;
   abstract createPresenter(
     callback: NotifyLogViewCallbackType<UiData>,
-  ): Promise<AbstractLogViewerPresenter<UiData>>;
+  ): Promise<AbstractLogViewerPresenter<UiData, object>>;
   abstract createPresenterWithEmptyTrace(
     callback: NotifyLogViewCallbackType<UiData>,
-  ): Promise<AbstractLogViewerPresenter<UiData>>;
+  ): Promise<AbstractLogViewerPresenter<UiData, object>>;
   abstract getPositionUpdate(): TracePositionUpdate;
 
+  resetTestEnvironment?(): void;
   executePropertiesChecksForEmptyTrace?(uiData: UiDataLog): void;
   executePropertiesChecksAfterPositionUpdate?(uiData: UiDataLog): void;
   executeSpecializedTests?(): void;

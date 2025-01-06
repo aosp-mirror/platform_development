@@ -15,11 +15,12 @@
  */
 
 import {assertDefined} from 'common/assert_utils';
-import {Store} from 'common/store';
+import {Store} from 'common/store/store';
 import {WinscopeEvent} from 'messaging/winscope_event';
 import {EmitEvent} from 'messaging/winscope_event_emitter';
 import {Trace} from 'trace/trace';
 import {Traces} from 'trace/traces';
+import {TRACE_INFO} from 'trace/trace_info';
 import {TraceType} from 'trace/trace_type';
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
 import {View, Viewer, ViewType} from 'viewers/viewer';
@@ -56,10 +57,10 @@ export class ViewerInput implements Viewer {
     this.presenter.addEventListeners(this.htmlElement);
 
     this.view = new View(
-      ViewType.TAB,
+      ViewType.TRACE_TAB,
       this.getTraces(),
       this.htmlElement,
-      'Input',
+      TRACE_INFO[TraceType.INPUT_EVENT_MERGED].name,
     );
   }
 

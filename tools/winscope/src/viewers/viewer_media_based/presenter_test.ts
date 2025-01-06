@@ -14,14 +14,16 @@
  * limitations under the License.
  */
 
+import {TimestampConverterUtils} from 'common/time/test_utils';
 import {
+  ActiveTraceChanged,
   ExpandedTimelineToggled,
   TracePositionUpdate,
 } from 'messaging/winscope_event';
-import {TimestampConverterUtils} from 'test/unit/timestamp_converter_utils';
 import {TraceBuilder} from 'test/unit/trace_builder';
 import {MediaBasedTraceEntry} from 'trace/media_based_trace_entry';
 import {TraceType} from 'trace/trace_type';
+import {ViewerEvents} from 'viewers/common/viewer_events';
 import {Presenter} from './presenter';
 import {UiData} from './ui_data';
 
@@ -62,6 +64,19 @@ describe('PresenterMediaBased', () => {
     expect(uiData.titles).toEqual(['recording 1', 'recording 2']);
   });
 
+  it('adds event listeners', () => {
+    const element = document.createElement('div');
+    presenter.addEventListeners(element);
+
+    const spy = spyOn(presenter, 'onOverlayDblClick');
+    element.dispatchEvent(
+      new CustomEvent(ViewerEvents.OverlayDblClick, {
+        detail: 0,
+      }),
+    );
+    expect(spy).toHaveBeenCalledWith(0);
+  });
+
   it('processes trace position updates', async () => {
     const positionUpdate1 = TracePositionUpdate.fromTimestamp(timestamps[1]);
     await presenter.onAppEvent(positionUpdate1);
@@ -78,5 +93,16 @@ describe('PresenterMediaBased', () => {
     expect(uiData.forceMinimize).toBeTrue();
     await presenter.onAppEvent(new ExpandedTimelineToggled(false));
     expect(uiData.forceMinimize).toBeFalse();
+  });
+
+  it('handles overlay double click', async () => {
+    const spy = jasmine.createSpy();
+    presenter.setEmitEvent(spy);
+
+    await presenter.onOverlayDblClick(3);
+    expect(spy).not.toHaveBeenCalled();
+
+    await presenter.onOverlayDblClick(1);
+    expect(spy).toHaveBeenCalledWith(new ActiveTraceChanged(trace2));
   });
 });

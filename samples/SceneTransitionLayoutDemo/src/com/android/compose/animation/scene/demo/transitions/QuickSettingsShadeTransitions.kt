@@ -17,8 +17,6 @@
 package com.android.compose.animation.scene.demo.transitions
 
 import androidx.compose.animation.core.tween
-import androidx.compose.foundation.gestures.Orientation
-import com.android.compose.animation.scene.Edge
 import com.android.compose.animation.scene.SceneTransitionsBuilder
 import com.android.compose.animation.scene.and
 import com.android.compose.animation.scene.demo.Clock
@@ -31,23 +29,19 @@ import com.android.compose.animation.scene.demo.Scenes
 import com.android.compose.animation.scene.demo.notification.NotificationList
 import com.android.compose.animation.scene.inContent
 import com.android.compose.animation.scene.or
+import com.android.compose.animation.scene.reveal.ContainerRevealHaptics
+import com.android.compose.animation.scene.reveal.verticalContainerReveal
 
 val QuickSettingsToNotificationShadeFadeProgress = 0.5f
 
-fun SceneTransitionsBuilder.quickSettingsShadeTransitions() {
+fun SceneTransitionsBuilder.quickSettingsShadeTransitions(revealHaptics: ContainerRevealHaptics) {
     to(Overlays.QuickSettings) {
         spec = tween(500)
-
-        notifyStlThatShadeDoesNotResizeDuringThisTransition()
 
         sharedElement(MediaPlayer.Elements.MediaPlayer, elevateInContent = Overlays.QuickSettings)
         sharedElement(Clock.Elements.Clock, elevateInContent = Overlays.QuickSettings)
 
-        translate(PartialShade.Elements.Root, Edge.Top)
-        fractionRange(start = 0.5f) {
-            fade(QuickSettingsGrid.Elements.Tiles)
-            fade(QuickSettings.Elements.PagerIndicators)
-        }
+        verticalContainerReveal(PartialShade.Elements.Root, revealHaptics)
     }
 
     from(Overlays.QuickSettings, to = Overlays.Notifications) {
@@ -75,17 +69,5 @@ fun SceneTransitionsBuilder.quickSettingsShadeTransitions() {
         fractionRange(start = QuickSettingsToNotificationShadeFadeProgress) {
             fade(NotificationList.Elements.Notifications and inContent(Overlays.Notifications))
         }
-    }
-
-    overscroll(Overlays.QuickSettings, Orientation.Vertical) {
-        notifyStlThatShadeDoesNotResizeDuringThisTransition()
-
-        translate(PartialShade.Elements.Root, y = { absoluteDistance })
-    }
-
-    overscroll(Overlays.QuickSettings, Orientation.Horizontal) {
-        notifyStlThatShadeDoesNotResizeDuringThisTransition()
-
-        translate(PartialShade.Elements.Root, x = { absoluteDistance })
     }
 }

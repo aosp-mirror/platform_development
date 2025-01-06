@@ -15,12 +15,12 @@
  */
 import {assertDefined} from 'common/assert_utils';
 import {FilterFlag} from 'common/filter_flag';
-import {Timestamp} from 'common/time';
+import {Timestamp} from 'common/time/time';
 import {Item} from 'trace/item';
 import {HierarchyTreeNode} from 'trace/tree_node/hierarchy_tree_node';
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
 import {WindowType} from 'trace/window_type';
-import {TextFilter, TextFilterValues} from 'viewers/common/text_filter';
+import {TextFilter} from 'viewers/common/text_filter';
 import {WmImeUtils} from 'viewers/common/wm_ime_utils';
 import {TreeNodeFilter, UiTreeUtils} from './ui_tree_utils';
 
@@ -81,14 +81,10 @@ export class ImeLayers implements Item {
 
 class ImeAdditionalPropertiesUtils {
   private isInputMethodSurface = UiTreeUtils.makeNodeFilter(
-    new TextFilter(
-      new TextFilterValues('InputMethod', []),
-    ).getFilterPredicate(),
+    new TextFilter('InputMethod').getFilterPredicate(),
   );
   private isImeContainer = UiTreeUtils.makeNodeFilter(
-    new TextFilter(
-      new TextFilterValues('ImeContainer', []),
-    ).getFilterPredicate(),
+    new TextFilter('ImeContainer').getFilterPredicate(),
   );
 
   processWindowManagerTraceEntry(
@@ -160,9 +156,7 @@ class ImeAdditionalPropertiesUtils {
         .slice(1);
     if (focusedWindowToken) {
       const isFocusedWindow = UiTreeUtils.makeNodeFilter(
-        new TextFilter(
-          new TextFilterValues(focusedWindowToken, []),
-        ).getFilterPredicate(),
+        new TextFilter(focusedWindowToken).getFilterPredicate(),
       );
       focusedWindowLayer = entryTree.findDfs(isFocusedWindow);
     }
@@ -181,9 +175,7 @@ class ImeAdditionalPropertiesUtils {
     const taskLayerOfImeSnapshot = this.findAncestorTaskLayerOfImeLayer(
       entryTree,
       UiTreeUtils.makeNodeFilter(
-        new TextFilter(
-          new TextFilterValues('IME-snapshot', []),
-        ).getFilterPredicate(),
+        new TextFilter('IME-snapshot').getFilterPredicate(),
       ),
     );
 
@@ -281,9 +273,9 @@ class ImeAdditionalPropertiesUtils {
     }
 
     const isTaskLayer = UiTreeUtils.makeNodeFilter(
-      new TextFilter(
-        new TextFilterValues('Task|ImePlaceholder', [FilterFlag.USE_REGEX]),
-      ).getFilterPredicate(),
+      new TextFilter('Task|ImePlaceholder', [
+        FilterFlag.USE_REGEX,
+      ]).getFilterPredicate(),
     );
     const taskLayer = imeLayer.findAncestor(isTaskLayer);
     if (!taskLayer) {

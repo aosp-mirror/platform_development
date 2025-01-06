@@ -61,11 +61,24 @@ enum Cmd {
         #[command(flatten)]
         crates: MigrationCrateList,
     },
+    /// Analyze a crate to see if it can be imported.
+    #[command(hide = true)]
+    AnalyzeImport {
+        /// The crate name.
+        crate_name: String,
+    },
     /// Import a crate and its dependencies into the monorepo.
     #[command(hide = true)]
     Import {
         /// The crate name.
         crate_name: String,
+
+        /// The crate version.
+        version: String,
+
+        /// Run "cargo_embargo autoconfig"
+        #[arg(long, default_value_t = false)]
+        autoconfig: bool,
     },
     /// Regenerate crates from vendored code by applying patches, running cargo_embargo, etc.
     Regenerate {
@@ -118,6 +131,17 @@ enum Cmd {
     TryUpdates {},
     /// Initialize a new managed repo.
     Init {},
+    /// Update TEST_MAPPING files.
+    #[command(hide = true)]
+    TestMapping {
+        #[command(flatten)]
+        crates: CrateList,
+    },
+    /// Verify checksums for a crate.
+    VerifyChecksum {
+        #[command(flatten)]
+        crates: CrateList,
+    },
 }
 
 #[derive(Args)]
@@ -137,11 +161,7 @@ struct CrateList {
 impl CrateList {
     fn to_list(&self, managed_repo: &ManagedRepo) -> Result<Vec<String>> {
         Ok(if self.all {
-            managed_repo
-                .all_crate_names()?
-                .into_iter()
-                .filter(|crate_name| !self.exclude.contains(crate_name))
-                .collect::<Vec<_>>()
+            managed_repo.all_crate_names()?.difference(&self.exclude).cloned().collect::<Vec<_>>()
         } else {
             self.crates.clone()
         })
@@ -209,7 +229,10 @@ fn main() -> Result<()> {
             managed_repo.regenerate(crates.to_list(&managed_repo)?.into_iter(), true)
         }
         Cmd::PreuploadCheck { files } => managed_repo.preupload_check(&files),
-        Cmd::Import { crate_name } => managed_repo.import(&crate_name),
+        Cmd::AnalyzeImport { crate_name } => managed_repo.analyze_import(&crate_name),
+        Cmd::Import { crate_name, version, autoconfig } => {
+            managed_repo.import(&crate_name, &version, autoconfig)
+        }
         Cmd::FixLicenses { crates } => {
             managed_repo.fix_licenses(crates.to_list(&managed_repo)?.into_iter())
         }
@@ -225,5 +248,11 @@ fn main() -> Result<()> {
         Cmd::Update { crate_name, version } => managed_repo.update(crate_name, version),
         Cmd::TryUpdates {} => managed_repo.try_updates(),
         Cmd::Init {} => managed_repo.init(),
+        Cmd::TestMapping { crates } => {
+            managed_repo.fix_test_mapping(crates.to_list(&managed_repo)?.into_iter())
+        }
+        Cmd::VerifyChecksum { crates } => {
+            managed_repo.verify_checksums(crates.to_list(&managed_repo)?.into_iter())
+        }
     }
 }

@@ -15,9 +15,9 @@
  */
 
 import {assertDefined} from 'common/assert_utils';
-import {Store} from 'common/store';
-import {Timestamp} from 'common/time';
-import {TimeUtils} from 'common/time_utils';
+import {Store} from 'common/store/store';
+import {Timestamp} from 'common/time/time';
+import {TimeUtils} from 'common/time/time_utils';
 import {UserNotifier} from 'common/user_notifier';
 import {CrossToolProtocol} from 'cross_tool/cross_tool_protocol';
 import {Analytics} from 'logging/analytics';
@@ -33,7 +33,11 @@ import {
 import {
   ActiveTraceChanged,
   ExpandedTimelineToggled,
+  TraceAddRequest,
   TracePositionUpdate,
+  TraceSearchCompleted,
+  TraceSearchFailed,
+  TraceSearchInitialized,
   ViewersLoaded,
   ViewersUnloaded,
   WinscopeEvent,
@@ -51,6 +55,7 @@ import {ViewerFactory} from 'viewers/viewer_factory';
 import {FilesSource} from './files_source';
 import {TimelineData} from './timeline_data';
 import {TracePipeline} from './trace_pipeline';
+import {TraceSearchInitializer} from './trace_search/trace_search_initializer';
 
 export class Mediator {
   private abtChromeExtensionProtocol: WinscopeEventEmitter &
@@ -265,11 +270,12 @@ export class Mediator {
     );
 
     await event.visit(WinscopeEventType.ACTIVE_TRACE_CHANGED, async (event) => {
-      this.timelineData.trySetActiveTrace(event.trace);
-      for (const viewer of this.viewers) {
-        await viewer.onWinscopeEvent(event);
+      if (this.timelineData.trySetActiveTrace(event.trace)) {
+        for (const viewer of this.viewers) {
+          await viewer.onWinscopeEvent(event);
+        }
+        await this.timelineComponent?.onWinscopeEvent(event);
       }
-      await this.timelineComponent?.onWinscopeEvent(event);
     });
 
     await event.visit(WinscopeEventType.DARK_MODE_TOGGLED, async (event) => {
@@ -297,6 +303,48 @@ export class Mediator {
       WinscopeEventType.FILTER_PRESET_APPLY_REQUEST,
       async (event) => {
         await this.findViewerByType(event.traceType)?.onWinscopeEvent(event);
+      },
+    );
+
+    await event.visit(WinscopeEventType.TRACE_SEARCH_REQUEST, async (event) => {
+      await this.timelineComponent?.onWinscopeEvent(event);
+      const searchViewer = this.viewers.find(
+        (viewer) => viewer.getViews()[0].type === ViewType.GLOBAL_SEARCH,
+      );
+      const trace = await this.tracePipeline.tryCreateSearchTrace(event.query);
+      this.timelineComponent?.onWinscopeEvent(new TraceSearchCompleted());
+      if (!trace) {
+        await searchViewer?.onWinscopeEvent(new TraceSearchFailed());
+        return;
+      }
+      const newSearchTrace = new TraceAddRequest(trace);
+      await searchViewer?.onWinscopeEvent(newSearchTrace);
+      if (trace.lengthEntries > 0 && !trace.isDumpWithoutTimestamp()) {
+        assertDefined(this.timelineData).getTraces().addTrace(trace);
+        await this.timelineComponent?.onWinscopeEvent(newSearchTrace);
+      }
+    });
+
+    await event.visit(WinscopeEventType.TRACE_REMOVE_REQUEST, async (event) => {
+      this.tracePipeline.getTraces().deleteTrace(event.trace);
+      if (this.timelineData.hasTrace(event.trace)) {
+        this.timelineData.getTraces().deleteTrace(event.trace);
+        await this.timelineComponent?.onWinscopeEvent(event);
+      }
+    });
+
+    await event.visit(
+      WinscopeEventType.INITIALIZE_TRACE_SEARCH_REQUEST,
+      async (event) => {
+        await this.timelineComponent?.onWinscopeEvent(event);
+        const traces = this.tracePipeline.getTraces();
+        const views = await TraceSearchInitializer.createSearchViews(traces);
+        const searchViewer = this.viewers.find(
+          (viewer) => viewer.getViews()[0].type === ViewType.GLOBAL_SEARCH,
+        );
+        const initializedEvent = new TraceSearchInitialized(views);
+        await searchViewer?.onWinscopeEvent(initializedEvent);
+        await this.timelineComponent?.onWinscopeEvent(initializedEvent);
       },
     );
   }
@@ -465,7 +513,7 @@ export class Mediator {
     await this.propagateTracePosition(initialPosition, true);
 
     this.focusedTabView = this.viewers
-      .find((v) => v.getViews()[0].type !== ViewType.OVERLAY)
+      .find((v) => v.getViews()[0].type === ViewType.TRACE_TAB)
       ?.getViews()[0];
     this.areViewersLoaded = true;
 

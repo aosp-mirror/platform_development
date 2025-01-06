@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import {Timestamp} from 'common/time';
+import {Timestamp} from 'common/time/time';
 import {TraceEntry} from 'trace/trace';
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
 import {TextFilter} from 'viewers/common/text_filter';
@@ -26,9 +26,9 @@ export interface UiDataLog {
   entries: LogEntry[];
   selectedIndex: undefined | number;
   scrollToIndex: undefined | number;
+  currentIndex: undefined | number;
 
   headers: LogHeader[];
-  currentIndex?: undefined | number;
   propertiesTree?: undefined | UiPropertyTreeNode;
   propertiesUserOptions?: UserOptions;
   propertiesFilter?: TextFilter;
@@ -45,7 +45,7 @@ export class LogHeader {
 }
 
 export interface LogEntry {
-  traceEntry: TraceEntry<PropertyTreeNode>;
+  traceEntry: TraceEntry<object>;
   fields: LogField[];
   propertiesTree?: undefined | PropertyTreeNode;
 }

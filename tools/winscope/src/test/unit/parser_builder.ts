@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-import {Timestamp} from 'common/time';
-import {TimestampConverterUtils} from 'test/unit/timestamp_converter_utils';
+import {TimestampConverterUtils} from 'common/time/test_utils';
+import {Timestamp} from 'common/time/time';
 import {
   CustomQueryParserResultTypeMap,
   CustomQueryType,
@@ -62,7 +62,7 @@ export class ParserBuilder<T> {
     type: Q,
     result: CustomQueryParserResultTypeMap[Q],
   ): this {
-    this.customQueryResult.set(type, result);
+    this.customQueryResult.set(type, result ?? {});
     return this;
   }
 

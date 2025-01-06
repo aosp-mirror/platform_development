@@ -15,14 +15,14 @@
  */
 
 import {assertDefined} from 'common/assert_utils';
-import {InMemoryStorage} from 'common/in_memory_storage';
+import {InMemoryStorage} from 'common/store/in_memory_storage';
+import {TimestampConverterUtils} from 'common/time/test_utils';
 import {
   TabbedViewSwitchRequest,
   TracePositionUpdate,
 } from 'messaging/winscope_event';
 import {Transform} from 'parsers/surface_flinger/transform_utils';
 import {HierarchyTreeBuilder} from 'test/unit/hierarchy_tree_builder';
-import {TimestampConverterUtils} from 'test/unit/timestamp_converter_utils';
 import {TracesBuilder} from 'test/unit/traces_builder';
 import {TraceBuilder} from 'test/unit/trace_builder';
 import {UnitTestUtils} from 'test/unit/utils';
@@ -38,7 +38,7 @@ import {NotifyLogViewCallbackType} from 'viewers/common/abstract_log_viewer_pres
 import {AbstractLogViewerPresenterTest} from 'viewers/common/abstract_log_viewer_presenter_test';
 import {VISIBLE_CHIP} from 'viewers/common/chip';
 import {LogSelectFilter} from 'viewers/common/log_filters';
-import {TextFilter, TextFilterValues} from 'viewers/common/text_filter';
+import {TextFilter} from 'viewers/common/text_filter';
 import {LogField, LogHeader} from 'viewers/common/ui_data_log';
 import {UserOptions} from 'viewers/common/user_options';
 import {ViewerEvents} from 'viewers/common/viewer_events';
@@ -48,34 +48,54 @@ import {UiData} from './ui_data';
 class PresenterInputTest extends AbstractLogViewerPresenterTest<UiData> {
   override readonly expectedHeaders = [
     {
-      header: new LogHeader({
-        name: 'Type',
-        cssClass: 'input-type inline',
-      }),
+      header: new LogHeader(
+        {
+          name: 'Type',
+          cssClass: 'input-type inline',
+        },
+        new LogSelectFilter(['MOTION', 'KEY'], false, '80', '100%'),
+      ),
     },
     {
-      header: new LogHeader({
-        name: 'Source',
-        cssClass: 'input-source',
-      }),
+      header: new LogHeader(
+        {
+          name: 'Source',
+          cssClass: 'input-source',
+        },
+        new LogSelectFilter(['TOUCHSCREEN', 'KEYBOARD'], false, '200', '100%'),
+      ),
     },
     {
-      header: new LogHeader({
-        name: 'Action',
-        cssClass: 'input-action',
-      }),
+      header: new LogHeader(
+        {
+          name: 'Action',
+          cssClass: 'input-action',
+        },
+        new LogSelectFilter(
+          ['DOWN', 'OUTSIDE', 'MOVE', 'UP'],
+          false,
+          '100',
+          '100%',
+        ),
+      ),
     },
     {
-      header: new LogHeader({
-        name: 'Device',
-        cssClass: 'input-device-id right-align',
-      }),
+      header: new LogHeader(
+        {
+          name: 'Device',
+          cssClass: 'input-device-id right-align',
+        },
+        new LogSelectFilter(['4', '2'], false, '80', '100%'),
+      ),
     },
     {
-      header: new LogHeader({
-        name: 'Display',
-        cssClass: 'input-display-id right-align',
-      }),
+      header: new LogHeader(
+        {
+          name: 'Display',
+          cssClass: 'input-display-id right-align',
+        },
+        new LogSelectFilter(['0', '-1'], false, '80', '100%'),
+      ),
     },
     {
       header: new LogHeader({
@@ -630,9 +650,7 @@ class PresenterInputTest extends AbstractLogViewerPresenterTest<UiData> {
         expect(
           assertDefined(uiData.dispatchPropertiesTree).getAllChildren().length,
         ).toEqual(5);
-        await presenter.onDispatchPropertiesFilterChange(
-          new TextFilter(new TextFilterValues('212', [])),
-        );
+        await presenter.onDispatchPropertiesFilterChange(new TextFilter('212'));
         expect(
           assertDefined(uiData.dispatchPropertiesTree).getAllChildren().length,
         ).toEqual(1);

@@ -14,10 +14,16 @@
  * limitations under the License.
  */
 
-import {assertDefined} from 'common/assert_utils';
+import {assertDefined} from './assert_utils';
 
+/**
+ * Type for HTTP request headers.
+ */
 export type HttpRequestHeaderType = Array<[string, string]>;
 
+/**
+ * Status of an HTTP request.
+ */
 export enum HttpRequestStatus {
   UNSENT,
   UNAUTH,
@@ -25,6 +31,9 @@ export enum HttpRequestStatus {
   ERROR,
 }
 
+/**
+ * Response from an HTTP request.
+ */
 export interface HttpResponse {
   status: HttpRequestStatus;
   type: XMLHttpRequestResponseType; //eslint-disable-line no-undef
@@ -33,7 +42,17 @@ export interface HttpResponse {
   getHeader: (name: string) => string | undefined;
 }
 
+/**
+ * Class for making HTTP requests.
+ */
 export class HttpRequest {
+  /**
+   * Make a GET request.
+   * @param path The path of the request.
+   * @param headers The headers of the request.
+   * @param type The response type of the request.
+   * @return A promise that resolves to the response.
+   */
   static async get(
     path: string,
     headers: HttpRequestHeaderType,
@@ -42,6 +61,13 @@ export class HttpRequest {
     return await HttpRequest.call('GET', path, headers, type);
   }
 
+  /**
+   * Make a POST request.
+   * @param path The path of the request.
+   * @param headers The headers of the request.
+   * @param jsonRequest The JSON request body.
+   * @return A promise that resolves to the response.
+   */
   static async post(
     path: string,
     headers: HttpRequestHeaderType,

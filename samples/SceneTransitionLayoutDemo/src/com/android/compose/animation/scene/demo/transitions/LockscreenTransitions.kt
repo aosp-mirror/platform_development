@@ -18,7 +18,6 @@ package com.android.compose.animation.scene.demo.transitions
 
 import androidx.compose.animation.core.CubicBezierEasing
 import androidx.compose.animation.core.tween
-import androidx.compose.foundation.gestures.Orientation
 import androidx.compose.ui.unit.dp
 import com.android.compose.animation.scene.Edge
 import com.android.compose.animation.scene.SceneKey
@@ -28,7 +27,6 @@ import com.android.compose.animation.scene.TransitionKey
 import com.android.compose.animation.scene.demo.Bouncer
 import com.android.compose.animation.scene.demo.Camera
 import com.android.compose.animation.scene.demo.Clock
-import com.android.compose.animation.scene.demo.DemoConfiguration
 import com.android.compose.animation.scene.demo.Launcher
 import com.android.compose.animation.scene.demo.Lockscreen
 import com.android.compose.animation.scene.demo.MediaPlayer
@@ -39,23 +37,11 @@ import com.android.compose.animation.scene.demo.SmartSpace
 import com.android.compose.animation.scene.demo.Stub
 import com.android.compose.animation.scene.demo.notification.NotificationList
 
-fun SceneTransitionsBuilder.lockscreenTransitions(configuration: DemoConfiguration) {
+fun SceneTransitionsBuilder.lockscreenTransitions() {
     // The transitions between lockscreen/split lockscreen <=> bouncer/launcher/camera/stub are
     // the same.
     commonLockscreenTransitions(Scenes.Lockscreen)
     commonLockscreenTransitions(Scenes.SplitLockscreen)
-
-    if (configuration.useOverscrollSpec) {
-        overscrollDisabled(Scenes.Lockscreen, Orientation.Vertical)
-
-        overscroll(Scenes.StubStart, Orientation.Horizontal) {
-            translate(Stub.Elements.TextStart, x = { absoluteDistance })
-        }
-
-        overscroll(Scenes.StubEnd, Orientation.Horizontal) {
-            translate(Stub.Elements.TextEnd, x = { absoluteDistance })
-        }
-    }
 }
 
 val BouncerBackgroundEndProgress = 0.5f

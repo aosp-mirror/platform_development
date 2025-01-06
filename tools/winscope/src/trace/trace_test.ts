@@ -14,14 +14,16 @@
  * limitations under the License.
  */
 
-import {TIME_UNIT_TO_NANO} from 'common/time_units';
+import {TimestampConverterUtils} from 'common/time/test_utils';
+import {TIME_UNIT_TO_NANO} from 'common/time/time_units';
 import {ParserBuilder} from 'test/unit/parser_builder';
-import {TimestampConverterUtils} from 'test/unit/timestamp_converter_utils';
 import {TraceBuilder} from 'test/unit/trace_builder';
 import {TraceUtils} from 'test/unit/trace_utils';
+import {UnitTestUtils} from 'test/unit/utils';
 import {FrameMapBuilder} from './frame_map_builder';
 import {AbsoluteFrameIndex} from './index_types';
 import {Trace} from './trace';
+import {TraceType} from './trace_type';
 
 describe('Trace', () => {
   let trace: Trace<string>;
@@ -1399,10 +1401,9 @@ describe('Trace', () => {
   });
 
   it('spansMultipleDates()', () => {
-    const emptyTrace = new TraceBuilder<string>()
-      .setEntries([])
-      .setTimestamps([])
-      .build();
+    const emptyTrace = UnitTestUtils.makeEmptyTrace(
+      TraceType.TEST_TRACE_STRING,
+    );
     expect(emptyTrace.spansMultipleDates()).toBeFalse();
 
     const traceWithElapsedTimestamps = new TraceBuilder<string>()

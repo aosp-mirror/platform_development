@@ -25,12 +25,14 @@ import {MatSelectModule} from '@angular/material/select';
 import {MatTooltipModule} from '@angular/material/tooltip';
 import {BrowserAnimationsModule} from '@angular/platform-browser/animations';
 import {assertDefined} from 'common/assert_utils';
-import {InMemoryStorage} from 'common/in_memory_storage';
-import {Store} from 'common/store';
+import {InMemoryStorage} from 'common/store/in_memory_storage';
+import {Store} from 'common/store/store';
 import {TraceType} from 'trace/trace_type';
+import {ConfigurationOptions} from 'trace_collection/trace_configuration';
 import {TraceConfigComponent} from './trace_config_component';
 
 describe('TraceConfigComponent', () => {
+  const storeKey = 'TestConfigSettings';
   let fixture: ComponentFixture<TraceConfigComponent>;
   let component: TraceConfigComponent;
   let htmlElement: HTMLElement;
@@ -89,37 +91,50 @@ describe('TraceConfigComponent', () => {
       'multiple_selection_trace configuration',
       'optional_multiple_selection_trace configuration',
       'optional_selection_trace configuration',
+      'window_trace configuration',
     ]);
   });
 
   it('applies stored config and emits event on init', async () => {
-    expect(
-      assertDefined(component.traceConfig)['layers_trace'].enabled,
-    ).toBeTrue();
-    const inputElement = assertDefined(
-      htmlElement.querySelector<HTMLInputElement>('.trace-checkbox input'),
-    );
-    inputElement.click();
+    assertDefined(
+      htmlElement.querySelector<HTMLInputElement>('.enable-config-opt input'),
+    ).click();
     fixture.detectChanges();
     expect(
-      assertDefined(component.traceConfig)['layers_trace'].enabled,
-    ).toBeFalse();
+      assertDefined(component.traceConfig)['layers_trace'].config
+        .checkboxConfigs,
+    ).toEqual([{name: 'trace buffers', key: 'tracebuffers', enabled: false}]);
+
+    // remove window_trace checkbox configs from storage
+    const commonStorage = new InMemoryStorage();
+    commonStorage.add(
+      storeKey + 'layers_trace',
+      assertDefined(component.storage?.get(storeKey + 'layers_trace')),
+    );
+    const wmConfig: ConfigurationOptions = JSON.parse(
+      assertDefined(component.storage?.get(storeKey + 'window_trace')),
+    );
+    wmConfig.checkboxConfigs = [];
+    commonStorage.add(storeKey + 'window_trace', JSON.stringify(wmConfig));
 
     const newFixture = TestBed.createComponent(TraceConfigComponent);
     const newComponent = newFixture.componentInstance;
     const spy = spyOn(newComponent.traceConfigChange, 'emit');
-    await setComponentInputs(
-      newComponent,
-      newFixture,
-      assertDefined(component.storage),
-    );
+    await setComponentInputs(newComponent, newFixture, commonStorage);
     expect(spy).toHaveBeenCalledTimes(1);
-    expect(
-      assertDefined(newComponent.traceConfig)['layers_trace'].enabled,
-    ).toBeFalse();
+
+    const newConfig = assertDefined(newComponent.traceConfig);
+    // layers_trace tracebuffers set to false from storage
+    expect(newConfig['layers_trace'].config.checkboxConfigs).toEqual([
+      {name: 'trace buffers', key: 'tracebuffers', enabled: false},
+    ]);
+    // window_trace checkbox configs retained during merge even though they are no longer in storage
+    expect(newConfig['window_trace'].config.checkboxConfigs).toEqual([
+      {name: 'extra', key: 'extra', enabled: true},
+    ]);
   });
 
-  it('handles proxy initial trace config', async () => {
+  it('handles proxy object for initial trace config', async () => {
     const newFixture = TestBed.createComponent(TraceConfigComponent);
     const newComponent = newFixture.componentInstance;
     const spy = spyOn(newComponent.traceConfigChange, 'emit');
@@ -147,13 +162,13 @@ describe('TraceConfigComponent', () => {
     expect(box.textContent).toContain(traceKey);
     expect(inputElement.checked).toBeTrue();
     expect(inputElement.ariaChecked).toEqual('true');
-    expect(config[traceKey].enabled).toBeTrue();
+    expect(config[traceKey].config.enabled).toBeTrue();
 
     inputElement.click();
     fixture.detectChanges();
     expect(inputElement.checked).toBeFalse();
     expect(inputElement.ariaChecked).toEqual('false');
-    expect(config[traceKey].enabled).toBeFalse();
+    expect(config[traceKey].config.enabled).toBeFalse();
     expect(configChangeSpy).toHaveBeenCalledTimes(1);
   });
 
@@ -170,13 +185,13 @@ describe('TraceConfigComponent', () => {
     expect(box.textContent).toContain(traceKey);
     expect(inputElement.checked).toBeFalse();
     expect(inputElement.ariaChecked).toEqual('false');
-    expect(config[traceKey].enabled).toBeFalse();
+    expect(config[traceKey].config.enabled).toBeFalse();
 
     inputElement.click();
     fixture.detectChanges();
     expect(inputElement.checked).toBeTrue();
     expect(inputElement.ariaChecked).toEqual('true');
-    expect(config[traceKey].enabled).toBeTrue();
+    expect(config[traceKey].config.enabled).toBeTrue();
     expect(configChangeSpy).toHaveBeenCalledTimes(1);
   });
 
@@ -190,7 +205,7 @@ describe('TraceConfigComponent', () => {
     expect(box.textContent).toContain(traceKey);
   });
 
-  it('enable and select configs show', () => {
+  it('checkbox and select configs show', () => {
     const enable_config_opt = assertDefined(
       htmlElement.querySelector('.enable-config-opt'),
     );
@@ -204,26 +219,26 @@ describe('TraceConfigComponent', () => {
     expect(selection_config_opt.innerHTML).toContain('tracing level');
   });
 
-  it('changing enable config model value causes box to change', async () => {
+  it('changing checkbox config model value causes box to change', async () => {
     const inputElement = assertDefined(
       htmlElement.querySelector<HTMLInputElement>('.enable-config input'),
     );
     assertDefined(
       assertDefined(component.traceConfig)['layers_trace'].config,
-    ).enableConfigs[0].enabled = false;
+    ).checkboxConfigs[0].enabled = false;
     await detectNgModelChanges();
     expect(inputElement.checked).toBeFalse();
     expect(inputElement.ariaChecked).toEqual('false');
 
     assertDefined(
       assertDefined(component.traceConfig)['layers_trace'].config,
-    ).enableConfigs[0].enabled = true;
+    ).checkboxConfigs[0].enabled = true;
     await detectNgModelChanges();
     expect(inputElement.checked).toBeTrue();
     expect(inputElement.ariaChecked).toEqual('true');
   });
 
-  it('changing enable config by DOM interaction emits event', async () => {
+  it('changing checkbox config by DOM interaction emits event', async () => {
     configChangeSpy.calls.reset();
     const inputElement = assertDefined(
       htmlElement.querySelector<HTMLInputElement>('.enable-config input'),
@@ -333,11 +348,11 @@ describe('TraceConfigComponent', () => {
     c.initialTraceConfig = {
       layers_trace: {
         name: 'layers_trace',
-        enabled: true,
         available: true,
         types: [TraceType.SURFACE_FLINGER],
         config: {
-          enableConfigs: [
+          enabled: true,
+          checkboxConfigs: [
             {
               name: 'trace buffers',
               key: 'tracebuffers',
@@ -356,25 +371,37 @@ describe('TraceConfigComponent', () => {
       },
       window_trace: {
         name: 'window_trace',
-        enabled: false,
         available: true,
         types: [TraceType.WINDOW_MANAGER],
-        config: undefined,
+        config: {
+          enabled: false,
+          checkboxConfigs: [
+            {
+              name: 'extra',
+              key: 'extra',
+              enabled: true,
+            },
+          ],
+          selectionConfigs: [],
+        },
       },
       unavailable_trace: {
         name: 'unavailable_trace',
-        enabled: false,
         available: false,
         types: [TraceType.TEST_TRACE_STRING],
-        config: undefined,
+        config: {
+          enabled: false,
+          checkboxConfigs: [],
+          selectionConfigs: [],
+        },
       },
       optional_selection_trace: {
         name: 'optional_selection_trace',
-        enabled: true,
         available: true,
         types: [TraceType.TEST_TRACE_STRING],
         config: {
-          enableConfigs: [],
+          enabled: true,
+          checkboxConfigs: [],
           selectionConfigs: [
             {
               key: 'displays',
@@ -388,11 +415,11 @@ describe('TraceConfigComponent', () => {
       },
       multiple_selection_trace: {
         name: 'multiple_selection_trace',
-        enabled: true,
         available: true,
         types: [TraceType.TEST_TRACE_STRING],
         config: {
-          enableConfigs: [],
+          enabled: true,
+          checkboxConfigs: [],
           selectionConfigs: [
             {
               key: 'displays',
@@ -405,11 +432,11 @@ describe('TraceConfigComponent', () => {
       },
       optional_multiple_selection_trace: {
         name: 'optional_multiple_selection_trace',
-        enabled: true,
         available: true,
         types: [TraceType.TEST_TRACE_STRING],
         config: {
-          enableConfigs: [],
+          enabled: true,
+          checkboxConfigs: [],
           selectionConfigs: [
             {
               key: 'displays',
@@ -422,7 +449,7 @@ describe('TraceConfigComponent', () => {
         },
       },
     };
-    c.traceConfigStoreKey = 'TestConfigSettings';
+    c.traceConfigStoreKey = storeKey;
     c.storage = storage;
     await detectNgModelChanges(f);
     f.detectChanges();

@@ -14,7 +14,10 @@
  * limitations under the License.
  */
 
-import {TimestampConverterUtils} from 'test/unit/timestamp_converter_utils';
+import {
+  TimestampConverterUtils,
+  timestampEqualityTester,
+} from 'common/time/test_utils';
 import {TraceBuilder} from 'test/unit/trace_builder';
 import {UnitTestUtils} from 'test/unit/utils';
 import {CoarseVersion} from 'trace/coarse_version';
@@ -29,7 +32,7 @@ describe('ParserWindowManagerDump', () => {
   let trace: Trace<HierarchyTreeNode>;
 
   beforeAll(async () => {
-    jasmine.addCustomEqualityTester(UnitTestUtils.timestampEqualityTester);
+    jasmine.addCustomEqualityTester(timestampEqualityTester);
     parser = (await UnitTestUtils.getParser(
       'traces/dump_WindowManager.pb',
     )) as Parser<HierarchyTreeNode>;

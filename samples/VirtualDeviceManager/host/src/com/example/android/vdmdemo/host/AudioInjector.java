@@ -18,6 +18,7 @@ package com.example.android.vdmdemo.host;
 
 import static android.media.AudioTrack.STATE_INITIALIZED;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.media.AudioFormat;
 import android.media.AudioManager;
@@ -26,6 +27,7 @@ import android.media.AudioTrack;
 import android.media.audiopolicy.AudioMix;
 import android.media.audiopolicy.AudioMixingRule;
 import android.media.audiopolicy.AudioPolicy;
+import android.os.SystemClock;
 import android.util.Log;
 
 import androidx.annotation.GuardedBy;
@@ -40,7 +42,6 @@ import dagger.hilt.android.qualifiers.ApplicationContext;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
 import java.util.function.Consumer;
 
 import javax.inject.Inject;
@@ -59,6 +60,8 @@ public final class AudioInjector implements Consumer<RemoteEvent> {
                     .setEncoding(AudioFormat.ENCODING_PCM_16BIT)
                     .build();
 
+    @Inject
+    PreferenceController mPreferenceController;
     private final Object mLock = new Object();
 
     @GuardedBy("mLock")
@@ -69,12 +72,14 @@ public final class AudioInjector implements Consumer<RemoteEvent> {
     @GuardedBy("mLock")
     private ImmutableSet<Integer> mReroutedUids = ImmutableSet.of();
     private AudioPolicy mAudioPolicy;
+    private AudioMix mUidAudioMix;
     private final Context mApplicationContext;
     private Context mDeviceContext;
     private AudioManager mAudioManager;
 
     private final AudioManager.AudioRecordingCallback mAudioRecordingCallback =
             new AudioManager.AudioRecordingCallback() {
+                @SuppressLint("MissingPermission")
                 @Override
                 public void onRecordingConfigChanged(List<AudioRecordingConfiguration> configs) {
                     super.onRecordingConfigChanged(configs);
@@ -94,6 +99,7 @@ public final class AudioInjector implements Consumer<RemoteEvent> {
                         }
 
                         if (shouldStream && !mIsPlaying) {
+                            Log.d(TAG, "Send StartAudioInput RemoteEvent to remote device.");
                             mRemoteIo.sendMessage(RemoteEvent.newBuilder()
                                     .setStartAudioInput(
                                             RemoteEventProto.StartAudioInput.newBuilder()
@@ -104,6 +110,7 @@ public final class AudioInjector implements Consumer<RemoteEvent> {
                                                     .build())
                                     .build());
                         } else if (!shouldStream && mIsPlaying) {
+                            Log.d(TAG, "Send StopAudioInput RemoteEvent to remote device.");
                             mRemoteIo.sendMessage(RemoteEvent.newBuilder().setStopAudioInput(
                                     RemoteEventProto.StopAudioInput.newBuilder().build()).build());
                         }
@@ -158,6 +165,8 @@ public final class AudioInjector implements Consumer<RemoteEvent> {
             for (AudioTrack audioTrack : mAudioTracks) {
                 audioTrack.play();
             }
+
+            Log.d(TAG, "Start playback on " + mAudioTracks.size() + " source tracks.");
         }
     }
 
@@ -167,6 +176,8 @@ public final class AudioInjector implements Consumer<RemoteEvent> {
             for (AudioTrack audioTrack : mAudioTracks) {
                 audioTrack.stop();
             }
+
+            Log.d(TAG, "Stop playback on " + mAudioTracks.size() + " source tracks.");
         }
     }
 
@@ -174,15 +185,17 @@ public final class AudioInjector implements Consumer<RemoteEvent> {
      * Setup the AudioInjector
      */
     public void start(int deviceId, int audioSessionId) {
+        Log.d(TAG, "AudioInjector start with deviceId " + deviceId
+                + " and audioSessionId " + audioSessionId);
         mDeviceContext = mApplicationContext.createDeviceContext(deviceId)
                 .createDeviceContext(deviceId);
         mRecordingSessionId = audioSessionId;
-        mAudioManager = mDeviceContext.getSystemService(AudioManager.class);
-
         mRemoteIo.addMessageConsumer(this);
-        mAudioManager.registerAudioRecordingCallback(mAudioRecordingCallback, null);
-        synchronized (mLock) {
-            updateAudioPolicies(mReroutedUids);
+
+        mAudioManager = mDeviceContext.getSystemService(AudioManager.class);
+        if (mAudioManager != null) {
+            mAudioManager.registerAudioRecordingCallback(mAudioRecordingCallback, null);
+            registerAudioPolicy(ImmutableSet.of());
         }
     }
 
@@ -190,25 +203,20 @@ public final class AudioInjector implements Consumer<RemoteEvent> {
      * Stop the AudioInjector
      */
     public void stop() {
+        Log.d(TAG, "AudioInjector stop.");
         synchronized (mLock) {
             if (mIsPlaying) {
                 mIsPlaying = false;
                 mRemoteIo.sendMessage(RemoteEvent.newBuilder().setStopAudioInput(
                         RemoteEventProto.StopAudioInput.newBuilder().build()).build());
             }
-            for (AudioTrack audioTrack : mAudioTracks) {
-                audioTrack.stop();
-                audioTrack.release();
-            }
-            mAudioTracks.clear();
+
+            closeAndReleaseAllTracks();
+            mRemoteIo.removeMessageConsumer(this);
 
             if (mAudioManager != null) {
-                mRemoteIo.removeMessageConsumer(this);
                 mAudioManager.unregisterAudioRecordingCallback(mAudioRecordingCallback);
-
-                if (mAudioPolicy != null) {
-                    mAudioManager.unregisterAudioPolicy(mAudioPolicy);
-                }
+                unregisterAudioPolicy();
                 mAudioManager = null;
             }
         }
@@ -230,12 +238,10 @@ public final class AudioInjector implements Consumer<RemoteEvent> {
     /**
      * @param updatedUids uids that are now relevant to the AudioInjector
      */
-    public void updateVdmUids(Set<Integer> updatedUids) {
+    public void updateVdmUids(ImmutableSet<Integer> updatedUids) {
         synchronized (mLock) {
             if (mAudioPolicy == null) {
-                Log.e(
-                        TAG,
-                        "Not updating AudioPolicy - no audio policy configured");
+                Log.e(TAG, "Not updating AudioPolicy - no audio policy configured");
                 return;
             }
 
@@ -248,27 +254,78 @@ public final class AudioInjector implements Consumer<RemoteEvent> {
         }
     }
 
-    private void updateAudioPolicies(Set<Integer> updatedUids) {
-        synchronized (mLock) {
-            for (AudioTrack audioTrack : mAudioTracks) {
-                audioTrack.stop();
-                audioTrack.release();
-            }
-            mAudioTracks.clear();
+    @SuppressLint("MissingPermission")
+    @GuardedBy("mLock")
+    private void updateAudioPolicies(ImmutableSet<Integer> updatedUids) {
+        long startUpdateTimeMs = SystemClock.uptimeMillis();
 
-            if (mAudioPolicy != null) {
-                mAudioManager.unregisterAudioPolicy(mAudioPolicy);
-            }
+        Log.d(TAG, "Started updateAudioPolicies. Already reroutedUids: "
+                + mReroutedUids + " -> updatedUids: " + updatedUids);
 
-            mReroutedUids = ImmutableSet.copyOf(updatedUids);
-            registerAudioPolicy();
-        }
+        // TODO (b/387489016) - Manage the audioTrackSources when updating the mixes
+//        if (BuildCompat.isAtLeastV() && mPreferenceController.getBoolean(
+//                R.string.pref_enable_update_audio_policy_mixes)) {
+//            if (mAudioPolicy != null) {
+//                // we have an audio policy, so we just need to update the uid audio mix
+//                if (updatedUids.isEmpty()) {
+//                    if (mUidAudioMix != null) {
+//                        mAudioPolicy.detachMixes(Collections.singletonList(mUidAudioMix));
+//                        mUidAudioMix = null;
+//                        mReroutedUids = ImmutableSet.of();
+//                    }
+//
+//                    Log.d(TAG, "Detached UID audio mixes since updatedUids set is empty in "
+//                            + (SystemClock.uptimeMillis() - startUpdateTimeMs) + "ms.");
+//                } else {
+//                    if (mUidAudioMix != null) {
+//                        // we have an uid audio mix to update
+//                        Pair<AudioMix, AudioMixingRule> update =
+//                                Pair.create(mUidAudioMix, createUidMixingRule(updatedUids));
+//                        mReroutedUids = ImmutableSet.copyOf(updatedUids);
+//                        mAudioPolicy.updateMixingRules(Collections.singletonList(update));
+//
+//                        Log.d(TAG, "Updated AudioPolicy mixes in "
+//                                + (SystemClock.uptimeMillis() - startUpdateTimeMs) + "ms.");
+//                    } else {
+//                        // no uid audio mix so add one to the policy
+//                        AudioMix uidAudioMix = getUidAudioMix(updatedUids);
+//                        if (uidAudioMix != null) {
+//                            mAudioPolicy.attachMixes(Collections.singletonList(uidAudioMix));
+//                            mUidAudioMix = uidAudioMix;
+//                            mReroutedUids = ImmutableSet.copyOf(updatedUids);
+//
+//                            Log.d(TAG, "Attached UID audio mix since there was none previous in "
+//                                    + (SystemClock.uptimeMillis() - startUpdateTimeMs) + "ms.");
+//                        }
+//                    }
+//                }
+//            } else {
+//                // no audio policy set, shouldn't reach here, so register the full policy
+//                registerAudioPolicy(updatedUids);
+//            }
+//        } else {
+            synchronized (mLock) {
+                closeAndReleaseAllTracks();
+
+                unregisterAudioPolicy();
+                registerAudioPolicy(updatedUids);
+
+                Log.d(TAG, "Unregistered / re-registered full AudioPolicy in "
+                        + (SystemClock.uptimeMillis() - startUpdateTimeMs) + "ms.");
+            }
+//        }
     }
 
-    private void registerAudioPolicy() {
+    @SuppressLint("MissingPermission")
+    private void registerAudioPolicy(ImmutableSet<Integer> uids) {
         synchronized (mLock) {
+            if (mAudioPolicy != null) {
+                Log.w(TAG, "AudioInjector AudioPolicy is already registered.");
+                return;
+            }
+
             AudioMix sessionIdAudioMix = getSessionIdAudioMix(mRecordingSessionId);
-            AudioMix uidAudioMix = getUidAudioMix(mReroutedUids);
+            AudioMix uidAudioMix = getUidAudioMix(uids);
 
             AudioPolicy.Builder audioPolicyBuilder = new AudioPolicy.Builder(mDeviceContext)
                     .addMix(sessionIdAudioMix);
@@ -283,24 +340,52 @@ public final class AudioInjector implements Consumer<RemoteEvent> {
             }
 
             mAudioPolicy = audioPolicy;
+            mUidAudioMix = uidAudioMix;
+            mReroutedUids = ImmutableSet.copyOf(uids);
+
             addAudioTrack(mAudioPolicy.createAudioTrackSource(sessionIdAudioMix));
             if (uidAudioMix != null) {
                 addAudioTrack(mAudioPolicy.createAudioTrackSource(uidAudioMix));
             }
+
+            Log.i(TAG, "Registered AudioInjector audio policy successfully.");
         }
+    }
+
+    @SuppressLint("MissingPermission")
+    private void unregisterAudioPolicy() {
+        if (mAudioPolicy != null) {
+            mAudioManager.unregisterAudioPolicy(mAudioPolicy);
+            mReroutedUids = ImmutableSet.of();
+            mUidAudioMix = null;
+            mAudioPolicy = null;
+        }
+
+        Log.i(TAG, "Unregistered AudioInjector audio policy done.");
     }
 
     private void addAudioTrack(AudioTrack audioTrack) {
         synchronized (mLock) {
             if (audioTrack.getState() != STATE_INITIALIZED) {
-                throw new IllegalStateException("set an uninitialized AudioTrack.");
+                throw new IllegalStateException("Set an uninitialized AudioTrack.");
             }
 
             if (mIsPlaying) {
                 audioTrack.play();
             }
             mAudioTracks.add(audioTrack);
+
+            Log.d(TAG, "Added source audio track: " + audioTrack);
         }
+    }
+
+    private void closeAndReleaseAllTracks() {
+        Log.i(TAG, "Close and release all source tracks.");
+        for (AudioTrack audioTrack : mAudioTracks) {
+            audioTrack.stop();
+            audioTrack.release();
+        }
+        mAudioTracks.clear();
     }
 
     private static AudioMix getSessionIdAudioMix(int sessionId) {
@@ -322,15 +407,16 @@ public final class AudioInjector implements Consumer<RemoteEvent> {
             return null;
         }
 
-        AudioMixingRule.Builder uidMixingRule = new AudioMixingRule.Builder()
-                .setTargetMixRole(AudioMixingRule.MIX_ROLE_INJECTOR);
-        for (Integer reroutedUid : reroutedUids) {
-            uidMixingRule.addMixRule(AudioMixingRule.RULE_MATCH_UID, reroutedUid);
-        }
-
-        return new AudioMix.Builder(uidMixingRule.build())
+        return new AudioMix.Builder(createUidMixingRule(reroutedUids))
                 .setRouteFlags(AudioMix.ROUTE_FLAG_LOOP_BACK)
                 .setFormat(AUDIO_FORMAT_IN)
                 .build();
+    }
+
+    private static AudioMixingRule createUidMixingRule(ImmutableSet<Integer> uids) {
+        AudioMixingRule.Builder builder = new AudioMixingRule.Builder().setTargetMixRole(
+                AudioMixingRule.MIX_ROLE_INJECTOR);
+        uids.forEach(uid -> builder.addMixRule(AudioMixingRule.RULE_MATCH_UID, uid));
+        return builder.build();
     }
 }

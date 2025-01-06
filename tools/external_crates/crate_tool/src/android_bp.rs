@@ -18,6 +18,7 @@ use std::{
     fs::{remove_file, rename},
     path::Path,
     process::{Command, Output},
+    time::{Duration, SystemTime},
 };
 
 use anyhow::{Context, Result};
@@ -84,12 +85,16 @@ pub fn cargo_embargo_autoconfig(path: &RootedPath) -> Result<Output> {
 }
 
 pub fn maybe_build_cargo_embargo(repo_root: &impl AsRef<Path>, force_rebuild: bool) -> Result<()> {
-    if !force_rebuild && repo_root.as_ref().join("out/host/linux-x86/bin/cargo_embargo").exists() {
-        Ok(())
-    } else {
+    let cargo_embargo = repo_root.as_ref().join("out/host/linux-x86/bin/cargo_embargo");
+    if force_rebuild
+        || !cargo_embargo.exists()
+        || SystemTime::now().duration_since(cargo_embargo.metadata()?.modified()?)?
+            > Duration::from_secs(14 * 24 * 60 * 60)
+    {
         println!("Rebuilding cargo_embargo");
-        build_cargo_embargo(repo_root)
+        return build_cargo_embargo(repo_root);
     }
+    Ok(())
 }
 
 pub fn build_cargo_embargo(repo_root: &impl AsRef<Path>) -> Result<()> {

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import {TimestampConverterUtils} from 'test/unit/timestamp_converter_utils';
+import {TimestampConverterUtils} from 'common/time/test_utils';
 import {TracesUtils} from 'test/unit/traces_utils';
 import {TraceBuilder} from 'test/unit/trace_builder';
 import {CustomQueryType} from './custom_query';
@@ -615,5 +615,59 @@ describe('FrameMapper', () => {
       start: 0,
       end: 1,
     });
+  });
+
+  it('does not propagate mapping if frames range undefined', async () => {
+    const validTs = time1.add(2000000000n);
+    const transactions = new TraceBuilder<PropertyTreeNode>()
+      .setType(TraceType.TRANSACTIONS)
+      .setEntries(['entry-0' as unknown as PropertyTreeNode])
+      .setTimestamps([validTs])
+      .setFrame(0, 0)
+      .build();
+    const windowManager = new TraceBuilder<HierarchyTreeNode>()
+      .setType(TraceType.WINDOW_MANAGER)
+      .setEntries(['entry-0' as unknown as HierarchyTreeNode])
+      .setTimestamps([time0])
+      .build();
+    const ime = new TraceBuilder<MediaBasedTraceEntry>()
+      .setType(TraceType.INPUT_METHOD_MANAGER_SERVICE)
+      .setEntries(['entry-0' as unknown as MediaBasedTraceEntry])
+      .setTimestamps([validTs])
+      .build();
+
+    const traces = new Traces();
+    traces.addTrace(transactions);
+    traces.addTrace(windowManager);
+    traces.addTrace(ime);
+    await new FrameMapper(traces).computeMapping();
+
+    expect(transactions.getEntry(0).getFramesRange()).toBeDefined();
+    expect(windowManager.getEntry(0).getFramesRange()).toBeDefined();
+    expect(ime.hasFrameInfo()).toBeFalse();
+  });
+
+  it('does not propagate mapping if vsync ids invalid', async () => {
+    const trace = new TraceBuilder<PropertyTreeNode>()
+      .setType(TraceType.INPUT_EVENT_MERGED)
+      .setEntries(['entry-0' as unknown as PropertyTreeNode])
+      .setTimestamps([time1])
+      .setParserCustomQueryResult(CustomQueryType.VSYNCID, [-1n])
+      .build();
+
+    const surfaceFlinger = new TraceBuilder<HierarchyTreeNode>()
+      .setType(TraceType.SURFACE_FLINGER)
+      .setEntries(['entry-0' as unknown as HierarchyTreeNode])
+      .setTimestamps([time1])
+      .setParserCustomQueryResult(CustomQueryType.VSYNCID, [1n])
+      .build();
+
+    const traces = new Traces();
+    traces.addTrace(trace);
+    traces.addTrace(surfaceFlinger);
+    await new FrameMapper(traces).computeMapping();
+
+    expect(surfaceFlinger.getEntry(0).getFramesRange()).toBeDefined();
+    expect(trace.hasFrameInfo()).toBeFalse();
   });
 });

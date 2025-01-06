@@ -10,6 +10,7 @@
     <string name="permissions_demo" translatable="false">VDM Permissions Demo</string>
     <string name="latency_demo" translatable="false">VDM Latency Demo</string>
     <string name="stylus_demo" translatable="false">VDM Stylus Demo</string>
+    <string name="recorder_demo" translatable="false">VDM Recorder Demo</string>
 
     <string name="start_opted_out_activity" translatable="false">Start opted out activity</string>
     <string name="start_blocked_activity" translatable="false">Start blocked activity</string>
@@ -47,4 +48,8 @@
     <string name="vibrate" translatable="false">Vibrate</string>
     <string name="perform_haptic_feedback" translatable="false">Perform haptic feedback</string>
     <string name="ringtone_vibration" translatable="false">Ringtone vibration</string>
+
+    <string name="start_record" translatable="false">Start record</string>
+    <string name="stop_record" translatable="false">Stop record</string>
+    <string name="recorder_status" translatable="false">Recorder Status</string>
 </resources>

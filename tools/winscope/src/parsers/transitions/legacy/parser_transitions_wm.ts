@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import {Timestamp} from 'common/time';
+import {Timestamp} from 'common/time/time';
 import {AbstractParser} from 'parsers/legacy/abstract_parser';
 import {EntryPropertiesTreeFactory} from 'parsers/transitions/entry_properties_tree_factory';
 import root from 'protos/transitions/udc/json';
@@ -22,7 +22,12 @@ import {com} from 'protos/transitions/udc/static';
 import {TraceType} from 'trace/trace_type';
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
 
-export class ParserTransitionsWm extends AbstractParser<PropertyTreeNode> {
+type TransitionProto = com.android.server.wm.shell.ITransition;
+
+export class ParserTransitionsWm extends AbstractParser<
+  PropertyTreeNode,
+  TransitionProto
+> {
   private static readonly TransitionTraceProto = root.lookupType(
     'com.android.server.wm.shell.TransitionTraceProto',
   );
@@ -43,14 +48,12 @@ export class ParserTransitionsWm extends AbstractParser<PropertyTreeNode> {
 
   override processDecodedEntry(
     index: number,
-    entryProto: com.android.server.wm.shell.ITransition,
+    entryProto: TransitionProto,
   ): PropertyTreeNode {
     return this.makePropertiesTree(entryProto);
   }
 
-  override decodeTrace(
-    buffer: Uint8Array,
-  ): com.android.server.wm.shell.ITransition[] {
+  override decodeTrace(buffer: Uint8Array): TransitionProto[] {
     const decodedProto = ParserTransitionsWm.TransitionTraceProto.decode(
       buffer,
     ) as unknown as com.android.server.wm.shell.ITransitionTraceProto;
@@ -67,16 +70,13 @@ export class ParserTransitionsWm extends AbstractParser<PropertyTreeNode> {
     return [0x09, 0x54, 0x52, 0x4e, 0x54, 0x52, 0x41, 0x43, 0x45]; // .TRNTRACE
   }
 
-  protected override getTimestamp(
-    entry: com.android.server.wm.shell.ITransition,
-  ): Timestamp {
-    // for consistency with all transitions, elapsed nanos are defined as shell dispatch time else INVALID_TIME_NS
+  protected override getTimestamp(entry: TransitionProto): Timestamp {
+    // for consistency with all transitions, elapsed nanos are defined as
+    // shell dispatch time else INVALID_TIME_NS
     return this.timestampConverter.makeZeroTimestamp();
   }
 
-  private validateWmTransitionEntry(
-    entry: com.android.server.wm.shell.ITransition,
-  ) {
+  private validateWmTransitionEntry(entry: TransitionProto) {
     if (entry.id === 0) {
       throw new Error('WM Transition entry needs non-null id');
     }
@@ -95,9 +95,7 @@ export class ParserTransitionsWm extends AbstractParser<PropertyTreeNode> {
     }
   }
 
-  private makePropertiesTree(
-    entryProto: com.android.server.wm.shell.ITransition,
-  ): PropertyTreeNode {
+  private makePropertiesTree(entryProto: TransitionProto): PropertyTreeNode {
     this.validateWmTransitionEntry(entryProto);
 
     const shellEntryTree = EntryPropertiesTreeFactory.makeShellPropertiesTree();

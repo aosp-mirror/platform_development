@@ -33,8 +33,8 @@ import {MatSliderModule} from '@angular/material/slider';
 import {MatTooltipModule} from '@angular/material/tooltip';
 import {BrowserAnimationsModule} from '@angular/platform-browser/animations';
 import {assertDefined} from 'common/assert_utils';
+import {TimestampConverterUtils} from 'common/time/test_utils';
 import {PropertyTreeBuilder} from 'test/unit/property_tree_builder';
-import {TimestampConverterUtils} from 'test/unit/timestamp_converter_utils';
 import {TraceBuilder} from 'test/unit/trace_builder';
 import {UnitTestUtils} from 'test/unit/utils';
 import {Trace, TraceEntry} from 'trace/trace';
@@ -127,13 +127,13 @@ describe('ViewerInputComponent', () => {
     expect(component).toBeTruthy();
   });
 
-  it('renders filter in title', () => {
-    expect(htmlElement.querySelector('.headers .filter')).toBeNull();
+  it('renders filters in header', () => {
     expect(
       htmlElement.querySelector(
-        `.title-section .filter.${testSpec.cssClass.split(' ')[0]}`,
+        `.headers .filter.${testSpec.cssClass.split(' ')[0]}`,
       ),
     ).toBeTruthy();
+    expect(htmlElement.querySelector(`.title-section .filter`)).toBeNull();
   });
 
   it('renders entries with field values and no trace timestamp', () => {
