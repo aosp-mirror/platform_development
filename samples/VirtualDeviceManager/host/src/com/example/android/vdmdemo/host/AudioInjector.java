@@ -29,10 +29,8 @@ import android.media.audiopolicy.AudioMixingRule;
 import android.media.audiopolicy.AudioPolicy;
 import android.os.SystemClock;
 import android.util.Log;
-import android.util.Pair;
 
 import androidx.annotation.GuardedBy;
-import androidx.core.os.BuildCompat;
 
 import com.example.android.vdmdemo.common.RemoteEventProto;
 import com.example.android.vdmdemo.common.RemoteEventProto.AudioFrame;
@@ -43,7 +41,6 @@ import com.google.common.collect.ImmutableSet;
 import dagger.hilt.android.qualifiers.ApplicationContext;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.function.Consumer;
 
@@ -102,6 +99,7 @@ public final class AudioInjector implements Consumer<RemoteEvent> {
                         }
 
                         if (shouldStream && !mIsPlaying) {
+                            Log.d(TAG, "Send StartAudioInput RemoteEvent to remote device.");
                             mRemoteIo.sendMessage(RemoteEvent.newBuilder()
                                     .setStartAudioInput(
                                             RemoteEventProto.StartAudioInput.newBuilder()
@@ -112,6 +110,7 @@ public final class AudioInjector implements Consumer<RemoteEvent> {
                                                     .build())
                                     .build());
                         } else if (!shouldStream && mIsPlaying) {
+                            Log.d(TAG, "Send StopAudioInput RemoteEvent to remote device.");
                             mRemoteIo.sendMessage(RemoteEvent.newBuilder().setStopAudioInput(
                                     RemoteEventProto.StopAudioInput.newBuilder().build()).build());
                         }
@@ -166,6 +165,8 @@ public final class AudioInjector implements Consumer<RemoteEvent> {
             for (AudioTrack audioTrack : mAudioTracks) {
                 audioTrack.play();
             }
+
+            Log.d(TAG, "Start playback on " + mAudioTracks.size() + " source tracks.");
         }
     }
 
@@ -175,6 +176,8 @@ public final class AudioInjector implements Consumer<RemoteEvent> {
             for (AudioTrack audioTrack : mAudioTracks) {
                 audioTrack.stop();
             }
+
+            Log.d(TAG, "Stop playback on " + mAudioTracks.size() + " source tracks.");
         }
     }
 
@@ -259,47 +262,48 @@ public final class AudioInjector implements Consumer<RemoteEvent> {
         Log.d(TAG, "Started updateAudioPolicies. Already reroutedUids: "
                 + mReroutedUids + " -> updatedUids: " + updatedUids);
 
-        if (BuildCompat.isAtLeastV() && mPreferenceController.getBoolean(
-                R.string.pref_enable_update_audio_policy_mixes)) {
-            if (mAudioPolicy != null) {
-                // we have an audio policy, so we just need to update the uid audio mix
-                if (updatedUids.isEmpty()) {
-                    if (mUidAudioMix != null) {
-                        mAudioPolicy.detachMixes(Collections.singletonList(mUidAudioMix));
-                        mUidAudioMix = null;
-                        mReroutedUids = ImmutableSet.of();
-                    }
-
-                    Log.d(TAG, "Detached UID audio mixes since updatedUids set is empty in "
-                            + (SystemClock.uptimeMillis() - startUpdateTimeMs) + "ms.");
-                } else {
-                    if (mUidAudioMix != null) {
-                        // we have an uid audio mix to update
-                        Pair<AudioMix, AudioMixingRule> update =
-                                Pair.create(mUidAudioMix, createUidMixingRule(updatedUids));
-                        mReroutedUids = ImmutableSet.copyOf(updatedUids);
-                        mAudioPolicy.updateMixingRules(Collections.singletonList(update));
-
-                        Log.d(TAG, "Updated AudioPolicy mixes in "
-                                + (SystemClock.uptimeMillis() - startUpdateTimeMs) + "ms.");
-                    } else {
-                        // no uid audio mix so add one to the policy
-                        AudioMix uidAudioMix = getUidAudioMix(updatedUids);
-                        if (uidAudioMix != null) {
-                            mAudioPolicy.attachMixes(Collections.singletonList(uidAudioMix));
-                            mUidAudioMix = uidAudioMix;
-                            mReroutedUids = ImmutableSet.copyOf(updatedUids);
-
-                            Log.d(TAG, "Attached UID audio mix since there was none previous in "
-                                    + (SystemClock.uptimeMillis() - startUpdateTimeMs) + "ms.");
-                        }
-                    }
-                }
-            } else {
-                // no audio policy set, shouldn't reach here, so register the full policy
-                registerAudioPolicy(updatedUids);
-            }
-        } else {
+        // TODO (b/387489016) - Manage the audioTrackSources when updating the mixes
+//        if (BuildCompat.isAtLeastV() && mPreferenceController.getBoolean(
+//                R.string.pref_enable_update_audio_policy_mixes)) {
+//            if (mAudioPolicy != null) {
+//                // we have an audio policy, so we just need to update the uid audio mix
+//                if (updatedUids.isEmpty()) {
+//                    if (mUidAudioMix != null) {
+//                        mAudioPolicy.detachMixes(Collections.singletonList(mUidAudioMix));
+//                        mUidAudioMix = null;
+//                        mReroutedUids = ImmutableSet.of();
+//                    }
+//
+//                    Log.d(TAG, "Detached UID audio mixes since updatedUids set is empty in "
+//                            + (SystemClock.uptimeMillis() - startUpdateTimeMs) + "ms.");
+//                } else {
+//                    if (mUidAudioMix != null) {
+//                        // we have an uid audio mix to update
+//                        Pair<AudioMix, AudioMixingRule> update =
+//                                Pair.create(mUidAudioMix, createUidMixingRule(updatedUids));
+//                        mReroutedUids = ImmutableSet.copyOf(updatedUids);
+//                        mAudioPolicy.updateMixingRules(Collections.singletonList(update));
+//
+//                        Log.d(TAG, "Updated AudioPolicy mixes in "
+//                                + (SystemClock.uptimeMillis() - startUpdateTimeMs) + "ms.");
+//                    } else {
+//                        // no uid audio mix so add one to the policy
+//                        AudioMix uidAudioMix = getUidAudioMix(updatedUids);
+//                        if (uidAudioMix != null) {
+//                            mAudioPolicy.attachMixes(Collections.singletonList(uidAudioMix));
+//                            mUidAudioMix = uidAudioMix;
+//                            mReroutedUids = ImmutableSet.copyOf(updatedUids);
+//
+//                            Log.d(TAG, "Attached UID audio mix since there was none previous in "
+//                                    + (SystemClock.uptimeMillis() - startUpdateTimeMs) + "ms.");
+//                        }
+//                    }
+//                }
+//            } else {
+//                // no audio policy set, shouldn't reach here, so register the full policy
+//                registerAudioPolicy(updatedUids);
+//            }
+//        } else {
             synchronized (mLock) {
                 closeAndReleaseAllTracks();
 
@@ -309,7 +313,7 @@ public final class AudioInjector implements Consumer<RemoteEvent> {
                 Log.d(TAG, "Unregistered / re-registered full AudioPolicy in "
                         + (SystemClock.uptimeMillis() - startUpdateTimeMs) + "ms.");
             }
-        }
+//        }
     }
 
     @SuppressLint("MissingPermission")
@@ -370,10 +374,13 @@ public final class AudioInjector implements Consumer<RemoteEvent> {
                 audioTrack.play();
             }
             mAudioTracks.add(audioTrack);
+
+            Log.d(TAG, "Added source audio track: " + audioTrack);
         }
     }
 
     private void closeAndReleaseAllTracks() {
+        Log.i(TAG, "Close and release all source tracks.");
         for (AudioTrack audioTrack : mAudioTracks) {
             audioTrack.stop();
             audioTrack.release();
