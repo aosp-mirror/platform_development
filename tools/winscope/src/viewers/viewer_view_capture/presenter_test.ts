@@ -35,6 +35,7 @@ import {VISIBLE_CHIP} from 'viewers/common/chip';
 import {UiDataHierarchy} from 'viewers/common/ui_data_hierarchy';
 import {UiHierarchyTreeNode} from 'viewers/common/ui_hierarchy_tree_node';
 import {UiTreeUtils} from 'viewers/common/ui_tree_utils';
+import {ViewerEvents} from 'viewers/common/viewer_events';
 import {Presenter} from 'viewers/viewer_view_capture/presenter';
 import {UiData} from 'viewers/viewer_view_capture/ui_data';
 
@@ -227,6 +228,14 @@ the default for its data type.`,
           notifyViewCallback as NotifyHierarchyViewCallbackType<UiData>,
           new InMemoryStorage(),
         );
+      });
+
+      it('adds event listeners', async () => {
+        const element = document.createElement('div');
+        presenter.addEventListeners(element);
+        const spy: jasmine.Spy = spyOn(presenter, 'onMiniRectsDoubleClick');
+        element.dispatchEvent(new CustomEvent(ViewerEvents.MiniRectsDblClick));
+        expect(spy).toHaveBeenCalledTimes(1);
       });
 
       it('exposes all VC traces', () => {

@@ -38,6 +38,7 @@ import {TextFilter} from 'viewers/common/text_filter';
 import {UiDataHierarchy} from 'viewers/common/ui_data_hierarchy';
 import {UiHierarchyTreeNode} from 'viewers/common/ui_hierarchy_tree_node';
 import {UiTreeUtils} from 'viewers/common/ui_tree_utils';
+import {ViewerEvents} from 'viewers/common/viewer_events';
 import {Presenter} from './presenter';
 import {UiData} from './ui_data';
 
@@ -298,6 +299,19 @@ the default for its data type.`,
       afterEach(() => {
         userNotifierChecker.expectNone();
         userNotifierChecker.reset();
+      });
+
+      it('adds event listeners', async () => {
+        const element = document.createElement('div');
+        presenter.addEventListeners(element);
+        const spy: jasmine.Spy = spyOn(presenter, 'onRectDoubleClick');
+        const testId = 'test';
+        element.dispatchEvent(
+          new CustomEvent(ViewerEvents.RectsDblClick, {
+            detail: {clickedRectId: testId},
+          }),
+        );
+        expect(spy).toHaveBeenCalledWith(testId);
       });
 
       it('handles displays with no visible layers', async () => {

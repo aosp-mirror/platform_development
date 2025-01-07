@@ -118,7 +118,7 @@ describe('AbstractLogViewerPresenter', () => {
     });
   });
 
-  it('adds events listeners', async () => {
+  it('adds event listeners', async () => {
     const element = makeElement();
     presenter.addEventListeners(element);
 

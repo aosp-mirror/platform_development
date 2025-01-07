@@ -42,6 +42,7 @@ import {TextFilter} from 'viewers/common/text_filter';
 import {UiHierarchyTreeNode} from 'viewers/common/ui_hierarchy_tree_node';
 import {UI_RECT_FACTORY} from 'viewers/common/ui_rect_factory';
 import {UserOptions} from 'viewers/common/user_options';
+import {ViewerEvents} from 'viewers/common/viewer_events';
 import {UiRect} from 'viewers/components/rects/ui_rect';
 import {UiData} from './ui_data';
 
@@ -201,6 +202,17 @@ the default for its data type.`,
     this.uiData.sfRects = this.sfRects;
     this.uiData.curatedProperties = this.curatedProperties;
     this.refreshHierarchyViewerUiData();
+  }
+
+  protected override addViewerSpecificListeners(
+    htmlElement: HTMLElement,
+  ): void {
+    htmlElement.addEventListener(
+      ViewerEvents.MiniRectsDblClick,
+      async (event) => {
+        await this.onMiniRectsDoubleClick();
+      },
+    );
   }
 
   private async initializePackageNamesIfNeeded() {

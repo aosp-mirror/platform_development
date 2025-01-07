@@ -379,7 +379,7 @@ class PresenterInputTest extends AbstractLogViewerPresenterTest<UiData> {
         await this.setUpTestEnvironment();
       });
 
-      it('adds events listeners', async () => {
+      it('adds event listeners', async () => {
         const element = document.createElement('div');
         const presenter = await this.createPresenter(
           (uiDataLog) => (uiData = uiDataLog as UiData),

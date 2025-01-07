@@ -22,7 +22,6 @@ import {Traces} from 'trace/traces';
 import {TRACE_INFO} from 'trace/trace_info';
 import {TraceType} from 'trace/trace_type';
 import {HierarchyTreeNode} from 'trace/tree_node/hierarchy_tree_node';
-import {ViewerEvents} from 'viewers/common/viewer_events';
 import {View, Viewer, ViewType} from 'viewers/viewer';
 import {Presenter} from './presenter';
 import {UiData} from './ui_data';
@@ -41,13 +40,6 @@ export class ViewerViewCapture implements Viewer {
     };
     this.presenter = new Presenter(traces, storage, notifyViewCallback);
     this.presenter.addEventListeners(this.htmlElement);
-
-    this.htmlElement.addEventListener(
-      ViewerEvents.MiniRectsDblClick,
-      async (event) => {
-        await this.presenter.onMiniRectsDoubleClick();
-      },
-    );
 
     this.view = new View(
       ViewType.TRACE_TAB,

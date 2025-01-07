@@ -439,9 +439,7 @@ export class Presenter extends AbstractLogViewerPresenter<
     return entries[index];
   }
 
-  override addEventListeners(htmlElement: HTMLElement) {
-    super.addEventListeners(htmlElement);
-
+  protected override addViewerSpecificListeners(htmlElement: HTMLElement) {
     htmlElement.addEventListener(
       ViewerEvents.HighlightedPropertyChange,
       (event) =>

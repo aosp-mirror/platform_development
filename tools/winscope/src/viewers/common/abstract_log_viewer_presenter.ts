@@ -128,6 +128,8 @@ export abstract class AbstractLogViewerPresenter<
       event.preventDefault();
       await this.onPositionChangeByKeyPress(event);
     });
+
+    this.addViewerSpecificListeners(htmlElement);
   }
 
   async onAppEvent(event: WinscopeEvent) {
@@ -257,6 +259,10 @@ export abstract class AbstractLogViewerPresenter<
         }
       }
     }
+  }
+
+  protected addViewerSpecificListeners(htmlElement: HTMLElement) {
+    // do nothing
   }
 
   protected refreshUiData() {

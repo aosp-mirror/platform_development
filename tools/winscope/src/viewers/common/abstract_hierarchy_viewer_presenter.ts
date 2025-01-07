@@ -149,6 +149,7 @@ export abstract class AbstractHierarchyViewerPresenter<
         );
       },
     );
+    this.addViewerSpecificListeners(htmlElement);
   }
 
   onPinnedItemChange(pinnedItem: UiHierarchyTreeNode) {
@@ -259,6 +260,15 @@ export abstract class AbstractHierarchyViewerPresenter<
         this.refreshUIData();
       },
     );
+    await this.onViewerSpecificWinscopeEvent(event);
+  }
+
+  protected async onViewerSpecificWinscopeEvent(event: WinscopeEvent) {
+    // do nothing
+  }
+
+  protected addViewerSpecificListeners(htmlElement: HTMLElement) {
+    // do nothing;
   }
 
   protected saveConfigAsPreset(storeKey: string) {
