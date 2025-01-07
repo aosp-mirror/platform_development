@@ -37,7 +37,7 @@ import {timeButtonStyle} from './styles/clickable_property.styles';
           {{ node.formattedValue() }}
         </button>
         <a *ngIf="!isTimestamp()" [class]="[valueClass()]" class="mat-body-2 value new">{{ node.formattedValue() }}</a>
-        <s *ngIf="isModified()" class="old-value">{{ node.getOldValue() }}</s>
+        <s *ngIf="isModified()" class="mat-body-2 old-value">{{ node.getOldValue() }}</s>
       </div>
     </div>
   `,
