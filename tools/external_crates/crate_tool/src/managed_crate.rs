@@ -131,6 +131,7 @@ impl<State: ManagedCrateState> ManagedCrate<State> {
                 patches.push(entry.path());
             }
         }
+        patches.sort();
 
         Ok(patches)
     }
