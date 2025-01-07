@@ -278,7 +278,7 @@ const traceDefaultConfig: TraceConfigurationMap = {
   input: {
     name: 'Input',
     config: {
-      enabled: false,
+      enabled: true,
       checkboxConfigs: [],
       selectionConfigs: [],
     },
