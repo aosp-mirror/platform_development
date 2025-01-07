@@ -43,6 +43,7 @@ import {
   makeDisplayIdentifiers,
 } from 'viewers/viewer_surface_flinger/presenter';
 import {DispatchEntryFormatter} from './operations/dispatch_entry_formatter';
+import {InputCoordinatePropagator} from './operations/input_coordinate_propagator';
 import {InputEntry, UiData} from './ui_data';
 
 enum InputEventType {
@@ -90,6 +91,8 @@ export class Presenter extends AbstractLogViewerPresenter<
   private readonly surfaceFlingerTrace: Trace<HierarchyTreeNode> | undefined;
   protected override uiData: UiData = UiData.createEmpty();
 
+  private readonly inputCoordinatePropagator = new InputCoordinatePropagator();
+
   private readonly layerIdToName = new Map<number, string>();
   private readonly allInputLayerIds = new Set<number>();
 
@@ -105,6 +108,7 @@ export class Presenter extends AbstractLogViewerPresenter<
     Presenter.DENYLIST_DISPATCH_PROPERTIES,
     [new DispatchEntryFormatter(this.layerIdToName)],
   );
+  protected override keepCalculated = true;
   private readonly currentTargetWindowIds = new Set<string>();
 
   private readonly rectsPresenter = new RectsPresenter(
@@ -252,6 +256,7 @@ export class Presenter extends AbstractLogViewerPresenter<
     traceEntry: TraceEntryLazy<PropertyTreeNode>,
   ): Promise<InputEntry> {
     const wrapperTree = await traceEntry.getValue();
+    this.inputCoordinatePropagator.apply(wrapperTree);
 
     let eventTree = wrapperTree.getChildByName('keyEvent');
     let type = InputEventType.KEY;
