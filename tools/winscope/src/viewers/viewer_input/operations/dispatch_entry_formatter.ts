@@ -25,60 +25,69 @@ export class DispatchEntryFormatter implements Operation<UiPropertyTreeNode> {
   constructor(private readonly layerIdToName: Map<number, string>) {}
 
   apply(node: UiPropertyTreeNode): void {
-    node.getAllChildren().forEach((dispatchEntry) => {
-      this.formatTargetWindow(dispatchEntry);
+    node.setDisplayName('TargetWindows');
+    node.getAllChildren().forEach((dispatchEntry, index) => {
+      const windowName = this.getWindowName(dispatchEntry);
+      dispatchEntry.setDisplayName(`${windowName}`);
       this.formatDispatchedPointers(dispatchEntry);
     });
   }
 
-  private formatTargetWindow(dispatchEntry: UiPropertyTreeNode) {
+  private getWindowName(dispatchEntry: UiPropertyTreeNode): string {
     const windowIdNode = dispatchEntry.getChildByName('windowId');
-    if (windowIdNode === undefined) {
-      return;
+    const value = windowIdNode?.getValue();
+    if (value === undefined) {
+      return '<Unknown Window ID>';
     }
-    windowIdNode.setDisplayName('TargetWindow');
-    const windowId = Number(windowIdNode.getValue() ?? -1);
-    const layerName = this.layerIdToName.get(windowId);
-    windowIdNode.setFormatter(
-      new FixedStringFormatter(
-        `${windowId} - ${layerName ?? '<Unknown Name>'}`,
-      ),
+    return (
+      this.layerIdToName.get(Number(value)) ??
+      `WindowId: ${value} - <Unknown Name>`
     );
   }
 
   private formatDispatchedPointers(dispatchEntry: UiPropertyTreeNode) {
-    const dispatchedPointerNode =
+    const dispatchedPointersNode =
       dispatchEntry.getChildByName('dispatchedPointer');
-    if (dispatchedPointerNode === undefined) {
+    if (dispatchedPointersNode === undefined) {
       return;
     }
-    dispatchedPointerNode.setDisplayName('DispatchedPointersInWindowSpace');
-    let formattedPointers = '';
-    dispatchedPointerNode.getAllChildren()?.forEach((pointer) => {
+    dispatchedPointersNode.setDisplayName('DispatchedPointers');
+
+    const pointers = dispatchedPointersNode.getAllChildren();
+    if (!pointers || pointers.length === 0) {
+      dispatchedPointersNode.setFormatter(new FixedStringFormatter('<none>'));
+      return;
+    }
+    pointers.forEach((pointer, index) => {
+      pointer.setDisplayName(`${index} - Pointer`);
+
+      const id = pointer.getChildByName('pointerId')?.getValue() ?? '?';
+
       const axisValues = pointer.getChildByName('axisValueInWindow');
       let x = '?';
       let y = '?';
       axisValues?.getAllChildren()?.forEach((axisValue) => {
         const axis = Number(axisValue.getChildByName('axis')?.getValue());
         if (axis === DispatchEntryFormatter.AXIS_X) {
-          x = axisValue.getChildByName('value')?.getValue() ?? '?';
+          x = axisValue.getChildByName('value')?.getValue()?.toFixed(2) ?? '?';
           return;
         }
         if (axis === DispatchEntryFormatter.AXIS_Y) {
-          y = axisValue.getChildByName('value')?.getValue() ?? '?';
+          y = axisValue.getChildByName('value')?.getValue()?.toFixed(2) ?? '?';
           return;
         }
       });
-      if (formattedPointers.length > 0) {
-        formattedPointers += ', ';
-      }
-      formattedPointers += `(${x}, ${y})`;
+
+      const rawX =
+        pointer.getChildByName('xInDisplay')?.getValue()?.toFixed(2) ?? '?';
+      const rawY =
+        pointer.getChildByName('yInDisplay')?.getValue()?.toFixed(2) ?? '?';
+
+      pointer.setFormatter(
+        new FixedStringFormatter(
+          `ID: ${id}, XY: (${x}, ${y}), RawXY: (${rawX}, ${rawY})`,
+        ),
+      );
     });
-    if (formattedPointers.length === 0) {
-      formattedPointers = '<none>';
-    }
-    dispatchedPointerNode.setFormatter(
-      new FixedStringFormatter(formattedPointers),
-    );
   }
 }
