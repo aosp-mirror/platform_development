@@ -51,8 +51,14 @@ export class Canvas {
     opacity: 0,
     transparent: true,
   });
+  static readonly GRAPHICS_NAMES = {
+    border: 'graphics_border',
+    circle: 'graphics_circle',
+    fillRegion: 'graphics_fill_region',
+    line: 'graphics_line',
+    text: 'graphics_text',
+  };
   private static readonly RECT_EDGE_BOLD_WIDTH = 10;
-  private static readonly FILL_REGION_NAME = 'fillRegion';
 
   renderer = new THREE.WebGLRenderer({
     antialias: true,
@@ -198,7 +204,16 @@ export class Canvas {
         .filter((graphics) => graphics.rect.isClickable)
         .map((graphics) => graphics.mesh),
     );
-    return intersected.at(0)?.object.name;
+    const name = intersected.at(0)?.object.name;
+    if (!name) {
+      return undefined;
+    }
+    for (const suffix of Object.values(Canvas.GRAPHICS_NAMES)) {
+      if (name.endsWith(suffix)) {
+        return name.substring(0, name.length - suffix.length);
+      }
+    }
+    return name;
   }
 
   private toMatrix4(transform: TransformMatrix): THREE.Matrix4 {
@@ -528,7 +543,7 @@ export class Canvas {
     );
     // Prevent z-fighting with the parent mesh
     fillMesh.position.z = 1;
-    fillMesh.name = rect.id + Canvas.FILL_REGION_NAME;
+    fillMesh.name = rect.id + Canvas.GRAPHICS_NAMES.fillRegion;
     mesh.add(fillMesh);
   }
 
@@ -559,7 +574,7 @@ export class Canvas {
       existingMesh.remove(
         assertDefined(
           existingMesh.getObjectByName(
-            existingRect.id + Canvas.FILL_REGION_NAME,
+            existingRect.id + Canvas.GRAPHICS_NAMES.fillRegion,
           ),
         ),
       );
@@ -581,7 +596,7 @@ export class Canvas {
         existingMesh.remove(
           assertDefined(
             existingMesh.getObjectByName(
-              existingRect.id + Canvas.FILL_REGION_NAME,
+              existingRect.id + Canvas.GRAPHICS_NAMES.fillRegion,
             ),
           ),
         );
@@ -595,7 +610,7 @@ export class Canvas {
       } else {
         const fillMesh = assertDefined(
           existingMesh.getObjectByName(
-            existingRect.id + Canvas.FILL_REGION_NAME,
+            existingRect.id + Canvas.GRAPHICS_NAMES.fillRegion,
           ),
         ) as THREE.Mesh;
         fillMesh.material = fillMaterial;
@@ -623,7 +638,11 @@ export class Canvas {
       newRect.isPinned !== existingRect.isPinned;
     if (isGeometryChanged || isColorChanged) {
       existingMesh.remove(
-        assertDefined(existingMesh.getObjectByName(existingRect.id + 'border')),
+        assertDefined(
+          existingMesh.getObjectByName(
+            existingRect.id + Canvas.GRAPHICS_NAMES.border,
+          ),
+        ),
       );
       this.addRectBorders(newRect, existingMesh);
     }
@@ -643,7 +662,7 @@ export class Canvas {
     } else {
       borderMesh = this.makeRectBorders(newRect, mesh.geometry);
     }
-    borderMesh.name = newRect.id + 'border';
+    borderMesh.name = newRect.id + Canvas.GRAPHICS_NAMES.border;
     mesh.add(borderMesh);
   }
 
@@ -675,7 +694,7 @@ export class Canvas {
       label.circle.center.y,
       label.circle.center.z,
     );
-    mesh.name = label.rectId + 'circle';
+    mesh.name = label.rectId + Canvas.GRAPHICS_NAMES.circle;
     return mesh;
   }
 
@@ -683,7 +702,7 @@ export class Canvas {
     const lineGeometry = this.makeLabelLineGeometry(label);
     const lineMaterial = this.makeLabelMaterial(label);
     const line = new THREE.Line(lineGeometry, lineMaterial);
-    line.name = label.rectId + 'line';
+    line.name = label.rectId + Canvas.GRAPHICS_NAMES.line;
     return line;
   }
 
@@ -741,7 +760,7 @@ export class Canvas {
       label.textCenter.y,
       label.textCenter.z,
     );
-    labelCss.name = label.rectId + 'text';
+    labelCss.name = label.rectId + Canvas.GRAPHICS_NAMES.text;
     return labelCss;
   }
 
