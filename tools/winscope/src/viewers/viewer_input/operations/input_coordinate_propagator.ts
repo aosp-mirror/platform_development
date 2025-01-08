@@ -82,6 +82,7 @@ export class InputCoordinatePropagator implements Operation<PropertyTreeNode> {
             populatedAxes.add(axis);
           });
 
+          // Populate the X and Y axis values
           if (!populatedAxes.has(InputCoordinatePropagator.AXIS_X)) {
             const xAxisValue = this.addPropertyTo(axisValues, 'x');
             this.addPropertyTo(
@@ -99,6 +100,14 @@ export class InputCoordinatePropagator implements Operation<PropertyTreeNode> {
               InputCoordinatePropagator.AXIS_Y,
             );
             this.addPropertyTo(yAxisValue, 'value', eventXY[1]);
+          }
+
+          // Populate Raw X and Raw Y values (x/y in display)
+          if (pointer.getChildByName('xInDisplay')?.getValue() === undefined) {
+            this.addPropertyTo(pointer, 'xInDisplay', eventXY[0]);
+          }
+          if (pointer.getChildByName('yInDisplay')?.getValue() === undefined) {
+            this.addPropertyTo(pointer, 'yInDisplay', eventXY[1]);
           }
         });
     });

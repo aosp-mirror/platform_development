@@ -94,6 +94,24 @@ describe('InputCoordinatePropagator', () => {
         ?.getChildByName('value')
         ?.getValue(),
     ).toEqual(9.87);
+    expect(
+      root
+        .getChildByName('windowDispatchEvents')
+        ?.getChildByName('0')
+        ?.getChildByName('dispatchedPointer')
+        ?.getChildByName('0')
+        ?.getChildByName('xInDisplay')
+        ?.getValue(),
+    ).toEqual(1.23);
+    expect(
+      root
+        .getChildByName('windowDispatchEvents')
+        ?.getChildByName('0')
+        ?.getChildByName('dispatchedPointer')
+        ?.getChildByName('0')
+        ?.getChildByName('yInDisplay')
+        ?.getValue(),
+    ).toEqual(9.87);
   });
 
   it('does not propagate when pointer ids do not match', () => {
@@ -122,6 +140,22 @@ describe('InputCoordinatePropagator', () => {
         ?.getChildByName('0')
         ?.getChildByName('axisValueInWindow'),
     ).toBeUndefined();
+    expect(
+      root
+        .getChildByName('windowDispatchEvents')
+        ?.getChildByName('0')
+        ?.getChildByName('dispatchedPointer')
+        ?.getChildByName('0')
+        ?.getChildByName('xInDisplay'),
+    ).toBeUndefined();
+    expect(
+      root
+        .getChildByName('windowDispatchEvents')
+        ?.getChildByName('0')
+        ?.getChildByName('dispatchedPointer')
+        ?.getChildByName('0')
+        ?.getChildByName('yInDisplay'),
+    ).toBeUndefined();
   });
 
   it('only propagates when value is not present', () => {
@@ -143,6 +177,8 @@ describe('InputCoordinatePropagator', () => {
                                   {name: 'axis', value: 1},
                                 ]},
                             ]},
+                          {name: 'xInDisplay', value: 0.98},
+                          {name: 'yInDisplay', value: undefined},
                         ]},
                     ]},
                 ]},
@@ -184,5 +220,75 @@ describe('InputCoordinatePropagator', () => {
         ?.getChildByName('value')
         ?.getValue(),
     ).toEqual(9.87);
+    expect(
+      root
+        .getChildByName('windowDispatchEvents')
+        ?.getChildByName('0')
+        ?.getChildByName('dispatchedPointer')
+        ?.getChildByName('0')
+        ?.getChildByName('xInDisplay')
+        ?.getValue(),
+    ).toEqual(0.98);
+    expect(
+      root
+        .getChildByName('windowDispatchEvents')
+        ?.getChildByName('0')
+        ?.getChildByName('dispatchedPointer')
+        ?.getChildByName('0')
+        ?.getChildByName('yInDisplay')
+        ?.getValue(),
+    ).toEqual(9.87);
+  });
+
+  it('does not propagate when XY not present in event', () => {
+    // prettier-ignore
+    const motionEventNode = new PropertyTreeBuilder()
+        .setRootId(root.id)
+        .setName('motionEvent')
+        .setChildren([
+          {name: 'pointer', children: [
+              {name: '0', children: [
+                  {name: 'pointerId', value: 0},
+                  {name: 'axisValue', children: [
+                      {name: '0', children: [
+                          {name: 'axis', value: 0},
+                          {name: 'value', value: undefined},
+                        ]},
+                      {name: '1', children: [
+                          {name: 'axis', value: 1},
+                          {name: 'value', value: 9.87},
+                        ]},
+                    ]},
+                ]},
+            ]},
+        ]).build();
+    root.addOrReplaceChild(motionEventNode);
+
+    operation.apply(root);
+
+    expect(
+      root
+        .getChildByName('windowDispatchEvents')
+        ?.getChildByName('0')
+        ?.getChildByName('dispatchedPointer')
+        ?.getChildByName('0')
+        ?.getChildByName('axisValueInWindow'),
+    ).toBeUndefined();
+    expect(
+      root
+        .getChildByName('windowDispatchEvents')
+        ?.getChildByName('0')
+        ?.getChildByName('dispatchedPointer')
+        ?.getChildByName('0')
+        ?.getChildByName('xInDisplay'),
+    ).toBeUndefined();
+    expect(
+      root
+        .getChildByName('windowDispatchEvents')
+        ?.getChildByName('0')
+        ?.getChildByName('dispatchedPointer')
+        ?.getChildByName('0')
+        ?.getChildByName('yInDisplay'),
+    ).toBeUndefined();
   });
 });
