@@ -48,7 +48,7 @@ import {UiData} from './ui_data';
         [userOptions]="inputData?.rectsUserOptions ?? {}"
         [pinnedItems]="inputData?.pinnedItems ?? []"
         [isDarkMode]="inputData?.isDarkMode ?? false"
-        [rectType]="inputData?.rectType"
+        [rectSpec]="inputData?.rectSpec"
         (collapseButtonClicked)="sections.onCollapseStateChange(CollapsibleSectionType.RECTS, true)"></rects-view>
 
       <hierarchy-view
@@ -146,9 +146,9 @@ export class ViewerSurfaceFlingerComponent extends ViewerComponent<UiData> {
 
   ngOnChanges(simpleChanges: SimpleChanges) {
     const data = simpleChanges['inputData'];
-    if (data?.currentValue?.rectType !== data?.previousValue?.rectType) {
+    if (data?.currentValue?.rectSpec !== data?.previousValue?.rectSpec) {
       this.rectsTitle = assertDefined(
-        this.inputData?.rectType,
+        this.inputData?.rectSpec,
       ).type.toUpperCase();
       assertDefined(
         this.sections.getSection(CollapsibleSectionType.RECTS),

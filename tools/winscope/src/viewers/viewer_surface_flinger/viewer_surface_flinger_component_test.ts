@@ -29,12 +29,12 @@ import {MatSliderModule} from '@angular/material/slider';
 import {MatTooltipModule} from '@angular/material/tooltip';
 import {BrowserAnimationsModule} from '@angular/platform-browser/animations';
 import {UnitTestUtils} from 'test/unit/utils';
-import {RectType} from 'viewers/common/ui_rect_type';
 import {CollapsedSectionsComponent} from 'viewers/components/collapsed_sections_component';
 import {CollapsibleSectionTitleComponent} from 'viewers/components/collapsible_section_title_component';
 import {HierarchyComponent} from 'viewers/components/hierarchy_component';
 import {PropertiesComponent} from 'viewers/components/properties_component';
 import {RectsComponent} from 'viewers/components/rects/rects_component';
+import {TraceRectType} from 'viewers/components/rects/rect_spec';
 import {SurfaceFlingerPropertyGroupsComponent} from 'viewers/components/surface_flinger_property_groups_component';
 import {UiData} from './ui_data';
 import {ViewerSurfaceFlingerComponent} from './viewer_surface_flinger_component';
@@ -145,7 +145,12 @@ describe('ViewerSurfaceFlingerComponent', () => {
 
   it('handles rect type change', () => {
     let uiData = new UiData(undefined);
-    uiData.rectType = {type: RectType.LAYERS, icon: ''};
+    uiData.rectSpec = {
+      type: TraceRectType.LAYERS,
+      icon: '',
+      legend: [],
+      multiple: false,
+    };
     component.inputData = uiData;
     fixture.detectChanges();
 
@@ -153,18 +158,23 @@ describe('ViewerSurfaceFlingerComponent', () => {
       htmlElement,
       fixture,
       '.rects-view',
-      RectType.LAYERS.toUpperCase(),
+      TraceRectType.LAYERS.toUpperCase(),
     );
 
     uiData = new UiData(undefined);
-    uiData.rectType = {type: RectType.INPUT_WINDOWS, icon: ''};
+    uiData.rectSpec = {
+      type: TraceRectType.INPUT_WINDOWS,
+      icon: '',
+      legend: [],
+      multiple: false,
+    };
     component.inputData = uiData;
     fixture.detectChanges();
     UnitTestUtils.checkSectionCollapseAndExpand(
       htmlElement,
       fixture,
       '.rects-view',
-      RectType.INPUT_WINDOWS.toUpperCase(),
+      TraceRectType.INPUT_WINDOWS.toUpperCase(),
     );
   });
 

@@ -37,10 +37,14 @@ import {TraceType} from 'trace/trace_type';
 import {VISIBLE_CHIP} from 'viewers/common/chip';
 import {DisplayIdentifier} from 'viewers/common/display_identifier';
 import {UiHierarchyTreeNode} from 'viewers/common/ui_hierarchy_tree_node';
-import {RectType, UiRectType} from 'viewers/common/ui_rect_type';
 import {RectDblClickDetail, ViewerEvents} from 'viewers/common/viewer_events';
 import {CollapsibleSectionTitleComponent} from 'viewers/components/collapsible_section_title_component';
 import {RectsComponent} from 'viewers/components/rects/rects_component';
+import {
+  RectLegendOption,
+  RectSpec,
+  TraceRectType,
+} from 'viewers/components/rects/rect_spec';
 import {UiRect} from 'viewers/components/rects/ui_rect';
 import {UserOptionsComponent} from 'viewers/components/user_options_component';
 import {Camera} from './camera';
@@ -831,7 +835,17 @@ describe('RectsComponent', () => {
       clicks++;
     });
     expect(htmlElement.querySelector('.rect-type')).toBeNull();
-    component.rectType = {type: RectType.LAYERS, icon: 'layers'};
+
+    component.rectSpec = {
+      type: TraceRectType.LAYERS,
+      icon: 'layers',
+      legend: [],
+      multiple: false,
+    };
+    fixture.detectChanges();
+    expect(htmlElement.querySelector('.rect-type')).toBeNull();
+
+    component.rectSpec.multiple = true;
     fixture.detectChanges();
     const button = assertDefined(
       htmlElement.querySelector<HTMLElement>('.rect-type'),
@@ -844,22 +858,108 @@ describe('RectsComponent', () => {
   });
 
   it('shows warning for any rect type set after the first', async () => {
-    component.rectType = {type: RectType.LAYERS, icon: 'layers'};
+    component.rectSpec = {
+      type: TraceRectType.LAYERS,
+      icon: 'layers',
+      legend: [],
+      multiple: true,
+    };
     fixture.detectChanges();
     expect(htmlElement.querySelector('.warning')).toBeNull();
 
-    component.rectType = {type: RectType.INPUT_WINDOWS, icon: 'touch_app'};
+    component.rectSpec = {
+      type: TraceRectType.INPUT_WINDOWS,
+      icon: 'touch_app',
+      legend: [],
+      multiple: true,
+    };
     fixture.detectChanges();
     const warning = assertDefined(htmlElement.querySelector('.warning'));
     expect(
       warning.querySelector('.warning-message')?.textContent?.trim(),
     ).toEqual(
-      'Showing input windows - change type by clicking  touch_app  icon above',
+      'Showing input windows - change type by clicking touch_app icon above',
     );
 
-    component.rectType = {type: RectType.LAYERS, icon: 'layers'};
+    component.rectSpec = {
+      type: TraceRectType.LAYERS,
+      icon: 'layers',
+      legend: [],
+      multiple: true,
+    };
     fixture.detectChanges();
     expect(htmlElement.querySelector('.warning')).toBeNull();
+  });
+
+  it('provides legend from rect spec', () => {
+    expect(htmlElement.querySelector('.rect-legend')).toBeNull();
+    const legend = [
+      {
+        fill: 'blue',
+        border: 'black',
+        desc: 'Option 1',
+        showInWireFrameMode: false,
+      },
+      {
+        fill: '',
+        border: 'red',
+        desc: 'Option 2',
+        showInWireFrameMode: true,
+      },
+      {
+        border: 'green',
+        desc: 'Option 3',
+        showInWireFrameMode: true,
+      },
+    ];
+    component.rectSpec = {
+      type: TraceRectType.LAYERS,
+      icon: 'layers',
+      legend,
+      multiple: false,
+    };
+    fixture.detectChanges();
+    const legendEl = assertDefined(
+      htmlElement.querySelector<HTMLElement>('.rect-legend'),
+    );
+    expect(legendEl.querySelector('.rect-legend-expand-button')).toBeNull();
+
+    const optionsWrapper = assertDefined(
+      legendEl.querySelector<HTMLElement>('.shading-opts'),
+    );
+    expect(optionsWrapper.className).not.toContain('force-show-all');
+
+    let options = optionsWrapper.querySelectorAll<HTMLElement>('.shading-opt');
+    expect(options.length).toEqual(3);
+    options.forEach((option, i) => checkShadingOpt(option, i, legend));
+
+    updateShadingMode(ShadingMode.GRADIENT, ShadingMode.WIRE_FRAME);
+    options = optionsWrapper.querySelectorAll<HTMLElement>('.shading-opt');
+    expect(options.length).toEqual(2);
+    options.forEach((option, i) => checkShadingOpt(option, i + 1, legend));
+
+    optionsWrapper.style.width = optionsWrapper.clientWidth / 2 + 'px';
+    fixture.detectChanges(); // halve wrapper width so options no longer all fit
+    const expandButton = assertDefined(
+      legendEl.querySelector<HTMLElement>('.rect-legend-expand-button'),
+    );
+    expect(expandButton.textContent).toEqual('more_horiz');
+    expandButton.click();
+    fixture.detectChanges();
+    expect(optionsWrapper.className).toContain('force-show-all');
+    expect(expandButton.textContent).toEqual('expand_circle_down');
+
+    expandButton.click();
+    fixture.detectChanges();
+    expect(expandButton.textContent).toEqual('more_horiz');
+    expect(optionsWrapper.className).not.toContain('force-show-all');
+
+    expandButton.click();
+    fixture.detectChanges(); // click again to show expanded view
+
+    optionsWrapper.style.width = '';
+    fixture.detectChanges(); // button disappears now that options all fit in available space
+    expect(legendEl.querySelector('.rect-legend-expand-button')).toBeNull();
   });
 
   function resetSpies() {
@@ -1035,6 +1135,19 @@ describe('RectsComponent', () => {
     ].forEach((spy) => expect(spy).toHaveBeenCalledTimes(times));
   }
 
+  function checkShadingOpt(
+    option: HTMLElement,
+    i: number,
+    l: RectLegendOption[],
+  ) {
+    const square = assertDefined(option.querySelector<HTMLElement>('.square'));
+    expect(square.style.backgroundColor).toEqual(l[i].fill ?? '');
+    expect(square.style.borderColor).toEqual(l[i].border);
+    expect(option.textContent).toEqual(
+      l[i].fill !== undefined ? l[i].desc : 'question_mark' + l[i].desc,
+    );
+  }
+
   @Component({
     selector: 'host-component',
     template: `
@@ -1051,7 +1164,7 @@ describe('RectsComponent', () => {
         [pinnedItems]="pinnedItems"
         [isDarkMode]="isDarkMode"
         [highlightedItem]="highlightedItem"
-        [rectType]="rectType"></rects-view>
+        [rectSpec]="rectSpec"></rects-view>
     `,
   })
   class TestHostComponent {
@@ -1076,7 +1189,7 @@ describe('RectsComponent', () => {
     pinnedItems: UiHierarchyTreeNode[] = [];
     isDarkMode = false;
     highlightedItem = '';
-    rectType: UiRectType | undefined;
+    rectSpec: RectSpec | undefined;
 
     @ViewChild(RectsComponent)
     rectsComponent: RectsComponent | undefined;

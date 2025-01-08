@@ -40,9 +40,9 @@ import {TRACE_INFO} from 'trace/trace_info';
 import {TraceType} from 'trace/trace_type';
 import {DisplayIdentifier} from 'viewers/common/display_identifier';
 import {UiHierarchyTreeNode} from 'viewers/common/ui_hierarchy_tree_node';
-import {RectType, UiRectType} from 'viewers/common/ui_rect_type';
 import {UserOptions} from 'viewers/common/user_options';
 import {RectDblClickDetail, ViewerEvents} from 'viewers/common/viewer_events';
+import {RectSpec, TraceRectType} from 'viewers/components/rects/rect_spec';
 import {UiRect} from 'viewers/components/rects/ui_rect';
 import {iconDividerStyle} from 'viewers/components/styles/icon_divider.styles';
 import {multlineTooltip} from 'viewers/components/styles/tooltip.styles';
@@ -161,15 +161,15 @@ import {ShadingMode} from './shading_mode';
 
         <div class="displays-section">
           <button
-            *ngIf="rectType"
+            *ngIf="rectSpec?.multiple"
             color="accent"
             class="rect-type"
             (mouseenter)="onInteractionStart([rectTypeButton])"
             (mouseleave)="onInteractionEnd([rectTypeButton])"
             mat-icon-button
-            [matTooltip]="'Showing ' + rectType.type"
-            (click)="onUiRectTypeButtonClicked()" #rectTypeButton>
-            <mat-icon class="material-symbols-outlined"> {{rectType.icon}} </mat-icon>
+            [matTooltip]="'Showing ' + rectSpec.type"
+            (click)="onRectTypeButtonClicked()" #rectTypeButton>
+            <mat-icon class="material-symbols-outlined"> {{rectSpec.icon}} </mat-icon>
           </button>
           <span class="mat-body-1"> {{groupLabel}}: </span>
           <mat-form-field appearance="none" class="displays-select">
@@ -205,12 +205,12 @@ import {ShadingMode} from './shading_mode';
     </div>
     <mat-divider></mat-divider>
     <span
-      *ngIf="showRectTypeWarning()"
+      *ngIf="showRectSpecWarning()"
       class="mat-body-1 warning">
       <mat-icon class="warning-icon"> warning </mat-icon>
       <span class="warning-message">
-        Showing {{rectType.type}} - change type by clicking
-        <mat-icon class="material-symbols-outlined inline-icon"> {{rectType.icon}} </mat-icon>
+        Showing {{rectSpec.type}} - change type by clicking
+        <mat-icon class="material-symbols-outlined inline-icon">{{rectSpec.icon}}</mat-icon>
         icon above
       </span>
     </span>
@@ -230,6 +230,33 @@ import {ShadingMode} from './shading_mode';
           oncontextmenu="return false"></canvas>
       </div>
     </div>
+    <span class="mat-body-1 rect-legend" *ngIf="rectSpec">
+      <span class="shading-opts" [class.force-show-all]="legendExpanded" #shadingOpts>
+        <ng-container *ngFor="let opt of rectSpec.legend">
+          <span
+            *ngIf="!largeRectsMapper3d.isWireFrame() || opt.showInWireFrameMode"
+            class="shading-opt">
+            <mat-icon
+              *ngIf="opt.fill === undefined"
+              [style.border-color]="opt.border"
+              class="square">question_mark</mat-icon>
+            <div
+              *ngIf="opt.fill !== undefined"
+              [style.background-color]="opt.fill"
+              [style.border-color]="opt.border"
+              class="square"></div>
+            <span class="mat-body-1 shading-opt-desc">{{opt.desc}}</span>
+          </span>
+        </ng-container>
+      </span>
+      <button
+        *ngIf="showExpandButton(shadingOpts)"
+        mat-icon-button
+        class="rect-legend-expand-button"
+        (click)="legendExpanded = !legendExpanded">
+        <mat-icon class="material-symbols-outlined">{{legendExpanded ? 'expand_circle_down' : 'more_horiz'}}</mat-icon>
+      </button>
+    </span>
   `,
   styles: [
     `
@@ -318,13 +345,11 @@ import {ShadingMode} from './shading_mode';
         position: absolute;
         z-index: 1000;
       }
-
       .option-label {
         display: flex;
         align-items: center;
         justify-content: space-between;
       }
-
       .option-only-button {
         padding: 0 10px;
         border-radius: 10px;
@@ -335,10 +360,45 @@ import {ShadingMode} from './shading_mode';
         align-items: center;
         display: flex;
       }
-
       .option-label-text {
         overflow: hidden;
         text-overflow: ellipsis;
+      }
+      .rect-legend {
+        display: flex;
+        justify-content: space-between;
+        background-color: var(--card-title-background-color);
+      }
+      .shading-opts {
+        display: flex;
+        flex-wrap: wrap;
+        padding: 0 4px;
+      }
+      .shading-opts:not(.force-show-all) {
+        max-height: 24px;
+        overflow-y: hidden;
+      }
+      .shading-opt {
+        display: flex;
+        align-items: center;
+        padding: 2px;
+      }
+      .square {
+        width: 12px;
+        height: 12px;
+        line-height: 12px;
+        font-size: 12px;
+        border-style: solid;
+        border-width: 1.5px;
+      }
+      .shading-opt-desc {
+        padding-inline-start: 2px;
+      }
+      .rect-legend-expand-button {
+        height: 24px;
+        width: 24px;
+        line-height: 24px;
+        font-size: 24px;
       }
     `,
     multlineTooltip,
@@ -360,7 +420,7 @@ export class RectsComponent implements OnInit, OnDestroy {
   @Input() groupLabel = 'Displays';
   @Input() isStackBased = false;
   @Input() shadingModes: ShadingMode[] = [ShadingMode.GRADIENT];
-  @Input() rectType: UiRectType | undefined;
+  @Input() rectSpec: RectSpec | undefined;
   @Input() userOptions: UserOptions = {};
   @Input() dependencies: TraceType[] = [];
   @Input() pinnedItems: UiHierarchyTreeNode[] = [];
@@ -368,6 +428,7 @@ export class RectsComponent implements OnInit, OnDestroy {
 
   @Output() collapseButtonClicked = new EventEmitter();
 
+  legendExpanded = false;
   private internalRects: UiRect[] = [];
   private internalMiniRects?: UiRect[];
   private storeKeyZSpacingFactor = '';
@@ -389,7 +450,7 @@ export class RectsComponent implements OnInit, OnDestroy {
   private mouseMoveListener = (event: MouseEvent) => this.onMouseMove(event);
   private mouseUpListener = (event: MouseEvent) => this.onMouseUp(event);
   private panning = false;
-  private defaultRectType: RectType | undefined;
+  private defaultRectType: TraceRectType | undefined;
 
   private static readonly ZOOM_SCROLL_RATIO = 0.3;
 
@@ -459,7 +520,7 @@ export class RectsComponent implements OnInit, OnDestroy {
       this.internalMiniRects = this.miniRects;
       this.drawMiniRects();
     }
-    this.defaultRectType = this.rectType?.type;
+    this.defaultRectType = this.rectSpec?.type;
   }
 
   ngOnChanges(simpleChanges: SimpleChanges) {
@@ -746,7 +807,7 @@ export class RectsComponent implements OnInit, OnDestroy {
     components.forEach((c) => (c.color = 'accent'));
   }
 
-  onUiRectTypeButtonClicked() {
+  onRectTypeButtonClicked() {
     this.elementRef.nativeElement.dispatchEvent(
       new CustomEvent(ViewerEvents.RectTypeButtonClick, {
         bubbles: true,
@@ -754,10 +815,17 @@ export class RectsComponent implements OnInit, OnDestroy {
     );
   }
 
-  showRectTypeWarning() {
+  showRectSpecWarning(): boolean {
     return (
       this.defaultRectType !== undefined &&
-      this.defaultRectType !== this.rectType?.type
+      this.defaultRectType !== this.rectSpec?.type
+    );
+  }
+
+  showExpandButton(options: HTMLElement): boolean {
+    return (
+      options.scrollHeight > options.clientHeight ||
+      (this.legendExpanded && options.scrollHeight > 24)
     );
   }
 

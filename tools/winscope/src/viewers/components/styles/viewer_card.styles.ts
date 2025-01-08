@@ -29,9 +29,19 @@ export const viewerCardStyle = `
     overflow: auto;
     border-radius: 4px;
     margin: 4px;
-    padding-bottom: 12px;
     background-color: var(--background-color);
     box-shadow: 0px 1px 3px var(--border-color), 0px 1px 2px var(--border-color);
+  }
+
+  .hierarchy-view:not(.collapsed),
+  .ime-additional-properties:not(.collapsed),
+  .properties-view:not(.collapsed),
+  .log-view:not(.collapsed),
+  .property-groups:not(.collapsed),
+  .global-search:not(.collapsed),
+  .search-results:not(.collapsed),
+  .how-to-search:not(.collapsed) {
+    padding-bottom: 12px;
   }
 
   .rects-view:not(.collapsed),
