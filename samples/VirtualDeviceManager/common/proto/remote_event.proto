@@ -70,6 +70,8 @@ message SensorCapabilities {
   float power = 6;
   int32 min_delay_us = 7;
   int32 max_delay_us = 8;
+  bool is_wake_up_sensor = 9;
+  int32 reporting_mode = 10;
 }
 
 message CameraCapabilities {
@@ -96,6 +98,7 @@ message CameraFrame {
 
 message StartStreaming {
   bool home_enabled = 1;
+  bool rotation_supported = 2;
 }
 
 message StopStreaming {
@@ -122,6 +125,7 @@ enum InputDeviceType {
   DEVICE_TYPE_NAVIGATION_TOUCHPAD = 3;
   DEVICE_TYPE_TOUCHSCREEN = 4;
   DEVICE_TYPE_KEYBOARD = 5;
+  DEVICE_TYPE_ROTARY_ENCODER = 6;
 }
 
 message RemoteInputEvent {

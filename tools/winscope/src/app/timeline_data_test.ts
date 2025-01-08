@@ -16,11 +16,17 @@
 
 import {assertDefined} from 'common/assert_utils';
 import {TimeRange} from 'common/time';
+import {CannotParseAllTransitions} from 'messaging/user_warnings';
+import {ParserBuilder} from 'test/unit/parser_builder';
+import {PropertyTreeBuilder} from 'test/unit/property_tree_builder';
 import {TimestampConverterUtils} from 'test/unit/timestamp_converter_utils';
 import {TracesBuilder} from 'test/unit/traces_builder';
 import {TraceBuilder} from 'test/unit/trace_builder';
+import {UserNotifierChecker} from 'test/unit/user_notifier_checker';
+import {Traces} from 'trace/traces';
 import {TracePosition} from 'trace/trace_position';
 import {TraceType} from 'trace/trace_type';
+import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
 import {TimelineData} from './timeline_data';
 
 describe('TimelineData', () => {
@@ -37,6 +43,7 @@ describe('TimelineData', () => {
     .setTimestamps(TraceType.EVENT_LOG, [timestamp9])
     .setTimestamps(TraceType.SURFACE_FLINGER, [timestamp10])
     .setTimestamps(TraceType.WINDOW_MANAGER, [timestamp11])
+    .setTimestamps(TraceType.TRANSACTIONS, [])
     .build();
 
   const traceSf = assertDefined(traces.getTrace(TraceType.SURFACE_FLINGER));
@@ -99,6 +106,30 @@ describe('TimelineData', () => {
     });
   });
 
+  it('drops empty trace', () => {
+    timelineData.initialize(
+      traces,
+      undefined,
+      TimestampConverterUtils.TIMESTAMP_CONVERTER,
+    );
+    expect(
+      timelineData.getTraces().getTrace(TraceType.TRANSACTIONS),
+    ).toBeUndefined();
+  });
+
+  it('sets first entry as that with valid timestamp', async () => {
+    const traces = new TracesBuilder()
+      .setTimestamps(TraceType.TRANSITION, [timestamp0, timestamp9])
+      .setTimestamps(TraceType.SURFACE_FLINGER, [timestamp9, timestamp10])
+      .build();
+    await timelineData.initialize(
+      traces,
+      undefined,
+      TimestampConverterUtils.TIMESTAMP_CONVERTER,
+    );
+    expect(timelineData.getFullTimeRange().from).toEqual(timestamp9);
+  });
+
   it('uses first entry of first active trace by default', () => {
     timelineData.initialize(
       traces,
@@ -108,7 +139,7 @@ describe('TimelineData', () => {
     expect(timelineData.getCurrentPosition()).toEqual(position10);
   });
 
-  it('uses explicit position if set', () => {
+  it('uses explicit position if set and valid within time range', () => {
     timelineData.initialize(
       traces,
       undefined,
@@ -116,14 +147,35 @@ describe('TimelineData', () => {
     );
     expect(timelineData.getCurrentPosition()).toEqual(position10);
 
-    timelineData.setPosition(position1000);
-    expect(timelineData.getCurrentPosition()).toEqual(position1000);
+    timelineData.setPosition(position11);
+    expect(timelineData.getCurrentPosition()).toEqual(position11);
 
     timelineData.trySetActiveTrace(traceSf);
-    expect(timelineData.getCurrentPosition()).toEqual(position1000);
+    expect(timelineData.getCurrentPosition()).toEqual(position11);
 
     timelineData.trySetActiveTrace(traceWm);
-    expect(timelineData.getCurrentPosition()).toEqual(position1000);
+    expect(timelineData.getCurrentPosition()).toEqual(position11);
+
+    timelineData.setPosition(position1000);
+    expect(timelineData.getCurrentPosition()).not.toEqual(position1000);
+  });
+
+  it('crops explicit position to within timeline range', () => {
+    timelineData.initialize(
+      traces,
+      undefined,
+      TimestampConverterUtils.TIMESTAMP_CONVERTER,
+    );
+
+    timelineData.setPosition(TracePosition.fromTimestamp(timestamp0));
+    expect(timelineData.getCurrentPosition()).toEqual(
+      TracePosition.fromTraceEntry(
+        assertDefined(traces.getTrace(TraceType.PROTO_LOG)).getEntry(0),
+      ),
+    );
+
+    timelineData.setPosition(position1000);
+    expect(timelineData.getCurrentPosition()).toEqual(position11);
   });
 
   it('sets active trace and update current position accordingly', () => {
@@ -343,5 +395,35 @@ describe('TimelineData', () => {
     timelineData.trySetActiveTrace(traceWm);
 
     expect(timelineData.getCurrentPosition()?.timestamp).toBe(timestamp11);
+  });
+
+  it('handles partially corrupted transitions trace', async () => {
+    const userNotifierChecker = new UserNotifierChecker();
+
+    const traces = new Traces();
+    const trace = new TraceBuilder<PropertyTreeNode>()
+      .setType(TraceType.TRANSITION)
+      .setParser(
+        new ParserBuilder<PropertyTreeNode>()
+          .setIsCorrupted(true)
+          .setEntries([
+            new PropertyTreeBuilder()
+              .setRootId('TransitionsTraceEntry')
+              .setName('transition')
+              .build(),
+          ])
+          .setTimestamps([timestamp9])
+          .build(),
+      )
+      .build();
+    traces.addTrace(trace);
+
+    await timelineData.initialize(
+      traces,
+      undefined,
+      TimestampConverterUtils.TIMESTAMP_CONVERTER,
+    );
+    userNotifierChecker.expectAdded([new CannotParseAllTransitions()]);
+    expect(timelineData.getTransitionEntries()).toEqual([undefined]);
   });
 });

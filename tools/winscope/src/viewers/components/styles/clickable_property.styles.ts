@@ -15,7 +15,7 @@
  */
 
 export const timeButtonStyle = `
-    .time button {
+    .time-button {
       padding: 0px;
       line-height: normal;
       text-align: left;
@@ -26,6 +26,7 @@ export const inlineButtonStyle = `
     .inline button {
       padding: 0px;
       min-width: fit-content;
+      width: fit-content;
       line-height: normal;
       text-align: left;
     }

@@ -70,12 +70,12 @@ static CUSTOMIZATIONS: &[&str] = &[
     "*.bp",
     "*.bp.fragment",
     "*.mk",
+    "android",
     "cargo_embargo.json",
     "patches",
     "METADATA",
     "TEST_MAPPING",
     "MODULE_LICENSE_*",
-    "README.android",
 ];
 
 static SYMLINKS: &[&str] = &["LICENSE", "NOTICE"];
@@ -131,6 +131,7 @@ impl<State: ManagedCrateState> ManagedCrate<State> {
                 patches.push(entry.path());
             }
         }
+        patches.sort();
 
         Ok(patches)
     }

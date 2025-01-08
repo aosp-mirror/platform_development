@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import {FilterFlag, makeFilterPredicate} from 'common/filter_flag';
 import {
   PropertySource,
   PropertyTreeNode,
@@ -37,12 +38,15 @@ export class UiTreeUtils {
     );
   };
 
-  static isNotDefault: TreeNodeFilter = (node: TreeNode) => {
-    return (
-      node instanceof UiPropertyTreeNode &&
-      node.source !== PropertySource.DEFAULT
-    );
-  };
+  static makeIsNotDefaultFilter(allowList: string[]): TreeNodeFilter {
+    return (node: TreeNode) => {
+      return (
+        node instanceof UiPropertyTreeNode &&
+        (node.source !== PropertySource.DEFAULT ||
+          allowList.includes(node.name))
+      );
+    };
+  }
 
   static isNotCalculated: TreeNodeFilter = (node: TreeNode) => {
     return (
@@ -51,45 +55,25 @@ export class UiTreeUtils {
     );
   };
 
-  static makeIdFilter(filterString: string): TreeNodeFilter {
-    const filter = (node: TreeNode) => {
-      const regex = new RegExp(filterString, 'i');
-      return filterString.length === 0 || regex.test(node.id);
-    };
-    return filter;
-  }
-
-  static makePropertyFilter(filterString: string): TreeNodeFilter {
-    const filter = (node: TreeNode) => {
-      const regex = new RegExp(filterString, 'i');
+  static makeNodeFilter(
+    filterString: string,
+    flags: FilterFlag[] = [],
+  ): TreeNodeFilter {
+    const predicate = makeFilterPredicate(filterString, flags);
+    return (node: TreeNode) => {
       return (
-        filterString.length === 0 ||
-        regex.test(node.name) ||
-        (node instanceof PropertyTreeNode && regex.test(node.formattedValue()))
+        predicate(node.id) ||
+        (node instanceof PropertyTreeNode && predicate(node.formattedValue()))
       );
     };
-    return filter;
   }
 
   static makeIdMatchFilter(targetId: string): TreeNodeFilter {
     return (node: TreeNode) => node.id === targetId;
   }
 
-  static makePropertyMatchFilter(targetValue: string): TreeNodeFilter {
-    return (node: TreeNode) => {
-      return (
-        node instanceof UiPropertyTreeNode &&
-        node.formattedValue() !== targetValue
-      );
-    };
-  }
-
   static makeDenyListFilterByName(denylist: string[]): TreeNodeFilter {
     return (node: TreeNode) => !denylist.includes(node.name);
-  }
-
-  static makeAllowListFilterById(allowlist: string[]): TreeNodeFilter {
-    return (node: TreeNode) => allowlist.includes(node.id);
   }
 
   static shouldGetProperties(node: UiHierarchyTreeNode): boolean {

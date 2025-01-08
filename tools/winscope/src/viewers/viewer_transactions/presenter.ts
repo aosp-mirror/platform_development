@@ -14,63 +14,38 @@
  * limitations under the License.
  */
 
-import {ArrayUtils} from 'common/array_utils';
 import {assertDefined} from 'common/assert_utils';
-import {FunctionUtils} from 'common/function_utils';
 import {PersistentStoreProxy} from 'common/persistent_store_proxy';
-import {
-  TracePositionUpdate,
-  WinscopeEvent,
-  WinscopeEventType,
-} from 'messaging/winscope_event';
-import {
-  EmitEvent,
-  WinscopeEventEmitter,
-} from 'messaging/winscope_event_emitter';
-import {AbsoluteEntryIndex} from 'trace/index_types';
-import {Trace, TraceEntry} from 'trace/trace';
-import {TraceEntryFinder} from 'trace/trace_entry_finder';
-import {TIMESTAMP_NODE_FORMATTER} from 'trace/tree_node/formatters';
+import {Store} from 'common/store';
+import {Trace} from 'trace/trace';
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
-import {DEFAULT_PROPERTY_TREE_NODE_FACTORY} from 'trace/tree_node/property_tree_node_factory';
-import {Filter} from 'viewers/common/operations/filter';
-import {UiPropertyTreeNode} from 'viewers/common/ui_property_tree_node';
-import {UiTreeFormatter} from 'viewers/common/ui_tree_formatter';
-import {UiTreeUtils} from 'viewers/common/ui_tree_utils';
+import {
+  AbstractLogViewerPresenter,
+  NotifyLogViewCallbackType,
+} from 'viewers/common/abstract_log_viewer_presenter';
+import {LogPresenter} from 'viewers/common/log_presenter';
+import {PropertiesPresenter} from 'viewers/common/properties_presenter';
+import {LogField, LogFieldType, LogFilter} from 'viewers/common/ui_data_log';
 import {UserOptions} from 'viewers/common/user_options';
 import {SetRootDisplayNames} from './operations/set_root_display_name';
-import {UiData, UiDataEntry, UiDataEntryType} from './ui_data';
+import {TransactionsEntry, TransactionsEntryType, UiData} from './ui_data';
 
-type NotifyViewCallbackType = (uiData: UiData) => void;
-
-export class Presenter implements WinscopeEventEmitter {
-  private emitAppEvent: EmitEvent = FunctionUtils.DO_NOTHING_ASYNC;
-  private readonly trace: Trace<PropertyTreeNode>;
-  private entry?: TraceEntry<PropertyTreeNode>;
-  private originalIndicesOfUiDataEntries: number[];
-  private uiData = UiData.EMPTY;
-
+export class Presenter extends AbstractLogViewerPresenter<UiData> {
+  private static readonly FIELD_TYPES = [
+    LogFieldType.TRANSACTION_ID,
+    LogFieldType.VSYNC_ID,
+    LogFieldType.PID,
+    LogFieldType.UID,
+    LogFieldType.TRANSACTION_TYPE,
+    LogFieldType.LAYER_OR_DISPLAY_ID,
+    LogFieldType.FLAGS,
+  ];
+  private static readonly VALUE_NA = 'N/A';
   private isInitialized = false;
-  private allUiDataEntries: UiDataEntry[] = [];
-  private allVSyncIds: string[] = [];
-  private allPids: string[] = [];
-  private allUids: string[] = [];
-  private allTypes: string[] = [];
-  private allLayerAndDisplayIds: string[] = [];
-  private allTransactionIds: string[] = [];
-  private allFlags: string[] = [];
 
-  private vsyncIdFilter: string[] = [];
-  private pidFilter: string[] = [];
-  private uidFilter: string[] = [];
-  private typeFilter: string[] = [];
-  private layerIdFilter: string[] = [];
-  private whatFilter: string[] = [];
-  private transactionIdFilter: string[] = [];
-
-  private currentPropertiesTree: PropertyTreeNode | undefined;
-
-  private propertiesUserOptions: UserOptions =
+  protected override keepCalculated = true;
+  protected override logPresenter = new LogPresenter<TransactionsEntry>();
+  protected override propertiesPresenter = new PropertiesPresenter(
     PersistentStoreProxy.new<UserOptions>(
       'TransactionsPropertyOptions',
       {
@@ -85,322 +60,64 @@ export class Presenter implements WinscopeEventEmitter {
         },
       },
       this.storage,
-    );
-
-  private readonly notifyUiDataCallback: NotifyViewCallbackType;
-  private static readonly VALUE_NA = 'N/A';
+    ),
+    undefined,
+    [],
+    [new SetRootDisplayNames()],
+  );
 
   constructor(
     trace: Trace<PropertyTreeNode>,
-    private readonly storage: Storage,
-    notifyViewCallback: NotifyViewCallbackType,
+    readonly storage: Store,
+    notifyViewCallback: NotifyLogViewCallbackType<UiData>,
   ) {
-    this.trace = trace;
-    this.notifyUiDataCallback = notifyViewCallback;
-    this.originalIndicesOfUiDataEntries = [];
-    this.notifyUiDataCallback(this.uiData);
+    super(trace, notifyViewCallback, UiData.createEmpty());
   }
 
-  setEmitEvent(callback: EmitEvent) {
-    this.emitAppEvent = callback;
-  }
-
-  async onAppEvent(event: WinscopeEvent) {
-    await event.visit(
-      WinscopeEventType.TRACE_POSITION_UPDATE,
-      async (event) => {
-        await this.initializeIfNeeded();
-        this.entry = TraceEntryFinder.findCorrespondingEntry(
-          this.trace,
-          event.position,
-        );
-        this.uiData.currentEntryIndex = this.computeCurrentEntryIndex();
-        this.uiData.selectedEntryIndex = undefined;
-        this.uiData.scrollToIndex = this.uiData.currentEntryIndex;
-        this.currentPropertiesTree = this.computePropertiesTree(
-          this.uiData.entries,
-          this.uiData.currentEntryIndex,
-          this.uiData.selectedEntryIndex,
-        );
-        this.uiData.currentPropertiesTree = this.formatPropertiesTree(
-          this.currentPropertiesTree,
-        );
-
-        this.notifyUiDataCallback(this.uiData);
-      },
-    );
-  }
-
-  onVSyncIdFilterChanged(vsyncIds: string[]) {
-    this.vsyncIdFilter = vsyncIds;
-    this.uiData = this.computeUiData();
-    this.notifyUiDataCallback(this.uiData);
-  }
-
-  onPidFilterChanged(pids: string[]) {
-    this.pidFilter = pids;
-    this.uiData = this.computeUiData();
-    this.notifyUiDataCallback(this.uiData);
-  }
-
-  onUidFilterChanged(uids: string[]) {
-    this.uidFilter = uids;
-    this.uiData = this.computeUiData();
-    this.notifyUiDataCallback(this.uiData);
-  }
-
-  onTypeFilterChanged(types: string[]) {
-    this.typeFilter = types;
-    this.uiData = this.computeUiData();
-    this.notifyUiDataCallback(this.uiData);
-  }
-
-  onLayerIdFilterChanged(ids: string[]) {
-    this.layerIdFilter = ids;
-    this.uiData = this.computeUiData();
-    this.notifyUiDataCallback(this.uiData);
-  }
-
-  onWhatFilterChanged(flags: string[]) {
-    this.whatFilter = flags;
-    this.uiData = this.computeUiData();
-    this.notifyUiDataCallback(this.uiData);
-  }
-
-  onTransactionIdFilterChanged(ids: string[]) {
-    this.transactionIdFilter = ids;
-    this.uiData = this.computeUiData();
-    this.notifyUiDataCallback(this.uiData);
-  }
-
-  onEntryClicked(index: number) {
-    if (this.uiData.selectedEntryIndex === index) {
-      return;
-    }
-    this.uiData.selectedEntryIndex = index;
-    this.uiData.scrollToIndex = undefined; // no scrolling
-    this.updatePropertiesTree();
-  }
-
-  onEntryChangedByKeyPress(index: number) {
-    if (this.uiData.selectedEntryIndex === index) {
-      return;
-    }
-    this.uiData.selectedEntryIndex = index;
-    this.uiData.scrollToIndex = index;
-    this.updatePropertiesTree();
-  }
-
-  onPropertiesUserOptionsChange(userOptions: UserOptions) {
-    this.propertiesUserOptions = userOptions;
-    this.uiData.propertiesUserOptions = this.propertiesUserOptions;
-    this.uiData.currentPropertiesTree = this.formatPropertiesTree(
-      this.currentPropertiesTree,
-    );
-    this.notifyUiDataCallback(this.uiData);
-  }
-
-  async onLogTimestampClicked(traceIndex: AbsoluteEntryIndex) {
-    await this.emitAppEvent(
-      TracePositionUpdate.fromTraceEntry(this.trace.getEntry(traceIndex), true),
-    );
-  }
-
-  private async initializeIfNeeded() {
+  protected override async initializeIfNeeded() {
     if (this.isInitialized) {
       return;
     }
 
-    this.allUiDataEntries = await this.makeUiDataEntries();
+    const allEntries = await this.makeUiDataEntries();
+    const filters: LogFilter[] = [];
 
-    this.allVSyncIds = this.getUniqueUiDataEntryValues(
-      this.allUiDataEntries,
-      (entry: UiDataEntry) => entry.vsyncId.toString(),
-    );
-    this.allPids = this.getUniqueUiDataEntryValues(
-      this.allUiDataEntries,
-      (entry: UiDataEntry) => entry.pid,
-    );
-    this.allUids = this.getUniqueUiDataEntryValues(
-      this.allUiDataEntries,
-      (entry: UiDataEntry) => entry.uid,
-    );
-    this.allTypes = this.getUniqueUiDataEntryValues(
-      this.allUiDataEntries,
-      (entry: UiDataEntry) => entry.type,
-    );
-    this.allLayerAndDisplayIds = this.getUniqueUiDataEntryValues(
-      this.allUiDataEntries,
-      (entry: UiDataEntry) => entry.layerOrDisplayId,
-    );
-    this.allTransactionIds = this.getUniqueUiDataEntryValues(
-      this.allUiDataEntries,
-      (entry: UiDataEntry) => entry.transactionId,
-    );
-    this.allFlags = this.getUniqueUiDataEntryValues(
-      this.allUiDataEntries,
-      (entry: UiDataEntry) => entry.what.split('|').map((flag) => flag.trim()),
-    );
+    for (const type of Presenter.FIELD_TYPES) {
+      if (type === LogFieldType.FLAGS) {
+        filters.push({
+          type,
+          options: this.getUniqueUiDataEntryValues(
+            allEntries,
+            (entry: TransactionsEntry) =>
+              assertDefined(
+                entry.fields.find((f) => f.type === type)?.value as string,
+              )
+                .split('|')
+                .map((flag) => flag.trim()),
+          ),
+        });
+      } else {
+        filters.push({
+          type,
+          options: this.getUniqueUiDataEntryValues(
+            allEntries,
+            (entry: TransactionsEntry) =>
+              assertDefined(
+                entry.fields.find((f) => f.type === type),
+              ).value.toString(),
+          ),
+        });
+      }
+    }
 
-    this.uiData = this.computeUiData();
-
+    this.logPresenter.setAllEntries(allEntries);
+    this.logPresenter.setFilters(filters);
+    this.refreshUiData();
     this.isInitialized = true;
   }
 
-  private computeUiData(): UiData {
-    const entries = this.allUiDataEntries;
-
-    let filteredEntries = entries;
-
-    if (this.vsyncIdFilter.length > 0) {
-      filteredEntries = filteredEntries.filter((entry) =>
-        this.vsyncIdFilter.includes(entry.vsyncId.toString()),
-      );
-    }
-
-    if (this.pidFilter.length > 0) {
-      filteredEntries = filteredEntries.filter((entry) =>
-        this.pidFilter.includes(entry.pid),
-      );
-    }
-
-    if (this.uidFilter.length > 0) {
-      filteredEntries = filteredEntries.filter((entry) =>
-        this.uidFilter.includes(entry.uid),
-      );
-    }
-
-    if (this.typeFilter.length > 0) {
-      filteredEntries = filteredEntries.filter((entry) =>
-        this.typeFilter.includes(entry.type),
-      );
-    }
-
-    if (this.layerIdFilter.length > 0) {
-      filteredEntries = filteredEntries.filter((entry) =>
-        this.layerIdFilter.includes(entry.layerOrDisplayId),
-      );
-    }
-
-    if (this.whatFilter.length > 0) {
-      filteredEntries = filteredEntries.filter(
-        (entry) =>
-          this.whatFilter.find((flag) => entry.what.includes(flag)) !==
-          undefined,
-      );
-    }
-
-    if (this.transactionIdFilter.length > 0) {
-      filteredEntries = filteredEntries.filter((entry) =>
-        this.transactionIdFilter.includes(entry.transactionId.toString()),
-      );
-    }
-
-    this.originalIndicesOfUiDataEntries = filteredEntries.map(
-      (entry) => entry.traceIndex,
-    );
-
-    const currentEntryIndex = this.computeCurrentEntryIndex();
-    const selectedEntryIndex = undefined;
-    this.currentPropertiesTree = this.computePropertiesTree(
-      filteredEntries,
-      currentEntryIndex,
-      selectedEntryIndex,
-    );
-
-    const formattedPropertiesTree = this.formatPropertiesTree(
-      this.currentPropertiesTree,
-    );
-
-    return new UiData(
-      this.allVSyncIds,
-      this.allPids,
-      this.allUids,
-      this.allTypes,
-      this.allLayerAndDisplayIds,
-      this.allTransactionIds,
-      this.allFlags,
-      filteredEntries,
-      currentEntryIndex,
-      selectedEntryIndex,
-      currentEntryIndex,
-      formattedPropertiesTree,
-      this.propertiesUserOptions,
-    );
-  }
-
-  private computeCurrentEntryIndex(): undefined | number {
-    if (!this.entry) {
-      return undefined;
-    }
-
-    if (this.originalIndicesOfUiDataEntries.length === 0) {
-      return undefined;
-    }
-
-    return (
-      ArrayUtils.binarySearchFirstGreaterOrEqual(
-        this.originalIndicesOfUiDataEntries,
-        this.entry.getIndex(),
-      ) ?? this.originalIndicesOfUiDataEntries.length - 1
-    );
-  }
-
-  private updatePropertiesTree() {
-    this.currentPropertiesTree = this.computePropertiesTree(
-      this.uiData.entries,
-      this.uiData.currentEntryIndex,
-      this.uiData.selectedEntryIndex,
-    );
-
-    this.uiData.currentPropertiesTree = this.formatPropertiesTree(
-      this.currentPropertiesTree,
-    );
-
-    this.notifyUiDataCallback(this.uiData);
-  }
-
-  private computePropertiesTree(
-    entries: UiDataEntry[],
-    currentEntryIndex: undefined | number,
-    selectedEntryIndex: undefined | number,
-  ): PropertyTreeNode | undefined {
-    if (selectedEntryIndex !== undefined) {
-      return entries[selectedEntryIndex].propertiesTree;
-    }
-    if (currentEntryIndex !== undefined) {
-      return entries[currentEntryIndex].propertiesTree;
-    }
-    return undefined;
-  }
-
-  private formatPropertiesTree(
-    propertiesTree: PropertyTreeNode | undefined,
-  ): UiPropertyTreeNode | undefined {
-    if (!propertiesTree) return undefined;
-
-    const uiTree = UiPropertyTreeNode.from(propertiesTree);
-    const formatter = new UiTreeFormatter<UiPropertyTreeNode>().setUiTree(
-      uiTree,
-    );
-
-    if (!this.propertiesUserOptions['showDefaults']?.enabled) {
-      formatter.addOperation(
-        new Filter(
-          [
-            UiTreeUtils.isNotDefault,
-            UiTreeUtils.makePropertyMatchFilter('IDENTITY'),
-          ],
-          false,
-        ),
-      );
-    }
-
-    return formatter.addOperation(new SetRootDisplayNames()).format();
-  }
-
-  private async makeUiDataEntries(): Promise<UiDataEntry[]> {
-    const entries: UiDataEntry[] = [];
+  private async makeUiDataEntries(): Promise<TransactionsEntry[]> {
+    const entries: TransactionsEntry[] = [];
 
     const entryProtos = await Promise.all(
       this.trace.mapEntry(async (entry) => {
@@ -419,183 +136,207 @@ export class Presenter implements WinscopeEventEmitter {
         assertDefined(entryNode.getChildByName('vsyncId')).getValue(),
       );
 
-      const entryTimestamp =
-        DEFAULT_PROPERTY_TREE_NODE_FACTORY.makeCalculatedProperty(
-          'TransactionsTraceEntry',
-          'timestamp',
-          entry.getTimestamp(),
-        );
-      entryTimestamp.setFormatter(TIMESTAMP_NODE_FORMATTER);
-
       for (const transactionState of assertDefined(
         entryNode.getChildByName('transactions'),
       ).getAllChildren()) {
+        const transactionId = assertDefined(
+          transactionState.getChildByName('transactionId'),
+        ).formattedValue();
         const pid = assertDefined(
           transactionState.getChildByName('pid'),
         ).formattedValue();
         const uid = assertDefined(
           transactionState.getChildByName('uid'),
         ).formattedValue();
-        const transactionId = assertDefined(
-          transactionState.getChildByName('transactionId'),
-        ).formattedValue();
-
         const layerChanges = assertDefined(
           transactionState.getChildByName('layerChanges'),
         ).getAllChildren();
+
         for (const layerState of layerChanges) {
-          entries.push(
-            new UiDataEntry(
-              traceIndex,
-              entryTimestamp,
-              vsyncId,
-              pid,
-              uid,
-              UiDataEntryType.LAYER_CHANGED,
-              assertDefined(
+          const fields: LogField[] = [
+            {type: LogFieldType.TRANSACTION_ID, value: transactionId},
+            {type: LogFieldType.VSYNC_ID, value: vsyncId},
+            {type: LogFieldType.PID, value: pid},
+            {type: LogFieldType.UID, value: uid},
+            {
+              type: LogFieldType.TRANSACTION_TYPE,
+              value: TransactionsEntryType.LAYER_CHANGED,
+            },
+            {
+              type: LogFieldType.LAYER_OR_DISPLAY_ID,
+              value: assertDefined(
                 layerState.getChildByName('layerId'),
               ).formattedValue(),
-              transactionId,
-              assertDefined(layerState.getChildByName('what')).formattedValue(),
-              layerState,
-            ),
-          );
+            },
+            {
+              type: LogFieldType.FLAGS,
+              value: assertDefined(
+                layerState.getChildByName('what'),
+              ).formattedValue(),
+            },
+          ];
+          entries.push(new TransactionsEntry(entry, fields, layerState));
         }
 
         const displayChanges = assertDefined(
           transactionState.getChildByName('displayChanges'),
         ).getAllChildren();
         for (const displayState of displayChanges) {
-          entries.push(
-            new UiDataEntry(
-              traceIndex,
-              entryTimestamp,
-              vsyncId,
-              pid,
-              uid,
-              UiDataEntryType.DISPLAY_CHANGED,
-              assertDefined(displayState.getChildByName('id')).formattedValue(),
-              transactionId,
-              assertDefined(
+          const fields: LogField[] = [
+            {type: LogFieldType.TRANSACTION_ID, value: transactionId},
+            {type: LogFieldType.VSYNC_ID, value: vsyncId},
+            {type: LogFieldType.PID, value: pid},
+            {type: LogFieldType.UID, value: uid},
+            {
+              type: LogFieldType.TRANSACTION_TYPE,
+              value: TransactionsEntryType.DISPLAY_CHANGED,
+            },
+            {
+              type: LogFieldType.LAYER_OR_DISPLAY_ID,
+              value: assertDefined(
+                displayState.getChildByName('id'),
+              ).formattedValue(),
+            },
+            {
+              type: LogFieldType.FLAGS,
+              value: assertDefined(
                 displayState.getChildByName('what'),
               ).formattedValue(),
-              displayState,
-            ),
-          );
+            },
+          ];
+          entries.push(new TransactionsEntry(entry, fields, displayState));
         }
 
         if (layerChanges.length === 0 && displayChanges.length === 0) {
-          entries.push(
-            new UiDataEntry(
-              traceIndex,
-              entryTimestamp,
-              vsyncId,
-              pid,
-              uid,
-              UiDataEntryType.NO_OP,
-              '',
-              transactionId,
-              '',
-              undefined,
-            ),
-          );
+          const fields: LogField[] = [
+            {type: LogFieldType.TRANSACTION_ID, value: transactionId},
+            {type: LogFieldType.VSYNC_ID, value: vsyncId},
+            {type: LogFieldType.PID, value: pid},
+            {type: LogFieldType.UID, value: uid},
+            {
+              type: LogFieldType.TRANSACTION_TYPE,
+              value: TransactionsEntryType.NO_OP,
+            },
+            {type: LogFieldType.LAYER_OR_DISPLAY_ID, value: ''},
+            {type: LogFieldType.FLAGS, value: ''},
+          ];
+          entries.push(new TransactionsEntry(entry, fields, undefined));
         }
       }
 
       for (const layerCreationArgs of assertDefined(
         entryNode.getChildByName('addedLayers'),
       ).getAllChildren()) {
-        entries.push(
-          new UiDataEntry(
-            traceIndex,
-            entryTimestamp,
-            vsyncId,
-            Presenter.VALUE_NA,
-            Presenter.VALUE_NA,
-            UiDataEntryType.LAYER_ADDED,
-            assertDefined(
+        const fields: LogField[] = [
+          {type: LogFieldType.TRANSACTION_ID, value: ''},
+          {type: LogFieldType.VSYNC_ID, value: vsyncId},
+          {type: LogFieldType.PID, value: Presenter.VALUE_NA},
+          {type: LogFieldType.UID, value: Presenter.VALUE_NA},
+          {
+            type: LogFieldType.TRANSACTION_TYPE,
+            value: TransactionsEntryType.LAYER_ADDED,
+          },
+          {
+            type: LogFieldType.LAYER_OR_DISPLAY_ID,
+            value: assertDefined(
               layerCreationArgs.getChildByName('layerId'),
             ).formattedValue(),
-            '',
-            '',
-            layerCreationArgs,
-          ),
-        );
+          },
+          {type: LogFieldType.FLAGS, value: ''},
+        ];
+        entries.push(new TransactionsEntry(entry, fields, layerCreationArgs));
       }
 
       for (const destroyedLayerId of assertDefined(
         entryNode.getChildByName('destroyedLayers'),
       ).getAllChildren()) {
-        entries.push(
-          new UiDataEntry(
-            traceIndex,
-            entryTimestamp,
-            vsyncId,
-            Presenter.VALUE_NA,
-            Presenter.VALUE_NA,
-            UiDataEntryType.LAYER_DESTROYED,
-            destroyedLayerId.formattedValue(),
-            '',
-            '',
-            destroyedLayerId,
-          ),
-        );
+        const fields: LogField[] = [
+          {type: LogFieldType.TRANSACTION_ID, value: ''},
+          {type: LogFieldType.VSYNC_ID, value: vsyncId},
+          {type: LogFieldType.PID, value: Presenter.VALUE_NA},
+          {type: LogFieldType.UID, value: Presenter.VALUE_NA},
+          {
+            type: LogFieldType.TRANSACTION_TYPE,
+            value: TransactionsEntryType.LAYER_DESTROYED,
+          },
+          {
+            type: LogFieldType.LAYER_OR_DISPLAY_ID,
+            value: destroyedLayerId.formattedValue(),
+          },
+          {type: LogFieldType.FLAGS, value: ''},
+        ];
+        entries.push(new TransactionsEntry(entry, fields, destroyedLayerId));
       }
 
       for (const displayState of assertDefined(
         entryNode.getChildByName('addedDisplays'),
       ).getAllChildren()) {
-        entries.push(
-          new UiDataEntry(
-            traceIndex,
-            entryTimestamp,
-            vsyncId,
-            Presenter.VALUE_NA,
-            Presenter.VALUE_NA,
-            UiDataEntryType.DISPLAY_ADDED,
-            assertDefined(displayState.getChildByName('id')).formattedValue(),
-            '',
-            assertDefined(displayState.getChildByName('what')).formattedValue(),
-            displayState,
-          ),
-        );
+        const fields: LogField[] = [
+          {type: LogFieldType.TRANSACTION_ID, value: ''},
+          {type: LogFieldType.VSYNC_ID, value: vsyncId},
+          {type: LogFieldType.PID, value: Presenter.VALUE_NA},
+          {type: LogFieldType.UID, value: Presenter.VALUE_NA},
+          {
+            type: LogFieldType.TRANSACTION_TYPE,
+            value: TransactionsEntryType.DISPLAY_ADDED,
+          },
+          {
+            type: LogFieldType.LAYER_OR_DISPLAY_ID,
+            value: assertDefined(
+              displayState.getChildByName('id'),
+            ).formattedValue(),
+          },
+          {
+            type: LogFieldType.FLAGS,
+            value: assertDefined(
+              displayState.getChildByName('what'),
+            ).formattedValue(),
+          },
+        ];
+        entries.push(new TransactionsEntry(entry, fields, displayState));
       }
 
       for (const removedDisplayId of assertDefined(
         entryNode.getChildByName('removedDisplays'),
       ).getAllChildren()) {
-        entries.push(
-          new UiDataEntry(
-            traceIndex,
-            entryTimestamp,
-            vsyncId,
-            Presenter.VALUE_NA,
-            Presenter.VALUE_NA,
-            UiDataEntryType.DISPLAY_REMOVED,
-            removedDisplayId.formattedValue(),
-            '',
-            '',
-            removedDisplayId,
-          ),
-        );
+        const fields: LogField[] = [
+          {type: LogFieldType.TRANSACTION_ID, value: ''},
+          {type: LogFieldType.VSYNC_ID, value: vsyncId},
+          {type: LogFieldType.PID, value: Presenter.VALUE_NA},
+          {type: LogFieldType.UID, value: Presenter.VALUE_NA},
+          {
+            type: LogFieldType.TRANSACTION_TYPE,
+            value: TransactionsEntryType.DISPLAY_REMOVED,
+          },
+          {
+            type: LogFieldType.LAYER_OR_DISPLAY_ID,
+            value: removedDisplayId.formattedValue(),
+          },
+          {type: LogFieldType.FLAGS, value: ''},
+        ];
+        entries.push(new TransactionsEntry(entry, fields, removedDisplayId));
       }
 
       for (const destroyedLayerHandleId of assertDefined(
         entryNode.getChildByName('destroyedLayerHandles'),
       ).getAllChildren()) {
+        const fields: LogField[] = [
+          {type: LogFieldType.TRANSACTION_ID, value: ''},
+          {type: LogFieldType.VSYNC_ID, value: vsyncId},
+          {type: LogFieldType.PID, value: Presenter.VALUE_NA},
+          {type: LogFieldType.UID, value: Presenter.VALUE_NA},
+          {
+            type: LogFieldType.TRANSACTION_TYPE,
+            value: TransactionsEntryType.LAYER_HANDLE_DESTROYED,
+          },
+          {
+            type: LogFieldType.LAYER_OR_DISPLAY_ID,
+            value: destroyedLayerHandleId.formattedValue(),
+          },
+          {type: LogFieldType.FLAGS, value: ''},
+        ];
         entries.push(
-          new UiDataEntry(
-            traceIndex,
-            entryTimestamp,
-            vsyncId,
-            Presenter.VALUE_NA,
-            Presenter.VALUE_NA,
-            UiDataEntryType.LAYER_HANDLE_DESTROYED,
-            destroyedLayerHandleId.formattedValue(),
-            '',
-            '',
-            destroyedLayerHandleId,
-          ),
+          new TransactionsEntry(entry, fields, destroyedLayerHandleId),
         );
       }
     }
@@ -604,11 +345,11 @@ export class Presenter implements WinscopeEventEmitter {
   }
 
   private getUniqueUiDataEntryValues<T>(
-    entries: UiDataEntry[],
-    getValue: (entry: UiDataEntry) => T | T[],
+    entries: TransactionsEntry[],
+    getValue: (entry: TransactionsEntry) => T | T[],
   ): T[] {
     const uniqueValues = new Set<T>();
-    entries.forEach((entry: UiDataEntry) => {
+    entries.forEach((entry: TransactionsEntry) => {
       const value = getValue(entry);
       if (Array.isArray(value)) {
         value.forEach((val) => uniqueValues.add(val));
