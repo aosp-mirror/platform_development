@@ -35,13 +35,9 @@ private const val EXTRA_IS_INITIAL = "isInitial"
 fun createAlternateIntent(intent: Intent): Intent {
     val text = buildString {
         append("Shared URIs:")
-        intent.extraStream.forEach {
-            append("\n * $it")
-        }
+        intent.extraStream.forEach { append("\n * $it") }
     }
-    return Intent(Intent.ACTION_SEND).apply {
-        setText(text)
-    }
+    return Intent(Intent.ACTION_SEND).apply { setText(text) }
 }
 
 fun Intent.setText(text: CharSequence) {
@@ -77,45 +73,40 @@ private fun createModifyShareAction(
     isInitial: Boolean,
     count: Int,
 ): ChooserAction {
-    val pendingIntent = PendingIntent.getBroadcast(
-        context,
-        1,
-        Intent(CustomActionFactory.BROADCAST_ACTION)
-            .apply {
-                this.isInitial = isInitial
-            },
-        PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_CANCEL_CURRENT
-    )
+    val pendingIntent =
+        PendingIntent.getBroadcast(
+            context,
+            1,
+            Intent(CustomActionFactory.BROADCAST_ACTION).apply { this.isInitial = isInitial },
+            PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_CANCEL_CURRENT,
+        )
     return ChooserAction.Builder(
-        Icon.createWithResource(context, R.drawable.testicon),
-        buildString {
-            append("Modify Share")
-            if (!isInitial) {
-                append(" (items: $count)")
-            }
-        },
-        pendingIntent
-    ).build()
+            Icon.createWithResource(context, R.drawable.testicon),
+            buildString {
+                append("Modify Share")
+                if (!isInitial) {
+                    append(" (items: $count)")
+                }
+            },
+            pendingIntent,
+        )
+        .build()
 }
 
 val Intent.extraStream: List<Uri>
     get() = buildList {
         when (action) {
-            Intent.ACTION_SEND -> getParcelableExtra(
-                Intent.EXTRA_STREAM,
-                Uri::class.java
-            )?.let { add(it) }
+            Intent.ACTION_SEND ->
+                getParcelableExtra(Intent.EXTRA_STREAM, Uri::class.java)?.let { add(it) }
 
-            Intent.ACTION_SEND_MULTIPLE -> getParcelableArrayListExtra(
-                Intent.EXTRA_STREAM,
-                Uri::class.java
-            )?.let { uris ->
-                for (uri in uris) {
-                    if (uri != null) {
-                        add(uri)
+            Intent.ACTION_SEND_MULTIPLE ->
+                getParcelableArrayListExtra(Intent.EXTRA_STREAM, Uri::class.java)?.let { uris ->
+                    for (uri in uris) {
+                        if (uri != null) {
+                            add(uri)
+                        }
                     }
                 }
-            }
         }
     }
 
@@ -131,18 +122,22 @@ fun createCallerTarget(context: Context, text: String) =
         Icon.createWithResource(context, R.drawable.launcher_icon),
         1f,
         ComponentName(context, CallerDirectTargetActivity::class.java),
-        bundleOf(Intent.EXTRA_TEXT to text)
+        bundleOf(Intent.EXTRA_TEXT to text),
     )
 
 fun createRefinementIntentSender(context: Context, isInitial: Boolean) =
     PendingIntent.getBroadcast(
-        context,
-        1,
-        Intent(REFINEMENT_ACTION).apply {
-            setPackage(context.packageName)
-            this.isInitial = isInitial
-        },
-        PendingIntent.FLAG_MUTABLE or PendingIntent.FLAG_CANCEL_CURRENT or
-            PendingIntent.FLAG_CANCEL_CURRENT
+            context,
+            1,
+            Intent(REFINEMENT_ACTION).apply {
+                setPackage(context.packageName)
+                this.isInitial = isInitial
+            },
+            PendingIntent.FLAG_MUTABLE or
+                PendingIntent.FLAG_CANCEL_CURRENT or
+                PendingIntent.FLAG_CANCEL_CURRENT,
+        )
+        .intentSender
 
-    ).intentSender
+val Any.hashId: String
+    get() = System.identityHashCode(this).toString(Character.MAX_RADIX)
