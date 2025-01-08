@@ -26,6 +26,7 @@ import {CustomQueryType} from 'trace/custom_query';
 import {Trace} from 'trace/trace';
 import {Traces} from 'trace/traces';
 import {TraceEntryFinder} from 'trace/trace_entry_finder';
+import {TRACE_INFO} from 'trace/trace_info';
 import {TraceType} from 'trace/trace_type';
 import {
   EMPTY_OBJ_STRING,
@@ -53,6 +54,7 @@ import {RectsPresenter} from 'viewers/common/rects_presenter';
 import {TextFilter} from 'viewers/common/text_filter';
 import {UiHierarchyTreeNode} from 'viewers/common/ui_hierarchy_tree_node';
 import {UI_RECT_FACTORY} from 'viewers/common/ui_rect_factory';
+import {RectType, UiRectType} from 'viewers/common/ui_rect_type';
 import {UserOptions} from 'viewers/common/user_options';
 import {ViewerEvents} from 'viewers/common/viewer_events';
 import {UiRect} from 'viewers/components/rects/ui_rect';
@@ -114,8 +116,12 @@ export class Presenter extends AbstractHierarchyViewerPresenter<UiData> {
       },
       this.storage,
     ),
-    (tree: HierarchyTreeNode) =>
-      UI_RECT_FACTORY.makeUiRects(tree, this.viewCapturePackageNames),
+    (tree: HierarchyTreeNode) => {
+      if (this.rectTypes[this.rectTypeIndex].type === RectType.LAYERS) {
+        return UI_RECT_FACTORY.makeUiRects(tree, this.viewCapturePackageNames);
+      }
+      return UI_RECT_FACTORY.makeInputRects(tree, (id) => false);
+    },
     (displays: UiRect[]) =>
       makeDisplayIdentifiers(displays, this.wmFocusedDisplayId),
     convertRectIdToLayerorDisplayName,
@@ -150,6 +156,14 @@ the default for its data type.`,
   private curatedProperties: SfCuratedProperties | undefined;
   private wmTrace: Trace<HierarchyTreeNode> | undefined;
   private wmFocusedDisplayId: number | undefined;
+  private rectTypes: UiRectType[] = [
+    {type: RectType.LAYERS, icon: TRACE_INFO[TraceType.SURFACE_FLINGER].icon},
+    {
+      type: RectType.INPUT_WINDOWS,
+      icon: TRACE_INFO[TraceType.INPUT_EVENT_MERGED].icon,
+    },
+  ];
+  private rectTypeIndex = 0;
 
   constructor(
     trace: Trace<HierarchyTreeNode>,
@@ -189,6 +203,19 @@ the default for its data type.`,
     this.refreshUIData();
   }
 
+  onUiRectTypeButtonClicked() {
+    this.rectTypeIndex =
+      this.rectTypeIndex < this.rectTypes.length - 1
+        ? this.rectTypeIndex + 1
+        : 0;
+    const currentHierarchyTrees =
+      this.hierarchyPresenter.getAllCurrentHierarchyTrees();
+    if (currentHierarchyTrees) {
+      this.rectsPresenter?.applyHierarchyTreesChange(currentHierarchyTrees);
+    }
+    this.refreshUIData();
+  }
+
   protected override getOverrideDisplayName(
     selected: SelectedTree,
   ): string | undefined {
@@ -223,6 +250,7 @@ the default for its data type.`,
 
   protected override refreshUIData() {
     this.uiData.curatedProperties = this.curatedProperties;
+    this.uiData.rectType = this.rectTypes[this.rectTypeIndex];
     this.refreshHierarchyViewerUiData();
   }
 
@@ -230,6 +258,9 @@ the default for its data type.`,
     htmlElement.addEventListener(ViewerEvents.RectsDblClick, async (event) => {
       const rectId = (event as CustomEvent).detail.clickedRectId;
       await this.onRectDoubleClick(rectId);
+    });
+    htmlElement.addEventListener(ViewerEvents.RectTypeButtonClick, (event) => {
+      this.onUiRectTypeButtonClicked();
     });
   }
 

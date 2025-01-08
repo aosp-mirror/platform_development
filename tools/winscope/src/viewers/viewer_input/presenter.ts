@@ -126,7 +126,7 @@ export class Presenter extends AbstractLogViewerPresenter<
     ),
     (tree: HierarchyTreeNode) =>
       UI_RECT_FACTORY.makeInputRects(tree, (id) =>
-        this.currentTargetWindowIds.has(id),
+        this.currentTargetWindowIds.has(id.split(' ')[0]),
       ),
     makeDisplayIdentifiers,
     convertRectIdToLayerorDisplayName,

@@ -689,7 +689,7 @@ describe('SurfaceFlinger RectsComputation', () => {
         },
         {
           id: 3,
-          name: 'wallpaper',
+          name: 'layer3',
           properties: {
             id: 3,
             name: 'layer3',
@@ -863,7 +863,7 @@ describe('SurfaceFlinger RectsComputation', () => {
         .setY(0)
         .setWidth(1)
         .setHeight(1)
-        .setId('1')
+        .setId('1 layer1')
         .setName('layer1')
         .setCornerRadius(0)
         .setTransform(Transform.EMPTY.matrix)
@@ -879,7 +879,7 @@ describe('SurfaceFlinger RectsComputation', () => {
         .setY(0)
         .setWidth(2)
         .setHeight(2)
-        .setId('2')
+        .setId('2 layer2')
         .setName('layer2')
         .setCornerRadius(0)
         .setTransform(Transform.EMPTY.matrix)
@@ -896,7 +896,7 @@ describe('SurfaceFlinger RectsComputation', () => {
         .setY(0)
         .setWidth(5)
         .setHeight(5)
-        .setId('3')
+        .setId('3 layer3')
         .setName('layer3')
         .setCornerRadius(0)
         .setTransform(Transform.EMPTY.matrix)
@@ -912,7 +912,7 @@ describe('SurfaceFlinger RectsComputation', () => {
         .setY(0)
         .setWidth(5)
         .setHeight(5)
-        .setId('4')
+        .setId('4 layerRelativeZ')
         .setName('layerRelativeZ')
         .setCornerRadius(0)
         .setTransform(Transform.EMPTY.matrix)
@@ -928,7 +928,7 @@ describe('SurfaceFlinger RectsComputation', () => {
         .setY(0)
         .setWidth(5)
         .setHeight(5)
-        .setId('6')
+        .setId('6 notTouchableLayer')
         .setName('notTouchableLayer')
         .setCornerRadius(0)
         .setTransform(Transform.EMPTY.matrix)
@@ -945,7 +945,7 @@ describe('SurfaceFlinger RectsComputation', () => {
         .setY(0)
         .setWidth(5)
         .setHeight(5)
-        .setId('7')
+        .setId('7 touchableLayer')
         .setName('touchableLayer')
         .setCornerRadius(0)
         .setTransform(Transform.EMPTY.matrix)
@@ -962,7 +962,7 @@ describe('SurfaceFlinger RectsComputation', () => {
         .setY(0)
         .setWidth(5)
         .setHeight(5)
-        .setId('8')
+        .setId('8 touchableLayer')
         .setName('touchableLayer')
         .setCornerRadius(0)
         .setTransform(Transform.EMPTY.matrix)
@@ -979,7 +979,7 @@ describe('SurfaceFlinger RectsComputation', () => {
         .setY(0)
         .setWidth(0)
         .setHeight(0)
-        .setId('9')
+        .setId('9 touchableLayerWithNoFrame')
         .setName('touchableLayerWithNoFrame')
         .setCornerRadius(0)
         .setTransform(Transform.EMPTY.matrix)

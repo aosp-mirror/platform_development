@@ -22,6 +22,7 @@ import {TextFilter} from 'viewers/common/text_filter';
 import {UiDataHierarchy} from 'viewers/common/ui_data_hierarchy';
 import {UiHierarchyTreeNode} from 'viewers/common/ui_hierarchy_tree_node';
 import {UiPropertyTreeNode} from 'viewers/common/ui_property_tree_node';
+import {UiRectType} from 'viewers/common/ui_rect_type';
 import {UserOptions} from 'viewers/common/user_options';
 import {UiRect} from 'viewers/components/rects/ui_rect';
 
@@ -41,6 +42,7 @@ export class UiData implements UiDataHierarchy {
   hierarchyTrees: UiHierarchyTreeNode[] | undefined;
   propertiesTree: UiPropertyTreeNode | undefined;
   isDarkMode = false;
+  rectType: UiRectType | undefined;
 
   constructor(
     public curatedProperties: SfCuratedProperties | undefined = undefined,
