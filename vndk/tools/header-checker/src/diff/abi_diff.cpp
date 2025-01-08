@@ -333,14 +333,12 @@ bool HeaderAbiDiff::DumpLoneElements(
       continue;
     }
 
-    // If an element (FunctionIR or GlobalVarIR) is missing from the new ABI
-    // dump but a corresponding ELF symbol (ElfFunctionIR or ElfObjectIR) can
-    // be found in the new ABI dump file, don't emit error on this element.
-    // This may happen when the standard reference target implements the
-    // function (or the global variable) in C/C++ and the target-under-test
-    // implements the function (or the global variable) in assembly.
+    // If this FunctionIR/GlobalVarIR is missing from the new ABI dump but a
+    // corresponding ElfFunctionIR/ElfObjectIR can be found in the new ABI dump,
+    // don't emit error on this element.
     const std::string &element_linker_set_key = element->GetLinkerSetKey();
-    if (new_elf_map &&
+    if (diff_policy_options_.allow_adding_removing_referenced_apis &&
+        new_elf_map &&
         new_elf_map->find(element_linker_set_key) != new_elf_map->end()) {
       continue;
     }
