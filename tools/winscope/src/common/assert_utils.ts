@@ -14,9 +14,16 @@
  * limitations under the License.
  */
 
-export function assertDefined<A>(value: A | null | undefined): A {
+export function assertDefined<A>(
+  value: A | null | undefined,
+  lazyErrorMessage?: () => string,
+): A {
   if (value === undefined || value === null) {
-    throw new Error(`Expected value, but found '${value}'`);
+    throw new Error(
+      lazyErrorMessage
+        ? lazyErrorMessage()
+        : `Expected value, but found '${value}'`,
+    );
   }
   return value;
 }

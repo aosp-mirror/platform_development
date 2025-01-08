@@ -21,17 +21,21 @@ import {TraceType} from 'trace/trace_type';
 
 /* eslint-disable no-undef */
 export class Analytics {
-  private static GLOBAL_EXCEPTION = 'global_exception';
+  private static BUGANIZER_OPENED = 'buganizer_opened';
   private static CROSS_TOOL_SYNC = 'cross_tool_sync';
   private static DARK_MODE_ENABLED = 'dark_mode_enabled';
   private static DOCUMENTATION_OPENED = 'documentation_opened';
-  private static BUGANIZER_OPENED = 'buganizer_opened';
   private static EXPANDED_TIMELINE_OPENED = 'expanded_timeline_opened';
+  private static GLOBAL_EXCEPTION = 'global_exception';
   private static HIERARCHY_SETTINGS = 'hierarchy_settings';
   private static NAVIGATION_ZOOM_EVENT = 'navigation_zoom';
   private static PROPERTIES_SETTINGS = 'properties_settings';
+  private static PROXY_ERROR = 'proxy_error';
+  private static PROXY_SERVER_NOT_FOUND = 'proxy_server_not_found';
+  private static PROXY_NO_FILES_FOUND = 'proxy_no_files_found';
   private static RECT_SETTINGS = 'rect_settings';
   private static REFRESH_DUMPS = 'refresh_dumps';
+  private static TIME_BOOKMARK = 'time_bookmark';
   private static TIME_COPIED = 'time_copied';
   private static TIME_INPUT = 'time_input';
   private static TRACE_TAB_SWITCHED = 'trace_tab_switched';
@@ -48,6 +52,11 @@ export class Analytics {
         description,
       } as Gtag.CustomParams);
     }
+    static logProxyError(description: string) {
+      Analytics.doLogEvent(Analytics.PROXY_ERROR, {
+        description,
+      } as Gtag.CustomParams);
+    }
   };
 
   static Help = class {
@@ -57,17 +66,6 @@ export class Analytics {
 
     static logBuganizerOpened() {
       Analytics.doLogEvent(Analytics.BUGANIZER_OPENED);
-    }
-  };
-
-  static Settings = class {
-    static logDarkModeEnabled() {
-      Analytics.doLogEvent(Analytics.DARK_MODE_ENABLED);
-    }
-    static logCrossToolSync(value: boolean) {
-      Analytics.doLogEvent(Analytics.CROSS_TOOL_SYNC, {
-        value,
-      } as Gtag.CustomParams);
     }
   };
 
@@ -130,6 +128,10 @@ export class Analytics {
       } as Gtag.CustomParams);
     }
 
+    static logTimeBookmark() {
+      Analytics.doLogEvent(Analytics.TIME_BOOKMARK);
+    }
+
     static logTraceTimelineDeselected(type: string) {
       Analytics.doLogEvent(Analytics.TRACE_TIMELINE_DESELECTED, {
         type,
@@ -137,7 +139,7 @@ export class Analytics {
     }
 
     static logZoom(
-      type: 'scroll' | 'button' | 'reset',
+      type: 'scroll' | 'button' | 'reset' | 'key',
       component: 'rects' | 'timeline',
       direction?: 'in' | 'out',
     ) {
@@ -145,6 +147,27 @@ export class Analytics {
         direction,
         component,
         type,
+      } as Gtag.CustomParams);
+    }
+  };
+
+  static Proxy = class {
+    static logServerNotFound() {
+      Analytics.doLogEvent(Analytics.PROXY_SERVER_NOT_FOUND);
+    }
+
+    static logNoFilesFound() {
+      Analytics.doLogEvent(Analytics.PROXY_NO_FILES_FOUND);
+    }
+  };
+
+  static Settings = class {
+    static logDarkModeEnabled() {
+      Analytics.doLogEvent(Analytics.DARK_MODE_ENABLED);
+    }
+    static logCrossToolSync(value: boolean) {
+      Analytics.doLogEvent(Analytics.CROSS_TOOL_SYNC, {
+        value,
       } as Gtag.CustomParams);
     }
   };
@@ -183,9 +206,10 @@ export class Analytics {
   };
 
   static UserNotification = class {
-    static logUserWarning(description: string) {
+    static logUserWarning(description: string, message: string) {
       Analytics.doLogEvent(Analytics.USER_WARNING, {
         description,
+        message,
       } as Gtag.CustomParams);
     }
   };

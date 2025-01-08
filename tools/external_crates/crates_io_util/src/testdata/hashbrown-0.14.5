@@ -1,0 +1,178 @@
+{
+  "name": "hashbrown",
+  "vers": "0.14.5",
+  "deps": [
+    {
+      "name": "ahash",
+      "req": "^0.8.7",
+      "features": [],
+      "kind": "normal",
+      "optional": true,
+      "default_features": false
+    },
+    {
+      "name": "alloc",
+      "req": "^1.0.0",
+      "features": [],
+      "package": "rustc-std-workspace-alloc",
+      "kind": "normal",
+      "optional": true,
+      "default_features": true
+    },
+    {
+      "name": "allocator-api2",
+      "req": "^0.2.9",
+      "features": [
+        "alloc"
+      ],
+      "kind": "normal",
+      "optional": true,
+      "default_features": false
+    },
+    {
+      "name": "bumpalo",
+      "req": "^3.13.0",
+      "features": [
+        "allocator-api2"
+      ],
+      "kind": "dev",
+      "optional": false,
+      "default_features": true
+    },
+    {
+      "name": "compiler_builtins",
+      "req": "^0.1.2",
+      "features": [],
+      "kind": "normal",
+      "optional": true,
+      "default_features": true
+    },
+    {
+      "name": "core",
+      "req": "^1.0.0",
+      "features": [],
+      "package": "rustc-std-workspace-core",
+      "kind": "normal",
+      "optional": true,
+      "default_features": true
+    },
+    {
+      "name": "doc-comment",
+      "req": "^0.3.1",
+      "features": [],
+      "kind": "dev",
+      "optional": false,
+      "default_features": true
+    },
+    {
+      "name": "equivalent",
+      "req": "^1.0",
+      "features": [],
+      "kind": "normal",
+      "optional": true,
+      "default_features": false
+    },
+    {
+      "name": "fnv",
+      "req": "^1.0.7",
+      "features": [],
+      "kind": "dev",
+      "optional": false,
+      "default_features": true
+    },
+    {
+      "name": "lazy_static",
+      "req": "^1.4",
+      "features": [],
+      "kind": "dev",
+      "optional": false,
+      "default_features": true
+    },
+    {
+      "name": "rand",
+      "req": "^0.8.3",
+      "features": [
+        "small_rng"
+      ],
+      "kind": "dev",
+      "optional": false,
+      "default_features": true
+    },
+    {
+      "name": "rayon",
+      "req": "^1.0",
+      "features": [],
+      "kind": "normal",
+      "optional": true,
+      "default_features": true
+    },
+    {
+      "name": "rayon",
+      "req": "^1.0",
+      "features": [],
+      "kind": "dev",
+      "optional": false,
+      "default_features": true
+    },
+    {
+      "name": "rkyv",
+      "req": "^0.7.42",
+      "features": [
+        "alloc"
+      ],
+      "kind": "normal",
+      "optional": true,
+      "default_features": false
+    },
+    {
+      "name": "rkyv",
+      "req": "^0.7.42",
+      "features": [
+        "validation"
+      ],
+      "kind": "dev",
+      "optional": false,
+      "default_features": true
+    },
+    {
+      "name": "serde",
+      "req": "^1.0.25",
+      "features": [],
+      "kind": "normal",
+      "optional": true,
+      "default_features": false
+    },
+    {
+      "name": "serde_test",
+      "req": "^1.0",
+      "features": [],
+      "kind": "dev",
+      "optional": false,
+      "default_features": true
+    }
+  ],
+  "features": {
+    "inline-more": [],
+    "raw": [],
+    "rustc-internal-api": [],
+    "default": [
+      "ahash",
+      "inline-more",
+      "allocator-api2"
+    ],
+    "rustc-dep-of-std": [
+      "nightly",
+      "core",
+      "compiler_builtins",
+      "alloc",
+      "rustc-internal-api"
+    ],
+    "nightly": [
+      "allocator-api2?/nightly",
+      "bumpalo/allocator_api"
+    ]
+  },
+  "rust_version": "1.63.0",
+  "cksum": "e5274423e17b7c9fc20b6e7e208532f9b19825d82dfd615708b70edd83df41f1",
+  "yanked": false
+}

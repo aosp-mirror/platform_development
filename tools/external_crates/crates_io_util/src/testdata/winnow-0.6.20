@@ -1,0 +1,166 @@
+{
+  "name": "winnow",
+  "vers": "0.6.20",
+  "deps": [
+    {
+      "name": "annotate-snippets",
+      "req": "^0.11.3",
+      "features": [],
+      "kind": "dev",
+      "optional": false,
+      "default_features": true
+    },
+    {
+      "name": "anstream",
+      "req": "^0.3.2",
+      "features": [],
+      "kind": "normal",
+      "optional": true,
+      "default_features": true
+    },
+    {
+      "name": "anstyle",
+      "req": "^1.0.1",
+      "features": [],
+      "kind": "normal",
+      "optional": true,
+      "default_features": true
+    },
+    {
+      "name": "anyhow",
+      "req": "^1.0.86",
+      "features": [],
+      "kind": "dev",
+      "optional": false,
+      "default_features": true
+    },
+    {
+      "name": "automod",
+      "req": "^1.0.14",
+      "features": [],
+      "kind": "dev",
+      "optional": false,
+      "default_features": true
+    },
+    {
+      "name": "circular",
+      "req": "^0.3.0",
+      "features": [],
+      "kind": "dev",
+      "optional": false,
+      "default_features": true
+    },
+    {
+      "name": "criterion",
+      "req": "^0.5.1",
+      "features": [],
+      "kind": "dev",
+      "optional": false,
+      "default_features": true
+    },
+    {
+      "name": "doc-comment",
+      "req": "^0.3",
+      "features": [],
+      "kind": "dev",
+      "optional": false,
+      "default_features": true
+    },
+    {
+      "name": "is-terminal",
+      "req": "^0.4.9",
+      "features": [],
+      "kind": "normal",
+      "optional": true,
+      "default_features": true
+    },
+    {
+      "name": "lexopt",
+      "req": "^0.3.0",
+      "features": [],
+      "kind": "dev",
+      "optional": false,
+      "default_features": true
+    },
+    {
+      "name": "memchr",
+      "req": "^2.5",
+      "features": [],
+      "kind": "normal",
+      "optional": true,
+      "default_features": false
+    },
+    {
+      "name": "proptest",
+      "req": "^1.2.0",
+      "features": [],
+      "kind": "dev",
+      "optional": false,
+      "default_features": true
+    },
+    {
+      "name": "rustc-hash",
+      "req": "^1.1.0",
+      "features": [],
+      "kind": "dev",
+      "optional": false,
+      "default_features": true
+    },
+    {
+      "name": "snapbox",
+      "req": "^0.6.0",
+      "features": [
+        "examples"
+      ],
+      "kind": "dev",
+      "optional": false,
+      "default_features": true
+    },
+    {
+      "name": "term-transcript",
+      "req": "^0.2.0",
+      "features": [],
+      "kind": "dev",
+      "optional": false,
+      "default_features": true
+    },
+    {
+      "name": "terminal_size",
+      "req": "^0.4.0",
+      "features": [],
+      "kind": "normal",
+      "optional": true,
+      "default_features": true
+    }
+  ],
+  "features": {
+    "unstable-recover": [],
+    "unstable-doc": [
+      "alloc",
+      "std",
+      "simd",
+      "unstable-recover"
+    ],
+    "simd": [
+      "dep:memchr"
+    ],
+    "debug": [
+      "std",
+      "dep:anstream",
+      "dep:anstyle",
+      "dep:is-terminal",
+      "dep:terminal_size"
+    ],
+    "alloc": [],
+    "default": [
+      "std"
+    ],
+    "std": [
+      "alloc",
+      "memchr?/std"
+    ]
+  },
+  "rust_version": "1.65.0",
+  "cksum": "36c1fec1a2bb5866f07c25f68c26e565c4c200aebb96d7e55710c19d3e8ac49b",
+  "yanked": false
+}

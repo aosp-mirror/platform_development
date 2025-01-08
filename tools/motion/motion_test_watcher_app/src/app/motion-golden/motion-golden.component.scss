@@ -1,48 +1,74 @@
 :host {
-  display: flex;
-  flex: 0 0 100%;
-  flex-direction: column;
-}
-
-.wrapper {
-  position: relative;
-  margin: 16px;
-  padding: 16px;
+  padding: 24px;
   display: flex;
   flex-direction: column;
-
-  border-radius: 12px;
-  border: 1px solid #c4c6d0;
 }
 
-.label {
-  position: absolute;
-  top: -12px;
-  padding: 0 16px;
-  background: var(--mat-app-background-color);
+.golden-card {
+  mat-card-title {
+    margin: 16px;
+  }
 }
 
-img.screenshot {
-  width: fit-content;
+.golden-content {
+  display: flex;
+  flex-direction: row;
+
+  app-timeline-view {
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1;
+  }
 }
 
-.screenshot-container {
-  width: fit-content;
-
-  border-radius: 8px;
-  background-color: black;
-  padding: 12px;
+.overlay {
+  z-index: 30;
+  position: fixed;
+  top: 0px;
+  left: 0px;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
 }
-img.screenshot {
-  width: fit-content;
-  background-image: linear-gradient(45deg, #808080 25%, transparent 25%),
-    linear-gradient(-45deg, #808080 25%, transparent 25%),
-    linear-gradient(45deg, transparent 75%, #808080 75%),
-    linear-gradient(-45deg, transparent 75%, #808080 75%);
-  background-size: 20px 20px;
-  background-position:
-    0 0,
-    0 10px,
-    10px -10px,
-    -10px 0px;
+
+.video-card {
+  pointer-events: all;
+  width: max(250px, 15vw);
+  min-width: 165px;
+  resize: both;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  padding: 0;
+  right: -50px;
+  top: 20vh;
+}
+
+.header {
+  display: flex;
+  flex-direction: row;
+  margin: 0px;
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+}
+.button-drag {
+  flex-grow: 1;
+  cursor: grab;
+  padding: 2px;
+}
+
+.drag-icon {
+  float: left;
+  margin: 5px 0;
+}
+
+.video-container,
+app-video-view {
+  border: 1px solid var(--default-border);
+  width: 100%;
+  height: auto;
+  cursor: grab;
+  overflow: hidden;
+  min-width: 100px;
+  min-height: 100px;
 }

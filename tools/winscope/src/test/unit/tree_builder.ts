@@ -31,10 +31,10 @@ export abstract class TreeBuilder<T, U> {
 
   build(): T {
     if (this.id === undefined) {
-      throw Error('id not set');
+      throw new Error('id not set');
     }
     if (this.name === undefined) {
-      throw Error('name not set');
+      throw new Error('name not set');
     }
 
     const rootNode = this.makeRootNode();

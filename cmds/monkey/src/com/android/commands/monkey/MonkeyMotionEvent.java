@@ -58,7 +58,7 @@ public abstract class MonkeyMotionEvent extends MonkeyEvent {
     }
 
     public MonkeyMotionEvent addPointer(int id, float x, float y) {
-        return addPointer(id, x, y, 0, 0);
+        return addPointer(id, x, y, 1 /*pressure*/, 5 /*size*/);
     }
 
     public MonkeyMotionEvent addPointer(int id, float x, float y,
@@ -144,6 +144,10 @@ public abstract class MonkeyMotionEvent extends MonkeyEvent {
                 mAction, pointerCount, pointerProperties, pointerCoords,
                 mMetaState, 0 /*buttonState*/, mXPrecision, mYPrecision, mDeviceId, mEdgeFlags,
                 mSource, mDisplayId, 0 /*flags*/);
+    }
+
+    public MotionEvent getMotionEventForInjection() {
+        return getEvent();
     }
 
     @Override

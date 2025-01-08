@@ -14,17 +14,19 @@
  * limitations under the License.
  */
 
+import {Store} from 'common/store';
 import {WinscopeEvent} from 'messaging/winscope_event';
 import {EmitEvent} from 'messaging/winscope_event_emitter';
 import {Trace} from 'trace/trace';
 import {Traces} from 'trace/traces';
+import {TRACE_INFO} from 'trace/trace_info';
 import {TraceType} from 'trace/trace_type';
 import {HierarchyTreeNode} from 'trace/tree_node/hierarchy_tree_node';
-import {NotifyHierarchyViewCallbackType} from 'viewers/common/abstract_hierarchy_viewer_presenter';
 import {ViewerEvents} from 'viewers/common/viewer_events';
 import {View, Viewer, ViewType} from 'viewers/viewer';
 import {Presenter} from './presenter';
 import {UiData} from './ui_data';
+import {ViewerSurfaceFlingerComponent} from './viewer_surface_flinger_component';
 
 export class ViewerSurfaceFlinger implements Viewer {
   static readonly DEPENDENCIES: TraceType[] = [TraceType.SURFACE_FLINGER];
@@ -34,23 +36,15 @@ export class ViewerSurfaceFlinger implements Viewer {
   private readonly presenter: Presenter;
   private readonly view: View;
 
-  constructor(
-    trace: Trace<HierarchyTreeNode>,
-    traces: Traces,
-    storage: Storage,
-  ) {
+  constructor(trace: Trace<HierarchyTreeNode>, traces: Traces, storage: Store) {
     this.trace = trace;
     this.htmlElement = document.createElement('viewer-surface-flinger');
 
     const notifyViewCallback = (uiData: UiData) => {
-      (this.htmlElement as any).inputData = uiData;
+      (this.htmlElement as unknown as ViewerSurfaceFlingerComponent).inputData =
+        uiData;
     };
-    this.presenter = new Presenter(
-      trace,
-      traces,
-      storage,
-      notifyViewCallback as NotifyHierarchyViewCallbackType,
-    );
+    this.presenter = new Presenter(trace, traces, storage, notifyViewCallback);
     this.presenter.addEventListeners(this.htmlElement);
 
     this.htmlElement.addEventListener(
@@ -65,7 +59,7 @@ export class ViewerSurfaceFlinger implements Viewer {
       ViewType.TAB,
       this.getTraces(),
       this.htmlElement,
-      'Surface Flinger',
+      TRACE_INFO[TraceType.SURFACE_FLINGER].name,
     );
   }
 
