@@ -33,7 +33,6 @@ export class ParserTransitions extends AbstractParser<PropertyTreeNode> {
       CREATE PERFETTO TABLE ${this.getTableName()} AS
       SELECT
         STATE.id as id,
-        STATE.type,
         CASE
           WHEN (STATE.ts = 0 AND TRANS.int_value IS NOT NULL) THEN TRANS.int_value
           ELSE STATE.ts END

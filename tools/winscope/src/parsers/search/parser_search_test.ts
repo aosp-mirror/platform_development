@@ -86,8 +86,7 @@ describe('ParserSearch', () => {
       const firstRow = entry.iter({});
       expect(firstRow.get('id')).toEqual(0n);
       expect(firstRow.get('ts')).toEqual(14500282843n);
-      expect(firstRow.get('type')).toEqual('surfaceflinger_layers_snapshot');
-      expect(firstRow.get('arg_set_id')).toEqual(176n);
+      expect(firstRow.get('arg_set_id')).toEqual(6193n);
     });
   });
 
@@ -116,8 +115,7 @@ describe('ParserSearch', () => {
       expect(entry.numRows()).toEqual(1815);
       const firstRow = entry.iter({});
       expect(firstRow.get('id')).toEqual(0n);
-      expect(firstRow.get('type')).toEqual('surfaceflinger_layer');
-      expect(firstRow.get('arg_set_id')).toEqual(1n);
+      expect(firstRow.get('arg_set_id')).toEqual(0n);
       expect(firstRow.get('snapshot_id')).toEqual(0n);
     });
   });
@@ -145,7 +143,6 @@ describe('ParserSearch', () => {
       const entry = await parser.getEntry(0);
       expect(entry.columns()).toEqual([
         'id',
-        'type',
         'ts',
         'arg_set_id',
         'base64_proto',
