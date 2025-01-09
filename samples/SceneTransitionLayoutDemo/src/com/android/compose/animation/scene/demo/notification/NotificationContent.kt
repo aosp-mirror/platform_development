@@ -63,7 +63,7 @@ object NotificationContent {
     }
 
     fun transitions(springConfiguration: SpringConfiguration) = transitions {
-        defaultSwipeSpec =
+        defaultMotionSpatialSpec =
             spring(
                 stiffness = springConfiguration.stiffness,
                 dampingRatio = springConfiguration.dampingRatio,
