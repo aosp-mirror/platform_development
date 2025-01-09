@@ -30,6 +30,10 @@ import {ColorType} from './color_type';
 import {RectLabel} from './rect_label';
 import {UiRect3D} from './ui_rect3d';
 
+export function colorToCss(color: THREE.Color): string {
+  return '#' + color.getHexString();
+}
+
 export class Canvas {
   static readonly TARGET_SCENE_DIAGONAL = 4;
   static readonly RECT_COLOR_HIGHLIGHTED_LIGHT_MODE = new THREE.Color(
@@ -38,12 +42,22 @@ export class Canvas {
   static readonly RECT_COLOR_HIGHLIGHTED_DARK_MODE = new THREE.Color(
     0x5f718a, // Keep in sync with .dark-mode --selected-element-color in material-theme.scss
   );
+  static readonly RECT_COLOR_VISIBLE = new THREE.Color(
+    200 / 255,
+    232 / 255,
+    183 / 255,
+  );
+  static readonly RECT_COLOR_NOT_VISIBLE = new THREE.Color(
+    220 / 255,
+    220 / 255,
+    220 / 255,
+  );
   static readonly RECT_COLOR_HAS_CONTENT = new THREE.Color(0xad42f5);
   static readonly RECT_EDGE_COLOR_LIGHT_MODE = 0x000000;
   static readonly RECT_EDGE_COLOR_DARK_MODE = 0xffffff;
   static readonly RECT_EDGE_COLOR_ROUNDED = 0x848884;
-  static readonly RECT_EDGE_COLOR_PINNED = 0xffc24b; // Keep in sync with Color#PINNED_ITEM_BORDER
-  static readonly RECT_EDGE_COLOR_PINNED_ALT = 0xb34a24;
+  static readonly RECT_EDGE_COLOR_PINNED = new THREE.Color(0xffc24b); // Keep in sync with Color#PINNED_ITEM_BORDER
+  static readonly RECT_EDGE_COLOR_PINNED_ALT = new THREE.Color(0xb34a24);
   static readonly LABEL_LINE_COLOR = 0x808080;
   static readonly OPACITY_REGULAR = 0.75;
   static readonly OPACITY_OVERSIZED = 0.25;
@@ -76,7 +90,7 @@ export class Canvas {
     100,
   );
   private scene = new THREE.Scene();
-  private pinnedIdToColorMap = new Map<string, number>();
+  private pinnedIdToColorMap = new Map<string, THREE.Color>();
   private lastAssignedDefaultPinnedColor = false;
   private firstDraw = true;
   private lastScene: SceneState = {
@@ -319,13 +333,6 @@ export class Canvas {
       .lineTo(topLeft.x, topLeft.y);
   }
 
-  private getVisibleRectColor(darkFactor: number) {
-    const red = ((200 - 45) * darkFactor + 45) / 255;
-    const green = ((232 - 182) * darkFactor + 182) / 255;
-    const blue = ((183 - 44) * darkFactor + 44) / 255;
-    return new THREE.Color(red, green, blue);
-  }
-
   private getColor(rect: UiRect3D): THREE.Color | undefined {
     switch (rect.colorType) {
       case ColorType.VISIBLE: {
@@ -338,10 +345,13 @@ export class Canvas {
       }
       case ColorType.NOT_VISIBLE: {
         // gray (darkness depends on z order)
-        const lower = 120;
-        const upper = 220;
-        const darkness = ((upper - lower) * rect.darkFactor + lower) / 255;
-        return new THREE.Color(darkness, darkness, darkness);
+        return Canvas.RECT_COLOR_NOT_VISIBLE.clone().multiplyScalar(
+          this.getColorScalingValue(
+            120,
+            Canvas.RECT_COLOR_NOT_VISIBLE.r,
+            rect.darkFactor,
+          ),
+        );
       }
       case ColorType.HIGHLIGHTED: {
         return this.isDarkMode()
@@ -361,6 +371,19 @@ export class Canvas {
         assertUnreachable(rect.colorType);
       }
     }
+  }
+
+  private getVisibleRectColor(darkFactor: number) {
+    const color = Canvas.RECT_COLOR_VISIBLE.clone();
+    color.r *= this.getColorScalingValue(45, color.r, darkFactor);
+    color.g *= this.getColorScalingValue(182, color.g, darkFactor);
+    color.b *= this.getColorScalingValue(44, color.b, darkFactor);
+    return color;
+  }
+
+  private getColorScalingValue(l: number, u: number, darkFactor: number) {
+    const scale = l / u / 255;
+    return darkFactor * (1 - scale) + scale;
   }
 
   private makeRectBorders(

@@ -522,14 +522,14 @@ describe('Canvas', () => {
       expect(material.opacity).toEqual(opacity);
     }
 
-    function checkBorderColor(id: string, color: number) {
+    function checkBorderColor(id: string, color: THREE.Color | number) {
       const rectMesh = getRectMesh(id);
-
       const borderMesh = assertDefined(
         rectMesh.getObjectByName(id + Canvas.GRAPHICS_NAMES.border),
       ) as THREE.Mesh;
+      const meshColor = (borderMesh.material as THREE.LineBasicMaterial).color;
       expect(
-        (borderMesh.material as THREE.LineBasicMaterial).color.getHex(),
+        color instanceof THREE.Color ? meshColor : meshColor.getHex(),
       ).toEqual(color);
     }
 
