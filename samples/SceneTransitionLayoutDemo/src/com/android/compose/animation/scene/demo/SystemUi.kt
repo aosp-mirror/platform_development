@@ -14,17 +14,17 @@
  * limitations under the License.
  */
 
+@file:OptIn(ExperimentalMaterial3ExpressiveApi::class)
+
 package com.android.compose.animation.scene.demo
 
 import android.content.Context
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.OverscrollEffect
-import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
@@ -48,17 +48,18 @@ import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Videocam
 import androidx.compose.material.icons.filled.ZoomOutMap
 import androidx.compose.material3.Button
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.MotionScheme
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.windowsizeclass.ExperimentalMaterial3WindowSizeClassApi
 import androidx.compose.material3.windowsizeclass.WindowHeightSizeClass
 import androidx.compose.material3.windowsizeclass.WindowSizeClass
 import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
@@ -172,6 +173,7 @@ class MutableSceneTransitionLayoutSaver(
     private val sceneSaver: Scenes.SceneSaver,
     private val transitions: SceneTransitions,
     private val canChangeScene: (SceneKey) -> Boolean,
+    private val motionScheme: MotionScheme,
 ) : Saver<MutableSceneTransitionLayoutState, String> {
     override fun SaverScope.save(state: MutableSceneTransitionLayoutState): String {
         val currentScene = state.transitionState.currentScene
@@ -181,8 +183,9 @@ class MutableSceneTransitionLayoutSaver(
     override fun restore(value: String): MutableSceneTransitionLayoutState {
         val currentScene = sceneSaver.restore(value)
         return MutableSceneTransitionLayoutState(
-            currentScene,
-            transitions,
+            initialScene = currentScene,
+            motionScheme = motionScheme,
+            transitions = transitions,
             canChangeScene = canChangeScene,
         )
     }
@@ -197,6 +200,7 @@ fun SystemUi(modifier: Modifier = Modifier) {
     SystemUi(configuration, { configuration = it }, modifier)
 }
 
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun SystemUi(
     configuration: DemoConfiguration,
@@ -223,22 +227,22 @@ fun SystemUi(
     val notificationCountInLockscreen = configuration.notificationsInLockscreen
     val notificationCount = max(notificationCountInLockscreen, configuration.notificationsInShade)
     val interactiveNotifications = configuration.interactiveNotifications
-    val notificationSprings = configuration.springConfigurations.notificationSprings
     val notificationTextMeasurer = rememberTextMeasurer(cacheSize = notificationCount * 2)
+    val motionScheme = MaterialTheme.motionScheme
     val notifications =
         remember(
             interactiveNotifications,
             notificationCount,
             notificationCountInLockscreen,
-            notificationSprings,
             notificationTextMeasurer,
+            motionScheme,
         ) {
             notifications(
                 interactiveNotifications,
                 notificationCount,
                 notificationCountInLockscreen,
-                notificationSprings,
                 notificationTextMeasurer,
+                motionScheme,
             )
         }
     val expectedQsSize = 12
@@ -279,12 +283,11 @@ fun SystemUi(
         )
     val quickSettingsPagerState = rememberPagerState { nQuickSettingsPages }
 
-    val springConfiguration = configuration.springConfigurations.systemUiSprings
     val hapticFeedback = LocalHapticFeedback.current
     val revealHaptics = remember(hapticFeedback) { DemoContainerRevealHaptics(hapticFeedback) }
     val transitions =
-        remember(quickSettingsPagerState, springConfiguration, revealHaptics) {
-            systemUiTransitions(quickSettingsPagerState, springConfiguration, revealHaptics)
+        remember(quickSettingsPagerState, revealHaptics) {
+            systemUiTransitions(quickSettingsPagerState, revealHaptics)
         }
 
     val sceneSaver =
@@ -313,11 +316,22 @@ fun SystemUi(
         }
 
     val stateSaver =
-        remember(sceneSaver, transitions, canChangeScene) {
-            MutableSceneTransitionLayoutSaver(sceneSaver, transitions, canChangeScene)
+        remember(sceneSaver, transitions, canChangeScene, motionScheme) {
+            MutableSceneTransitionLayoutSaver(
+                sceneSaver = sceneSaver,
+                transitions = transitions,
+                canChangeScene = canChangeScene,
+                motionScheme = motionScheme,
+            )
         }
     val layoutState =
-        rememberSaveable(transitions, canChangeScene, configuration, saver = stateSaver) {
+        rememberSaveable(
+            transitions,
+            canChangeScene,
+            configuration,
+            motionScheme,
+            saver = stateSaver,
+        ) {
             val initialScene =
                 initialScene?.let {
                     Scenes.ensureCorrectScene(
@@ -328,8 +342,9 @@ fun SystemUi(
                 } ?: lockscreenScene
 
             MutableSceneTransitionLayoutState(
-                initialScene,
-                transitions,
+                initialScene = initialScene,
+                motionScheme = motionScheme,
+                transitions = transitions,
                 canChangeScene = canChangeScene,
                 canShowOverlay = { configuration.canChangeSceneOrOverlays },
                 canHideOverlay = { configuration.canChangeSceneOrOverlays },
@@ -437,238 +452,225 @@ fun SystemUi(
         val shape = RoundedCornerShape(Shade.Dimensions.ScrimCornerSize)
         val borderColor = MaterialTheme.colorScheme.onSurface
 
-        Box(
+        Surface(
             Modifier.thenIf(!configuration.isFullscreen) {
-                    Modifier.padding(3.dp)
-                        .then(
-                            if (configuration.transitionBorder) {
-                                Modifier.border(
-                                    5.dp,
-                                    if (layoutState.isTransitioning()) Color.Red else Color.Green,
-                                    shape,
-                                )
-                            } else {
-                                Modifier.border(1.dp, borderColor, shape)
-                            }
-                        )
-                        .clip(shape)
-                }
-                .background(MaterialTheme.colorScheme.surfaceVariant)
-        ) {
-            CompositionLocalProvider(
-                LocalContentColor provides MaterialTheme.colorScheme.onSurface
-            ) {
-                var isMediaPlayerPlaying by remember { mutableStateOf(false) }
-                val mediaPlayer: (@Composable ContentScope.(isSmall: Boolean) -> Unit)? =
-                    if (configuration.showMediaPlayer) {
-                        { isSmall ->
-                            MediaPlayer(
-                                isSmall = isSmall,
-                                isPlaying = isMediaPlayerPlaying,
-                                onIsPlayingChange = { isMediaPlayerPlaying = it },
+                Modifier.padding(3.dp)
+                    .then(
+                        if (configuration.transitionBorder) {
+                            Modifier.border(
+                                5.dp,
+                                if (layoutState.isTransitioning()) Color.Red else Color.Green,
+                                shape,
                             )
+                        } else {
+                            Modifier.border(1.dp, borderColor, shape)
                         }
-                    } else {
-                        null
-                    }
-                val largeMediaPlayer: (@Composable ContentScope.() -> Unit)? =
-                    mediaPlayer?.let { { it(/* isSmall= */ false) } }
-                val smallMediaPlayer: (@Composable ContentScope.() -> Unit)? =
-                    mediaPlayer?.let { { it(/* isSmall= */ true) } }
-
-                val qsPager: (@Composable ContentScope.() -> Unit) = {
-                    QuickSettingsPager(
-                        pagerState = quickSettingsPagerState,
-                        tiles = quickSettingsTiles,
-                        nRows = nQuickSettingsRow,
-                        nColumns = nQuickSettingsColumns,
                     )
+                    .clip(shape)
+            },
+            color = MaterialTheme.colorScheme.surfaceVariant,
+        ) {
+            var isMediaPlayerPlaying by remember { mutableStateOf(false) }
+            val mediaPlayer: (@Composable ContentScope.(isSmall: Boolean) -> Unit)? =
+                if (configuration.showMediaPlayer) {
+                    { isSmall ->
+                        MediaPlayer(
+                            isSmall = isSmall,
+                            isPlaying = isMediaPlayerPlaying,
+                            onIsPlayingChange = { isMediaPlayerPlaying = it },
+                        )
+                    }
+                } else {
+                    null
                 }
+            val largeMediaPlayer: (@Composable ContentScope.() -> Unit)? =
+                mediaPlayer?.let { { it(/* isSmall= */ false) } }
+            val smallMediaPlayer: (@Composable ContentScope.() -> Unit)? =
+                mediaPlayer?.let { { it(/* isSmall= */ true) } }
 
-                // SceneTransitionLayout can only be bound to one SceneTransitionLayoutState, so
-                // make sure we recompose it fully when we create a new state object.
-                key(layoutState) {
-                    SceneTransitionLayout(
-                        state = layoutState,
-                        transitionInterceptionThreshold =
-                            configuration.transitionInterceptionThreshold,
-                        modifier =
-                            // Make this layout accessible to UiAutomator.
-                            Modifier.semantics { testTagsAsResourceId = true }
-                                .testTag("SystemUiSceneTransitionLayout"),
-                        swipeSourceDetector =
-                            if (configuration.enableOverlays) {
-                                remember {
-                                    SplitEdgeDetector(
-                                        topEdgeSplitFraction = { 0.5f },
-                                        edgeSize = 60.dp,
-                                    )
-                                }
-                            } else {
-                                DefaultEdgeDetector
-                            },
+            val qsPager: (@Composable ContentScope.() -> Unit) = {
+                QuickSettingsPager(
+                    pagerState = quickSettingsPagerState,
+                    tiles = quickSettingsTiles,
+                    nRows = nQuickSettingsRow,
+                    nColumns = nQuickSettingsColumns,
+                )
+            }
+
+            // SceneTransitionLayout can only be bound to one SceneTransitionLayoutState, so
+            // make sure we recompose it fully when we create a new state object.
+            key(layoutState) {
+                SceneTransitionLayout(
+                    state = layoutState,
+                    transitionInterceptionThreshold = configuration.transitionInterceptionThreshold,
+                    modifier =
+                        // Make this layout accessible to UiAutomator.
+                        Modifier.semantics { testTagsAsResourceId = true }
+                            .testTag("SystemUiSceneTransitionLayout"),
+                    swipeSourceDetector =
+                        if (configuration.enableOverlays) {
+                            remember {
+                                SplitEdgeDetector(topEdgeSplitFraction = { 0.5f }, edgeSize = 60.dp)
+                            }
+                        } else {
+                            DefaultEdgeDetector
+                        },
+                ) {
+                    scene(Scenes.Launcher, Launcher.userActions(shadeScene, configuration)) {
+                        Launcher(launcherColumns)
+                    }
+                    scene(
+                        Scenes.Lockscreen,
+                        Lockscreen.userActions(
+                            isLockscreenDismissable,
+                            shadeScene,
+                            requiresFullDistanceSwipeToShade =
+                                when (configuration.lsToShadeRequiresFullSwipe) {
+                                    ToggleableState.On -> true
+                                    ToggleableState.Off -> false
+                                    ToggleableState.Indeterminate ->
+                                        configuration.interactiveNotifications
+                                },
+                            configuration,
+                        ),
                     ) {
-                        scene(Scenes.Launcher, Launcher.userActions(shadeScene, configuration)) {
-                            Launcher(launcherColumns)
-                        }
-                        scene(
-                            Scenes.Lockscreen,
-                            Lockscreen.userActions(
-                                isLockscreenDismissable,
-                                shadeScene,
-                                requiresFullDistanceSwipeToShade =
-                                    when (configuration.lsToShadeRequiresFullSwipe) {
-                                        ToggleableState.On -> true
-                                        ToggleableState.Off -> false
-                                        ToggleableState.Indeterminate ->
-                                            configuration.interactiveNotifications
-                                    },
-                                configuration,
-                            ),
-                        ) {
-                            Lockscreen(
-                                notificationList = {
-                                    NotificationList(
-                                        maxNotificationCount =
-                                            configuration.notificationsInLockscreen
-                                    )
-                                },
-                                mediaPlayer = largeMediaPlayer,
-                                isDismissable = isLockscreenDismissable,
-                                onToggleDismissable = {
-                                    isLockscreenDismissable = !isLockscreenDismissable
-                                },
-                                ::onChangeScene,
-                            )
-                        }
-                        scene(
-                            Scenes.SplitLockscreen,
-                            SplitLockscreen.userActions(
-                                isLockscreenDismissable,
-                                shadeScene,
-                                configuration,
-                            ),
-                        ) {
-                            SplitLockscreen(
-                                notificationList = {
-                                    NotificationList(
-                                        maxNotificationCount =
-                                            configuration.notificationsInLockscreen
-                                    )
-                                },
-                                mediaPlayer = largeMediaPlayer,
-                                isDismissable = isLockscreenDismissable,
-                                onToggleDismissable = {
-                                    isLockscreenDismissable = !isLockscreenDismissable
-                                },
-                                ::onChangeScene,
-                                configuration = configuration,
-                            )
-                        }
-                        scene(Scenes.StubStart, Stub.startUserActions(lockscreenScene)) {
-                            Stub(
-                                rootKey = Stub.Elements.SceneStart,
-                                textKey = Stub.Elements.TextStart,
-                                text = "Stub scene (start)",
-                            )
-                        }
-                        scene(Scenes.StubEnd, Stub.endUserActions(lockscreenScene)) {
-                            Stub(
-                                rootKey = Stub.Elements.SceneEnd,
-                                textKey = Stub.Elements.TextEnd,
-                                text = "Stub scene (end)",
-                            )
-                        }
-                        scene(Scenes.Camera, Camera.userActions(lockscreenScene)) { Camera() }
-                        scene(Scenes.Bouncer, Bouncer.userActions(lockscreenScene)) {
-                            Bouncer(
-                                onBouncerCancelled = { onChangeScene(lockscreenScene) },
-                                onBouncerSolved = { onChangeScene(Scenes.Launcher) },
-                            )
-                        }
-                        scene(
-                            Scenes.QuickSettings,
-                            QuickSettings.userActions(
-                                shadeScene,
-                                lockscreenScene,
-                                isLockscreenDismissed,
-                            ),
-                        ) {
-                            QuickSettings(
-                                qsPager,
-                                mediaPlayer = largeMediaPlayer,
-                                ::onSettingsButtonClicked,
-                                ::onPowerButtonClicked,
-                            )
-                        }
-                        scene(
-                            Scenes.Shade,
-                            Shade.userActions(isLockscreenDismissed, lockscreenScene),
-                        ) {
-                            Shade(
-                                notificationList = { overscrollEffect ->
-                                    NotificationList(
-                                        maxNotificationCount = configuration.notificationsInShade,
-                                        overscrollEffect = overscrollEffect,
-                                    )
-                                },
-                                mediaPlayer = largeMediaPlayer,
-                                quickSettingsTiles,
-                                nQuickSettingsColumns,
-                            )
-                        }
-                        scene(
-                            Scenes.SplitShade,
-                            SplitShade.userActions(isLockscreenDismissed, lockscreenScene),
-                        ) {
-                            SplitShade(
-                                notificationList = {
-                                    NotificationList(
-                                        maxNotificationCount = configuration.notificationsInShade
-                                    )
-                                },
-                                mediaPlayer = largeMediaPlayer,
-                                quickSettingsTiles,
-                                nQuickSettingsSplitShadeRows,
-                                nQuickSettingsColumns,
-                                ::onSettingsButtonClicked,
-                                ::onPowerButtonClicked,
-                            )
-                        }
+                        Lockscreen(
+                            notificationList = {
+                                NotificationList(
+                                    maxNotificationCount = configuration.notificationsInLockscreen
+                                )
+                            },
+                            mediaPlayer = largeMediaPlayer,
+                            isDismissable = isLockscreenDismissable,
+                            onToggleDismissable = {
+                                isLockscreenDismissable = !isLockscreenDismissable
+                            },
+                            ::onChangeScene,
+                        )
+                    }
+                    scene(
+                        Scenes.SplitLockscreen,
+                        SplitLockscreen.userActions(
+                            isLockscreenDismissable,
+                            shadeScene,
+                            configuration,
+                        ),
+                    ) {
+                        SplitLockscreen(
+                            notificationList = {
+                                NotificationList(
+                                    maxNotificationCount = configuration.notificationsInLockscreen
+                                )
+                            },
+                            mediaPlayer = largeMediaPlayer,
+                            isDismissable = isLockscreenDismissable,
+                            onToggleDismissable = {
+                                isLockscreenDismissable = !isLockscreenDismissable
+                            },
+                            ::onChangeScene,
+                            configuration = configuration,
+                        )
+                    }
+                    scene(Scenes.StubStart, Stub.startUserActions(lockscreenScene)) {
+                        Stub(
+                            rootKey = Stub.Elements.SceneStart,
+                            textKey = Stub.Elements.TextStart,
+                            text = "Stub scene (start)",
+                        )
+                    }
+                    scene(Scenes.StubEnd, Stub.endUserActions(lockscreenScene)) {
+                        Stub(
+                            rootKey = Stub.Elements.SceneEnd,
+                            textKey = Stub.Elements.TextEnd,
+                            text = "Stub scene (end)",
+                        )
+                    }
+                    scene(Scenes.Camera, Camera.userActions(lockscreenScene)) { Camera() }
+                    scene(Scenes.Bouncer, Bouncer.userActions(lockscreenScene)) {
+                        Bouncer(
+                            onBouncerCancelled = { onChangeScene(lockscreenScene) },
+                            onBouncerSolved = { onChangeScene(Scenes.Launcher) },
+                        )
+                    }
+                    scene(
+                        Scenes.QuickSettings,
+                        QuickSettings.userActions(
+                            shadeScene,
+                            lockscreenScene,
+                            isLockscreenDismissed,
+                        ),
+                    ) {
+                        QuickSettings(
+                            qsPager,
+                            mediaPlayer = largeMediaPlayer,
+                            ::onSettingsButtonClicked,
+                            ::onPowerButtonClicked,
+                        )
+                    }
+                    scene(Scenes.Shade, Shade.userActions(isLockscreenDismissed, lockscreenScene)) {
+                        Shade(
+                            notificationList = { overscrollEffect ->
+                                NotificationList(
+                                    maxNotificationCount = configuration.notificationsInShade,
+                                    overscrollEffect = overscrollEffect,
+                                )
+                            },
+                            mediaPlayer = largeMediaPlayer,
+                            quickSettingsTiles,
+                            nQuickSettingsColumns,
+                        )
+                    }
+                    scene(
+                        Scenes.SplitShade,
+                        SplitShade.userActions(isLockscreenDismissed, lockscreenScene),
+                    ) {
+                        SplitShade(
+                            notificationList = {
+                                NotificationList(
+                                    maxNotificationCount = configuration.notificationsInShade
+                                )
+                            },
+                            mediaPlayer = largeMediaPlayer,
+                            quickSettingsTiles,
+                            nQuickSettingsSplitShadeRows,
+                            nQuickSettingsColumns,
+                            ::onSettingsButtonClicked,
+                            ::onPowerButtonClicked,
+                        )
+                    }
 
-                        scene(Scenes.AlwaysOnDisplay) {
-                            AlwaysOnDisplay(Modifier.clickable { onChangeScene(lockscreenScene) })
-                        }
+                    scene(Scenes.AlwaysOnDisplay) {
+                        AlwaysOnDisplay(Modifier.clickable { onChangeScene(lockscreenScene) })
+                    }
 
-                        overlay(
-                            Overlays.QuickSettings,
-                            userActions = QuickSettingsShade.UserActions,
-                            alignment = Alignment.TopEnd,
-                        ) {
-                            QuickSettingsShade(qsPager, smallMediaPlayer)
-                        }
+                    overlay(
+                        Overlays.QuickSettings,
+                        userActions = QuickSettingsShade.UserActions,
+                        alignment = Alignment.TopEnd,
+                    ) {
+                        QuickSettingsShade(qsPager, smallMediaPlayer)
+                    }
 
-                        overlay(
-                            Overlays.Notifications,
-                            userActions = NotificationShade.UserActions,
-                            alignment = Alignment.TopStart,
-                        ) {
-                            NotificationShade(
-                                clock =
-                                    if (shouldUseSplitScenes) {
-                                        null
-                                    } else {
-                                        { Clock(MaterialTheme.colorScheme.onSurfaceVariant) }
-                                    },
-                                mediaPlayer = largeMediaPlayer,
-                                notificationList = {
-                                    NotificationList(
-                                        maxNotificationCount = configuration.notificationsInShade,
-                                        isScrollable = false,
-                                    )
+                    overlay(
+                        Overlays.Notifications,
+                        userActions = NotificationShade.UserActions,
+                        alignment = Alignment.TopStart,
+                    ) {
+                        NotificationShade(
+                            clock =
+                                if (shouldUseSplitScenes) {
+                                    null
+                                } else {
+                                    { Clock(MaterialTheme.colorScheme.onSurfaceVariant) }
                                 },
-                            )
-                        }
+                            mediaPlayer = largeMediaPlayer,
+                            notificationList = {
+                                NotificationList(
+                                    maxNotificationCount = configuration.notificationsInShade,
+                                    isScrollable = false,
+                                )
+                            },
+                        )
                     }
                 }
             }
