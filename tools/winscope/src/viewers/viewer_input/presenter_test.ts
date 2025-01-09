@@ -30,6 +30,7 @@ import {CustomQueryType} from 'trace/custom_query';
 import {Parser} from 'trace/parser';
 import {Trace} from 'trace/trace';
 import {Traces} from 'trace/traces';
+import {TRACE_INFO} from 'trace/trace_info';
 import {TraceRectBuilder} from 'trace/trace_rect_builder';
 import {TraceType} from 'trace/trace_type';
 import {HierarchyTreeNode} from 'trace/tree_node/hierarchy_tree_node';
@@ -42,6 +43,7 @@ import {TextFilter} from 'viewers/common/text_filter';
 import {LogField, LogHeader} from 'viewers/common/ui_data_log';
 import {UserOptions} from 'viewers/common/user_options';
 import {ViewerEvents} from 'viewers/common/viewer_events';
+import {TraceRectType} from 'viewers/components/rects/rect_spec';
 import {Presenter} from './presenter';
 import {UiData} from './ui_data';
 
@@ -562,6 +564,7 @@ class PresenterInputTest extends AbstractLogViewerPresenterTest<UiData> {
         );
         await presenter.onAppEvent(this.getPositionUpdate());
         expect(uiData.rectsToDraw).toBeUndefined();
+        checkRectSpec();
       });
 
       it('empty trace no rects defined without SF trace', async () => {
@@ -572,6 +575,7 @@ class PresenterInputTest extends AbstractLogViewerPresenterTest<UiData> {
         );
         await presenter.onAppEvent(this.getPositionUpdate());
         expect(uiData.rectsToDraw).toBeUndefined();
+        checkRectSpec();
       });
 
       it('rects defined with SF trace', async () => {
@@ -582,6 +586,7 @@ class PresenterInputTest extends AbstractLogViewerPresenterTest<UiData> {
         await presenter.onAppEvent(this.getPositionUpdate());
         expect(uiData.rectsToDraw).toBeDefined();
         expect(uiData.rectsToDraw).toEqual([]);
+        checkRectSpec();
       });
 
       it('empty trace rects defined with SF trace', async () => {
@@ -772,6 +777,46 @@ class PresenterInputTest extends AbstractLogViewerPresenterTest<UiData> {
           .build();
         traces.addTrace(sfTrace);
         return traces;
+      }
+
+      function checkRectSpec() {
+        expect(uiData.rectSpec).toEqual({
+          type: TraceRectType.INPUT_WINDOWS,
+          icon: TRACE_INFO[TraceType.INPUT_EVENT_MERGED].icon,
+          legend: [
+            {
+              fill: '#c8e8b7',
+              desc: 'Visible and touchable',
+              border: 'var(--default-text-color)',
+              showInWireFrameMode: false,
+            },
+            {
+              fill: '#dcdcdc',
+              desc: 'Not visible',
+              border: 'var(--default-text-color)',
+              showInWireFrameMode: false,
+            },
+            {
+              fill: '',
+              border: 'var(--default-text-color)',
+              desc: 'Visible but not touchable',
+              showInWireFrameMode: false,
+            },
+            {
+              fill: 'var(--selected-element-color)',
+              desc: 'Selected',
+              border: 'var(--default-text-color)',
+              showInWireFrameMode: true,
+            },
+            {
+              fill: '#ad42f5',
+              desc: 'Has input',
+              border: 'var(--default-text-color)',
+              showInWireFrameMode: false,
+            },
+          ],
+          multiple: false,
+        });
       }
     });
   }

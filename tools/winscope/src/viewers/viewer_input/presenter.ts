@@ -21,6 +21,7 @@ import {TabbedViewSwitchRequest} from 'messaging/winscope_event';
 import {CustomQueryType} from 'trace/custom_query';
 import {Trace, TraceEntry, TraceEntryLazy} from 'trace/trace';
 import {Traces} from 'trace/traces';
+import {TRACE_INFO} from 'trace/trace_info';
 import {TraceType} from 'trace/trace_type';
 import {HierarchyTreeNode} from 'trace/tree_node/hierarchy_tree_node';
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
@@ -38,6 +39,10 @@ import {ColumnSpec, LogEntry, LogHeader} from 'viewers/common/ui_data_log';
 import {UI_RECT_FACTORY} from 'viewers/common/ui_rect_factory';
 import {UserOptions} from 'viewers/common/user_options';
 import {ViewerEvents} from 'viewers/common/viewer_events';
+import {
+  RectLegendFactory,
+  TraceRectType,
+} from 'viewers/components/rects/rect_spec';
 import {
   convertRectIdToLayerorDisplayName,
   makeDisplayIdentifiers,
@@ -89,7 +94,6 @@ export class Presenter extends AbstractLogViewerPresenter<
 
   private readonly traces: Traces;
   private readonly surfaceFlingerTrace: Trace<HierarchyTreeNode> | undefined;
-  protected override uiData: UiData = UiData.createEmpty();
 
   private readonly inputCoordinatePropagator = new InputCoordinatePropagator();
 
@@ -144,6 +148,12 @@ export class Presenter extends AbstractLogViewerPresenter<
   ) {
     const uiData = UiData.createEmpty();
     uiData.isDarkMode = storage.get('dark-mode') === 'true';
+    uiData.rectSpec = {
+      type: TraceRectType.INPUT_WINDOWS,
+      icon: TRACE_INFO[TraceType.INPUT_EVENT_MERGED].icon,
+      legend: RectLegendFactory.makeLegendForInputWindowRects(false),
+      multiple: false,
+    };
     super(
       mergedInputEventTrace,
       (uiData) => notifyInputViewCallback(uiData as UiData),
