@@ -327,7 +327,7 @@ bool AbiDiffHelper::AreOpaqueTypesEqual(const std::string &old_type_id,
   // b/253095767: In T, some dump files contain opaque types whose IDs end with
   // "#ODR:" and the source paths. This function removes the suffixes before
   // comparing the type IDs.
-  if (!diff_policy_options_.consider_opaque_types_different_ ||
+  if (!diff_policy_options_.consider_opaque_types_different ||
       ExtractMultiDefinitionTypeId(old_type_id) ==
           ExtractMultiDefinitionTypeId(new_type_id)) {
     return true;
