@@ -15,59 +15,30 @@
  */
 
 import {Store} from 'common/store/store';
-import {WinscopeEvent} from 'messaging/winscope_event';
-import {EmitEvent} from 'messaging/winscope_event_emitter';
 import {Trace} from 'trace/trace';
 import {Traces} from 'trace/traces';
-import {TRACE_INFO} from 'trace/trace_info';
 import {TraceType} from 'trace/trace_type';
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
-import {View, Viewer, ViewType} from 'viewers/viewer';
+import {AbstractViewer} from 'viewers/abstract_viewer';
 import {Presenter} from './presenter';
 import {UiData} from './ui_data';
 import {ViewerProtologComponent} from './viewer_protolog_component';
 
-class ViewerProtoLog implements Viewer {
+export class ViewerProtoLog extends AbstractViewer<PropertyTreeNode> {
   static readonly DEPENDENCIES: TraceType[] = [TraceType.PROTO_LOG];
 
-  private readonly trace: Trace<PropertyTreeNode>;
-  private readonly htmlElement: HTMLElement;
-  private readonly presenter: Presenter;
-  private readonly view: View;
+  constructor(trace: Trace<PropertyTreeNode>, traces: Traces, store: Store) {
+    super(trace, traces, 'viewer-protolog', store);
+  }
 
-  constructor(trace: Trace<PropertyTreeNode>, traces: Traces, storage: Store) {
-    this.trace = trace;
-    this.htmlElement = document.createElement('viewer-protolog');
-    (this.htmlElement as unknown as ViewerProtologComponent).store = storage;
+  protected override initializePresenter(
+    trace: Trace<PropertyTreeNode>,
+    traces: Traces,
+    store: Store,
+  ): Presenter {
     const notifyViewCallback = (data: UiData) => {
       (this.htmlElement as unknown as ViewerProtologComponent).inputData = data;
     };
-    this.presenter = new Presenter(trace, notifyViewCallback, storage);
-    this.presenter.addEventListeners(this.htmlElement);
-
-    this.view = new View(
-      ViewType.TRACE_TAB,
-      this.getTraces(),
-      this.htmlElement,
-      TRACE_INFO[TraceType.PROTO_LOG].name,
-    );
-  }
-
-  async onWinscopeEvent(event: WinscopeEvent) {
-    await this.presenter.onAppEvent(event);
-  }
-
-  setEmitEvent(callback: EmitEvent) {
-    this.presenter.setEmitEvent(callback);
-  }
-
-  getViews(): View[] {
-    return [this.view];
-  }
-
-  getTraces(): Array<Trace<PropertyTreeNode>> {
-    return [this.trace];
+    return new Presenter(trace, notifyViewCallback, store);
   }
 }
-
-export {ViewerProtoLog};

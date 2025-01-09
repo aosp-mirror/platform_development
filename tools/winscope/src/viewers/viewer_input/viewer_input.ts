@@ -16,67 +16,31 @@
 
 import {assertDefined} from 'common/assert_utils';
 import {Store} from 'common/store/store';
-import {WinscopeEvent} from 'messaging/winscope_event';
-import {EmitEvent} from 'messaging/winscope_event_emitter';
 import {Trace} from 'trace/trace';
 import {Traces} from 'trace/traces';
-import {TRACE_INFO} from 'trace/trace_info';
 import {TraceType} from 'trace/trace_type';
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
-import {View, Viewer, ViewType} from 'viewers/viewer';
+import {AbstractViewer} from 'viewers/abstract_viewer';
 import {Presenter} from './presenter';
 import {UiData} from './ui_data';
 import {ViewerInputComponent} from './viewer_input_component';
 
-export class ViewerInput implements Viewer {
+export class ViewerInput extends AbstractViewer<PropertyTreeNode> {
   static readonly DEPENDENCIES: TraceType[] = [TraceType.INPUT_EVENT_MERGED];
 
-  private readonly traces: Traces;
-  private readonly mergedInputEventTrace: Trace<PropertyTreeNode>;
-  private readonly htmlElement: HTMLElement;
-  private readonly presenter: Presenter;
-  private readonly view: View;
-
-  constructor(traces: Traces, storage: Store) {
-    this.traces = traces;
-    this.mergedInputEventTrace = assertDefined(
-      traces.getTrace(TraceType.INPUT_EVENT_MERGED),
-    );
-    this.htmlElement = document.createElement('viewer-input');
-
-    this.presenter = new Presenter(
-      traces,
-      this.mergedInputEventTrace,
-      storage,
-      (uiData: UiData) => {
-        (this.htmlElement as unknown as ViewerInputComponent).inputData =
-          uiData;
-      },
-    );
-
-    this.presenter.addEventListeners(this.htmlElement);
-
-    this.view = new View(
-      ViewType.TRACE_TAB,
-      this.getTraces(),
-      this.htmlElement,
-      TRACE_INFO[TraceType.INPUT_EVENT_MERGED].name,
-    );
+  constructor(traces: Traces, store: Store) {
+    const trace = assertDefined(traces.getTrace(TraceType.INPUT_EVENT_MERGED));
+    super(trace, traces, 'viewer-input', store);
   }
 
-  setEmitEvent(callback: EmitEvent) {
-    this.presenter.setEmitEvent(callback);
-  }
-
-  async onWinscopeEvent(event: WinscopeEvent) {
-    await this.presenter.onAppEvent(event);
-  }
-
-  getViews(): View[] {
-    return [this.view];
-  }
-
-  getTraces(): Array<Trace<PropertyTreeNode>> {
-    return [this.mergedInputEventTrace];
+  protected override initializePresenter(
+    trace: Trace<PropertyTreeNode>,
+    traces: Traces,
+    store: Store,
+  ): Presenter {
+    const notifyViewCallback = (uiData: UiData) => {
+      (this.htmlElement as unknown as ViewerInputComponent).inputData = uiData;
+    };
+    return new Presenter(traces, trace, store, notifyViewCallback);
   }
 }

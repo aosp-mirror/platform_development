@@ -22,10 +22,7 @@ import {
   WinscopeEvent,
   WinscopeEventType,
 } from 'messaging/winscope_event';
-import {
-  EmitEvent,
-  WinscopeEventEmitter,
-} from 'messaging/winscope_event_emitter';
+import {EmitEvent} from 'messaging/winscope_event_emitter';
 import {Trace, TraceEntry} from 'trace/trace';
 import {TraceEntryFinder} from 'trace/trace_entry_finder';
 import {TracePosition} from 'trace/trace_position';
@@ -47,8 +44,7 @@ export type NotifyLogViewCallbackType<UiData> = (uiData: UiData) => void;
 export abstract class AbstractLogViewerPresenter<
   UiData extends UiDataLog,
   TraceEntryType extends object,
-> implements WinscopeEventEmitter
-{
+> {
   protected static readonly VALUE_NA = 'N/A';
   protected emitAppEvent: EmitEvent = FunctionUtils.DO_NOTHING_ASYNC;
   protected abstract logPresenter: LogPresenter<LogEntry>;

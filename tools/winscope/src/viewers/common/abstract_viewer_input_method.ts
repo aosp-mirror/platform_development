@@ -15,59 +15,36 @@
  */
 
 import {Store} from 'common/store/store';
-import {WinscopeEvent} from 'messaging/winscope_event';
 import {Trace} from 'trace/trace';
 import {Traces} from 'trace/traces';
-import {TRACE_INFO} from 'trace/trace_info';
 import {HierarchyTreeNode} from 'trace/tree_node/hierarchy_tree_node';
+import {AbstractViewer} from 'viewers/abstract_viewer';
 import {AbstractPresenterInputMethod} from 'viewers/common/abstract_presenter_input_method';
 import {ImeUiData} from 'viewers/common/ime_ui_data';
 import {ViewerComponent} from 'viewers/components/viewer_component';
-import {View, Viewer, ViewType} from 'viewers/viewer';
+import {NotifyHierarchyViewCallbackType} from './abstract_hierarchy_viewer_presenter';
 
-export abstract class AbstractViewerInputMethod implements Viewer {
-  private readonly trace: Trace<HierarchyTreeNode>;
-  protected readonly htmlElement: HTMLElement;
-  protected readonly presenter: AbstractPresenterInputMethod;
-  protected readonly view: View;
-
-  protected imeUiCallback = (uiData: ImeUiData) => {
-    (this.htmlElement as unknown as ViewerComponent<ImeUiData>).inputData =
-      uiData;
-  };
-
-  constructor(trace: Trace<HierarchyTreeNode>, traces: Traces, storage: Store) {
-    this.trace = trace;
-    this.htmlElement = document.createElement('viewer-input-method');
-    this.presenter = this.initializePresenter(trace, traces, storage);
-    this.presenter.addEventListeners(this.htmlElement);
-    this.view = new View(
-      ViewType.TRACE_TAB,
-      this.getTraces(),
-      this.htmlElement,
-      TRACE_INFO[trace.type].name,
-    );
+export abstract class AbstractViewerInputMethod extends AbstractViewer<HierarchyTreeNode> {
+  constructor(trace: Trace<HierarchyTreeNode>, traces: Traces, store: Store) {
+    super(trace, traces, 'viewer-input-method', store);
   }
 
-  async onWinscopeEvent(event: WinscopeEvent) {
-    await this.presenter.onAppEvent(event);
-  }
-
-  setEmitEvent() {
-    // do nothing
-  }
-
-  getViews(): View[] {
-    return [this.view];
-  }
-
-  getTraces(): Array<Trace<HierarchyTreeNode>> {
-    return [this.trace];
-  }
-
-  protected abstract initializePresenter(
+  protected override initializePresenter(
     trace: Trace<HierarchyTreeNode>,
     traces: Traces,
-    storage: Store,
+    store: Store,
+  ): AbstractPresenterInputMethod {
+    const imeUiCallback = (uiData: ImeUiData) => {
+      (this.htmlElement as unknown as ViewerComponent<ImeUiData>).inputData =
+        uiData;
+    };
+    return this.createPresenter(trace, traces, store, imeUiCallback);
+  }
+
+  protected abstract createPresenter(
+    trace: Trace<HierarchyTreeNode>,
+    traces: Traces,
+    store: Store,
+    imeUiCallback: NotifyHierarchyViewCallbackType<ImeUiData>,
   ): AbstractPresenterInputMethod;
 }
