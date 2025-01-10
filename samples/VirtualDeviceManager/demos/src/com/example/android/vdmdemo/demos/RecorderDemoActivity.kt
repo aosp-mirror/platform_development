@@ -32,17 +32,23 @@ import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import kotlin.concurrent.thread
+import kotlinx.atomicfu.AtomicBoolean
+import kotlinx.atomicfu.atomic
 
 /**
  * Demo activity for testing starting and stopping multiple (NUMBER_OF_RECORDERS) recordings. Does
- * not read nor use the data from the AudioRecorder(s).
+ * not use the data from the AudioRecorder(s). The reading from the AudioRecord(s) is necessary to
+ * activate the dynamic policies.
  */
 class RecorderDemoActivity :
     AppCompatActivity(), ActivityCompat.OnRequestPermissionsResultCallback {
 
     private var audioManager: AudioManager? = null
 
-    private val recorders = MutableList<AudioRecord?>(NUMBER_OF_RECORDERS) { null }
+    private val recorders = List(NUMBER_OF_RECORDERS) { AudioRecorder(it) }
+
+    private lateinit var buttons: List<Button>
     private lateinit var recorderStatusTextViews: List<TextView>
 
     private val audioRecordingCallback =
@@ -50,12 +56,21 @@ class RecorderDemoActivity :
             override fun onRecordingConfigChanged(configs: List<AudioRecordingConfiguration>) {
                 super.onRecordingConfigChanged(configs)
                 Log.d(TAG, "onRecordingConfigChanged with configs: ${configs.map { toLog(it) }}")
+
+                // recording configuration changed, update UI state for all recorders
+                runOnUiThread { updateAllRecordersUi() }
             }
         }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.recorder_demo_activity)
+
+        buttons =
+            listOf(
+                requireViewById(R.id.first_recorder_button),
+                requireViewById(R.id.second_recorder_button),
+            )
 
         recorderStatusTextViews =
             listOf(
@@ -70,99 +85,54 @@ class RecorderDemoActivity :
     override fun onDestroy() {
         super.onDestroy()
 
-        for (i in 0 until recorders.size) {
-            recorders[i]?.run {
-                stop()
-                release()
-            }
-            recorders[i] = null
-        }
+        recorders.forEach { it.stopRecording() }
+
         audioManager?.unregisterAudioRecordingCallback(audioRecordingCallback)
     }
 
     fun onFirstButtonClick(view: View) {
-        onButtonClick(view as Button, 0 /* first recorder index */)
+        onButtonClick(0 /* first recorder index */)
     }
 
     fun onSecondButtonClick(view: View) {
-        onButtonClick(view as Button, 1 /* second recorder index */)
+        onButtonClick(1 /* second recorder index */)
     }
 
-    private fun onButtonClick(button: Button, index: Int) {
+    private fun onButtonClick(index: Int) {
         if (index < 0 || index > recorders.size) {
             Log.w(TAG, "Recorder index ($index) out of range (0 - $NUMBER_OF_RECORDERS).")
             return
         }
 
-        if (recorders[index] == null) {
-            recorders[index] = createRecorder(index)
-        }
-
-        // can still be null if no permissions are granted
-        recorders[index]?.let {
-            if (toggleRecording(it)) {
-                button.setText(R.string.stop_record)
-                button.setBackgroundColor(Color.RED)
-            } else {
-                button.setText(R.string.start_record)
-                button.setBackgroundColor(Color.GRAY)
-            }
-        }
-
-        recorderStatusTextViews[index].text = getRecorderStatus(recorders[index])
+        recorders[index].toggleRecording()
+        // just toggle the recording, the UI will be later updated by the recording config callback
     }
 
-    @SuppressLint("MissingPermission")
-    private fun createRecorder(index: Int): AudioRecord? {
-        if (index < 0 || index > RECORDERS_SETTINGS.size) {
-            Log.w(
-                TAG,
-                "Settings for recorder index ($index) out of range (0 - ${RECORDERS_SETTINGS.size}).",
-            )
-            return null
-        }
-
-        if (
-            ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO) !=
-                PackageManager.PERMISSION_GRANTED
-        ) {
-            Log.i("TAG", "Requesting RECORD_AUDIO permission from the user...")
-            ActivityCompat.requestPermissions(
-                this,
-                arrayOf(Manifest.permission.RECORD_AUDIO),
-                PERMISSIONS_REQUEST_CODE,
-            )
-            return null
-        } else {
-            with(RECORDERS_SETTINGS[index]) {
-                return AudioRecord(
-                    source,
-                    sampleRate,
-                    channels,
-                    encoding,
-                    AudioRecord.getMinBufferSize(sampleRate, channels, encoding),
-                )
-            }
+    private fun updateAllRecordersUi() {
+        for (i in 0 until NUMBER_OF_RECORDERS) {
+            updateRecorderUi(i)
         }
     }
 
-    // Start to record if the AudioRecord is stopped
-    // or stops the recording if the AudioRecord is recording
-    // Returns true if now active and recording, false otherwise
-    private fun toggleRecording(recorder: AudioRecord): Boolean {
-        if (recorder.state != AudioRecord.STATE_INITIALIZED) {
-            Log.w(TAG, "Recorder $recorder is not initialized!")
-            return false
-        }
+    private fun updateRecorderUi(index: Int) {
+        recorders[index].run {
+            val isRecording = isRecording()
+            val buttonText =
+                if (isRecording) {
+                    R.string.stop_record
+                } else {
+                    R.string.start_record
+                }
+            val backgroundColor =
+                if (isRecording) {
+                    Color.RED
+                } else {
+                    Color.GRAY
+                }
 
-        if (recorder.recordingState == AudioRecord.RECORDSTATE_RECORDING) {
-            Log.d(TAG, "Stop recording for recorder: $recorder")
-            recorder.stop()
-            return false
-        } else {
-            Log.d(TAG, "Start recording for recorder: $recorder")
-            recorder.startRecording()
-            return true
+            buttons[index].setText(buttonText)
+            buttons[index].setBackgroundColor(backgroundColor)
+            recorderStatusTextViews[index].text = getRecorderStatus()
         }
     }
 
@@ -182,30 +152,141 @@ class RecorderDemoActivity :
         }
     }
 
-    private fun getRecorderStatus(audioRecord: AudioRecord?) =
-        audioRecord?.let {
-            val state =
-                if (it.recordingState == AudioRecord.RECORDSTATE_RECORDING) {
-                    "Recording"
-                } else {
-                    "Stopped"
-                }
-
-            "$state source ${friendlyAudioSource(it.audioSource)} device address ${it.routedDevice?.address}"
-        } ?: "Recorder uninitialized!"
-
     @SuppressLint("MissingPermission")
     private fun toLog(config: AudioRecordingConfiguration) =
         with(config) {
-            "AudioRecordingConfiguration: $this has " +
-                "audioSource: ${this.audioSource} audioDevice: ${this.audioDevice} " +
-                "clientAudioSource: ${this.clientAudioSource} " +
-                "clientAudioSessionId: ${this.clientAudioSessionId} " +
-                "clientEffects: ${this.clientEffects} effects: ${this.effects} " +
-                "isClientSilenced: ${this.isClientSilenced} format: ${this.format}"
+            "AudioRecordingConfiguration: $this has audioSource: ${this.audioSource} audioDevice: ${this.audioDevice} clientAudioSource: ${this.clientAudioSource} clientAudioSessionId: ${this.clientAudioSessionId} clientEffects: ${this.clientEffects} effects: ${this.effects} isClientSilenced: ${this.isClientSilenced} format: ${this.format}"
         }
 
-    data class RecorderSettings(
+    /**
+     * Utility class managing creation and reading from an AudioRecord. Doesn't do anything with the
+     * recorded audio data.
+     */
+    private inner class AudioRecorder(private val index: Int) {
+        private var isRunning: AtomicBoolean = atomic(false)
+        private var audioRecord: AudioRecord? = null
+
+        private fun createAndReadAudioRecord() {
+            createRecorder(index)?.let { record ->
+                audioRecord = record
+
+                if (record.state != AudioRecord.STATE_INITIALIZED) {
+                    Log.e(TAG, "Can NOT start recording for UNINITIALIZED AudioRecord $index.")
+                    return
+                }
+
+                val bufferSize =
+                    (AUDIO_RECORDER_BUFFER_SIZE_MS * record.sampleRate * record.channelCount / 1000)
+                val buffer = ByteArray(bufferSize)
+
+                Log.d(TAG, "AudioRecord $index start recording...")
+                try {
+                    record.startRecording()
+                } catch (e: Exception) {
+                    Log.e(TAG, "Exception starting AudioRecord $index.", e)
+                    return
+                }
+                Log.d(TAG, "AudioRecord $index recording started.")
+
+                isRunning.value = true
+
+                while (isRunning.value) {
+                    val ret = record.read(buffer, 0, buffer.size, AudioRecord.READ_BLOCKING)
+                    if (ret < 0) {
+                        Log.e(
+                            TAG,
+                            "Error calling read on AudioRecord $index, read call returned $ret",
+                        )
+                        break
+                    }
+                    // no use for the audio data
+                }
+
+                // No longer running, recording should stop and be released,
+                // it will be recreated when needed
+                record.stop()
+                record.release()
+                audioRecord = null
+
+                Log.d(TAG, "AudioRecord $index stopped recording.")
+            } ?: Log.e(TAG, "Can NOT start recording for NULL AudioRecord $index.")
+        }
+
+        fun isRecording() = isRunning.value
+
+        fun startRecording() {
+            Log.d(TAG, "startRecording() for AudioRecord $index.")
+
+            thread { createAndReadAudioRecord() }
+        }
+
+        fun stopRecording() {
+            Log.d(TAG, "stopRecording() for AudioRecord $index.")
+            isRunning.value = false
+        }
+
+        fun toggleRecording() {
+            if (isRecording()) {
+                stopRecording()
+            } else {
+                startRecording()
+            }
+        }
+
+        fun getRecorderStatus() =
+            audioRecord?.let {
+                val state =
+                    if (it.state == AudioRecord.STATE_INITIALIZED) {
+                        if (it.recordingState == AudioRecord.RECORDSTATE_RECORDING) {
+                            "Recording"
+                        } else {
+                            "Stopped"
+                        }
+                    } else {
+                        "Uninitialized"
+                    }
+
+                "$state source ${friendlyAudioSource(it.audioSource)} device address ${it.routedDevice?.address}"
+            } ?: "Recorder not created!"
+
+        @SuppressLint("MissingPermission")
+        private fun createRecorder(index: Int): AudioRecord? {
+            if (index < 0 || index > RECORDERS_SETTINGS.size) {
+                Log.w(
+                    TAG,
+                    "Settings for recorder index ($index) out of range (0 - ${RECORDERS_SETTINGS.size}).",
+                )
+                return null
+            }
+
+            if (
+                ContextCompat.checkSelfPermission(
+                    this@RecorderDemoActivity,
+                    Manifest.permission.RECORD_AUDIO,
+                ) != PackageManager.PERMISSION_GRANTED
+            ) {
+                Log.i("TAG", "Requesting RECORD_AUDIO permission from the user...")
+                ActivityCompat.requestPermissions(
+                    this@RecorderDemoActivity,
+                    arrayOf(Manifest.permission.RECORD_AUDIO),
+                    PERMISSIONS_REQUEST_CODE,
+                )
+                return null
+            } else {
+                with(RECORDERS_SETTINGS[index]) {
+                    return AudioRecord(
+                        source,
+                        sampleRate,
+                        channels,
+                        encoding,
+                        AudioRecord.getMinBufferSize(sampleRate, channels, encoding),
+                    )
+                }
+            }
+        }
+    }
+
+    private data class RecorderSettings(
         val source: Int,
         val sampleRate: Int,
         val channels: Int,
@@ -218,8 +299,10 @@ class RecorderDemoActivity :
         const val PERMISSIONS_REQUEST_CODE = 99
         const val NUMBER_OF_RECORDERS = 2
 
+        const val AUDIO_RECORDER_BUFFER_SIZE_MS = 50
+
         // some defaults for easy instantiation of AudioRecorder objects
-        const val FIRST_RECORDER_SOURCE = AudioSource.MIC
+        const val FIRST_RECORDER_SOURCE = AudioSource.DEFAULT
         const val FIRST_RECORDER_SAMPLE_RATE: Int = 8000
         const val FIRST_RECORDER_CHANNELS: Int = AudioFormat.CHANNEL_IN_MONO
         const val FIRST_RECORDER_AUDIO_ENCODING: Int = AudioFormat.ENCODING_PCM_16BIT
@@ -257,12 +340,12 @@ class RecorderDemoActivity :
                 AudioSource.VOICE_COMMUNICATION -> "VOICE_COMMUNICATION"
                 AudioSource.REMOTE_SUBMIX -> "REMOTE_SUBMIX"
                 AudioSource.UNPROCESSED -> "UNPROCESSED"
-                /* AudioSource.ECHO_REFERENCE */ 1997 -> "ECHO_REFERENCE"
+                1997 -> "ECHO_REFERENCE" /* AudioSource.ECHO_REFERENCE */
                 AudioSource.VOICE_PERFORMANCE -> "VOICE_PERFORMANCE"
-                /* AudioSource.RADIO_TUNER */ 1998 -> "RADIO_TUNER"
-                /* AudioSource.HOTWORD */ 1999 -> "HOTWORD"
-                /* AudioSource.ULTRASOUND */ 2000 -> "ULTRASOUND"
-                /* AudioSource.AUDIO_SOURCE_INVALID */ -1 -> "AUDIO_SOURCE_INVALID"
+                1998 -> "RADIO_TUNER" /* AudioSource.RADIO_TUNER */
+                1999 -> "HOTWORD" /* AudioSource.HOTWORD */
+                2000 -> "ULTRASOUND" /* AudioSource.ULTRASOUND */
+                -1 -> "AUDIO_SOURCE_INVALID" /* AudioSource.AUDIO_SOURCE_INVALID */
                 else -> "unknown source $source"
             }
     }
