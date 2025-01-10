@@ -93,6 +93,14 @@ static llvm::cl::opt<bool> allow_unreferenced_changes(
                    " APIs."),
     llvm::cl::Optional, llvm::cl::cat(header_checker_category));
 
+static llvm::cl::opt<bool> allow_adding_removing_referenced_apis(
+    "allow-adding-removing-referenced-apis",
+    llvm::cl::desc("Do not return a non zero status on addition or removal of "
+                   "functions and variables that have corresponding symbols. "
+                   "This option ignores the functions built in runtime "
+                   "libraries and may not be declared in headers."),
+    llvm::cl::Optional, llvm::cl::cat(header_checker_category));
+
 static llvm::cl::opt<bool> consider_opaque_types_different(
     "consider-opaque-types-different",
     llvm::cl::desc("Consider opaque types with different names as different. "
@@ -185,6 +193,8 @@ static void UpdateFlags(const ConfigSection &section) {
       allow_unreferenced_elf_symbol_changes = value_bool;
     } else if (key == "allow_unreferenced_changes") {
       allow_unreferenced_changes = value_bool;
+    } else if (key == "allow_adding_removing_referenced_apis") {
+      allow_adding_removing_referenced_apis = value_bool;
     } else if (key == "consider_opaque_types_different") {
       consider_opaque_types_different = value_bool;
     }
@@ -244,7 +254,10 @@ int main(int argc, const char **argv) {
   std::set<std::string> ignored_linker_set_keys_set(
       ignore_linker_set_keys.begin(), ignore_linker_set_keys.end());
 
-  DiffPolicyOptions diff_policy_options(consider_opaque_types_different);
+  const DiffPolicyOptions diff_policy_options{
+      .consider_opaque_types_different = consider_opaque_types_different,
+      .allow_adding_removing_referenced_apis =
+          allow_adding_removing_referenced_apis};
 
   HeaderAbiDiff judge(lib_name, arch, old_dump, new_dump, compatibility_report,
                       ignored_symbols, ignored_linker_set_keys_set,

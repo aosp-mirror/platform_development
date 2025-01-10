@@ -101,8 +101,8 @@ TOP=$(pwd)
 
 # Setup Soong configuration
 SOONG_OUT="${OUT_DIR}/soong"
-SOONG_HOST_OUT="${OUT_DIR}/soong/host/linux-x86"
-rm -rf "${SOONG_OUT}"
+SOONG_HOST_OUT="${OUT_DIR}/host/linux-x86"
+rm -rf "${SOONG_OUT}" "${SOONG_HOST_OUT}"
 mkdir -p "${SOONG_OUT}"
 cat > "${SOONG_OUT}/soong.variables" << __EOF__
 {
