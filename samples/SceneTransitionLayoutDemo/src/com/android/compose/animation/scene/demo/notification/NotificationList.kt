@@ -38,6 +38,7 @@ import com.android.compose.animation.scene.SceneTransitionLayoutState
 import com.android.compose.animation.scene.demo.DemoConfiguration
 import com.android.compose.animation.scene.demo.Scenes
 import com.android.compose.animation.scene.observableTransitionState
+import com.android.compose.gesture.NestedScrollableBound
 import com.android.compose.modifiers.thenIf
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.combine
@@ -72,11 +73,11 @@ fun SceneScope.NotificationList(
     // TODO(b/291025415): Make sure everything still works when using `LazyColumn` instead of a
     // scrollable `Column`.
     val scrollState = if (isScrollable) rememberScrollState() else null
-
     Column(
         modifier
             .thenIf(scrollState != null) {
-                Modifier.verticalScroll(scrollState!!, overscrollEffect?.withoutVisualEffect())
+                Modifier.disableSwipesWhenScrolling(NestedScrollableBound.BottomRight)
+                    .verticalScroll(scrollState!!, overscrollEffect?.withoutVisualEffect())
             }
             .fillMaxWidth()
             .padding(16.dp),
