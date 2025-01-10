@@ -545,6 +545,43 @@ INNER JOIN sf_hierarchy_root_search STATE
         },
       ],
     },
+    {
+      name: 'protolog',
+      dataType: 'ProtoLog',
+      spec: [
+        {
+          name: 'ts',
+          desc: 'Timestamp of log',
+        },
+        {
+          name: 'level',
+          desc: 'Log level',
+        },
+        {
+          name: 'tag',
+          desc: 'Logging group tag',
+        },
+        {
+          name: 'message',
+          desc: 'Log message',
+        },
+        {
+          name: 'stacktrace',
+          desc: 'Stacktrace (if available)',
+        },
+        {
+          name: 'location',
+          desc: 'Code location from which message originates',
+        },
+      ],
+      examples: [
+        {
+          query: `SELECT ts, message, location FROM protolog
+  WHERE message LIKE '%transition%'`,
+          desc: 'returns logs with message containing "transition"',
+        },
+      ],
+    },
   ];
 
   constructor(@Inject(ElementRef) private elementRef: ElementRef<HTMLElement>) {
