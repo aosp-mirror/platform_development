@@ -12,12 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#[cfg(feature = "gestalt_ratio")]
-use gestalt_ratio::gestalt_ratio;
-#[cfg(feature = "gestalt_ratio")]
+#[cfg(feature = "fuzzy_content_match")]
 use itertools::Itertools;
 use spdx::{LicenseReq, Licensee};
 use std::sync::LazyLock;
+#[cfg(feature = "fuzzy_content_match")]
+use textdistance::str::ratcliff_obershelp;
 
 fn strip_punctuation(text: &str) -> String {
     let lowercase = text.to_lowercase();
@@ -44,7 +44,7 @@ pub(crate) fn classify_license_file_contents(contents: &str) -> Option<LicenseRe
     }
 
     // Fuzzy match. This is expensive, so start with licenses that are closest in length to the file.
-    #[cfg(feature = "gestalt_ratio")]
+    #[cfg(feature = "fuzzy_content_match")]
     for (req, required_text) in LICENSE_CONTENT_CLASSIFICATION.iter().sorted_by(|a, b| {
         let mut ra = a.1.len() as f32 / contents.len() as f32;
         let mut rb = b.1.len() as f32 / contents.len() as f32;
@@ -56,7 +56,7 @@ pub(crate) fn classify_license_file_contents(contents: &str) -> Option<LicenseRe
         }
         rb.partial_cmp(&ra).unwrap()
     }) {
-        let similarity = gestalt_ratio(&contents, required_text);
+        let similarity = ratcliff_obershelp(contents.as_str(), required_text);
         if similarity > 0.95 {
             return Some(req.clone());
         }
@@ -115,7 +115,7 @@ mod tests {
         );
     }
 
-    #[cfg(feature = "gestalt_ratio")]
+    #[cfg(feature = "fuzzy_content_match")]
     #[test]
     fn test_classify_fuzzy() {
         assert_eq!(
