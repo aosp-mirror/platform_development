@@ -33,7 +33,7 @@ fun systemUiTransitions(
     revealHaptics: ContainerRevealHaptics,
 ) = transitions {
     interruptionHandler = DemoInterruptionHandler
-    defaultSwipeSpec =
+    defaultMotionSpatialSpec =
         spring(
             stiffness = springConfiguration.stiffness,
             dampingRatio = springConfiguration.dampingRatio,
