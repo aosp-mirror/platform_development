@@ -1327,7 +1327,7 @@ fn crate_to_rulesmk(
             override_module_name(
                 &format!("lib{dep}"),
                 &package_cfg.dep_blocklist,
-                &cfg.module_name_overrides,
+                &BTreeMap::new(),
                 &RULESMK_RENAME_MAP,
             )
         })

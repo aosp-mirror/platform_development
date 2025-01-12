@@ -16,7 +16,7 @@
 //! very similar to .cargo-checksum.json
 
 use std::{
-    collections::HashMap,
+    collections::BTreeMap,
     fs::{remove_file, write, File},
     io::{self, BufReader, Read},
     path::{Path, PathBuf, StripPrefixError},
@@ -31,7 +31,8 @@ use walkdir::WalkDir;
 #[derive(Serialize, Deserialize)]
 struct Checksum {
     package: Option<String>,
-    files: HashMap<String, String>,
+    // BTreeMap keeps this reproducible
+    files: BTreeMap<String, String>,
 }
 
 #[allow(missing_docs)]
@@ -62,7 +63,7 @@ pub fn generate(crate_dir: impl AsRef<Path>) -> Result<(), ChecksumError> {
     if checksum_file.exists() {
         remove_file(&checksum_file)?;
     }
-    let mut checksum = Checksum { package: None, files: HashMap::new() };
+    let mut checksum = Checksum { package: None, files: BTreeMap::new() };
     for entry in WalkDir::new(crate_dir).follow_links(true) {
         let entry = entry?;
         if entry.path().is_dir() {
