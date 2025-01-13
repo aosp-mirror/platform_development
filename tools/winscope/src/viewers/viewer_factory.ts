@@ -16,6 +16,7 @@
 
 import {assertTrue} from 'common/assert_utils';
 import {Store} from 'common/store/store';
+import {TimestampConverter} from 'common/time/timestamp_converter';
 import {Trace} from 'trace/trace';
 import {Traces} from 'trace/traces';
 import {TraceType, TraceTypeUtils} from 'trace/trace_type';
@@ -55,12 +56,16 @@ class ViewerFactory {
     ViewerScreenshot,
   ];
 
-  createViewers(traces: Traces, storage: Store): Viewer[] {
+  createViewers(
+    traces: Traces,
+    storage: Store,
+    timestampConverter: TimestampConverter,
+  ): Viewer[] {
     const viewers: Viewer[] = [];
 
     for (const trace of traces) {
       if (trace.isPerfetto()) {
-        viewers.push(new ViewerSearch(traces, storage));
+        viewers.push(new ViewerSearch(traces, storage, timestampConverter));
         break;
       }
     }

@@ -42,6 +42,12 @@ class SearchResultPresenterTest extends AbstractLogViewerPresenterTest<SearchRes
         cssClass: 'search-result',
       }),
     },
+    {
+      header: new LogHeader({
+        name: 'value',
+        cssClass: 'search-result',
+      }),
+    },
   ];
   private trace: Trace<QueryResult> | undefined;
   private positionUpdate: TracePositionUpdate | undefined;
@@ -49,8 +55,10 @@ class SearchResultPresenterTest extends AbstractLogViewerPresenterTest<SearchRes
 
   override async setUpTestEnvironment(): Promise<void> {
     const time100 = TimestampConverterUtils.makeRealTimestamp(100n);
-    const [spyQueryResult, spyIter] =
-      UnitTestUtils.makeSearchTraceSpies(time100);
+    const [spyQueryResult, spyIter] = UnitTestUtils.makeSearchTraceSpies(
+      time100,
+      123,
+    );
     this.spyIter = spyIter;
     this.trace = new TraceBuilder<QueryResult>()
       .setEntries([spyQueryResult])
@@ -70,24 +78,34 @@ class SearchResultPresenterTest extends AbstractLogViewerPresenterTest<SearchRes
     callback: NotifyLogViewCallbackType<SearchResult>,
   ): Promise<SearchResultPresenter> {
     const time100 = TimestampConverterUtils.makeRealTimestamp(100n);
-    const [spyQueryResult, spyIter] =
-      UnitTestUtils.makeSearchTraceSpies(time100);
+    const [spyQueryResult, spyIter] = UnitTestUtils.makeSearchTraceSpies(
+      time100,
+      123,
+    );
     this.spyIter = spyIter;
     const trace = UnitTestUtils.makeEmptyTrace(TraceType.SEARCH);
-    return new SearchResultPresenter(trace, callback, spyQueryResult);
+    return new SearchResultPresenter(
+      trace,
+      callback,
+      (valueNs: bigint) => TimestampConverterUtils.makeRealTimestamp(valueNs),
+      spyQueryResult,
+    );
   }
 
   override async createPresenter(
     callback: NotifyLogViewCallbackType<SearchResult>,
     trace = assertDefined(this.trace),
-    positionUpdate = assertDefined(this.getPositionUpdate()),
+    positionUpdate?: TracePositionUpdate,
   ): Promise<SearchResultPresenter> {
     const presenter = new SearchResultPresenter(
       trace,
       callback,
+      (valueNs: bigint) => TimestampConverterUtils.makeRealTimestamp(valueNs),
       await trace.getEntry(0).getValue(),
     );
-    await presenter.onAppEvent(positionUpdate); // trigger initialization
+    if (positionUpdate) {
+      await presenter.onAppEvent(positionUpdate); // trigger initialization
+    }
     return presenter;
   }
 
@@ -105,11 +123,82 @@ class SearchResultPresenterTest extends AbstractLogViewerPresenterTest<SearchRes
             spec: this.expectedHeaders[0].header.spec,
             value: firstEntry.getTimestamp(),
           },
-          {spec: this.expectedHeaders[1].header.spec, value: 'test_value'},
+          {spec: this.expectedHeaders[1].header.spec, value: 'test_property'},
+          {spec: this.expectedHeaders[2].header.spec, value: 123},
         ],
         propertiesTree: undefined,
       },
     ]);
+  }
+
+  override executeSpecializedTests() {
+    describe('Specialized tests', () => {
+      let result: SearchResult;
+
+      it("does not convert 'ts' column value to timestamp if entry timestamp is not valid", async () => {
+        const time0 = TimestampConverterUtils.makeZeroTimestamp();
+        const [spyQueryResult, spyIter] =
+          UnitTestUtils.makeSearchTraceSpies(time0);
+        const trace = new TraceBuilder<QueryResult>()
+          .setEntries([spyQueryResult])
+          .setTimestamps([time0])
+          .setType(TraceType.SEARCH)
+          .build();
+        await this.createPresenter(
+          (newResult) => {
+            result = newResult;
+          },
+          trace,
+          TracePositionUpdate.fromTraceEntry(trace.getEntry(0)),
+        );
+        expect(result.entries[0].fields[0].value).toEqual(0);
+      });
+
+      describe('value conversions', () => {
+        let presenter: SearchResultPresenter;
+
+        beforeAll(async () => {
+          await this.setUpTestEnvironment();
+        });
+
+        beforeEach(async () => {
+          presenter = await this.createPresenter((newResult) => {
+            result = newResult;
+          }, undefined);
+          this.resetTestEnvironment();
+        });
+
+        it("converts 'value' column string value to timestamp if 'property' value ends in 'time_ns'", async () => {
+          this.spyIter?.get
+            .withArgs('property')
+            .and.returnValue('test_time_ns');
+          this.spyIter?.get.withArgs('value').and.returnValue('123');
+          await presenter.onAppEvent(assertDefined(this.getPositionUpdate()));
+          expect(result.entries[0].fields[1].value).toEqual('test_time_ns');
+          expect(result.entries[0].fields[2].value).toEqual(
+            TimestampConverterUtils.makeRealTimestamp(123n),
+          );
+        });
+
+        it("converts value to 'NULL' if null", async () => {
+          this.spyIter?.get.withArgs('value').and.returnValue(null);
+          await presenter.onAppEvent(assertDefined(this.getPositionUpdate()));
+          expect(result.entries[0].fields[2].value).toEqual('NULL');
+        });
+
+        it('converts value to number if bigint', async () => {
+          this.spyIter?.get.withArgs('value').and.returnValue(321n);
+          await presenter.onAppEvent(assertDefined(this.getPositionUpdate()));
+          expect(result.entries[0].fields[2].value).toEqual(321);
+        });
+
+        it("converts value to '[]' if Uint8Array", async () => {
+          this.spyIter?.get.withArgs('value').and.returnValue(new Uint8Array());
+          await presenter.onAppEvent(assertDefined(this.getPositionUpdate()));
+          expect(result.entries[0].fields[2].value).toEqual('[]');
+        });
+      });
+    });
   }
 }
 

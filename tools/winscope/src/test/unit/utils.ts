@@ -29,7 +29,12 @@ import {TraceFile} from 'trace/trace_file';
 import {TraceMetadata} from 'trace/trace_metadata';
 import {TraceEntryTypeMap, TraceType} from 'trace/trace_type';
 import {HierarchyTreeNode} from 'trace/tree_node/hierarchy_tree_node';
-import {QueryResult, Row, RowIterator} from 'trace_processor/query_result';
+import {
+  ColumnType,
+  QueryResult,
+  Row,
+  RowIterator,
+} from 'trace_processor/query_result';
 import {TraceProcessorFactory} from 'trace_processor/trace_processor_factory';
 import {getFixtureFile} from './fixture_utils';
 import {TraceBuilder} from './trace_builder';
@@ -344,6 +349,7 @@ class UnitTestUtils {
 
   static makeSearchTraceSpies(
     ts?: Timestamp,
+    value?: ColumnType,
   ): [jasmine.SpyObj<QueryResult>, jasmine.SpyObj<RowIterator<Row>>] {
     const spyQueryResult = jasmine.createSpyObj<QueryResult>('result', [
       'numRows',
@@ -351,19 +357,24 @@ class UnitTestUtils {
       'iter',
     ]);
     spyQueryResult.numRows.and.returnValue(1);
-    spyQueryResult.columns.and.returnValue(
-      ts === undefined ? ['property'] : ['ts', 'property'],
-    );
+    const columns: string[] = [];
+    if (ts !== undefined) columns.push('ts');
+    columns.push('property');
+    if (value !== undefined) columns.push('value');
+    spyQueryResult.columns.and.returnValue(columns);
 
     const spyIter = jasmine.createSpyObj<RowIterator<Row>>('iter', [
       'valid',
       'next',
       'get',
     ]);
-    if (ts) {
+    if (ts !== undefined) {
       spyIter.get.withArgs('ts').and.returnValue(ts.getValueNs());
     }
-    spyIter.get.withArgs('property').and.returnValue('test_value');
+    spyIter.get.withArgs('property').and.returnValue('test_property');
+    if (value !== undefined) {
+      spyIter.get.withArgs('value').and.returnValue(value);
+    }
     spyIter.valid.and.returnValue(true);
     spyIter.next.and.callFake(() =>
       assertDefined(spyIter).valid.and.returnValue(false),

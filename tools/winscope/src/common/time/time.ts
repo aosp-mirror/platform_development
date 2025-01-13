@@ -84,3 +84,5 @@ export class Timestamp {
     return this.formatter.format(this, type);
   }
 }
+
+export type MakeTimestampStrategyType = (valueNs: bigint) => Timestamp;

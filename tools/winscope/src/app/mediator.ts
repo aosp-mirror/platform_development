@@ -496,6 +496,7 @@ export class Mediator {
     this.viewers = new ViewerFactory().createViewers(
       this.tracePipeline.getTraces(),
       this.storage,
+      this.tracePipeline.getTimestampConverter(),
     );
     this.viewers.forEach((viewer) =>
       viewer.setEmitEvent(async (event) => {
