@@ -83,7 +83,6 @@ data class DemoConfiguration(
             val canChangeSceneOrOverlaysKey = "canChangeSceneOrOverlays"
             val transitionInterceptionThresholdKey = "transitionInterceptionThreshold"
             val springConfigurationsKey = "springConfigurations"
-            val overscrollProgress = "overscrollProgress"
             val lsToShadeRequiresFullSwipe = "lsToShadeRequiresFullSwipe"
             val enableOverlays = "enableOverlays"
             val transitionBorder = "transitionBorder"

@@ -554,6 +554,7 @@ fun SystemUi(
                                     isLockscreenDismissable = !isLockscreenDismissable
                                 },
                                 ::onChangeScene,
+                                configuration = configuration,
                             )
                         }
                         scene(Scenes.StubStart, Stub.startUserActions(lockscreenScene)) {
@@ -642,7 +643,7 @@ fun SystemUi(
                         overlay(
                             Overlays.Notifications,
                             userActions = NotificationShade.UserActions,
-                            alignment = Alignment.TopEnd,
+                            alignment = Alignment.TopStart,
                         ) {
                             NotificationShade(
                                 notificationList = {

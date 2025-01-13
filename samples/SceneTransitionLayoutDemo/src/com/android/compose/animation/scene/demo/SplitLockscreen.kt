@@ -52,6 +52,7 @@ fun SceneScope.SplitLockscreen(
     isDismissable: Boolean,
     onToggleDismissable: () -> Unit,
     onChangeScene: (SceneKey) -> Unit,
+    configuration: DemoConfiguration,
     modifier: Modifier = Modifier,
 ) {
     Column(modifier.element(Lockscreen.Elements.Scene).fillMaxSize()) {
@@ -64,9 +65,17 @@ fun SceneScope.SplitLockscreen(
                 if (mediaPlayer != null) {
                     Box(Modifier.padding(top = 32.dp, start = 16.dp)) { mediaPlayer() }
                 }
+
+                if (configuration.enableOverlays) {
+                    notificationList()
+                }
             }
 
-            Box(Modifier.weight(1f).padding(16.dp)) { notificationList() }
+            Box(Modifier.weight(1f).padding(16.dp)) {
+                if (!configuration.enableOverlays) {
+                    notificationList()
+                }
+            }
         }
 
         LockButton(
