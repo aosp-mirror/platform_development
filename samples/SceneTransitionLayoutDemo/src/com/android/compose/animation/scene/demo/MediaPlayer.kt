@@ -16,18 +16,8 @@
 
 package com.android.compose.animation.scene.demo
 
-import androidx.compose.animation.core.LinearEasing
-import androidx.compose.animation.core.Spring
-import androidx.compose.animation.core.animateDpAsState
-import androidx.compose.animation.core.animateFloat
-import androidx.compose.animation.core.infiniteRepeatable
-import androidx.compose.animation.core.rememberInfiniteTransition
-import androidx.compose.animation.core.spring
-import androidx.compose.animation.core.tween
-import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -40,14 +30,9 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.graphics.Path
-import androidx.compose.ui.graphics.drawscope.clipRect
 import androidx.compose.ui.unit.dp
 import com.android.compose.animation.scene.ContentKey
 import com.android.compose.animation.scene.ElementKey
@@ -55,8 +40,6 @@ import com.android.compose.animation.scene.MovableElementKey
 import com.android.compose.animation.scene.SceneScope
 import com.android.compose.animation.scene.StaticElementContentPicker
 import com.android.compose.animation.scene.content.state.TransitionState
-import kotlin.math.ceil
-import kotlin.math.roundToInt
 
 object MediaPlayer {
     object Elements {
@@ -64,7 +47,8 @@ object MediaPlayer {
     }
 
     object Dimensions {
-        val Height = 150.dp
+        val HeightLarge = 150.dp
+        val HeightSmall = 70.dp
     }
 
     object Shapes {
@@ -80,6 +64,7 @@ object MediaPlayer {
                 Scenes.SplitShade,
                 Scenes.QuickSettings,
                 Overlays.QuickSettings,
+                Overlays.Notifications,
             )
 
         override fun contentDuringTransition(
@@ -121,6 +106,7 @@ object MediaPlayer {
                     Scenes.SplitShade
                 transition.isTransitioningBetween(Scenes.Lockscreen, Scenes.QuickSettings) ->
                     Scenes.QuickSettings
+                transition.isTransitioningFromOrTo(Overlays.Notifications) -> Overlays.Notifications
                 transition.isTransitioningFromOrTo(Overlays.QuickSettings) -> Overlays.QuickSettings
                 else -> pickSingleContentIn(contents, transition, element)
             }
@@ -130,17 +116,27 @@ object MediaPlayer {
 
 @Composable
 fun SceneScope.MediaPlayer(
+    isSmall: Boolean,
     isPlaying: Boolean,
     onIsPlayingChange: (Boolean) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    MovableElement(MediaPlayer.Elements.MediaPlayer, modifier) {
+    MovableElement(
+        MediaPlayer.Elements.MediaPlayer,
+        modifier
+            .fillMaxWidth()
+            .height(
+                if (isSmall) MediaPlayer.Dimensions.HeightSmall
+                else MediaPlayer.Dimensions.HeightLarge
+            ),
+    ) {
         content {
             Box(
-                Modifier.fillMaxWidth()
-                    .height(MediaPlayer.Dimensions.Height)
-                    .background(MaterialTheme.colorScheme.tertiary, MediaPlayer.Shapes.Background)
-                    .padding(16.dp)
+                Modifier.background(
+                        MaterialTheme.colorScheme.tertiary,
+                        MediaPlayer.Shapes.Background,
+                    )
+                    .padding(8.dp)
             ) {
                 FilledIconButton(
                     onClick = { onIsPlayingChange(!isPlaying) },
@@ -157,70 +153,6 @@ fun SceneScope.MediaPlayer(
                         Icon(Icons.Default.PlayArrow, null, tint = color)
                     }
                 }
-
-                Sinusoid(isPlaying = isPlaying)
-            }
-        }
-    }
-}
-
-@Composable
-private fun BoxScope.Sinusoid(isPlaying: Boolean, modifier: Modifier = Modifier) {
-    val color = MaterialTheme.colorScheme.onTertiary
-    val waveWidth = 10.dp
-    val maxWaveHeight = 5.dp
-    val lineWidth = 3.dp
-
-    val waveHeight by
-        animateDpAsState(
-            if (isPlaying) maxWaveHeight else 0.dp,
-            spring(stiffness = Spring.StiffnessMediumLow),
-        )
-
-    val shouldAnimateWave by remember { derivedStateOf { waveHeight > 0.dp } }
-    Box(
-        modifier.align(Alignment.BottomCenter).fillMaxWidth().height(maxWaveHeight * 2),
-        propagateMinConstraints = true,
-    ) {
-        if (shouldAnimateWave) {
-            val translation by
-                rememberInfiniteTransition()
-                    .animateFloat(
-                        0f,
-                        1f,
-                        infiniteRepeatable(tween(durationMillis = 1_000, easing = LinearEasing)),
-                    )
-
-            val path = remember { Path() }
-            Canvas(Modifier) {
-                val waveWidthPx = waveWidth.toPx()
-                val waveHeightPx = waveHeight.toPx()
-                val lineWidthPx = lineWidth.toPx()
-
-                clipRect {
-                    path.reset()
-
-                    repeat(ceil(size.width / (waveWidthPx * 2)).roundToInt() + 1) { i ->
-                        path.moveTo((i - translation) * waveWidthPx * 2, center.y - lineWidthPx / 2)
-                        path.relativeQuadraticTo(waveWidthPx / 2, -waveHeightPx, waveWidthPx, 0f)
-                        path.relativeQuadraticTo(waveWidthPx / 2, waveHeightPx, waveWidthPx, 0f)
-                        path.relativeLineTo(0f, lineWidthPx)
-                        path.relativeQuadraticTo(-waveWidthPx / 2, waveHeightPx, -waveWidthPx, 0f)
-                        path.relativeQuadraticTo(-waveWidthPx / 2, -waveHeightPx, -waveWidthPx, 0f)
-                        path.close()
-                    }
-
-                    drawPath(path, color)
-                }
-            }
-        } else {
-            Canvas(Modifier) {
-                drawLine(
-                    color,
-                    start = Offset(0f, center.y),
-                    end = Offset(size.width, center.y),
-                    strokeWidth = lineWidth.toPx(),
-                )
             }
         }
     }

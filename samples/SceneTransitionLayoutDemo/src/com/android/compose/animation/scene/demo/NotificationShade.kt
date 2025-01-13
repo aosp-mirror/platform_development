@@ -18,8 +18,10 @@ package com.android.compose.animation.scene.demo
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
 import com.android.compose.animation.scene.Back
 import com.android.compose.animation.scene.ElementKey
 import com.android.compose.animation.scene.SceneScope
@@ -42,11 +44,16 @@ object NotificationShade {
 
 @Composable
 fun SceneScope.NotificationShade(
+    mediaPlayer: (@Composable SceneScope.() -> Unit)?,
     notificationList: @Composable SceneScope.() -> Unit,
     modifier: Modifier = Modifier,
 ) {
     PartialShade(modifier) {
         Column(Modifier.element(NotificationShade.Elements.Content)) {
+            if (mediaPlayer != null) {
+                Box(Modifier.padding(horizontal = 16.dp).padding(top = 16.dp)) { mediaPlayer() }
+            }
+
             // Don't resize the notifications during the reveal.
             Box(Modifier.noResizeDuringTransitions()) { notificationList() }
         }
