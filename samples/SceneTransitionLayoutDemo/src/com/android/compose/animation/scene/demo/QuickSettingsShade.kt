@@ -20,7 +20,6 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -53,13 +52,11 @@ fun ContentScope.QuickSettingsShade(
 ) {
     PartialShade(modifier) {
         Column(Modifier.element(QuickSettingsShade.Elements.Content)) {
-            val horizontalPaddingModifier = Modifier.padding(horizontal = 16.dp)
-
-            Clock(MaterialTheme.colorScheme.onSurfaceVariant, horizontalPaddingModifier)
-
             if (mediaPlayer != null) {
                 // Ensure that the media player is above the QS tiles when they fade in.
-                Box(horizontalPaddingModifier.zIndex(1f)) { mediaPlayer() }
+                Box(Modifier.padding(top = 16.dp, start = 16.dp, end = 16.dp).zIndex(1f)) {
+                    mediaPlayer()
+                }
             }
 
             Spacer(Modifier.padding(top = 16.dp))

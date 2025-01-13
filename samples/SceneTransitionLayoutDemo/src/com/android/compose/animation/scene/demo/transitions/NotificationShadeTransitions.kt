@@ -20,6 +20,7 @@ import androidx.compose.animation.core.tween
 import com.android.compose.animation.scene.BaseTransitionBuilder
 import com.android.compose.animation.scene.SceneTransitionsBuilder
 import com.android.compose.animation.scene.TransitionBuilder
+import com.android.compose.animation.scene.demo.Clock
 import com.android.compose.animation.scene.demo.MediaPlayer
 import com.android.compose.animation.scene.demo.Overlays
 import com.android.compose.animation.scene.demo.PartialShade
@@ -31,18 +32,20 @@ fun SceneTransitionsBuilder.notificationShadeTransitions(revealHaptics: Containe
     to(Overlays.Notifications) {
         spec = tween(500)
         toNotificationShade(revealHaptics)
+        sharedElement(Clock.Elements.Clock, elevateInContent = Overlays.Notifications)
+        sharedElement(MediaPlayer.Elements.MediaPlayer, elevateInContent = Overlays.Notifications)
         sharedElement(
             NotificationList.Elements.Notifications,
             elevateInContent = Overlays.Notifications,
         )
-        sharedElement(MediaPlayer.Elements.MediaPlayer, elevateInContent = Overlays.Notifications)
     }
 
     from(Overlays.Notifications) {
         spec = tween(500)
         reversed { toNotificationShade(revealHaptics) }
-        sharedElement(NotificationList.Elements.Notifications, enabled = false)
+        sharedElement(Clock.Elements.Clock, enabled = false)
         sharedElement(MediaPlayer.Elements.MediaPlayer, enabled = false)
+        sharedElement(NotificationList.Elements.Notifications, enabled = false)
     }
 }
 

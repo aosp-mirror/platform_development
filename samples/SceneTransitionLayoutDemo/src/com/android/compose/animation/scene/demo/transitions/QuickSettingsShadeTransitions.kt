@@ -39,8 +39,6 @@ fun SceneTransitionsBuilder.quickSettingsShadeTransitions(revealHaptics: Contain
         spec = tween(500)
 
         sharedElement(MediaPlayer.Elements.MediaPlayer, elevateInContent = Overlays.QuickSettings)
-        sharedElement(Clock.Elements.Clock, elevateInContent = Overlays.QuickSettings)
-
         verticalContainerReveal(PartialShade.Elements.Root, revealHaptics)
     }
 
@@ -54,11 +52,10 @@ fun SceneTransitionsBuilder.quickSettingsShadeTransitions(revealHaptics: Contain
         // Elevate the media player so that they are not clipped when shared with the split
         // lockscreen.
         sharedElement(MediaPlayer.Elements.MediaPlayer, elevateInContent = Overlays.QuickSettings)
-        sharedElement(Clock.Elements.Clock, elevateInContent = Overlays.QuickSettings)
+        sharedElement(Clock.Elements.Clock, enabled = false)
 
         fractionRange(end = QuickSettingsToNotificationShadeFadeProgress) {
             fade(MediaPlayer.Elements.MediaPlayer)
-            fade(Clock.Elements.Clock)
             fade(QuickSettingsGrid.Elements.Tiles)
             fade(QuickSettings.Elements.PagerIndicators)
             fade(
@@ -67,6 +64,7 @@ fun SceneTransitionsBuilder.quickSettingsShadeTransitions(revealHaptics: Contain
             )
         }
         fractionRange(start = QuickSettingsToNotificationShadeFadeProgress) {
+            fade(Clock.Elements.Clock)
             fade(NotificationList.Elements.Notifications and inContent(Overlays.Notifications))
         }
     }

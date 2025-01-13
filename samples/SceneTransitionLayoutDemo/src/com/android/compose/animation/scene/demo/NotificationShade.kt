@@ -44,14 +44,18 @@ object NotificationShade {
 
 @Composable
 fun ContentScope.NotificationShade(
+    clock: (@Composable ContentScope.() -> Unit)?,
     mediaPlayer: (@Composable ContentScope.() -> Unit)?,
     notificationList: @Composable ContentScope.() -> Unit,
     modifier: Modifier = Modifier,
 ) {
     PartialShade(modifier) {
         Column(Modifier.element(NotificationShade.Elements.Content)) {
-            if (mediaPlayer != null) {
-                Box(Modifier.padding(horizontal = 16.dp).padding(top = 16.dp)) { mediaPlayer() }
+            if (clock != null || mediaPlayer != null) {
+                Column(Modifier.padding(horizontal = 16.dp).padding(top = 16.dp)) {
+                    clock?.let { it() }
+                    mediaPlayer?.let { it() }
+                }
             }
 
             // Don't resize the notifications during the reveal.

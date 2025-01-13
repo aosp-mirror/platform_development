@@ -654,6 +654,12 @@ fun SystemUi(
                             alignment = Alignment.TopStart,
                         ) {
                             NotificationShade(
+                                clock =
+                                    if (shouldUseSplitScenes) {
+                                        null
+                                    } else {
+                                        { Clock(MaterialTheme.colorScheme.onSurfaceVariant) }
+                                    },
                                 mediaPlayer = largeMediaPlayer,
                                 notificationList = {
                                     NotificationList(
