@@ -88,6 +88,20 @@ describe('TraceSearchInitializer', () => {
     expect(queryResult.numRows()).toEqual(2);
   });
 
+  it('initializes transitions', async () => {
+    const parser = await UnitTestUtils.getPerfettoParser(
+      TraceType.TRANSITION,
+      'traces/perfetto/shell_transitions_trace.perfetto-trace',
+    );
+    expect(await createViews(parser)).toEqual(['transitions_search']);
+    const queryResult = await UnitTestUtils.runQueryAndGetResult(`
+      SELECT * FROM transitions_search
+        WHERE flat_property='handler'
+        AND value LIKE '%DefaultMixedHandler'
+    `);
+    expect(queryResult.numRows()).toEqual(2);
+  });
+
   async function createViews(parser: Parser<object>) {
     const trace = Trace.fromParser(parser);
     const traces = new Traces();

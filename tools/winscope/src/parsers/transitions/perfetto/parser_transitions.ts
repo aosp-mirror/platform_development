@@ -38,9 +38,7 @@ export class ParserTransitions extends AbstractParser<PropertyTreeNode> {
           ELSE STATE.ts END
         AS ts,
         STATE.transition_id,
-        STATE.arg_set_id,
-        STATE.base64_proto,
-        STATE.base64_proto_id
+        STATE.arg_set_id
       FROM ${this.internalTableName} STATE
       LEFT JOIN args TRANS
         ON TRANS.arg_set_id = STATE.arg_set_id AND TRANS.key = 'send_time_ns'
