@@ -16,9 +16,99 @@
 
 import {TraceType} from 'trace/trace_type';
 import {AbstractSearchViewFactory} from './abstract_search_view_factory';
+import {SearchView} from './trace_search_initializer';
 
 export class SearchViewFactorySf extends AbstractSearchViewFactory {
   override readonly traceType = TraceType.SURFACE_FLINGER;
+  private static readonly LAYER_VIEW: SearchView = {
+    name: 'sf_layer_search',
+    dataType: 'SurfaceFlinger layer',
+    spec: [
+      {
+        name: 'state_id',
+        desc: 'Unique id of entry to which layer belongs',
+      },
+      {name: 'ts', desc: 'Timestamp of entry to which layer belongs'},
+      {name: 'layer_id', desc: 'Layer id'},
+      {name: 'parent_id', desc: 'Layer id of parent'},
+      {name: 'layer_name', desc: 'Layer name'},
+      {
+        name: 'property',
+        desc: 'Property name accounting for repeated fields',
+      },
+      {
+        name: 'flat_property',
+        desc: 'Property name not accounting for repeated fields',
+      },
+      {name: 'value', desc: 'Property value in string format'},
+      {
+        name: 'previous_value',
+        desc: 'Property value from previous entry in string format',
+      },
+    ],
+    examples: [
+      {
+        query: `SELECT ts, value, previous_value FROM sf_layer_search
+WHERE layer_name='Taskbar#97'
+AND property='color.a'
+AND value!=previous_value`,
+        desc: 'returns timestamp, current and previous values of alpha for Taskbar#97, for states where alpha changed from previous state',
+      },
+      {
+        query: `SELECT ts, value, previous_value FROM sf_layer_search
+WHERE layer_name LIKE 'Wallpaper%'
+AND property='bounds.bottom'
+AND cast_int!(value) <= 2400`,
+        desc: 'returns timestamp, current and previous values of bottom bound for layers that start with "Wallpaper", for states where bottom bound <= 2400',
+      },
+    ],
+  };
+  private static readonly ROOT_VIEW: SearchView = {
+    name: 'sf_hierarchy_root_search',
+    dataType: 'SurfaceFlinger root',
+    spec: [
+      {
+        name: 'state_id',
+        desc: 'Unique id of entry',
+      },
+      {name: 'ts', desc: 'Timestamp of entry'},
+      {
+        name: 'property',
+        desc: 'Property name accounting for repeated fields',
+      },
+      {
+        name: 'flat_property',
+        desc: 'Property name not accounting for repeated fields',
+      },
+      {name: 'value', desc: 'Property value in string format'},
+      {
+        name: 'previous_value',
+        desc: 'Property value from previous entry in string format',
+      },
+    ],
+    examples: [
+      {
+        query: `SELECT STATE.* FROM sf_hierarchy_root_search STATE_WITH_DISPLAY_ON
+INNER JOIN sf_hierarchy_root_search STATE
+ON STATE.state_id = STATE_WITH_DISPLAY_ON.state_id
+AND STATE_WITH_DISPLAY_ON.flat_property='displays.layer_stack'
+AND STATE_WITH_DISPLAY_ON.value!='4294967295'
+AND STATE.property LIKE CONCAT(
+  SUBSTRING(
+      STATE_WITH_DISPLAY_ON.property,
+      0,
+      instr(STATE_WITH_DISPLAY_ON.property, ']')
+  ),
+  '%'
+)`,
+        desc: 'returns all properties for displays with valid layer stack from all states',
+      },
+    ],
+  };
+
+  static getPossibleSearchViews(): SearchView[] {
+    return [SearchViewFactorySf.LAYER_VIEW, SearchViewFactorySf.ROOT_VIEW];
+  }
 
   override async createSearchViews(): Promise<string[]> {
     const layerArgsTable = await this.createSqlTableWithDefaults(
@@ -74,9 +164,8 @@ export class SearchViewFactorySf extends AbstractSearchViewFactory {
           `;
     await this.traceProcessor.query(sqlCreateViewSfLayerWithProperties);
 
-    const layerSearchView = 'sf_layer_search';
     const sqlCreateViewSfLayerSearch = `
-            CREATE PERFETTO VIEW ${layerSearchView}(
+            CREATE PERFETTO VIEW ${SearchViewFactorySf.LAYER_VIEW.name}(
               state_id INT,
               ts INT,
               layer_id INT,
@@ -117,9 +206,8 @@ export class SearchViewFactorySf extends AbstractSearchViewFactory {
           `;
     await this.traceProcessor.query(sqlCreateViewSfEntry);
 
-    const entrySearchView = 'sf_hierarchy_root_search';
     const sqlCreateViewSfEntrySearch = `
-            CREATE PERFETTO VIEW ${entrySearchView} AS
+            CREATE PERFETTO VIEW ${SearchViewFactorySf.ROOT_VIEW.name} AS
               SELECT
                 STATE.*,
                 PREVIOUS.value as previous_value
@@ -131,6 +219,9 @@ export class SearchViewFactorySf extends AbstractSearchViewFactory {
           `;
     await this.traceProcessor.query(sqlCreateViewSfEntrySearch);
 
-    return [layerSearchView, entrySearchView];
+    return [
+      SearchViewFactorySf.LAYER_VIEW.name,
+      SearchViewFactorySf.ROOT_VIEW.name,
+    ];
   }
 }
