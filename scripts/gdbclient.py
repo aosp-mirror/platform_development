@@ -351,9 +351,10 @@ def generate_lldb_script(root: str, sysroot: str, binary_name: str, port: str | 
     commands.append('# If the below `gdb-remote` fails, run the command manually, '
                     + 'as it may have raced with lldbserver startup.')
     commands.append('gdb-remote {}'.format(str(port)))
-    for cmd in extra_cmds:
-        if not cmd.startswith('#'):
-            commands.append(cmd)
+    if extra_cmds is not None:
+        for cmd in extra_cmds:
+            if not cmd.startswith('#'):
+                commands.append(cmd)
     return '\n'.join(commands)
 
 

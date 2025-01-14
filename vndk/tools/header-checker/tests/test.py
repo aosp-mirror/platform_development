@@ -99,9 +99,9 @@ class HeaderCheckerTest(unittest.TestCase):
                         f'reference dump.')
         return os.path.join(REF_DUMP_DIR, module.arch, module.get_dump_name())
 
-    def prepare_and_run_abi_diff_all_archs(self, old_lib, new_lib,
-                                           expected_return_code, flags=[],
-                                           create_old=False, create_new=True):
+    def prepare_and_run_abi_diff_all_arches(self, old_lib, new_lib,
+                                            expected_return_code, flags=[],
+                                            create_old=False, create_new=True):
         old_modules = Module.get_test_modules_by_name(old_lib)
         new_modules = Module.get_test_modules_by_name(new_lib)
         self.assertEqual(len(old_modules), len(new_modules))
@@ -118,7 +118,7 @@ class HeaderCheckerTest(unittest.TestCase):
         # of the reports is sufficient.
         return output
 
-    def prepare_and_absolute_diff_all_archs(self, old_lib, new_lib):
+    def prepare_and_absolute_diff_all_arches(self, old_lib, new_lib):
         old_modules = Module.get_test_modules_by_name(old_lib)
         new_modules = Module.get_test_modules_by_name(new_lib)
         self.assertEqual(len(old_modules), len(new_modules))
@@ -143,192 +143,196 @@ class HeaderCheckerTest(unittest.TestCase):
         self.run_and_compare_name_cpp('example3.h')
 
     def test_libc_and_cpp(self):
-        self.prepare_and_run_abi_diff_all_archs(
+        self.prepare_and_run_abi_diff_all_arches(
             "libc_and_cpp", "libc_and_cpp", 0)
 
     def test_libc_and_cpp_and_libc_and_cpp_with_unused_struct(self):
-        self.prepare_and_run_abi_diff_all_archs(
+        self.prepare_and_run_abi_diff_all_arches(
             "libc_and_cpp", "libc_and_cpp_with_unused_struct", 0)
 
     def test_libc_and_cpp_and_libc_and_cpp_with_unused_struct_allow(self):
-        self.prepare_and_run_abi_diff_all_archs(
+        self.prepare_and_run_abi_diff_all_arches(
             "libc_and_cpp", "libc_and_cpp_with_unused_struct", 0,
             ["-allow-unreferenced-changes"])
 
     def test_libc_and_cpp_and_libc_and_cpp_with_unused_struct_check_all(self):
-        self.prepare_and_run_abi_diff_all_archs(
+        self.prepare_and_run_abi_diff_all_arches(
             "libc_and_cpp", "libc_and_cpp_with_unused_struct", 1,
             ["-check-all-apis"])
-        self.prepare_and_run_abi_diff_all_archs(
+        self.prepare_and_run_abi_diff_all_arches(
             "libc_and_cpp", "libc_and_cpp_with_unused_struct", 0,
             ["-check-all-apis",
              "-ignore-linker-set-key", "_ZTI12UnusedStruct"])
 
     def test_libc_and_cpp_with_unused_struct_and_libc_and_cpp_with_unused_cstruct(
             self):
-        self.prepare_and_run_abi_diff_all_archs(
+        self.prepare_and_run_abi_diff_all_arches(
             "libc_and_cpp_with_unused_struct",
             "libc_and_cpp_with_unused_cstruct", 0,
             ['-check-all-apis', '-allow-unreferenced-changes'])
 
     def test_libc_and_cpp_and_libc_and_cpp_with_unused_struct_check_all_advice(
             self):
-        self.prepare_and_run_abi_diff_all_archs(
+        self.prepare_and_run_abi_diff_all_arches(
             "libc_and_cpp", "libc_and_cpp_with_unused_struct", 0,
             ['-check-all-apis', '-advice-only'])
 
     def test_libc_and_cpp_opaque_pointer_diff(self):
-        self.prepare_and_run_abi_diff_all_archs(
+        self.prepare_and_run_abi_diff_all_arches(
             "libc_and_cpp_with_opaque_ptr_a",
             "libc_and_cpp_with_opaque_ptr_b", 8,
             ['-consider-opaque-types-different'], True, True)
 
     def test_libgolden_cpp_return_type_diff(self):
-        self.prepare_and_run_abi_diff_all_archs(
+        self.prepare_and_run_abi_diff_all_arches(
             "libgolden_cpp", "libgolden_cpp_return_type_diff", 8)
-        self.prepare_and_run_abi_diff_all_archs(
+        self.prepare_and_run_abi_diff_all_arches(
             "libgolden_cpp", "libgolden_cpp_return_type_diff", 0,
             ["-ignore-linker-set-key", "_ZN17HighVolumeSpeaker6ListenEv",
              "-ignore-linker-set-key", "_ZN16LowVolumeSpeaker6ListenEv"])
 
     def test_libgolden_cpp_add_odr(self):
-        self.prepare_and_run_abi_diff_all_archs(
+        self.prepare_and_run_abi_diff_all_arches(
             "libgolden_cpp", "libgolden_cpp_odr", 0,
             ['-check-all-apis', '-allow-unreferenced-changes'])
 
     def test_libgolden_cpp_add_function(self):
-        self.prepare_and_run_abi_diff_all_archs(
+        self.prepare_and_run_abi_diff_all_arches(
             "libgolden_cpp", "libgolden_cpp_add_function", 6)
 
     def test_libgolden_cpp_add_function_allow_extension(self):
-        self.prepare_and_run_abi_diff_all_archs(
+        self.prepare_and_run_abi_diff_all_arches(
             "libgolden_cpp", "libgolden_cpp_add_function", 0,
             ['-allow-extensions'])
 
     def test_libgolden_cpp_add_function_and_elf_symbol(self):
-        self.prepare_and_run_abi_diff_all_archs(
+        self.prepare_and_run_abi_diff_all_arches(
             "libgolden_cpp", "libgolden_cpp_add_function_and_unexported_elf",
             6)
 
     def test_libgolden_cpp_fabricated_function_ast_removed_diff(self):
-        self.prepare_and_run_abi_diff_all_archs(
-            "libgolden_cpp_add_function_sybmol_only",
-            "libgolden_cpp_add_function", 0, [], False, False)
+        self.prepare_and_run_abi_diff_all_arches(
+            "libgolden_cpp_add_function_symbol_only",
+            "libgolden_cpp_add_function", 4, [], False, False)
+        self.prepare_and_run_abi_diff_all_arches(
+            "libgolden_cpp_add_function_symbol_only",
+            "libgolden_cpp_add_function", 0,
+            ["-allow-adding-removing-referenced-apis"], False, False)
 
     def test_libgolden_cpp_change_function_access(self):
-        self.prepare_and_run_abi_diff_all_archs(
+        self.prepare_and_run_abi_diff_all_arches(
             "libgolden_cpp", "libgolden_cpp_change_function_access", 8)
 
     def test_libgolden_cpp_add_global_variable(self):
-        self.prepare_and_run_abi_diff_all_archs(
+        self.prepare_and_run_abi_diff_all_arches(
             "libgolden_cpp", "libgolden_cpp_add_global_variable", 6)
 
     def test_libgolden_cpp_change_global_var_access(self):
-        self.prepare_and_run_abi_diff_all_archs(
+        self.prepare_and_run_abi_diff_all_arches(
             "libgolden_cpp_add_global_variable",
             "libgolden_cpp_add_global_variable_private", 8)
 
     def test_libgolden_cpp_parameter_type_diff(self):
-        self.prepare_and_run_abi_diff_all_archs(
+        self.prepare_and_run_abi_diff_all_arches(
             "libgolden_cpp", "libgolden_cpp_parameter_type_diff", 8)
 
     def test_libgolden_cpp_with_vtable_diff(self):
-        self.prepare_and_run_abi_diff_all_archs(
+        self.prepare_and_run_abi_diff_all_arches(
             "libgolden_cpp", "libgolden_cpp_vtable_diff", 8)
 
     def test_libgolden_cpp_member_diff_advice_only(self):
-        self.prepare_and_run_abi_diff_all_archs(
+        self.prepare_and_run_abi_diff_all_arches(
             "libgolden_cpp", "libgolden_cpp_member_diff", 0, ['-advice-only'])
 
     def test_libgolden_cpp_member_diff(self):
-        self.prepare_and_run_abi_diff_all_archs(
+        self.prepare_and_run_abi_diff_all_arches(
             "libgolden_cpp", "libgolden_cpp_member_diff", 8)
-        self.prepare_and_run_abi_diff_all_archs(
+        self.prepare_and_run_abi_diff_all_arches(
             "libgolden_cpp", "libgolden_cpp_member_diff", 0,
             ["-ignore-linker-set-key", "_ZTI16LowVolumeSpeaker"])
 
     def test_libgolden_cpp_change_member_access(self):
-        self.prepare_and_run_abi_diff_all_archs(
+        self.prepare_and_run_abi_diff_all_arches(
             "libgolden_cpp", "libgolden_cpp_change_member_access", 8)
 
     def test_libgolden_cpp_enum_extended(self):
-        self.prepare_and_run_abi_diff_all_archs(
+        self.prepare_and_run_abi_diff_all_arches(
             "libgolden_cpp", "libgolden_cpp_enum_extended", 4)
 
     def test_libgolden_cpp_enum_diff(self):
-        self.prepare_and_run_abi_diff_all_archs(
+        self.prepare_and_run_abi_diff_all_arches(
             "libgolden_cpp", "libgolden_cpp_enum_diff", 8)
-        self.prepare_and_run_abi_diff_all_archs(
+        self.prepare_and_run_abi_diff_all_arches(
             "libgolden_cpp", "libgolden_cpp_enum_diff", 0,
             ["-ignore-linker-set-key", "_ZTIN12SuperSpeaker6VolumeE"])
 
     def test_libgolden_cpp_member_fake_diff(self):
-        self.prepare_and_run_abi_diff_all_archs(
+        self.prepare_and_run_abi_diff_all_arches(
             "libgolden_cpp", "libgolden_cpp_member_fake_diff", 0)
 
     def test_libgolden_cpp_member_integral_type_diff(self):
-        self.prepare_and_run_abi_diff_all_archs(
+        self.prepare_and_run_abi_diff_all_arches(
             "libgolden_cpp", "libgolden_cpp_member_integral_type_diff", 8)
 
     def test_libgolden_cpp_member_cv_diff(self):
-        self.prepare_and_run_abi_diff_all_archs(
+        self.prepare_and_run_abi_diff_all_arches(
             "libgolden_cpp", "libgolden_cpp_member_cv_diff", 8)
 
     def test_libgolden_cpp_unreferenced_elf_symbol_removed(self):
-        self.prepare_and_run_abi_diff_all_archs(
+        self.prepare_and_run_abi_diff_all_arches(
             "libgolden_cpp", "libgolden_cpp_unreferenced_elf_symbol_removed",
             16)
 
     def test_libgolden_cpp_unreferenced_elf_symbol_added(self):
-        self.prepare_and_run_abi_diff_all_archs(
+        self.prepare_and_run_abi_diff_all_arches(
             "libgolden_cpp_unreferenced_elf_symbol_removed", "libgolden_cpp",
             2, create_old=True, create_new=False)
 
     def test_libreproducability(self):
-        self.prepare_and_absolute_diff_all_archs(
+        self.prepare_and_absolute_diff_all_arches(
             "libreproducability", "libreproducability")
 
     def test_libgolden_cpp_member_name_changed(self):
-        self.prepare_and_run_abi_diff_all_archs(
+        self.prepare_and_run_abi_diff_all_arches(
             "libgolden_cpp", "libgolden_cpp_member_name_changed", 0)
 
     def test_libgolden_cpp_member_function_pointer_changed(self):
-        self.prepare_and_run_abi_diff_all_archs(
+        self.prepare_and_run_abi_diff_all_arches(
             "libgolden_cpp_function_pointer",
             "libgolden_cpp_function_pointer_parameter_added", 8, [],
             True, True)
 
     def test_libgolden_cpp_internal_struct_access_upgraded(self):
-        self.prepare_and_run_abi_diff_all_archs(
+        self.prepare_and_run_abi_diff_all_arches(
             "libgolden_cpp_internal_private_struct",
             "libgolden_cpp_internal_public_struct", 4, [], True, True)
 
     def test_libgolden_cpp_internal_struct_access_downgraded(self):
-        self.prepare_and_run_abi_diff_all_archs(
+        self.prepare_and_run_abi_diff_all_arches(
             "libgolden_cpp_internal_public_struct",
             "libgolden_cpp_internal_private_struct", 8, [], True, True)
 
     def test_libgolden_cpp_inheritance_type_changed(self):
-        self.prepare_and_run_abi_diff_all_archs(
+        self.prepare_and_run_abi_diff_all_arches(
             "libgolden_cpp", "libgolden_cpp_inheritance_type_changed", 8, [],
             True, True)
 
     def test_libpure_virtual_function(self):
-        self.prepare_and_absolute_diff_all_archs(
+        self.prepare_and_absolute_diff_all_arches(
             "libpure_virtual_function", "libpure_virtual_function")
 
     def test_libc_and_cpp_in_json(self):
-        self.prepare_and_absolute_diff_all_archs(
+        self.prepare_and_absolute_diff_all_arches(
             "libgolden_cpp_json", "libgolden_cpp_json")
 
     def test_libc_and_cpp_in_protobuf_and_json(self):
-        self.prepare_and_run_abi_diff_all_archs(
+        self.prepare_and_run_abi_diff_all_arches(
             "libgolden_cpp", "libgolden_cpp_json", 0,
             ["-input-format-old", "ProtobufTextFormat",
              "-input-format-new", "Json"])
 
     def test_opaque_type_self_diff(self):
-        self.prepare_and_run_abi_diff_all_archs(
+        self.prepare_and_run_abi_diff_all_arches(
             "libopaque_type", "libopaque_type", 0,
             ["-input-format-old", "Json", "-input-format-new", "Json",
              "-consider-opaque-types-different"],
@@ -374,38 +378,38 @@ class HeaderCheckerTest(unittest.TestCase):
                 ["-input-format-old", "Json", "-input-format-new", "Json"])
 
     def test_no_source(self):
-        self.prepare_and_run_abi_diff_all_archs(
+        self.prepare_and_run_abi_diff_all_arches(
             "libempty", "libempty", 0,
             ["-input-format-old", "Json", "-input-format-new", "Json"])
 
     def test_golden_anonymous_enum(self):
-        self.prepare_and_absolute_diff_all_archs(
+        self.prepare_and_absolute_diff_all_arches(
             "libgolden_anonymous_enum", "libgolden_anonymous_enum")
 
     def test_swap_anonymous_enum(self):
-        self.prepare_and_run_abi_diff_all_archs(
+        self.prepare_and_run_abi_diff_all_arches(
             "libgolden_anonymous_enum", "libswap_anonymous_enum", 0,
             ["-input-format-old", "Json", "-input-format-new", "Json",
              "-check-all-apis"])
 
     def test_swap_anonymous_enum_field(self):
-        self.prepare_and_run_abi_diff_all_archs(
+        self.prepare_and_run_abi_diff_all_arches(
             "libgolden_anonymous_enum", "libswap_anonymous_enum_field", 0,
             ["-input-format-old", "Json", "-input-format-new", "Json",
              "-check-all-apis"])
 
     def test_anonymous_enum_odr(self):
-        self.prepare_and_absolute_diff_all_archs(
+        self.prepare_and_absolute_diff_all_arches(
             "libanonymous_enum_odr", "libanonymous_enum_odr")
 
     def test_libifunc(self):
-        self.prepare_and_absolute_diff_all_archs(
+        self.prepare_and_absolute_diff_all_arches(
             "libifunc", "libifunc")
 
     def test_merge_multi_definitions(self):
-        self.prepare_and_absolute_diff_all_archs(
+        self.prepare_and_absolute_diff_all_arches(
             "libmerge_multi_definitions", "libmerge_multi_definitions")
-        self.prepare_and_run_abi_diff_all_archs(
+        self.prepare_and_run_abi_diff_all_arches(
             "libmerge_multi_definitions", "libdiff_multi_definitions", 0,
             flags=["-input-format-new", "Json", "-input-format-old", "Json",
                    "-consider-opaque-types-different"],
@@ -425,38 +429,38 @@ class HeaderCheckerTest(unittest.TestCase):
         self.assertRegex(os.path.basename(resource_dir), r"^[\d.]+$")
 
     def test_struct_extensions(self):
-        output = self.prepare_and_run_abi_diff_all_archs(
+        output = self.prepare_and_run_abi_diff_all_arches(
             "libstruct_extensions", "liballowed_struct_extensions", 4,
             flags=["-input-format-new", "Json", "-input-format-old", "Json"],
             create_old=False, create_new=False)
         self.assertEqual(output.count("record_type_extension_diffs"), 6)
 
-        output = self.prepare_and_run_abi_diff_all_archs(
+        output = self.prepare_and_run_abi_diff_all_arches(
             "liballowed_struct_extensions", "libstruct_extensions", 8,
             flags=["-input-format-new", "Json", "-input-format-old", "Json"],
             create_old=False, create_new=False)
         self.assertEqual(output.count("record_type_diffs"), 6)
 
     def test_param_size_diff(self):
-        self.prepare_and_run_abi_diff_all_archs(
+        self.prepare_and_run_abi_diff_all_arches(
             "libpass_by_value", "libparam_size_diff", 8,
             flags=["-input-format-new", "Json", "-input-format-old", "Json"],
             create_old=False, create_new=False)
 
     def test_return_size_diff(self):
-        self.prepare_and_run_abi_diff_all_archs(
+        self.prepare_and_run_abi_diff_all_arches(
             "libpass_by_value", "libreturn_size_diff", 8,
             flags=["-input-format-new", "Json", "-input-format-old", "Json"],
             create_old=False, create_new=False)
 
     def test_function_extensions(self):
-        diff = self.prepare_and_run_abi_diff_all_archs(
+        diff = self.prepare_and_run_abi_diff_all_arches(
             "libfunction_extensions", "liballowed_function_extensions", 4,
             flags=["-input-format-new", "Json", "-input-format-old", "Json"],
             create_old=False, create_new=False)
         self.assertEqual(6, diff.count('function_extension_diffs'))
 
-        diff = self.prepare_and_run_abi_diff_all_archs(
+        diff = self.prepare_and_run_abi_diff_all_arches(
             "liballowed_function_extensions", "libfunction_extensions", 8,
             flags=["-input-format-new", "Json", "-input-format-old", "Json"],
             create_old=False, create_new=False)
@@ -465,10 +469,10 @@ class HeaderCheckerTest(unittest.TestCase):
         self.assertEqual(5, diff.count('function_diffs'))
 
     def test_array_diff(self):
-        self.prepare_and_absolute_diff_all_archs("libarray", "libarray")
-        self.prepare_and_absolute_diff_all_archs(
+        self.prepare_and_absolute_diff_all_arches("libarray", "libarray")
+        self.prepare_and_absolute_diff_all_arches(
             "libarray_diff", "libarray_diff")
-        diff = self.prepare_and_run_abi_diff_all_archs(
+        diff = self.prepare_and_run_abi_diff_all_arches(
             "libarray", "libarray_diff", 8,
             flags=["-input-format-new", "Json", "-input-format-old", "Json"],
             create_old=False, create_new=False)
@@ -483,7 +487,7 @@ class HeaderCheckerTest(unittest.TestCase):
                           f'"{type_id}" should be in the diff report.')
 
     def test_union_diff(self):
-        diff = self.prepare_and_run_abi_diff_all_archs(
+        diff = self.prepare_and_run_abi_diff_all_arches(
             "libunion", "libunion_diff", 8,
             flags=["-input-format-new", "Json", "-input-format-old", "Json"],
             create_old=False, create_new=True)
@@ -494,7 +498,7 @@ class HeaderCheckerTest(unittest.TestCase):
         self.assertNotIn("fields_removed", diff)
 
     def test_enum_diff(self):
-        self.prepare_and_absolute_diff_all_archs("libenum", "libenum")
+        self.prepare_and_absolute_diff_all_arches("libenum", "libenum")
 
     def test_io_error(self):
         cpp_path = os.path.join(self.get_tmp_dir(), "test.cpp")
@@ -545,17 +549,17 @@ class HeaderCheckerTest(unittest.TestCase):
         self.assertEqual(return_code, 1)
 
     def test_bit_field_diff(self):
-        self.prepare_and_absolute_diff_all_archs(
+        self.prepare_and_absolute_diff_all_arches(
             "libbit_field", "libbit_field")
-        self.prepare_and_run_abi_diff_all_archs(
+        self.prepare_and_run_abi_diff_all_arches(
             "libbit_field", "libbit_field_diff", 8,
             flags=["-input-format-new", "Json", "-input-format-old", "Json"],
             create_old=False, create_new=True)
 
     def test_availability(self):
-        self.prepare_and_absolute_diff_all_archs(
+        self.prepare_and_absolute_diff_all_arches(
             "libavailability", "libavailability")
-        self.prepare_and_absolute_diff_all_archs(
+        self.prepare_and_absolute_diff_all_arches(
             "libavailability_35", "libavailability_35")
 
 

@@ -247,7 +247,7 @@ TEST_MODULES = [
         api='current',
     ),
     LsdumpModule(
-        name='libgolden_cpp_add_function_sybmol_only',
+        name='libgolden_cpp_add_function_symbol_only',
         srcs=[
             'integration/cpp/gold/golden_1.cpp',
             'integration/cpp/gold/high_volume_speaker.cpp',
