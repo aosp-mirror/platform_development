@@ -82,13 +82,13 @@ pub fn find_licenses(
     if !state.unsatisfied.is_empty() {
         possible_license_files.retain(|file| {
             let contents = read_to_string(crate_path.join(file)).unwrap();
-            if let Some(req) = content_checker::classify_license_file_contents(&contents) {
-                if state.unsatisfied.remove(&req) {
-                    state.satisfied.insert(req, file.clone());
-                    return false;
+            let matches = content_checker::classify_license_file_contents(&contents);
+            for req in &matches {
+                if state.unsatisfied.remove(req) {
+                    state.satisfied.insert(req.clone(), file.clone());
                 }
             }
-            true
+            !matches.is_empty()
         });
     }
 
