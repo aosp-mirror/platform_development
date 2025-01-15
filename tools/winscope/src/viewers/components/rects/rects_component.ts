@@ -27,6 +27,7 @@ import {
   SimpleChange,
   SimpleChanges,
 } from '@angular/core';
+import {MatButtonToggleChange} from '@angular/material/button-toggle';
 import {CanColor} from '@angular/material/core';
 import {MatIconRegistry} from '@angular/material/icon';
 import {MatSelectChange} from '@angular/material/select';
@@ -160,18 +161,20 @@ import {ShadingMode} from './shading_mode';
         </user-options>
 
         <div class="displays-section">
-          <button
-            *ngIf="rectSpec?.multiple"
-            color="accent"
-            class="rect-type"
-            (mouseenter)="onInteractionStart([rectTypeButton])"
-            (mouseleave)="onInteractionEnd([rectTypeButton])"
-            mat-icon-button
-            [matTooltip]="'Showing ' + rectSpec.type"
-            (click)="onRectTypeButtonClicked()" #rectTypeButton>
-            <mat-icon class="material-symbols-outlined"> {{rectSpec.icon}} </mat-icon>
-          </button>
-          <span class="mat-body-1"> {{groupLabel}}: </span>
+          <mat-button-toggle-group
+            *ngIf="allRectSpecs"
+            [value]="rectSpec"
+            (change)="onRectTypeButtonClicked($event)"
+            appearance="rect-type-toggle"
+            class="rect-type-toggle">
+            <mat-button-toggle *ngFor="let spec of allRectSpecs" [value]="spec">
+              <mat-icon
+                [color]="spec === rectSpec ? 'primary' : 'accent'"
+                [matTooltip]="'Show ' + spec.type"
+                class="rect-type-icon material-symbols-outlined">{{spec.icon}}</mat-icon>
+            </mat-button-toggle>
+          </mat-button-toggle-group>
+          <span class="mat-body-1">{{groupLabel}}:</span>
           <mat-form-field appearance="none" class="displays-select">
             <mat-select
               #displaySelect
@@ -209,9 +212,7 @@ import {ShadingMode} from './shading_mode';
       class="mat-body-1 warning">
       <mat-icon class="warning-icon"> warning </mat-icon>
       <span class="warning-message">
-        Showing {{rectSpec.type}} - change type by clicking
-        <mat-icon class="material-symbols-outlined inline-icon">{{rectSpec.icon}}</mat-icon>
-        icon above
+        Showing {{rectSpec.type}} - change rect type via toggle above
       </span>
     </span>
     <span class="mat-body-1 placeholder-text" *ngIf="rects.length===0"> No rects found. </span>
@@ -308,6 +309,9 @@ import {ShadingMode} from './shading_mode';
         border-radius: 4px;
         height: 24px;
         margin-left: 5px;
+      }
+      .rect-type-toggle {
+        margin: 0 4px;
       }
       .rects-content {
         height: 100%;
@@ -421,6 +425,7 @@ export class RectsComponent implements OnInit, OnDestroy {
   @Input() isStackBased = false;
   @Input() shadingModes: ShadingMode[] = [ShadingMode.GRADIENT];
   @Input() rectSpec: RectSpec | undefined;
+  @Input() allRectSpecs: RectSpec[] | undefined;
   @Input() userOptions: UserOptions = {};
   @Input() dependencies: TraceType[] = [];
   @Input() pinnedItems: UiHierarchyTreeNode[] = [];
@@ -807,10 +812,12 @@ export class RectsComponent implements OnInit, OnDestroy {
     components.forEach((c) => (c.color = 'accent'));
   }
 
-  onRectTypeButtonClicked() {
+  onRectTypeButtonClicked(event: MatButtonToggleChange) {
+    const spec: RectSpec = event.value;
     this.elementRef.nativeElement.dispatchEvent(
       new CustomEvent(ViewerEvents.RectTypeButtonClick, {
         bubbles: true,
+        detail: {type: spec.type},
       }),
     );
   }

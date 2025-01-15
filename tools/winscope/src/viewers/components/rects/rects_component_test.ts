@@ -18,6 +18,7 @@ import {CommonModule} from '@angular/common';
 import {Component, ViewChild} from '@angular/core';
 import {ComponentFixture, TestBed} from '@angular/core/testing';
 import {MatButtonModule} from '@angular/material/button';
+import {MatButtonToggleModule} from '@angular/material/button-toggle';
 import {MatDividerModule} from '@angular/material/divider';
 import {MatFormFieldModule} from '@angular/material/form-field';
 import {MatIconModule} from '@angular/material/icon';
@@ -90,6 +91,7 @@ describe('RectsComponent', () => {
         MatSelectModule,
         BrowserAnimationsModule,
         MatFormFieldModule,
+        MatButtonToggleModule,
       ],
       declarations: [
         TestHostComponent,
@@ -830,31 +832,45 @@ describe('RectsComponent', () => {
   });
 
   it('handles rect type button click', async () => {
-    let clicks = 0;
-    htmlElement.addEventListener(ViewerEvents.RectTypeButtonClick, () => {
-      clicks++;
+    let clicked: TraceRectType | undefined;
+    htmlElement.addEventListener(ViewerEvents.RectTypeButtonClick, (event) => {
+      clicked = (event as CustomEvent).detail.type;
     });
-    expect(htmlElement.querySelector('.rect-type')).toBeNull();
+    expect(htmlElement.querySelector('.rect-type-toggle')).toBeNull();
 
     component.rectSpec = {
       type: TraceRectType.LAYERS,
       icon: 'layers',
       legend: [],
-      multiple: false,
     };
     fixture.detectChanges();
-    expect(htmlElement.querySelector('.rect-type')).toBeNull();
+    expect(htmlElement.querySelector('.rect-type-toggle')).toBeNull();
 
-    component.rectSpec.multiple = true;
+    component.allRectSpecs = [
+      component.rectSpec,
+      {
+        type: TraceRectType.INPUT_WINDOWS,
+        icon: 'touch_app',
+        legend: [],
+      },
+    ];
     fixture.detectChanges();
-    const button = assertDefined(
-      htmlElement.querySelector<HTMLElement>('.rect-type'),
+    const buttons = Array.from(
+      htmlElement.querySelectorAll<HTMLElement>('.rect-type-icon'),
     );
-    expect(button.textContent?.trim()).toEqual('layers');
-    UnitTestUtils.checkTooltips([button], ['Showing layers'], fixture);
-    button.click();
+    expect(buttons[0].textContent?.trim()).toEqual('layers');
+    expect(buttons[1].textContent?.trim()).toEqual('touch_app');
+    await UnitTestUtils.checkTooltips(
+      buttons,
+      ['Show layers', 'Show input windows'],
+      fixture,
+    );
+    buttons[0].click();
     fixture.detectChanges();
-    expect(clicks).toEqual(1);
+    expect(clicked).toBeUndefined();
+    buttons[1].click();
+    fixture.detectChanges();
+    expect(clicked).toEqual(TraceRectType.INPUT_WINDOWS);
   });
 
   it('shows warning for any rect type set after the first', async () => {
@@ -862,7 +878,6 @@ describe('RectsComponent', () => {
       type: TraceRectType.LAYERS,
       icon: 'layers',
       legend: [],
-      multiple: true,
     };
     fixture.detectChanges();
     expect(htmlElement.querySelector('.warning')).toBeNull();
@@ -871,21 +886,17 @@ describe('RectsComponent', () => {
       type: TraceRectType.INPUT_WINDOWS,
       icon: 'touch_app',
       legend: [],
-      multiple: true,
     };
     fixture.detectChanges();
     const warning = assertDefined(htmlElement.querySelector('.warning'));
     expect(
       warning.querySelector('.warning-message')?.textContent?.trim(),
-    ).toEqual(
-      'Showing input windows - change type by clicking touch_app icon above',
-    );
+    ).toEqual('Showing input windows - change rect type via toggle above');
 
     component.rectSpec = {
       type: TraceRectType.LAYERS,
       icon: 'layers',
       legend: [],
-      multiple: true,
     };
     fixture.detectChanges();
     expect(htmlElement.querySelector('.warning')).toBeNull();
@@ -916,7 +927,6 @@ describe('RectsComponent', () => {
       type: TraceRectType.LAYERS,
       icon: 'layers',
       legend,
-      multiple: false,
     };
     fixture.detectChanges();
     const legendEl = assertDefined(
@@ -1164,7 +1174,8 @@ describe('RectsComponent', () => {
         [pinnedItems]="pinnedItems"
         [isDarkMode]="isDarkMode"
         [highlightedItem]="highlightedItem"
-        [rectSpec]="rectSpec"></rects-view>
+        [rectSpec]="rectSpec"
+        [allRectSpecs]="allRectSpecs"></rects-view>
     `,
   })
   class TestHostComponent {
@@ -1190,6 +1201,7 @@ describe('RectsComponent', () => {
     isDarkMode = false;
     highlightedItem = '';
     rectSpec: RectSpec | undefined;
+    allRectSpecs: RectSpec[] | undefined;
 
     @ViewChild(RectsComponent)
     rectsComponent: RectsComponent | undefined;
