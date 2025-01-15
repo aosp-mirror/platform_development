@@ -23,6 +23,7 @@ import {UiDataHierarchy} from 'viewers/common/ui_data_hierarchy';
 import {UiHierarchyTreeNode} from 'viewers/common/ui_hierarchy_tree_node';
 import {UiPropertyTreeNode} from 'viewers/common/ui_property_tree_node';
 import {UserOptions} from 'viewers/common/user_options';
+import {RectSpec} from 'viewers/components/rects/rect_spec';
 import {UiRect} from 'viewers/components/rects/ui_rect';
 
 export class UiData implements UiDataHierarchy {
@@ -30,6 +31,7 @@ export class UiData implements UiDataHierarchy {
   rectsToDraw: UiRect[] = [];
   rectIdToShowState: Map<string, RectShowState> | undefined;
   displays: DisplayIdentifier[] = [];
+  rectSpec: RectSpec | undefined;
   highlightedItem = '';
   highlightedProperty = '';
   hierarchyFilter = new TextFilter();

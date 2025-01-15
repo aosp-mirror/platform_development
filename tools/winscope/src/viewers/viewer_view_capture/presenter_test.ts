@@ -27,6 +27,7 @@ import {CustomQueryType} from 'trace/custom_query';
 import {Parser} from 'trace/parser';
 import {Trace} from 'trace/trace';
 import {Traces} from 'trace/traces';
+import {TRACE_INFO} from 'trace/trace_info';
 import {TraceType} from 'trace/trace_type';
 import {HierarchyTreeNode} from 'trace/tree_node/hierarchy_tree_node';
 import {NotifyHierarchyViewCallbackType} from 'viewers/common/abstract_hierarchy_viewer_presenter';
@@ -36,6 +37,7 @@ import {UiDataHierarchy} from 'viewers/common/ui_data_hierarchy';
 import {UiHierarchyTreeNode} from 'viewers/common/ui_hierarchy_tree_node';
 import {UiTreeUtils} from 'viewers/common/ui_tree_utils';
 import {ViewerEvents} from 'viewers/common/viewer_events';
+import {TraceRectType} from 'viewers/components/rects/rect_spec';
 import {Presenter} from 'viewers/viewer_view_capture/presenter';
 import {UiData} from 'viewers/viewer_view_capture/ui_data';
 
@@ -92,6 +94,33 @@ the default for its data type.`,
     },
   };
 
+  override readonly expectedInitialRectSpec = {
+    type: TraceRectType.VIEWS,
+    icon: TRACE_INFO[TraceType.VIEW_CAPTURE].icon,
+    legend: [
+      {
+        fill: '#ad42f5',
+        desc: 'Visible',
+        border: 'var(--default-text-color)',
+        showInWireFrameMode: false,
+      },
+      {
+        fill: '#dcdcdc',
+        desc: 'Not visible',
+        border: 'var(--default-text-color)',
+        showInWireFrameMode: false,
+      },
+      {
+        fill: 'var(--selected-element-color)',
+        desc: 'Selected',
+        border: 'var(--default-text-color)',
+        showInWireFrameMode: true,
+      },
+      {border: '#ffc24b', desc: 'Pinned', showInWireFrameMode: true},
+      {border: '#b34a24', desc: 'Pinned', showInWireFrameMode: true},
+    ],
+    multiple: false,
+  };
   override readonly treeNodeLongName =
     'com.android.launcher3.taskbar.TaskbarView@80213537';
   override readonly treeNodeShortName = 'TaskbarView@80213537';

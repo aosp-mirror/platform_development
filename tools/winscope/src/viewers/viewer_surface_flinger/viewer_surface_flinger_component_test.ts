@@ -15,12 +15,8 @@
  */
 import {CommonModule} from '@angular/common';
 import {HttpClientModule} from '@angular/common/http';
-import {CUSTOM_ELEMENTS_SCHEMA} from '@angular/core';
-import {
-  ComponentFixture,
-  ComponentFixtureAutoDetect,
-  TestBed,
-} from '@angular/core/testing';
+import {Component, CUSTOM_ELEMENTS_SCHEMA} from '@angular/core';
+import {ComponentFixture, TestBed} from '@angular/core/testing';
 import {FormsModule} from '@angular/forms';
 import {MatButtonModule} from '@angular/material/button';
 import {MatCheckboxModule} from '@angular/material/checkbox';
@@ -38,18 +34,20 @@ import {CollapsibleSectionTitleComponent} from 'viewers/components/collapsible_s
 import {HierarchyComponent} from 'viewers/components/hierarchy_component';
 import {PropertiesComponent} from 'viewers/components/properties_component';
 import {RectsComponent} from 'viewers/components/rects/rects_component';
+import {TraceRectType} from 'viewers/components/rects/rect_spec';
 import {SurfaceFlingerPropertyGroupsComponent} from 'viewers/components/surface_flinger_property_groups_component';
+import {UiData} from './ui_data';
 import {ViewerSurfaceFlingerComponent} from './viewer_surface_flinger_component';
 
 describe('ViewerSurfaceFlingerComponent', () => {
-  let fixture: ComponentFixture<ViewerSurfaceFlingerComponent>;
-  let component: ViewerSurfaceFlingerComponent;
+  let fixture: ComponentFixture<TestHostComponent>;
+  let component: TestHostComponent;
   let htmlElement: HTMLElement;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      providers: [{provide: ComponentFixtureAutoDetect, useValue: true}],
       declarations: [
+        TestHostComponent,
         ViewerSurfaceFlingerComponent,
         HierarchyComponent,
         PropertiesComponent,
@@ -75,7 +73,7 @@ describe('ViewerSurfaceFlingerComponent', () => {
       ],
       schemas: [CUSTOM_ELEMENTS_SCHEMA],
     }).compileComponents();
-    fixture = TestBed.createComponent(ViewerSurfaceFlingerComponent);
+    fixture = TestBed.createComponent(TestHostComponent);
     component = fixture.componentInstance;
     htmlElement = fixture.nativeElement;
     fixture.detectChanges();
@@ -144,4 +142,48 @@ describe('ViewerSurfaceFlingerComponent', () => {
       'PROTO DUMP',
     );
   });
+
+  it('handles rect type change', () => {
+    let uiData = new UiData(undefined);
+    uiData.rectSpec = {
+      type: TraceRectType.LAYERS,
+      icon: '',
+      legend: [],
+      multiple: false,
+    };
+    component.inputData = uiData;
+    fixture.detectChanges();
+
+    UnitTestUtils.checkSectionCollapseAndExpand(
+      htmlElement,
+      fixture,
+      '.rects-view',
+      TraceRectType.LAYERS.toUpperCase(),
+    );
+
+    uiData = new UiData(undefined);
+    uiData.rectSpec = {
+      type: TraceRectType.INPUT_WINDOWS,
+      icon: '',
+      legend: [],
+      multiple: false,
+    };
+    component.inputData = uiData;
+    fixture.detectChanges();
+    UnitTestUtils.checkSectionCollapseAndExpand(
+      htmlElement,
+      fixture,
+      '.rects-view',
+      TraceRectType.INPUT_WINDOWS.toUpperCase(),
+    );
+  });
+
+  @Component({
+    selector: 'host-component',
+    template:
+      '<viewer-surface-flinger [inputData]="inputData"></viewer-surface-flinger>',
+  })
+  class TestHostComponent {
+    inputData: UiData | undefined;
+  }
 });

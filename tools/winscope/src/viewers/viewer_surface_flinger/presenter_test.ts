@@ -38,9 +38,9 @@ import {VISIBLE_CHIP} from 'viewers/common/chip';
 import {TextFilter} from 'viewers/common/text_filter';
 import {UiDataHierarchy} from 'viewers/common/ui_data_hierarchy';
 import {UiHierarchyTreeNode} from 'viewers/common/ui_hierarchy_tree_node';
-import {RectType} from 'viewers/common/ui_rect_type';
 import {UiTreeUtils} from 'viewers/common/ui_tree_utils';
 import {ViewerEvents} from 'viewers/common/viewer_events';
+import {TraceRectType} from 'viewers/components/rects/rect_spec';
 import {Presenter} from './presenter';
 import {UiData} from './ui_data';
 
@@ -103,6 +103,39 @@ the default for its data type.`,
     },
   };
 
+  override readonly expectedInitialRectSpec = {
+    type: TraceRectType.LAYERS,
+    icon: TRACE_INFO[TraceType.SURFACE_FLINGER].icon,
+    legend: [
+      {
+        fill: '#c8e8b7',
+        desc: 'Visible',
+        border: 'var(--default-text-color)',
+        showInWireFrameMode: false,
+      },
+      {
+        fill: '#dcdcdc',
+        desc: 'Not visible',
+        border: 'var(--default-text-color)',
+        showInWireFrameMode: false,
+      },
+      {
+        fill: 'var(--selected-element-color)',
+        desc: 'Selected',
+        border: 'var(--default-text-color)',
+        showInWireFrameMode: true,
+      },
+      {
+        fill: '#ad42f5',
+        desc: 'Has view content',
+        border: 'var(--default-text-color)',
+        showInWireFrameMode: false,
+      },
+      {border: '#ffc24b', desc: 'Pinned', showInWireFrameMode: true},
+      {border: '#b34a24', desc: 'Pinned', showInWireFrameMode: true},
+    ],
+    multiple: true,
+  };
   override readonly treeNodeLongName =
     'ActivityRecord{64953af u0 com.google.android.apps.nexuslauncher/.NexusLauncherActivity#96';
   override readonly treeNodeShortName =
@@ -230,10 +263,7 @@ the default for its data type.`,
     expect(assertDefined((uiData as UiData).curatedProperties).flags).toEqual(
       'ENABLE_BACKPRESSURE (0x100)',
     );
-    expect((uiData as UiData).rectType).toEqual({
-      type: RectType.LAYERS,
-      icon: TRACE_INFO[TraceType.SURFACE_FLINGER].icon,
-    });
+    expect((uiData as UiData).rectSpec).toEqual(this.expectedInitialRectSpec);
   }
 
   override executePropertiesChecksAfterSecondPositionUpdate(
@@ -325,7 +355,7 @@ the default for its data type.`,
         );
         expect(spy).toHaveBeenCalledWith(testId);
 
-        spy = spyOn(presenter, 'onUiRectTypeButtonClicked');
+        spy = spyOn(presenter, 'onRectTypeButtonClicked');
         el.dispatchEvent(new CustomEvent(ViewerEvents.RectTypeButtonClick));
         expect(spy).toHaveBeenCalled();
       });
@@ -610,14 +640,43 @@ the default for its data type.`,
         expect(uiData.rectsToDraw[1].id).toEqual(
           '3 Display 0 name="Built-in Screen"#3',
         );
-        presenter.onUiRectTypeButtonClicked();
+        presenter.onRectTypeButtonClicked();
         expect(uiData.rectsToDraw.length).toEqual(9);
         expect(uiData.rectsToDraw[1].id).toEqual(
           '76 com.android.systemui.ImageWallpaper#76',
         );
-        expect(uiData.rectType).toEqual({
-          type: RectType.INPUT_WINDOWS,
+        expect(uiData.rectSpec).toEqual({
+          type: TraceRectType.INPUT_WINDOWS,
           icon: TRACE_INFO[TraceType.INPUT_EVENT_MERGED].icon,
+          legend: [
+            {
+              fill: '#c8e8b7',
+              desc: 'Visible and touchable',
+              border: 'var(--default-text-color)',
+              showInWireFrameMode: false,
+            },
+            {
+              fill: '#dcdcdc',
+              desc: 'Not visible',
+              border: 'var(--default-text-color)',
+              showInWireFrameMode: false,
+            },
+            {
+              fill: '',
+              border: 'var(--default-text-color)',
+              desc: 'Visible but not touchable',
+              showInWireFrameMode: false,
+            },
+            {
+              fill: 'var(--selected-element-color)',
+              desc: 'Selected',
+              border: 'var(--default-text-color)',
+              showInWireFrameMode: true,
+            },
+            {border: '#ffc24b', desc: 'Pinned', showInWireFrameMode: true},
+            {border: '#b34a24', desc: 'Pinned', showInWireFrameMode: true},
+          ],
+          multiple: true,
         });
       });
 

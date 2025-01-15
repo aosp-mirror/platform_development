@@ -37,7 +37,8 @@ import {UiData} from './ui_data';
           (sectionChange)="sections.onCollapseStateChange($event, false)">
       </collapsed-sections>
 
-      <rects-view *ngIf="inputData?.rectsToDraw"
+      <rects-view
+          *ngIf="inputData?.rectsToDraw"
           class="rects-view"
           [class.collapsed]="sections.isSectionCollapsed(CollapsibleSectionType.RECTS)"
           [title]="rectsTitle"
@@ -50,6 +51,7 @@ import {UiData} from './ui_data';
           [highlightedItem]="inputData?.highlightedRect ?? ''"
           [userOptions]="inputData?.rectsUserOptions ?? {}"
           [isDarkMode]="inputData?.isDarkMode ?? false"
+          [rectSpec]="inputData?.rectSpec"
           (collapseButtonClicked)="sections.onCollapseStateChange(CollapsibleSectionType.RECTS, true)"></rects-view>
 
       <log-view

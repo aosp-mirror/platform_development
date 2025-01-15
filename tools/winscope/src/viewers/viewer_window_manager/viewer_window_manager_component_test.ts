@@ -14,12 +14,9 @@
  * limitations under the License.
  */
 
+import {HttpClientModule} from '@angular/common/http';
 import {CUSTOM_ELEMENTS_SCHEMA} from '@angular/core';
-import {
-  ComponentFixture,
-  ComponentFixtureAutoDetect,
-  TestBed,
-} from '@angular/core/testing';
+import {ComponentFixture, TestBed} from '@angular/core/testing';
 import {FormsModule} from '@angular/forms';
 import {MatButtonModule} from '@angular/material/button';
 import {MatDividerModule} from '@angular/material/divider';
@@ -44,7 +41,6 @@ describe('ViewerWindowManagerComponent', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      providers: [{provide: ComponentFixtureAutoDetect, useValue: true}],
       imports: [
         MatIconModule,
         MatDividerModule,
@@ -55,6 +51,7 @@ describe('ViewerWindowManagerComponent', () => {
         FormsModule,
         BrowserAnimationsModule,
         MatSelectModule,
+        HttpClientModule,
       ],
       declarations: [
         ViewerWindowManagerComponent,
@@ -69,6 +66,7 @@ describe('ViewerWindowManagerComponent', () => {
     fixture = TestBed.createComponent(ViewerWindowManagerComponent);
     component = fixture.componentInstance;
     htmlElement = fixture.nativeElement;
+    fixture.detectChanges();
   });
 
   it('can be created', () => {

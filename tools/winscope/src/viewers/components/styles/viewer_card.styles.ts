@@ -29,9 +29,19 @@ export const viewerCardStyle = `
     overflow: auto;
     border-radius: 4px;
     margin: 4px;
-    padding-bottom: 12px;
     background-color: var(--background-color);
     box-shadow: 0px 1px 3px var(--border-color), 0px 1px 2px var(--border-color);
+  }
+
+  .hierarchy-view:not(.collapsed),
+  .ime-additional-properties:not(.collapsed),
+  .properties-view:not(.collapsed),
+  .log-view:not(.collapsed),
+  .property-groups:not(.collapsed),
+  .global-search:not(.collapsed),
+  .search-results:not(.collapsed),
+  .how-to-search:not(.collapsed) {
+    padding-bottom: 12px;
   }
 
   .rects-view:not(.collapsed),
@@ -86,5 +96,30 @@ export const viewerCardInnerStyle = `
 
   .padded-title {
     padding-bottom: 8px;
+  }
+
+  .warning {
+    display: flex;
+    align-items: center;
+    padding: 2px 12px;
+    background-color: var(--warning-background-color);
+  }
+  .warning-message {
+    padding-inline-start: 2px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: flex;
+    align-items: center;
+    width: 100%;
+  }
+  .warning-icon, .inline-icon {
+    font-size: 18px;
+    width: 18px;
+    height: 18px;
+    padding-inline-end: 4px;
+  }
+  .inline-icon {
+    padding-inline-start: 4px;
   }
 `;

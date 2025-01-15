@@ -54,9 +54,13 @@ import {RectsPresenter} from 'viewers/common/rects_presenter';
 import {TextFilter} from 'viewers/common/text_filter';
 import {UiHierarchyTreeNode} from 'viewers/common/ui_hierarchy_tree_node';
 import {UI_RECT_FACTORY} from 'viewers/common/ui_rect_factory';
-import {RectType, UiRectType} from 'viewers/common/ui_rect_type';
 import {UserOptions} from 'viewers/common/user_options';
 import {ViewerEvents} from 'viewers/common/viewer_events';
+import {
+  RectLegendFactory,
+  RectSpec,
+  TraceRectType,
+} from 'viewers/components/rects/rect_spec';
 import {UiRect} from 'viewers/components/rects/ui_rect';
 import {UiData} from './ui_data';
 
@@ -117,7 +121,7 @@ export class Presenter extends AbstractHierarchyViewerPresenter<UiData> {
       this.storage,
     ),
     (tree: HierarchyTreeNode) => {
-      if (this.rectTypes[this.rectTypeIndex].type === RectType.LAYERS) {
+      if (this.rectSpecs[this.rectSpecIndex].type === TraceRectType.LAYERS) {
         return UI_RECT_FACTORY.makeUiRects(tree, this.viewCapturePackageNames);
       }
       return UI_RECT_FACTORY.makeInputRects(tree, (id) => false);
@@ -156,14 +160,21 @@ the default for its data type.`,
   private curatedProperties: SfCuratedProperties | undefined;
   private wmTrace: Trace<HierarchyTreeNode> | undefined;
   private wmFocusedDisplayId: number | undefined;
-  private rectTypes: UiRectType[] = [
-    {type: RectType.LAYERS, icon: TRACE_INFO[TraceType.SURFACE_FLINGER].icon},
+  private rectSpecs: RectSpec[] = [
     {
-      type: RectType.INPUT_WINDOWS,
+      type: TraceRectType.LAYERS,
+      icon: TRACE_INFO[TraceType.SURFACE_FLINGER].icon,
+      legend: RectLegendFactory.makeLegendForLayerRects(true),
+      multiple: true,
+    },
+    {
+      type: TraceRectType.INPUT_WINDOWS,
       icon: TRACE_INFO[TraceType.INPUT_EVENT_MERGED].icon,
+      legend: RectLegendFactory.makeLegendForInputWindowRects(true),
+      multiple: true,
     },
   ];
-  private rectTypeIndex = 0;
+  private rectSpecIndex = 0;
 
   constructor(
     trace: Trace<HierarchyTreeNode>,
@@ -203,10 +214,10 @@ the default for its data type.`,
     this.refreshUIData();
   }
 
-  onUiRectTypeButtonClicked() {
-    this.rectTypeIndex =
-      this.rectTypeIndex < this.rectTypes.length - 1
-        ? this.rectTypeIndex + 1
+  onRectTypeButtonClicked() {
+    this.rectSpecIndex =
+      this.rectSpecIndex < this.rectSpecs.length - 1
+        ? this.rectSpecIndex + 1
         : 0;
     const currentHierarchyTrees =
       this.hierarchyPresenter.getAllCurrentHierarchyTrees();
@@ -250,7 +261,7 @@ the default for its data type.`,
 
   protected override refreshUIData() {
     this.uiData.curatedProperties = this.curatedProperties;
-    this.uiData.rectType = this.rectTypes[this.rectTypeIndex];
+    this.uiData.rectSpec = this.rectSpecs[this.rectSpecIndex];
     this.refreshHierarchyViewerUiData();
   }
 
@@ -260,7 +271,7 @@ the default for its data type.`,
       await this.onRectDoubleClick(rectId);
     });
     htmlElement.addEventListener(ViewerEvents.RectTypeButtonClick, (event) => {
-      this.onUiRectTypeButtonClicked();
+      this.onRectTypeButtonClicked();
     });
   }
 

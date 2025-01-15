@@ -431,7 +431,9 @@ describe('Canvas', () => {
       const noFillRegion = makeUiRect3D(rectId);
       canvas.updateRects([noFillRegion]);
       const rectMesh = getRectMesh(rectId);
-      expect(rectMesh.getObjectByName(rectId + 'fillRegion')).toBeUndefined();
+      expect(
+        rectMesh.getObjectByName(rectId + Canvas.GRAPHICS_NAMES.fillRegion),
+      ).toBeUndefined();
       expect(
         (rectMesh.material as THREE.MeshBasicMaterial).color.getHex(),
       ).toEqual(13166775);
@@ -485,7 +487,9 @@ describe('Canvas', () => {
 
       canvas.updateRects([noFillRegion]);
       expect(
-        getRectMesh(rectId).getObjectByName(rectId + 'fillRegion'),
+        getRectMesh(rectId).getObjectByName(
+          rectId + Canvas.GRAPHICS_NAMES.fillRegion,
+        ),
       ).toBeUndefined();
     });
 
@@ -518,14 +522,14 @@ describe('Canvas', () => {
       expect(material.opacity).toEqual(opacity);
     }
 
-    function checkBorderColor(id: string, color: number) {
+    function checkBorderColor(id: string, color: THREE.Color | number) {
       const rectMesh = getRectMesh(id);
-
       const borderMesh = assertDefined(
-        rectMesh.getObjectByName(id + 'border'),
+        rectMesh.getObjectByName(id + Canvas.GRAPHICS_NAMES.border),
       ) as THREE.Mesh;
+      const meshColor = (borderMesh.material as THREE.LineBasicMaterial).color;
       expect(
-        (borderMesh.material as THREE.LineBasicMaterial).color.getHex(),
+        color instanceof THREE.Color ? meshColor : meshColor.getHex(),
       ).toEqual(color);
     }
 
@@ -536,7 +540,7 @@ describe('Canvas', () => {
     function getFillRegionMesh(id: string) {
       const rectMesh = getRectMesh(id);
       return assertDefined(
-        rectMesh.getObjectByName(id + 'fillRegion'),
+        rectMesh.getObjectByName(id + Canvas.GRAPHICS_NAMES.fillRegion),
       ) as THREE.Mesh;
     }
 
@@ -566,19 +570,37 @@ describe('Canvas', () => {
     it('adds and removes labels', () => {
       const mapDeleteSpy = spyOn(Map.prototype, 'delete').and.callThrough();
       canvas.updateLabels([]);
-      expect(graphicsScene.getObjectByName(rectId + 'circle')).toBeUndefined();
-      expect(graphicsScene.getObjectByName(rectId + 'line')).toBeUndefined();
-      expect(graphicsScene.getObjectByName(rectId + 'text')).toBeUndefined();
+      expect(
+        graphicsScene.getObjectByName(rectId + Canvas.GRAPHICS_NAMES.circle),
+      ).toBeUndefined();
+      expect(
+        graphicsScene.getObjectByName(rectId + Canvas.GRAPHICS_NAMES.line),
+      ).toBeUndefined();
+      expect(
+        graphicsScene.getObjectByName(rectId + Canvas.GRAPHICS_NAMES.text),
+      ).toBeUndefined();
 
       canvas.updateLabels([makeRectLabel(rectId)]);
-      expect(graphicsScene.getObjectByName(rectId + 'circle')).toBeDefined();
-      expect(graphicsScene.getObjectByName(rectId + 'line')).toBeDefined();
-      expect(graphicsScene.getObjectByName(rectId + 'text')).toBeDefined();
+      expect(
+        graphicsScene.getObjectByName(rectId + Canvas.GRAPHICS_NAMES.circle),
+      ).toBeDefined();
+      expect(
+        graphicsScene.getObjectByName(rectId + Canvas.GRAPHICS_NAMES.line),
+      ).toBeDefined();
+      expect(
+        graphicsScene.getObjectByName(rectId + Canvas.GRAPHICS_NAMES.text),
+      ).toBeDefined();
 
       canvas.updateLabels([]);
-      expect(graphicsScene.getObjectByName(rectId + 'circle')).toBeUndefined();
-      expect(graphicsScene.getObjectByName(rectId + 'line')).toBeUndefined();
-      expect(graphicsScene.getObjectByName(rectId + 'text')).toBeUndefined();
+      expect(
+        graphicsScene.getObjectByName(rectId + Canvas.GRAPHICS_NAMES.circle),
+      ).toBeUndefined();
+      expect(
+        graphicsScene.getObjectByName(rectId + Canvas.GRAPHICS_NAMES.line),
+      ).toBeUndefined();
+      expect(
+        graphicsScene.getObjectByName(rectId + Canvas.GRAPHICS_NAMES.text),
+      ).toBeUndefined();
       expect(mapDeleteSpy).toHaveBeenCalledOnceWith(rectId);
     });
 
@@ -723,19 +745,19 @@ describe('Canvas', () => {
 
     function getCircleMesh(id: string): THREE.Mesh {
       return assertDefined(
-        graphicsScene.getObjectByName(id + 'circle'),
+        graphicsScene.getObjectByName(id + Canvas.GRAPHICS_NAMES.circle),
       ) as THREE.Mesh;
     }
 
     function getLine(id: string): THREE.Line {
       return assertDefined(
-        graphicsScene.getObjectByName(id + 'line'),
+        graphicsScene.getObjectByName(id + Canvas.GRAPHICS_NAMES.line),
       ) as THREE.Line;
     }
 
     function getText(id: string): CSS2DObject {
       return assertDefined(
-        graphicsScene.getObjectByName(id + 'text'),
+        graphicsScene.getObjectByName(id + Canvas.GRAPHICS_NAMES.text),
       ) as CSS2DObject;
     }
 
@@ -803,6 +825,19 @@ describe('Canvas', () => {
 
     it('identifies clicked rect', () => {
       const rect = makeUiRect3D(rectId);
+      rect.isClickable = true;
+      canvas.updateRects([rect]);
+      canvas.renderView();
+
+      const id = canvas.getClickedRectId(0.1, 0.1, 0);
+      expect(id).toEqual('rect1');
+    });
+
+    it('identifies clicked rect from fill region', () => {
+      const rect = makeUiRect3D(rectId);
+      rect.fillRegion = [
+        {topLeft: rect.topLeft, bottomRight: rect.bottomRight},
+      ];
       rect.isClickable = true;
       canvas.updateRects([rect]);
       canvas.renderView();
