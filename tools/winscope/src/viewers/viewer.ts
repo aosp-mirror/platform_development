@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 import {WinscopeEvent} from 'messaging/winscope_event';
 import {
   EmitEvent,
@@ -21,13 +22,13 @@ import {
 import {WinscopeEventListener} from 'messaging/winscope_event_listener';
 import {Trace} from 'trace/trace';
 
-enum ViewType {
+export enum ViewType {
   TRACE_TAB,
   OVERLAY,
   GLOBAL_SEARCH,
 }
 
-class View {
+export class View {
   constructor(
     public type: ViewType,
     public traces: Array<Trace<object>>,
@@ -36,11 +37,9 @@ class View {
   ) {}
 }
 
-interface Viewer extends WinscopeEventListener, WinscopeEventEmitter {
+export interface Viewer extends WinscopeEventListener, WinscopeEventEmitter {
   onWinscopeEvent(event: WinscopeEvent): Promise<void>;
   setEmitEvent(callback: EmitEvent): void;
   getViews(): View[];
   getTraces(): Array<Trace<object>>;
 }
-
-export {Viewer, View, ViewType};

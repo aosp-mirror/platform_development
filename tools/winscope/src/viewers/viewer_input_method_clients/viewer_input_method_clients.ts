@@ -19,30 +19,26 @@ import {Trace} from 'trace/trace';
 import {Traces} from 'trace/traces';
 import {ImeTraceType, TraceType} from 'trace/trace_type';
 import {HierarchyTreeNode} from 'trace/tree_node/hierarchy_tree_node';
+import {NotifyHierarchyViewCallbackType} from 'viewers/common/abstract_hierarchy_viewer_presenter';
 import {AbstractViewerInputMethod} from 'viewers/common/abstract_viewer_input_method';
+import {ImeUiData} from 'viewers/common/ime_ui_data';
 import {PresenterInputMethodClients} from './presenter_input_method_clients';
 
-class ViewerInputMethodClients extends AbstractViewerInputMethod {
+export class ViewerInputMethodClients extends AbstractViewerInputMethod {
   static readonly DEPENDENCIES: ImeTraceType[] = [
     TraceType.INPUT_METHOD_CLIENTS,
   ];
 
-  constructor(trace: Trace<HierarchyTreeNode>, traces: Traces, storage: Store) {
-    super(trace, traces, storage);
+  constructor(trace: Trace<HierarchyTreeNode>, traces: Traces, store: Store) {
+    super(trace, traces, store);
   }
 
-  override initializePresenter(
+  override createPresenter(
     trace: Trace<HierarchyTreeNode>,
     traces: Traces,
-    storage: Store,
+    store: Store,
+    imeUiCallback: NotifyHierarchyViewCallbackType<ImeUiData>,
   ): PresenterInputMethodClients {
-    return new PresenterInputMethodClients(
-      trace,
-      traces,
-      storage,
-      this.imeUiCallback,
-    );
+    return new PresenterInputMethodClients(trace, traces, store, imeUiCallback);
   }
 }
-
-export {ViewerInputMethodClients};

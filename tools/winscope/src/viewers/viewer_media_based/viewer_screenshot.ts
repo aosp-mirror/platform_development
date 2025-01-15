@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import {Store} from 'common/store/store';
 import {Traces} from 'trace/traces';
 import {TraceType} from 'trace/trace_type';
 import {ViewerMediaBased} from './viewer_media_based';
@@ -21,7 +22,11 @@ import {ViewerMediaBased} from './viewer_media_based';
 export class ViewerScreenshot extends ViewerMediaBased {
   static readonly DEPENDENCIES: TraceType[] = [TraceType.SCREENSHOT];
 
-  constructor(traces: Traces) {
-    super(traces, TraceType.SCREENSHOT);
+  constructor(traces: Traces, store: Store) {
+    super(traces, store);
+  }
+
+  protected override getTraceTypeForViewTitle(): TraceType {
+    return TraceType.SCREENSHOT;
   }
 }

@@ -24,10 +24,7 @@ import {
   WinscopeEvent,
   WinscopeEventType,
 } from 'messaging/winscope_event';
-import {
-  EmitEvent,
-  WinscopeEventEmitter,
-} from 'messaging/winscope_event_emitter';
+import {EmitEvent} from 'messaging/winscope_event_emitter';
 import {Trace, TraceEntry} from 'trace/trace';
 import {Traces} from 'trace/traces';
 import {TraceEntryFinder} from 'trace/trace_entry_finder';
@@ -49,8 +46,7 @@ export type NotifyHierarchyViewCallbackType<UiData> = (uiData: UiData) => void;
 
 export abstract class AbstractHierarchyViewerPresenter<
   UiData extends UiDataHierarchy,
-> implements WinscopeEventEmitter
-{
+> {
   protected emitWinscopeEvent: EmitEvent = FunctionUtils.DO_NOTHING_ASYNC;
   protected overridePropertiesTree: PropertyTreeNode | undefined;
   protected overridePropertiesTreeName: string | undefined;
