@@ -14,12 +14,10 @@
  * limitations under the License.
  */
 
+import {MakeTimestampStrategyType} from 'common/time/time';
 import {ParserTimestampConverter} from 'common/time/timestamp_converter';
 import {SetFormatters} from 'parsers/operations/set_formatters';
-import {
-  MakeTimestampStrategyType,
-  TransformToTimestamp,
-} from 'parsers/operations/transform_to_timestamp';
+import {TransformToTimestamp} from 'parsers/operations/transform_to_timestamp';
 import {TIMESTAMP_NODE_FORMATTER} from 'trace/tree_node/formatters';
 import {PropertyTreeBuilderFromProto} from 'trace/tree_node/property_tree_builder_from_proto';
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';

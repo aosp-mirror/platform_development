@@ -145,7 +145,6 @@ describe('ParserSearch', () => {
         'id',
         'ts',
         'arg_set_id',
-        'base64_proto',
         'base64_proto_id',
       ]);
       expect(entry.numRows()).toEqual(0);

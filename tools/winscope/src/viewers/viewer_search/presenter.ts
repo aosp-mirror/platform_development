@@ -18,6 +18,7 @@ import {assertDefined} from 'common/assert_utils';
 import {FunctionUtils} from 'common/function_utils';
 import {PersistentStoreProxy} from 'common/store/persistent_store_proxy';
 import {Store} from 'common/store/store';
+import {TimestampConverter} from 'common/time/timestamp_converter';
 import {
   InitializeTraceSearchRequest,
   TracePositionUpdate,
@@ -65,6 +66,7 @@ export class Presenter {
     private traces: Traces,
     private storage: Store,
     private readonly notifyViewCallback: (uiData: UiData) => void,
+    private readonly timestampConverter: TimestampConverter,
   ) {
     this.uiData.savedSearches = Array.from(this.savedSearches.searches);
     this.addSearch();
@@ -246,6 +248,8 @@ export class Presenter {
         }
         this.updateCurrentSearches();
       },
+      (valueNs: bigint) =>
+        this.timestampConverter.makeTimestampFromBootTimeNs(valueNs),
       firstEntry ? await firstEntry.getValue() : undefined,
     );
     presenter.addEventListeners(assertDefined(this.viewerElement));

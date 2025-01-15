@@ -16,19 +16,23 @@
 
 import {Traces} from 'trace/traces';
 import {TraceProcessorFactory} from 'trace_processor/trace_processor_factory';
+import {SearchViewFactoryProtoLog} from './search_view_factory_protolog';
 import {SearchViewFactorySf} from './search_view_factory_sf';
 import {SearchViewFactoryTransactions} from './search_view_factory_transactions';
+import {SearchViewFactoryTransitions} from './search_view_factory_transitions';
 
 export class TraceSearchInitializer {
-  private static readonly FACTORIES = [
+  static readonly FACTORIES = [
     SearchViewFactorySf,
     SearchViewFactoryTransactions,
+    SearchViewFactoryTransitions,
+    SearchViewFactoryProtoLog,
   ];
 
   static async createSearchViews(traces: Traces): Promise<string[]> {
     const traceProcessor = await TraceProcessorFactory.getSingleInstance();
 
-    const searchViews = [];
+    const searchViews: string[] = [];
     for (const FactoryType of TraceSearchInitializer.FACTORIES) {
       const factory = new FactoryType(traceProcessor);
       if (traces.getTrace(factory.traceType)?.isPerfetto()) {
@@ -39,3 +43,14 @@ export class TraceSearchInitializer {
     return searchViews;
   }
 }
+
+export interface SearchView {
+  name: string;
+  dataType: string;
+  spec: Array<{name: string; desc: string}>;
+  examples: Array<{query: string; desc: string}>;
+}
+
+export const SEARCH_VIEWS = TraceSearchInitializer.FACTORIES.flatMap(
+  (factory) => factory.getPossibleSearchViews(),
+);

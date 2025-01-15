@@ -60,6 +60,7 @@ describe('PresenterSearch', () => {
       new Traces(),
       new InMemoryStorage(),
       (newData: UiData) => (uiData = newData),
+      TimestampConverterUtils.TIMESTAMP_CONVERTER,
     );
     userNotifierChecker.reset();
     element = document.createElement('div');
@@ -153,15 +154,21 @@ describe('PresenterSearch', () => {
     );
 
     const time100 = TimestampConverterUtils.makeRealTimestamp(100n);
-    const [spyQueryResult, spyIter] =
-      UnitTestUtils.makeSearchTraceSpies(time100);
+    const [spyQueryResult, spyIter] = UnitTestUtils.makeSearchTraceSpies(
+      time100,
+      '123',
+    );
+    spyIter.get.withArgs('property').and.returnValue('test_time_ns');
+    const spyTimestamp = spyOn(
+      TimestampConverterUtils.TIMESTAMP_CONVERTER,
+      'makeTimestampFromBootTimeNs',
+    ).and.callThrough();
     const trace = new TraceBuilder<QueryResult>()
       .setEntries([spyQueryResult])
       .setTimestamps([time100])
       .setDescriptors([testQuery])
       .setType(TraceType.SEARCH)
       .build();
-
     await presenter.onAppEvent(new TraceAddRequest(trace));
     const expectedSearch = new CurrentSearch(
       1,
@@ -176,8 +183,9 @@ describe('PresenterSearch', () => {
     );
     expect(uiData.currentSearches.length).toEqual(1);
     expect(uiData.currentSearches[0].result?.currentIndex).toEqual(0);
-    expect(uiData.currentSearches[0].result?.headers.length).toEqual(2);
+    expect(uiData.currentSearches[0].result?.headers.length).toEqual(3);
     expect(uiData.currentSearches[0].result?.entries.length).toEqual(1);
+    expect(spyTimestamp).toHaveBeenCalledOnceWith(123n);
     expect(uiData.lastTraceFailed).toEqual(false);
     expect(uiData.recentSearches).toEqual([new ListedSearch(testQuery)]);
 

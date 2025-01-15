@@ -508,9 +508,10 @@ export class Trace<T> {
         }
         i++;
       }
-      const firstDate = TimestampUtils.extractDateFromHumanTimestamp(
-        assertDefined(firstTs),
-      );
+      if (!firstTs) {
+        return false;
+      }
+      const firstDate = TimestampUtils.extractDateFromHumanTimestamp(firstTs);
       if (firstDate) {
         const lastDate = TimestampUtils.extractDateFromHumanTimestamp(
           this.getEntry(this.lengthEntries - 1)

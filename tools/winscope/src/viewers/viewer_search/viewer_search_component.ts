@@ -27,6 +27,7 @@ import {
 } from '@angular/core';
 import {FormControl, ValidationErrors, Validators} from '@angular/forms';
 import {MatTabGroup} from '@angular/material/tabs';
+import {SEARCH_VIEWS} from 'app/trace_search/trace_search_initializer';
 import {assertDefined} from 'common/assert_utils';
 import {TimeDuration} from 'common/time/time_duration';
 import {TIME_UNIT_TO_NANO} from 'common/time/time_units';
@@ -184,7 +185,7 @@ import {CurrentSearch, ListedSearch, UiData} from './ui_data';
           </span>
 
           <cdk-accordion class="how-to-accordion" [multi]="true">
-            <cdk-accordion-item *ngFor="let searchView of searchViews" class="accordion-item" #accordionItem="cdkAccordionItem">
+            <cdk-accordion-item *ngFor="let searchView of SEARCH_VIEWS" class="accordion-item" #accordionItem="cdkAccordionItem">
               <span
                 class="mat-body-1 accordion-item-header"
                 (click)="onHeaderClick(accordionItem)">
@@ -412,177 +413,11 @@ export class ViewerSearchComponent extends ViewerComponent<UiData> {
     this.editOption,
     this.saveOption,
   ];
-
   readonly globalSearchText = `
      Write an SQL query in the field below, and run the search. \
      Results will be shown in a tabular view and you can optionally visualize them in the timeline. \
   `;
-  readonly searchViews: SearchView[] = [
-    {
-      name: 'sf_layer_search',
-      dataType: 'SurfaceFlinger layer',
-      spec: [
-        {
-          name: 'state_id',
-          desc: 'Unique id of entry to which layer belongs',
-        },
-        {name: 'ts', desc: 'Timestamp of entry to which layer belongs'},
-        {name: 'layer_id', desc: 'Layer id'},
-        {name: 'parent_id', desc: 'Layer id of parent'},
-        {name: 'layer_name', desc: 'Layer name'},
-        {
-          name: 'property',
-          desc: 'Property name accounting for repeated fields',
-        },
-        {
-          name: 'flat_property',
-          desc: 'Property name not accounting for repeated fields',
-        },
-        {name: 'value', desc: 'Property value in string format'},
-        {
-          name: 'previous_value',
-          desc: 'Property value from previous entry in string format',
-        },
-      ],
-      examples: [
-        {
-          query: `SELECT ts, value, previous_value FROM sf_layer_search
-  WHERE layer_name='Taskbar#97'
-  AND property='color.a'
-  AND value!=previous_value`,
-          desc: 'returns timestamp, current and previous values of alpha for Taskbar#97, for states where alpha changed from previous state',
-        },
-        {
-          query: `SELECT ts, value, previous_value FROM sf_layer_search
-  WHERE layer_name LIKE 'Wallpaper%'
-  AND property='bounds.bottom'
-  AND cast_int!(value) <= 2400`,
-          desc: 'returns timestamp, current and previous values of bottom bound for layers that start with "Wallpaper", for states where bottom bound <= 2400',
-        },
-      ],
-    },
-    {
-      name: 'sf_hierarchy_root_search',
-      dataType: 'SurfaceFlinger root',
-      spec: [
-        {
-          name: 'state_id',
-          desc: 'Unique id of entry',
-        },
-        {name: 'ts', desc: 'Timestamp of entry'},
-        {
-          name: 'property',
-          desc: 'Property name accounting for repeated fields',
-        },
-        {
-          name: 'flat_property',
-          desc: 'Property name not accounting for repeated fields',
-        },
-        {name: 'value', desc: 'Property value in string format'},
-        {
-          name: 'previous_value',
-          desc: 'Property value from previous entry in string format',
-        },
-      ],
-      examples: [
-        {
-          query: `SELECT STATE.* FROM sf_hierarchy_root_search STATE_WITH_DISPLAY_ON
-INNER JOIN sf_hierarchy_root_search STATE
-  ON STATE.state_id = STATE_WITH_DISPLAY_ON.state_id
-  AND STATE_WITH_DISPLAY_ON.flat_property='displays.layer_stack'
-  AND STATE_WITH_DISPLAY_ON.value!='4294967295'
-  AND STATE.property LIKE CONCAT(
-    SUBSTRING(
-        STATE_WITH_DISPLAY_ON.property,
-        0,
-        instr(STATE_WITH_DISPLAY_ON.property, ']')
-    ),
-    '%'
-  )`,
-          desc: 'returns all properties for displays with valid layer stack from all states',
-        },
-      ],
-    },
-    {
-      name: 'transactions_search',
-      dataType:
-        'the Transactions trace, including transactions, added/destroyed layers and added/removed/changed displays',
-      spec: [
-        {
-          name: 'state_id',
-          desc: 'Unique id of entry to which proto property belongs',
-        },
-        {
-          name: 'ts',
-          desc: 'Timestamp of entry to which proto property belongs',
-        },
-        {
-          name: 'transaction_id',
-          desc: 'Transaction id if available',
-        },
-        {
-          name: 'property',
-          desc: 'Property name accounting for repeated fields',
-        },
-        {
-          name: 'flat_property',
-          desc: 'Property name not accounting for repeated fields',
-        },
-        {name: 'value', desc: 'Property value in string format'},
-      ],
-      examples: [
-        {
-          query: `SELECT ts, transaction_id FROM transactions_search
-  WHERE flat_property='transactions.layer_changes.x'
-  AND value='-54.0'`,
-          desc: 'returns timestamp and transaction id when layer x position was changed to -54.0',
-        },
-        {
-          query: `SELECT ts FROM transactions_search
-  WHERE flat_property='added_layers.name'
-  AND value='ImeContainer'`,
-          desc: 'returns timestamp when ImeContainer layer was added',
-        },
-      ],
-    },
-    {
-      name: 'protolog',
-      dataType: 'ProtoLog',
-      spec: [
-        {
-          name: 'ts',
-          desc: 'Timestamp of log',
-        },
-        {
-          name: 'level',
-          desc: 'Log level',
-        },
-        {
-          name: 'tag',
-          desc: 'Logging group tag',
-        },
-        {
-          name: 'message',
-          desc: 'Log message',
-        },
-        {
-          name: 'stacktrace',
-          desc: 'Stacktrace (if available)',
-        },
-        {
-          name: 'location',
-          desc: 'Code location from which message originates',
-        },
-      ],
-      examples: [
-        {
-          query: `SELECT ts, message, location FROM protolog
-  WHERE message LIKE '%transition%'`,
-          desc: 'returns logs with message containing "transition"',
-        },
-      ],
-    },
-  ];
+  readonly SEARCH_VIEWS = SEARCH_VIEWS;
 
   constructor(@Inject(ElementRef) private elementRef: ElementRef<HTMLElement>) {
     super();
@@ -841,13 +676,6 @@ INNER JOIN sf_hierarchy_root_search STATE
       !savedSearches.some((search) => search.name === control.value);
     return !valid ? {invalidInput: control.value} : null;
   }
-}
-
-interface SearchView {
-  name: string;
-  dataType: string;
-  spec: Array<{name: string; desc: string}>;
-  examples: Array<{query: string; desc: string}>;
 }
 
 interface SearchSection {

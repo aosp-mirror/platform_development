@@ -15,6 +15,7 @@
  */
 
 import {Store} from 'common/store/store';
+import {TimestampConverter} from 'common/time/timestamp_converter';
 import {WinscopeEvent} from 'messaging/winscope_event';
 import {EmitEvent} from 'messaging/winscope_event_emitter';
 import {Trace} from 'trace/trace';
@@ -35,12 +36,21 @@ export class ViewerSearch implements Viewer {
   private readonly traces: Traces;
   private readonly view: View;
 
-  constructor(traces: Traces, storage: Store) {
+  constructor(
+    traces: Traces,
+    storage: Store,
+    timestampConverter: TimestampConverter,
+  ) {
     this.htmlElement = document.createElement('viewer-search');
     const notifyViewCallback = (data: UiData) => {
       (this.htmlElement as unknown as ViewerSearchComponent).inputData = data;
     };
-    this.presenter = new Presenter(traces, storage, notifyViewCallback);
+    this.presenter = new Presenter(
+      traces,
+      storage,
+      notifyViewCallback,
+      timestampConverter,
+    );
     this.presenter.addEventListeners(this.htmlElement);
     this.traces = traces;
     this.view = new View(

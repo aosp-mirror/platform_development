@@ -15,14 +15,11 @@
  */
 
 import {assertDefined} from 'common/assert_utils';
-import {Timestamp} from 'common/time/time';
+import {MakeTimestampStrategyType, Timestamp} from 'common/time/time';
 import {ParserTimestampConverter} from 'common/time/timestamp_converter';
 import {AddDefaults} from 'parsers/operations/add_defaults';
 import {SetFormatters} from 'parsers/operations/set_formatters';
-import {
-  MakeTimestampStrategyType,
-  TransformToTimestamp,
-} from 'parsers/operations/transform_to_timestamp';
+import {TransformToTimestamp} from 'parsers/operations/transform_to_timestamp';
 import {TranslateIntDef} from 'parsers/operations/translate_intdef';
 import {TamperedMessageType} from 'parsers/tampered_message_type';
 import {perfetto} from 'protos/transitions/latest/static';
