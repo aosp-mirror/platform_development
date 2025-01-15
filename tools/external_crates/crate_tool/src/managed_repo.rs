@@ -827,47 +827,6 @@ impl ManagedRepo {
         self.regenerate([&crate_name].iter(), true)?;
         Ok(())
     }
-    pub fn try_updates(&self) -> Result<()> {
-        let output = Command::new("git")
-            .args(["status", "--porcelain", "."])
-            .current_dir(&self.path)
-            .output()?
-            .success_or_error()?;
-        if !output.stdout.is_empty() {
-            return Err(anyhow!("Crate repo {} has uncommitted changes", self.path));
-        }
-
-        for (crate_name, version) in self.suggest_updates(true)? {
-            println!("Trying to update {} to {}", crate_name, version);
-            Command::new("git")
-                .args(["restore", "."])
-                .current_dir(&self.path)
-                .output()?
-                .success_or_error()?;
-            Command::new("git")
-                .args(["clean", "-f", "."])
-                .current_dir(&self.path)
-                .output()?
-                .success_or_error()?;
-            if let Err(e) = self.update(&crate_name, &version) {
-                println!("Updating {} to {} failed: {}", crate_name, version, e);
-                continue;
-            }
-            let build_result = Command::new("/usr/bin/bash")
-                .args(["-c", "source build/envsetup.sh && lunch aosp_husky-trunk_staging-eng && cd external/rust && mm"])
-                .env_remove("OUT_DIR")
-                .current_dir(self.path.root())
-                .spawn().context("Failed to spawn mm")?
-                .wait().context("Failed to wait on mm")?
-                .success_or_error();
-            if let Err(e) = build_result {
-                println!("Faild to build {} {}: {}", crate_name, version, e);
-                continue;
-            }
-            println!("Update {} to {} succeeded", crate_name, version);
-        }
-        Ok(())
-    }
     pub fn init(&self) -> Result<()> {
         if self.path.abs().exists() {
             return Err(anyhow!("{} already exists", self.path));
