@@ -69,8 +69,8 @@ object MediaPlayer {
         override fun contentDuringTransition(
             element: ElementKey,
             transition: TransitionState.Transition,
-            fromContentZIndex: Float,
-            toContentZIndex: Float,
+            fromContentZIndex: Long,
+            toContentZIndex: Long,
         ): ContentKey {
             return when {
                 // During the Lockscreen => Shade transition, the media player is visible in the
