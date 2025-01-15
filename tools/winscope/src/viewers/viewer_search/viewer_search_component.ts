@@ -200,9 +200,9 @@ import {CurrentSearch, ListedSearch, UiData} from './ui_data';
                 </span>
                 <span class="mat-body-2">Spec:</span>
                 <table>
-                  <tr *ngFor="let c of searchView.spec">
-                    <td><code>{{c.name}}</code></td>
-                    <td class="mat-body-1">{{c.desc}}</td>
+                  <tr *ngFor="let column of searchView.columns">
+                    <td><code>{{column.name}}</code></td>
+                    <td class="mat-body-1">{{column.desc}}</td>
                   </tr>
                 </table>
                 <span class="mat-body-2">

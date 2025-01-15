@@ -24,7 +24,7 @@ export class SearchViewFactoryTransactions extends AbstractSearchViewFactory {
     name: 'transactions_search',
     dataType:
       'the Transactions trace, including transactions, added/destroyed layers and added/removed/changed displays',
-    spec: [
+    columns: [
       {
         name: 'state_id',
         desc: 'Unique id of entry to which proto property belongs',
