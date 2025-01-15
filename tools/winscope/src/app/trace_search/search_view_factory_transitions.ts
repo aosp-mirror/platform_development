@@ -23,7 +23,7 @@ export class SearchViewFactoryTransitions extends AbstractSearchViewFactory {
   static readonly VIEW: SearchView = {
     name: 'transitions_search',
     dataType: 'Transitions',
-    spec: [
+    columns: [
       {
         name: 'ts',
         desc: 'Dispatch time - falls back to send time if available, else 0',

@@ -23,7 +23,7 @@ export class SearchViewFactorySf extends AbstractSearchViewFactory {
   private static readonly LAYER_VIEW: SearchView = {
     name: 'sf_layer_search',
     dataType: 'SurfaceFlinger layer',
-    spec: [
+    columns: [
       {
         name: 'state_id',
         desc: 'Unique id of entry to which layer belongs',
@@ -66,7 +66,7 @@ AND cast_int!(value) <= 2400`,
   private static readonly ROOT_VIEW: SearchView = {
     name: 'sf_hierarchy_root_search',
     dataType: 'SurfaceFlinger root',
-    spec: [
+    columns: [
       {
         name: 'state_id',
         desc: 'Unique id of entry',

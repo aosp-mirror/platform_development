@@ -14,12 +14,13 @@
  * limitations under the License.
  */
 
+import {assertDefined} from 'common/assert_utils';
 import {UnitTestUtils} from 'test/unit/utils';
 import {Parser} from 'trace/parser';
 import {Trace} from 'trace/trace';
 import {Traces} from 'trace/traces';
 import {TraceType} from 'trace/trace_type';
-import {TraceSearchInitializer} from './trace_search_initializer';
+import {SEARCH_VIEWS, TraceSearchInitializer} from './trace_search_initializer';
 
 describe('TraceSearchInitializer', () => {
   it('robust to no searchable traces', async () => {
@@ -32,7 +33,7 @@ describe('TraceSearchInitializer', () => {
       TraceType.SURFACE_FLINGER,
       'traces/perfetto/layers_trace.perfetto-trace',
     );
-    expect(await createViews(parser)).toEqual([
+    await createViewsAndTestExamples(parser, [
       'sf_layer_search',
       'sf_hierarchy_root_search',
     ]);
@@ -60,7 +61,7 @@ describe('TraceSearchInitializer', () => {
       TraceType.TRANSACTIONS,
       'traces/perfetto/transactions_trace.perfetto-trace',
     );
-    expect(await createViews(parser)).toEqual(['transactions_search']);
+    await createViewsAndTestExamples(parser, ['transactions_search']);
     const queryResultTransaction = await UnitTestUtils.runQueryAndGetResult(`
       SELECT * FROM transactions_search
         WHERE flat_property='transactions.layer_changes.x'
@@ -81,7 +82,7 @@ describe('TraceSearchInitializer', () => {
       TraceType.PROTO_LOG,
       'traces/perfetto/protolog.perfetto-trace',
     );
-    expect(await createViews(parser)).toEqual(['protolog']);
+    await createViewsAndTestExamples(parser, ['protolog']);
     const queryResult = await UnitTestUtils.runQueryAndGetResult(`
       SELECT * FROM protolog WHERE message LIKE '%string%'
     `);
@@ -93,7 +94,7 @@ describe('TraceSearchInitializer', () => {
       TraceType.TRANSITION,
       'traces/perfetto/shell_transitions_trace.perfetto-trace',
     );
-    expect(await createViews(parser)).toEqual(['transitions_search']);
+    await createViewsAndTestExamples(parser, ['transitions_search']);
     const queryResult = await UnitTestUtils.runQueryAndGetResult(`
       SELECT * FROM transitions_search
         WHERE flat_property='handler'
@@ -102,10 +103,24 @@ describe('TraceSearchInitializer', () => {
     expect(queryResult.numRows()).toEqual(2);
   });
 
-  async function createViews(parser: Parser<object>) {
+  async function createViewsAndTestExamples(
+    parser: Parser<object>,
+    expectedViews: string[],
+  ) {
     const trace = Trace.fromParser(parser);
     const traces = new Traces();
     traces.addTrace(trace);
-    return await TraceSearchInitializer.createSearchViews(traces);
+    const views = await TraceSearchInitializer.createSearchViews(traces);
+    expect(views).toEqual(expectedViews);
+    for (const viewName of views) {
+      const view = assertDefined(
+        SEARCH_VIEWS.find((view) => view.name === viewName),
+      );
+      for (const example of view.examples) {
+        await expectAsync(
+          UnitTestUtils.runQueryAndGetResult(example.query),
+        ).not.toBeRejected();
+      }
+    }
   }
 });

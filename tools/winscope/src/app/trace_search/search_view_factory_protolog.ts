@@ -23,7 +23,7 @@ export class SearchViewFactoryProtoLog extends AbstractSearchViewFactory {
   private static readonly VIEW: SearchView = {
     name: 'protolog',
     dataType: 'ProtoLog',
-    spec: [
+    columns: [
       {
         name: 'ts',
         desc: 'Timestamp of log',

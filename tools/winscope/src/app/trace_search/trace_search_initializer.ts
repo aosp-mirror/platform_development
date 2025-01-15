@@ -47,7 +47,7 @@ export class TraceSearchInitializer {
 export interface SearchView {
   name: string;
   dataType: string;
-  spec: Array<{name: string; desc: string}>;
+  columns: Array<{name: string; desc: string}>;
   examples: Array<{query: string; desc: string}>;
 }
 
