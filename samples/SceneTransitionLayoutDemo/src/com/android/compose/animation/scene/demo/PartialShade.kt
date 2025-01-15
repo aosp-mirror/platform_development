@@ -41,9 +41,9 @@ import androidx.compose.ui.node.LayoutAwareModifierNode
 import androidx.compose.ui.node.ModifierNodeElement
 import androidx.compose.ui.node.invalidateDraw
 import androidx.compose.ui.unit.dp
+import com.android.compose.animation.scene.ContentScope
 import com.android.compose.animation.scene.ElementKey
 import com.android.compose.animation.scene.LowestZIndexContentPicker
-import com.android.compose.animation.scene.SceneScope
 import com.android.compose.gesture.effect.rememberOffsetOverscrollEffect
 import com.android.compose.modifiers.thenIf
 
@@ -70,7 +70,7 @@ object PartialShade {
 }
 
 @Composable
-fun SceneScope.PartialShade(
+fun ContentScope.PartialShade(
     modifier: Modifier = Modifier,
     content: @Composable BoxScope.() -> Unit,
 ) {

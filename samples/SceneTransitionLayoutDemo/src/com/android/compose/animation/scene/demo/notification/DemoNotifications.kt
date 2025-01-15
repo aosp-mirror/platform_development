@@ -19,10 +19,10 @@ package com.android.compose.animation.scene.demo.notification
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.text.TextMeasurer
 import com.android.compose.animation.scene.ContentKey
+import com.android.compose.animation.scene.ContentScope
 import com.android.compose.animation.scene.ElementKey
 import com.android.compose.animation.scene.MovableElementKey
 import com.android.compose.animation.scene.MutableSceneTransitionLayoutState
-import com.android.compose.animation.scene.SceneScope
 import com.android.compose.animation.scene.SceneTransitions
 import com.android.compose.animation.scene.StaticElementContentPicker
 import com.android.compose.animation.scene.content.state.TransitionState
@@ -70,11 +70,11 @@ private fun notification(
             MutableSceneTransitionLayoutState(Notification.Scenes.Collapsed, transitions)
         override val isInteractive: Boolean = isInteractive
 
-        override val collapsedContent: @Composable SceneScope.() -> Unit = {
+        override val collapsedContent: @Composable ContentScope.() -> Unit = {
             CollapsedNotificationContent(i, textMeasurer)
         }
 
-        override val expandedContent: @Composable SceneScope.() -> Unit = {
+        override val expandedContent: @Composable ContentScope.() -> Unit = {
             ExpandedNotificationContent(i, textMeasurer)
         }
     }

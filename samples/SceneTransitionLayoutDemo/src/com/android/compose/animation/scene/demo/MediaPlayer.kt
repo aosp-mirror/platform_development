@@ -30,14 +30,13 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.android.compose.animation.scene.ContentKey
+import com.android.compose.animation.scene.ContentScope
 import com.android.compose.animation.scene.ElementKey
 import com.android.compose.animation.scene.MovableElementKey
-import com.android.compose.animation.scene.SceneScope
 import com.android.compose.animation.scene.StaticElementContentPicker
 import com.android.compose.animation.scene.content.state.TransitionState
 
@@ -115,7 +114,7 @@ object MediaPlayer {
 }
 
 @Composable
-fun SceneScope.MediaPlayer(
+fun ContentScope.MediaPlayer(
     isSmall: Boolean,
     isPlaying: Boolean,
     onIsPlayingChange: (Boolean) -> Unit,

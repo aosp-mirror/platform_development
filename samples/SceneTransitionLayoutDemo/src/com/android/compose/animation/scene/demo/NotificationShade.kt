@@ -23,8 +23,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.android.compose.animation.scene.Back
+import com.android.compose.animation.scene.ContentScope
 import com.android.compose.animation.scene.ElementKey
-import com.android.compose.animation.scene.SceneScope
 import com.android.compose.animation.scene.Swipe
 import com.android.compose.animation.scene.UserActionResult
 
@@ -43,9 +43,9 @@ object NotificationShade {
 }
 
 @Composable
-fun SceneScope.NotificationShade(
-    mediaPlayer: (@Composable SceneScope.() -> Unit)?,
-    notificationList: @Composable SceneScope.() -> Unit,
+fun ContentScope.NotificationShade(
+    mediaPlayer: (@Composable ContentScope.() -> Unit)?,
+    notificationList: @Composable ContentScope.() -> Unit,
     modifier: Modifier = Modifier,
 ) {
     PartialShade(modifier) {

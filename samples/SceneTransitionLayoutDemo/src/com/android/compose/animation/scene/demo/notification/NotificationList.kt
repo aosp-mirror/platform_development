@@ -31,9 +31,9 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
+import com.android.compose.animation.scene.ContentScope
 import com.android.compose.animation.scene.ElementKey
 import com.android.compose.animation.scene.ObservableTransitionState
-import com.android.compose.animation.scene.SceneScope
 import com.android.compose.animation.scene.SceneTransitionLayoutState
 import com.android.compose.animation.scene.demo.DemoConfiguration
 import com.android.compose.animation.scene.demo.Scenes
@@ -56,7 +56,7 @@ object NotificationList {
 }
 
 @Composable
-fun SceneScope.NotificationList(
+fun ContentScope.NotificationList(
     notifications: List<NotificationViewModel>,
     maxNotificationCount: Int?,
     demoConfiguration: DemoConfiguration,
@@ -105,7 +105,7 @@ fun SceneScope.NotificationList(
 }
 
 @Composable
-private fun SceneScope.ExpandFirstNotificationWhenSwipingFromLockscreenToShade(
+private fun ContentScope.ExpandFirstNotificationWhenSwipingFromLockscreenToShade(
     notifications: List<NotificationViewModel>
 ) {
     val firstNotification = notifications.firstOrNull() ?: return

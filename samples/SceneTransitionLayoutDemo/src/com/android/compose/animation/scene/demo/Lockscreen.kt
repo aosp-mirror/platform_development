@@ -35,9 +35,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
+import com.android.compose.animation.scene.ContentScope
 import com.android.compose.animation.scene.ElementKey
 import com.android.compose.animation.scene.SceneKey
-import com.android.compose.animation.scene.SceneScope
 import com.android.compose.animation.scene.Swipe
 import com.android.compose.animation.scene.UserAction
 import com.android.compose.animation.scene.UserActionResult
@@ -92,9 +92,9 @@ object Lockscreen {
 }
 
 @Composable
-fun SceneScope.Lockscreen(
-    notificationList: @Composable SceneScope.() -> Unit,
-    mediaPlayer: (@Composable SceneScope.() -> Unit)?,
+fun ContentScope.Lockscreen(
+    notificationList: @Composable ContentScope.() -> Unit,
+    mediaPlayer: (@Composable ContentScope.() -> Unit)?,
     isDismissable: Boolean,
     onToggleDismissable: () -> Unit,
     onChangeScene: (SceneKey) -> Unit,
@@ -130,7 +130,7 @@ fun SceneScope.Lockscreen(
 
 @Composable
 @OptIn(ExperimentalFoundationApi::class)
-internal fun SceneScope.LockButton(
+internal fun ContentScope.LockButton(
     isDismissable: Boolean,
     onToggleDismissable: () -> Unit,
     onChangeScene: (SceneKey) -> Unit,
@@ -164,7 +164,10 @@ internal fun SceneScope.LockButton(
 }
 
 @Composable
-internal fun SceneScope.LockscreenCameraButton(onClick: () -> Unit, modifier: Modifier = Modifier) {
+internal fun ContentScope.LockscreenCameraButton(
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
     CameraButton(
         backgroundColor = MaterialTheme.colorScheme.surfaceBright,
         iconColor = MaterialTheme.colorScheme.onSurface,

@@ -87,12 +87,12 @@ import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.dp
 import androidx.window.layout.WindowMetricsCalculator
+import com.android.compose.animation.scene.ContentScope
 import com.android.compose.animation.scene.DefaultEdgeDetector
 import com.android.compose.animation.scene.ElementKey
 import com.android.compose.animation.scene.MutableSceneTransitionLayoutState
 import com.android.compose.animation.scene.OverlayKey
 import com.android.compose.animation.scene.SceneKey
-import com.android.compose.animation.scene.SceneScope
 import com.android.compose.animation.scene.SceneTransitionLayout
 import com.android.compose.animation.scene.SceneTransitions
 import com.android.compose.animation.scene.demo.notification.NotificationList
@@ -263,6 +263,7 @@ fun SystemUi(
                         WindowHeightSizeClass.Compact -> 2
                         else -> 3
                     }
+
                 else -> error("Unknown size class: ${windowSizeClass.widthSizeClass}")
             }
         }
@@ -288,11 +289,13 @@ fun SystemUi(
 
     val sceneSaver =
         remember(lockscreenScene, shadeScene) { Scenes.SceneSaver(lockscreenScene, shadeScene) }
+
     fun maybeUpdateLockscreenDismissed(scene: SceneKey) {
         when (scene) {
             Scenes.Launcher -> isLockscreenDismissed = true
             Scenes.Lockscreen,
             Scenes.SplitLockscreen -> isLockscreenDismissed = false
+
             else -> {}
         }
     }
@@ -366,7 +369,7 @@ fun SystemUi(
     }
 
     @Composable
-    fun SceneScope.NotificationList(
+    fun ContentScope.NotificationList(
         maxNotificationCount: Int,
         isScrollable: Boolean = true,
         overscrollEffect: OverscrollEffect? = null,
@@ -456,7 +459,7 @@ fun SystemUi(
                 LocalContentColor provides MaterialTheme.colorScheme.onSurface
             ) {
                 var isMediaPlayerPlaying by remember { mutableStateOf(false) }
-                val mediaPlayer: (@Composable SceneScope.(isSmall: Boolean) -> Unit)? =
+                val mediaPlayer: (@Composable ContentScope.(isSmall: Boolean) -> Unit)? =
                     if (configuration.showMediaPlayer) {
                         { isSmall ->
                             MediaPlayer(
@@ -468,12 +471,12 @@ fun SystemUi(
                     } else {
                         null
                     }
-                val largeMediaPlayer: (@Composable SceneScope.() -> Unit)? =
+                val largeMediaPlayer: (@Composable ContentScope.() -> Unit)? =
                     mediaPlayer?.let { { it(/* isSmall= */ false) } }
-                val smallMediaPlayer: (@Composable SceneScope.() -> Unit)? =
+                val smallMediaPlayer: (@Composable ContentScope.() -> Unit)? =
                     mediaPlayer?.let { { it(/* isSmall= */ true) } }
 
-                val qsPager: (@Composable SceneScope.() -> Unit) = {
+                val qsPager: (@Composable ContentScope.() -> Unit) = {
                     QuickSettingsPager(
                         pagerState = quickSettingsPagerState,
                         tiles = quickSettingsTiles,

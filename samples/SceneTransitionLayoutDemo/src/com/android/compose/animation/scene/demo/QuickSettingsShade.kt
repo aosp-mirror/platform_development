@@ -26,8 +26,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
 import com.android.compose.animation.scene.Back
+import com.android.compose.animation.scene.ContentScope
 import com.android.compose.animation.scene.ElementKey
-import com.android.compose.animation.scene.SceneScope
 import com.android.compose.animation.scene.Swipe
 import com.android.compose.animation.scene.UserActionResult
 
@@ -46,9 +46,9 @@ object QuickSettingsShade {
 }
 
 @Composable
-fun SceneScope.QuickSettingsShade(
-    qsPager: @Composable SceneScope.() -> Unit,
-    mediaPlayer: @Composable (SceneScope.() -> Unit)?,
+fun ContentScope.QuickSettingsShade(
+    qsPager: @Composable ContentScope.() -> Unit,
+    mediaPlayer: @Composable (ContentScope.() -> Unit)?,
     modifier: Modifier = Modifier,
 ) {
     PartialShade(modifier) {

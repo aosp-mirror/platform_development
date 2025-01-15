@@ -41,8 +41,8 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.TextMeasurer
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
+import com.android.compose.animation.scene.ContentScope
 import com.android.compose.animation.scene.ElementKey
-import com.android.compose.animation.scene.SceneScope
 import com.android.compose.animation.scene.ValueKey
 import com.android.compose.animation.scene.animateElementIntAsState
 import com.android.compose.animation.scene.demo.CachedText
@@ -79,7 +79,7 @@ object NotificationContent {
 }
 
 @Composable
-fun SceneScope.CollapsedNotificationContent(
+fun ContentScope.CollapsedNotificationContent(
     i: Int,
     textMeasurer: TextMeasurer,
     modifier: Modifier = Modifier,
@@ -101,7 +101,7 @@ fun SceneScope.CollapsedNotificationContent(
 }
 
 @Composable
-fun SceneScope.ExpandedNotificationContent(
+fun ContentScope.ExpandedNotificationContent(
     i: Int,
     textMeasurer: TextMeasurer,
     modifier: Modifier = Modifier,
@@ -130,7 +130,7 @@ fun SceneScope.ExpandedNotificationContent(
 }
 
 @Composable
-private fun SceneScope.Title(i: Int, textMeasurer: TextMeasurer, modifier: Modifier = Modifier) {
+private fun ContentScope.Title(i: Int, textMeasurer: TextMeasurer, modifier: Modifier = Modifier) {
     CachedText(
         "Notification $i",
         textMeasurer,
@@ -140,7 +140,7 @@ private fun SceneScope.Title(i: Int, textMeasurer: TextMeasurer, modifier: Modif
 }
 
 @Composable
-private fun SceneScope.Content(
+private fun ContentScope.Content(
     content: String,
     textMeasurer: TextMeasurer,
     modifier: Modifier = Modifier,
@@ -154,12 +154,12 @@ private fun SceneScope.Content(
 }
 
 @Composable
-private fun SceneScope.Icon(icon: ImageVector, modifier: Modifier = Modifier) {
+private fun ContentScope.Icon(icon: ImageVector, modifier: Modifier = Modifier) {
     Icon(icon, null, modifier.size(24.dp).element(NotificationContent.Elements.Icon))
 }
 
 @Composable
-private fun SceneScope.Chevron(rotate: Boolean, modifier: Modifier = Modifier) {
+private fun ContentScope.Chevron(rotate: Boolean, modifier: Modifier = Modifier) {
     val key = NotificationContent.Elements.Chevron
     Element(key, modifier) {
         val rotation by

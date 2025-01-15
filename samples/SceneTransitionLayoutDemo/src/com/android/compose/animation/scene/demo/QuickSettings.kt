@@ -52,11 +52,11 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.unit.dp
 import com.android.compose.animation.scene.Back
+import com.android.compose.animation.scene.ContentScope
 import com.android.compose.animation.scene.Edge
 import com.android.compose.animation.scene.ElementKey
 import com.android.compose.animation.scene.LowestZIndexContentPicker
 import com.android.compose.animation.scene.SceneKey
-import com.android.compose.animation.scene.SceneScope
 import com.android.compose.animation.scene.Swipe
 import com.android.compose.animation.scene.UserAction
 import com.android.compose.animation.scene.UserActionResult
@@ -115,9 +115,9 @@ object QuickSettings {
 
 @Composable
 @OptIn(ExperimentalFoundationApi::class)
-fun SceneScope.QuickSettings(
-    qsPager: @Composable SceneScope.() -> Unit,
-    mediaPlayer: (@Composable SceneScope.() -> Unit)?,
+fun ContentScope.QuickSettings(
+    qsPager: @Composable ContentScope.() -> Unit,
+    mediaPlayer: (@Composable ContentScope.() -> Unit)?,
     onSettingsButtonClicked: () -> Unit,
     onPowerButtonClicked: () -> Unit,
     modifier: Modifier = Modifier,
@@ -187,7 +187,7 @@ fun SceneScope.QuickSettings(
 }
 
 @Composable
-fun SceneScope.QuickSettingsBackground(modifier: Modifier = Modifier) {
+fun ContentScope.QuickSettingsBackground(modifier: Modifier = Modifier) {
     Box(
         modifier
             .element(QuickSettings.Elements.Background)
@@ -197,7 +197,7 @@ fun SceneScope.QuickSettingsBackground(modifier: Modifier = Modifier) {
 }
 
 @Composable
-private fun SceneScope.TimeRow(modifier: Modifier = Modifier) {
+private fun ContentScope.TimeRow(modifier: Modifier = Modifier) {
     Row(modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
         ShadeTime(scale = 2.57f)
         Spacer(Modifier.weight(1f))
@@ -206,12 +206,12 @@ private fun SceneScope.TimeRow(modifier: Modifier = Modifier) {
 }
 
 @Composable
-internal fun SceneScope.Operator(modifier: Modifier = Modifier) {
+internal fun ContentScope.Operator(modifier: Modifier = Modifier) {
     Text("Emergency calls only", modifier.element(QuickSettings.Elements.Operator))
 }
 
 @Composable
-private fun SceneScope.DateAndBatteryRow(modifier: Modifier = Modifier) {
+private fun ContentScope.DateAndBatteryRow(modifier: Modifier = Modifier) {
     Row(modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
         ShadeDate(Modifier.element(QuickSettings.Elements.Date))
         Spacer(Modifier.weight(1f))
@@ -220,7 +220,7 @@ private fun SceneScope.DateAndBatteryRow(modifier: Modifier = Modifier) {
 }
 
 @Composable
-internal fun SceneScope.BrightnessSlider(modifier: Modifier = Modifier) {
+internal fun ContentScope.BrightnessSlider(modifier: Modifier = Modifier) {
     Box(
         modifier
             .element(QuickSettings.Elements.BrightnessSlider)

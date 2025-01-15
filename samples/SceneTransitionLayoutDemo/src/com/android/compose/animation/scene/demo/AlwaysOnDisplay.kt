@@ -25,8 +25,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import com.android.compose.animation.scene.ContentScope
 import com.android.compose.animation.scene.ElementKey
-import com.android.compose.animation.scene.SceneScope
 
 object AlwaysOnDisplay {
     object Elements {
@@ -35,7 +35,7 @@ object AlwaysOnDisplay {
 }
 
 @Composable
-fun SceneScope.AlwaysOnDisplay(modifier: Modifier = Modifier) {
+fun ContentScope.AlwaysOnDisplay(modifier: Modifier = Modifier) {
     Box(modifier) {
         Box(
             Modifier.element(AlwaysOnDisplay.Elements.Background)
