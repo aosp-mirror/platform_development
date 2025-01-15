@@ -1447,7 +1447,7 @@ mod tests {
                 .unwrap();
             }
 
-            assert_that!(output, eq(expected_output));
+            assert_that!(output, eq(&expected_output));
 
             set_current_dir(old_current_dir).unwrap();
         }
