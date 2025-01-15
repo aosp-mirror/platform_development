@@ -152,7 +152,6 @@ export class Presenter extends AbstractLogViewerPresenter<
       type: TraceRectType.INPUT_WINDOWS,
       icon: TRACE_INFO[TraceType.INPUT_EVENT_MERGED].icon,
       legend: RectLegendFactory.makeLegendForInputWindowRects(false),
-      multiple: false,
     };
     super(
       mergedInputEventTrace,

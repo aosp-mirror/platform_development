@@ -19,7 +19,6 @@ import {Canvas, colorToCss} from 'viewers/components/rects/canvas';
 export interface RectSpec {
   type: TraceRectType;
   icon: string;
-  multiple: boolean;
   legend: RectLegendOption[];
 }
 

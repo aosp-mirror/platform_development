@@ -118,7 +118,6 @@ the default for its data type.`,
       {border: '#ffc24b', desc: 'Pinned', showInWireFrameMode: true},
       {border: '#b34a24', desc: 'Pinned', showInWireFrameMode: true},
     ],
-    multiple: false,
   };
   override readonly treeNodeLongName =
     'f7092ed com.google.android.apps.nexuslauncher/.NexusLauncherActivity';

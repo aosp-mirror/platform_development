@@ -815,7 +815,6 @@ class PresenterInputTest extends AbstractLogViewerPresenterTest<UiData> {
               showInWireFrameMode: false,
             },
           ],
-          multiple: false,
         });
       }
     });

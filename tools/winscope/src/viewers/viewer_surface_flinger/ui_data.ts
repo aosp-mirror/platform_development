@@ -43,6 +43,7 @@ export class UiData implements UiDataHierarchy {
   propertiesTree: UiPropertyTreeNode | undefined;
   isDarkMode = false;
   rectSpec: RectSpec | undefined;
+  allRectSpecs: RectSpec[] | undefined;
 
   constructor(
     public curatedProperties: SfCuratedProperties | undefined = undefined,
