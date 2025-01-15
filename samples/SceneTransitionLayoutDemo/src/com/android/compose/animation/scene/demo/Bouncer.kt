@@ -36,9 +36,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
 import com.android.compose.animation.scene.Back
+import com.android.compose.animation.scene.ContentScope
 import com.android.compose.animation.scene.ElementKey
 import com.android.compose.animation.scene.SceneKey
-import com.android.compose.animation.scene.SceneScope
 import com.android.compose.animation.scene.Swipe
 import com.android.compose.grid.VerticalGrid
 
@@ -53,7 +53,7 @@ object Bouncer {
 }
 
 @Composable
-fun SceneScope.Bouncer(
+fun ContentScope.Bouncer(
     onBouncerCancelled: () -> Unit,
     onBouncerSolved: () -> Unit,
     modifier: Modifier = Modifier,

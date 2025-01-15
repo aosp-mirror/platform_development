@@ -46,8 +46,8 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import com.android.compose.animation.scene.ContentScope
 import com.android.compose.animation.scene.ElementKey
-import com.android.compose.animation.scene.SceneScope
 import com.android.compose.animation.scene.ValueKey
 import com.android.compose.grid.VerticalGrid
 import kotlin.math.abs
@@ -121,7 +121,7 @@ object QuickSettingsGrid {
  * is true.
  */
 @Composable
-fun SceneScope.QuickSettingsGrid(
+fun ContentScope.QuickSettingsGrid(
     tiles: List<QuickSettingsTileViewModel>,
     nColumns: Int,
     isExpanded: Boolean,
@@ -163,7 +163,7 @@ fun tileHeight(isExpanded: Boolean) =
     else QuickSettingsGrid.Dimensions.TileCollapsedHeight
 
 @Composable
-private fun SceneScope.Tile(
+private fun ContentScope.Tile(
     viewModel: QuickSettingsTileViewModel,
     height: Dp,
     expansionProgress: () -> Float,

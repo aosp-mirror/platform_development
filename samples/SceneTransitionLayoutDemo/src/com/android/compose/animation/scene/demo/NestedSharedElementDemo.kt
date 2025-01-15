@@ -37,7 +37,6 @@ import com.android.compose.animation.scene.ContentScope
 import com.android.compose.animation.scene.ElementKey
 import com.android.compose.animation.scene.MutableSceneTransitionLayoutState
 import com.android.compose.animation.scene.SceneKey
-import com.android.compose.animation.scene.SceneScope
 import com.android.compose.animation.scene.SceneTransitionLayout
 import com.android.compose.animation.scene.transitions
 
@@ -159,6 +158,6 @@ private fun ContentScope.ChildSTL(
 }
 
 @Composable
-private fun SceneScope.SharedElement(modifier: Modifier = Modifier) {
+private fun ContentScope.SharedElement(modifier: Modifier = Modifier) {
     Box(modifier.element(Elements.Shared).background(Color.Green, CircleShape))
 }

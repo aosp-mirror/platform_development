@@ -69,9 +69,9 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import com.android.compose.animation.scene.Back
+import com.android.compose.animation.scene.ContentScope
 import com.android.compose.animation.scene.ElementKey
 import com.android.compose.animation.scene.SceneKey
-import com.android.compose.animation.scene.SceneScope
 import com.android.compose.animation.scene.Swipe
 import com.android.compose.animation.scene.UserAction
 import com.android.compose.animation.scene.UserActionResult
@@ -138,9 +138,9 @@ object Shade {
 }
 
 @Composable
-fun SceneScope.Shade(
-    notificationList: @Composable SceneScope.(OverscrollEffect?) -> Unit,
-    mediaPlayer: (@Composable SceneScope.() -> Unit)?,
+fun ContentScope.Shade(
+    notificationList: @Composable ContentScope.(OverscrollEffect?) -> Unit,
+    mediaPlayer: (@Composable ContentScope.() -> Unit)?,
     quickSettingsTiles: List<QuickSettingsTileViewModel>,
     nQuickSettingsColumns: Int,
     modifier: Modifier = Modifier,
@@ -179,7 +179,7 @@ fun SceneScope.Shade(
 }
 
 @Composable
-private fun SceneScope.ShadeLayout(
+private fun ContentScope.ShadeLayout(
     background: @Composable () -> Unit,
     underScrim: @Composable () -> Unit,
     scrim: @Composable () -> Unit,
@@ -273,7 +273,7 @@ private fun SceneScope.ShadeLayout(
  * scene.
  */
 @Composable
-private fun SceneScope.additionalScrimOffset(): Animatable<Dp, AnimationVector1D>? {
+private fun ContentScope.additionalScrimOffset(): Animatable<Dp, AnimationVector1D>? {
     fun shouldHaveAdditionalScrimOffset(): Boolean {
         val currentTransition = layoutState.currentTransition ?: return false
         return currentTransition.isInitiatedByUserInput &&
@@ -346,8 +346,8 @@ private fun minScrimOffset(
 }
 
 @Composable
-private fun SceneScope.UnderScrim(
-    mediaPlayer: @Composable (SceneScope.() -> Unit)?,
+private fun ContentScope.UnderScrim(
+    mediaPlayer: @Composable (ContentScope.() -> Unit)?,
     quickSettingsTiles: List<QuickSettingsTileViewModel>,
     nQuickSettingsColumns: Int,
     modifier: Modifier = Modifier,
@@ -393,8 +393,8 @@ private fun SceneScope.UnderScrim(
 }
 
 @Composable
-private fun SceneScope.Scrim(
-    notificationList: @Composable SceneScope.(OverscrollEffect?) -> Unit,
+private fun ContentScope.Scrim(
+    notificationList: @Composable ContentScope.(OverscrollEffect?) -> Unit,
     shouldPunchHoleBehindScrim: Boolean,
     scrimMinTopPadding: Dp,
     modifier: Modifier = Modifier,
@@ -436,7 +436,7 @@ private fun SceneScope.Scrim(
 }
 
 @Composable
-fun SceneScope.StatusBar(showDateAndTime: Boolean, modifier: Modifier = Modifier) {
+fun ContentScope.StatusBar(showDateAndTime: Boolean, modifier: Modifier = Modifier) {
     Row(
         modifier.height(Shade.Dimensions.StatusBarHeight),
         verticalAlignment = Alignment.CenterVertically,
@@ -455,7 +455,7 @@ fun SceneScope.StatusBar(showDateAndTime: Boolean, modifier: Modifier = Modifier
 }
 
 @Composable
-fun SceneScope.ShadeTime(scale: Float, modifier: Modifier = Modifier) {
+fun ContentScope.ShadeTime(scale: Float, modifier: Modifier = Modifier) {
     Element(Shade.Elements.Time, modifier) {
         val measurer = rememberTextMeasurer()
         val color = LocalContentColor.current
@@ -502,6 +502,6 @@ fun ShadeDate(modifier: Modifier = Modifier) {
 }
 
 @Composable
-fun SceneScope.BatteryPercentage(modifier: Modifier = Modifier) {
+fun ContentScope.BatteryPercentage(modifier: Modifier = Modifier) {
     Text("92%", modifier.element(Shade.Elements.BatteryPercentage))
 }

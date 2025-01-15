@@ -27,8 +27,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.android.compose.animation.scene.ContentScope
 import com.android.compose.animation.scene.SceneKey
-import com.android.compose.animation.scene.SceneScope
 
 object SplitLockscreen {
     fun userActions(
@@ -46,9 +46,9 @@ object SplitLockscreen {
 }
 
 @Composable
-fun SceneScope.SplitLockscreen(
-    notificationList: @Composable SceneScope.() -> Unit,
-    mediaPlayer: @Composable (SceneScope.() -> Unit)?,
+fun ContentScope.SplitLockscreen(
+    notificationList: @Composable ContentScope.() -> Unit,
+    mediaPlayer: @Composable (ContentScope.() -> Unit)?,
     isDismissable: Boolean,
     onToggleDismissable: () -> Unit,
     onChangeScene: (SceneKey) -> Unit,

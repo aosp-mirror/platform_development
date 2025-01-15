@@ -34,9 +34,9 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.android.compose.animation.scene.Back
+import com.android.compose.animation.scene.ContentScope
 import com.android.compose.animation.scene.ElementKey
 import com.android.compose.animation.scene.SceneKey
-import com.android.compose.animation.scene.SceneScope
 import com.android.compose.animation.scene.Swipe
 import com.android.compose.animation.scene.UserAction
 import com.android.compose.animation.scene.UserActionResult
@@ -66,9 +66,9 @@ object SplitShade {
 }
 
 @Composable
-fun SceneScope.SplitShade(
-    notificationList: @Composable SceneScope.() -> Unit,
-    mediaPlayer: @Composable (SceneScope.() -> Unit)?,
+fun ContentScope.SplitShade(
+    notificationList: @Composable ContentScope.() -> Unit,
+    mediaPlayer: @Composable (ContentScope.() -> Unit)?,
     quickSettingsTiles: List<QuickSettingsTileViewModel>,
     nQuickSettingsRows: Int,
     nQuickSettingsColumns: Int,
