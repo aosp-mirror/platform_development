@@ -84,6 +84,7 @@ static DELETIONS: LazyLock<HashMap<&str, &[&str]>> = LazyLock::new(|| {
     HashMap::from([
         ("libbpf-sys", ["elfutils", "zlib", "libbpf"].as_slice()),
         ("libusb1-sys", ["libusb"].as_slice()),
+        ("libz-sys", ["src/zlib", "src/zlib-ng"].as_slice()),
     ])
 });
 
