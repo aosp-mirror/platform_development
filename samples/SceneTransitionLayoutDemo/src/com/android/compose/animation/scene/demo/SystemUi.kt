@@ -475,6 +475,7 @@ fun SystemUi(
             },
             color = MaterialTheme.colorScheme.surfaceVariant,
         ) {
+            val stretchOverscrollFactory = LocalOverscrollFactory.current
             CompositionLocalProvider(
                 LocalContentColor provides MaterialTheme.colorScheme.onSurface,
                 LocalOverscrollFactory provides rememberOffsetOverscrollEffectFactory(),
@@ -509,6 +510,9 @@ fun SystemUi(
                 // SceneTransitionLayout can only be bound to one SceneTransitionLayoutState, so
                 // make sure we recompose it fully when we create a new state object.
                 key(layoutState) {
+                    val overlayEffectFactory =
+                        if (shouldUseSplitScenes) null else stretchOverscrollFactory
+
                     SceneTransitionLayout(
                         state = layoutState,
                         transitionInterceptionThreshold =
@@ -665,6 +669,7 @@ fun SystemUi(
                             Overlays.QuickSettings,
                             userActions = QuickSettingsShade.UserActions,
                             alignment = Alignment.TopEnd,
+                            effectFactory = overlayEffectFactory,
                         ) {
                             QuickSettingsShade(qsPager, smallMediaPlayer)
                         }
@@ -673,6 +678,7 @@ fun SystemUi(
                             Overlays.Notifications,
                             userActions = NotificationShade.UserActions,
                             alignment = Alignment.TopStart,
+                            effectFactory = overlayEffectFactory,
                         ) {
                             NotificationShade(
                                 clock =

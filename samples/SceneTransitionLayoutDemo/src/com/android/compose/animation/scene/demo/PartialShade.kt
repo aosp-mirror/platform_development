@@ -75,9 +75,9 @@ fun ContentScope.PartialShade(
     Box(
         modifier
             .fillMaxWidth(if (isSplitShade) 0.5f else 1f)
-            .thenIf(isSplitShade) { Modifier.padding(16.dp) }
             .overscroll(verticalOverscrollEffect)
             .overscroll(contentOverscrollEffect)
+            .thenIf(isSplitShade) { Modifier.padding(16.dp) }
             .element(rootElement)
             .clip(shape)
             .background(PartialShade.Colors.Background)
