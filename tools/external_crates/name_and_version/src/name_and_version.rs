@@ -89,7 +89,7 @@ impl<'a> NameAndVersionRef<'a> {
     }
 }
 
-impl<'a> NamedAndVersioned for NameAndVersionRef<'a> {
+impl NamedAndVersioned for NameAndVersionRef<'_> {
     fn name(&self) -> &str {
         self.name
     }
@@ -107,27 +107,27 @@ impl<'a> Borrow<dyn NamedAndVersioned + 'a> for NameAndVersion {
     }
 }
 
-impl<'a> PartialEq for (dyn NamedAndVersioned + 'a) {
+impl PartialEq for (dyn NamedAndVersioned + '_) {
     fn eq(&self, other: &Self) -> bool {
         self.key().eq(&other.key())
     }
 }
 
-impl<'a> Eq for (dyn NamedAndVersioned + 'a) {}
+impl Eq for (dyn NamedAndVersioned + '_) {}
 
-impl<'a> PartialOrd for (dyn NamedAndVersioned + 'a) {
+impl PartialOrd for (dyn NamedAndVersioned + '_) {
     fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
         Some(self.cmp(other))
     }
 }
 
-impl<'a> Ord for (dyn NamedAndVersioned + 'a) {
+impl Ord for (dyn NamedAndVersioned + '_) {
     fn cmp(&self, other: &Self) -> Ordering {
         self.key().cmp(&other.key())
     }
 }
 
-impl<'a> Hash for (dyn NamedAndVersioned + 'a) {
+impl Hash for (dyn NamedAndVersioned + '_) {
     fn hash<H: Hasher>(&self, state: &mut H) {
         self.key().hash(state)
     }
