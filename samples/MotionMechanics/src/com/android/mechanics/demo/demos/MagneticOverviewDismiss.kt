@@ -14,13 +14,9 @@
  * limitations under the License.
  */
 
-@file:OptIn(ExperimentalMaterial3ExpressiveApi::class, ExperimentalMaterial3ExpressiveApi::class)
-
 package com.android.mechanics.demo.demos
 
 import androidx.compose.animation.core.Animatable
-import androidx.compose.animation.core.FiniteAnimationSpec
-import androidx.compose.animation.core.SpringSpec
 import androidx.compose.foundation.gestures.Orientation
 import androidx.compose.foundation.gestures.draggable
 import androidx.compose.foundation.gestures.rememberDraggableState
@@ -32,34 +28,27 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults.outlinedCardColors
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
-import androidx.compose.material3.FloatingActionButton
-import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.MotionScheme
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.platform.LocalViewConfiguration
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
-import com.android.mechanics.DistanceGestureContext
-import com.android.mechanics.GestureContext
-import com.android.mechanics.MotionValue
 import com.android.mechanics.debug.DebugMotionValueVisualization
-import com.android.mechanics.demo.tuneable.ConfigDialog
+import com.android.mechanics.demo.staging.asMechanics
+import com.android.mechanics.demo.staging.defaultSpatialSpring
+import com.android.mechanics.demo.staging.rememberDistanceGestureContext
+import com.android.mechanics.demo.staging.rememberMotionValue
+import com.android.mechanics.demo.tuneable.ConfigurableDemo
 import com.android.mechanics.demo.tuneable.Section
 import com.android.mechanics.demo.tuneable.SliderWithPreview
 import com.android.mechanics.demo.tuneable.SpringParameterSection
@@ -76,6 +65,16 @@ import com.android.mechanics.spec.reverseBuilder
 import com.android.mechanics.spring.SpringParameters
 import kotlin.math.abs
 import kotlin.math.roundToInt
+
+@Composable
+fun MagneticOverviewDismiss() {
+    ConfigurableDemo(
+        defaultConfig = rememberDefaultConfig(),
+        configUi = { value, onValueChanged -> DismissDemoConfig(value, onValueChanged) },
+    ) { config, modifier ->
+        DismissDemo(config, modifier = modifier)
+    }
+}
 
 object Keys {
     val Start = BreakpointKey("Start")
@@ -157,37 +156,6 @@ fun DismissDemo(config: Config, modifier: Modifier = Modifier) {
 
 // Stuff below is only demo helpers - configuration, stuff that should go to libraries etc.
 
-// Wrapper composable that includes the configuration dialog
-@Composable
-fun MagneticOverviewDismiss(modifier: Modifier = Modifier) {
-    val defaultConfig = rememberDefaultConfig()
-    var config by remember { mutableStateOf(defaultConfig) }
-
-    var showConfigurationDialog by remember { mutableStateOf(false) }
-
-    if (showConfigurationDialog) {
-        ConfigDialog(
-            config,
-            onConfigurationChange = { config = it },
-            onDismissRequest = { showConfigurationDialog = false },
-            defaultConfig = defaultConfig,
-        ) { value, onValueChanged ->
-            DismissDemoConfig(value, onValueChanged)
-        }
-    }
-
-    Box(modifier = modifier.fillMaxSize()) {
-        DismissDemo(config, modifier = Modifier.matchParentSize())
-
-        FloatingActionButton(
-            onClick = { showConfigurationDialog = true },
-            modifier = Modifier.padding(32.dp).align(Alignment.BottomEnd),
-        ) {
-            Icon(Icons.Filled.Settings, "Config")
-        }
-    }
-}
-
 @Composable
 fun DismissDemoConfig(config: Config, onConfigChanged: (Config) -> Unit) {
 
@@ -233,6 +201,7 @@ fun DismissDemoConfig(config: Config, onConfigChanged: (Config) -> Unit) {
     }
 }
 
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 private fun rememberDefaultConfig(): Config {
     val defaultSpring = defaultSpatialSpring()
@@ -291,86 +260,4 @@ fun Density.createDetachSpec(config: Config): MotionSpec {
         resetSpring = config.defaultSpring,
         segmentHandlers = segmentHandlers,
     )
-}
-
-@Composable
-fun rememberMotionValue(
-    input: () -> Float,
-    spec: () -> MotionSpec,
-    gestureContext: GestureContext,
-    stableThreshold: Float = 0.01f,
-    label: String? = null,
-): MotionValue {
-    val motionValue =
-        remember(input) {
-            MotionValue(
-                input,
-                gestureContext,
-                initialSpec = spec(),
-                label = label,
-                stableThreshold = stableThreshold,
-            )
-        }
-
-    motionValue.spec = spec()
-
-    LaunchedEffect(motionValue) { motionValue.keepRunning() }
-    return motionValue
-}
-
-// TODO move to library
-@Composable
-fun rememberDerivedMotionValue(
-    input: MotionValue,
-    spec: () -> MotionSpec,
-    stableThreshold: Float = 0.01f,
-    label: String? = null,
-): MotionValue {
-    val motionValue =
-        remember(input) {
-            MotionValue.createDerived(
-                input,
-                initialSpec = spec(),
-                label = label,
-                stableThreshold = stableThreshold,
-            )
-        }
-
-    motionValue.spec = spec()
-
-    LaunchedEffect(motionValue) { motionValue.keepRunning() }
-    return motionValue
-}
-
-@Composable
-fun rememberDistanceGestureContext(
-    initDistance: Float = 0f,
-    initialDirection: InputDirection = InputDirection.Max,
-): DistanceGestureContext {
-    val touchSlop = LocalViewConfiguration.current.touchSlop
-    val gestureContext = remember {
-        DistanceGestureContext(initDistance, initialDirection, touchSlop)
-    }
-
-    return gestureContext
-}
-
-/** Converts a [SpringSpec] into its [SpringParameters] equivalent. */
-fun SpringSpec<*>.asMechanics() = SpringParameters(stiffness, dampingRatio)
-
-/** Converts a [SpringSpec] into its [SpringParameters] equivalent. */
-fun FiniteAnimationSpec<*>.asMechanics() =
-    with(this as SpringSpec<*>) { SpringParameters(stiffness, dampingRatio) }
-
-private fun MechanicsSpringSpec(factory: () -> FiniteAnimationSpec<Any>) =
-    (factory() as SpringSpec<Any>).asMechanics()
-
-@Composable
-fun defaultSpatialSpring(): SpringParameters {
-    return (MaterialTheme.motionScheme.defaultSpatialSpec<Any>() as SpringSpec<Any>).asMechanics()
-}
-
-@Composable
-fun defaultEffectSpring(): SpringParameters {
-    return (MaterialTheme.motionScheme.defaultSpatialSpec<Any>() as SpringSpec<Any>).asMechanics()
 }
