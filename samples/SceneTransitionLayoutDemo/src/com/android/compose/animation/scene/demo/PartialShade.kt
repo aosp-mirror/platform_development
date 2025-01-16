@@ -17,12 +17,12 @@
 package com.android.compose.animation.scene.demo
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.gestures.Orientation
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.overscroll
+import androidx.compose.foundation.rememberOverscrollEffect
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -44,7 +44,6 @@ import androidx.compose.ui.unit.dp
 import com.android.compose.animation.scene.ContentScope
 import com.android.compose.animation.scene.ElementKey
 import com.android.compose.animation.scene.LowestZIndexContentPicker
-import com.android.compose.gesture.effect.rememberOffsetOverscrollEffect
 import com.android.compose.modifiers.thenIf
 
 object PartialShade {
@@ -78,7 +77,7 @@ fun ContentScope.PartialShade(
 
     val shape =
         if (isSplitShade) PartialShade.Shapes.SplitBackground else PartialShade.Shapes.Background
-    val contentOverscrollEffect = rememberOffsetOverscrollEffect(Orientation.Vertical)
+    val contentOverscrollEffect = checkNotNull(rememberOverscrollEffect())
     Box(
         modifier
             .fillMaxWidth(if (isSplitShade) 0.5f else 1f)

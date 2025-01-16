@@ -23,7 +23,6 @@ import androidx.compose.animation.core.VisibilityThreshold
 import androidx.compose.foundation.OverscrollEffect
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.FlingBehavior
-import androidx.compose.foundation.gestures.Orientation
 import androidx.compose.foundation.gestures.ScrollableDefaults
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -34,6 +33,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.overscroll
+import androidx.compose.foundation.rememberOverscrollEffect
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.LocalTextStyle
@@ -78,7 +78,6 @@ import com.android.compose.animation.scene.UserActionResult
 import com.android.compose.animation.scene.ValueKey
 import com.android.compose.animation.scene.animateElementFloatAsState
 import com.android.compose.animation.scene.animateSceneFloatAsState
-import com.android.compose.gesture.effect.rememberOffsetOverscrollEffect
 import com.android.compose.modifiers.thenIf
 import com.android.compose.nestedscroll.LargeTopAppBarNestedScrollConnection
 import com.android.compose.nestedscroll.PriorityNestedScrollConnection
@@ -399,7 +398,7 @@ private fun ContentScope.Scrim(
     scrimMinTopPadding: Dp,
     modifier: Modifier = Modifier,
 ) {
-    val overscrollEffect = rememberOffsetOverscrollEffect(Orientation.Vertical)
+    val overscrollEffect = rememberOverscrollEffect()
     Box(
         modifier
             .overscroll(verticalOverscrollEffect)
