@@ -42,7 +42,7 @@ use crate::{
     license::{most_restrictive_type, update_module_license_files},
     managed_crate::ManagedCrate,
     pseudo_crate::{CargoVendorDirty, PseudoCrate},
-    upgradable::{IsUpgradableTo, MatchesRelaxed},
+    upgradable::{IsUpgradableTo, MatchesWithCompatibilityRule, SemverCompatibilityRule},
     SuccessOrError,
 };
 
@@ -416,8 +416,12 @@ impl ManagedRepo {
                     continue;
                 }
                 let versions = cc.get_versions(dep.crate_name()).collect::<Vec<_>>();
-                let has_matching_version =
-                    versions.iter().any(|(nv, _)| req.matches_relaxed(nv.version()));
+                let has_matching_version = versions.iter().any(|(nv, _)| {
+                    req.matches_with_compatibility_rule(
+                        nv.version(),
+                        SemverCompatibilityRule::Loose,
+                    )
+                });
                 if !has_matching_version {
                     found_problems = true;
                 }
@@ -430,7 +434,14 @@ impl ManagedRepo {
                             "  Dep {} {} is {}satisfied by v{} at {}",
                             dep.crate_name(),
                             dep.requirement(),
-                            if req.matches_relaxed(dep_crate.version()) { "" } else { "not " },
+                            if req.matches_with_compatibility_rule(
+                                dep_crate.version(),
+                                SemverCompatibilityRule::Loose
+                            ) {
+                                ""
+                            } else {
+                                "not "
+                            },
                             dep_crate.version(),
                             dep_crate.path()
                         );
@@ -698,9 +709,15 @@ impl ManagedRepo {
             println!("Version {}", version.version());
             let mut found_problems = false;
             let parsed_version = semver::Version::parse(version.version())?;
-            if !krate.android_version().is_upgradable_to(&parsed_version) {
+            if !krate
+                .android_version()
+                .is_upgradable_to(&parsed_version, SemverCompatibilityRule::Strict)
+            {
                 found_problems = true;
-                if !krate.android_version().is_upgradable_to_relaxed(&parsed_version) {
+                if !krate
+                    .android_version()
+                    .is_upgradable_to(&parsed_version, SemverCompatibilityRule::Loose)
+                {
                     println!("  Not semver-compatible, even by relaxed standards");
                 } else {
                     println!("  Semver-compatible, but only by relaxed standards since major version is 0");
@@ -731,7 +748,10 @@ impl ManagedRepo {
                     }
                 }
                 for (_, dep_crate) in cc.get_versions(dep.crate_name()) {
-                    if !req.matches_relaxed(dep_crate.version()) {
+                    if !req.matches_with_compatibility_rule(
+                        dep_crate.version(),
+                        SemverCompatibilityRule::Loose,
+                    ) {
                         found_problems = true;
                         println!(
                             "  Dep {} {} is not satisfied by v{} at {}",
@@ -753,7 +773,11 @@ impl ManagedRepo {
 
         Ok(())
     }
-    pub fn suggest_updates(&self, consider_patched_crates: bool) -> Result<Vec<(String, String)>> {
+    pub fn suggest_updates(
+        &self,
+        consider_patched_crates: bool,
+        semver_compatibility: SemverCompatibilityRule,
+    ) -> Result<Vec<(String, String)>> {
         let mut suggestions = Vec::new();
         let mut managed_crates = self.new_cc();
         managed_crates.add_from(self.managed_dir().rel())?;
@@ -786,7 +810,7 @@ impl ManagedRepo {
 
             for version in cio_crate.versions_gt(krate.version()).rev() {
                 let parsed_version = semver::Version::parse(version.version())?;
-                if !krate.version().is_upgradable_to_relaxed(&parsed_version) {
+                if !krate.version().is_upgradable_to(&parsed_version, semver_compatibility) {
                     continue;
                 }
                 if !version.android_deps_with_version_reqs().any(|(dep, req)| {
@@ -799,7 +823,10 @@ impl ManagedRepo {
                         &legacy_crates
                     };
                     for (_, dep_crate) in cc.get_versions(dep.crate_name()) {
-                        if req.matches_relaxed(dep_crate.version()) {
+                        if req.matches_with_compatibility_rule(
+                            dep_crate.version(),
+                            SemverCompatibilityRule::Loose,
+                        ) {
                             return false;
                         }
                     }
