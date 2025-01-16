@@ -20,6 +20,7 @@ use std::{
     path::Path,
     process::Command,
     str::from_utf8,
+    sync::LazyLock,
 };
 
 use anyhow::{anyhow, bail, Context, Result};
@@ -45,6 +46,35 @@ use crate::{
     upgradable::{IsUpgradableTo, MatchesRelaxed},
     SuccessOrError,
 };
+
+// TODO: Store this as a data file in the monorepo.
+static IMPORT_DENYLIST: LazyLock<BTreeSet<&str>> = LazyLock::new(|| {
+    BTreeSet::from([
+        "instant", // Not maintained.
+        // Uniffi crates.
+        // Per mmaurer: "considered too difficult to verify and stopped being used for the original use case".
+        "oneshot-uniffi",
+        "uniffi",
+        "uniffi_checksum_derive",
+        "uniffi_core",
+        "uniffi_macros",
+        "uniffi_meta",
+        // From go/android-restricted-rust-crates
+        "ctor",                      // Runs before main, can cause linking errors
+        "inventory",                 // Depends on ctor
+        "ouroboros",                 // Sketchy unsafe, code smell
+        "sled",                      // There is too much unsafe.
+        "proc-macro-error",          // Unmaintained and depends on syn 1
+        "derive-getters",            // Unmaintained and depends on syn 1
+        "android_system_properties", // Duplicates internal functionality
+        "x509-parser",               // Duplicates x509-cert and BoringSSL
+        "der-parser",                // Duplicates der
+        "oid-registry",
+        "asn1-rs",
+        "android-tzdata", // Relies on unsupported API
+        "rustls",         // Duplicates BoringSSL
+    ])
+});
 
 pub struct ManagedRepo {
     path: RootedPath,
@@ -382,6 +412,11 @@ impl ManagedRepo {
             return Ok(());
         }
 
+        if IMPORT_DENYLIST.contains(crate_name) {
+            println!("Crate {crate_name} is on the import denylist");
+            return Ok(());
+        }
+
         let mut managed_crates = self.new_cc();
         managed_crates.add_from(self.managed_dir().rel())?;
         let legacy_crates = self.legacy_crates()?;
@@ -405,6 +440,9 @@ impl ManagedRepo {
                         dep.crate_name(),
                         dep.requirement()
                     );
+                    if IMPORT_DENYLIST.contains(dep.crate_name()) {
+                        println!("    And {} is on the import denylist", dep.crate_name());
+                    }
                     // This is a no-op because our dependency code only considers normal deps anyway.
                     // TODO: Fix the deps code.
                     if matches!(dep.kind(), DependencyKind::Dev) {
@@ -445,11 +483,14 @@ impl ManagedRepo {
     }
     pub fn import(&self, crate_name: &str, version: &str, autoconfig: bool) -> Result<()> {
         if self.contains(crate_name) {
-            return Err(anyhow!("Crate already imported at {}", self.managed_dir_for(crate_name)));
+            bail!("Crate already imported at {}", self.managed_dir_for(crate_name));
         }
         let legacy_dir = self.legacy_dir_for(crate_name, None)?;
         if legacy_dir.abs().exists() {
-            return Err(anyhow!("Legacy crate already imported at {}", legacy_dir));
+            bail!("Legacy crate already imported at {}", legacy_dir);
+        }
+        if IMPORT_DENYLIST.contains(crate_name) {
+            bail!("Crate {crate_name} is on the import denylist");
         }
 
         let pseudo_crate = self.pseudo_crate();
@@ -546,8 +587,6 @@ impl ManagedRepo {
 
         self.regenerate([&crate_name].iter(), true)?;
         println!("Please edit {} and run 'regenerate' for this crate", managed_dir);
-
-        // TODO: Create TEST_MAPPING
 
         Ok(())
     }
