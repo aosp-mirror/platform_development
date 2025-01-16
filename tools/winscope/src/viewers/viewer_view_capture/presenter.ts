@@ -146,7 +146,6 @@ the default for its data type.`,
       type: TraceRectType.VIEWS,
       icon: TRACE_INFO[TraceType.VIEW_CAPTURE].icon,
       legend: RectLegendFactory.makeLegendForViewRects(),
-      multiple: false,
     };
     super(undefined, traces, storage, notifyViewCallback, uiData);
     this.viewCaptureTraces = traces.getTraces(TraceType.VIEW_CAPTURE);

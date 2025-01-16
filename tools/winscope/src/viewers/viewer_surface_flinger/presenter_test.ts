@@ -134,7 +134,38 @@ the default for its data type.`,
       {border: '#ffc24b', desc: 'Pinned', showInWireFrameMode: true},
       {border: '#b34a24', desc: 'Pinned', showInWireFrameMode: true},
     ],
-    multiple: true,
+  };
+  readonly expectedInputWindowsSpec = {
+    type: TraceRectType.INPUT_WINDOWS,
+    icon: TRACE_INFO[TraceType.INPUT_EVENT_MERGED].icon,
+    legend: [
+      {
+        fill: '#c8e8b7',
+        desc: 'Visible and touchable',
+        border: 'var(--default-text-color)',
+        showInWireFrameMode: false,
+      },
+      {
+        fill: '#dcdcdc',
+        desc: 'Not visible',
+        border: 'var(--default-text-color)',
+        showInWireFrameMode: false,
+      },
+      {
+        fill: '',
+        border: 'var(--default-text-color)',
+        desc: 'Visible but not touchable',
+        showInWireFrameMode: false,
+      },
+      {
+        fill: 'var(--selected-element-color)',
+        desc: 'Selected',
+        border: 'var(--default-text-color)',
+        showInWireFrameMode: true,
+      },
+      {border: '#ffc24b', desc: 'Pinned', showInWireFrameMode: true},
+      {border: '#b34a24', desc: 'Pinned', showInWireFrameMode: true},
+    ],
   };
   override readonly treeNodeLongName =
     'ActivityRecord{64953af u0 com.google.android.apps.nexuslauncher/.NexusLauncherActivity#96';
@@ -264,6 +295,10 @@ the default for its data type.`,
       'ENABLE_BACKPRESSURE (0x100)',
     );
     expect((uiData as UiData).rectSpec).toEqual(this.expectedInitialRectSpec);
+    expect((uiData as UiData).allRectSpecs).toEqual([
+      this.expectedInitialRectSpec,
+      this.expectedInputWindowsSpec,
+    ]);
   }
 
   override executePropertiesChecksAfterSecondPositionUpdate(
@@ -356,8 +391,12 @@ the default for its data type.`,
         expect(spy).toHaveBeenCalledWith(testId);
 
         spy = spyOn(presenter, 'onRectTypeButtonClicked');
-        el.dispatchEvent(new CustomEvent(ViewerEvents.RectTypeButtonClick));
-        expect(spy).toHaveBeenCalled();
+        el.dispatchEvent(
+          new CustomEvent(ViewerEvents.RectTypeButtonClick, {
+            detail: {type: TraceRectType.LAYERS},
+          }),
+        );
+        expect(spy).toHaveBeenCalledOnceWith(TraceRectType.LAYERS);
       });
 
       it('handles displays with no visible layers', async () => {
@@ -640,46 +679,17 @@ the default for its data type.`,
         expect(uiData.rectsToDraw[1].id).toEqual(
           '3 Display 0 name="Built-in Screen"#3',
         );
-        presenter.onRectTypeButtonClicked();
+        presenter.onRectTypeButtonClicked(TraceRectType.INPUT_WINDOWS);
         expect(uiData.rectsToDraw.length).toEqual(9);
         expect(uiData.rectsToDraw[1].id).toEqual(
           '76 com.android.systemui.ImageWallpaper#76',
         );
-        expect(uiData.rectSpec).toEqual({
-          type: TraceRectType.INPUT_WINDOWS,
-          icon: TRACE_INFO[TraceType.INPUT_EVENT_MERGED].icon,
-          legend: [
-            {
-              fill: '#c8e8b7',
-              desc: 'Visible and touchable',
-              border: 'var(--default-text-color)',
-              showInWireFrameMode: false,
-            },
-            {
-              fill: '#dcdcdc',
-              desc: 'Not visible',
-              border: 'var(--default-text-color)',
-              showInWireFrameMode: false,
-            },
-            {
-              fill: '',
-              border: 'var(--default-text-color)',
-              desc: 'Visible but not touchable',
-              showInWireFrameMode: false,
-            },
-            {
-              fill: 'var(--selected-element-color)',
-              desc: 'Selected',
-              border: 'var(--default-text-color)',
-              showInWireFrameMode: true,
-            },
-            {border: '#ffc24b', desc: 'Pinned', showInWireFrameMode: true},
-            {border: '#b34a24', desc: 'Pinned', showInWireFrameMode: true},
-          ],
-          multiple: true,
-        });
+        expect(uiData.rectSpec).toEqual(this.expectedInputWindowsSpec);
+        expect(uiData.allRectSpecs).toEqual([
+          this.expectedInitialRectSpec,
+          this.expectedInputWindowsSpec,
+        ]);
       });
-
       async function checkColorAndTransform(
         treeForAlphaCheck: UiHierarchyTreeNode,
         treeForTransformCheck: UiHierarchyTreeNode,

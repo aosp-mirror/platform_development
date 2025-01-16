@@ -398,12 +398,12 @@ class UnitTestUtils {
     return tp.query(query).waitAllRows();
   }
 
-  static checkTooltips<T>(
+  static async checkTooltips<T>(
     elements: HTMLElement[],
     expTooltips: string[],
     fixture: ComponentFixture<T>,
   ) {
-    elements.forEach((el, index) => {
+    for (const [index, el] of elements.entries()) {
       el.dispatchEvent(new Event('mouseenter'));
       fixture.detectChanges();
       expect(
@@ -411,7 +411,8 @@ class UnitTestUtils {
       ).toEqual(expTooltips[index]);
       el.dispatchEvent(new Event('mouseleave'));
       fixture.detectChanges();
-    });
+      await fixture.whenStable();
+    }
   }
 }
 

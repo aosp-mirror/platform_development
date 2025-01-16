@@ -149,7 +149,6 @@ describe('ViewerSurfaceFlingerComponent', () => {
       type: TraceRectType.LAYERS,
       icon: '',
       legend: [],
-      multiple: false,
     };
     component.inputData = uiData;
     fixture.detectChanges();
@@ -166,7 +165,6 @@ describe('ViewerSurfaceFlingerComponent', () => {
       type: TraceRectType.INPUT_WINDOWS,
       icon: '',
       legend: [],
-      multiple: false,
     };
     component.inputData = uiData;
     fixture.detectChanges();

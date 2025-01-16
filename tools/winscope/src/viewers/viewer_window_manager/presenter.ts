@@ -141,7 +141,6 @@ the default for its data type.`,
       type: TraceRectType.WINDOW_STATES,
       icon: TRACE_INFO[TraceType.WINDOW_MANAGER].icon,
       legend: RectLegendFactory.makeLegendForWindowStateRects(),
-      multiple: false,
     };
     super(trace, traces, storage, notifyViewCallback, uiData);
   }

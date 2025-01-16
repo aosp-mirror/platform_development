@@ -357,7 +357,7 @@ describe('TimelineComponent', () => {
 
     const matOptions =
       document.documentElement.querySelectorAll<HTMLInputElement>('mat-option');
-    UnitTestUtils.checkTooltips(
+    await UnitTestUtils.checkTooltips(
       Array.from(matOptions),
       [
         'test query, 0',
@@ -397,7 +397,7 @@ describe('TimelineComponent', () => {
       const expectedType = expectedTypes[index];
       expect(text).toEqual(TRACE_INFO[expectedType].icon);
     });
-    UnitTestUtils.checkTooltips(
+    await UnitTestUtils.checkTooltips(
       traceIcons,
       [
         'Search test query',

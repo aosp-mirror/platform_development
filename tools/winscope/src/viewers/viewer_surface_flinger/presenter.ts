@@ -165,13 +165,11 @@ the default for its data type.`,
       type: TraceRectType.LAYERS,
       icon: TRACE_INFO[TraceType.SURFACE_FLINGER].icon,
       legend: RectLegendFactory.makeLegendForLayerRects(true),
-      multiple: true,
     },
     {
       type: TraceRectType.INPUT_WINDOWS,
       icon: TRACE_INFO[TraceType.INPUT_EVENT_MERGED].icon,
       legend: RectLegendFactory.makeLegendForInputWindowRects(true),
-      multiple: true,
     },
   ];
   private rectSpecIndex = 0;
@@ -183,6 +181,7 @@ the default for its data type.`,
     notifyViewCallback: NotifyHierarchyViewCallbackType<UiData>,
   ) {
     super(trace, traces, storage, notifyViewCallback, new UiData());
+    this.uiData.allRectSpecs = this.rectSpecs;
     this.wmTrace = traces.getTrace(TraceType.WINDOW_MANAGER);
   }
 
@@ -214,11 +213,8 @@ the default for its data type.`,
     this.refreshUIData();
   }
 
-  onRectTypeButtonClicked() {
-    this.rectSpecIndex =
-      this.rectSpecIndex < this.rectSpecs.length - 1
-        ? this.rectSpecIndex + 1
-        : 0;
+  onRectTypeButtonClicked(type: TraceRectType) {
+    this.rectSpecIndex = this.rectSpecs.findIndex((spec) => spec.type === type);
     const currentHierarchyTrees =
       this.hierarchyPresenter.getAllCurrentHierarchyTrees();
     if (currentHierarchyTrees) {
@@ -271,7 +267,8 @@ the default for its data type.`,
       await this.onRectDoubleClick(rectId);
     });
     htmlElement.addEventListener(ViewerEvents.RectTypeButtonClick, (event) => {
-      this.onRectTypeButtonClicked();
+      const type = (event as CustomEvent).detail.type;
+      this.onRectTypeButtonClicked(type);
     });
   }
 
