@@ -22,7 +22,7 @@ use std::{
     str::from_utf8,
 };
 
-use anyhow::{anyhow, Context, Result};
+use anyhow::{anyhow, bail, Context, Result};
 use crates_index::DependencyKind;
 use glob::glob;
 use google_metadata::GoogleMetadata;
@@ -588,10 +588,21 @@ impl ManagedRepo {
                 self.managed_dir(), managed_dirs.difference(&deps).join(", "), deps.difference(&managed_dirs).join(", ")));
         }
 
-        let crate_list = pseudo_crate.read_crate_list()?;
-        if deps.iter().ne(crate_list.iter()) {
-            return Err(anyhow!("Deps in pseudo_crate/Cargo.toml don't match deps in crate-list.txt\nCargo.toml: {}\ncrate-list.txt: {}",
-                deps.iter().join(", "), crate_list.iter().join(", ")));
+        let crate_list = pseudo_crate.read_crate_list("crate-list.txt")?;
+        if !deps.is_subset(&crate_list) {
+            bail!("Deps in pseudo_crate/Cargo.toml don't match deps in crate-list.txt\nCargo.toml: {}\ncrate-list.txt: {}",
+                deps.iter().join(", "), crate_list.iter().join(", "));
+        }
+
+        let expected_deleted_crates =
+            crate_list.difference(&deps).cloned().collect::<BTreeSet<_>>();
+        let deleted_crates = pseudo_crate.read_crate_list("deleted-crates.txt")?;
+        if deleted_crates != expected_deleted_crates {
+            bail!(
+                "Deleted crate list is inconsistent. Expected: {}, Found: {}",
+                expected_deleted_crates.iter().join(", "),
+                deleted_crates.iter().join(", ")
+            );
         }
 
         // Per https://android.googlesource.com/platform/tools/repohooks/,
