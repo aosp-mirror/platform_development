@@ -21,8 +21,17 @@ use glob::glob;
 
 use crate::LicenseCheckerError;
 
-static LICENSE_GLOBS: &[&str] =
-    &["LICENSE", "LICENCE", "LICENSE.*", "LICENSE-*", "LICENSES/*", "UNLICENSE", "COPYING"];
+static LICENSE_GLOBS: &[&str] = &[
+    "LICENSE",
+    "LICENCE",
+    "LICENSE.*",
+    "LICENSE-*",
+    "LICENSES/*",
+    "UNLICENSE",
+    "COPYING",
+    "license",
+    "license.*",
+];
 
 pub(crate) fn find_license_files(
     path: impl AsRef<Path>,
