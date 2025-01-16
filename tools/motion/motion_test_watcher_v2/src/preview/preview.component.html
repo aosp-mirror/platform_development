@@ -1,0 +1,32 @@
+<div class="flex justify-center items-center h-full p-4">
+  <div *ngIf="videoUrl">
+    <video #videoPlayer width="320" height="240" [src]="videoUrl">
+      Your browser does not support the video tag.
+    </video>
+    <div class="flex justify-center mt-2" [style.visibility]="videoUrl ? 'visible' : 'hidden'">
+      <button mat-icon-button (click)="goToStart()" class="mr-2">
+        <mat-icon>first_page</mat-icon>
+      </button>
+      <button mat-icon-button (click)="stepBackward()" class="mr-2">
+        <mat-icon>skip_previous</mat-icon>
+      </button>
+      <button mat-icon-button (click)="togglePlayPause()" class="mr-2">
+        <mat-icon>{{ isPlaying ? 'pause' : 'play_arrow' }}</mat-icon>
+      </button>
+      <select [(ngModel)]="playbackSpeed" (change)="setPlaybackSpeed()" class="mr-2 bg-white cursor-pointer">
+        <option value="0.25">0.25x</option>
+        <option value="0.5">0.5x</option>
+        <option value="1">1x</option>
+        <option value="1.5">1.5x</option>
+        <option value="2">2x</option>
+      </select>
+      <button mat-icon-button (click)="stepForward()" class="mr-2">
+        <mat-icon>skip_next</mat-icon>
+      </button>
+      <button mat-icon-button (click)="goToEnd()" class="mr-2">
+        <mat-icon>last_page</mat-icon>
+      </button>
+    </div>
+  </div>
+  <p *ngIf="!videoUrl" class="text-center text-gray-500 mt-2">No test selected.</p>
+</div>

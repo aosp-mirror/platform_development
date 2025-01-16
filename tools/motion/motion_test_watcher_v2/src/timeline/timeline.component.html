@@ -1,0 +1,44 @@
+<div *ngIf="selectedGolden" class="w-full h-[500px] p-4 relative">
+  <div
+    class="flex flex-col items-stretch h-full bg-white rounded shadow-md p-4"
+  >
+    <div class="flex-grow">
+      <app-graph
+        *ngIf="!loading"
+        [expectedData]="expectedData"
+        [actualData]="actualData"
+        [featureName]="getSelectedFeatureName()"
+      ></app-graph>
+      <div *ngIf="loading">Loading...</div>
+    </div>
+  </div>
+  <div class="mt-4 flex justify-center space-x-2">
+    <button
+      class="px-3 py-1 rounded bg-gray-200 hover:bg-gray-300"
+      (click)="onPrevious()"
+    >
+      &#16;
+    </button>
+    <button
+      class="px-3 py-1 rounded bg-gray-200 hover:bg-gray-300"
+      (click)="onNext()"
+    >
+      &#17;
+    </button>
+  </div>
+  <div class="mt-4 flex justify-center space-x-2">
+    <button
+      class="px-3 py-1 rounded bg-red-500 hover:bg-red-700 text-white"
+      (click)="updateGolden()"
+    >
+      Update Golden
+    </button>
+  </div>
+</div>
+
+<div
+  *ngIf="!selectedGolden"
+  class="w-full h-[500px] p-4 flex justify-center items-center"
+>
+  <p class="text-center text-gray-500">No test selected.</p>
+</div>
