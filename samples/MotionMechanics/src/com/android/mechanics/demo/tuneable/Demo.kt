@@ -17,6 +17,7 @@
 package com.android.mechanics.demo.tuneable
 
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
@@ -32,17 +33,20 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 
-typealias DemoContent<T> = @Composable (config: T, modifier: Modifier) -> Unit
+interface Demo<T> {
+    val identifier: String
 
-// Wrapper composable that includes the configuration dialog
+    @Composable fun rememberDefaultConfig(): T
+
+    @Composable fun ColumnScope.ConfigUi(config: T, onConfigChanged: (T) -> Unit)
+
+    @Composable fun DemoUi(config: T, modifier: Modifier)
+}
+
 @Composable
-fun <T> ConfigurableDemo(
-    defaultConfig: T,
-    configUi: ConfigurationContent<T>,
-    modifier: Modifier = Modifier,
-    demoUI: DemoContent<T>,
-) {
-    var config by remember { mutableStateOf(defaultConfig) }
+fun <T> Demo<T>.ConfigurableDemo(modifier: Modifier = Modifier) {
+    val defaultConfig = rememberDefaultConfig()
+    var config by remember(defaultConfig) { mutableStateOf(defaultConfig) }
 
     var showConfigurationDialog by remember { mutableStateOf(false) }
 
@@ -52,12 +56,13 @@ fun <T> ConfigurableDemo(
             onConfigurationChange = { config = it },
             onDismissRequest = { showConfigurationDialog = false },
             defaultConfig = defaultConfig,
-            content = configUi,
-        )
+        ) { value, onValueChanged ->
+            ConfigUi(value, onValueChanged)
+        }
     }
 
     Box(modifier = modifier.fillMaxSize()) {
-        demoUI(config, Modifier.matchParentSize())
+        DemoUi(config, Modifier.matchParentSize())
 
         FloatingActionButton(
             onClick = { showConfigurationDialog = true },

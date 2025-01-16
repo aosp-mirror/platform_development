@@ -34,6 +34,8 @@ import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.navigation
+import com.android.mechanics.demo.tuneable.ConfigurableDemo
+import com.android.mechanics.demo.tuneable.Demo
 
 /** A screen in the demo app. */
 sealed class Screen(val identifier: String)
@@ -45,10 +47,14 @@ class ParentScreen(identifier: String, val children: Map<String, Screen>) : Scre
 class ChildScreen(identifier: String, val content: @Composable (NavController) -> Unit) :
     Screen(identifier)
 
+/** A child screen, which shows a [demo]. */
+class DemoScreen(val demo: Demo<*>) : Screen(demo.identifier)
+
 /** Create the navigation graph for [screen]. */
 fun NavGraphBuilder.screen(screen: Screen, navController: NavController) {
     when (screen) {
         is ChildScreen -> composable(screen.identifier) { screen.content(navController) }
+        is DemoScreen -> composable(screen.identifier) { screen.demo.ConfigurableDemo() }
         is ParentScreen -> {
             val menuRoute = "${screen.identifier}_menu"
             navigation(startDestination = menuRoute, route = screen.identifier) {
