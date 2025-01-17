@@ -24,10 +24,17 @@ import androidx.compose.ui.Modifier
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.rememberNavController
 import com.android.mechanics.demo.demos.MagneticOverviewDismiss
+import com.android.mechanics.demo.demos.MaterialFadeThrough
 
 object DemoScreens {
     val Home =
-        ParentScreen("home", mapOf("Magnetic Card Dismiss" to DemoScreen(MagneticOverviewDismiss)))
+        ParentScreen(
+            "home",
+            mapOf(
+                "Magnetic Card Dismiss" to DemoScreen(MagneticOverviewDismiss),
+                "Material Fade Through" to DemoScreen(MaterialFadeThrough),
+            ),
+        )
 }
 
 @Composable

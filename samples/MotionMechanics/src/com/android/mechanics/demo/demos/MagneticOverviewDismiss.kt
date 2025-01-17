@@ -44,7 +44,7 @@ import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
-import com.android.mechanics.debug.DebugMotionValueVisualization
+import com.android.mechanics.debug.debugMotionValue
 import com.android.mechanics.demo.staging.asMechanics
 import com.android.mechanics.demo.staging.defaultSpatialSpring
 import com.android.mechanics.demo.staging.rememberDistanceGestureContext
@@ -93,7 +93,7 @@ object MagneticOverviewDismiss : Demo<MagneticOverviewDismiss.Config> {
         val gestureContext = rememberDistanceGestureContext()
         val yOffset = rememberMotionValue(gestureContext::dragOffset, spec::value, gestureContext)
 
-        Column(modifier = modifier.fillMaxSize().padding(64.dp)) {
+        Column(modifier = modifier.fillMaxSize().padding(64.dp).debugMotionValue(yOffset)) {
             Box(modifier = Modifier.weight(1f).fillMaxWidth()) {
                 Card(
                     colors = outlinedCardColors(MaterialTheme.colorScheme.primary),
@@ -142,11 +142,6 @@ object MagneticOverviewDismiss : Demo<MagneticOverviewDismiss.Config> {
                             ),
                 ) {}
             }
-            DebugMotionValueVisualization(
-                yOffset,
-                inputRange = with(density) { -100.dp.toPx()..500.dp.toPx() },
-                modifier = Modifier.height(80.dp).fillMaxWidth(),
-            )
         }
     }
 
