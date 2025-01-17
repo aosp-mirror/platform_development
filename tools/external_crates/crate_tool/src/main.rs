@@ -120,6 +120,9 @@ enum Cmd {
         /// How strict to be about enforcing semver compatibility.
         #[arg(long, value_enum, default_value_t = SemverCompatibilityRule::Loose)]
         semver_compatibility: SemverCompatibilityRule,
+
+        #[arg(long, default_value_t = false)]
+        json: bool,
     },
     /// Update a crate to the specified version.
     Update {
@@ -244,8 +247,8 @@ fn main() -> Result<()> {
         }
         Cmd::UpdatableCrates {} => managed_repo.updatable_crates(),
         Cmd::AnalyzeUpdates { crate_name } => managed_repo.analyze_updates(crate_name),
-        Cmd::SuggestUpdates { patches, semver_compatibility } => {
-            managed_repo.suggest_updates(patches, semver_compatibility).map(|_x| ())
+        Cmd::SuggestUpdates { patches, semver_compatibility, json } => {
+            managed_repo.suggest_updates(patches, semver_compatibility, json)
         }
         Cmd::Update { crate_name, version } => managed_repo.update(crate_name, version),
         Cmd::Init {} => managed_repo.init(),
