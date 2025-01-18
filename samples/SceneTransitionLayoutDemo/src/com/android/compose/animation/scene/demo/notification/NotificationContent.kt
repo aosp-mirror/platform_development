@@ -16,7 +16,6 @@
 
 package com.android.compose.animation.scene.demo.notification
 
-import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -46,7 +45,6 @@ import com.android.compose.animation.scene.ElementKey
 import com.android.compose.animation.scene.ValueKey
 import com.android.compose.animation.scene.animateElementIntAsState
 import com.android.compose.animation.scene.demo.CachedText
-import com.android.compose.animation.scene.demo.SpringConfiguration
 import com.android.compose.animation.scene.transitions
 
 object NotificationContent {
@@ -62,14 +60,7 @@ object NotificationContent {
         val ChevronRotation = ValueKey("NotificationChevronRotation")
     }
 
-    fun transitions(springConfiguration: SpringConfiguration) = transitions {
-        defaultMotionSpatialSpec =
-            spring(
-                stiffness = springConfiguration.stiffness,
-                dampingRatio = springConfiguration.dampingRatio,
-                visibilityThreshold = 0.5f,
-            )
-
+    fun transitions() = transitions {
         from(Notification.Scenes.Expanded, to = Notification.Scenes.Collapsed) {
             spec = tween(500)
 

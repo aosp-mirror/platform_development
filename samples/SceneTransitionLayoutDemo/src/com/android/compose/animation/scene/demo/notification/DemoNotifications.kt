@@ -14,8 +14,12 @@
  * limitations under the License.
  */
 
+@file:OptIn(ExperimentalMaterial3ExpressiveApi::class)
+
 package com.android.compose.animation.scene.demo.notification
 
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+import androidx.compose.material3.MotionScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.text.TextMeasurer
 import com.android.compose.animation.scene.ContentKey
@@ -28,7 +32,6 @@ import com.android.compose.animation.scene.StaticElementContentPicker
 import com.android.compose.animation.scene.content.state.TransitionState
 import com.android.compose.animation.scene.demo.Overlays
 import com.android.compose.animation.scene.demo.Scenes
-import com.android.compose.animation.scene.demo.SpringConfiguration
 import com.android.compose.animation.scene.demo.transitions.QuickSettingsToNotificationShadeFadeProgress
 import com.android.compose.animation.scene.demo.transitions.ToNotificationShadeStartFadeProgress
 import com.android.compose.animation.scene.demo.transitions.ToShadeScrimFadeEndFraction
@@ -38,13 +41,20 @@ fun notifications(
     isInteractive: Boolean,
     n: Int,
     nInLockscreen: Int,
-    springConfiguration: SpringConfiguration,
     textMeasurer: TextMeasurer,
+    motionScheme: MotionScheme,
 ): List<NotificationViewModel> {
-    val transitions = NotificationContent.transitions(springConfiguration)
+    val transitions = NotificationContent.transitions()
     return List(n) { i ->
         val shownInLockscreen = i <= nInLockscreen - 1
-        notification(isInteractive, i + 1, transitions, textMeasurer, shownInLockscreen)
+        notification(
+            isInteractive = isInteractive,
+            i = i + 1,
+            transitions = transitions,
+            textMeasurer = textMeasurer,
+            shownInLockscreen = shownInLockscreen,
+            motionScheme = motionScheme,
+        )
     }
 }
 
@@ -54,6 +64,7 @@ private fun notification(
     transitions: SceneTransitions,
     textMeasurer: TextMeasurer,
     shownInLockscreen: Boolean,
+    motionScheme: MotionScheme,
 ): NotificationViewModel {
     val key =
         MovableElementKey(
@@ -67,7 +78,11 @@ private fun notification(
     return object : NotificationViewModel {
         override val key: MovableElementKey = key
         override val state: MutableSceneTransitionLayoutState =
-            MutableSceneTransitionLayoutState(Notification.Scenes.Collapsed, transitions)
+            MutableSceneTransitionLayoutState(
+                initialScene = Notification.Scenes.Collapsed,
+                motionScheme = motionScheme,
+                transitions = transitions,
+            )
         override val isInteractive: Boolean = isInteractive
 
         override val collapsedContent: @Composable ContentScope.() -> Unit = {
