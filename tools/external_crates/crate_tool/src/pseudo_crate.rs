@@ -15,6 +15,7 @@
 use std::{
     cell::OnceCell,
     collections::BTreeMap,
+    env,
     fs::{read, write},
     io::BufRead,
     process::Command,
@@ -103,13 +104,21 @@ impl PseudoCrate<CargoVendorClean> {
     }
     fn crates(&self) -> &CrateCollection {
         self.extra.crates.get_or_init(|| {
+            let out_dir = env::var("OUT_DIR").unwrap_or("out".to_string());
+            let vendor_dir = self
+                .get_path()
+                .with_same_root(format!("{out_dir}/rust-vendored-crates"))
+                .unwrap()
+                .join(self.get_path().rel())
+                .unwrap();
             Command::new("cargo")
                 .args(["vendor", "--versioned-dirs"])
+                .arg(vendor_dir.abs())
                 .current_dir(&self.path)
                 .run_quiet_and_expect_success()
                 .unwrap();
             let mut crates = CrateCollection::new(self.path.root());
-            crates.add_from(self.get_path().join("vendor").unwrap()).unwrap();
+            crates.add_from(vendor_dir).unwrap();
             crates
         })
     }
