@@ -399,16 +399,19 @@ class UnitTestUtils {
   }
 
   static async checkTooltips<T>(
-    elements: HTMLElement[],
-    expTooltips: string[],
+    elements: Element[],
+    expTooltips: Array<string | undefined>,
     fixture: ComponentFixture<T>,
   ) {
     for (const [index, el] of elements.entries()) {
       el.dispatchEvent(new Event('mouseenter'));
       fixture.detectChanges();
-      expect(
-        document.querySelector<HTMLElement>('.mat-tooltip-panel')?.textContent,
-      ).toEqual(expTooltips[index]);
+      const panel = document.querySelector<HTMLElement>('.mat-tooltip-panel');
+      if (expTooltips[index] !== undefined) {
+        expect(panel?.textContent).toEqual(expTooltips[index]);
+      } else {
+        expect(panel).toBeNull();
+      }
       el.dispatchEvent(new Event('mouseleave'));
       fixture.detectChanges();
       await fixture.whenStable();

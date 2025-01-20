@@ -17,6 +17,7 @@ import {ComponentFixture, TestBed} from '@angular/core/testing';
 import {MatTooltipModule} from '@angular/material/tooltip';
 import {assertDefined} from 'common/assert_utils';
 import {TreeNodeUtils} from 'test/unit/tree_node_utils';
+import {UnitTestUtils} from 'test/unit/utils';
 import {VISIBLE_CHIP} from 'viewers/common/chip';
 import {UiHierarchyTreeNode} from 'viewers/common/ui_hierarchy_tree_node';
 import {HierarchyTreeNodeDataViewComponent} from './hierarchy_tree_node_data_view_component';
@@ -64,7 +65,7 @@ describe('HierarchyTreeNodeDataViewComponent', () => {
     const displayName = assertDefined(
       htmlElement.querySelector<HTMLElement>('.display-name'),
     );
-    checkTooltip(displayName, 'test node');
+    UnitTestUtils.checkTooltips([displayName], ['test node'], fixture);
   });
 
   it('shows chips with tooltip on hover', () => {
@@ -77,15 +78,6 @@ describe('HierarchyTreeNodeDataViewComponent', () => {
     const chip = assertDefined(
       htmlElement.querySelector<HTMLElement>('.tree-view-chip'),
     );
-    checkTooltip(chip, VISIBLE_CHIP.long);
+    UnitTestUtils.checkTooltips([chip], [VISIBLE_CHIP.long], fixture);
   });
-
-  function checkTooltip(triggerElement: HTMLElement, expectedText: string) {
-    triggerElement.dispatchEvent(new Event('mouseenter'));
-    fixture.detectChanges();
-    const tooltipPanel = assertDefined(
-      document.querySelector<HTMLElement>('.mat-tooltip-panel'),
-    );
-    expect(tooltipPanel.textContent?.trim()).toEqual(expectedText);
-  }
 });
