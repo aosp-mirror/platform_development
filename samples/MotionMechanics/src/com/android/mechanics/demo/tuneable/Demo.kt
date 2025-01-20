@@ -34,6 +34,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.android.mechanics.demo.staging.debug.DebugUi
 
@@ -45,6 +46,14 @@ interface Demo<T> {
     @Composable fun ColumnScope.ConfigUi(config: T, onConfigChanged: (T) -> Unit)
 
     @Composable fun DemoUi(config: T, modifier: Modifier)
+
+    val visualizationInputRange: ClosedFloatingPointRange<Float>
+
+    val expandedGraphHeight: Dp
+        get() = 96.dp
+
+    val collapsedGraphHeight: Dp
+        get() = 48.dp
 }
 
 @Composable
@@ -74,7 +83,12 @@ fun <T> Demo<T>.ConfigurableDemo(modifier: Modifier = Modifier) {
             }
         }
 
-        DebugUi(modifier = modifier.fillMaxWidth().weight(1f, fill = true)) { contentModifier ->
+        DebugUi(
+            visualizationInputRange,
+            expandedGraphHeight,
+            collapsedGraphHeight,
+            modifier = modifier.fillMaxWidth().weight(1f, fill = true),
+        ) { contentModifier ->
             DemoUi(config, contentModifier)
         }
     }

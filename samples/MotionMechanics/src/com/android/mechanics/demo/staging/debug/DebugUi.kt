@@ -48,6 +48,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.graphics.drawscope.rotate
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.android.compose.modifiers.height
 import com.android.mechanics.debug.DebugMotionValueVisualization
@@ -56,7 +57,13 @@ import com.android.mechanics.debug.motionValueDebugger
 
 /**  */
 @Composable
-fun DebugUi(modifier: Modifier = Modifier, content: @Composable (modifier: Modifier) -> Unit) {
+fun DebugUi(
+    visualizationInputRange: ClosedFloatingPointRange<Float>,
+    expandedGraphHeight: Dp,
+    collapsedGraphHeight: Dp,
+    modifier: Modifier = Modifier,
+    content: @Composable (modifier: Modifier) -> Unit,
+) {
     val debuggerState = remember { MotionValueDebuggerState() }
 
     Box(modifier = modifier.fillMaxHeight()) {
@@ -69,10 +76,10 @@ fun DebugUi(modifier: Modifier = Modifier, content: @Composable (modifier: Modif
 
         var isExpanded by remember { mutableStateOf(true) }
         Card(modifier = Modifier.fillMaxWidth().padding(16.dp).align(Alignment.BottomStart)) {
-            Column(modifier = Modifier.padding(16.dp)) {
+            Column(modifier = Modifier.fillMaxWidth().padding(16.dp)) {
                 Row(
                     horizontalArrangement = Arrangement.SpaceBetween,
-                    modifier = Modifier.clickable { isExpanded = !isExpanded },
+                    modifier = Modifier.fillMaxWidth().clickable { isExpanded = !isExpanded },
                 ) {
                     Text(text = "Motion Value Visualization", style = typography.titleMedium)
                     val rotation by animateFloatAsState(if (isExpanded) 180f else 0f)
@@ -96,11 +103,15 @@ fun DebugUi(modifier: Modifier = Modifier, content: @Composable (modifier: Modif
                         debuggerState.observedMotionValues.forEach {
                             key(it) {
                                 var rowExpanded by remember { mutableStateOf(false) }
-                                val height by animateDpAsState(if (rowExpanded) 60.dp else 20.dp)
+                                val height by
+                                    animateDpAsState(
+                                        if (rowExpanded) expandedGraphHeight
+                                        else collapsedGraphHeight
+                                    )
 
                                 DebugMotionValueVisualization(
                                     it,
-                                    0f..1000f,
+                                    visualizationInputRange,
                                     modifier =
                                         Modifier.height { height.toPx().toInt() }
                                             .fillMaxWidth()

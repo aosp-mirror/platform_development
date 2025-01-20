@@ -40,8 +40,12 @@ import androidx.compose.material3.MaterialTheme.typography
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.android.compose.animation.scene.ElementKey
 import com.android.compose.modifiers.thenIf
@@ -115,6 +119,9 @@ object MaterialFadeThrough : Demo<MaterialFadeThrough.Config> {
         val fadeRevealSpec = rememberFadeContentRevealSpec(showDelta = 8.dp, hideDelta = 16.dp)
         return remember(fadeRevealSpec) { Config(fadeRevealSpec, showItemBackground = false) }
     }
+
+    override var visualizationInputRange by mutableStateOf(0f..1000f)
+    override val collapsedGraphHeight: Dp = 20.dp
 
     @Composable
     override fun ColumnScope.ConfigUi(config: Config, onConfigChanged: (Config) -> Unit) {
