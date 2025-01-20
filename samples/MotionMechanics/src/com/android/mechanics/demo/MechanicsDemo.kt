@@ -26,10 +26,8 @@ import androidx.navigation.compose.rememberNavController
 import com.android.mechanics.demo.demos.MagneticOverviewDismiss
 
 object DemoScreens {
-    private val MagneticOverviewDismissDemo =
-        ChildScreen("overview_dismiss") { MagneticOverviewDismiss() }
-
-    val Home = ParentScreen("home", mapOf("Magnetic Card Dismiss" to MagneticOverviewDismissDemo))
+    val Home =
+        ParentScreen("home", mapOf("Magnetic Card Dismiss" to DemoScreen(MagneticOverviewDismiss)))
 }
 
 @Composable
