@@ -13,16 +13,16 @@
 // limitations under the License.
 
 use std::{
-    collections::HashMap,
+    cell::OnceCell,
     fs::{copy, read_dir, read_link, read_to_string, remove_dir_all, rename, write},
     os::unix::fs::symlink,
     path::PathBuf,
     process::{Command, Output},
     str::from_utf8,
-    sync::LazyLock,
 };
 
 use anyhow::{anyhow, ensure, Context, Result};
+use crate_config::CrateConfig;
 use glob::glob;
 use google_metadata::GoogleMetadata;
 use license_checker::find_licenses;
@@ -45,6 +45,7 @@ use crate::{
 #[derive(Debug)]
 pub struct ManagedCrate<State: ManagedCrateState> {
     android_crate: Crate,
+    config: OnceCell<CrateConfig>,
     extra: State,
 }
 
@@ -70,6 +71,7 @@ static CUSTOMIZATIONS: &[&str] = &[
     "*.bp",
     "*.bp.fragment",
     "*.mk",
+    "android_config.toml",
     "android",
     "cargo_embargo.json",
     "patches",
@@ -80,14 +82,6 @@ static CUSTOMIZATIONS: &[&str] = &[
 
 static SYMLINKS: &[&str] = &["LICENSE", "NOTICE"];
 
-static DELETIONS: LazyLock<HashMap<&str, &[&str]>> = LazyLock::new(|| {
-    HashMap::from([
-        ("libbpf-sys", ["elfutils", "zlib", "libbpf"].as_slice()),
-        ("libusb1-sys", ["libusb"].as_slice()),
-        ("libz-sys", ["src/zlib", "src/zlib-ng"].as_slice()),
-    ])
-});
-
 impl<State: ManagedCrateState> ManagedCrate<State> {
     pub fn name(&self) -> &str {
         self.android_crate.name()
@@ -97,6 +91,13 @@ impl<State: ManagedCrateState> ManagedCrate<State> {
     }
     pub fn android_crate_path(&self) -> &RootedPath {
         self.android_crate.path()
+    }
+    pub fn config(&self) -> &CrateConfig {
+        self.config.get_or_init(|| {
+            let config_file = self.android_crate_path().join("android_config.toml").unwrap();
+            CrateConfig::read(&config_file)
+                .unwrap_or_else(|e| panic!("Failed to read {config_file}/android_config.toml: {e}"))
+        })
     }
     pub fn android_bp(&self) -> RootedPath {
         self.android_crate_path().join("Android.bp").unwrap()
@@ -244,11 +245,12 @@ impl<State: ManagedCrateState> ManagedCrate<State> {
 
 impl ManagedCrate<New> {
     pub fn new(android_crate: Crate) -> Self {
-        ManagedCrate { android_crate, extra: New {} }
+        ManagedCrate { android_crate, config: OnceCell::new(), extra: New {} }
     }
     pub fn into_legacy(self) -> ManagedCrate<Vendored> {
         ManagedCrate {
             android_crate: self.android_crate.clone(),
+            config: self.config,
             extra: Vendored { vendored_crate: self.android_crate },
         }
     }
@@ -258,7 +260,11 @@ impl ManagedCrate<New> {
     ) -> Result<ManagedCrate<Vendored>> {
         let vendored_crate =
             Crate::from(pseudo_crate.vendored_dir_for(self.android_crate.name())?.clone())?;
-        Ok(ManagedCrate { android_crate: self.android_crate, extra: Vendored { vendored_crate } })
+        Ok(ManagedCrate {
+            android_crate: self.android_crate,
+            config: self.config,
+            extra: Vendored { vendored_crate },
+        })
     }
     pub fn stage(
         self,
@@ -298,6 +304,7 @@ impl ManagedCrate<Vendored> {
 
         Ok(ManagedCrate {
             android_crate: self.android_crate,
+            config: self.config,
             extra: Staged {
                 vendored_crate: self.extra.vendored_crate,
                 patch_output,
@@ -369,7 +376,7 @@ impl ManagedCrate<Vendored> {
                 symlink(dest, dest_dir.join(link)?)?;
             }
         }
-        for deletion in *DELETIONS.get(self.name()).unwrap_or(&[].as_slice()) {
+        for deletion in self.config().deletions() {
             let dir = self.staging_path().join(deletion)?;
             ensure!(dir.abs().is_dir(), "{dir} is not a directory");
             remove_dir_all(dir)?;
@@ -438,8 +445,10 @@ impl ManagedCrate<Vendored> {
         let android_crate_dir = staged.android_crate.path();
         remove_dir_all(android_crate_dir)?;
         rename(staged.staging_path(), android_crate_dir)?;
-        staged.fix_test_mapping()?;
-        checksum::generate(android_crate_dir.abs())?;
+        if update_metadata {
+            staged.fix_test_mapping()?;
+            checksum::generate(android_crate_dir.abs())?;
+        }
 
         Ok(staged)
     }
