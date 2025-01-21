@@ -103,6 +103,21 @@ describe('TraceSearchInitializer', () => {
     expect(queryResult.numRows()).toEqual(2);
   });
 
+  it('initializes view capture', async () => {
+    const parser = await UnitTestUtils.getPerfettoParser(
+      TraceType.VIEW_CAPTURE,
+      'traces/perfetto/viewcapture.perfetto-trace',
+    );
+    await createViewsAndTestExamples(parser, ['viewcapture_search']);
+    const queryResult = await UnitTestUtils.runQueryAndGetResult(`
+      SELECT * FROM viewcapture_search
+        WHERE class_name LIKE '%SearchContainerView'
+        AND flat_property='translation_y'
+        AND value!=previous_value
+    `);
+    expect(queryResult.numRows()).toEqual(28);
+  });
+
   async function createViewsAndTestExamples(
     parser: Parser<object>,
     expectedViews: string[],

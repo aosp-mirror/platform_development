@@ -20,12 +20,14 @@ import {SearchViewFactoryProtoLog} from './search_view_factory_protolog';
 import {SearchViewFactorySf} from './search_view_factory_sf';
 import {SearchViewFactoryTransactions} from './search_view_factory_transactions';
 import {SearchViewFactoryTransitions} from './search_view_factory_transitions';
+import {SearchViewFactoryVc} from './search_view_factory_vc';
 
 export class TraceSearchInitializer {
   static readonly FACTORIES = [
     SearchViewFactorySf,
     SearchViewFactoryTransactions,
     SearchViewFactoryTransitions,
+    SearchViewFactoryVc,
     SearchViewFactoryProtoLog,
   ];
 
