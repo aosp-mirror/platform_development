@@ -16,7 +16,7 @@
 
 @file:OptIn(ExperimentalAnimatableApi::class)
 
-package com.android.mechanics.demo.demos
+package com.android.mechanics.demo.presentation
 
 import androidx.compose.animation.core.ExperimentalAnimatableApi
 import androidx.compose.foundation.background
@@ -49,24 +49,18 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.android.compose.animation.scene.ElementKey
 import com.android.compose.modifiers.thenIf
-import com.android.mechanics.demo.staging.behavior.reveal.FadeContentRevealSpec
 import com.android.mechanics.demo.staging.behavior.reveal.fadeReveal
-import com.android.mechanics.demo.staging.behavior.reveal.rememberFadeContentRevealSpec
 import com.android.mechanics.demo.staging.behavior.reveal.revealContainer
 import com.android.mechanics.demo.tuneable.Demo
-import com.android.mechanics.demo.tuneable.DpSlider
-import com.android.mechanics.demo.tuneable.GuaranteeSection
 import com.android.mechanics.demo.tuneable.LabelledCheckbox
-import com.android.mechanics.demo.tuneable.Section
-import com.android.mechanics.demo.tuneable.SpringParameterSection
 import com.android.mechanics.demo.util.ExpandableCard
 
-object MaterialFadeThrough : Demo<MaterialFadeThrough.Config> {
+object PredefinedMotionDemo : Demo<PredefinedMotionDemo.Config> {
     object Elements {
         val ExpandableContent = ElementKey("ExpandableContent")
     }
 
-    data class Config(val fadeSpec: FadeContentRevealSpec, val showItemBackground: Boolean)
+    data class Config(val showItemBackground: Boolean)
 
     @Composable
     override fun DemoUi(config: Config, modifier: Modifier) {
@@ -91,7 +85,7 @@ object MaterialFadeThrough : Demo<MaterialFadeThrough.Config> {
                             horizontalArrangement = Arrangement.spacedBy(8.dp),
                             modifier =
                                 Modifier.noResizeDuringTransitions()
-                                    .fadeReveal(spec = config.fadeSpec, debug = true)
+                                    .fadeReveal(debug = true)
                                     .fillMaxWidth()
                                     .thenIf(config.showItemBackground) {
                                         Modifier.background(colors.primary)
@@ -115,8 +109,7 @@ object MaterialFadeThrough : Demo<MaterialFadeThrough.Config> {
     @OptIn(ExperimentalMaterial3ExpressiveApi::class)
     @Composable
     override fun rememberDefaultConfig(): Config {
-        val fadeRevealSpec = rememberFadeContentRevealSpec(showDelta = 8.dp, hideDelta = 16.dp)
-        return remember(fadeRevealSpec) { Config(fadeRevealSpec, showItemBackground = false) }
+        return remember { Config(showItemBackground = false) }
     }
 
     override var visualizationInputRange by mutableStateOf(0f..1000f)
@@ -130,61 +123,7 @@ object MaterialFadeThrough : Demo<MaterialFadeThrough.Config> {
             onCheckedChange = { onConfigChanged(config.copy(showItemBackground = it)) },
             modifier = Modifier.fillMaxWidth(),
         )
-
-        Section(
-            "Show",
-            summary = { "" },
-            value = config.fadeSpec,
-            onValueChanged = { onConfigChanged(config.copy(fadeSpec = it)) },
-            sectionKey = "show spec",
-            modifier = Modifier.fillMaxWidth(),
-        ) { spec, onSpecChanged ->
-            SpringParameterSection(
-                " Spring",
-                spec.showSpring,
-                onValueChanged = { onSpecChanged(spec.copy(showSpring = it)) },
-                "showspring",
-                modifier = Modifier.fillMaxWidth(),
-            )
-            GuaranteeSection(
-                " Guarantee",
-                spec.showGuarantee,
-                { onSpecChanged(spec.copy(showGuarantee = it)) },
-                "showguarantee",
-                modifier = Modifier.fillMaxWidth(),
-            )
-
-            Text(text = "Delta", modifier = Modifier.padding(start = 8.dp))
-            DpSlider(spec.showDelta, { onSpecChanged(spec.copy(showDelta = it)) }, 0.dp..24.dp)
-        }
-
-        Section(
-            "Hide",
-            summary = { "" },
-            value = config.fadeSpec,
-            onValueChanged = { onConfigChanged(config.copy(fadeSpec = it)) },
-            sectionKey = "show spec",
-            modifier = Modifier.fillMaxWidth(),
-        ) { spec, onSpecChanged ->
-            SpringParameterSection(
-                "Spring",
-                spec.hideSpring,
-                onValueChanged = { onSpecChanged(spec.copy(hideSpring = it)) },
-                "hidespring",
-                modifier = Modifier.fillMaxWidth(),
-            )
-            GuaranteeSection(
-                "Guarantee",
-                spec.hideGuarantee,
-                { onSpecChanged(spec.copy(hideGuarantee = it)) },
-                "hideguarantee",
-                modifier = Modifier.fillMaxWidth(),
-            )
-
-            Text(text = "Delta", modifier = Modifier.padding(start = 8.dp))
-            DpSlider(spec.hideDelta, { onSpecChanged(spec.copy(hideDelta = it)) }, 0.dp..24.dp)
-        }
     }
 
-    override val identifier: String = "material_fade_through"
+    override val identifier: String = "predefined_motion"
 }
