@@ -49,8 +49,8 @@ object ParentSTL {
 
 object ChildSTL {
     object Scenes {
-        val Top = SceneKey("Red")
-        val Bottom = SceneKey("Red")
+        val Top = SceneKey("Top")
+        val Bottom = SceneKey("Bottom")
     }
 }
 
@@ -101,18 +101,17 @@ fun NestedSharedElementDemo(modifier: Modifier = Modifier) {
                 }
                 .padding(16.dp),
         ) {
-            scene(ParentSTL.Scenes.Right) {
-                Box(Modifier.fillMaxSize()) {
-                    SharedElement(Modifier.size(30.dp).align(Alignment.TopEnd))
-                }
-            }
-
             scene(ParentSTL.Scenes.Left) {
                 Box(Modifier.fillMaxSize()) {
                     ChildSTL(
                         childState,
                         Modifier.align(Alignment.Center).fillMaxSize(fraction = 0.5f),
                     )
+                }
+            }
+            scene(ParentSTL.Scenes.Right) {
+                Box(Modifier.fillMaxSize()) {
+                    SharedElement(Modifier.size(30.dp).align(Alignment.TopEnd))
                 }
             }
         }

@@ -101,8 +101,8 @@ private object NotificationOnlyInShadePicker : StaticElementContentPicker {
     override fun contentDuringTransition(
         element: ElementKey,
         transition: TransitionState.Transition,
-        fromContentZIndex: Float,
-        toContentZIndex: Float,
+        fromContentZIndex: Long,
+        toContentZIndex: Long,
     ): ContentKey {
         return pickSingleContentIn(contents, transition, element)
     }
@@ -121,8 +121,8 @@ private object NotificationThatCanBeOnLockscreenPicker : StaticElementContentPic
     override fun contentDuringTransition(
         element: ElementKey,
         transition: TransitionState.Transition,
-        fromContentZIndex: Float,
-        toContentZIndex: Float,
+        fromContentZIndex: Long,
+        toContentZIndex: Long,
     ): ContentKey {
         fun handleLockscreenShadeTransition(
             lockscreen: ContentKey,
