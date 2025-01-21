@@ -68,6 +68,7 @@ static LICENSE_PREFERENCE: LazyLock<Vec<Licensee>> = LazyLock::new(|| {
         "0BSD",
         "Unlicense",
         "Zlib",
+        "Unicode-3.0",
         "Unicode-DFS-2016",
         "NCSA",
         "OpenSSL",
