@@ -232,7 +232,10 @@ impl<State: ManagedCrateState> ManagedCrate<State> {
     pub fn fix_test_mapping(&self) -> Result<()> {
         let mut tm = TestMapping::read(self.android_crate_path().clone())?;
         println!("{}", self.name());
-        if tm.fix_import_paths() || tm.add_new_tests_to_postsubmit()? {
+        let mut changed = tm.fix_import_paths();
+        changed |= tm.add_new_tests_to_postsubmit()?;
+        changed |= tm.remove_unknown_tests()?;
+        if changed {
             tm.write()?;
         }
         Ok(())
@@ -435,6 +438,7 @@ impl ManagedCrate<Vendored> {
         let android_crate_dir = staged.android_crate.path();
         remove_dir_all(android_crate_dir)?;
         rename(staged.staging_path(), android_crate_dir)?;
+        staged.fix_test_mapping()?;
         checksum::generate(android_crate_dir.abs())?;
 
         Ok(staged)

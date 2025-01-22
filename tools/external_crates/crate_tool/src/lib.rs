@@ -35,6 +35,7 @@ mod upgradable;
 
 pub use self::android_bp::maybe_build_cargo_embargo;
 pub use self::managed_repo::ManagedRepo;
+pub use self::upgradable::SemverCompatibilityRule;
 
 #[derive(Error, Debug)]
 pub enum CrateError {

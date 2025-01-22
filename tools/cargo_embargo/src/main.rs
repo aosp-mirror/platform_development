@@ -654,9 +654,10 @@ fn write_build_files(
             )?;
         }
     }
+    let main_module_name_overrides = &cfg.variants.first().unwrap().module_name_overrides;
     if !mk_contents.is_empty() {
         // If rules.mk is generated, then make it accessible via dirgroup.
-        bp_contents += &generate_android_bp_for_rules_mk(package_name)?;
+        bp_contents += &generate_android_bp_for_rules_mk(package_name, main_module_name_overrides)?;
     }
 
     let def = PackageConfig::default();
@@ -673,7 +674,7 @@ fn write_build_files(
             package_cfg,
             read_license_header(&output_path, true)?.trim(),
             crates,
-            &cfg.variants.first().unwrap().module_name_overrides,
+            main_module_name_overrides,
         )?;
         let bp_contents = package_header + &bp_contents;
         write_format_android_bp(&output_path, &bp_contents, package_cfg.patch.as_deref())?;
@@ -806,6 +807,7 @@ fn choose_licenses(license: &str) -> Result<Vec<&str>> {
         // Other cases.
         "MIT OR LGPL-3.0-or-later" => vec!["MIT"],
         "MIT/BSD-3-Clause" => vec!["MIT"],
+        "MIT AND (MIT OR Apache-2.0)" => vec!["MIT"],
 
         "LGPL-2.1-only OR BSD-2-Clause" => vec!["BSD-2-Clause"],
         _ => {
@@ -927,11 +929,19 @@ fn generate_rules_mk(
 }
 
 /// Generates and returns a Soong Blueprint for a Trusty rules.mk
-fn generate_android_bp_for_rules_mk(package_name: &str) -> Result<String> {
+fn generate_android_bp_for_rules_mk(
+    package_name: &str,
+    module_name_overrides: &BTreeMap<String, String>,
+) -> Result<String> {
     let mut bp_contents = String::new();
 
     let mut m = BpModule::new("dirgroup".to_string());
-    m.props.set("name", format!("trusty_dirgroup_external_rust_crates_{}", package_name));
+
+    let default_dirgroup_name = format!("trusty_dirgroup_external_rust_crates_{}", package_name);
+    let dirgroup_name =
+        override_module_name(&default_dirgroup_name, &[], module_name_overrides, &RENAME_MAP)
+            .unwrap_or(default_dirgroup_name);
+    m.props.set("name", dirgroup_name);
     m.props.set("dirs", vec!["."]);
     m.props.set("visibility", vec!["//trusty/vendor/google/aosp/scripts"]);
 
