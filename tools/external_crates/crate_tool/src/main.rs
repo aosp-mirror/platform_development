@@ -17,7 +17,7 @@ use std::{
     path::PathBuf,
 };
 
-use anyhow::Result;
+use anyhow::{bail, Result};
 use clap::{Args, Parser, Subcommand};
 use crate_tool::{
     default_repo_root, maybe_build_cargo_embargo, ManagedRepo, SemverCompatibilityRule,
@@ -166,6 +166,9 @@ impl CrateList {
         Ok(if self.all {
             managed_repo.all_crate_names()?.difference(&self.exclude).cloned().collect::<Vec<_>>()
         } else {
+            if self.crates.is_empty() {
+                bail!("No crates specified");
+            }
             self.crates.clone()
         })
     }
