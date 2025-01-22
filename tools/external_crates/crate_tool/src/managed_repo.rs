@@ -580,10 +580,7 @@ impl ManagedRepo {
         if licenses.satisfied.len() == 1 && licenses.unsatisfied.is_empty() {
             let license_file = krate.path().join("LICENSE")?;
             if !license_file.abs().exists() {
-                symlink(
-                    licenses.satisfied.iter().next().unwrap().1.file_name().unwrap(),
-                    license_file,
-                )?;
+                symlink(licenses.satisfied.iter().next().unwrap().1, license_file)?;
             }
         }
 
