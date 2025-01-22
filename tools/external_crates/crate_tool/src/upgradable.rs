@@ -12,45 +12,76 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+use clap::ValueEnum;
 use semver::{Version, VersionReq};
 
+/// How strictly to enforce semver compatibility.
+#[derive(Copy, Clone, ValueEnum)]
+pub enum SemverCompatibilityRule {
+    /// Ignore semantic version. Consider any two versions compatible.
+    Ignore,
+    /// Consider 0.x and 0.y to be compatible, but otherwise follow standard rules.
+    Loose,
+    /// Follow standard semantic version rules, under which 0.x and 0.y are incompatible.
+    Strict,
+}
 /// A trait for determining semver compatibility.
 pub trait IsUpgradableTo {
-    /// Returns true if the object version is semver-compatible with 'other'.
-    fn is_upgradable_to(&self, other: &Version) -> bool;
-    /// Returns true if the object version is semver-compatible with 'other', or if
-    /// both have a major version of 0 and the other version is greater.
-    fn is_upgradable_to_relaxed(&self, other: &Version) -> bool;
+    /// Returns true if the object version is upgradable to 'other', according to
+    /// the specified semantic version compatibility strictness.
+    fn is_upgradable_to(
+        &self,
+        other: &Version,
+        semver_compatibility: SemverCompatibilityRule,
+    ) -> bool;
 }
 
 impl IsUpgradableTo for semver::Version {
-    fn is_upgradable_to(&self, other: &Version) -> bool {
-        VersionReq::parse(&self.to_string()).is_ok_and(|req| req.matches(other))
-    }
-    fn is_upgradable_to_relaxed(&self, other: &Version) -> bool {
-        VersionReq::parse(&self.to_string()).is_ok_and(|req| req.matches_relaxed(other))
+    fn is_upgradable_to(
+        &self,
+        other: &Version,
+        semver_compatibility: SemverCompatibilityRule,
+    ) -> bool {
+        other > self
+            && VersionReq::parse(&self.to_string())
+                .is_ok_and(|req| req.matches_with_compatibility_rule(other, semver_compatibility))
     }
 }
 
-/// A trait for relaxed semver compatibility. Major versions of 0 are treated as if they were non-zero.
-pub trait MatchesRelaxed {
-    /// Returns true if the version matches the req, but treats
-    /// major version of zero as if it were non-zero.
-    fn matches_relaxed(&self, version: &Version) -> bool;
+/// A trait for custom semver compatibility logic, allowing it to be ignored or relaxed.
+pub trait MatchesWithCompatibilityRule {
+    /// Returns true if the version matches the req, according to the
+    /// custom compatibility requirements of 'semver_compatibility'.
+    fn matches_with_compatibility_rule(
+        &self,
+        version: &Version,
+        semver_compatibility: SemverCompatibilityRule,
+    ) -> bool;
 }
-impl MatchesRelaxed for VersionReq {
-    fn matches_relaxed(&self, version: &Version) -> bool {
-        if self.matches(version) {
-            return true;
+impl MatchesWithCompatibilityRule for VersionReq {
+    fn matches_with_compatibility_rule(
+        &self,
+        version: &Version,
+        semver_compatibility: SemverCompatibilityRule,
+    ) -> bool {
+        match semver_compatibility {
+            SemverCompatibilityRule::Ignore => true,
+            SemverCompatibilityRule::Loose => {
+                if self.comparators.len() == 1
+                    && self.comparators[0].major == 0
+                    && version.major == 0
+                {
+                    let mut fake_v = version.clone();
+                    fake_v.major = 1;
+                    let mut fake_req = self.clone();
+                    fake_req.comparators[0].major = 1;
+                    fake_req.matches(&fake_v)
+                } else {
+                    self.matches(version)
+                }
+            }
+            SemverCompatibilityRule::Strict => self.matches(version),
         }
-        if self.comparators.len() == 1 && self.comparators[0].major == 0 && version.major == 0 {
-            let mut fake_v = version.clone();
-            fake_v.major = 1;
-            let mut fake_req = self.clone();
-            fake_req.comparators[0].major = 1;
-            return fake_req.matches(&fake_v);
-        }
-        false
     }
 }
 
@@ -68,18 +99,58 @@ mod tests {
         let major = Version::parse("3.0.0")?;
         let older = Version::parse("2.3.3")?;
 
-        // All have same behavior for is_upgradable_to_relaxed
-        assert!(version.is_upgradable_to(&patch), "Patch update");
-        assert!(version.is_upgradable_to_relaxed(&patch), "Patch update");
+        // All have same behavior for SemverCompatibility::LOOSE.
+        assert!(
+            version.is_upgradable_to(&patch, SemverCompatibilityRule::Strict),
+            "Patch update, strict"
+        );
+        assert!(
+            version.is_upgradable_to(&patch, SemverCompatibilityRule::Loose),
+            "Patch update, loose"
+        );
+        assert!(
+            version.is_upgradable_to(&patch, SemverCompatibilityRule::Ignore),
+            "Patch update, ignore"
+        );
 
-        assert!(version.is_upgradable_to(&minor), "Minor version update");
-        assert!(version.is_upgradable_to_relaxed(&minor), "Minor version update");
+        assert!(
+            version.is_upgradable_to(&minor, SemverCompatibilityRule::Strict),
+            "Minor version update, strict"
+        );
+        assert!(
+            version.is_upgradable_to(&minor, SemverCompatibilityRule::Loose),
+            "Minor version update, loose"
+        );
+        assert!(
+            version.is_upgradable_to(&minor, SemverCompatibilityRule::Ignore),
+            "Minor version update, ignore"
+        );
 
-        assert!(!version.is_upgradable_to(&major), "Incompatible (major version) update");
-        assert!(!version.is_upgradable_to_relaxed(&major), "Incompatible (major version) update");
+        assert!(
+            !version.is_upgradable_to(&major, SemverCompatibilityRule::Strict),
+            "Incompatible (major version) update, strict"
+        );
+        assert!(
+            !version.is_upgradable_to(&major, SemverCompatibilityRule::Loose),
+            "Incompatible (major version) update, loose"
+        );
+        assert!(
+            version.is_upgradable_to(&major, SemverCompatibilityRule::Ignore),
+            "Incompatible (major version) update, ignore"
+        );
 
-        assert!(!version.is_upgradable_to(&older), "Downgrade");
-        assert!(!version.is_upgradable_to_relaxed(&older), "Downgrade");
+        assert!(
+            !version.is_upgradable_to(&older, SemverCompatibilityRule::Strict),
+            "Downgrade, strict"
+        );
+        assert!(
+            !version.is_upgradable_to(&older, SemverCompatibilityRule::Loose),
+            "Downgrade, loose"
+        );
+        assert!(
+            !version.is_upgradable_to(&older, SemverCompatibilityRule::Ignore),
+            "Downgrade, ignore"
+        );
 
         Ok(())
     }
@@ -92,18 +163,58 @@ mod tests {
         let major = Version::parse("1.0.0")?;
         let older = Version::parse("0.3.3")?;
 
-        assert!(version.is_upgradable_to(&patch), "Patch update");
-        assert!(version.is_upgradable_to_relaxed(&patch), "Patch update");
+        assert!(
+            version.is_upgradable_to(&patch, SemverCompatibilityRule::Strict),
+            "Patch update, strict"
+        );
+        assert!(
+            version.is_upgradable_to(&patch, SemverCompatibilityRule::Loose),
+            "Patch update, loose"
+        );
+        assert!(
+            version.is_upgradable_to(&patch, SemverCompatibilityRule::Ignore),
+            "Patch update, ignore"
+        );
 
         // Different behavior for minor version changes.
-        assert!(!version.is_upgradable_to(&minor), "Minor version update");
-        assert!(version.is_upgradable_to_relaxed(&minor), "Minor version update");
+        assert!(
+            !version.is_upgradable_to(&minor, SemverCompatibilityRule::Strict),
+            "Minor version update, strict"
+        );
+        assert!(
+            version.is_upgradable_to(&minor, SemverCompatibilityRule::Loose),
+            "Minor version update, loose"
+        );
+        assert!(
+            version.is_upgradable_to(&minor, SemverCompatibilityRule::Ignore),
+            "Minor version update, ignore"
+        );
 
-        assert!(!version.is_upgradable_to(&major), "Incompatible (major version) update");
-        assert!(!version.is_upgradable_to_relaxed(&major), "Incompatible (major version) update");
+        assert!(
+            !version.is_upgradable_to(&major, SemverCompatibilityRule::Strict),
+            "Incompatible (major version) update, strict"
+        );
+        assert!(
+            !version.is_upgradable_to(&major, SemverCompatibilityRule::Loose),
+            "Incompatible (major version) update, loose"
+        );
+        assert!(
+            version.is_upgradable_to(&major, SemverCompatibilityRule::Ignore),
+            "Incompatible (major version) update, ignore"
+        );
 
-        assert!(!version.is_upgradable_to(&older), "Downgrade");
-        assert!(!version.is_upgradable_to_relaxed(&older), "Downgrade");
+        assert!(
+            !version.is_upgradable_to(&older, SemverCompatibilityRule::Strict),
+            "Downgrade, strict"
+        );
+        assert!(
+            !version.is_upgradable_to(&older, SemverCompatibilityRule::Loose),
+            "Downgrade, loose"
+        );
+        assert!(
+            !version.is_upgradable_to(&older, SemverCompatibilityRule::Ignore),
+            "Downgrade, ignore"
+        );
 
         Ok(())
     }

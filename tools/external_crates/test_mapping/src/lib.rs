@@ -93,6 +93,11 @@ impl TestMapping {
         }
         Ok(())
     }
+    /// Remove tests from TEST_MAPPING that are no longer in the
+    /// Android.bp file
+    pub fn remove_unknown_tests(&mut self) -> Result<bool, TestMappingError> {
+        Ok(self.json.remove_unknown_tests(&self.bp.rust_tests()?))
+    }
     /// Update the presubmit and presubmit_rust fields to the
     /// set of test targets in the Android.bp file.
     /// Since adding new tests directly to presubmits is discouraged,
