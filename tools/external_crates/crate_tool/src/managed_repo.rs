@@ -51,7 +51,9 @@ use crate::{
 // TODO: Store this as a data file in the monorepo.
 static IMPORT_DENYLIST: LazyLock<BTreeSet<&str>> = LazyLock::new(|| {
     BTreeSet::from([
-        "instant", // Not maintained.
+        "instant",        // Not maintained.
+        "bumpalo",        // Unsound
+        "allocator-api2", // Unsound
         // Uniffi crates.
         // Per mmaurer: "considered too difficult to verify and stopped being used for the original use case".
         "oneshot-uniffi",
