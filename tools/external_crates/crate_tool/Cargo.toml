@@ -25,6 +25,7 @@ spdx = "0.10"
 thiserror = "1"
 walkdir = "2"
 checksum = { path = "../checksum" }
+crate_config = { path = "../crate_config" }
 google_metadata = { path = "../google_metadata"}
 license_checker = { path = "../license_checker", features = ["fuzzy_content_match"] }
 name_and_version = { path = "../name_and_version" }
