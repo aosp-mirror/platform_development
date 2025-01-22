@@ -22,9 +22,9 @@ import com.android.compose.animation.scene.and
 import com.android.compose.animation.scene.demo.Clock
 import com.android.compose.animation.scene.demo.MediaPlayer
 import com.android.compose.animation.scene.demo.Overlays
-import com.android.compose.animation.scene.demo.PartialShade
 import com.android.compose.animation.scene.demo.QuickSettings
 import com.android.compose.animation.scene.demo.QuickSettingsGrid
+import com.android.compose.animation.scene.demo.QuickSettingsShade
 import com.android.compose.animation.scene.demo.Scenes
 import com.android.compose.animation.scene.demo.notification.NotificationList
 import com.android.compose.animation.scene.inContent
@@ -39,7 +39,7 @@ fun SceneTransitionsBuilder.quickSettingsShadeTransitions(revealHaptics: Contain
         spec = tween(500)
 
         sharedElement(MediaPlayer.Elements.MediaPlayer, elevateInContent = Overlays.QuickSettings)
-        verticalContainerReveal(PartialShade.Elements.Root, revealHaptics)
+        verticalContainerReveal(QuickSettingsShade.Elements.Root, revealHaptics)
     }
 
     from(Overlays.QuickSettings, to = Overlays.Notifications) {

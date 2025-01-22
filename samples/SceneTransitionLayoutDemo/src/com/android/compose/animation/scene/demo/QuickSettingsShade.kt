@@ -29,9 +29,12 @@ import com.android.compose.animation.scene.ContentScope
 import com.android.compose.animation.scene.ElementKey
 import com.android.compose.animation.scene.Swipe
 import com.android.compose.animation.scene.UserActionResult
+import com.android.compose.animation.scene.UserActionResult.ShowOverlay
+import com.android.compose.animation.scene.UserActionResult.ShowOverlay.HideCurrentOverlays
 
 object QuickSettingsShade {
     object Elements {
+        val Root = ElementKey("QuickSettingsShadeRoot")
         val Content = ElementKey("QuickSettingsShadeContent")
     }
 
@@ -40,7 +43,10 @@ object QuickSettingsShade {
             Back to UserActionResult.HideOverlay(Overlays.QuickSettings),
             Swipe.Up to UserActionResult.HideOverlay(Overlays.QuickSettings),
             Swipe.Down(fromSource = SceneContainerEdge.TopStart) to
-                UserActionResult.ReplaceByOverlay(Overlays.Notifications),
+                ShowOverlay(
+                    Overlays.Notifications,
+                    hideCurrentOverlays = HideCurrentOverlays.Some(Overlays.QuickSettings),
+                ),
         )
 }
 
@@ -50,7 +56,7 @@ fun ContentScope.QuickSettingsShade(
     mediaPlayer: @Composable (ContentScope.() -> Unit)?,
     modifier: Modifier = Modifier,
 ) {
-    PartialShade(modifier) {
+    PartialShade(QuickSettingsShade.Elements.Root, modifier) {
         Column(Modifier.element(QuickSettingsShade.Elements.Content)) {
             if (mediaPlayer != null) {
                 // Ensure that the media player is above the QS tiles when they fade in.

@@ -19,7 +19,6 @@ package com.android.compose.animation.scene.demo
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.gestures.Orientation
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -31,6 +30,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.overscroll
+import androidx.compose.foundation.rememberOverscrollEffect
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -60,7 +60,6 @@ import com.android.compose.animation.scene.SceneKey
 import com.android.compose.animation.scene.Swipe
 import com.android.compose.animation.scene.UserAction
 import com.android.compose.animation.scene.UserActionResult
-import com.android.compose.gesture.effect.rememberOffsetOverscrollEffect
 
 object QuickSettings {
     /**
@@ -128,7 +127,7 @@ fun ContentScope.QuickSettings(
         CompositionLocalProvider(LocalContentColor provides Color.White) {
             val scrollState = rememberScrollState()
 
-            val offsetOverscrollEffect = rememberOffsetOverscrollEffect(Orientation.Vertical)
+            val offsetOverscrollEffect = rememberOverscrollEffect()
             Column(
                 Modifier.noResizeDuringTransitions()
                     .overscroll(verticalOverscrollEffect)

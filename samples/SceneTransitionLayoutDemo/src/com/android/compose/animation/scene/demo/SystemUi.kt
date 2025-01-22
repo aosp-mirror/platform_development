@@ -20,6 +20,7 @@ package com.android.compose.animation.scene.demo
 
 import android.content.Context
 import androidx.activity.compose.BackHandler
+import androidx.compose.foundation.LocalOverscrollFactory
 import androidx.compose.foundation.OverscrollEffect
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -51,6 +52,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.MotionScheme
 import androidx.compose.material3.Surface
@@ -60,6 +62,7 @@ import androidx.compose.material3.windowsizeclass.WindowHeightSizeClass
 import androidx.compose.material3.windowsizeclass.WindowSizeClass
 import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
@@ -99,7 +102,9 @@ import com.android.compose.animation.scene.SceneTransitions
 import com.android.compose.animation.scene.demo.notification.NotificationList
 import com.android.compose.animation.scene.demo.notification.notifications
 import com.android.compose.animation.scene.demo.transitions.systemUiTransitions
+import com.android.compose.gesture.effect.rememberOffsetOverscrollEffectFactory
 import com.android.compose.modifiers.thenIf
+import com.android.compose.windowsizeclass.calculateWindowSizeClass
 import kotlin.math.max
 
 object Scenes {
@@ -470,207 +475,227 @@ fun SystemUi(
             },
             color = MaterialTheme.colorScheme.surfaceVariant,
         ) {
-            var isMediaPlayerPlaying by remember { mutableStateOf(false) }
-            val mediaPlayer: (@Composable ContentScope.(isSmall: Boolean) -> Unit)? =
-                if (configuration.showMediaPlayer) {
-                    { isSmall ->
-                        MediaPlayer(
-                            isSmall = isSmall,
-                            isPlaying = isMediaPlayerPlaying,
-                            onIsPlayingChange = { isMediaPlayerPlaying = it },
-                        )
+            val stretchOverscrollFactory = LocalOverscrollFactory.current
+            CompositionLocalProvider(
+                LocalContentColor provides MaterialTheme.colorScheme.onSurface,
+                LocalOverscrollFactory provides rememberOffsetOverscrollEffectFactory(),
+            ) {
+                var isMediaPlayerPlaying by remember { mutableStateOf(false) }
+                val mediaPlayer: (@Composable ContentScope.(isSmall: Boolean) -> Unit)? =
+                    if (configuration.showMediaPlayer) {
+                        { isSmall ->
+                            MediaPlayer(
+                                isSmall = isSmall,
+                                isPlaying = isMediaPlayerPlaying,
+                                onIsPlayingChange = { isMediaPlayerPlaying = it },
+                            )
+                        }
+                    } else {
+                        null
                     }
-                } else {
-                    null
+                val largeMediaPlayer: (@Composable ContentScope.() -> Unit)? =
+                    mediaPlayer?.let { { it(/* isSmall= */ false) } }
+                val smallMediaPlayer: (@Composable ContentScope.() -> Unit)? =
+                    mediaPlayer?.let { { it(/* isSmall= */ true) } }
+
+                val qsPager: (@Composable ContentScope.() -> Unit) = {
+                    QuickSettingsPager(
+                        pagerState = quickSettingsPagerState,
+                        tiles = quickSettingsTiles,
+                        nRows = nQuickSettingsRow,
+                        nColumns = nQuickSettingsColumns,
+                    )
                 }
-            val largeMediaPlayer: (@Composable ContentScope.() -> Unit)? =
-                mediaPlayer?.let { { it(/* isSmall= */ false) } }
-            val smallMediaPlayer: (@Composable ContentScope.() -> Unit)? =
-                mediaPlayer?.let { { it(/* isSmall= */ true) } }
 
-            val qsPager: (@Composable ContentScope.() -> Unit) = {
-                QuickSettingsPager(
-                    pagerState = quickSettingsPagerState,
-                    tiles = quickSettingsTiles,
-                    nRows = nQuickSettingsRow,
-                    nColumns = nQuickSettingsColumns,
-                )
-            }
+                // SceneTransitionLayout can only be bound to one SceneTransitionLayoutState, so
+                // make sure we recompose it fully when we create a new state object.
+                key(layoutState) {
+                    val overlayEffectFactory =
+                        if (shouldUseSplitScenes) null else stretchOverscrollFactory
 
-            // SceneTransitionLayout can only be bound to one SceneTransitionLayoutState, so
-            // make sure we recompose it fully when we create a new state object.
-            key(layoutState) {
-                SceneTransitionLayout(
-                    state = layoutState,
-                    transitionInterceptionThreshold = configuration.transitionInterceptionThreshold,
-                    modifier =
-                        // Make this layout accessible to UiAutomator.
-                        Modifier.semantics { testTagsAsResourceId = true }
-                            .testTag("SystemUiSceneTransitionLayout"),
-                    swipeSourceDetector =
-                        if (configuration.enableOverlays) {
-                            remember {
-                                SplitEdgeDetector(topEdgeSplitFraction = { 0.5f }, edgeSize = 60.dp)
-                            }
-                        } else {
-                            DefaultEdgeDetector
-                        },
-                ) {
-                    scene(Scenes.Launcher, Launcher.userActions(shadeScene, configuration)) {
-                        Launcher(launcherColumns)
-                    }
-                    scene(
-                        Scenes.Lockscreen,
-                        Lockscreen.userActions(
-                            isLockscreenDismissable,
-                            shadeScene,
-                            requiresFullDistanceSwipeToShade =
-                                when (configuration.lsToShadeRequiresFullSwipe) {
-                                    ToggleableState.On -> true
-                                    ToggleableState.Off -> false
-                                    ToggleableState.Indeterminate ->
-                                        configuration.interactiveNotifications
+                    SceneTransitionLayout(
+                        state = layoutState,
+                        transitionInterceptionThreshold =
+                            configuration.transitionInterceptionThreshold,
+                        modifier =
+                            // Make this layout accessible to UiAutomator.
+                            Modifier.semantics { testTagsAsResourceId = true }
+                                .testTag("SystemUiSceneTransitionLayout"),
+                        swipeSourceDetector =
+                            if (configuration.enableOverlays) {
+                                remember {
+                                    SplitEdgeDetector(
+                                        topEdgeSplitFraction = { 0.5f },
+                                        edgeSize = 60.dp,
+                                    )
+                                }
+                            } else {
+                                DefaultEdgeDetector
+                            },
+                    ) {
+                        scene(Scenes.Launcher, Launcher.userActions(shadeScene, configuration)) {
+                            Launcher(launcherColumns)
+                        }
+                        scene(
+                            Scenes.Lockscreen,
+                            Lockscreen.userActions(
+                                isLockscreenDismissable,
+                                shadeScene,
+                                requiresFullDistanceSwipeToShade =
+                                    when (configuration.lsToShadeRequiresFullSwipe) {
+                                        ToggleableState.On -> true
+                                        ToggleableState.Off -> false
+                                        ToggleableState.Indeterminate ->
+                                            configuration.interactiveNotifications
+                                    },
+                                configuration,
+                            ),
+                        ) {
+                            Lockscreen(
+                                notificationList = {
+                                    NotificationList(
+                                        maxNotificationCount =
+                                            configuration.notificationsInLockscreen
+                                    )
                                 },
-                            configuration,
-                        ),
-                    ) {
-                        Lockscreen(
-                            notificationList = {
-                                NotificationList(
-                                    maxNotificationCount = configuration.notificationsInLockscreen
-                                )
-                            },
-                            mediaPlayer = largeMediaPlayer,
-                            isDismissable = isLockscreenDismissable,
-                            onToggleDismissable = {
-                                isLockscreenDismissable = !isLockscreenDismissable
-                            },
-                            ::onChangeScene,
-                        )
-                    }
-                    scene(
-                        Scenes.SplitLockscreen,
-                        SplitLockscreen.userActions(
-                            isLockscreenDismissable,
-                            shadeScene,
-                            configuration,
-                        ),
-                    ) {
-                        SplitLockscreen(
-                            notificationList = {
-                                NotificationList(
-                                    maxNotificationCount = configuration.notificationsInLockscreen
-                                )
-                            },
-                            mediaPlayer = largeMediaPlayer,
-                            isDismissable = isLockscreenDismissable,
-                            onToggleDismissable = {
-                                isLockscreenDismissable = !isLockscreenDismissable
-                            },
-                            ::onChangeScene,
-                            configuration = configuration,
-                        )
-                    }
-                    scene(Scenes.StubStart, Stub.startUserActions(lockscreenScene)) {
-                        Stub(
-                            rootKey = Stub.Elements.SceneStart,
-                            textKey = Stub.Elements.TextStart,
-                            text = "Stub scene (start)",
-                        )
-                    }
-                    scene(Scenes.StubEnd, Stub.endUserActions(lockscreenScene)) {
-                        Stub(
-                            rootKey = Stub.Elements.SceneEnd,
-                            textKey = Stub.Elements.TextEnd,
-                            text = "Stub scene (end)",
-                        )
-                    }
-                    scene(Scenes.Camera, Camera.userActions(lockscreenScene)) { Camera() }
-                    scene(Scenes.Bouncer, Bouncer.userActions(lockscreenScene)) {
-                        Bouncer(
-                            onBouncerCancelled = { onChangeScene(lockscreenScene) },
-                            onBouncerSolved = { onChangeScene(Scenes.Launcher) },
-                        )
-                    }
-                    scene(
-                        Scenes.QuickSettings,
-                        QuickSettings.userActions(
-                            shadeScene,
-                            lockscreenScene,
-                            isLockscreenDismissed,
-                        ),
-                    ) {
-                        QuickSettings(
-                            qsPager,
-                            mediaPlayer = largeMediaPlayer,
-                            ::onSettingsButtonClicked,
-                            ::onPowerButtonClicked,
-                        )
-                    }
-                    scene(Scenes.Shade, Shade.userActions(isLockscreenDismissed, lockscreenScene)) {
-                        Shade(
-                            notificationList = { overscrollEffect ->
-                                NotificationList(
-                                    maxNotificationCount = configuration.notificationsInShade,
-                                    overscrollEffect = overscrollEffect,
-                                )
-                            },
-                            mediaPlayer = largeMediaPlayer,
-                            quickSettingsTiles,
-                            nQuickSettingsColumns,
-                        )
-                    }
-                    scene(
-                        Scenes.SplitShade,
-                        SplitShade.userActions(isLockscreenDismissed, lockscreenScene),
-                    ) {
-                        SplitShade(
-                            notificationList = {
-                                NotificationList(
-                                    maxNotificationCount = configuration.notificationsInShade
-                                )
-                            },
-                            mediaPlayer = largeMediaPlayer,
-                            quickSettingsTiles,
-                            nQuickSettingsSplitShadeRows,
-                            nQuickSettingsColumns,
-                            ::onSettingsButtonClicked,
-                            ::onPowerButtonClicked,
-                        )
-                    }
-
-                    scene(Scenes.AlwaysOnDisplay) {
-                        AlwaysOnDisplay(Modifier.clickable { onChangeScene(lockscreenScene) })
-                    }
-
-                    overlay(
-                        Overlays.QuickSettings,
-                        userActions = QuickSettingsShade.UserActions,
-                        alignment = Alignment.TopEnd,
-                    ) {
-                        QuickSettingsShade(qsPager, smallMediaPlayer)
-                    }
-
-                    overlay(
-                        Overlays.Notifications,
-                        userActions = NotificationShade.UserActions,
-                        alignment = Alignment.TopStart,
-                    ) {
-                        NotificationShade(
-                            clock =
-                                if (shouldUseSplitScenes) {
-                                    null
-                                } else {
-                                    { Clock(MaterialTheme.colorScheme.onSurfaceVariant) }
+                                mediaPlayer = largeMediaPlayer,
+                                isDismissable = isLockscreenDismissable,
+                                onToggleDismissable = {
+                                    isLockscreenDismissable = !isLockscreenDismissable
                                 },
-                            mediaPlayer = largeMediaPlayer,
-                            notificationList = {
-                                NotificationList(
-                                    maxNotificationCount = configuration.notificationsInShade,
-                                    isScrollable = false,
-                                )
-                            },
-                        )
+                                ::onChangeScene,
+                            )
+                        }
+                        scene(
+                            Scenes.SplitLockscreen,
+                            SplitLockscreen.userActions(
+                                isLockscreenDismissable,
+                                shadeScene,
+                                configuration,
+                            ),
+                        ) {
+                            SplitLockscreen(
+                                notificationList = {
+                                    NotificationList(
+                                        maxNotificationCount =
+                                            configuration.notificationsInLockscreen
+                                    )
+                                },
+                                mediaPlayer = largeMediaPlayer,
+                                isDismissable = isLockscreenDismissable,
+                                onToggleDismissable = {
+                                    isLockscreenDismissable = !isLockscreenDismissable
+                                },
+                                ::onChangeScene,
+                                configuration = configuration,
+                            )
+                        }
+                        scene(Scenes.StubStart, Stub.startUserActions(lockscreenScene)) {
+                            Stub(
+                                rootKey = Stub.Elements.SceneStart,
+                                textKey = Stub.Elements.TextStart,
+                                text = "Stub scene (start)",
+                            )
+                        }
+                        scene(Scenes.StubEnd, Stub.endUserActions(lockscreenScene)) {
+                            Stub(
+                                rootKey = Stub.Elements.SceneEnd,
+                                textKey = Stub.Elements.TextEnd,
+                                text = "Stub scene (end)",
+                            )
+                        }
+                        scene(Scenes.Camera, Camera.userActions(lockscreenScene)) { Camera() }
+                        scene(Scenes.Bouncer, Bouncer.userActions(lockscreenScene)) {
+                            Bouncer(
+                                onBouncerCancelled = { onChangeScene(lockscreenScene) },
+                                onBouncerSolved = { onChangeScene(Scenes.Launcher) },
+                            )
+                        }
+                        scene(
+                            Scenes.QuickSettings,
+                            QuickSettings.userActions(
+                                shadeScene,
+                                lockscreenScene,
+                                isLockscreenDismissed,
+                            ),
+                        ) {
+                            QuickSettings(
+                                qsPager,
+                                mediaPlayer = largeMediaPlayer,
+                                ::onSettingsButtonClicked,
+                                ::onPowerButtonClicked,
+                            )
+                        }
+                        scene(
+                            Scenes.Shade,
+                            Shade.userActions(isLockscreenDismissed, lockscreenScene),
+                        ) {
+                            Shade(
+                                notificationList = { overscrollEffect ->
+                                    NotificationList(
+                                        maxNotificationCount = configuration.notificationsInShade,
+                                        overscrollEffect = overscrollEffect,
+                                    )
+                                },
+                                mediaPlayer = largeMediaPlayer,
+                                quickSettingsTiles,
+                                nQuickSettingsColumns,
+                            )
+                        }
+                        scene(
+                            Scenes.SplitShade,
+                            SplitShade.userActions(isLockscreenDismissed, lockscreenScene),
+                        ) {
+                            SplitShade(
+                                notificationList = {
+                                    NotificationList(
+                                        maxNotificationCount = configuration.notificationsInShade
+                                    )
+                                },
+                                mediaPlayer = largeMediaPlayer,
+                                quickSettingsTiles,
+                                nQuickSettingsSplitShadeRows,
+                                nQuickSettingsColumns,
+                                ::onSettingsButtonClicked,
+                                ::onPowerButtonClicked,
+                            )
+                        }
+
+                        scene(Scenes.AlwaysOnDisplay) {
+                            AlwaysOnDisplay(Modifier.clickable { onChangeScene(lockscreenScene) })
+                        }
+
+                        overlay(
+                            Overlays.QuickSettings,
+                            userActions = QuickSettingsShade.UserActions,
+                            alignment = Alignment.TopEnd,
+                            effectFactory = overlayEffectFactory,
+                        ) {
+                            QuickSettingsShade(qsPager, smallMediaPlayer)
+                        }
+
+                        overlay(
+                            Overlays.Notifications,
+                            userActions = NotificationShade.UserActions,
+                            alignment = Alignment.TopStart,
+                            effectFactory = overlayEffectFactory,
+                        ) {
+                            NotificationShade(
+                                clock =
+                                    if (shouldUseSplitScenes) {
+                                        null
+                                    } else {
+                                        { Clock(MaterialTheme.colorScheme.onSurfaceVariant) }
+                                    },
+                                mediaPlayer = largeMediaPlayer,
+                                notificationList = {
+                                    NotificationList(
+                                        maxNotificationCount = configuration.notificationsInShade,
+                                        isScrollable = false,
+                                    )
+                                },
+                            )
+                        }
                     }
                 }
             }

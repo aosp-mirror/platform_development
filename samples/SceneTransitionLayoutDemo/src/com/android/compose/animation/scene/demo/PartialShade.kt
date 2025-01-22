@@ -17,12 +17,12 @@
 package com.android.compose.animation.scene.demo
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.gestures.Orientation
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.overscroll
+import androidx.compose.foundation.rememberOverscrollEffect
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -43,17 +43,9 @@ import androidx.compose.ui.node.invalidateDraw
 import androidx.compose.ui.unit.dp
 import com.android.compose.animation.scene.ContentScope
 import com.android.compose.animation.scene.ElementKey
-import com.android.compose.animation.scene.LowestZIndexContentPicker
-import com.android.compose.gesture.effect.rememberOffsetOverscrollEffect
 import com.android.compose.modifiers.thenIf
 
 object PartialShade {
-    object Elements {
-        val Root = ElementKey("PartialShadeRoot", placeAllCopies = true)
-        val Background =
-            ElementKey("PartialShadeBackground", contentPicker = LowestZIndexContentPicker)
-    }
-
     object Colors {
         val Background
             @Composable get() = Shade.Colors.Scrim
@@ -71,6 +63,7 @@ object PartialShade {
 
 @Composable
 fun ContentScope.PartialShade(
+    rootElement: ElementKey,
     modifier: Modifier = Modifier,
     content: @Composable BoxScope.() -> Unit,
 ) {
@@ -78,33 +71,23 @@ fun ContentScope.PartialShade(
 
     val shape =
         if (isSplitShade) PartialShade.Shapes.SplitBackground else PartialShade.Shapes.Background
-    val contentOverscrollEffect = rememberOffsetOverscrollEffect(Orientation.Vertical)
+    val contentOverscrollEffect = checkNotNull(rememberOverscrollEffect())
     Box(
         modifier
             .fillMaxWidth(if (isSplitShade) 0.5f else 1f)
-            .thenIf(isSplitShade) { Modifier.padding(16.dp) }
             .overscroll(verticalOverscrollEffect)
             .overscroll(contentOverscrollEffect)
-            .element(PartialShade.Elements.Root)
+            .thenIf(isSplitShade) { Modifier.padding(16.dp) }
+            .element(rootElement)
             .clip(shape)
-    ) {
-        val backgroundColor = PartialShade.Colors.Background
-        Box(
-            Modifier.element(PartialShade.Elements.Background)
-                .matchParentSize()
-                .thenIf(!isSplitShade) { Modifier.then(ExtraBackgroundElement(backgroundColor)) }
-                .background(backgroundColor)
-        )
-
-        Box(
-            Modifier.disableSwipesWhenScrolling()
-                .verticalScroll(
-                    rememberScrollState(),
-                    overscrollEffect = contentOverscrollEffect.withoutVisualEffect(),
-                ),
-            content = content,
-        )
-    }
+            .background(PartialShade.Colors.Background)
+            .disableSwipesWhenScrolling()
+            .verticalScroll(
+                rememberScrollState(),
+                overscrollEffect = contentOverscrollEffect.withoutVisualEffect(),
+            ),
+        content = content,
+    )
 }
 
 // A modifier that ensures that there is no hole between the shade and the top of the device when
