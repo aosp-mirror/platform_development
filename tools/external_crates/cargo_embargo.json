@@ -3,6 +3,9 @@
     "checksum": {
       "device_supported": false
     },
+    "crate_config": {
+      "device_supported": false
+    },
     "rooted_path": {
       "device_supported": false
     },
