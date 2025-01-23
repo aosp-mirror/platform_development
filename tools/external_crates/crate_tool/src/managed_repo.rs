@@ -51,7 +51,9 @@ use crate::{
 // TODO: Store this as a data file in the monorepo.
 static IMPORT_DENYLIST: LazyLock<BTreeSet<&str>> = LazyLock::new(|| {
     BTreeSet::from([
-        "instant", // Not maintained.
+        "instant",        // Not maintained.
+        "bumpalo",        // Unsound
+        "allocator-api2", // Unsound
         // Uniffi crates.
         // Per mmaurer: "considered too difficult to verify and stopped being used for the original use case".
         "oneshot-uniffi",
@@ -578,10 +580,7 @@ impl ManagedRepo {
         if licenses.satisfied.len() == 1 && licenses.unsatisfied.is_empty() {
             let license_file = krate.path().join("LICENSE")?;
             if !license_file.abs().exists() {
-                symlink(
-                    licenses.satisfied.iter().next().unwrap().1.file_name().unwrap(),
-                    license_file,
-                )?;
+                symlink(licenses.satisfied.iter().next().unwrap().1, license_file)?;
             }
         }
 

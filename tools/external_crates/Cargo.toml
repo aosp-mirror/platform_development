@@ -1,6 +1,7 @@
 [workspace]
 members = [
     "checksum",
+    "crate_config",
     "crate_tool",
     "google_metadata",
     "license_checker",
