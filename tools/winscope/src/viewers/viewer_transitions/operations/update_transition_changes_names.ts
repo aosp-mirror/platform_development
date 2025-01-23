@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import {FixedStringFormatter} from 'trace/tree_node/formatters';
+import {FixedStringFormatter, formatAsHex} from 'trace/tree_node/formatters';
 import {Operation} from 'trace/tree_node/operations/operation';
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
 
@@ -45,13 +45,16 @@ export class UpdateTransitionChangesNames
 
         const windowId = target.getChildByName('windowId');
         if (windowId) {
-          const windowIdString = windowId.getValue().toString(16);
-          const windowTitle = this.windowTokenToTitle.get(windowIdString);
+          const windowIdValue = windowId.getValue();
+          const windowTitle = this.windowTokenToTitle.get(
+            windowIdValue.toString(16),
+          );
+          const windowIdString = formatAsHex(windowIdValue);
           windowId.setFormatter(
             new FixedStringFormatter(
               windowTitle
-                ? `0x${windowIdString} (${windowTitle})`
-                : `0x${windowIdString}`,
+                ? `${windowIdString} (${windowTitle})`
+                : `${windowIdString}`,
             ),
           );
         }

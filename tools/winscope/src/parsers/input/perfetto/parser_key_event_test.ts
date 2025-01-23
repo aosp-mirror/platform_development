@@ -79,7 +79,7 @@ describe('Perfetto ParserKeyEvent', () => {
     expect(keyEvent?.getChildByName('deviceId')?.getValue()).toEqual(2);
     expect(keyEvent?.getChildByName('displayId')?.getValue()).toEqual(-1);
     expect(keyEvent?.getChildByName('metaState')?.formattedValue()).toEqual(
-      '0',
+      'UNKNOWN (0x0)',
     );
     expect(keyEvent?.getChildByName('keyCode')?.getValue()).toEqual(24);
     expect(keyEvent?.getChildByName('scanCode')?.getValue()).toEqual(115);
