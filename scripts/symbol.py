@@ -105,12 +105,14 @@ class ProcessCache:
     return pipe
 
   def SpawnProcess(self, cmd):
-     return subprocess.Popen(cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE, universal_newlines=True)
+    return subprocess.Popen(cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE, universal_newlines=True)
 
   def TerminateProcess(self, pipe):
-    pipe.stdin.close()
-    pipe.stdout.close()
-    pipe.terminate()
+    if pipe.poll() is None:
+      # Process is still running.
+      pipe.stdin.close()
+      pipe.stdout.close()
+      pipe.terminate()
     pipe.wait()
 
   def KillAllProcesses(self):
@@ -304,7 +306,7 @@ def GetStackRecordsForSet(lib, unique_addrs):
     frame_offset, size, tag_offset may be None.
   """
   child = _GetJSONSymbolizerForLib(lib)
-  if child is None:
+  if child is None or child.poll() is not None:
     return None
   records = []
   for addr in unique_addrs:
@@ -374,11 +376,12 @@ def CallLlvmSymbolizerForSet(lib, unique_addrs):
       child.stdin.flush()
       records = []
       json_result = json.loads(child.stdout.readline().strip())
-      for symbol in json_result["Symbol"]:
-        function_name = symbol["FunctionName"]
-        # GNU style location: file_name:line_num
-        location = ("%s:%s" % (symbol["FileName"], symbol["Line"]))
-        records.append((function_name, location))
+      if "Symbol" in json_result:
+        for symbol in json_result["Symbol"]:
+          function_name = symbol["FunctionName"]
+          # GNU style location: file_name:line_num
+          location = ("%s:%s" % (symbol["FileName"], symbol["Line"]))
+          records.append((function_name, location))
     except IOError as e:
       # Remove the / in front of the library name to match other output.
       records = [(None, lib[1:] + "  ***Error: " + str(e))]

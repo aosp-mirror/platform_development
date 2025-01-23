@@ -307,6 +307,12 @@ class TraceConverter:
     name = match.group(1)
     start = int(match.group(2))
     end = start + int(match.group(3))
+    # When the actual apk data is mapped in to the process, it will be
+    # mapped in on a page boundary. This means the header data can start
+    # after the actual offset and the code will get the wrong file.
+    # Rounding down to a page boundary (assumes 4096 page size) fixes
+    # this problem.
+    start = start & ~0xfff
 
     offset_list.append([name, start, end])
     return name, start, end
@@ -553,6 +559,7 @@ class TraceConverter:
         #   Some.apk!libshared.so
         # or
         #   Some.apk
+        lib_extracted = False
         if so_offset:
           # If it ends in apk, we are done.
           apk = None
@@ -572,6 +579,7 @@ class TraceConverter:
                 apk = area[0:index + 4]
           if apk:
             lib_name, lib = self.GetLibFromApk(apk, so_offset)
+            lib_extracted = lib != None
         else:
           # Sometimes we'll see something like:
           #   #01 pc abcd  libart.so!libart.so
@@ -583,17 +591,18 @@ class TraceConverter:
           lib = area
           lib_name = None
 
-        if build_id:
-          # If we have the build_id, do a brute-force search of the symbols directory.
-          basename = os.path.basename(lib).split("!")[-1]
-          lib = self.GetLibraryByBuildId(symbol.SYMBOLS_DIR, basename, build_id)
-          if not lib:
-            print("WARNING: Cannot find {} with build id {} in symbols directory."
-                  .format(basename, build_id))
-        else:
-          # When using atest, test paths are different between the out/ directory
-          # and device. Apply fixups.
-          lib = self.GetLibPath(lib)
+        if not lib_extracted:
+          if build_id:
+            # If we have the build_id, do a brute-force search of the symbols directory.
+            basename = os.path.basename(lib).split("!")[-1]
+            lib = self.GetLibraryByBuildId(symbol.SYMBOLS_DIR, basename, build_id)
+            if not lib:
+              print("WARNING: Cannot find {} with build id {} in symbols directory."
+                    .format(basename, build_id))
+          else:
+            # When using atest, test paths are different between the out/ directory
+            # and device. Apply fixups.
+            lib = self.GetLibPath(lib)
 
         # If a calls b which further calls c and c is inlined to b, we want to
         # display "a -> b -> c" in the stack trace instead of just "a -> c"
