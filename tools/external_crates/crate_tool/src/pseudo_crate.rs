@@ -55,6 +55,9 @@ impl<State: PseudoCrateState> PseudoCrate<State> {
         let mut lines = BTreeSet::new();
         for line in read(self.path.join(filename)?)?.lines() {
             let line = line?;
+            if line.trim().is_empty() {
+                continue;
+            }
             if !lines.insert(line.clone()) {
                 bail!("Duplicate entry {line} in crate list {filename}");
             }
