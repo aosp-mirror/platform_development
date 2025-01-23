@@ -147,22 +147,21 @@ fn sync_to_green(monorepo_path: &Path) -> Result<()> {
 
 fn get_suggestions(monorepo_path: &Path) -> Result<Vec<(String, String)>> {
     // TODO: Improve update suggestion algorithm, and produce output in machine-readable format.
-    let output = Command::new(monorepo_path.join("crate_tool"))
-        .args(["suggest-updates", "--patches"])
-        .current_dir(monorepo_path)
-        .output()?
-        .success_or_error()?;
-    let mut suggestions = from_utf8(&output.stdout)?
-        .trim()
-        .lines()
-        .map(|suggestion| {
+    let mut suggestions = Vec::new();
+    for compatibility in ["ignore", "loose", "strict"] {
+        let output = Command::new(monorepo_path.join("crate_tool"))
+            .args(["suggest-updates", "--patches", "--semver-compatibility", compatibility])
+            .current_dir(monorepo_path)
+            .output()?
+            .success_or_error()?;
+        suggestions.extend(from_utf8(&output.stdout)?.trim().lines().map(|suggestion| {
             let words = suggestion.split_whitespace().collect::<Vec<_>>();
             if words.len() != 6 {
                 println!("Failed to parse suggestion {suggestion}");
             }
             (words[2].to_string(), words[5].to_string())
-        })
-        .collect::<Vec<_>>();
+        }));
+    }
 
     // Return suggestions in random order. This reduces merge conflicts and ensures
     // all crates eventually get tried, even if something goes wrong and the program
