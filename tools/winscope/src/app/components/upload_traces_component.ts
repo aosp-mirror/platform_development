@@ -24,6 +24,8 @@ import {
 } from '@angular/core';
 import {TracePipeline} from 'app/trace_pipeline';
 import {ProgressListener} from 'messaging/progress_listener';
+import {WinscopeEvent, WinscopeEventType} from 'messaging/winscope_event';
+import {WinscopeEventListener} from 'messaging/winscope_event_listener';
 import {Trace} from 'trace/trace';
 import {TRACE_INFO} from 'trace/trace_info';
 import {TraceTypeUtils} from 'trace/trace_type';
@@ -44,16 +46,24 @@ import {LoadProgressComponent} from './load_progress_component';
             class="load-btn"
             matTooltip="Upload trace with an associated viewer to visualize"
             [matTooltipDisabled]="hasLoadedFilesWithViewers()"
-            [disabled]="!hasLoadedFilesWithViewers()"
+            [disabled]="isViewTracesButtonDisabled()"
             (click)="onViewTracesButtonClick()">
             View traces
           </button>
 
-          <button class="download-btn" color="primary" mat-stroked-button (click)="downloadTracesClick.emit()">
-            Download all
-          </button>
+          <button
+            class="download-btn"
+            color="primary"
+            mat-stroked-button
+            (click)="downloadTracesClick.emit()">Download all</button>
 
-          <button color="primary" mat-stroked-button for="fileDropRef" (click)="fileDropRef.click()">
+          <button
+            class="upload-btn"
+            color="primary"
+            mat-stroked-button
+            for="fileDropRef"
+            [disabled]="viewersLoading"
+            (click)="fileDropRef.click()">
             Upload another file
           </button>
 
@@ -61,6 +71,7 @@ import {LoadProgressComponent} from './load_progress_component';
             class="clear-all-btn"
             color="primary"
             mat-stroked-button
+            [disabled]="viewersLoading"
             (click)="onClearButtonClick()">
             Clear all
           </button>
@@ -92,7 +103,10 @@ import {LoadProgressComponent} from './load_progress_component';
         <mat-list
           *ngIf="!isLoadingFiles && tracePipeline.getTraces().getSize() > 0"
           class="uploaded-files">
-          <mat-list-item [class.no-visualization]="!canVisualizeTrace(trace)" [class.trace-error]="trace.isCorrupted()" *ngFor="let trace of tracePipeline.getTraces()">
+          <mat-list-item
+            [class.no-visualization]="!canVisualizeTrace(trace)"
+            [class.trace-error]="trace.isCorrupted()"
+            *ngFor="let trace of tracePipeline.getTraces()">
             <mat-icon
               matListIcon
               [style]="{color: TRACE_INFO[trace.type].color}">
@@ -102,19 +116,26 @@ import {LoadProgressComponent} from './load_progress_component';
             <p matLine>{{ TRACE_INFO[trace.type].name }}</p>
             <p matLine *ngFor="let descriptor of trace.getDescriptors()">{{ descriptor }}</p>
 
-            <mat-icon class="warning-icon" *ngIf="!canVisualizeTrace(trace)" [matTooltip]="cannotVisualizeTraceTooltip(trace)">
-              warning
-            </mat-icon>
-            <mat-icon class="error-icon" *ngIf="trace.isCorrupted()" [matTooltip]="traceErrorTooltip(trace)">
-              error
-            </mat-icon>
-            <button mat-icon-button (click)="onRemoveTrace($event, trace)">
+            <mat-icon
+              class="warning-icon"
+              *ngIf="!canVisualizeTrace(trace)"
+              [matTooltip]="cannotVisualizeTraceTooltip(trace)">warning</mat-icon>
+            <mat-icon
+              class="error-icon"
+              *ngIf="trace.isCorrupted()"
+              [matTooltip]="traceErrorTooltip(trace)">error</mat-icon>
+            <button
+              mat-icon-button
+              (click)="onRemoveTrace($event, trace)"
+              [disabled]="viewersLoading">
               <mat-icon>close</mat-icon>
             </button>
           </mat-list-item>
         </mat-list>
 
-        <div *ngIf="!isLoadingFiles && tracePipeline.getTraces().getSize() === 0" class="drop-info">
+        <div
+          *ngIf="!isLoadingFiles && tracePipeline.getTraces().getSize() === 0"
+          class="drop-info">
           <p class="mat-body-3 icon">
             <mat-icon inline fontIcon="upload"></mat-icon>
           </p>
@@ -211,12 +232,15 @@ import {LoadProgressComponent} from './load_progress_component';
     `,
   ],
 })
-export class UploadTracesComponent implements ProgressListener {
+export class UploadTracesComponent
+  implements WinscopeEventListener, ProgressListener
+{
   TRACE_INFO = TRACE_INFO;
   isLoadingFiles = false;
   progressMessage = '';
   progressPercentage?: number;
   lastUiProgressUpdateTimeMs?: number;
+  viewersLoading = false;
 
   @Input() tracePipeline: TracePipeline | undefined;
   @Output() filesUploaded = new EventEmitter<File[]>();
@@ -230,6 +254,18 @@ export class UploadTracesComponent implements ProgressListener {
 
   ngOnInit() {
     this.tracePipeline?.clear();
+  }
+
+  async onWinscopeEvent(event: WinscopeEvent) {
+    await event.visit(WinscopeEventType.APP_TRACE_VIEW_REQUEST, async () => {
+      this.viewersLoading = true;
+    });
+    await event.visit(
+      WinscopeEventType.APP_TRACE_VIEW_REQUEST_HANDLED,
+      async () => {
+        this.viewersLoading = false;
+      },
+    );
   }
 
   onProgressUpdate(
@@ -255,7 +291,11 @@ export class UploadTracesComponent implements ProgressListener {
   }
 
   onInputFiles(event: Event) {
+    if (this.viewersLoading) {
+      return;
+    }
     const files = this.getInputFiles(event);
+    if (files.length === 0) return;
     this.filesUploaded.emit(files);
   }
 
@@ -279,6 +319,9 @@ export class UploadTracesComponent implements ProgressListener {
   }
 
   onFileDrop(e: DragEvent) {
+    if (this.viewersLoading) {
+      return;
+    }
     e.preventDefault();
     e.stopPropagation();
     const droppedFiles = e.dataTransfer?.files;
@@ -307,6 +350,10 @@ export class UploadTracesComponent implements ProgressListener {
 
       return hasFilesWithViewers;
     });
+  }
+
+  isViewTracesButtonDisabled(): boolean {
+    return this.viewersLoading || !this.hasLoadedFilesWithViewers();
   }
 
   canVisualizeTrace(trace: Trace<object>): boolean {
