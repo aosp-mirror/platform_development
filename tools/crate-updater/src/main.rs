@@ -26,6 +26,7 @@ use clap::Parser;
 use crate_updater::UpdatesTried;
 use rand::seq::SliceRandom;
 use rand::thread_rng;
+use serde::Deserialize;
 
 #[derive(Parser)]
 struct Cli {
@@ -115,6 +116,17 @@ fn cleanup_and_sync_monorepo(monorepo_path: &Path) -> Result<()> {
     Ok(())
 }
 
+#[derive(Deserialize, Default, Debug)]
+struct UpdateSuggestions {
+    updates: Vec<UpdateSuggestion>,
+}
+
+#[derive(Deserialize, Default, Debug)]
+struct UpdateSuggestion {
+    name: String,
+    version: String,
+}
+
 fn sync_to_green(monorepo_path: &Path) -> Result<()> {
     Command::new("prodcertstatus").run_and_stream_output()?;
     Command::new("/google/data/ro/projects/android/smartsync_login").run_and_stream_output()?;
@@ -145,22 +157,23 @@ fn sync_to_green(monorepo_path: &Path) -> Result<()> {
     Ok(())
 }
 
-fn get_suggestions(monorepo_path: &Path) -> Result<Vec<(String, String)>> {
-    // TODO: Improve update suggestion algorithm, and produce output in machine-readable format.
+fn get_suggestions(monorepo_path: &Path) -> Result<Vec<UpdateSuggestion>> {
+    // TODO: Improve update suggestion algorithm.
     let mut suggestions = Vec::new();
     for compatibility in ["ignore", "loose", "strict"] {
         let output = Command::new(monorepo_path.join("crate_tool"))
-            .args(["suggest-updates", "--patches", "--semver-compatibility", compatibility])
+            .args([
+                "suggest-updates",
+                "--json",
+                "--patches",
+                "--semver-compatibility",
+                compatibility,
+            ])
             .current_dir(monorepo_path)
             .output()?
             .success_or_error()?;
-        suggestions.extend(from_utf8(&output.stdout)?.trim().lines().map(|suggestion| {
-            let words = suggestion.split_whitespace().collect::<Vec<_>>();
-            if words.len() != 6 {
-                println!("Failed to parse suggestion {suggestion}");
-            }
-            (words[2].to_string(), words[5].to_string())
-        }));
+        let json: UpdateSuggestions = serde_json::from_slice(&output.stdout)?;
+        suggestions.extend(json.updates);
     }
 
     // Return suggestions in random order. This reduces merge conflicts and ensures
@@ -309,8 +322,10 @@ fn main() -> Result<()> {
         .run_and_stream_output()?;
 
     let mut updates_tried = UpdatesTried::read()?;
-    for (crate_name, version) in get_suggestions(&monorepo_path)?.iter() {
-        if DENYLIST.contains(crate_name.as_str()) {
+    for suggestion in get_suggestions(&monorepo_path)? {
+        let crate_name = suggestion.name.as_str();
+        let version = suggestion.version.as_str();
+        if DENYLIST.contains(crate_name) {
             println!("Skipping {crate_name} (on deny list)");
             continue;
         }
@@ -319,10 +334,9 @@ fn main() -> Result<()> {
             continue;
         }
         cleanup_and_sync_monorepo(&monorepo_path)?;
-        let res =
-            try_update(&args.android_root, &monorepo_path, crate_name.as_str(), version.as_str())
-                .inspect_err(|e| println!("Update failed: {}", e));
-        updates_tried.record(crate_name.clone(), version.clone(), res.is_ok())?;
+        let res = try_update(&args.android_root, &monorepo_path, crate_name, version)
+            .inspect_err(|e| println!("Update failed: {}", e));
+        updates_tried.record(suggestion.name, suggestion.version, res.is_ok())?;
     }
     cleanup_and_sync_monorepo(&monorepo_path)?;
 
