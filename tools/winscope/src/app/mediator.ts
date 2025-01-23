@@ -32,6 +32,8 @@ import {
 } from 'messaging/user_warnings';
 import {
   ActiveTraceChanged,
+  AppTraceViewRequest,
+  AppTraceViewRequestHandled,
   ExpandedTimelineToggled,
   TraceAddRequest,
   TracePositionUpdate,
@@ -61,7 +63,7 @@ export class Mediator {
   private abtChromeExtensionProtocol: WinscopeEventEmitter &
     WinscopeEventListener;
   private crossToolProtocol: CrossToolProtocol;
-  private uploadTracesComponent?: ProgressListener;
+  private uploadTracesComponent?: WinscopeEventListener & ProgressListener;
   private collectTracesComponent?: ProgressListener &
     WinscopeEventEmitter &
     WinscopeEventListener;
@@ -102,7 +104,9 @@ export class Mediator {
     });
   }
 
-  setUploadTracesComponent(component: ProgressListener | undefined) {
+  setUploadTracesComponent(
+    component: (WinscopeEventListener & ProgressListener) | undefined,
+  ) {
     this.uploadTracesComponent = component;
   }
 
@@ -163,7 +167,13 @@ export class Mediator {
           if (failedTraces.length > 0) {
             UserNotifier.add(new NoValidFiles(failedTraces));
           }
+          await this.uploadTracesComponent?.onWinscopeEvent(
+            new AppTraceViewRequest(),
+          );
           await this.loadViewers();
+          await this.uploadTracesComponent?.onWinscopeEvent(
+            new AppTraceViewRequestHandled(),
+          );
         } else {
           this.currentProgressListener?.onOperationFinished(false);
         }

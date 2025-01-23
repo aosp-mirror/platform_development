@@ -28,6 +28,7 @@ export enum WinscopeEventType {
   APP_FILES_UPLOADED,
   APP_RESET_REQUEST,
   APP_TRACE_VIEW_REQUEST,
+  APP_TRACE_VIEW_REQUEST_HANDLED,
   APP_REFRESH_DUMPS_REQUEST,
   REMOTE_TOOL_DOWNLOAD_START,
   REMOTE_TOOL_FILES_RECEIVED,
@@ -58,6 +59,7 @@ interface TypeMap {
   [WinscopeEventType.APP_FILES_UPLOADED]: AppFilesUploaded;
   [WinscopeEventType.APP_RESET_REQUEST]: AppResetRequest;
   [WinscopeEventType.APP_TRACE_VIEW_REQUEST]: AppTraceViewRequest;
+  [WinscopeEventType.APP_TRACE_VIEW_REQUEST_HANDLED]: AppTraceViewRequestHandled;
   [WinscopeEventType.APP_REFRESH_DUMPS_REQUEST]: AppRefreshDumpsRequest;
   [WinscopeEventType.REMOTE_TOOL_DOWNLOAD_START]: RemoteToolDownloadStart;
   [WinscopeEventType.REMOTE_TOOL_FILES_RECEIVED]: RemoteToolFilesReceived;
@@ -122,6 +124,10 @@ export class AppResetRequest extends WinscopeEvent {
 
 export class AppTraceViewRequest extends WinscopeEvent {
   override readonly type = WinscopeEventType.APP_TRACE_VIEW_REQUEST;
+}
+
+export class AppTraceViewRequestHandled extends WinscopeEvent {
+  override readonly type = WinscopeEventType.APP_TRACE_VIEW_REQUEST_HANDLED;
 }
 
 export class AppRefreshDumpsRequest extends WinscopeEvent {
