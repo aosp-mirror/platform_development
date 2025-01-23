@@ -1,0 +1,72 @@
+<div
+  *ngIf="totalTestCount === 0; else testListContent"
+  class="flex flex-col items-center justify-center h-full p-8 bg-white rounded-md"
+>
+  <p class="text-gray-500 text-center">
+    No tests found. Click refresh to load tests.
+  </p>
+  <button
+    (click)="triggerRefresh(false)"
+    class="mt-4 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-700"
+  >
+    Refresh
+  </button>
+</div>
+
+<ng-template #testListContent>
+  <div class="p-4 bg-white rounded-md">
+    <div class="flex justify-between items-center pb-2 mb-2">
+      <select
+        id="statusFilter"
+        class="mt-1 block pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md"
+        [(ngModel)]="filterStatus"
+      >
+        <option value="all">All Tests ({{ totalTestCount }})</option>
+        <option value="pass">Passing Tests ({{ passingTestCount }})</option>
+        <option value="fail">Failing Tests ({{ failingTestCount }})</option>
+      </select>
+      <div class="flex items-center space-x-2">
+        <span class="text-green-600">{{ passingTestCount }} Passed</span>
+        <span class="text-red-600">{{ failingTestCount }} Failed</span>
+        <button
+          mat-icon-button
+          (click)="triggerRefresh(false)"
+          matTooltip="Refresh"
+        >
+          <mat-icon>refresh</mat-icon>
+        </button>
+        <button
+          mat-icon-button
+          (click)="triggerRefresh(true)"
+          matTooltip="Clear"
+        >
+          <mat-icon>delete</mat-icon>
+        </button>
+      </div>
+    </div>
+    <mat-accordion class="mt-4" displayMode="flat">
+      <mat-expansion-panel
+        *ngFor="let golden of filteredGoldens"
+        (opened)="panelOpened(golden)"
+        [ngClass]="getResultClass(golden)"
+      >
+        <mat-expansion-panel-header class="flex items-center">
+          <mat-panel-title class="flex-1 min-w-0">
+            <div class="flex items-center">
+              <span class="truncate">{{ golden.testMethodName }}</span>
+            </div>
+          </mat-panel-title>
+        </mat-expansion-panel-header>
+        <div class="p-4">
+          <div class="font-medium text-gray-700">
+            {{ golden.testClassName }}
+          </div>
+          <div class="text-gray-600">Golden: {{ golden.label }}</div>
+          <div class="text-gray-500 text-sm">
+            {{ golden.testTime | date : "medium" }}
+          </div>
+        </div>
+      </mat-expansion-panel>
+    </mat-accordion>
+  </div>
+</ng-template>
