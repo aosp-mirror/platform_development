@@ -64,7 +64,7 @@ data class DemoConfiguration(
     val transitionInterceptionThreshold: Float = 0.05f,
     val motion: MotionConfig = MotionConfig.Default,
     val lsToShadeRequiresFullSwipe: ToggleableState = ToggleableState.Indeterminate,
-    val enableOverlays: Boolean = true,
+    val enableOverlays: Boolean = false,
     val transitionBorder: Boolean = true,
 ) {
     companion object {
@@ -78,9 +78,9 @@ data class DemoConfiguration(
             val canChangeSceneOrOverlaysKey = "canChangeSceneOrOverlays"
             val transitionInterceptionThresholdKey = "transitionInterceptionThreshold"
             val motionSchemeKey = "motionScheme"
-            val lsToShadeRequiresFullSwipeKey = "lsToShadeRequiresFullSwipe"
-            val enableOverlaysKey = "enableOverlays"
-            val transitionBorderKey = "transitionBorder"
+            val lsToShadeRequiresFullSwipe = "lsToShadeRequiresFullSwipe"
+            val enableOverlays = "enableOverlays"
+            val transitionBorder = "transitionBorder"
 
             mapSaver(
                 save = {
@@ -94,9 +94,9 @@ data class DemoConfiguration(
                         canChangeSceneOrOverlaysKey to it.canChangeSceneOrOverlays,
                         transitionInterceptionThresholdKey to it.transitionInterceptionThreshold,
                         motionSchemeKey to it.motion.name,
-                        lsToShadeRequiresFullSwipeKey to it.lsToShadeRequiresFullSwipe,
-                        enableOverlaysKey to it.enableOverlays,
-                        transitionBorderKey to it.transitionBorder,
+                        lsToShadeRequiresFullSwipe to it.lsToShadeRequiresFullSwipe,
+                        enableOverlays to it.enableOverlays,
+                        transitionBorder to it.transitionBorder,
                     )
                 },
                 restore = {
@@ -112,9 +112,9 @@ data class DemoConfiguration(
                             it[transitionInterceptionThresholdKey] as Float,
                         motion = MotionConfig.fromName(it[motionSchemeKey] as String),
                         lsToShadeRequiresFullSwipe =
-                            it[lsToShadeRequiresFullSwipeKey] as ToggleableState,
-                        enableOverlays = it[enableOverlaysKey] as Boolean,
-                        transitionBorder = it[transitionBorderKey] as Boolean,
+                            it[lsToShadeRequiresFullSwipe] as ToggleableState,
+                        enableOverlays = it[enableOverlays] as Boolean,
+                        transitionBorder = it[transitionBorder] as Boolean,
                     )
                 },
             )
