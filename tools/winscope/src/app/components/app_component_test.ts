@@ -46,6 +46,7 @@ import {MatTooltipModule} from '@angular/material/tooltip';
 import {Title} from '@angular/platform-browser';
 import {BrowserAnimationsModule} from '@angular/platform-browser/animations';
 import {assertDefined} from 'common/assert_utils';
+import {Download} from 'common/download';
 import {FileUtils} from 'common/file_utils';
 import {TimestampConverterUtils} from 'common/time/test_utils';
 import {UserNotifier} from 'common/user_notifier';
@@ -142,7 +143,7 @@ describe('AppComponent', () => {
         Validators.pattern(FileUtils.DOWNLOAD_FILENAME_REGEX),
       ]),
     );
-    downloadTracesSpy = spyOn(component, 'downloadTraces');
+    downloadTracesSpy = spyOn(Download, 'fromUrl');
     fixture.detectChanges();
   });
 
@@ -246,7 +247,7 @@ describe('AppComponent', () => {
     updateFilenameInputAndDownloadTraces('Winscope2', true);
     await waitToBeCalled(downloadTracesSpy);
     expect(downloadTracesSpy).toHaveBeenCalledOnceWith(
-      jasmine.any(Blob),
+      jasmine.any(String),
       'Winscope2.zip',
     );
 
@@ -257,7 +258,7 @@ describe('AppComponent', () => {
     updateFilenameInputAndDownloadTraces('win_scope', true);
     await waitToBeCalled(downloadTracesSpy);
     expect(downloadTracesSpy).toHaveBeenCalledOnceWith(
-      jasmine.any(Blob),
+      jasmine.any(String),
       'win_scope.zip',
     );
   });
@@ -298,7 +299,7 @@ describe('AppComponent', () => {
     updateFilenameInputAndDownloadTraces('Winscope2', true);
     await waitToBeCalled(downloadTracesSpy);
     expect(downloadTracesSpy).toHaveBeenCalledOnceWith(
-      jasmine.any(Blob),
+      jasmine.any(String),
       'Winscope2.zip',
     );
     downloadTracesSpy.calls.reset();
@@ -310,7 +311,7 @@ describe('AppComponent', () => {
     updateFilenameInputAndDownloadTraces('win.scope', true);
     await waitToBeCalled(downloadTracesSpy);
     expect(downloadTracesSpy).toHaveBeenCalledOnceWith(
-      jasmine.any(Blob),
+      jasmine.any(String),
       'win.scope.zip',
     );
   });

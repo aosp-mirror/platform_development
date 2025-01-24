@@ -100,6 +100,8 @@ export class LoadedParsers {
   clear() {
     this.legacyParsers = [];
     this.perfettoParsers = [];
+    this.legacyParsersKeptForDownload = [];
+    this.perfettoParsersKeptForDownload = [];
   }
 
   async makeZipArchive(onProgressUpdate?: OnProgressUpdateType): Promise<Blob> {
