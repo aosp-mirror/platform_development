@@ -375,11 +375,6 @@ describe('LoadedParsers', () => {
       .setTimestamps(timestamps)
       .setDescriptors(['screenshot.png'])
       .build();
-    const parserScreenshot1 = new ParserBuilder<object>()
-      .setType(TraceType.SCREENSHOT)
-      .setTimestamps(timestamps)
-      .setDescriptors(['screenshot.png'])
-      .build();
     const overrideError = new TraceOverridden(
       'screenshot.png',
       TraceType.SCREEN_RECORDING,
@@ -449,16 +444,20 @@ describe('LoadedParsers', () => {
     ]);
   });
 
-  it('can be cleared', () => {
+  it('can be cleared', async () => {
     loadedParsers.clear();
-    loadParsers([parserSf0], [parserWm0]);
-    expectLoadResult([parserSf0, parserWm0], []);
-
+    loadParsers([parserSf0, parserWm0], []);
+    loadedParsers.remove(parserWm0, true);
     loadedParsers.clear();
     expectLoadResult([], []);
+    await expectDownloadResult([]);
 
-    loadParsers([parserSf0], [parserWm0]);
+    loadParsers([parserSf0, parserWm0], []);
     expectLoadResult([parserSf0, parserWm0], []);
+    await expectDownloadResult([
+      'sf/filename.winscope',
+      'wm/filename.winscope',
+    ]);
   });
 
   it('can make zip archive of traces with appropriate directories and extensions', async () => {
