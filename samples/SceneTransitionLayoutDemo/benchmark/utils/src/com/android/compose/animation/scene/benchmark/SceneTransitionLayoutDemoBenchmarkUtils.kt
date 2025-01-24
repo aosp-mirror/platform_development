@@ -43,7 +43,10 @@ interface SceneTransitionLayoutBenchmarkScope {
     fun startActivity(intent: Intent)
 }
 
-fun SceneTransitionLayoutBenchmarkScope.startDemoActivity(initialScene: String) {
+fun SceneTransitionLayoutBenchmarkScope.startDemoActivity(
+    initialScene: String,
+    notificationsInShade: Int? = null,
+) {
     val intent =
         (context().packageManager.getLaunchIntentForPackage(StlDemoConstants.PACKAGE)
                 ?: error("Unable to acquire intent for package ${StlDemoConstants.PACKAGE}"))
@@ -53,6 +56,8 @@ fun SceneTransitionLayoutBenchmarkScope.startDemoActivity(initialScene: String) 
                 putExtra(StlDemoConstants.INITIAL_SCENE_EXTRA, initialScene)
                 putExtra(StlDemoConstants.FULLSCREEN_EXTRA, true)
                 putExtra(StlDemoConstants.DISABLE_RIPPLE_EXTRA, true)
+
+                notificationsInShade?.let { putExtra(StlDemoConstants.NOTIFICATIONS_IN_SHADE, it) }
             }
 
     val device = device()
@@ -133,6 +138,7 @@ object StlDemoConstants {
     internal const val INITIAL_SCENE_EXTRA = "initial_scene"
     internal const val FULLSCREEN_EXTRA = "fullscreen"
     internal const val DISABLE_RIPPLE_EXTRA = "disable_ripple"
+    internal const val NOTIFICATIONS_IN_SHADE = "notifications_in_shade"
     internal val ROOT_STL_SELECTOR = By.res("SystemUiSceneTransitionLayout")
 }
 

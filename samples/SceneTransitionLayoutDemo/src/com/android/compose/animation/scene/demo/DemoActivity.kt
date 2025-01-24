@@ -55,6 +55,7 @@ class DemoActivity : ComponentActivity() {
         const val INITIAL_SCENE_EXTRA = "initial_scene"
         const val FULLSCREEN_EXTRA = "fullscreen"
         const val DISABLE_RIPPLE_EXTRA = "disable_ripple"
+        const val NOTIFICATIONS_IN_SHADE = "notifications_in_shade"
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -68,11 +69,17 @@ class DemoActivity : ComponentActivity() {
 
         val isFullscreen = intent.extras?.getBoolean(FULLSCREEN_EXTRA) ?: false
         val disableRipple = intent.extras?.getBoolean(DISABLE_RIPPLE_EXTRA) ?: false
+        val notificationsInShade = intent.extras?.getInt(NOTIFICATIONS_IN_SHADE, 10) ?: 10
 
         setContent {
             var configuration by
                 rememberSaveable(stateSaver = DemoConfiguration.Saver) {
-                    mutableStateOf(DemoConfiguration(isFullscreen = isFullscreen))
+                    mutableStateOf(
+                        DemoConfiguration(
+                            isFullscreen = isFullscreen,
+                            notificationsInShade = notificationsInShade,
+                        )
+                    )
                 }
 
             SideEffect {
