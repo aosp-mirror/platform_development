@@ -56,6 +56,22 @@ impl TestMappingJson {
             && self.presubmit_rust.is_empty()
             && self.postsubmit.is_empty()
     }
+    pub fn remove_unknown_tests(&mut self, tests: &BTreeSet<String>) -> bool {
+        let mut changed = false;
+        if self.presubmit.iter().any(|t| !tests.contains(&t.name)) {
+            self.presubmit.retain(|t| tests.contains(&t.name));
+            changed = true;
+        }
+        if self.presubmit_rust.iter().any(|t| !tests.contains(&t.name)) {
+            self.presubmit_rust.retain(|t| tests.contains(&t.name));
+            changed = true;
+        }
+        if self.postsubmit.iter().any(|t| !tests.contains(&t.name)) {
+            self.postsubmit.retain(|t| tests.contains(&t.name));
+            changed = true;
+        }
+        changed
+    }
     pub fn set_presubmits(&mut self, tests: &BTreeSet<String>) {
         self.presubmit = tests.iter().map(|t| TestMappingName { name: t.to_string() }).collect();
         self.presubmit_rust = self.presubmit.clone();

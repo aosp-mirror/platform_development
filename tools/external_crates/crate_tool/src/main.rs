@@ -17,9 +17,11 @@ use std::{
     path::PathBuf,
 };
 
-use anyhow::Result;
+use anyhow::{bail, Result};
 use clap::{Args, Parser, Subcommand};
-use crate_tool::{default_repo_root, maybe_build_cargo_embargo, ManagedRepo};
+use crate_tool::{
+    default_repo_root, maybe_build_cargo_embargo, ManagedRepo, SemverCompatibilityRule,
+};
 use rooted_path::RootedPath;
 use semver::Version;
 
@@ -114,6 +116,13 @@ enum Cmd {
         /// Don't exclude crates that have patches.
         #[arg(long, default_value_t = false)]
         patches: bool,
+
+        /// How strict to be about enforcing semver compatibility.
+        #[arg(long, value_enum, default_value_t = SemverCompatibilityRule::Loose)]
+        semver_compatibility: SemverCompatibilityRule,
+
+        #[arg(long, default_value_t = false)]
+        json: bool,
     },
     /// Update a crate to the specified version.
     Update {
@@ -123,12 +132,6 @@ enum Cmd {
         /// The crate version.
         version: String,
     },
-    /// Try suggested crate updates and see which ones succeed.
-    ///
-    /// Take about 15 minutes per crate, so suggested use is to tee to a file and let it run overnight:
-    ///
-    /// ./android_cargo.py run --bin crate_tool -- try-updates | tee crate-updates
-    TryUpdates {},
     /// Initialize a new managed repo.
     Init {},
     /// Update TEST_MAPPING files.
@@ -163,6 +166,9 @@ impl CrateList {
         Ok(if self.all {
             managed_repo.all_crate_names()?.difference(&self.exclude).cloned().collect::<Vec<_>>()
         } else {
+            if self.crates.is_empty() {
+                bail!("No crates specified");
+            }
             self.crates.clone()
         })
     }
@@ -244,9 +250,10 @@ fn main() -> Result<()> {
         }
         Cmd::UpdatableCrates {} => managed_repo.updatable_crates(),
         Cmd::AnalyzeUpdates { crate_name } => managed_repo.analyze_updates(crate_name),
-        Cmd::SuggestUpdates { patches } => managed_repo.suggest_updates(patches).map(|_x| ()),
+        Cmd::SuggestUpdates { patches, semver_compatibility, json } => {
+            managed_repo.suggest_updates(patches, semver_compatibility, json)
+        }
         Cmd::Update { crate_name, version } => managed_repo.update(crate_name, version),
-        Cmd::TryUpdates {} => managed_repo.try_updates(),
         Cmd::Init {} => managed_repo.init(),
         Cmd::TestMapping { crates } => {
             managed_repo.fix_test_mapping(crates.to_list(&managed_repo)?.into_iter())

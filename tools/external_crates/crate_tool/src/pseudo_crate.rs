@@ -14,7 +14,7 @@
 
 use std::{
     cell::OnceCell,
-    collections::BTreeMap,
+    collections::{BTreeMap, BTreeSet},
     env,
     fs::{read, write},
     io::BufRead,
@@ -22,7 +22,7 @@ use std::{
     str::from_utf8,
 };
 
-use anyhow::{anyhow, Context, Result};
+use anyhow::{anyhow, bail, Context, Result};
 use itertools::Itertools;
 use name_and_version::{NameAndVersionMap, NamedAndVersioned};
 use rooted_path::RootedPath;
@@ -51,10 +51,16 @@ impl<State: PseudoCrateState> PseudoCrate<State> {
     pub fn get_path(&self) -> &RootedPath {
         &self.path
     }
-    pub fn read_crate_list(&self) -> Result<Vec<String>> {
-        let mut lines = Vec::new();
-        for line in read(self.path.join("crate-list.txt")?)?.lines() {
-            lines.push(line?);
+    pub fn read_crate_list(&self, filename: &str) -> Result<BTreeSet<String>> {
+        let mut lines = BTreeSet::new();
+        for line in read(self.path.join(filename)?)?.lines() {
+            let line = line?;
+            if line.trim().is_empty() {
+                continue;
+            }
+            if !lines.insert(line.clone()) {
+                bail!("Duplicate entry {line} in crate list {filename}");
+            }
         }
         Ok(lines)
     }
@@ -62,7 +68,16 @@ impl<State: PseudoCrateState> PseudoCrate<State> {
 
 impl PseudoCrate<CargoVendorClean> {
     pub fn regenerate_crate_list(&self) -> Result<()> {
-        write(self.path.join("crate-list.txt")?, format!("{}\n", self.deps().keys().join("\n")))?;
+        let old_crate_list = self.read_crate_list("crate-list.txt")?;
+        let current_crates = self.deps().keys().cloned().collect::<BTreeSet<_>>();
+        write(
+            self.path.join("crate-list.txt")?,
+            format!("{}\n", old_crate_list.union(&current_crates).join("\n")),
+        )?;
+        write(
+            self.path.join("deleted-crates.txt")?,
+            format!("{}\n", old_crate_list.difference(&current_crates).join("\n")),
+        )?;
         Ok(())
     }
     fn version_of(&self, crate_name: &str) -> Result<Version> {
@@ -179,6 +194,7 @@ license = "Apache-2.0"
 "#,
         )?;
         write(self.path.join("crate-list.txt")?, "")?;
+        write(self.path.join("deleted-crates.txt")?, "")?;
         write(self.path.join(".gitignore")?, "target/\nvendor/\n")?;
 
         ensure_exists_and_empty(&self.path.join("src")?)?;

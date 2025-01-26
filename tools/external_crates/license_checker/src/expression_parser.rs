@@ -68,6 +68,7 @@ static LICENSE_PREFERENCE: LazyLock<Vec<Licensee>> = LazyLock::new(|| {
         "0BSD",
         "Unlicense",
         "Zlib",
+        "Unicode-3.0",
         "Unicode-DFS-2016",
         "NCSA",
         "OpenSSL",
@@ -136,6 +137,11 @@ mod tests {
                 Licensee::parse("MIT").unwrap().into_req()
             ]),
             "Apache preferred to MIT"
+        );
+        assert_eq!(
+            get_chosen_licenses("foo", Some("MIT AND (MIT OR Apache-2.0)"))?,
+            BTreeSet::from([Licensee::parse("MIT").unwrap().into_req()]),
+            "Complex expression from libm 0.2.11"
         );
         assert_eq!(
             get_chosen_licenses("webpki", None)?,
