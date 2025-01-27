@@ -14,6 +14,9 @@
       "add_toplevel_block": "google_metadata/cargo_embargo_protobuf.bp",
       "patch": "google_metadata/patches/Android.bp.patch"
     },
+    "license_checker": {
+      "device_supported": false
+    },
     "name_and_version": {
       "device_supported": false
     },
@@ -22,13 +25,14 @@
     },
     "repo_config": {
       "device_supported": false
+    },
+    "test_mapping": {
+      "device_supported": false
     }
   },
   "tests": true,
   "workspace": true,
   "workspace_excludes": [
-    "crate_tool",
-    "license_checker",
-    "test_mapping"
+    "crate_tool"
   ]
 }
