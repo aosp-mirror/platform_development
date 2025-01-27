@@ -14,7 +14,9 @@
  * limitations under the License.
  */
 
+import {Analytics} from 'logging/analytics';
 import {Traces} from 'trace/traces';
+import {TRACE_INFO} from 'trace/trace_info';
 import {TraceProcessorFactory} from 'trace_processor/trace_processor_factory';
 import {SearchViewFactoryProtoLog} from './search_view_factory_protolog';
 import {SearchViewFactorySf} from './search_view_factory_sf';
@@ -38,7 +40,13 @@ export class TraceSearchInitializer {
     for (const FactoryType of TraceSearchInitializer.FACTORIES) {
       const factory = new FactoryType(traceProcessor);
       if (traces.getTrace(factory.traceType)?.isPerfetto()) {
+        const lastQueryStartTime = Date.now();
         const views = await factory.createSearchViews();
+        const executionTimeMs = Date.now() - lastQueryStartTime;
+        Analytics.TraceSearch.logInitializationTime(
+          TRACE_INFO[factory.traceType].name,
+          executionTimeMs,
+        );
         searchViews.push(...views);
       }
     }

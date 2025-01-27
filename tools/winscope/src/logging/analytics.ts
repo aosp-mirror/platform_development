@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import {FilesSource} from 'app/files_source';
 import {globalConfig} from 'common/global_config';
 import {CoarseVersion} from 'trace/coarse_version';
 import {Parser} from 'trace/parser';
@@ -26,6 +27,9 @@ export class Analytics {
   private static DARK_MODE_ENABLED = 'dark_mode_enabled';
   private static DOCUMENTATION_OPENED = 'documentation_opened';
   private static EXPANDED_TIMELINE_OPENED = 'expanded_timeline_opened';
+  private static FILE_EXTRACTION_TIME = 'file_extraction_time';
+  private static FILE_PARSING_TIME = 'file_parsing_time';
+  private static FRAME_MAP_BUILD_TIME = 'frame_map_build_time';
   private static FRAME_MAP_ERROR = 'frame_map_error';
   private static GLOBAL_EXCEPTION = 'global_exception';
   private static HIERARCHY_SETTINGS = 'hierarchy_settings';
@@ -34,6 +38,8 @@ export class Analytics {
   private static PROXY_ERROR = 'proxy_error';
   private static PROXY_SERVER_NOT_FOUND = 'proxy_server_not_found';
   private static PROXY_NO_FILES_FOUND = 'proxy_no_files_found';
+  private static TP_SEARCH_INITIALIZATION_TIME =
+    'tp_search_initialization_time';
   private static TP_QUERY_EXECUTION_TIME = 'tp_query_execution_time';
   private static TP_QUERY_REQUESTED = 'tp_query_requested';
   private static TP_QUERY_FAILED = 'tp_query_failed';
@@ -45,11 +51,13 @@ export class Analytics {
   private static TIME_INPUT = 'time_input';
   private static TRACE_TAB_SWITCHED = 'trace_tab_switched';
   private static TRACE_TIMELINE_DESELECTED = 'trace_timeline_deselected';
-  private static TRACING_LOADED_EVENT = 'tracing_trace_loaded';
   private static TRACING_COLLECT_DUMP = 'tracing_collect_dump';
   private static TRACING_COLLECT_TRACE = 'tracing_collect_trace';
+  private static TRACING_LOADED_EVENT = 'tracing_trace_loaded';
   private static TRACING_OPEN_FROM_ABT = 'tracing_from_abt';
+  private static TRACING_START_TIME = 'tracing_start_time';
   private static USER_WARNING = 'user_warning';
+  private static VIEWER_INITIALIZATION_TIME = 'viewer_initialization_time';
 
   static Error = class {
     static logGlobalException(description: string) {
@@ -76,6 +84,39 @@ export class Analytics {
 
     static logBuganizerOpened() {
       Analytics.doLogEvent(Analytics.BUGANIZER_OPENED);
+    }
+  };
+
+  static Loading = class {
+    static logFileExtractionTime(
+      type: 'bugreport' | 'device',
+      ms: number,
+      file_size: number,
+    ) {
+      Analytics.logTimeMs(Analytics.FILE_EXTRACTION_TIME, ms, {type, file_size});
+    }
+
+    static logFileParsingTime(
+      type: 'perfetto' | 'legacy',
+      source: FilesSource,
+      ms: number,
+    ) {
+      Analytics.logTimeMs(Analytics.FILE_PARSING_TIME, ms, {source, type});
+    }
+
+    static logFrameMapBuildTime(ms: number) {
+      Analytics.logTimeMs(Analytics.FRAME_MAP_BUILD_TIME, ms);
+    }
+
+    static logViewerInitializationTime(
+      traceType: string,
+      source: FilesSource,
+      ms: number,
+    ) {
+      Analytics.logTimeMs(Analytics.VIEWER_INITIALIZATION_TIME, ms, {
+        source,
+        traceType,
+      });
     }
   };
 
@@ -183,10 +224,13 @@ export class Analytics {
   };
 
   static TraceSearch = class {
-    static logQueryExecutionTime(value: number) {
-      Analytics.doLogEvent(Analytics.TP_QUERY_EXECUTION_TIME, {
-        value,
-      } as Gtag.CustomParams);
+    static logInitializationTime(traceType: string, ms: number) {
+      Analytics.logTimeMs(Analytics.TP_SEARCH_INITIALIZATION_TIME, ms, {
+        traceType,
+      });
+    }
+    static logQueryExecutionTime(ms: number) {
+      Analytics.logTimeMs(Analytics.TP_QUERY_EXECUTION_TIME, ms);
     }
     static logQueryFailure() {
       Analytics.doLogEvent(Analytics.TP_QUERY_FAILED);
@@ -225,6 +269,10 @@ export class Analytics {
       });
     }
 
+    static logStartTime(ms: number) {
+      Analytics.logTimeMs(Analytics.TRACING_START_TIME, ms);
+    }
+
     static logOpenFromABT() {
       Analytics.doLogEvent(Analytics.TRACING_OPEN_FROM_ABT);
     }
@@ -249,6 +297,17 @@ export class Analytics {
   ) {
     if (globalConfig.MODE === 'PROD') {
       gtag('event', eventName, eventParams);
+    }
+  }
+
+  private static logTimeMs(
+    eventName: string,
+    ms: number,
+    params?: Gtag.CustomParams,
+  ) {
+    if (ms > 0) {
+      const finalParams = Object.assign({value: ms}, params);
+      Analytics.doLogEvent(eventName, finalParams);
     }
   }
 }
