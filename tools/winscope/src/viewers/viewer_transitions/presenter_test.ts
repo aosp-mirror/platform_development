@@ -108,7 +108,7 @@ class PresenterTransitionsTest extends AbstractLogViewerPresenterTest<UiData> {
           '100%',
         ),
       ),
-      options: ['TRANSIT_FLAG_IS_RECENTS', 'UNKNOWN (0x0)'],
+      options: ['TRANSIT_FLAG_IS_RECENTS', '0x0'],
     },
     {
       header: new LogHeader(

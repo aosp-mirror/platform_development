@@ -121,6 +121,9 @@ export class TranslateIntDef implements Operation<PropertyTreeNode> {
     }
 
     if (flags.length === 0) {
+      if (leftOver === 0) {
+        return formatAsHex(0, true);
+      }
       return this.formatUnknownFlag(leftOver);
     }
 

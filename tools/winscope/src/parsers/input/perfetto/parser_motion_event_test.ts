@@ -94,7 +94,7 @@ describe('Perfetto ParserMotionEvent', () => {
       null,
     );
     expect(motionEvent?.getChildByName('metaState')?.formattedValue()).toEqual(
-      'UNKNOWN (0x0)',
+      '0x0',
     );
 
     const firstPointer = motionEvent
