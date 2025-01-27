@@ -46,7 +46,7 @@ export class GraphComponent implements AfterViewInit, OnChanges {
     if (
       changes['actualData'] ||
       changes['expectedData'] ||
-      changes['selectedFeatureIdx']
+      changes['featureName']
     ) {
       this.updateData();
       this.createChart();
