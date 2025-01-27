@@ -81,7 +81,7 @@ export class ParserWindowManager extends AbstractParser<HierarchyTreeNode> {
     entriesRange: EntriesRange,
   ): Promise<CustomQueryParserResultTypeMap[Q]> {
     return new VisitableParserCustomQuery(type)
-      .visit(CustomQueryType.WM_WINDOWS_TOKEN_AND_TITLE, () => {
+      .visit(CustomQueryType.WM_WINDOWS_TOKEN_AND_TITLE, async () => {
         const result: CustomQueryParserResultTypeMap[CustomQueryType.WM_WINDOWS_TOKEN_AND_TITLE] =
           [];
 

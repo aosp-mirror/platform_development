@@ -24,11 +24,22 @@ import {PropertyTreeNode} from './property_tree_node';
 const EMPTY_OBJ_STRING = '{empty}';
 const EMPTY_ARRAY_STRING = '[empty]';
 
-function formatNumber(value: number): string {
+function formatAsDecimal(value: number): string {
   if (!Number.isInteger(value)) {
     return value.toFixed(3).toString();
   }
   return value.toString();
+}
+
+function formatAsHex(value: number, upperCase = false): string {
+  if (value < 0) {
+    value += Math.pow(2, 32); // convert to 2's complement
+  }
+  let hexValue = value.toString(16);
+  if (upperCase) {
+    hexValue = hexValue.toUpperCase();
+  }
+  return '0x' + hexValue;
 }
 
 interface PropertyFormatter {
@@ -43,7 +54,7 @@ class DefaultPropertyFormatter implements PropertyFormatter {
     }
 
     if (typeof value === 'number') {
-      return formatNumber(value);
+      return formatAsDecimal(value);
     }
 
     if (value?.toString) return value.toString();
@@ -60,15 +71,15 @@ class ColorFormatter implements PropertyFormatter {
     const bNode = node.getChildByName('b');
     const alphaNode = node.getChildByName('a');
 
-    const r = formatNumber(rNode?.getValue() ?? 0);
-    const g = formatNumber(gNode?.getValue() ?? 0);
-    const b = formatNumber(bNode?.getValue() ?? 0);
+    const r = formatAsDecimal(rNode?.getValue() ?? 0);
+    const g = formatAsDecimal(gNode?.getValue() ?? 0);
+    const b = formatAsDecimal(bNode?.getValue() ?? 0);
     const rgbString = `(${r}, ${g}, ${b})`;
     if (rNode && gNode && bNode && !alphaNode) {
       return rgbString;
     }
 
-    const alpha = formatNumber(alphaNode?.getValue() ?? 0);
+    const alpha = formatAsDecimal(alphaNode?.getValue() ?? 0);
     const alphaString = `alpha: ${alpha}`;
     if (RawDataUtils.isEmptyObj(node)) {
       return `${EMPTY_OBJ_STRING}, ${alphaString}`;
@@ -83,10 +94,14 @@ class RectFormatter implements PropertyFormatter {
     if (!RawDataUtils.isRect(node) || RawDataUtils.isEmptyObj(node)) {
       return EMPTY_OBJ_STRING;
     }
-    const left = formatNumber(node.getChildByName('left')?.getValue() ?? 0);
-    const top = formatNumber(node.getChildByName('top')?.getValue() ?? 0);
-    const right = formatNumber(node.getChildByName('right')?.getValue() ?? 0);
-    const bottom = formatNumber(node.getChildByName('bottom')?.getValue() ?? 0);
+    const left = formatAsDecimal(node.getChildByName('left')?.getValue() ?? 0);
+    const top = formatAsDecimal(node.getChildByName('top')?.getValue() ?? 0);
+    const right = formatAsDecimal(
+      node.getChildByName('right')?.getValue() ?? 0,
+    );
+    const bottom = formatAsDecimal(
+      node.getChildByName('bottom')?.getValue() ?? 0,
+    );
 
     return `(${left}, ${top}) - (${right}, ${bottom})`;
   }
@@ -114,10 +129,10 @@ const LAYER_ID_FORMATTER = new LayerIdFormatter();
 
 class MatrixFormatter implements PropertyFormatter {
   format(node: PropertyTreeNode): string {
-    const dsdx = formatNumber(node.getChildByName('dsdx')?.getValue() ?? 0);
-    const dtdx = formatNumber(node.getChildByName('dtdx')?.getValue() ?? 0);
-    const dtdy = formatNumber(node.getChildByName('dtdy')?.getValue() ?? 0);
-    const dsdy = formatNumber(node.getChildByName('dsdy')?.getValue() ?? 0);
+    const dsdx = formatAsDecimal(node.getChildByName('dsdx')?.getValue() ?? 0);
+    const dtdx = formatAsDecimal(node.getChildByName('dtdx')?.getValue() ?? 0);
+    const dtdy = formatAsDecimal(node.getChildByName('dtdy')?.getValue() ?? 0);
+    const dsdy = formatAsDecimal(node.getChildByName('dsdy')?.getValue() ?? 0);
     const tx = node.getChildByName('tx');
     const ty = node.getChildByName('ty');
     if (
@@ -136,7 +151,7 @@ class MatrixFormatter implements PropertyFormatter {
     }
     return (
       matrix22 +
-      `, tx: ${formatNumber(tx?.getValue() ?? 0)}, ty: ${formatNumber(
+      `, tx: ${formatAsDecimal(tx?.getValue() ?? 0)}, ty: ${formatAsDecimal(
         ty?.getValue() ?? 0,
       )}`
     );
@@ -165,8 +180,8 @@ const SIZE_FORMATTER = new SizeFormatter();
 
 class PositionFormatter implements PropertyFormatter {
   format(node: PropertyTreeNode): string {
-    const x = formatNumber(node.getChildByName('x')?.getValue() ?? 0);
-    const y = formatNumber(node.getChildByName('y')?.getValue() ?? 0);
+    const x = formatAsDecimal(node.getChildByName('x')?.getValue() ?? 0);
+    const y = formatAsDecimal(node.getChildByName('y')?.getValue() ?? 0);
     return `x: ${x}, y: ${y}`;
   }
 }
@@ -241,6 +256,7 @@ const CUJ_TYPE_FORMATTER = new CujTypeFormatter();
 export {
   EMPTY_OBJ_STRING,
   EMPTY_ARRAY_STRING,
+  formatAsHex,
   PropertyFormatter,
   DEFAULT_PROPERTY_FORMATTER,
   COLOR_FORMATTER,

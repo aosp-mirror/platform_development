@@ -133,12 +133,12 @@ describe('TranslateIntDef', () => {
     ).toEqual('FLAG_ALLOW_LOCK_WHILE_SCREEN_ON');
   });
 
-  it('formats leftover', () => {
+  it('formats leftover flags', () => {
     propertyRoot = new PropertyTreeBuilder()
       .setIsRoot(true)
       .setRootId('test')
       .setName('node')
-      .setChildren([{name: 'inputConfig', value: 3}])
+      .setChildren([{name: 'inputConfig', value: -262144}])
       .build();
 
     const field = rootType.fields['intdefMappingEntry'];
@@ -148,6 +148,24 @@ describe('TranslateIntDef', () => {
       assertDefined(
         propertyRoot.getChildByName('inputConfig'),
       ).formattedValue(),
-    ).toEqual('NO_INPUT_CHANNEL | 2');
+    ).toEqual('SENSITIVE_FOR_PRIVACY | UNKNOWN (0xFFF80000)');
+  });
+
+  it('formats flags if no translation found', () => {
+    propertyRoot = new PropertyTreeBuilder()
+      .setIsRoot(true)
+      .setRootId('test')
+      .setName('node')
+      .setChildren([{name: 'layoutParamsFlags', value: 0}])
+      .build();
+
+    const field = rootType.fields['intdefMappingEntry'];
+    operation = new TranslateIntDef(field);
+    operation.apply(propertyRoot);
+    expect(
+      assertDefined(
+        propertyRoot.getChildByName('layoutParamsFlags'),
+      ).formattedValue(),
+    ).toEqual('UNKNOWN (0x0)');
   });
 });

@@ -16,7 +16,7 @@
 
 import intDefMapping from 'common/intDefMapping.json';
 import {TamperedProtoField} from 'parsers/tampered_message_type';
-import {FixedStringFormatter} from 'trace/tree_node/formatters';
+import {FixedStringFormatter, formatAsHex} from 'trace/tree_node/formatters';
 import {Operation} from 'trace/tree_node/operations/operation';
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
 
@@ -121,15 +121,19 @@ export class TranslateIntDef implements Operation<PropertyTreeNode> {
     }
 
     if (flags.length === 0) {
-      return `${intFlags}`;
+      return this.formatUnknownFlag(leftOver);
     }
 
     if (leftOver) {
       // If 0 is a valid flag value that isn't in the intDefMapping it will be ignored
-      flags += ' | ' + leftOver;
+      flags += ' | ' + this.formatUnknownFlag(leftOver);
     }
 
     return flags;
+  }
+
+  private formatUnknownFlag(value: number): string {
+    return `UNKNOWN (${formatAsHex(value, true)})`;
   }
 
   private readonly intDefColumn: {[key: string]: string} = {
