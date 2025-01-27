@@ -25,7 +25,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -35,8 +34,10 @@ import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.MotionScheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalDensity
@@ -44,7 +45,7 @@ import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
-import com.android.mechanics.debug.DebugMotionValueVisualization
+import com.android.mechanics.debug.debugMotionValue
 import com.android.mechanics.demo.staging.asMechanics
 import com.android.mechanics.demo.staging.defaultSpatialSpring
 import com.android.mechanics.demo.staging.rememberDistanceGestureContext
@@ -93,7 +94,7 @@ object MagneticOverviewDismiss : Demo<MagneticOverviewDismiss.Config> {
         val gestureContext = rememberDistanceGestureContext()
         val yOffset = rememberMotionValue(gestureContext::dragOffset, spec::value, gestureContext)
 
-        Column(modifier = modifier.fillMaxSize().padding(64.dp)) {
+        Column(modifier = modifier.fillMaxSize().padding(64.dp).debugMotionValue(yOffset)) {
             Box(modifier = Modifier.weight(1f).fillMaxWidth()) {
                 Card(
                     colors = outlinedCardColors(MaterialTheme.colorScheme.primary),
@@ -142,13 +143,10 @@ object MagneticOverviewDismiss : Demo<MagneticOverviewDismiss.Config> {
                             ),
                 ) {}
             }
-            DebugMotionValueVisualization(
-                yOffset,
-                inputRange = with(density) { -100.dp.toPx()..500.dp.toPx() },
-                modifier = Modifier.height(80.dp).fillMaxWidth(),
-            )
         }
     }
+
+    override var visualizationInputRange by mutableStateOf(0f..1000f)
 
     // Stuff below is only demo helpers - configuration, stuff that should go to libraries etc.
 

@@ -46,9 +46,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import kotlin.math.log10
 import kotlin.math.pow
+import kotlin.math.roundToInt
 
 @Composable
 fun SliderWithPreview(
@@ -56,9 +58,9 @@ fun SliderWithPreview(
     onValueChange: (Float) -> Unit,
     valueRange: ClosedFloatingPointRange<Float>,
     render: (Float) -> String,
+    modifier: Modifier = Modifier,
     normalize: (Float) -> Float = { it },
     steps: Int = 0,
-    modifier: Modifier = Modifier,
 ) {
     var sliderPosition by remember { mutableStateOf(value) }
     val interactionSource: MutableInteractionSource = remember { MutableInteractionSource() }
@@ -86,14 +88,47 @@ fun SliderWithPreview(
 }
 
 @Composable
+fun DpSlider(
+    value: Dp,
+    onValueChange: (Dp) -> Unit,
+    valueRange: ClosedRange<Dp>,
+    modifier: Modifier = Modifier,
+    steps: Int = 0,
+) {
+    var sliderPosition by remember { mutableStateOf(value.value) }
+    val interactionSource: MutableInteractionSource = remember { MutableInteractionSource() }
+    Slider(
+        value = sliderPosition,
+        onValueChangeFinished = { onValueChange(sliderPosition.dp) },
+        onValueChange = { sliderPosition = it.roundToInt().toFloat() },
+        valueRange = valueRange.start.value..valueRange.endInclusive.value,
+        interactionSource = interactionSource,
+        steps = steps,
+        thumb = {
+            Label(
+                label = {
+                    PlainTooltip(modifier = Modifier.wrapContentWidth(unbounded = true)) {
+                        Text("${sliderPosition.toInt()}dp", textAlign = TextAlign.Center)
+                    }
+                },
+                interactionSource = interactionSource,
+            ) {
+                SliderDefaults.Thumb(interactionSource = interactionSource)
+            }
+        },
+        modifier = modifier,
+    )
+}
+
+@Composable
 fun LogarithmicSliderWithPreview(
     value: Float,
     onValueChange: (Float) -> Unit,
     valueRange: ClosedFloatingPointRange<Float>,
     render: (Float) -> String,
+    modifier: Modifier = Modifier,
     normalize: (Float) -> Float = { it },
     steps: Int = 0,
-    modifier: Modifier = Modifier,
 ) {
 
     SliderWithPreview(
