@@ -93,15 +93,21 @@ export class Analytics {
       ms: number,
       file_size: number,
     ) {
-      Analytics.logTimeMs(Analytics.FILE_EXTRACTION_TIME, ms, {type, file_size});
+      Analytics.logTimeMs(Analytics.FILE_EXTRACTION_TIME, ms, {
+        type,
+        file_size,
+      });
     }
 
     static logFileParsingTime(
       type: 'perfetto' | 'legacy',
-      source: FilesSource,
+      files_source: FilesSource,
       ms: number,
     ) {
-      Analytics.logTimeMs(Analytics.FILE_PARSING_TIME, ms, {source, type});
+      Analytics.logTimeMs(Analytics.FILE_PARSING_TIME, ms, {
+        files_source,
+        type,
+      });
     }
 
     static logFrameMapBuildTime(ms: number) {
@@ -110,11 +116,11 @@ export class Analytics {
 
     static logViewerInitializationTime(
       traceType: string,
-      source: FilesSource,
+      files_source: FilesSource,
       ms: number,
     ) {
       Analytics.logTimeMs(Analytics.VIEWER_INITIALIZATION_TIME, ms, {
-        source,
+        files_source,
         traceType,
       });
     }
