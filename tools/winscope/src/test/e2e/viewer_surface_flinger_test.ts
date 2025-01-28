@@ -80,7 +80,7 @@ describe('Viewer Surface Flinger', () => {
 
     const flags = curatedProperties.element(by.css('.flags'));
     const flagsText = await flags.getText();
-    expect(flagsText).toEqual('Flags: OPAQUE|ENABLE_BACKPRESSURE (0x102)');
+    expect(flagsText).toEqual('Flags: OPAQUE | ENABLE_BACKPRESSURE (0x102)');
 
     const destinationFrame = curatedProperties.element(by.css('.dest-frame'));
     const destinationFrameText = await destinationFrame.getText();
