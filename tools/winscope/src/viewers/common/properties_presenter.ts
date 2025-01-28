@@ -14,6 +14,9 @@
  * limitations under the License.
  */
 
+import {Analytics} from 'logging/analytics';
+import {TRACE_INFO} from 'trace/trace_info';
+import {TraceType} from 'trace/trace_type';
 import {HierarchyTreeNode} from 'trace/tree_node/hierarchy_tree_node';
 import {Operation} from 'trace/tree_node/operations/operation';
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
@@ -96,6 +99,7 @@ export class PropertiesPresenter {
     previousHierarchyTree: HierarchyTreeNode | undefined,
     displayName: string | undefined,
     keepCalculated: boolean,
+    traceType?: TraceType,
   ): Promise<void> {
     if (!this.propertiesTree) {
       this.formattedTree = undefined;
@@ -113,10 +117,17 @@ export class PropertiesPresenter {
       const prevEntryUiTree = prevEntryNode
         ? UiPropertyTreeNode.from(await prevEntryNode.getAllProperties())
         : undefined;
+
+      const startTimeMs = Date.now();
       await new AddDiffsPropertiesTree(
         PropertiesPresenter.isPropertyNodeModified,
         this.propertiesDenylist,
       ).executeInPlace(uiTree, prevEntryUiTree);
+      Analytics.Navigation.logDiffComputationTime(
+        'properties',
+        traceType ? TRACE_INFO[traceType].name : 'Unknown',
+        Date.now() - startTimeMs,
+      );
     }
 
     if (displayName) {

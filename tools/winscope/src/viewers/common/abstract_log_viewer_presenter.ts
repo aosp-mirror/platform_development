@@ -311,6 +311,7 @@ export abstract class AbstractLogViewerPresenter<
         undefined,
         undefined,
         this.keepCalculated ?? false,
+        this.trace.type,
       );
       this.uiData.propertiesTree = this.propertiesPresenter.getFormattedTree();
     }

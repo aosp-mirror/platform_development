@@ -405,6 +405,7 @@ export class Presenter extends AbstractLogViewerPresenter<
       undefined,
       undefined,
       this.keepCalculated ?? false,
+      this.trace.type,
     );
     this.uiData.dispatchPropertiesTree =
       this.dispatchPropertiesPresenter.getFormattedTree();

@@ -25,6 +25,7 @@ export class Analytics {
   private static BUGANIZER_OPENED = 'buganizer_opened';
   private static CROSS_TOOL_SYNC = 'cross_tool_sync';
   private static DARK_MODE_ENABLED = 'dark_mode_enabled';
+  private static DIFF_COMPUTATION_TIME = 'diff_computation_time';
   private static DOCUMENTATION_OPENED = 'documentation_opened';
   private static EXPANDED_TIMELINE_OPENED = 'expanded_timeline_opened';
   private static FILE_EXTRACTION_TIME = 'file_extraction_time';
@@ -50,6 +51,7 @@ export class Analytics {
   private static TIME_BOOKMARK = 'time_bookmark';
   private static TIME_COPIED = 'time_copied';
   private static TIME_INPUT = 'time_input';
+  private static TIME_PROPAGATED = 'time_propagated';
   private static TRACE_TAB_SWITCHED = 'trace_tab_switched';
   private static TRACE_TIMELINE_DESELECTED = 'trace_timeline_deselected';
   private static TRACING_COLLECT_DUMP = 'tracing_collect_dump';
@@ -128,6 +130,17 @@ export class Analytics {
   };
 
   static Navigation = class {
+    static logDiffComputationTime(
+      component: 'hierarchy' | 'properties',
+      traceType: string,
+      ms: number,
+    ) {
+      Analytics.logTimeMs(Analytics.DIFF_COMPUTATION_TIME, ms, {
+        component,
+        traceType,
+      });
+    }
+
     static logExpandedTimelineOpened() {
       Analytics.doLogEvent(Analytics.EXPANDED_TIMELINE_OPENED);
     }
@@ -168,10 +181,19 @@ export class Analytics {
       } as Gtag.CustomParams);
     }
 
-    static logTabSwitched(tabTraceType: string) {
-      Analytics.doLogEvent(Analytics.TRACE_TAB_SWITCHED, {
+    static logTabSwitched(
+      tabTraceType: string,
+      ms: number,
+      first_switch: boolean,
+    ) {
+      Analytics.logTimeMs(Analytics.TRACE_TAB_SWITCHED, ms, {
         type: tabTraceType,
-      } as Gtag.CustomParams);
+        first_switch,
+      });
+    }
+
+    static logTimeBookmark() {
+      Analytics.doLogEvent(Analytics.TIME_BOOKMARK);
     }
 
     static logTimeCopied(type: 'ns' | 'human') {
@@ -186,8 +208,8 @@ export class Analytics {
       } as Gtag.CustomParams);
     }
 
-    static logTimeBookmark() {
-      Analytics.doLogEvent(Analytics.TIME_BOOKMARK);
+    static logTimePropagated(target: string, ms: number) {
+      Analytics.logTimeMs(Analytics.TIME_PROPAGATED, ms, {target});
     }
 
     static logTraceTimelineDeselected(type: string) {

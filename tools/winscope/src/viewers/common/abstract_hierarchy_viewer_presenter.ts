@@ -408,6 +408,7 @@ export abstract class AbstractHierarchyViewerPresenter<
         previousTree,
         this.getOverrideDisplayName(selected),
         this.keepCalculated(selectedTree),
+        trace.type,
       );
     } else {
       this.propertiesPresenter.clear();

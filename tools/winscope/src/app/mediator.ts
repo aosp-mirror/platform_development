@@ -396,6 +396,10 @@ export class Mediator {
             Date.now() - startTimeMs,
           );
         }
+        Analytics.Navigation.logTimePropagated(
+          traceName,
+          Date.now() - startTimeMs,
+        );
       } catch (e) {
         console.error(e);
         warnings.push(
@@ -407,11 +411,21 @@ export class Mediator {
     }
 
     if (this.timelineComponent) {
+      const startTimeMs = Date.now();
       await this.timelineComponent.onWinscopeEvent(event);
+      Analytics.Navigation.logTimePropagated(
+        'Timeline',
+        Date.now() - startTimeMs,
+      );
     }
 
     if (!omitCrossToolProtocol) {
+      const startTimeMs = Date.now();
       await this.crossToolProtocol.onWinscopeEvent(event);
+      Analytics.Navigation.logTimePropagated(
+        'CrossToolProtocol',
+        Date.now() - startTimeMs,
+      );
     }
 
     if (warnings.length > 0) {
@@ -534,7 +548,7 @@ export class Mediator {
     // Make sure all viewers are initialized and have performed the heavy pre-processing they need
     // at this stage, while the "initializing UI" progress message is still being displayed.
     // The viewers initialization is triggered by sending them a "trace position update".
-    await this.propagateTracePosition(initialPosition, true);
+    await this.propagateTracePosition(initialPosition, true, source);
 
     this.focusedTabView = this.viewers
       .find((v) => v.getViews()[0].type === ViewType.TRACE_TAB)

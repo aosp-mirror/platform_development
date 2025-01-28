@@ -462,10 +462,12 @@ export class TraceViewComponent
   }
 
   private async showTab(tab: Tab, firstToRender: boolean) {
+    const startTimeMs = Date.now();
     if (this.currentActiveTab) {
       this.currentActiveTab.view.htmlElement.style.display = 'none';
     }
 
+    const firstSwitch = tab.addedToDom;
     if (!tab.addedToDom) {
       // Workaround for b/255966194:
       // make sure that the first time a tab content is rendered
@@ -484,8 +486,12 @@ export class TraceViewComponent
     this.currentActiveTab = tab;
 
     if (!firstToRender) {
-      Analytics.Navigation.logTabSwitched(tab.view.title);
       await this.emitAppEvent(new TabbedViewSwitched(tab.view));
+      Analytics.Navigation.logTabSwitched(
+        tab.view.title,
+        Date.now() - startTimeMs,
+        firstSwitch,
+      );
     }
   }
 
