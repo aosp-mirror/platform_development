@@ -395,7 +395,7 @@ class UnitTestUtils {
 
   static async runQueryAndGetResult(query: string): Promise<QueryResult> {
     const tp = await TraceProcessorFactory.getSingleInstance();
-    return tp.query(query).waitAllRows();
+    return tp.queryAllRows(query);
   }
 
   static async checkTooltips<T>(

@@ -35,8 +35,8 @@ import {ParserWindowManager} from 'parsers/window_manager/perfetto/parser_window
 import {Parser} from 'trace/parser';
 import {TraceFile} from 'trace/trace_file';
 import {Row} from 'trace_processor/query_result';
+import {TraceProcessor} from 'trace_processor/trace_processor';
 import {TraceProcessorFactory} from 'trace_processor/trace_processor_factory';
-import {WasmEngineProxy} from 'trace_processor/wasm_engine_proxy';
 
 export class ParserFactory {
   private static readonly PARSERS = [
@@ -128,11 +128,9 @@ export class ParserFactory {
         new InvalidPerfettoTrace(traceFile.getDescriptor(), errors),
       );
     }
-    const result = await traceProcessor
-      .query(
-        "select name, value from stats where name = 'traced_buf_trace_writer_packet_loss'",
-      )
-      .waitAllRows();
+    const result = await traceProcessor.queryAllRows(
+      "select name, value from stats where name = 'traced_buf_trace_writer_packet_loss'",
+    );
     if (result.numRows() > 0) {
       const value = result.firstRow<Row>({})['value'];
       if (typeof value === 'bigint' && value > 0n) {
@@ -145,7 +143,7 @@ export class ParserFactory {
     return parsers;
   }
 
-  private async initializeTraceProcessor(): Promise<WasmEngineProxy> {
+  private async initializeTraceProcessor(): Promise<TraceProcessor> {
     const traceProcessor = await TraceProcessorFactory.getSingleInstance();
 
     await traceProcessor.resetTraceProcessor({

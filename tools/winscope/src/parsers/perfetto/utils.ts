@@ -18,12 +18,12 @@ import {assertDefined, assertTrue} from 'common/assert_utils';
 import {UserNotifier} from 'common/user_notifier';
 import {MissingVsyncId} from 'messaging/user_warnings';
 import {AbsoluteEntryIndex, EntriesRange} from 'trace/trace';
-import {WasmEngineProxy} from 'trace_processor/wasm_engine_proxy';
+import {TraceProcessor} from 'trace_processor/trace_processor';
 import {FakeProto, FakeProtoBuilder} from './fake_proto_builder';
 
 export class Utils {
   static async queryEntry(
-    traceProcessor: WasmEngineProxy,
+    traceProcessor: TraceProcessor,
     tableName: string,
     entryIndexToRowIdMap: number[],
     entryIndex: AbsoluteEntryIndex,
@@ -41,7 +41,7 @@ export class Utils {
       INNER JOIN args ON tbl.arg_set_id = args.arg_set_id
       WHERE tbl.id = ${rowId};
     `;
-    const result = await traceProcessor.query(sql).waitAllRows();
+    const result = await traceProcessor.queryAllRows(sql);
 
     const builder = new FakeProtoBuilder();
     for (const it = result.iter({}); it.valid(); it.next()) {
@@ -57,7 +57,7 @@ export class Utils {
   }
 
   static async queryVsyncId(
-    traceProcessor: WasmEngineProxy,
+    traceProcessor: TraceProcessor,
     tableName: string,
     entryIndexToRowIdMap: number[],
     entriesRange: EntriesRange,
@@ -81,7 +81,7 @@ export class Utils {
     const numEntries = maxRowId - minRowId + 1;
 
     const sql = createVsyncIdQuery(tableName, minRowId, maxRowId);
-    const result = await traceProcessor.query(sql).waitAllRows();
+    const result = await traceProcessor.queryAllRows(sql);
 
     const vsyncIdOrderedByRow: Array<bigint> = [];
     let curRowId = BigInt(minRowId);

@@ -38,14 +38,15 @@ export class Analytics {
   private static PROXY_ERROR = 'proxy_error';
   private static PROXY_SERVER_NOT_FOUND = 'proxy_server_not_found';
   private static PROXY_NO_FILES_FOUND = 'proxy_no_files_found';
-  private static TP_SEARCH_INITIALIZATION_TIME =
-    'tp_search_initialization_time';
+  private static RECT_SETTINGS = 'rect_settings';
+  private static REFRESH_DUMPS = 'refresh_dumps';
+  private static TP_GENERAL_QUERY_TIME = 'tp_general_query_time';
   private static TP_QUERY_EXECUTION_TIME = 'tp_query_execution_time';
   private static TP_QUERY_REQUESTED = 'tp_query_requested';
   private static TP_QUERY_FAILED = 'tp_query_failed';
   private static TP_QUERY_SAVED = 'tp_query_saved';
-  private static RECT_SETTINGS = 'rect_settings';
-  private static REFRESH_DUMPS = 'refresh_dumps';
+  private static TP_SEARCH_INITIALIZATION_TIME =
+    'tp_search_initialization_time';
   private static TIME_BOOKMARK = 'time_bookmark';
   private static TIME_COPIED = 'time_copied';
   private static TIME_INPUT = 'time_input';
@@ -226,6 +227,14 @@ export class Analytics {
       Analytics.doLogEvent(Analytics.CROSS_TOOL_SYNC, {
         value,
       } as Gtag.CustomParams);
+    }
+  };
+
+  static TraceProcessor = class {
+    static logQueryExecutionTime(ms: number, waitAllRows: boolean) {
+      Analytics.logTimeMs(Analytics.TP_GENERAL_QUERY_TIME, ms, {
+        waitAllRows,
+      });
     }
   };
 

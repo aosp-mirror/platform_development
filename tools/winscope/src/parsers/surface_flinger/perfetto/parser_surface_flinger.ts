@@ -39,7 +39,7 @@ import {TraceFile} from 'trace/trace_file';
 import {TraceType} from 'trace/trace_type';
 import {EnumFormatter, LAYER_ID_FORMATTER} from 'trace/tree_node/formatters';
 import {HierarchyTreeNode} from 'trace/tree_node/hierarchy_tree_node';
-import {WasmEngineProxy} from 'trace_processor/wasm_engine_proxy';
+import {TraceProcessor} from 'trace_processor/trace_processor';
 
 export class ParserSurfaceFlinger extends AbstractParser<HierarchyTreeNode> {
   private static readonly CUSTOM_FORMATTERS = new Map([
@@ -97,7 +97,7 @@ export class ParserSurfaceFlinger extends AbstractParser<HierarchyTreeNode> {
 
   constructor(
     traceFile: TraceFile,
-    traceProcessor: WasmEngineProxy,
+    traceProcessor: TraceProcessor,
     timestampConverter: ParserTimestampConverter,
   ) {
     super(traceFile, traceProcessor, timestampConverter);
@@ -158,7 +158,7 @@ export class ParserSurfaceFlinger extends AbstractParser<HierarchyTreeNode> {
         )
         GROUP BY id;
       `;
-        const queryResult = await this.traceProcessor.query(sql).waitAllRows();
+        const queryResult = await this.traceProcessor.queryAllRows(sql);
         const result: CustomQueryParserResultTypeMap[CustomQueryType.SF_LAYERS_ID_AND_NAME] =
           [];
         for (const it = queryResult.iter({}); it.valid(); it.next()) {
@@ -206,7 +206,7 @@ export class ParserSurfaceFlinger extends AbstractParser<HierarchyTreeNode> {
           INNER JOIN args ON sfl.arg_set_id = args.arg_set_id
       WHERE snapshot_id = ${this.entryIndexToRowIdMap[index]};
     `;
-    const result = await this.traceProcessor.query(sql).waitAllRows();
+    const result = await this.traceProcessor.queryAllRows(sql);
 
     for (const it = result.iter({}); it.valid(); it.next()) {
       const builder = getBuilder(it.get('layer_id') as number);

@@ -40,7 +40,7 @@ import {PropertiesProvider} from 'trace/tree_node/properties_provider';
 import {PropertiesProviderBuilder} from 'trace/tree_node/properties_provider_builder';
 import {PropertyTreeBuilderFromProto} from 'trace/tree_node/property_tree_builder_from_proto';
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
-import {WasmEngineProxy} from 'trace_processor/wasm_engine_proxy';
+import {TraceProcessor} from 'trace_processor/trace_processor';
 import {HierarchyTreeBuilderVc} from './hierarchy_tree_builder_vc';
 
 export class ParserViewCaptureWindow extends AbstractParser<HierarchyTreeNode> {
@@ -67,7 +67,7 @@ export class ParserViewCaptureWindow extends AbstractParser<HierarchyTreeNode> {
 
   constructor(
     traceFile: TraceFile,
-    traceProcessor: WasmEngineProxy,
+    traceProcessor: TraceProcessor,
     timestampConverter: ParserTimestampConverter,
     packageName: string,
     windowName: string,
@@ -159,9 +159,7 @@ export class ParserViewCaptureWindow extends AbstractParser<HierarchyTreeNode> {
           args.string_value = '${this.windowName}'
         ORDER BY vc.ts;
     `;
-    const result = await this.traceProcessor
-      .query(sqlRowIdAndTimestamp)
-      .waitAllRows();
+    const result = await this.traceProcessor.queryAllRows(sqlRowIdAndTimestamp);
     const entryIndexToRowId: number[] = [];
     for (const it = result.iter({}); it.valid(); it.next()) {
       const rowId = Number(it.get('id') as bigint);
@@ -195,7 +193,7 @@ export class ParserViewCaptureWindow extends AbstractParser<HierarchyTreeNode> {
           INNER JOIN args ON vcv.arg_set_id = args.arg_set_id
       WHERE snapshot_id = ${this.entryIndexToRowIdMap[index]};
     `;
-    const result = await this.traceProcessor.query(sql).waitAllRows();
+    const result = await this.traceProcessor.queryAllRows(sql);
 
     for (const it = result.iter({}); it.valid(); it.next()) {
       const builder = getBuilder(it.get('node_id') as number);

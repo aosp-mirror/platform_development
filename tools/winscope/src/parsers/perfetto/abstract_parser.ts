@@ -28,10 +28,10 @@ import {Parser} from 'trace/parser';
 import {TraceFile} from 'trace/trace_file';
 import {TRACE_INFO} from 'trace/trace_info';
 import {TraceType} from 'trace/trace_type';
-import {WasmEngineProxy} from 'trace_processor/wasm_engine_proxy';
+import {TraceProcessor} from 'trace_processor/trace_processor';
 
 export abstract class AbstractParser<T> implements Parser<T> {
-  protected traceProcessor: WasmEngineProxy;
+  protected traceProcessor: TraceProcessor;
   protected realToBootTimeOffsetNs?: bigint;
   protected timestampConverter: ParserTimestampConverter;
   protected entryIndexToRowIdMap: number[] = [];
@@ -44,7 +44,7 @@ export abstract class AbstractParser<T> implements Parser<T> {
 
   constructor(
     traceFile: TraceFile,
-    traceProcessor: WasmEngineProxy,
+    traceProcessor: TraceProcessor,
     timestampConverter: ParserTimestampConverter,
   ) {
     this.traceFile = traceFile;
@@ -133,9 +133,7 @@ export abstract class AbstractParser<T> implements Parser<T> {
      FROM ${this.getTableName()} AS tbl
      ORDER BY tbl.ts;
    `;
-    const result = await this.traceProcessor
-      .query(sqlRowIdAndTimestamp)
-      .waitAllRows();
+    const result = await this.traceProcessor.queryAllRows(sqlRowIdAndTimestamp);
     const entryIndexToRowId: AbsoluteEntryIndex[] = [];
     for (const it = result.iter({}); it.valid(); it.next()) {
       const rowId = Number(it.get('id') as bigint);
@@ -146,7 +144,7 @@ export abstract class AbstractParser<T> implements Parser<T> {
 
   private async queryRowBootTimeTimestamps(): Promise<Array<bigint>> {
     const sql = `SELECT ts FROM ${this.getTableName()} ORDER BY id;`;
-    const result = await this.traceProcessor.query(sql).waitAllRows();
+    const result = await this.traceProcessor.queryAllRows(sql);
     const timestamps: Array<bigint> = [];
     for (const it = result.iter({}); it.valid(); it.next()) {
       timestamps.push(it.get('ts') as bigint);
@@ -163,7 +161,7 @@ export abstract class AbstractParser<T> implements Parser<T> {
       SELECT TO_REALTIME(${bootTimeNs}) as realtime;
     `;
 
-    const result = await this.traceProcessor.query(sql).waitAllRows();
+    const result = await this.traceProcessor.queryAllRows(sql);
     assertTrue(
       result.numRows() === 1,
       () => 'Failed to query realtime timestamp',

@@ -76,7 +76,7 @@ export class ParserProtolog extends AbstractParser<PropertyTreeNode> {
         protolog
       WHERE protolog.id = ${this.entryIndexToRowIdMap[index]};
     `;
-    const result = await this.traceProcessor.query(sql).waitAllRows();
+    const result = await this.traceProcessor.queryAllRows(sql);
 
     if (result.numRows() !== 1) {
       throw new Error(

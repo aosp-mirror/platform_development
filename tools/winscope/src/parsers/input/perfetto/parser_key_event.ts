@@ -26,7 +26,7 @@ import {TraceFile} from 'trace/trace_file';
 import {TraceType} from 'trace/trace_type';
 import {PropertyTreeBuilderFromProto} from 'trace/tree_node/property_tree_builder_from_proto';
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
-import {WasmEngineProxy} from 'trace_processor/wasm_engine_proxy';
+import {TraceProcessor} from 'trace_processor/trace_processor';
 
 export class ParserKeyEvent extends AbstractInputEventParser {
   private static readonly KeyEventField =
@@ -41,7 +41,7 @@ export class ParserKeyEvent extends AbstractInputEventParser {
 
   constructor(
     traceFile: TraceFile,
-    traceProcessor: WasmEngineProxy,
+    traceProcessor: TraceProcessor,
     timestampConverter: ParserTimestampConverter,
   ) {
     super(traceFile, traceProcessor, timestampConverter);
