@@ -156,7 +156,10 @@ describe('TranslateIntDef', () => {
       .setIsRoot(true)
       .setRootId('test')
       .setName('node')
-      .setChildren([{name: 'layoutParamsFlags', value: 0}])
+      .setChildren([
+        {name: 'layoutParamsFlags', value: 0},
+        {name: 'inputConfig', value: -524288},
+      ])
       .build();
 
     const field = rootType.fields['intdefMappingEntry'];
@@ -166,6 +169,11 @@ describe('TranslateIntDef', () => {
       assertDefined(
         propertyRoot.getChildByName('layoutParamsFlags'),
       ).formattedValue(),
-    ).toEqual('UNKNOWN (0x0)');
+    ).toEqual('0x0');
+    expect(
+      assertDefined(
+        propertyRoot.getChildByName('inputConfig'),
+      ).formattedValue(),
+    ).toEqual('UNKNOWN (0xFFF80000)');
   });
 });
