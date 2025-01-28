@@ -169,7 +169,17 @@ export class ProxyConnection extends AdbConnection {
   async fetchLastTracingSessionData(device: AdbDevice): Promise<File[]> {
     this.adbData = [];
     this.selectedDevice = device;
+    const startTimeMs = Date.now();
     await this.setState(ConnectionState.LOADING_DATA);
+    const size = this.adbData.reduce(
+      (totalSize, file) => (totalSize += file.size),
+      0,
+    );
+    Analytics.Loading.logFileExtractionTime(
+      'device',
+      Date.now() - startTimeMs,
+      size,
+    );
     this.selectedDevice = undefined;
     return this.adbData;
   }
@@ -206,7 +216,8 @@ export class ProxyConnection extends AdbConnection {
         }
         return;
 
-      case ConnectionState.STARTING_TRACE:
+      case ConnectionState.STARTING_TRACE: {
+        const startTimeMs = Date.now();
         await this.postToProxy(
           `${ProxyEndpoint.START_TRACE}${
             assertDefined(this.selectedDevice).id
@@ -220,10 +231,11 @@ export class ProxyConnection extends AdbConnection {
         // TODO(b/330118129): identify source of additional start latency that affects some traces
         await TimeUtils.sleepMs(1000); // 1s timeout ensures SR fully started
         if (this.getState() === ConnectionState.STARTING_TRACE) {
+          Analytics.Tracing.logStartTime(Date.now() - startTimeMs);
           this.setState(ConnectionState.TRACING);
         }
         return;
-
+      }
       case ConnectionState.ENDING_TRACE:
         await this.postToProxy(
           `${ProxyEndpoint.END_TRACE}${assertDefined(this.selectedDevice).id}/`,
