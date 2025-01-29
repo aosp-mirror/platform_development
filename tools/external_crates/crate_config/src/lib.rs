@@ -23,6 +23,9 @@ use serde::Deserialize;
 pub struct CrateConfig {
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     deletions: Vec<String>,
+
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    update_with: Vec<String>,
 }
 
 #[allow(missing_docs)]
@@ -51,6 +54,10 @@ impl CrateConfig {
     /// Get an iterator over directories and files to delete.
     pub fn deletions(&self) -> impl Iterator<Item = &str> {
         self.deletions.iter().map(|d| d.as_str())
+    }
+    /// Get an iterator of crates that also need to be updated at the same time as this crate.
+    pub fn update_with(&self) -> impl Iterator<Item = &str> {
+        self.update_with.iter().map(|d| d.as_str())
     }
 }
 

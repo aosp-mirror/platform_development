@@ -29,10 +29,10 @@ use glob::glob;
 use google_metadata::GoogleMetadata;
 use itertools::Itertools;
 use license_checker::find_licenses;
-use name_and_version::{NameAndVersionMap, NameAndVersionRef, NamedAndVersioned};
+use name_and_version::{NameAndVersion, NameAndVersionMap, NameAndVersionRef, NamedAndVersioned};
 use repo_config::RepoConfig;
 use rooted_path::RootedPath;
-use semver::Version;
+use semver::{Version, VersionReq};
 use serde::Serialize;
 use spdx::Licensee;
 
@@ -908,12 +908,55 @@ impl ManagedRepo {
         Ok(())
     }
     pub fn update(&self, crate_name: impl AsRef<str>, version: impl AsRef<str>) -> Result<()> {
-        let pseudo_crate = self.pseudo_crate();
+        let crate_name = crate_name.as_ref();
         let version = Version::parse(version.as_ref())?;
-        let nv = NameAndVersionRef::new(crate_name.as_ref(), &version);
-        pseudo_crate.remove(&crate_name)?;
-        pseudo_crate.cargo_add(&nv)?;
-        self.regenerate([&crate_name].iter(), true)?;
+
+        let pseudo_crate = self.pseudo_crate();
+        let managed_crate = self.managed_crate_for(crate_name)?;
+        let mut crate_updates = vec![NameAndVersion::new(crate_name.to_string(), version.clone())];
+
+        let cio_crate = self.crates_io.get_crate(crate_name)?;
+        let cio_crate_version = cio_crate
+            .get_version(&version)
+            .ok_or(anyhow!("Could not find {crate_name} {version} on crates.io"))?;
+
+        for dependent_crate_name in managed_crate.config().update_with() {
+            let dep = cio_crate_version
+                .dependencies()
+                .iter()
+                .find(|dep| dep.crate_name() == dependent_crate_name)
+                .ok_or(anyhow!(
+                    "Could not find crate {dependent_crate_name} as a dependency of {crate_name}"
+                ))?;
+            let req = VersionReq::parse(dep.requirement())?;
+            let dep_cio_crate = self.crates_io.get_crate(dependent_crate_name)?;
+            let version = dep_cio_crate
+                .safe_versions()
+                .find(|v| {
+                    if let Ok(parsed_version) = Version::parse(v.version()) {
+                        req.matches(&parsed_version)
+                    } else {
+                        false
+                    }
+                })
+                .ok_or(anyhow!(
+                    "Failed to find a version of {dependent_crate_name} that satisfies {}",
+                    dep.requirement()
+                ))?;
+            println!("Also updating {dependent_crate_name} to {}", version.version());
+            crate_updates.push(NameAndVersion::new(
+                dependent_crate_name.to_string(),
+                Version::parse(version.version())?,
+            ));
+        }
+
+        for nv in &crate_updates {
+            pseudo_crate.remove(nv.name())?;
+        }
+        for nv in &crate_updates {
+            pseudo_crate.cargo_add(nv)?;
+        }
+        self.regenerate(crate_updates.iter().map(|nv| nv.name()), true)?;
         Ok(())
     }
     pub fn init(&self) -> Result<()> {

@@ -13,11 +13,9 @@
 // limitations under the License.
 
 use std::{
-    collections::BTreeSet,
     path::{Path, PathBuf},
     process::{Command, ExitStatus, Output},
     str::from_utf8,
-    sync::LazyLock,
 };
 
 use anyhow::{bail, Result};
@@ -268,36 +266,6 @@ fn try_update(
     Ok(())
 }
 
-#[rustfmt::skip]
-static DENYLIST: LazyLock<BTreeSet<&'static str>> = LazyLock::new(|| {
-    BTreeSet::from([
-        // Paired crates that need to be updated together
-        "async-stream",
-        "async-stream-impl",
-        "clap",
-        "clap_builder",
-        "linkme",
-        "linkme-impl",
-        "pin-project",
-        "pin-project-internal",
-        "protobuf-support",
-        "protobuf",
-        "ptr_meta",
-        "ptr_meta_derive",
-        "regex",
-        "regex-automata",
-        "regex-syntax",
-        "serde_derive",
-        "serde",
-        "thiserror-impl",
-        "thiserror",
-        "tikv-jemalloc-sys",
-        "tikv-jemallocator",
-        "zerocopy-derive",
-        "zerocopy",
-    ])
-});
-
 fn main() -> Result<()> {
     let args = Cli::parse();
     if !args.android_root.is_absolute() {
@@ -325,10 +293,6 @@ fn main() -> Result<()> {
     for suggestion in get_suggestions(&monorepo_path)? {
         let crate_name = suggestion.name.as_str();
         let version = suggestion.version.as_str();
-        if DENYLIST.contains(crate_name) {
-            println!("Skipping {crate_name} (on deny list)");
-            continue;
-        }
         if updates_tried.contains(crate_name, version) {
             println!("Skipping {crate_name} (already attempted recently)");
             continue;
