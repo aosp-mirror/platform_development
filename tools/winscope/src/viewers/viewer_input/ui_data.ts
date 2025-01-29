@@ -42,6 +42,8 @@ export class UiData implements UiDataLog {
     public propertiesTree: undefined | UiPropertyTreeNode,
   ) {}
 
+  isFetchingData = false;
+
   highlightedProperty: string = '';
   dispatchPropertiesTree: UiPropertyTreeNode | undefined;
 

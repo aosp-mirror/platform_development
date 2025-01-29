@@ -67,6 +67,7 @@ import {UiData} from './ui_data';
           [traceType]="${TraceType.INPUT_EVENT_MERGED}"
           [showTraceEntryTimes]="false"
           [showCurrentTimeButton]="false"
+          [isFetchingData]="inputData?.isFetchingData"
           (collapseButtonClicked)="sections.onCollapseStateChange(CollapsibleSectionType.LOG, true)"></log-view>
 
       <div class="properties" *ngIf="!arePropertiesCollapsed()">

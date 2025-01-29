@@ -33,7 +33,8 @@ import {UiData} from './ui_data';
         [headers]="inputData?.headers"
         [traceType]="${TraceType.CUJS}"
         [showTraceEntryTimes]="false"
-        [showCurrentTimeButton]="false">
+        [showCurrentTimeButton]="false"
+        [isFetchingData]="inputData?.isFetchingData">
       </log-view>
     </div>
   `,

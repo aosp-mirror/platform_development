@@ -27,6 +27,7 @@ export interface UiDataLog {
   selectedIndex: undefined | number;
   scrollToIndex: undefined | number;
   currentIndex: undefined | number;
+  isFetchingData: boolean;
 
   headers: LogHeader[];
   propertiesTree?: undefined | UiPropertyTreeNode;
