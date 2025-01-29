@@ -28,6 +28,7 @@ import {MatButtonModule} from '@angular/material/button';
 import {MatButtonToggleModule} from '@angular/material/button-toggle';
 import {MatCardModule} from '@angular/material/card';
 import {MatCheckboxModule} from '@angular/material/checkbox';
+import {MatPseudoCheckboxModule} from '@angular/material/core';
 import {MatDialogModule} from '@angular/material/dialog';
 import {MatDividerModule} from '@angular/material/divider';
 import {MatFormFieldModule} from '@angular/material/form-field';
@@ -199,6 +200,7 @@ import {GlobalErrorHandler} from './global_error_handler';
     OverlayModule,
     CdkAccordionModule,
     MatButtonToggleModule,
+    MatPseudoCheckboxModule,
   ],
   providers: [Title, {provide: ErrorHandler, useClass: GlobalErrorHandler}],
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
