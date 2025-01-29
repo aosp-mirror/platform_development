@@ -227,3 +227,7 @@ log-view .headers .mat-form-field-infix {
 .mat-button-toggle-checked, body.dark-mode .mat-button-toggle-checked {
     background-color: var(--card-title-background-color);
 }
+
+.mat-active.no-focus {
+    background-color: unset;
+}

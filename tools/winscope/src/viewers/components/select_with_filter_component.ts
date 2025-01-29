@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 import {Component, EventEmitter, Input, Output} from '@angular/core';
-import {MatSelectChange} from '@angular/material/select';
+import {MatSelect, MatSelectChange} from '@angular/material/select';
 
 @Component({
   selector: 'select-with-filter',
@@ -36,12 +36,25 @@ import {MatSelectChange} from '@angular/material/select';
           <mat-label>Filter options</mat-label>
           <input matInput #filter [(ngModel)]="filterString" />
         </mat-form-field>
+        <div *ngIf="(select.value?.length ?? 0) > 0" class="selected-options">
+          <span class="mat-option mat-active">Selected:</span>
+          <div
+            class="mat-option mat-selected mat-option-multiple mat-active selected-option"
+            *ngFor="let option of selectedOptions(select)"
+            (click)="onSelectedOptionClick(option, select)">
+          <mat-pseudo-checkbox
+            color="primary"
+            state="checked"
+            class="mat-option-pseudo-checkbox"></mat-pseudo-checkbox>
+          <div class="mat-option-text">{{option}}</div>
+          </div>
+        </div>
+        <mat-divider [vertical]="false"></mat-divider>
         <mat-option
           *ngFor="let option of options"
           [value]="option"
-          [class.hidden-option]="hideOption(option)">
-          {{ option }}
-        </mat-option>
+          class="option no-focus"
+          [class.hidden-option]="hideOption(option)">{{ option }}</mat-option>
       </mat-select>
     </mat-form-field>
   `,
@@ -53,6 +66,11 @@ import {MatSelectChange} from '@angular/material/select';
 
       .hidden-option {
         display: none;
+      }
+
+      .selected-options {
+        display: flex;
+        flex-direction: column;
       }
     `,
   ],
@@ -97,5 +115,14 @@ export class SelectWithFilterComponent {
 
   hideOption(option: string) {
     return !option.toLowerCase().includes(this.filterString.toLowerCase());
+  }
+
+  selectedOptions(select: MatSelect) {
+    return this.options.filter((o) => select.value.includes(o));
+  }
+
+  onSelectedOptionClick(option: string, select: MatSelect) {
+    select.value = select.value.filter((val: string) => val !== option);
+    this.selectChange.emit(new MatSelectChange(select, select.value));
   }
 }
