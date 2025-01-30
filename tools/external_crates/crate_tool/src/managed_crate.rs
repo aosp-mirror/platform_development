@@ -94,9 +94,14 @@ impl<State: ManagedCrateState> ManagedCrate<State> {
     }
     pub fn config(&self) -> &CrateConfig {
         self.config.get_or_init(|| {
-            let config_file = self.android_crate_path().join("android_config.toml").unwrap();
-            CrateConfig::read(&config_file)
-                .unwrap_or_else(|e| panic!("Failed to read {config_file}/android_config.toml: {e}"))
+            CrateConfig::read(self.android_crate_path().abs()).unwrap_or_else(|e| {
+                panic!(
+                    "Failed to read crate config {}/{}: {}",
+                    self.android_crate_path(),
+                    crate_config::CONFIG_FILE_NAME,
+                    e
+                )
+            })
         })
     }
     pub fn android_bp(&self) -> RootedPath {
