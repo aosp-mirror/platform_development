@@ -17,9 +17,6 @@
     "name_and_version": {
       "device_supported": false
     },
-    "name_and_version_proc_macros": {
-      "device_supported": false
-    },
     "repo_config": {
       "device_supported": false
     }
