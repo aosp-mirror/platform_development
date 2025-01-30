@@ -106,7 +106,6 @@ impl ManagedRepo {
                 let cc = self.legacy_crates_for(crate_name)?;
                 let nv = NameAndVersionRef::new(crate_name, v);
                 Ok(cc
-                    .map_field()
                     .get(&nv as &dyn NamedAndVersioned)
                     .ok_or(anyhow!("Failed to find crate {} v{}", crate_name, v))?
                     .path()
@@ -165,7 +164,7 @@ impl ManagedRepo {
         let krate = match version {
             Some(v) => {
                 let nv = NameAndVersionRef::new(crate_name, v);
-                match cc.map_field().get(&nv as &dyn NamedAndVersioned) {
+                match cc.get(&nv as &dyn NamedAndVersioned) {
                     Some(k) => k,
                     None => {
                         return Err(anyhow!("Did not find crate {} v{}", crate_name, v));
@@ -173,7 +172,7 @@ impl ManagedRepo {
                 }
             }
             None => {
-                if cc.map_field().len() != 1 {
+                if cc.len() != 1 {
                     return Err(anyhow!(
                         "Expected a single crate version for {}, but found {}. Specify a version with --versions={}=<version>",
                         crate_name,
@@ -181,7 +180,7 @@ impl ManagedRepo {
                         crate_name
                     ));
                 }
-                cc.map_field().values().next().unwrap()
+                cc.values().next().unwrap()
             }
         };
         println!("Found {} v{} in {}", krate.name(), krate.version(), krate.path());
@@ -428,12 +427,12 @@ impl ManagedRepo {
             let mut found_problems = false;
             for (dep, req) in version.android_deps_with_version_reqs() {
                 println!("Found dep {}", dep.crate_name());
-                let cc = if managed_crates.contains_name(dep.crate_name()) {
+                let cc = if managed_crates.contains_crate(dep.crate_name()) {
                     &managed_crates
                 } else {
                     &legacy_crates
                 };
-                if !cc.contains_name(dep.crate_name()) {
+                if !cc.contains_crate(dep.crate_name()) {
                     found_problems = true;
                     println!(
                         "  Dep {} {} has not been imported to Android",
@@ -701,7 +700,7 @@ impl ManagedRepo {
         let mut cc = self.new_cc();
         cc.add_from(self.managed_dir().rel())?;
 
-        for krate in cc.map_field().values() {
+        for krate in cc.values() {
             let cio_crate = self.crates_io.get_crate(krate.name())?;
             let upgrades =
                 cio_crate.versions_gt(krate.version()).map(|v| v.version()).collect::<Vec<_>>();
@@ -776,12 +775,12 @@ impl ManagedRepo {
             // * If a dep is missing, but the same dep exists for the current version of the crate, it's probably not actually necessary.
             // * Use relaxed version requirements, treating 0.x and 0.y as compatible, even though they aren't according to semver rules.
             for (dep, req) in version.android_deps_with_version_reqs() {
-                let cc = if managed_crates.contains_name(dep.crate_name()) {
+                let cc = if managed_crates.contains_crate(dep.crate_name()) {
                     &managed_crates
                 } else {
                     &legacy_crates
                 };
-                if !cc.contains_name(dep.crate_name()) {
+                if !cc.contains_crate(dep.crate_name()) {
                     found_problems = true;
                     println!(
                         "  Dep {} {} has not been imported to Android",
@@ -831,7 +830,7 @@ impl ManagedRepo {
         managed_crates.add_from(self.managed_dir().rel())?;
         let legacy_crates = self.legacy_crates()?;
 
-        for krate in managed_crates.map_field().values() {
+        for krate in managed_crates.values() {
             let cio_crate = self.crates_io.get_crate(krate.name())?;
 
             let base_version = cio_crate.get_version(krate.version());
@@ -869,7 +868,7 @@ impl ManagedRepo {
                     if !dep.is_changed_dep(&base_deps) {
                         return false;
                     }
-                    let cc = if managed_crates.contains_name(dep.crate_name()) {
+                    let cc = if managed_crates.contains_crate(dep.crate_name()) {
                         &managed_crates
                     } else {
                         &legacy_crates
