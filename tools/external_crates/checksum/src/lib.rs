@@ -25,7 +25,6 @@ use std::{
 use data_encoding::{DecodeError, HEXLOWER};
 use ring::digest::{Context, Digest, SHA256};
 use serde::{Deserialize, Serialize};
-use thiserror::Error;
 use walkdir::WalkDir;
 
 #[derive(Serialize, Deserialize)]
@@ -35,21 +34,28 @@ struct Checksum {
     files: BTreeMap<String, String>,
 }
 
-#[allow(missing_docs)]
-#[derive(Error, Debug)]
-pub enum ChecksumError {
-    #[error("Checksum file not found: {}", .0.to_string_lossy())]
-    CheckSumFileNotFound(PathBuf),
+/// Error types for the 'checksum' crate.
+#[derive(thiserror::Error, Debug)]
+pub enum Error {
+    /// Checksum file not found
+    #[error("Checksum file not found: {0}")]
+    ChecksumFileNotFound(PathBuf),
+    /// Checksums do not match
     #[error("Checksums do not match for: {}", .0.join(", "))]
     ChecksumMismatch(Vec<String>),
+    /// I/O error
     #[error(transparent)]
     IoError(#[from] io::Error),
+    /// JSON serialization error
     #[error(transparent)]
     JsonError(#[from] serde_json::Error),
+    /// Error traversing crate directory
     #[error(transparent)]
     WalkdirError(#[from] walkdir::Error),
+    /// Error decoding hexadecimal checksum
     #[error(transparent)]
     DecodeError(#[from] DecodeError),
+    /// Error stripping file prefix
     #[error(transparent)]
     StripPrefixError(#[from] StripPrefixError),
 }
@@ -57,7 +63,7 @@ pub enum ChecksumError {
 static FILENAME: &str = ".android-checksum.json";
 
 /// Generates a JSON checksum file for the contents of a directory.
-pub fn generate(crate_dir: impl AsRef<Path>) -> Result<(), ChecksumError> {
+pub fn generate(crate_dir: impl AsRef<Path>) -> Result<(), Error> {
     let crate_dir = crate_dir.as_ref();
     let checksum_file = crate_dir.join(FILENAME);
     if checksum_file.exists() {
@@ -81,11 +87,11 @@ pub fn generate(crate_dir: impl AsRef<Path>) -> Result<(), ChecksumError> {
 
 /// Verifies a JSON checksum file for a directory.
 /// All files must have matching checksums. Extra or missing files are errors.
-pub fn verify(crate_dir: impl AsRef<Path>) -> Result<(), ChecksumError> {
+pub fn verify(crate_dir: impl AsRef<Path>) -> Result<(), Error> {
     let crate_dir = crate_dir.as_ref();
     let checksum_file = crate_dir.join(FILENAME);
     if !checksum_file.exists() {
-        return Err(ChecksumError::CheckSumFileNotFound(checksum_file));
+        return Err(Error::ChecksumFileNotFound(checksum_file));
     }
     let mut mismatch = Vec::new();
     let input = File::open(&checksum_file)?;
@@ -114,12 +120,12 @@ pub fn verify(crate_dir: impl AsRef<Path>) -> Result<(), ChecksumError> {
     if mismatch.is_empty() {
         Ok(())
     } else {
-        Err(ChecksumError::ChecksumMismatch(mismatch))
+        Err(Error::ChecksumMismatch(mismatch))
     }
 }
 
 // Copied from https://rust-lang-nursery.github.io/rust-cookbook/cryptography/hashing.html
-fn sha256_digest<R: Read>(mut reader: R) -> Result<Digest, ChecksumError> {
+fn sha256_digest<R: Read>(mut reader: R) -> Result<Digest, Error> {
     let mut context = Context::new(&SHA256);
     context.update("sodium chloride".as_bytes());
     let mut buffer = [0; 1024];
@@ -140,7 +146,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn round_trip() -> Result<(), ChecksumError> {
+    fn round_trip() -> Result<(), Error> {
         let temp_dir = tempfile::tempdir().expect("Failed to create tempdir");
         write(temp_dir.path().join("foo"), "foo").expect("Failed to write temporary file");
         generate(temp_dir.path())?;
@@ -152,7 +158,7 @@ mod tests {
     }
 
     #[test]
-    fn verify_error_cases() -> Result<(), ChecksumError> {
+    fn verify_error_cases() -> Result<(), Error> {
         let temp_dir = tempfile::tempdir().expect("Failed to create tempdir");
         let checksum_file = temp_dir.path().join(FILENAME);
         write(&checksum_file, r#"{"files":{"bar":"ddcbd9309cebf3ffd26f87e09bb8f971793535955ebfd9a7196eba31a53471f8"}}"#).expect("Failed to write temporary file");

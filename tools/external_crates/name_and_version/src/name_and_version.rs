@@ -82,8 +82,8 @@ impl NamedAndVersioned for NameAndVersion {
     }
 }
 
-#[allow(missing_docs)]
 impl<'a> NameAndVersionRef<'a> {
+    /// Construct a reference to a name and version.
     pub fn new(name: &'a str, version: &'a Version) -> Self {
         NameAndVersionRef { name, version }
     }
