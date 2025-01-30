@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+//! A crate for finding license files in crates that satisfy their SPDX license expressions.
+
 use std::{
     collections::{BTreeMap, BTreeSet},
     fs::read_to_string,
@@ -26,6 +28,7 @@ mod expression_parser;
 mod file_name_checker;
 mod license_file_finder;
 
+#[allow(missing_docs)]
 #[derive(Error, Debug)]
 pub enum LicenseCheckerError {
     #[error("Couldn't convert filesystem path {} (lossy) to a string for globbing.", .0.to_string_lossy())]
@@ -52,12 +55,21 @@ pub enum LicenseCheckerError {
     Unknown,
 }
 
+/// The result of license file verification, containing a set of acceptable licenses, and the
+/// corresponding license files, if present.
 #[derive(Debug)]
 pub struct LicenseState {
+    /// Unsatisfied licenses. These are licenses that are required by evaluation of SPDX license in
+    /// Cargo.toml, but for which no matching license file was found.
     pub unsatisfied: BTreeSet<LicenseReq>,
+    /// Licenses for which a license file file was found, and the path to that file.
     pub satisfied: BTreeMap<LicenseReq, PathBuf>,
 }
 
+/// Evaluates the license expression for a crate at a given path and returns a minimal set of
+/// acceptable licenses, and whether we could find a matching license file for each one.
+///
+/// Returns an error if the licensing for the crate requires us to adopt unacceptable licenses.
 pub fn find_licenses(
     crate_path: impl AsRef<Path>,
     crate_name: &str,
