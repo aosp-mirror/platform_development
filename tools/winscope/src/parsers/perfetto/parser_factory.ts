@@ -16,6 +16,7 @@
 
 import {ParserTimestampConverter} from 'common/time/timestamp_converter';
 import {UserNotifier} from 'common/user_notifier';
+import {Analytics} from 'logging/analytics';
 import {ProgressListener} from 'messaging/progress_listener';
 import {
   InvalidPerfettoTrace,
@@ -151,6 +152,7 @@ export class ParserFactory {
       ingestFtraceInRawTable: false,
       analyzeTraceProtoContent: false,
     });
+    Analytics.Memory.logUsage('tp_initialized');
 
     return traceProcessor;
   }

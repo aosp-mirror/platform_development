@@ -385,26 +385,27 @@ export class Mediator {
 
     for (const viewer of viewers) {
       const type = viewer.getTraces().at(0)?.type;
-      const traceName = type !== undefined ? TRACE_INFO[type].name : 'Unknown';
+      const traceType = type !== undefined ? TRACE_INFO[type].name : 'Unknown';
       try {
         const startTimeMs = Date.now();
         await viewer.onWinscopeEvent(event);
         if (source !== undefined) {
           Analytics.Loading.logViewerInitializationTime(
-            traceName,
+            traceType,
             source,
             Date.now() - startTimeMs,
           );
+          Analytics.Memory.logUsage('viewer_initialized', {traceType});
         }
         Analytics.Navigation.logTimePropagated(
-          traceName,
+          traceType,
           Date.now() - startTimeMs,
         );
       } catch (e) {
         console.error(e);
         warnings.push(
           new CannotVisualizeTraceEntry(
-            `Cannot parse entry for ${traceName} trace: Trace may be corrupted.`,
+            `Cannot parse entry for ${traceType} trace: Trace may be corrupted.`,
           ),
         );
       }
@@ -431,6 +432,7 @@ export class Mediator {
     if (warnings.length > 0) {
       warnings.forEach((w) => UserNotifier.add(w));
     }
+    Analytics.Memory.logUsage('time_propagated');
   }
 
   private isViewerVisible(viewer: Viewer): boolean {
@@ -503,6 +505,7 @@ export class Mediator {
       const startTimeMs = Date.now();
       await this.tracePipeline.buildTraces();
       Analytics.Loading.logFrameMapBuildTime(Date.now() - startTimeMs);
+      Analytics.Memory.logUsage('frame_map_built');
       this.currentProgressListener?.onOperationFinished(true);
     } catch (e) {
       UserNotifier.add(new IncompleteFrameMapping((e as Error).message));
@@ -549,6 +552,7 @@ export class Mediator {
     // at this stage, while the "initializing UI" progress message is still being displayed.
     // The viewers initialization is triggered by sending them a "trace position update".
     await this.propagateTracePosition(initialPosition, true, source);
+    Analytics.Memory.logUsage('viewers_initialized');
 
     this.focusedTabView = this.viewers
       .find((v) => v.getViews()[0].type === ViewType.TRACE_TAB)

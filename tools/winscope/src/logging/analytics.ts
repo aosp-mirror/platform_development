@@ -35,6 +35,7 @@ export class Analytics {
   private static FRAME_MAP_ERROR = 'frame_map_error';
   private static GLOBAL_EXCEPTION = 'global_exception';
   private static HIERARCHY_SETTINGS = 'hierarchy_settings';
+  private static JS_MEMORY_USAGE = 'js_memory_usage';
   private static NAVIGATION_ZOOM_EVENT = 'navigation_zoom';
   private static PROPERTIES_SETTINGS = 'properties_settings';
   private static PROXY_ERROR = 'proxy_error';
@@ -127,6 +128,23 @@ export class Analytics {
         files_source,
         traceType,
       });
+    }
+  };
+
+  static Memory = class {
+    static logUsage(stage: string, params: object = {}) {
+      const memory: Memory | undefined = (performance as any).memory;
+      if (memory) {
+        Object.assign(params, {
+          stage,
+          heapSizeLimit: memory.jsHeapSizeLimit,
+          allocatedHeapSize: memory.totalJSHeapSize,
+          fractionAllocated: memory.totalJSHeapSize / memory.jsHeapSizeLimit,
+          usedHeapSize: memory.usedJSHeapSize,
+          fractionUsed: memory.usedJSHeapSize / memory.jsHeapSizeLimit,
+        });
+        Analytics.doLogEvent(Analytics.JS_MEMORY_USAGE, params);
+      }
     }
   };
 
@@ -361,4 +379,16 @@ export class Analytics {
       Analytics.doLogEvent(eventName, finalParams);
     }
   }
+}
+
+// https://developer.mozilla.org/en-US/docs/Web/API/Performance/memory
+// This feature is deprecated so may not work in all browsers. We collect
+// metrics from the field based on the JS heap because the replacement API,
+// measureUserAgentSpecificMemory(), requires the app to be cross-origin
+// isolated, which is incompatible with Winscope cross-tool integration.
+
+interface Memory {
+  jsHeapSizeLimit: number; // Maximum heap size, in bytes, available to the context.
+  totalJSHeapSize: number; // Total allocated heap size, in bytes.
+  usedJSHeapSize: number; // Currently active segment of JS heap, in bytes.
 }

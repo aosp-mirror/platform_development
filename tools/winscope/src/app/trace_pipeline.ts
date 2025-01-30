@@ -242,6 +242,7 @@ export class TracePipeline {
       source,
       Date.now() - startTimeMs,
     );
+    Analytics.Memory.logUsage('legacy_files_parsed');
 
     let perfettoParsers: FileAndParsers | undefined;
 
@@ -257,6 +258,7 @@ export class TracePipeline {
         source,
         Date.now() - startTimeMs,
       );
+      Analytics.Memory.logUsage('perfetto_files_parsed');
       perfettoParsers = new FileAndParsers(filterResult.perfetto, parsers);
     }
 
