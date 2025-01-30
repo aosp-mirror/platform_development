@@ -33,6 +33,7 @@ use rdeps::ReverseDeps;
 use rooted_path::RootedPath;
 use thiserror::Error;
 
+#[allow(missing_docs)]
 #[derive(Error, Debug)]
 pub enum TestMappingError {
     #[error("Blueprint file {0} not found")]
@@ -55,10 +56,14 @@ pub enum TestMappingError {
     GrepParseError(String),
 }
 
+/// A parsed TEST_MAPPING file
 #[derive(Debug)]
 pub struct TestMapping {
+    /// The path of the crate directory.
     path: RootedPath,
+    /// The contents of TEST_MAPPING
     json: TestMappingJson,
+    /// The parsed Android.bp file
     bp: BluePrint,
 }
 
