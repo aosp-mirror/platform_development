@@ -28,6 +28,7 @@ export class Analytics {
   private static DIFF_COMPUTATION_TIME = 'diff_computation_time';
   private static DOCUMENTATION_OPENED = 'documentation_opened';
   private static EXPANDED_TIMELINE_OPENED = 'expanded_timeline_opened';
+  private static FETCH_COMPONENT_DATA_TIME = 'fetch_component_data_time';
   private static FILE_EXTRACTION_TIME = 'file_extraction_time';
   private static FILE_PARSING_TIME = 'file_parsing_time';
   private static FRAME_MAP_BUILD_TIME = 'frame_map_build_time';
@@ -143,6 +144,19 @@ export class Analytics {
 
     static logExpandedTimelineOpened() {
       Analytics.doLogEvent(Analytics.EXPANDED_TIMELINE_OPENED);
+    }
+
+    static logFetchComponentDataTime(
+      component: 'hierarchy' | 'properties' | 'rects',
+      traceType: string,
+      withDiffs: boolean,
+      ms: number,
+    ) {
+      Analytics.logTimeMs(Analytics.FETCH_COMPONENT_DATA_TIME, ms, {
+        component,
+        traceType,
+        withDiffs,
+      });
     }
 
     static logHierarchySettingsChanged(

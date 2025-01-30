@@ -19,6 +19,7 @@ import {FunctionUtils} from 'common/function_utils';
 import {InMemoryStorage} from 'common/store/in_memory_storage';
 import {parseMap, stringifyMap} from 'common/store/persistent_store_proxy';
 import {Store} from 'common/store/store';
+import {Analytics} from 'logging/analytics';
 import {
   TracePositionUpdate,
   WinscopeEvent,
@@ -28,6 +29,7 @@ import {EmitEvent} from 'messaging/winscope_event_emitter';
 import {Trace, TraceEntry} from 'trace/trace';
 import {Traces} from 'trace/traces';
 import {TraceEntryFinder} from 'trace/trace_entry_finder';
+import {TRACE_INFO} from 'trace/trace_info';
 import {TraceType} from 'trace/trace_type';
 import {HierarchyTreeNode} from 'trace/tree_node/hierarchy_tree_node';
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
@@ -35,7 +37,7 @@ import {PropertiesPresenter} from 'viewers/common/properties_presenter';
 import {RectsPresenter} from 'viewers/common/rects_presenter';
 import {TextFilter} from 'viewers/common/text_filter';
 import {UiHierarchyTreeNode} from 'viewers/common/ui_hierarchy_tree_node';
-import {UserOptions} from 'viewers/common/user_options';
+import {UserOption, UserOptions} from 'viewers/common/user_options';
 import {HierarchyPresenter, SelectedTree} from './hierarchy_presenter';
 import {PresetHierarchy, TextFilterValues} from './preset_hierarchy';
 import {RectShowState} from './rect_show_state';
@@ -321,6 +323,8 @@ export abstract class AbstractHierarchyViewerPresenter<
   }
 
   protected async applyTracePositionUpdate(event: TracePositionUpdate) {
+    const hierarchyStartTime = Date.now();
+
     let entries: Array<TraceEntry<HierarchyTreeNode>> = [];
     if (this.multiTraceType !== undefined) {
       entries = this.traces
@@ -347,6 +351,8 @@ export abstract class AbstractHierarchyViewerPresenter<
         entries,
         this.highlightedItem,
       );
+      const showDiff = this.hierarchyPresenter.getUserOptions()['showDiff'];
+      this.logFetchComponentData(hierarchyStartTime, 'hierarchy', showDiff);
     } catch (e) {
       this.hierarchyPresenter.clear();
       this.rectsPresenter?.clear();
@@ -364,7 +370,10 @@ export abstract class AbstractHierarchyViewerPresenter<
     const currentHierarchyTrees =
       this.hierarchyPresenter.getAllCurrentHierarchyTrees();
     if (currentHierarchyTrees) {
+      const rectStartTime = Date.now();
       this.rectsPresenter?.applyHierarchyTreesChange(currentHierarchyTrees);
+      this.logFetchComponentData(rectStartTime, 'rects');
+
       await this.updatePropertiesTree();
     }
   }
@@ -382,6 +391,9 @@ export abstract class AbstractHierarchyViewerPresenter<
   }
 
   protected async updatePropertiesTree() {
+    const showDiff = this.propertiesPresenter.getUserOptions()['showDiff'];
+    const propertiesStartTime = Date.now();
+
     if (this.overridePropertiesTree) {
       this.propertiesPresenter.setPropertiesTree(this.overridePropertiesTree);
       await this.propertiesPresenter.formatPropertiesTree(
@@ -389,6 +401,7 @@ export abstract class AbstractHierarchyViewerPresenter<
         this.overridePropertiesTreeName,
         false,
       );
+      this.logFetchComponentData(propertiesStartTime, 'properties', showDiff);
       return;
     }
     const selected = this.hierarchyPresenter.getSelectedTree();
@@ -396,7 +409,7 @@ export abstract class AbstractHierarchyViewerPresenter<
       const {trace, tree: selectedTree} = selected;
       const propertiesTree = await selectedTree.getAllProperties();
       if (
-        this.propertiesPresenter.getUserOptions()['showDiff']?.enabled &&
+        showDiff?.enabled &&
         !this.hierarchyPresenter.getPreviousHierarchyTreeForTrace(trace)
       ) {
         await this.hierarchyPresenter.updatePreviousHierarchyTrees();
@@ -410,6 +423,7 @@ export abstract class AbstractHierarchyViewerPresenter<
         this.keepCalculated(selectedTree),
         trace.type,
       );
+      this.logFetchComponentData(propertiesStartTime, 'properties', showDiff);
     } else {
       this.propertiesPresenter.clear();
     }
@@ -468,6 +482,21 @@ export abstract class AbstractHierarchyViewerPresenter<
     // won't detect the new input
     const copy = Object.assign({}, this.uiData);
     this.notifyViewCallback(copy);
+  }
+
+  private logFetchComponentData(
+    startTimeMs: number,
+    component: 'hierarchy' | 'properties' | 'rects',
+    showDiffs?: UserOption,
+  ) {
+    const traceName =
+      TRACE_INFO[this.trace?.type ?? assertDefined(this.multiTraceType)].name;
+    Analytics.Navigation.logFetchComponentDataTime(
+      component,
+      traceName,
+      showDiffs !== undefined && showDiffs.enabled && !showDiffs.isUnavailable,
+      Date.now() - startTimeMs,
+    );
   }
 
   abstract onHighlightedNodeChange(node: UiHierarchyTreeNode): Promise<void>;

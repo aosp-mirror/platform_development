@@ -17,6 +17,7 @@
 import {assertDefined} from 'common/assert_utils';
 import {PersistentStoreProxy} from 'common/store/persistent_store_proxy';
 import {Store} from 'common/store/store';
+import {Analytics} from 'logging/analytics';
 import {TabbedViewSwitchRequest} from 'messaging/winscope_event';
 import {CustomQueryType} from 'trace/custom_query';
 import {Trace, TraceEntry, TraceEntryLazy} from 'trace/trace';
@@ -428,10 +429,18 @@ export class Presenter extends AbstractLogViewerPresenter<
       });
 
     if (inputEntry?.surfaceFlingerEntry !== undefined) {
+      const startTimeMs = Date.now();
       const node = await inputEntry.surfaceFlingerEntry.getValue();
       this.rectsPresenter.applyHierarchyTreesChange([
         {trace: this.surfaceFlingerTrace, trees: [node]},
       ]);
+      Analytics.Navigation.logFetchComponentDataTime(
+        'rects',
+        TRACE_INFO[TraceType.INPUT_EVENT_MERGED].name,
+        false,
+        Date.now() - startTimeMs,
+      );
+
       this.uiData.rectsToDraw = this.rectsPresenter.getRectsToDraw();
       this.uiData.rectIdToShowState =
         this.rectsPresenter.getRectIdToShowState();

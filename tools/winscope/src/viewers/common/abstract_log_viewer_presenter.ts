@@ -17,6 +17,7 @@
 import {DOMUtils} from 'common/dom_utils';
 import {FunctionUtils} from 'common/function_utils';
 import {Timestamp} from 'common/time/time';
+import {Analytics} from 'logging/analytics';
 import {
   TracePositionUpdate,
   WinscopeEvent,
@@ -25,6 +26,7 @@ import {
 import {EmitEvent} from 'messaging/winscope_event_emitter';
 import {Trace, TraceEntry} from 'trace/trace';
 import {TraceEntryFinder} from 'trace/trace_entry_finder';
+import {TRACE_INFO} from 'trace/trace_info';
 import {TracePosition} from 'trace/trace_position';
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
 import {PropertiesPresenter} from 'viewers/common/properties_presenter';
@@ -302,6 +304,9 @@ export abstract class AbstractLogViewerPresenter<
 
   protected async updatePropertiesTree(updateDefaultAllowlist = true) {
     if (this.propertiesPresenter) {
+      const traceName = TRACE_INFO[this.trace.type].name;
+      const propertiesStartTime = Date.now();
+
       const tree = this.getPropertiesTree();
       this.propertiesPresenter.setPropertiesTree(tree);
       if (updateDefaultAllowlist && this.updateDefaultAllowlist) {
@@ -314,6 +319,12 @@ export abstract class AbstractLogViewerPresenter<
         this.trace.type,
       );
       this.uiData.propertiesTree = this.propertiesPresenter.getFormattedTree();
+      Analytics.Navigation.logFetchComponentDataTime(
+        'properties',
+        traceName,
+        false,
+        Date.now() - propertiesStartTime,
+      );
     }
   }
 
