@@ -12,17 +12,17 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-//! TOML file to store per-crate configuration.
+//! TOML file to store per-repo configuration.
 
-use std::{fs::read_to_string, io, path::Path};
+use std::{collections::BTreeSet, fs::read_to_string, io, path::Path};
 
 use serde::Deserialize;
 
-/// A parsed android_config.toml file
+/// A parsed android_repo_config.toml file
 #[derive(Deserialize, Debug, Default, Clone)]
-pub struct CrateConfig {
+pub struct RepoConfig {
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    deletions: Vec<String>,
+    crate_denylist: BTreeSet<String>,
 }
 
 #[allow(missing_docs)]
@@ -34,23 +34,23 @@ pub enum Error {
     IoError(#[from] io::Error),
 }
 
-/// The crate config file name.
-pub static CONFIG_FILE_NAME: &str = "android_config.toml";
+/// The repo config file name.
+pub static CONFIG_FILE_NAME: &str = "android_repo_config.toml";
 
-impl CrateConfig {
-    /// Read the android_config.toml file in the specified directory. If not present,
+impl RepoConfig {
+    /// Read the android_repo_config.toml file in the specified directory. If not present,
     /// a default version is returned.
-    pub fn read(crate_dir: impl AsRef<Path>) -> Result<CrateConfig, Error> {
-        let config_file = crate_dir.as_ref().join(CONFIG_FILE_NAME);
+    pub fn read(managed_repo_dir: impl AsRef<Path>) -> Result<RepoConfig, Error> {
+        let config_file = managed_repo_dir.as_ref().join(CONFIG_FILE_NAME);
         if !config_file.exists() {
-            return Ok(CrateConfig::default());
+            return Ok(RepoConfig::default());
         }
-        let toml: CrateConfig = toml::from_str(read_to_string(config_file)?.as_str())?;
+        let toml: RepoConfig = toml::from_str(read_to_string(config_file)?.as_str())?;
         Ok(toml)
     }
-    /// Get an iterator over directories and files to delete.
-    pub fn deletions(&self) -> impl Iterator<Item = &str> {
-        self.deletions.iter().map(|d| d.as_str())
+    /// Returns true if the crate is on the crate denylist.
+    pub fn is_allowed(&self, crate_name: impl AsRef<str>) -> bool {
+        !self.crate_denylist.contains(crate_name.as_ref())
     }
 }
 
@@ -63,23 +63,24 @@ mod tests {
     #[test]
     fn basic() {
         let dir = tempfile::tempdir().expect("Failed to create tempdir");
-        write(dir.path().join(CONFIG_FILE_NAME), r#"deletions = ["foo"]"#)
+        write(dir.path().join(CONFIG_FILE_NAME), r#"crate_denylist = ["foo"]"#)
             .expect("Failed to write to tempdir");
-        let config = CrateConfig::read(dir.path()).expect("Failed to read config file");
-        assert_eq!(config.deletions, ["foo"]);
+        let config = RepoConfig::read(dir.path()).expect("Failed to read config file");
+        assert!(!config.is_allowed("foo"));
+        assert!(config.is_allowed("bar"));
     }
 
     #[test]
     fn default() {
         let dir = tempfile::tempdir().expect("Failed to create tempdir");
-        let config = CrateConfig::read(dir.path()).expect("Failed to get default config");
-        assert!(config.deletions.is_empty());
+        let config = RepoConfig::read(dir.path()).expect("Failed to get default config");
+        assert!(config.is_allowed("foo"));
     }
 
     #[test]
     fn parse_error() {
         let dir = tempfile::tempdir().expect("Failed to create tempdir");
         write(dir.path().join(CONFIG_FILE_NAME), r#"blah"#).expect("Failed to write to tempdir");
-        assert!(matches!(CrateConfig::read(dir.path()), Err(Error::TomlParseError(_))));
+        assert!(matches!(RepoConfig::read(dir.path()), Err(Error::TomlParseError(_))));
     }
 }
