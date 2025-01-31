@@ -16,7 +16,7 @@
 
 @file:OptIn(ExperimentalAnimatableApi::class)
 
-package com.android.mechanics.demo.demos
+package com.android.mechanics.demo.presentation
 
 import androidx.compose.animation.core.ExperimentalAnimatableApi
 import androidx.compose.foundation.background
@@ -61,7 +61,7 @@ import com.android.mechanics.demo.tuneable.Section
 import com.android.mechanics.demo.tuneable.SpringParameterSection
 import com.android.mechanics.demo.util.ExpandableCard
 
-object MaterialFadeThrough : Demo<MaterialFadeThrough.Config> {
+object PracticalDemoAppear : Demo<PracticalDemoAppear.Config> {
     object Elements {
         val ExpandableContent = ElementKey("ExpandableContent")
     }
@@ -186,5 +186,5 @@ object MaterialFadeThrough : Demo<MaterialFadeThrough.Config> {
         }
     }
 
-    override val identifier: String = "material_fade_through"
+    override val identifier: String = "PracticalDemoAppear"
 }

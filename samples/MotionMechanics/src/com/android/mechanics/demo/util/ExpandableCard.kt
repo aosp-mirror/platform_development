@@ -44,6 +44,7 @@ import com.android.compose.animation.scene.ElementKey
 import com.android.compose.animation.scene.MutableSceneTransitionLayoutState
 import com.android.compose.animation.scene.SceneKey
 import com.android.compose.animation.scene.SceneTransitionLayout
+import com.android.compose.animation.scene.SceneTransitions
 import com.android.compose.animation.scene.Swipe
 import com.android.compose.animation.scene.UserActionDistance
 import com.android.compose.animation.scene.ValueKey
@@ -64,9 +65,25 @@ object Values {
     val ChevronRotation = ValueKey("Rotation")
 }
 
+object Transitions {
+    val ExpandedCollapsedDistance = UserActionDistance { fromContent, toContent, orientation ->
+        val expandedSize = Scenes.Expanded.targetSize() ?: return@UserActionDistance 0f
+        val collapsedSize = Scenes.Collapsed.targetSize() ?: return@UserActionDistance 0f
+
+        (expandedSize.height - collapsedSize.height).toFloat()
+    }
+    val DefaultTransition = transitions {
+        from(Scenes.Expanded, Scenes.Collapsed) {
+            spec = tween(500)
+            distance = ExpandedCollapsedDistance
+        }
+    }
+}
+
 @Composable
 fun ExpandableCard(
     modifier: Modifier = Modifier,
+    transitions: SceneTransitions = remember { Transitions.DefaultTransition },
     header: @Composable ContentScope.(isExpanded: Boolean) -> Unit = {},
     content: @Composable ContentScope.(isExpanded: Boolean) -> Unit,
 ) {
@@ -75,20 +92,7 @@ fun ExpandableCard(
     val state = remember {
         MutableSceneTransitionLayoutState(
             Scenes.Collapsed,
-            transitions =
-                transitions {
-                    from(Scenes.Expanded, Scenes.Collapsed) {
-                        spec = tween(500)
-                        distance = UserActionDistance { fromContent, toContent, orientation ->
-                            val expandedSize =
-                                Scenes.Expanded.targetSize() ?: return@UserActionDistance 0f
-                            val collapsedSize =
-                                Scenes.Collapsed.targetSize() ?: return@UserActionDistance 0f
-
-                            (expandedSize.height - collapsedSize.height).toFloat()
-                        }
-                    }
-                },
+            transitions = transitions,
             motionScheme = motionScheme,
         )
     }

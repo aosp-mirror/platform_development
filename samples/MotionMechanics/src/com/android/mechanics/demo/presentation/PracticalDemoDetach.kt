@@ -16,9 +16,10 @@
 
 @file:OptIn(ExperimentalAnimatableApi::class)
 
-package com.android.mechanics.demo.demos
+package com.android.mechanics.demo.presentation
 
 import androidx.compose.animation.core.ExperimentalAnimatableApi
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -48,7 +49,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.android.compose.animation.scene.ElementKey
+import com.android.compose.animation.scene.transitions
 import com.android.compose.modifiers.thenIf
+import com.android.mechanics.demo.staging.behavior.magneticDetach
 import com.android.mechanics.demo.staging.behavior.reveal.FadeContentRevealSpec
 import com.android.mechanics.demo.staging.behavior.reveal.fadeReveal
 import com.android.mechanics.demo.staging.behavior.reveal.rememberFadeContentRevealSpec
@@ -60,8 +63,10 @@ import com.android.mechanics.demo.tuneable.LabelledCheckbox
 import com.android.mechanics.demo.tuneable.Section
 import com.android.mechanics.demo.tuneable.SpringParameterSection
 import com.android.mechanics.demo.util.ExpandableCard
+import com.android.mechanics.demo.util.Scenes
+import com.android.mechanics.demo.util.Transitions.ExpandedCollapsedDistance
 
-object MaterialFadeThrough : Demo<MaterialFadeThrough.Config> {
+object PracticalDemoDetach : Demo<PracticalDemoDetach.Config> {
     object Elements {
         val ExpandableContent = ElementKey("ExpandableContent")
     }
@@ -72,6 +77,15 @@ object MaterialFadeThrough : Demo<MaterialFadeThrough.Config> {
     override fun DemoUi(config: Config, modifier: Modifier) {
         val colors = MaterialTheme.colorScheme
         ExpandableCard(
+            transitions =
+                transitions {
+                    from(Scenes.Expanded, Scenes.Collapsed) {
+                        spec = tween(500)
+                        distance = ExpandedCollapsedDistance
+
+                        magneticDetach(Elements.ExpandableContent)
+                    }
+                },
             modifier = modifier.fillMaxWidth(),
             header = { Text(text = "Contents", style = typography.titleMedium) },
         ) { isExpanded ->
@@ -186,5 +200,5 @@ object MaterialFadeThrough : Demo<MaterialFadeThrough.Config> {
         }
     }
 
-    override val identifier: String = "material_fade_through"
+    override val identifier: String = "PracticalDemoDetach"
 }

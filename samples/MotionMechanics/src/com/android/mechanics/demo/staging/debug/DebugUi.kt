@@ -43,6 +43,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -74,7 +75,7 @@ fun DebugUi(
             content(Modifier.align(Alignment.TopStart))
         }
 
-        var isExpanded by remember { mutableStateOf(true) }
+        var isExpanded by rememberSaveable(key = "debugUiExpanded") { mutableStateOf(false) }
         Card(modifier = Modifier.fillMaxWidth().padding(16.dp).align(Alignment.BottomStart)) {
             Column(modifier = Modifier.fillMaxWidth().padding(16.dp)) {
                 Row(

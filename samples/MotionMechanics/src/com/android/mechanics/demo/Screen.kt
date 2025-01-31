@@ -83,8 +83,9 @@ private fun ScreenMenu(screen: ParentScreen, navController: NavController) {
                 ) {
                     val onClick = { navController.navigate(child.identifier) }
                     Column(
-                        Modifier.clickable(onClick = onClick).padding(16.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally,
+                        Modifier.clickable(onClick = onClick)
+                            .padding(horizontal = 24.dp, vertical = 16.dp),
+                        horizontalAlignment = Alignment.Start,
                     ) {
                         Text(name)
                     }
