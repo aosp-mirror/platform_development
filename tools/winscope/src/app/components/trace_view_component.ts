@@ -49,6 +49,7 @@ import {View, Viewer, ViewType} from 'viewers/viewer';
 interface Tab {
   view: View;
   addedToDom: boolean;
+  isTooltipStable: boolean;
 }
 
 @Component({
@@ -67,8 +68,10 @@ interface Tab {
                 [matTooltip]="getTabTooltip(tab.view)"
                 matTooltipPosition="above"
                 [matTooltipShowDelay]="300"
+                [matTooltipDisabled]="!tab.isTooltipStable"
                 (click)="onTabClick(tab)"
                 (focus)="$event.target.blur()"
+                (mouseenter)="onTabHover($event, tab)"
                 [class.last]="isLast"
                 class="tab">
               <mat-icon
@@ -303,6 +306,18 @@ export class TraceViewComponent
     return TRACE_INFO[trace.type].icon;
   }
 
+  onTabHover(event: MouseEvent, tab: Tab) {
+    if (tab.isTooltipStable) {
+      return;
+    }
+    this.ngZone.run(() => {
+      (event.target as HTMLElement).dispatchEvent(new Event('mouseleave'));
+      tab.isTooltipStable = true;
+      this.changeDetectorRef.detectChanges();
+      (event.target as HTMLElement)?.dispatchEvent(new Event('mouseenter'));
+    });
+  }
+
   async onTabClick(tab: Tab) {
     await this.showTab(tab, false);
   }
@@ -426,6 +441,7 @@ export class TraceViewComponent
         return {
           view,
           addedToDom: false,
+          isTooltipStable: false,
         };
       });
 
