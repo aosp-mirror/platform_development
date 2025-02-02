@@ -31,6 +31,8 @@ static LICENSE_GLOBS: &[&str] = &[
     "COPYING",
     "license",
     "license.*",
+    "third-party/chromium/LICENSE",
+    "docs/LICENSE*",
 ];
 
 pub(crate) fn find_license_files(
