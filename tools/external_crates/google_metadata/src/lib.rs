@@ -20,7 +20,6 @@ use std::{
 };
 
 use chrono::Datelike;
-use protobuf::text_format::ParseError;
 
 #[cfg(soong)]
 mod metadata_proto {
@@ -39,18 +38,23 @@ mod metadata_proto {
 
 pub use metadata_proto::*;
 
-#[allow(missing_docs)]
+/// Error types for the 'google_metadata' crate.
 #[derive(thiserror::Error, Debug)]
 pub enum Error {
-    #[error("File exists: {}", .0.display())]
+    /// Error trying to initialize a METADATA file that already exists
+    #[error("METADATA file exists: {0}")]
     FileExists(PathBuf),
-    #[error("Crate name not set")]
-    CrateNameMissing(),
+    /// Crate name not set in METADATA file
+    #[error("Crate name not set in METADATA file")]
+    CrateNameMissing,
+    /// Crate name mismatch
     #[error("Crate names don't match: {} in METADATA vs {}", .0, .1)]
     CrateNameMismatch(String, String),
-    #[error("Glob pattern error")]
-    ParseError(#[from] ParseError),
-    #[error("Write error")]
+    /// Protobuf parse error
+    #[error(transparent)]
+    ParseError(#[from] protobuf::text_format::ParseError),
+    /// Error writing METADATA file
+    #[error(transparent)]
     WriteError(#[from] std::io::Error),
 }
 
@@ -120,7 +124,7 @@ impl GoogleMetadata {
         name: impl AsRef<str>,
         version: Q,
     ) -> Result<(), Error> {
-        let name_in_metadata = self.metadata.name.as_ref().ok_or(Error::CrateNameMissing())?;
+        let name_in_metadata = self.metadata.name.as_ref().ok_or(Error::CrateNameMissing)?;
         if name_in_metadata != name.as_ref() {
             return Err(Error::CrateNameMismatch(
                 name_in_metadata.clone(),

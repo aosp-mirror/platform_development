@@ -24,7 +24,7 @@ use std::{
 
 use anyhow::{anyhow, bail, Context, Result};
 use itertools::Itertools;
-use name_and_version::{NameAndVersionMap, NamedAndVersioned};
+use name_and_version::NamedAndVersioned;
 use rooted_path::RootedPath;
 use semver::Version;
 

@@ -19,7 +19,7 @@ use std::{
 
 use glob::glob;
 
-use crate::LicenseCheckerError;
+use crate::Error;
 
 static LICENSE_GLOBS: &[&str] = &[
     "LICENSE",
@@ -35,23 +35,19 @@ static LICENSE_GLOBS: &[&str] = &[
     "docs/LICENSE*",
 ];
 
-pub(crate) fn find_license_files(
-    path: impl AsRef<Path>,
-) -> Result<BTreeSet<PathBuf>, LicenseCheckerError> {
+pub(crate) fn find_license_files(path: impl AsRef<Path>) -> Result<BTreeSet<PathBuf>, Error> {
     multiglob(path, LICENSE_GLOBS.iter())
 }
 
 fn multiglob<T: AsRef<str>>(
     path: impl AsRef<Path>,
     patterns: impl Iterator<Item = T>,
-) -> Result<BTreeSet<PathBuf>, LicenseCheckerError> {
+) -> Result<BTreeSet<PathBuf>, Error> {
     let path = path.as_ref();
     let mut matches = BTreeSet::new();
     for pattern in patterns {
         let pattern = path.join(pattern.as_ref());
-        for file in
-            glob(pattern.to_str().ok_or(LicenseCheckerError::PathToString(pattern.clone()))?)?
-        {
+        for file in glob(pattern.to_str().ok_or(Error::PathToString(pattern.clone()))?)? {
             let file = file?;
             if !file.is_symlink() {
                 matches.insert(file.strip_prefix(path)?.to_owned());
