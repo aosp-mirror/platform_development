@@ -17,8 +17,7 @@ use std::{
     fs::{copy, read_dir, read_link, read_to_string, remove_dir_all, rename, write},
     os::unix::fs::symlink,
     path::PathBuf,
-    process::{Command, Output},
-    str::from_utf8,
+    process::Command,
 };
 
 use anyhow::{anyhow, ensure, Context, Result};
@@ -57,16 +56,9 @@ pub struct Vendored {
     /// The vendored copy of the crate, from running `cargo vendor`
     vendored_crate: Crate,
 }
-#[derive(Debug)]
-pub struct Staged {
-    vendored_crate: Crate,
-    patch_output: Vec<(String, Output)>,
-    cargo_embargo_output: Output,
-}
 pub trait ManagedCrateState {}
 impl ManagedCrateState for New {}
 impl ManagedCrateState for Vendored {}
-impl ManagedCrateState for Staged {}
 
 static CUSTOMIZATIONS: &[&str] = &[
     "*.bp",
@@ -105,7 +97,7 @@ impl<State: ManagedCrateState> ManagedCrate<State> {
             })
         })
     }
-    fn staging_path(&self) -> RootedPath {
+    fn temporary_build_directory(&self) -> RootedPath {
         self.android_crate
             .path()
             .with_same_root("out/rust-crate-temporary-build")
@@ -262,42 +254,27 @@ impl ManagedCrate<New> {
     pub fn regenerate(
         self,
         pseudo_crate: &PseudoCrate<CargoVendorClean>,
-    ) -> Result<ManagedCrate<Staged>> {
-        self.into_vendored(pseudo_crate)?.regenerate()
+    ) -> Result<ManagedCrate<Vendored>> {
+        let vendored = self.into_vendored(pseudo_crate)?;
+        vendored.regenerate()?;
+        Ok(vendored)
     }
 }
 
 impl ManagedCrate<Vendored> {
-    fn stage(self) -> Result<ManagedCrate<Staged>> {
-        self.copy_to_staging()?;
-
-        self.copy_customizations()?;
-        let patch_output = self.apply_patches()?;
-        let cargo_embargo_output = run_cargo_embargo(&self.staging_path())?;
-
-        Ok(ManagedCrate {
-            android_crate: self.android_crate,
-            config: self.config,
-            extra: Staged {
-                vendored_crate: self.extra.vendored_crate,
-                patch_output,
-                cargo_embargo_output,
-            },
-        })
-    }
-    fn copy_to_staging(&self) -> Result<()> {
-        let staging_path = self.staging_path();
-        ensure_exists_and_empty(&staging_path)?;
-        remove_dir_all(&staging_path).context(format!("Failed to remove {}", staging_path))?;
-        copy_dir(self.extra.vendored_crate.path(), &staging_path).context(format!(
+    fn copy_to_temporary_build_directory(&self) -> Result<()> {
+        let build_dir = self.temporary_build_directory();
+        ensure_exists_and_empty(&build_dir)?;
+        remove_dir_all(&build_dir).context(format!("Failed to remove {}", build_dir))?;
+        copy_dir(self.extra.vendored_crate.path(), &build_dir).context(format!(
             "Failed to copy {} to {}",
             self.extra.vendored_crate.path(),
-            self.staging_path()
+            self.temporary_build_directory()
         ))?;
         Ok(())
     }
     fn copy_customizations(&self) -> Result<()> {
-        let dest_dir = self.staging_path();
+        let dest_dir = self.temporary_build_directory();
         for pattern in CUSTOMIZATIONS {
             let full_pattern = self.android_crate.path().join(pattern)?;
             for entry in glob(
@@ -345,90 +322,63 @@ impl ManagedCrate<Vendored> {
             }
         }
         for deletion in self.config().deletions() {
-            let dir = self.staging_path().join(deletion)?;
+            let dir = self.temporary_build_directory().join(deletion)?;
             ensure!(dir.abs().is_dir(), "{dir} is not a directory");
             remove_dir_all(dir)?;
         }
         Ok(())
     }
-    fn apply_patches(&self) -> Result<Vec<(String, Output)>> {
-        let mut patch_output = Vec::new();
+    fn apply_patches(&self) -> Result<()> {
         for patch in self.patches()? {
-            let output = Command::new("patch")
+            Command::new("patch")
                 .args(["-p1", "-l", "--no-backup-if-mismatch", "-i"])
                 .arg(&patch)
-                .current_dir(self.staging_path())
-                .output()?;
-            patch_output.push((
-                String::from_utf8_lossy(patch.file_name().unwrap().as_encoded_bytes()).to_string(),
-                output,
-            ));
+                .current_dir(self.temporary_build_directory())
+                .output()?
+                .success_or_error()?;
         }
-        Ok(patch_output)
+        Ok(())
     }
-    pub fn regenerate(self) -> Result<ManagedCrate<Staged>> {
-        let staged = self.stage()?;
-        staged.check_staged()?;
-        if !staged.staging_path().abs().exists() {
-            return Err(anyhow!("Staged crate not found at {}", staged.staging_path()));
+    pub fn regenerate(&self) -> Result<()> {
+        self.copy_to_temporary_build_directory()?;
+
+        self.copy_customizations()?;
+        self.apply_patches()?;
+        run_cargo_embargo(&self.temporary_build_directory())?
+            .success_or_error()
+            .context(format!("cargo_embargo execution failed for {}", self.name()))?;
+
+        if !self.temporary_build_directory().abs().exists() {
+            return Err(anyhow!(
+                "Temporary build directory not found at {}",
+                self.temporary_build_directory()
+            ));
         }
 
         let mut metadata =
-            GoogleMetadata::try_from(staged.staging_path().join("METADATA").unwrap())?;
+            GoogleMetadata::try_from(self.temporary_build_directory().join("METADATA").unwrap())?;
         let mut writeback = false;
         writeback |= metadata.migrate_homepage();
         writeback |= metadata.migrate_archive();
         writeback |= metadata.remove_deprecated_url();
-        let vendored_version = staged.extra.vendored_crate.version();
-        if staged.android_crate.version() != vendored_version {
+        let vendored_version = self.extra.vendored_crate.version();
+        if self.android_crate.version() != vendored_version {
             metadata.set_date_to_today()?;
-            metadata.set_version_and_urls(staged.name(), vendored_version.to_string())?;
+            metadata.set_version_and_urls(self.name(), vendored_version.to_string())?;
             writeback |= true;
         }
         if writeback {
-            println!("Updating METADATA for {}", staged.name());
+            println!("Updating METADATA for {}", self.name());
             metadata.write()?;
         }
 
-        let android_crate_dir = staged.android_crate.path();
+        let android_crate_dir = self.android_crate.path();
         remove_dir_all(android_crate_dir)?;
-        rename(staged.staging_path(), android_crate_dir)?;
+        rename(self.temporary_build_directory(), android_crate_dir)?;
 
-        staged.fix_test_mapping()?;
+        self.fix_test_mapping()?;
         checksum::generate(android_crate_dir.abs())?;
 
-        Ok(staged)
-    }
-}
-
-impl ManagedCrate<Staged> {
-    pub fn check_staged(&self) -> Result<()> {
-        if !self.patch_success() {
-            for (patch, output) in self.patch_output() {
-                if !output.status.success() {
-                    return Err(anyhow!(
-                        "Failed to patch {} with {}\nstdout:\n{}\nstderr:\n{}",
-                        self.name(),
-                        patch,
-                        from_utf8(&output.stdout)?,
-                        from_utf8(&output.stderr)?
-                    ));
-                }
-            }
-        }
-        self.cargo_embargo_output()
-            .success_or_error()
-            .context(format!("cargo_embargo execution failed for {}", self.name()))?;
-
         Ok(())
-    }
-    fn patch_success(&self) -> bool {
-        self.extra.patch_output.iter().all(|output| output.1.status.success())
-    }
-    fn patch_output(&self) -> &Vec<(String, Output)> {
-        &self.extra.patch_output
-    }
-    fn cargo_embargo_output(&self) -> &Output {
-        &self.extra.cargo_embargo_output
     }
 }
