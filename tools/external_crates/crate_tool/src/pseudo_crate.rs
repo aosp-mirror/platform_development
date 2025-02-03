@@ -164,11 +164,6 @@ impl PseudoCrate<CargoVendorClean> {
         dirty.cargo_add_unversioned(crate_name)?;
         Ok(dirty)
     }
-    pub fn remove(self, crate_name: &str) -> Result<PseudoCrate<CargoVendorDirty>> {
-        let dirty: PseudoCrate<CargoVendorDirty> = self.mark_dirty();
-        dirty.remove(crate_name)?;
-        Ok(dirty)
-    }
 }
 
 impl PseudoCrate<CargoVendorDirty> {

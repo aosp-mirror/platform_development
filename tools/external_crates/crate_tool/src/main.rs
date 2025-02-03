@@ -12,10 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use std::{
-    collections::{BTreeMap, BTreeSet},
-    path::PathBuf,
-};
+use std::{collections::BTreeSet, path::PathBuf};
 
 use anyhow::{bail, Result};
 use clap::{Args, Parser, Subcommand};
@@ -23,7 +20,6 @@ use crate_tool::{
     default_repo_root, maybe_build_cargo_embargo, ManagedRepo, SemverCompatibilityRule,
 };
 use rooted_path::RootedPath;
-use semver::Version;
 
 #[derive(Parser)]
 struct Cli {
@@ -53,16 +49,6 @@ struct Cli {
 
 #[derive(Subcommand)]
 enum Cmd {
-    /// Check the health of a crate, and whether it is safe to migrate.
-    MigrationHealth {
-        #[command(flatten)]
-        crates: MigrationCrateList,
-    },
-    /// Migrate crates from external/rust/crates to the monorepo.
-    Migrate {
-        #[command(flatten)]
-        crates: MigrationCrateList,
-    },
     /// Analyze a crate to see if it can be imported.
     #[command(hide = true)]
     AnalyzeImport {
@@ -177,33 +163,6 @@ impl CrateList {
     }
 }
 
-#[derive(Args)]
-struct MigrationCrateList {
-    /// The crate names. Also the directory names in external/rust/crates.
-    crates: Vec<String>,
-
-    /// Don't pin the crate version for the specified crates when checking health or migrating.
-    /// Specified as a comma-separated list of crate names.
-    #[arg(long, value_parser = CrateList::parse_crate_list, required=false, default_value="")]
-    unpinned: BTreeSet<String>,
-
-    /// For crates with multiple versions, use the specified version.
-    /// Specified as a comma-separated list of <crate_name>=<version>.
-    #[arg(long, value_parser = MigrationCrateList::parse_crate_versions, required=false, default_value="")]
-    versions: BTreeMap<String, Version>,
-}
-
-impl MigrationCrateList {
-    pub fn parse_crate_versions(arg: &str) -> Result<BTreeMap<String, Version>> {
-        Ok(arg
-            .split(',')
-            .filter(|k| !k.is_empty())
-            .map(|nv| nv.split_once("=").unwrap())
-            .map(|(crate_name, version)| (crate_name.to_string(), Version::parse(version).unwrap()))
-            .collect())
-    }
-}
-
 fn main() -> Result<()> {
     let args = Cli::parse();
 
@@ -215,24 +174,8 @@ fn main() -> Result<()> {
     )?;
 
     match args.command {
-        Cmd::MigrationHealth { crates } => {
-            for crate_name in &crates.crates {
-                if let Err(e) = managed_repo.migration_health(
-                    crate_name,
-                    args.verbose,
-                    crates.unpinned.contains(crate_name),
-                    crates.versions.get(crate_name),
-                ) {
-                    println!("Crate {} error: {}", crate_name, e);
-                }
-            }
-            Ok(())
-        }
-        Cmd::Migrate { crates } => {
-            managed_repo.migrate(crates.crates, args.verbose, &crates.unpinned, &crates.versions)
-        }
         Cmd::Regenerate { crates } => {
-            managed_repo.regenerate(crates.to_list(&managed_repo)?.into_iter(), true)
+            managed_repo.regenerate(crates.to_list(&managed_repo)?.into_iter())
         }
         Cmd::PreuploadCheck { files } => managed_repo.preupload_check(&files),
         Cmd::AnalyzeImport { crate_name } => managed_repo.analyze_import(&crate_name),

@@ -44,6 +44,7 @@ use crate::{
 
 #[derive(Debug)]
 pub struct ManagedCrate<State: ManagedCrateState> {
+    /// The crate with Android customizations, a subdirectory of crates/.
     android_crate: Crate,
     config: OnceCell<CrateConfig>,
     extra: State,
@@ -53,6 +54,7 @@ pub struct ManagedCrate<State: ManagedCrateState> {
 pub struct New {}
 #[derive(Debug)]
 pub struct Vendored {
+    /// The vendored copy of the crate, from running `cargo vendor`
     vendored_crate: Crate,
 }
 #[derive(Debug)]
@@ -60,7 +62,6 @@ pub struct Staged {
     vendored_crate: Crate,
     patch_output: Vec<(String, Output)>,
     cargo_embargo_output: Output,
-    android_bp_diff: Output,
 }
 pub trait ManagedCrateState {}
 impl ManagedCrateState for New {}
@@ -89,7 +90,7 @@ impl<State: ManagedCrateState> ManagedCrate<State> {
     pub fn android_version(&self) -> &Version {
         self.android_crate.version()
     }
-    pub fn android_crate_path(&self) -> &RootedPath {
+    fn android_crate_path(&self) -> &RootedPath {
         self.android_crate.path()
     }
     pub fn config(&self) -> &CrateConfig {
@@ -104,13 +105,7 @@ impl<State: ManagedCrateState> ManagedCrate<State> {
             })
         })
     }
-    pub fn android_bp(&self) -> RootedPath {
-        self.android_crate_path().join("Android.bp").unwrap()
-    }
-    pub fn cargo_embargo_json(&self) -> RootedPath {
-        self.android_crate_path().join("cargo_embargo.json").unwrap()
-    }
-    pub fn staging_path(&self) -> RootedPath {
+    fn staging_path(&self) -> RootedPath {
         self.android_crate
             .path()
             .with_same_root("out/rust-crate-temporary-build")
@@ -252,13 +247,6 @@ impl ManagedCrate<New> {
     pub fn new(android_crate: Crate) -> Self {
         ManagedCrate { android_crate, config: OnceCell::new(), extra: New {} }
     }
-    pub fn into_legacy(self) -> ManagedCrate<Vendored> {
-        ManagedCrate {
-            android_crate: self.android_crate.clone(),
-            config: self.config,
-            extra: Vendored { vendored_crate: self.android_crate },
-        }
-    }
     fn into_vendored(
         self,
         pseudo_crate: &PseudoCrate<CargoVendorClean>,
@@ -271,41 +259,21 @@ impl ManagedCrate<New> {
             extra: Vendored { vendored_crate },
         })
     }
-    pub fn stage(
-        self,
-        pseudo_crate: &PseudoCrate<CargoVendorClean>,
-    ) -> Result<ManagedCrate<Staged>> {
-        self.into_vendored(pseudo_crate)?.stage()
-    }
     pub fn regenerate(
         self,
-        update_metadata: bool,
         pseudo_crate: &PseudoCrate<CargoVendorClean>,
     ) -> Result<ManagedCrate<Staged>> {
-        self.into_vendored(pseudo_crate)?.regenerate(update_metadata)
+        self.into_vendored(pseudo_crate)?.regenerate()
     }
 }
 
 impl ManagedCrate<Vendored> {
-    pub fn stage(self) -> Result<ManagedCrate<Staged>> {
+    fn stage(self) -> Result<ManagedCrate<Staged>> {
         self.copy_to_staging()?;
 
-        // Workaround. When checking the health of a legacy crate, there is no separate vendored crate,
-        // so we just have self.android_crate and self.vendored_crate point to the same directory.
-        // In this case, there is no need to copy Android customizations into the clean vendored copy
-        // or apply the patches.
-        if self.android_crate.path() != self.extra.vendored_crate.path() {
-            self.copy_customizations()?;
-        }
-
-        let patch_output = if self.android_crate.path() != self.extra.vendored_crate.path() {
-            self.apply_patches()?
-        } else {
-            Vec::new()
-        };
-
+        self.copy_customizations()?;
+        let patch_output = self.apply_patches()?;
         let cargo_embargo_output = run_cargo_embargo(&self.staging_path())?;
-        let android_bp_diff = self.diff_android_bp()?;
 
         Ok(ManagedCrate {
             android_crate: self.android_crate,
@@ -314,7 +282,6 @@ impl ManagedCrate<Vendored> {
                 vendored_crate: self.extra.vendored_crate,
                 patch_output,
                 cargo_embargo_output,
-                android_bp_diff,
             },
         })
     }
@@ -327,10 +294,6 @@ impl ManagedCrate<Vendored> {
             self.extra.vendored_crate.path(),
             self.staging_path()
         ))?;
-        if staging_path.join(".git")?.abs().is_dir() {
-            remove_dir_all(staging_path.join(".git")?)
-                .with_context(|| "Failed to remove .git".to_string())?;
-        }
         Ok(())
     }
     fn copy_customizations(&self) -> Result<()> {
@@ -403,67 +366,42 @@ impl ManagedCrate<Vendored> {
         }
         Ok(patch_output)
     }
-    fn diff_android_bp(&self) -> Result<Output> {
-        Ok(Command::new("diff")
-            .args([
-                "-u",
-                "-w",
-                "-B",
-                "-I",
-                r#"default_team: "trendy_team_android_rust""#,
-                "-I",
-                "// has rustc warnings",
-                "-I",
-                "This file is generated by",
-                "-I",
-                "cargo_pkg_version:",
-            ])
-            .arg(self.android_bp().rel())
-            .arg(self.staging_path().join("Android.bp")?.rel())
-            .current_dir(self.android_crate.path().root())
-            .output()?)
-    }
-    pub fn regenerate(self, update_metadata: bool) -> Result<ManagedCrate<Staged>> {
+    pub fn regenerate(self) -> Result<ManagedCrate<Staged>> {
         let staged = self.stage()?;
         staged.check_staged()?;
         if !staged.staging_path().abs().exists() {
             return Err(anyhow!("Staged crate not found at {}", staged.staging_path()));
         }
-        if update_metadata {
-            let mut metadata =
-                GoogleMetadata::try_from(staged.staging_path().join("METADATA").unwrap())?;
-            let mut writeback = false;
-            writeback |= metadata.migrate_homepage();
-            writeback |= metadata.migrate_archive();
-            writeback |= metadata.remove_deprecated_url();
-            let vendored_version = staged.extra.vendored_crate.version();
-            if staged.android_crate.version() != vendored_version {
-                metadata.set_date_to_today()?;
-                metadata.set_version_and_urls(staged.name(), vendored_version.to_string())?;
-                writeback |= true;
-            }
-            if writeback {
-                println!("Updating METADATA for {}", staged.name());
-                metadata.write()?;
-            }
+
+        let mut metadata =
+            GoogleMetadata::try_from(staged.staging_path().join("METADATA").unwrap())?;
+        let mut writeback = false;
+        writeback |= metadata.migrate_homepage();
+        writeback |= metadata.migrate_archive();
+        writeback |= metadata.remove_deprecated_url();
+        let vendored_version = staged.extra.vendored_crate.version();
+        if staged.android_crate.version() != vendored_version {
+            metadata.set_date_to_today()?;
+            metadata.set_version_and_urls(staged.name(), vendored_version.to_string())?;
+            writeback |= true;
+        }
+        if writeback {
+            println!("Updating METADATA for {}", staged.name());
+            metadata.write()?;
         }
 
         let android_crate_dir = staged.android_crate.path();
         remove_dir_all(android_crate_dir)?;
         rename(staged.staging_path(), android_crate_dir)?;
-        if update_metadata {
-            staged.fix_test_mapping()?;
-            checksum::generate(android_crate_dir.abs())?;
-        }
+
+        staged.fix_test_mapping()?;
+        checksum::generate(android_crate_dir.abs())?;
 
         Ok(staged)
     }
 }
 
 impl ManagedCrate<Staged> {
-    pub fn vendored_version(&self) -> &Version {
-        self.extra.vendored_crate.version()
-    }
     pub fn check_staged(&self) -> Result<()> {
         if !self.patch_success() {
             for (patch, output) in self.patch_output() {
@@ -484,22 +422,13 @@ impl ManagedCrate<Staged> {
 
         Ok(())
     }
-    pub fn patch_success(&self) -> bool {
+    fn patch_success(&self) -> bool {
         self.extra.patch_output.iter().all(|output| output.1.status.success())
     }
-    pub fn patch_output(&self) -> &Vec<(String, Output)> {
+    fn patch_output(&self) -> &Vec<(String, Output)> {
         &self.extra.patch_output
     }
-    pub fn android_bp_diff(&self) -> &Output {
-        &self.extra.android_bp_diff
-    }
-    pub fn cargo_embargo_output(&self) -> &Output {
+    fn cargo_embargo_output(&self) -> &Output {
         &self.extra.cargo_embargo_output
-    }
-    pub fn cargo_embargo_success(&self) -> bool {
-        self.extra.cargo_embargo_output.status.success()
-    }
-    pub fn android_bp_unchanged(&self) -> bool {
-        self.extra.android_bp_diff.status.success()
     }
 }
