@@ -134,7 +134,24 @@ export abstract class AbstractLogViewerPresenter<
     await event.visit(
       WinscopeEventType.TRACE_POSITION_UPDATE,
       async (event) => {
-        await this.applyTracePositionUpdate(event);
+        if (this.uiData.isFetchingData) {
+          return;
+        }
+        if (!this.isInitialized) {
+          this.uiData.isFetchingData = true;
+          this.notifyViewChanged();
+          if (this.initializeTraceSpecificData) {
+            await this.initializeTraceSpecificData();
+          }
+          this.makeUiData().then(async () => {
+            await this.applyTracePositionUpdate(event);
+            this.uiData.isFetchingData = false;
+            this.notifyViewChanged();
+            this.isInitialized = true;
+          });
+        } else {
+          await this.applyTracePositionUpdate(event);
+        }
       },
     );
     await event.visit(WinscopeEventType.DARK_MODE_TOGGLED, async (event) => {
@@ -277,8 +294,7 @@ export abstract class AbstractLogViewerPresenter<
     }
   }
 
-  protected async applyTracePositionUpdate(event: TracePositionUpdate) {
-    await this.initializeIfNeeded();
+  private async applyTracePositionUpdate(event: TracePositionUpdate) {
     let entry: TraceEntry<TraceEntryType> | undefined;
     if (event.position.entry?.getFullTrace() === this.trace) {
       entry = event.position.entry as TraceEntry<TraceEntryType>;
@@ -328,25 +344,15 @@ export abstract class AbstractLogViewerPresenter<
     }
   }
 
-  private async initializeIfNeeded() {
-    if (this.isInitialized) {
-      return;
-    }
-
-    if (this.initializeTraceSpecificData) {
-      await this.initializeTraceSpecificData();
-    }
-
+  private async makeUiData() {
     const headers = this.makeHeaders();
     const allEntries = await this.makeUiDataEntries(headers);
     if (this.updateFiltersInHeaders) {
       this.updateFiltersInHeaders(headers, allEntries);
     }
-
     this.logPresenter.setAllEntries(allEntries);
     this.logPresenter.setHeaders(headers);
     this.refreshUiData();
-    this.isInitialized = true;
   }
 
   private updateIndicesUiData() {

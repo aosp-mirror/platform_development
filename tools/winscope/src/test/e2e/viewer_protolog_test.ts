@@ -22,6 +22,7 @@ describe('Viewer Protolog', () => {
   const totalEntries = 7295;
 
   beforeEach(async () => {
+    jasmine.DEFAULT_TIMEOUT_INTERVAL = 20000;
     await E2eTestUtils.beforeEach(1000);
     await browser.get(E2eTestUtils.WINSCOPE_URL);
   });
@@ -32,6 +33,7 @@ describe('Viewer Protolog', () => {
       'ProtoLog',
       viewerSelector,
     );
+    await E2eTestUtils.checkScrollPresent(viewerSelector);
     await E2eTestUtils.checkTotalScrollEntries(
       viewerSelector,
       totalEntries,
@@ -44,55 +46,28 @@ describe('Viewer Protolog', () => {
     await E2eTestUtils.checkFinalRealTimestamp('2022-11-21, 18:05:18.259');
     await E2eTestUtils.checkInitialRealTimestamp('2022-11-21, 18:05:09.777');
 
-    await checkSelectFilter(
+    await E2eTestUtils.checkSelectFilter(
+      viewerSelector,
       '.source-file',
       ['com/android/server/wm/ActivityStarter.java'],
       1,
+      totalEntries,
     );
-    await checkSelectFilter(
+
+    await E2eTestUtils.checkSelectFilter(
+      viewerSelector,
       '.source-file',
       [
         'com/android/server/wm/ActivityStarter.java',
         'com/android/server/wm/ActivityClientController.java',
       ],
       4,
+      totalEntries,
     );
 
-    await E2eTestUtils.checkTotalScrollEntries(
-      viewerSelector,
-      totalEntries,
-      true,
-    );
     await filterByText('FREEZE');
     await E2eTestUtils.checkTotalScrollEntries(viewerSelector, 4);
   });
-
-  async function checkSelectFilter(
-    filterSelector: string,
-    options: string[],
-    expectedFilteredEntries: number,
-  ) {
-    await E2eTestUtils.toggleSelectFilterOptions(
-      viewerSelector,
-      filterSelector,
-      options,
-    );
-    await E2eTestUtils.checkTotalScrollEntries(
-      viewerSelector,
-      expectedFilteredEntries,
-    );
-
-    await E2eTestUtils.toggleSelectFilterOptions(
-      viewerSelector,
-      filterSelector,
-      options,
-    );
-    await E2eTestUtils.checkTotalScrollEntries(
-      viewerSelector,
-      totalEntries,
-      true,
-    );
-  }
 
   async function filterByText(filterString: string) {
     await E2eTestUtils.updateInputField(

@@ -39,7 +39,8 @@ import {UiData} from './ui_data';
         [currentIndex]="inputData?.currentIndex"
         [entries]="inputData?.entries"
         [headers]="inputData?.headers"
-        [traceType]="${TraceType.TRANSACTIONS}">
+        [traceType]="${TraceType.TRANSACTIONS}"
+        [isFetchingData]="inputData?.isFetchingData">
       </log-view>
 
       <properties-view

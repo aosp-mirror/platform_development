@@ -31,7 +31,8 @@ import {UiData} from './ui_data';
         [currentIndex]="inputData?.currentIndex"
         [entries]="inputData?.entries"
         [headers]="inputData?.headers"
-        [traceType]="${TraceType.PROTO_LOG}">
+        [traceType]="${TraceType.PROTO_LOG}"
+        [isFetchingData]="inputData?.isFetchingData">
       </log-view>
     </div>
   `,

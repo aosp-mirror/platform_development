@@ -43,7 +43,8 @@ import {UiData} from './ui_data';
         [headers]="inputData?.headers"
         [traceType]="${TraceType.TRANSITION}"
         [showTraceEntryTimes]="false"
-        [showCurrentTimeButton]="false">
+        [showCurrentTimeButton]="false"
+        [isFetchingData]="inputData?.isFetchingData">
       </log-view>
 
       <properties-view

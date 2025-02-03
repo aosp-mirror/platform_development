@@ -27,6 +27,7 @@ import {MatDividerModule} from '@angular/material/divider';
 import {MatFormFieldModule} from '@angular/material/form-field';
 import {MatIconModule} from '@angular/material/icon';
 import {MatInputModule} from '@angular/material/input';
+import {MatProgressSpinnerModule} from '@angular/material/progress-spinner';
 import {MatSelectModule} from '@angular/material/select';
 import {BrowserAnimationsModule} from '@angular/platform-browser/animations';
 import {assertDefined} from 'common/assert_utils';
@@ -80,6 +81,7 @@ describe('LogComponent', () => {
         MatButtonModule,
         MatIconModule,
         MatPseudoCheckboxModule,
+        MatProgressSpinnerModule,
       ],
       declarations: [
         LogComponent,
@@ -322,6 +324,16 @@ describe('LogComponent', () => {
     component.entries = [];
     fixture.detectChanges();
     expect(htmlElement.querySelector('.placeholder-text')).toBeTruthy();
+    component.isFetchingData = true;
+    fixture.detectChanges();
+    expect(htmlElement.querySelector('.placeholder-text')).toBeNull();
+  });
+
+  it('shows fetching data message', () => {
+    expect(htmlElement.querySelector('.fetching-data')).toBeNull();
+    component.isFetchingData = true;
+    fixture.detectChanges();
+    expect(htmlElement.querySelector('.fetching-data')).toBeTruthy();
   });
 
   it('formats timestamp without date unless multiple dates present', () => {
