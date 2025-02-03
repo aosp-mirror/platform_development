@@ -22,6 +22,7 @@ import static com.google.common.util.concurrent.Uninterruptibles.joinUninterrupt
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.media.AudioDeviceInfo;
+import android.media.AudioFocusInfo;
 import android.media.AudioFormat;
 import android.media.AudioManager;
 import android.media.AudioManager.AudioPlaybackCallback;
@@ -30,13 +31,13 @@ import android.media.AudioRecord;
 import android.media.audiopolicy.AudioMix;
 import android.media.audiopolicy.AudioMixingRule;
 import android.media.audiopolicy.AudioPolicy;
+import android.os.Build;
 import android.os.SystemClock;
 import android.util.Log;
 import android.util.Pair;
 
 import androidx.annotation.GuardedBy;
 import androidx.annotation.Nullable;
-import androidx.core.os.BuildCompat;
 
 import com.example.android.vdmdemo.common.RemoteEventProto.AudioFrame;
 import com.example.android.vdmdemo.common.RemoteEventProto.RemoteEvent;
@@ -199,7 +200,7 @@ final class AudioStreamer {
         List<AudioDeviceInfo> newDevices =
                 getRemoteSubmixDevices().stream()
                         .filter(dev -> !preexistingAddresses.contains(dev.getAddress()))
-                        .collect(Collectors.toList());
+                        .toList();
 
         if (newDevices.size() > 1) {
             Log.e(TAG, "There's more than 1 new remote submix device");
@@ -237,7 +238,8 @@ final class AudioStreamer {
         Log.d(TAG, "Started updateAudioPolicies. Already rerouted uids: "
                 + mReroutedUids + " -> updated uids: " + uids);
 
-        if (BuildCompat.isAtLeastV() && mPreferenceController.getBoolean(
+        if ((Build.VERSION.SDK_INT >= Build.VERSION_CODES.VANILLA_ICE_CREAM)
+                && mPreferenceController.getBoolean(
                 R.string.pref_enable_update_audio_policy_mixes)) {
             if (mUidAudioPolicy != null && mUidAudioMix != null && !mReroutedUids.isEmpty()) {
                 if (uids.isEmpty()) {
@@ -292,9 +294,12 @@ final class AudioStreamer {
                 return false;
             }
 
-            AudioPolicy sessionPolicy = new AudioPolicy.Builder(mApplicationContext)
-                    .addMix(audioMix)
-                    .build();
+            AudioPolicy.Builder sessionPolicyBuilder =
+                    new AudioPolicy.Builder(mApplicationContext).addMix(audioMix);
+            sessionPolicyBuilder.setAudioPolicyFocusListener(
+                    new AudioFocusChangeListener("Session policy"));
+            sessionPolicyBuilder.setIsAudioFocusPolicy(false);
+            AudioPolicy sessionPolicy = sessionPolicyBuilder.build();
 
             int ret = mAudioManager.registerAudioPolicy(sessionPolicy);
             if (ret != AudioManager.SUCCESS) {
@@ -342,10 +347,12 @@ final class AudioStreamer {
                         .setFormat(AUDIO_FORMAT)
                         .build();
 
-        AudioPolicy uidPolicy = new AudioPolicy.Builder(mApplicationContext)
-                .addMix(uidAudioMix)
-                .build();
+        AudioPolicy.Builder uidPolicyBuilder = new AudioPolicy.Builder(mApplicationContext)
+                .addMix(uidAudioMix);
+        uidPolicyBuilder.setAudioPolicyFocusListener(new AudioFocusChangeListener("Uid policy"));
+        uidPolicyBuilder.setIsAudioFocusPolicy(false);
 
+        AudioPolicy uidPolicy = uidPolicyBuilder.build();
         int ret = mAudioManager.registerAudioPolicy(uidPolicy);
         if (ret != AudioManager.SUCCESS) {
             Log.e(TAG, "Failed to register UID audio policy, error code " + ret);
@@ -505,6 +512,44 @@ final class AudioStreamer {
 
         void stopStreaming() {
             mIsRunning.set(false);
+        }
+    }
+
+    private static class AudioFocusChangeListener extends AudioPolicy.AudioPolicyFocusListener {
+
+        private final String mPolicyText;
+
+        AudioFocusChangeListener(String policyText) {
+            mPolicyText = policyText;
+            Log.i(TAG, "Set AudioFocusChangeListener for " + policyText);
+        }
+
+        @Override
+        public void onAudioFocusGrant(AudioFocusInfo afi, int requestResult) {
+            super.onAudioFocusGrant(afi, requestResult);
+            Log.i(TAG, mPolicyText + " onAudioFocusGrant clientUid: " + afi.getClientUid()
+                    + " package: " + afi.getPackageName());
+        }
+
+        @Override
+        public void onAudioFocusLoss(AudioFocusInfo afi, boolean wasNotified) {
+            super.onAudioFocusLoss(afi, wasNotified);
+            Log.i(TAG, mPolicyText + " onAudioFocusLoss clientUid: " + afi.getClientUid()
+                    + " package: " + afi.getPackageName());
+        }
+
+        @Override
+        public void onAudioFocusRequest(AudioFocusInfo afi, int requestResult) {
+            super.onAudioFocusRequest(afi, requestResult);
+            Log.i(TAG, mPolicyText + " onAudioFocusRequest clientUid: " + afi.getClientUid()
+                    + " package: " + afi.getPackageName());
+        }
+
+        @Override
+        public void onAudioFocusAbandon(AudioFocusInfo afi) {
+            super.onAudioFocusAbandon(afi);
+            Log.i(TAG, mPolicyText + " onAudioFocusAbandon clientUid: " + afi.getClientUid()
+                    + " package: " + afi.getPackageName());
         }
     }
 }
