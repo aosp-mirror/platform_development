@@ -17,7 +17,7 @@
 
 use std::{
     collections::BTreeMap,
-    fs::{remove_file, write, File},
+    fs::{canonicalize, remove_file, write, File},
     io::{self, BufReader, Read},
     path::{Path, PathBuf, StripPrefixError},
 };
@@ -70,13 +70,34 @@ pub fn generate(crate_dir: impl AsRef<Path>) -> Result<(), Error> {
         remove_file(&checksum_file)?;
     }
     let mut checksum = Checksum { package: None, files: BTreeMap::new() };
-    for entry in WalkDir::new(crate_dir).follow_links(true) {
+    for entry in WalkDir::new(crate_dir) {
         let entry = entry?;
-        if entry.path().is_dir() {
+        let resolved_path = if entry.path().is_symlink() {
+            if let Ok(canonicalized) = canonicalize(entry.path()) {
+                if canonicalized.strip_prefix(crate_dir).is_err() {
+                    // Skip symlinks that point outside of the crate directory.
+                    // The only current example of this is crates/log/src/android_logger.rs
+                    //
+                    // The reason for this is that we want to run all of the crate
+                    // regeneration steps in a temporary directory, and never touch
+                    // the crate contents in-place.
+                    continue;
+                }
+                canonicalized
+            } else {
+                // Skip dangling symlinks. The AyeAye analyzer can't handle symlinks,
+                // so our only chance to validate them is in the local pre-upload check.
+                // We check for dangling symlinks in below in verify().
+                continue;
+            }
+        } else {
+            entry.path().to_path_buf()
+        };
+        if resolved_path.is_dir() {
             continue;
         }
         let filename = entry.path().strip_prefix(crate_dir)?.to_string_lossy().to_string();
-        let input = File::open(entry.path())?;
+        let input = File::open(resolved_path)?;
         let reader = BufReader::new(input);
         let digest = sha256_digest(reader)?;
         checksum.files.insert(filename, HEXLOWER.encode(digest.as_ref()));
@@ -97,15 +118,26 @@ pub fn verify(crate_dir: impl AsRef<Path>) -> Result<(), Error> {
     let input = File::open(&checksum_file)?;
     let reader = BufReader::new(input);
     let mut parsed: Checksum = serde_json::from_reader(reader)?;
-    for entry in WalkDir::new(crate_dir).follow_links(true) {
+    for entry in WalkDir::new(crate_dir) {
         let entry = entry?;
-        if entry.path().is_dir() || entry.path() == checksum_file {
+        let resolved_path = if entry.path().is_symlink() {
+            // Dangling symlinks are not allowed.
+            let canonical = canonicalize(entry.path())?;
+            if canonical.strip_prefix(crate_dir).is_err() {
+                // Skip symlinks that point outside the crate directory.
+                continue;
+            }
+            canonical
+        } else {
+            entry.path().to_path_buf()
+        };
+        if resolved_path.is_dir() || resolved_path == checksum_file {
             continue;
         }
         let filename = entry.path().strip_prefix(crate_dir)?.to_string_lossy().to_string();
         if let Some(checksum) = parsed.files.get(&filename) {
             let expected_digest = HEXLOWER.decode(checksum.to_ascii_lowercase().as_bytes())?;
-            let input = File::open(entry.path())?;
+            let input = File::open(resolved_path)?;
             let reader = BufReader::new(input);
             let digest = sha256_digest(reader)?;
             parsed.files.remove(&filename);
