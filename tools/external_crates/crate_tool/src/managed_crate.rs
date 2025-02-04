@@ -20,7 +20,7 @@ use std::{
     process::Command,
 };
 
-use anyhow::{anyhow, ensure, Context, Result};
+use anyhow::{anyhow, bail, ensure, Context, Result};
 use crate_config::CrateConfig;
 use glob::glob;
 use google_metadata::GoogleMetadata;
@@ -70,7 +70,6 @@ static CUSTOMIZATIONS: &[&str] = &[
     "patches",
     "METADATA",
     "TEST_MAPPING",
-    "MODULE_LICENSE_*",
 ];
 
 static SYMLINKS: &[&str] = &["LICENSE", "NOTICE"];
@@ -192,18 +191,6 @@ impl<State: ManagedCrateState> ManagedCrate<State> {
         }
         Ok(())
     }
-    pub fn fix_licenses(&self) -> Result<()> {
-        println!("{} = \"={}\"", self.name(), self.android_version());
-        let state =
-            find_licenses(self.android_crate_path(), self.name(), self.android_crate.license())?;
-        if !state.unsatisfied.is_empty() {
-            println!("{:?}", state);
-        } else {
-            // For now, just update MODULE_LICENSE_*
-            update_module_license_files(self.android_crate_path(), &state)?;
-        }
-        Ok(())
-    }
 }
 
 impl ManagedCrate<New> {
@@ -321,6 +308,27 @@ impl ManagedCrate<Vendored> {
         }
         Ok(())
     }
+    fn update_license_files(&self) -> Result<()> {
+        let state = find_licenses(
+            self.temporary_build_directory(),
+            self.name(),
+            self.android_crate.license(),
+        )?;
+
+        // For every chosen license, we must be able to find an associated
+        // license file.
+        if !state.unsatisfied.is_empty() {
+            bail!("Could not find license files for some licenses: {:?}", state.unsatisfied);
+        }
+
+        // SOME license must apply to the code. If none apply, that's an error.
+        if state.satisfied.is_empty() {
+            bail!("No license terms were found for this crate");
+        }
+
+        update_module_license_files(&self.temporary_build_directory(), &state)?;
+        Ok(())
+    }
     /// Runs cargo_embargo on the crate in the temporary build directory.
     ///
     /// Because cargo_embargo can modify Cargo.lock files, we save them, if present.
@@ -394,6 +402,12 @@ impl ManagedCrate<Vendored> {
         }
 
         self.apply_patches()?;
+
+        // License logic must happen AFTER applying patches, because we use patches
+        // to add missing license files. It must also happen BEFORE cargo_embargo,
+        // because cargo_embargo needs to put license information in the Android.bp.
+        self.update_license_files()?;
+
         self.run_cargo_embargo()?;
 
         self.update_metadata()?;

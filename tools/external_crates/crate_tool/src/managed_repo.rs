@@ -408,12 +408,6 @@ impl ManagedRepo {
         }
         Ok(())
     }
-    pub fn fix_licenses<T: AsRef<str>>(&self, crates: impl Iterator<Item = T>) -> Result<()> {
-        for crate_name in crates {
-            self.managed_crate_for(crate_name.as_ref())?.fix_licenses()?;
-        }
-        Ok(())
-    }
     pub fn recontextualize_patches<T: AsRef<str>>(
         &self,
         crates: impl Iterator<Item = T>,

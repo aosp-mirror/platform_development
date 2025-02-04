@@ -78,11 +78,6 @@ enum Cmd {
         /// List of changed files
         files: Vec<String>,
     },
-    /// Fix problems with license files.
-    FixLicenses {
-        #[command(flatten)]
-        crates: CrateList,
-    },
     /// Recontextualize patch files.
     RecontextualizePatches {
         #[command(flatten)]
@@ -170,9 +165,6 @@ fn main() -> Result<()> {
         Cmd::AnalyzeImport { crate_name } => managed_repo.analyze_import(&crate_name),
         Cmd::Import { crate_name, version, autoconfig } => {
             managed_repo.import(&crate_name, &version, autoconfig)
-        }
-        Cmd::FixLicenses { crates } => {
-            managed_repo.fix_licenses(crates.to_list(&managed_repo)?.into_iter())
         }
         Cmd::RecontextualizePatches { crates } => {
             managed_repo.recontextualize_patches(crates.to_list(&managed_repo)?.into_iter())
