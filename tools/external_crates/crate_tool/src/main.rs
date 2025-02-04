@@ -83,11 +83,6 @@ enum Cmd {
         #[command(flatten)]
         crates: CrateList,
     },
-    /// Fix up METADATA files.
-    FixMetadata {
-        #[command(flatten)]
-        crates: CrateList,
-    },
     /// Recontextualize patch files.
     RecontextualizePatches {
         #[command(flatten)]
@@ -120,12 +115,6 @@ enum Cmd {
     },
     /// Initialize a new managed repo.
     Init {},
-    /// Update TEST_MAPPING files.
-    #[command(hide = true)]
-    TestMapping {
-        #[command(flatten)]
-        crates: CrateList,
-    },
     /// Verify checksums for a crate.
     VerifyChecksum {
         #[command(flatten)]
@@ -185,9 +174,6 @@ fn main() -> Result<()> {
         Cmd::FixLicenses { crates } => {
             managed_repo.fix_licenses(crates.to_list(&managed_repo)?.into_iter())
         }
-        Cmd::FixMetadata { crates } => {
-            managed_repo.fix_metadata(crates.to_list(&managed_repo)?.into_iter())
-        }
         Cmd::RecontextualizePatches { crates } => {
             managed_repo.recontextualize_patches(crates.to_list(&managed_repo)?.into_iter())
         }
@@ -198,9 +184,6 @@ fn main() -> Result<()> {
         }
         Cmd::Update { crate_name, version } => managed_repo.update(crate_name, version),
         Cmd::Init {} => managed_repo.init(),
-        Cmd::TestMapping { crates } => {
-            managed_repo.fix_test_mapping(crates.to_list(&managed_repo)?.into_iter())
-        }
         Cmd::VerifyChecksum { crates } => {
             managed_repo.verify_checksums(crates.to_list(&managed_repo)?.into_iter())
         }

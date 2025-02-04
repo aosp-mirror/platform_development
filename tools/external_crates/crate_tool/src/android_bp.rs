@@ -15,7 +15,6 @@
 use std::{
     env,
     ffi::OsString,
-    fs::{remove_file, rename},
     path::Path,
     process::{Command, Output},
     time::{Duration, SystemTime},
@@ -43,12 +42,6 @@ pub fn run_cargo_embargo(temporary_build_path: &RootedPath) -> Result<Output> {
     maybe_build_cargo_embargo(&temporary_build_path.root(), false)?;
     let new_path = add_bpfmt_to_path(temporary_build_path.root())?;
 
-    let cargo_lock = temporary_build_path.join("Cargo.lock")?;
-    let saved_cargo_lock = temporary_build_path.join("Cargo.lock.saved")?;
-    if cargo_lock.abs().exists() {
-        rename(&cargo_lock, &saved_cargo_lock)?;
-    }
-
     let mut cmd = Command::new(
         temporary_build_path.with_same_root("out/host/linux-x86/bin/cargo_embargo")?.abs(),
     );
@@ -60,13 +53,6 @@ pub fn run_cargo_embargo(temporary_build_path: &RootedPath) -> Result<Output> {
         .current_dir(temporary_build_path)
         .output()
         .context(format!("Failed to execute {:?}", cmd.get_program()))?;
-
-    if cargo_lock.abs().exists() {
-        remove_file(&cargo_lock)?;
-    }
-    if saved_cargo_lock.abs().exists() {
-        rename(saved_cargo_lock, cargo_lock)?;
-    }
 
     Ok(output)
 }

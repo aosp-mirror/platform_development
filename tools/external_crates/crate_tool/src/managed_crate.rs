@@ -14,7 +14,7 @@
 
 use std::{
     cell::OnceCell,
-    fs::{copy, read_dir, read_link, read_to_string, remove_dir_all, rename, write},
+    fs::{copy, read_dir, read_link, read_to_string, remove_dir_all, remove_file, rename, write},
     os::unix::fs::symlink,
     path::PathBuf,
     process::Command,
@@ -96,14 +96,6 @@ impl<State: ManagedCrateState> ManagedCrate<State> {
                 )
             })
         })
-    }
-    fn temporary_build_directory(&self) -> RootedPath {
-        self.android_crate
-            .path()
-            .with_same_root("out/rust-crate-temporary-build")
-            .unwrap()
-            .join(self.name())
-            .unwrap()
     }
     fn patch_dir(&self) -> RootedPath {
         self.android_crate_path().join("patches").unwrap()
@@ -212,27 +204,6 @@ impl<State: ManagedCrateState> ManagedCrate<State> {
         }
         Ok(())
     }
-    pub fn fix_metadata(&self) -> Result<()> {
-        println!("{} = \"={}\"", self.name(), self.android_version());
-        let mut metadata = GoogleMetadata::try_from(self.android_crate_path().join("METADATA")?)?;
-        metadata.set_version_and_urls(self.name(), self.android_version().to_string())?;
-        metadata.migrate_archive();
-        metadata.migrate_homepage();
-        metadata.remove_deprecated_url();
-        metadata.write()?;
-        Ok(())
-    }
-    pub fn fix_test_mapping(&self) -> Result<()> {
-        let mut tm = TestMapping::read(self.android_crate_path().clone())?;
-        let mut changed = tm.fix_import_paths();
-        changed |= tm.add_new_tests_to_postsubmit()?;
-        changed |= tm.remove_unknown_tests()?;
-        if changed {
-            println!("Updating TEST_MAPPING for {}", self.name());
-            tm.write()?;
-        }
-        Ok(())
-    }
 }
 
 impl ManagedCrate<New> {
@@ -262,6 +233,15 @@ impl ManagedCrate<New> {
 }
 
 impl ManagedCrate<Vendored> {
+    fn temporary_build_directory(&self) -> RootedPath {
+        self.android_crate
+            .path()
+            .with_same_root("out/rust-crate-temporary-build")
+            .unwrap()
+            .join(self.name())
+            .unwrap()
+    }
+    /// Makes a clean copy of the vendored crates in a temporary build directory.
     fn copy_to_temporary_build_directory(&self) -> Result<()> {
         let build_dir = self.temporary_build_directory();
         ensure_exists_and_empty(&build_dir)?;
@@ -273,6 +253,9 @@ impl ManagedCrate<Vendored> {
         ))?;
         Ok(())
     }
+    /// Copies Android-specific customizations, such as Android.bp, METADATA, etc. from
+    /// the managed crate directory to the temporary build directory. These are things that
+    /// we have added and know need to be preserved.
     fn copy_customizations(&self) -> Result<()> {
         let dest_dir = self.temporary_build_directory();
         for pattern in CUSTOMIZATIONS {
@@ -321,13 +304,12 @@ impl ManagedCrate<Vendored> {
                 symlink(dest, dest_dir.join(link)?)?;
             }
         }
-        for deletion in self.config().deletions() {
-            let dir = self.temporary_build_directory().join(deletion)?;
-            ensure!(dir.abs().is_dir(), "{dir} is not a directory");
-            remove_dir_all(dir)?;
-        }
         Ok(())
     }
+    /// Applies patches from the patches/ directory in a deterministic order.
+    ///
+    /// Patches to the Android.bp file are excluded as they are applied
+    /// later, by cargo_embargo
     fn apply_patches(&self) -> Result<()> {
         for patch in self.patches()? {
             Command::new("patch")
@@ -339,22 +321,33 @@ impl ManagedCrate<Vendored> {
         }
         Ok(())
     }
-    pub fn regenerate(&self) -> Result<()> {
-        self.copy_to_temporary_build_directory()?;
+    /// Runs cargo_embargo on the crate in the temporary build directory.
+    ///
+    /// Because cargo_embargo can modify Cargo.lock files, we save them, if present.
+    fn run_cargo_embargo(&self) -> Result<()> {
+        let temporary_build_path = self.temporary_build_directory();
 
-        self.copy_customizations()?;
-        self.apply_patches()?;
-        run_cargo_embargo(&self.temporary_build_directory())?
+        let cargo_lock = temporary_build_path.join("Cargo.lock")?;
+        let saved_cargo_lock = temporary_build_path.join("Cargo.lock.saved")?;
+        if cargo_lock.abs().exists() {
+            rename(&cargo_lock, &saved_cargo_lock)?;
+        }
+
+        run_cargo_embargo(&temporary_build_path)?
             .success_or_error()
             .context(format!("cargo_embargo execution failed for {}", self.name()))?;
 
-        if !self.temporary_build_directory().abs().exists() {
-            return Err(anyhow!(
-                "Temporary build directory not found at {}",
-                self.temporary_build_directory()
-            ));
+        if cargo_lock.abs().exists() {
+            remove_file(&cargo_lock)?;
+        }
+        if saved_cargo_lock.abs().exists() {
+            rename(saved_cargo_lock, cargo_lock)?;
         }
 
+        Ok(())
+    }
+    /// Updates the METADATA file in the temporary build directory.
+    fn update_metadata(&self) -> Result<()> {
         let mut metadata =
             GoogleMetadata::try_from(self.temporary_build_directory().join("METADATA").unwrap())?;
         let mut writeback = false;
@@ -372,12 +365,45 @@ impl ManagedCrate<Vendored> {
             metadata.write()?;
         }
 
+        Ok(())
+    }
+    /// Updates the TEST_MAPPING file in the temporary build directory, by
+    /// removing deleted tests and adding new tests as post-submits.
+    fn fix_test_mapping(&self) -> Result<()> {
+        let mut tm = TestMapping::read(self.temporary_build_directory())?;
+        let mut changed = tm.fix_import_paths();
+        changed |= tm.add_new_tests_to_postsubmit()?;
+        changed |= tm.remove_unknown_tests()?;
+        // TODO: Add an option to fix up the reverse dependencies.
+        if changed {
+            println!("Updating TEST_MAPPING for {}", self.name());
+            tm.write()?;
+        }
+        Ok(())
+    }
+    pub fn regenerate(&self) -> Result<()> {
+        self.copy_to_temporary_build_directory()?;
+        self.copy_customizations()?;
+
+        // Delete stuff that we don't want to keep around, as specified in the
+        // android_config.toml
+        for deletion in self.config().deletions() {
+            let dir = self.temporary_build_directory().join(deletion)?;
+            ensure!(dir.abs().is_dir(), "{dir} is not a directory");
+            remove_dir_all(dir)?;
+        }
+
+        self.apply_patches()?;
+        self.run_cargo_embargo()?;
+
+        self.update_metadata()?;
+        self.fix_test_mapping()?;
+        // Fails on dangling symlinks, which happens when we run on the log crate.
+        checksum::generate(self.temporary_build_directory())?;
+
         let android_crate_dir = self.android_crate.path();
         remove_dir_all(android_crate_dir)?;
         rename(self.temporary_build_directory(), android_crate_dir)?;
-
-        self.fix_test_mapping()?;
-        checksum::generate(android_crate_dir.abs())?;
 
         Ok(())
     }

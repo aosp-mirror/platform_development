@@ -414,12 +414,6 @@ impl ManagedRepo {
         }
         Ok(())
     }
-    pub fn fix_metadata<T: AsRef<str>>(&self, crates: impl Iterator<Item = T>) -> Result<()> {
-        for crate_name in crates {
-            self.managed_crate_for(crate_name.as_ref())?.fix_metadata()?;
-        }
-        Ok(())
-    }
     pub fn recontextualize_patches<T: AsRef<str>>(
         &self,
         crates: impl Iterator<Item = T>,
@@ -700,13 +694,6 @@ impl ManagedRepo {
         let crates_dir = self.path.join("crates")?;
         create_dir_all(&crates_dir).context(format!("Failed to create {}", crates_dir))?;
         self.pseudo_crate().init()?;
-        Ok(())
-    }
-    pub fn fix_test_mapping<T: AsRef<str>>(&self, crates: impl Iterator<Item = T>) -> Result<()> {
-        for crate_name in crates {
-            let mc = self.managed_crate_for(crate_name.as_ref())?;
-            mc.fix_test_mapping()?;
-        }
         Ok(())
     }
     pub fn verify_checksums<T: AsRef<str>>(&self, crates: impl Iterator<Item = T>) -> Result<()> {
