@@ -50,6 +50,7 @@ static LICENSE_FILE_NAME_CLASSIFICATION: LazyLock<BTreeMap<OsString, LicenseReq>
             ("LICENSE-APACHE-2.0", "Apache-2.0"),
             ("LICENSES/Apache-2.0", "Apache-2.0"),
 
+            ("LICENSE-BSD-2-Clause", "BSD-2-Clause"),
             ("LICENSE-BSD-3-Clause", "BSD-3-Clause"),
 
             ("LICENSE-UNICODE", "Unicode-DFS-2016"),
