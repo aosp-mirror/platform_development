@@ -19,7 +19,6 @@ use std::process::{Command, ExitStatus, Output};
 use std::str::from_utf8;
 
 use anyhow::{anyhow, Context, Result};
-use semver::Version;
 use thiserror::Error;
 
 mod android_bp;
@@ -41,9 +40,6 @@ pub use self::upgradable::SemverCompatibilityRule;
 pub enum CrateError {
     #[error("Virtual crate: {0}")]
     VirtualCrate(PathBuf),
-
-    #[error("Duplicate crate version: {0} {1}")]
-    DuplicateCrateVersion(String, Version),
 }
 
 pub fn default_repo_root() -> Result<PathBuf> {
