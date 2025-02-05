@@ -80,7 +80,7 @@ static CUSTOMIZATIONS: &[&str] = &[
     "MODULE_LICENSE_*",
 ];
 
-static SYMLINKS: &[&str] = &["LICENSE", "NOTICE"];
+static SYMLINKS: &[&str] = &["LICENSE"];
 
 impl<State: ManagedCrateState> ManagedCrate<State> {
     pub fn name(&self) -> &str {
