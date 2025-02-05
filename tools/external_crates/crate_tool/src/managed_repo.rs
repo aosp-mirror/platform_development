@@ -288,15 +288,6 @@ impl ManagedRepo {
             write(krate.path().abs().join("cargo_embargo.json"), "{}")?;
         }
 
-        // If there's a single applicable license file, symlink it to LICENSE.
-        // TODO: Move this logic into regenerate, and improve it.
-        if licenses.satisfied.len() == 1 && licenses.unsatisfied.is_empty() {
-            let license_file = krate.path().join("LICENSE")?;
-            if !license_file.abs().exists() {
-                symlink(licenses.satisfied.iter().next().unwrap().1, license_file)?;
-            }
-        }
-
         if !licenses.unsatisfied.is_empty() {
             println!(
                 r#"
