@@ -7,16 +7,19 @@ import {
   OnChanges,
   SimpleChanges,
   ElementRef,
+  Output,
+  EventEmitter,
 } from '@angular/core';
 import { MotionGoldenData, MotionGoldenFeature } from '../../model/golden';
 import { Visualization, DataPoint } from './visualization';
 import { LineGraphVisualization } from './line-graph-visualization';
 import * as d3 from 'd3';
 import { NgIf } from '@angular/common';
+import { MatIconModule } from '@angular/material/icon';
 
 @Component({
   selector: 'app-graph',
-  imports: [NgIf],
+  imports: [NgIf, MatIconModule],
   templateUrl: './graph.component.html',
   styleUrl: './graph.component.css',
 })
@@ -26,9 +29,12 @@ export class GraphComponent implements AfterViewInit, OnChanges {
   @Input() expectedData: MotionGoldenData | undefined;
   @Input() actualData: MotionGoldenData | undefined;
   @Input() featureName: string | undefined;
+  @Input() isExpanded: boolean = false;
+  @Output() expand = new EventEmitter<string>();
 
   @ViewChild('chartContainer', { static: true })
   chartContainer!: ElementRef<HTMLDivElement>;
+  graphId: string = '';
 
   private svg!: d3.Selection<SVGSVGElement, unknown, null, undefined>;
   private width!: number;
@@ -37,6 +43,7 @@ export class GraphComponent implements AfterViewInit, OnChanges {
   private visualization!: Visualization;
 
   ngAfterViewInit(): void {
+    this.graphId = `graph-${this.featureName}-${Date.now()}`;
     this.width = this.chartContainer.nativeElement.offsetWidth;
     this.height = this.chartContainer.nativeElement.offsetHeight;
     this.createChart();
@@ -48,6 +55,7 @@ export class GraphComponent implements AfterViewInit, OnChanges {
       changes['expectedData'] ||
       changes['featureName']
     ) {
+      this.graphId = `graph-${this.featureName}-${Date.now()}`;
       this.updateData();
       this.createChart();
     }
@@ -135,10 +143,11 @@ export class GraphComponent implements AfterViewInit, OnChanges {
       return new LineGraphVisualization(
         minValue,
         maxValue,
+        this.graphId,
         this.previewService
       );
     }
-    return new LineGraphVisualization(0, 1, this.previewService);
+    return new LineGraphVisualization(0, 1, this.graphId, this.previewService);
   }
 
   private createChart(): void {

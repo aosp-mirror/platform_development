@@ -6,14 +6,14 @@ import {
 } from '../model/golden';
 import { GoldensService } from '../service/goldens.service';
 import { PreviewService } from '../service/preview.service';
-import { NgIf } from '@angular/common';
+import { NgFor, NgIf } from '@angular/common';
 import { forkJoin } from 'rxjs';
 import { GraphComponent } from './graph/graph.component';
 import { MatSnackBar } from '@angular/material/snack-bar';
 
 @Component({
   selector: 'app-timeline',
-  imports: [NgIf, GraphComponent],
+  imports: [NgIf, NgFor, GraphComponent],
   templateUrl: './timeline.component.html',
   styleUrl: './timeline.component.css',
 })
@@ -30,7 +30,7 @@ export class TimelineComponent implements OnChanges {
   expectedData: MotionGoldenData | undefined;
   loading: boolean = false;
   featureCount = 0;
-  selectedFeatureIdx: number = 0;
+  expandedGraphIdx: number = -1;
 
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['selectedGolden']) {
@@ -108,17 +108,25 @@ export class TimelineComponent implements OnChanges {
     data.features = newFeatures;
   }
 
-  selectGraph(index: number) {
-    this.selectedFeatureIdx = index;
+  toggleGraph(name: string) {
+    console.log("Toggling " + name)
+    const index = this.actualData?.features.findIndex(
+      (feature) => feature.name === name
+    );
+    if (index !== undefined && index !== this.expandedGraphIdx) {
+      this.expandedGraphIdx = index;
+    } else {
+      this.expandedGraphIdx = -1;
+    }
   }
 
   onNext() {
-    this.selectedFeatureIdx = (this.selectedFeatureIdx + 1) % this.featureCount;
+    this.expandedGraphIdx = (this.expandedGraphIdx + 1) % this.featureCount;
   }
 
   onPrevious() {
-    this.selectedFeatureIdx =
-      (this.selectedFeatureIdx - 1 + this.featureCount) % this.featureCount;
+    this.expandedGraphIdx =
+      (this.expandedGraphIdx - 1 + this.featureCount) % this.featureCount;
   }
 
   updateGolden() {
@@ -145,10 +153,16 @@ export class TimelineComponent implements OnChanges {
   }
 
   getSelectedFeatureName(): string | undefined {
-    if (this.actualData && this.selectedFeatureIdx !== undefined) {
-      return this.actualData.features[this.selectedFeatureIdx]?.name;
+    if (this.actualData && this.expandedGraphIdx !== undefined) {
+      return this.actualData.features[this.expandedGraphIdx]?.name;
     }
     return undefined;
   }
 
+  getFeatureName(index: number): string | undefined {
+    if (this.actualData) {
+      return this.actualData.features[index]?.name;
+    }
+    return undefined;
+  }
 }

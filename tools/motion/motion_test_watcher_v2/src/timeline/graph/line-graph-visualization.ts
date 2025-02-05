@@ -5,7 +5,12 @@ import { PreviewService } from '../../service/preview.service';
 export class LineGraphVisualization implements Visualization {
   minValue: number;
   maxValue: number;
+  graphId: string;
   viewSelectedCurrentFrame: number = 0;
+  // TODO Can't seem to select the graph with id while updating the marker.
+  // Using a global variable of type `any` is ofc a bad idea for this. Using this
+  // as temp fix. Hope I don't still see this here in 6 months
+  graph: any;
 
   margin = { top: 20, right: 20, bottom: 30, left: 50 };
   chartWidth = 0;
@@ -16,10 +21,12 @@ export class LineGraphVisualization implements Visualization {
   constructor(
     minValue: number,
     maxValue: number,
+    graphId: string,
     private previewService: PreviewService
   ) {
     this.minValue = minValue;
     this.maxValue = maxValue;
+    this.graphId = graphId;
     this.previewService.currentFrameFromView$.subscribe((frame) => {
       if (this.viewSelectedCurrentFrame === frame) return;
       this.viewSelectedCurrentFrame = frame ? frame : 0;
@@ -46,29 +53,40 @@ export class LineGraphVisualization implements Visualization {
       .domain([this.minValue, this.maxValue])
       .range([this.chartHeight, 0]);
 
+    const g = svg
+      .append('g')
+      .attr('id', this.graphId)
+      .attr('transform', `translate(${this.margin.left},${this.margin.top})`);
+
+    this.graph = g;
+
+    this.drawAxes(g);
+    this.drawExpected(g, data);
+    this.drawActual(g, data);
+    this.drawLegend(g);
+    this.addMarker(g, 0);
+    this.drawHover(g, data);
+  }
+
+  private drawAxes(g: d3.Selection<SVGGElement, unknown, null, undefined>) {
     const xAxis = d3.axisBottom(this.xScale);
     const yAxis = d3.axisLeft(this.yScale);
+    g.append('g')
+      .attr('class', 'x axis')
+      .attr('transform', `translate(0, ${this.chartHeight})`)
+      .call(xAxis);
 
-    const actualLine = d3
-      .line<DataPoint>()
-      .x((d) => this.xScale(d.x))
-      .y((d) => this.yScale(d.actualValue || 0));
+    g.append('g').attr('class', 'y axis').call(yAxis);
+  }
 
+  private drawExpected(
+    g: d3.Selection<SVGGElement, unknown, null, undefined>,
+    data: DataPoint[]
+  ) {
     const expectedLine = d3
       .line<DataPoint>()
       .x((d) => this.xScale(d.x))
       .y((d) => this.yScale(d.expectedValue || 0));
-
-    const g = svg
-      .append('g')
-      .attr('transform', `translate(${this.margin.left},${this.margin.top})`);
-
-    g.append('g')
-      .attr('class', 'x axis')
-      .attr('transform', `translate(0,${this.chartHeight})`)
-      .call(xAxis);
-
-    g.append('g').attr('class', 'y axis').call(yAxis);
 
     g.append('path')
       .datum(data)
@@ -86,6 +104,16 @@ export class LineGraphVisualization implements Visualization {
       .attr('cy', (d) => this.yScale(d.expectedValue || 0))
       .attr('r', 3)
       .attr('fill', 'red');
+  }
+
+  private drawActual(
+    g: d3.Selection<SVGGElement, unknown, null, undefined>,
+    data: DataPoint[]
+  ) {
+    const actualLine = d3
+      .line<DataPoint>()
+      .x((d) => this.xScale(d.x))
+      .y((d) => this.yScale(d.actualValue || 0));
 
     g.append('path')
       .datum(data)
@@ -103,7 +131,9 @@ export class LineGraphVisualization implements Visualization {
       .attr('cy', (d) => this.yScale(d.actualValue || 0))
       .attr('r', 2)
       .attr('fill', 'blue');
+  }
 
+  private drawLegend(g: d3.Selection<SVGGElement, unknown, null, undefined>) {
     const legend = g
       .append('g')
       .attr('class', 'legend')
@@ -143,20 +173,12 @@ export class LineGraphVisualization implements Visualization {
       .attr('y', 20)
       .text('Expected')
       .attr('alignment-baseline', 'middle');
+  }
 
-    g.append('line')
-      .attr('class', 'currentFrameLine')
-      .attr('x1', 0)
-      .attr('y1', -100)
-      .attr('x2', 0)
-      .attr('y2', this.chartHeight)
-      .attr('stroke', 'red')
-      .attr('stroke-width', 1)
-      .attr('stroke-linecap', 'butt')
-      .attr('transform', `translate(${this.margin.left},${this.margin.top})`);
-
-    // Hover over
-
+  private drawHover(
+    g: d3.Selection<SVGGElement, unknown, null, undefined>,
+    data: DataPoint[]
+  ) {
     const markerLine = g
       .append('line')
       .attr('class', 'marker-line')
@@ -246,24 +268,28 @@ export class LineGraphVisualization implements Visualization {
     return closestDataPoint;
   }
 
-  private updateMarker(): void {
-    const svg = d3.select('g');
-    if (!svg) return;
+  private addMarker(
+    g: d3.Selection<SVGGElement, unknown, null, undefined>,
+    xPos: number
+  ): void {
+    g.append('line')
+      .attr('class', 'currentFrameLine')
+      .attr('x1', xPos)
+      .attr('y1', -400)
+      .attr('x2', xPos)
+      .attr('y2', this.chartHeight)
+      .attr('stroke', 'red')
+      .attr('stroke-width', 1)
+      .attr('stroke-linecap', 'butt')
+      .attr('transform', `translate(${this.margin.left},${this.margin.top})`);
+  }
 
-    svg.selectAll('.currentFrameLine').remove();
+  private updateMarker(): void {
+    if (!this.graph) return;
+    this.graph.selectAll('.currentFrameLine').remove();
     const xPos = this.xScale(this.viewSelectedCurrentFrame);
     if (xPos >= 0 && xPos <= this.chartWidth) {
-      svg
-        .append('line')
-        .attr('class', 'currentFrameLine')
-        .attr('x1', xPos)
-        .attr('y1', -100)
-        .attr('x2', xPos)
-        .attr('y2', this.chartHeight)
-        .attr('stroke', 'red')
-        .attr('stroke-width', 1)
-        .attr('stroke-linecap', 'butt')
-        .attr('transform', `translate(${this.margin.left},${this.margin.top})`);
+      this.addMarker(this.graph, xPos);
     }
   }
 }
