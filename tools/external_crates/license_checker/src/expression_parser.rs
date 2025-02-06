@@ -78,6 +78,7 @@ static LICENSE_EXPR_SPECIAL_CASES: LazyLock<
     BTreeMap<&'static str, (Option<&'static str>, &'static str)>,
 > = LazyLock::new(|| {
     BTreeMap::from([
+        ("futures-channel", (Some("MIT OR Apache-2.0"), "(MIT OR Apache-2.0) AND BSD-2-Clause")),
         ("libfuzzer-sys", (Some("MIT/Apache-2.0/NCSA"), "(MIT OR Apache-2.0) AND NCSA")),
         ("ring", (None, "MIT AND ISC AND OpenSSL")),
         ("webpki", (None, "ISC AND BSD-3-Clause")),
