@@ -577,11 +577,6 @@ export class AppComponent implements WinscopeEventListener {
     });
   }
 
-  downloadTraces(blob: Blob, filename: string) {
-    const url = window.URL.createObjectURL(blob);
-    Download.fromUrl(url, filename);
-  }
-
   async onWinscopeEvent(event: WinscopeEvent) {
     await event.visit(WinscopeEventType.VIEWERS_LOADED, async (event) => {
       this.viewers = event.viewers;
@@ -673,5 +668,10 @@ export class AppComponent implements WinscopeEventListener {
 
   private translateStatus(status: boolean) {
     return status ? 'ON' : 'OFF';
+  }
+
+  private downloadTraces(blob: Blob, filename: string) {
+    const url = window.URL.createObjectURL(blob);
+    Download.fromUrl(url, filename);
   }
 }

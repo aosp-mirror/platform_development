@@ -257,6 +257,16 @@ class E2eTestUtils {
     expect(foundLabel).toBeTruthy();
   }
 
+  static async checkScrollPresent(viewerSelector: string) {
+    await browser.wait(
+      async () => {
+        return await element(by.css(`${viewerSelector} .scroll`)).isPresent();
+      },
+      1000,
+      'Fetching data timeout',
+    );
+  }
+
   static async checkTotalScrollEntries(
     viewerSelector: string,
     numberOfEntries: number,
@@ -277,12 +287,8 @@ class E2eTestUtils {
         );
       }
     }
-    const entries = await element.all(
-      by.css(`${viewerSelector} .scroll .entry`),
-    );
-    expect(await entries[entries.length - 1].getAttribute('item-id')).toEqual(
-      `${numberOfEntries - 1}`,
-    );
+    const lastId = await E2eTestUtils.getLastScrollEntryItemId(viewerSelector);
+    expect(lastId).toEqual(`${numberOfEntries - 1}`);
   }
 
   static async getLastScrollEntryItemId(
@@ -294,31 +300,33 @@ class E2eTestUtils {
     return await entries[entries.length - 1].getAttribute('item-id');
   }
 
-  static async toggleSelectFilterOptions(
+  static async checkSelectFilter(
     viewerSelector: string,
     filterSelector: string,
     options: string[],
+    expectedFilteredEntries: number,
+    totalEntries: number,
   ) {
-    await element(
-      by.css(
-        `${viewerSelector} .headers ${filterSelector} .mat-select-trigger`,
-      ),
-    ).click();
-
-    const optionElements: ElementFinder[] = await element.all(
-      by.css('.mat-select-panel .mat-option'),
+    await E2eTestUtils.toggleSelectFilterOptions(
+      viewerSelector,
+      filterSelector,
+      options,
     );
-    for (const optionEl of optionElements) {
-      const optionText = (await optionEl.getText()).trim();
-      if (options.some((option) => optionText === option)) {
-        await optionEl.click();
-      }
-    }
+    await E2eTestUtils.checkTotalScrollEntries(
+      viewerSelector,
+      expectedFilteredEntries,
+    );
 
-    const backdrop = await element(
-      by.css('.cdk-overlay-backdrop'),
-    ).getWebElement();
-    await browser.actions().mouseMove(backdrop, {x: 0, y: 0}).click().perform();
+    await E2eTestUtils.toggleSelectFilterOptions(
+      viewerSelector,
+      filterSelector,
+      options,
+    );
+    await E2eTestUtils.checkTotalScrollEntries(
+      viewerSelector,
+      totalEntries,
+      true,
+    );
   }
 
   static async uploadFixture(...paths: string[]) {
@@ -387,6 +395,35 @@ class E2eTestUtils {
   private static async checkEmitsOldDataMessages() {
     const text = await element(by.css('snack-bar')).getText();
     expect(text).toContain('discarded because data is old');
+  }
+
+  private static async toggleSelectFilterOptions(
+    viewerSelector: string,
+    filterSelector: string,
+    options: string[],
+  ) {
+    await element(
+      by.css(
+        `${viewerSelector} .headers ${filterSelector} .mat-select-trigger`,
+      ),
+    ).click();
+    const optionElements: ElementFinder[] = await element.all(
+      by.css('.mat-select-panel .option'),
+    );
+    for (const optionEl of optionElements) {
+      const optionText = (await optionEl.getText()).trim();
+      if (options.some((option) => optionText === option)) {
+        await optionEl.click();
+        options = options.filter((option) => option !== optionText);
+        if (options.length === 0) {
+          break;
+        }
+      }
+    }
+    const backdrop = await element(
+      by.css('.cdk-overlay-backdrop'),
+    ).getWebElement();
+    await browser.actions().mouseMove(backdrop, {x: 0, y: 0}).click().perform();
   }
 }
 

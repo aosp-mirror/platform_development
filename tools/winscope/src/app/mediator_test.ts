@@ -40,6 +40,7 @@ import {
   AppRefreshDumpsRequest,
   AppResetRequest,
   AppTraceViewRequest,
+  AppTraceViewRequestHandled,
   DarkModeToggled,
   ExpandedTimelineToggled,
   FilterPresetApplyRequest,
@@ -112,7 +113,7 @@ describe('Mediator', () => {
   let crossToolProtocol: CrossToolProtocol;
   let appComponent: WinscopeEventListener;
   let timelineComponent: WinscopeEventEmitter & WinscopeEventListener;
-  let uploadTracesComponent: ProgressListenerStub;
+  let uploadTracesComponent: WinscopeEventListenerStub & ProgressListenerStub;
   let collectTracesComponent: ProgressListenerStub &
     WinscopeEventEmitterStub &
     WinscopeEventListenerStub;
@@ -170,7 +171,10 @@ describe('Mediator', () => {
       new WinscopeEventEmitterStub(),
       new WinscopeEventListenerStub(),
     );
-    uploadTracesComponent = new ProgressListenerStub();
+    uploadTracesComponent = FunctionUtils.mixin(
+      new ProgressListenerStub(),
+      new WinscopeEventListenerStub(),
+    );
     collectTracesComponent = FunctionUtils.mixin(
       FunctionUtils.mixin(
         new ProgressListenerStub(),
@@ -216,6 +220,7 @@ describe('Mediator', () => {
       spyOn(timelineComponent, 'onWinscopeEvent'),
       spyOn(timelineData, 'initialize').and.callThrough(),
       spyOn(traceViewComponent, 'onWinscopeEvent'),
+      spyOn(uploadTracesComponent, 'onWinscopeEvent'),
       spyOn(uploadTracesComponent, 'onProgressUpdate'),
       spyOn(uploadTracesComponent, 'onOperationFinished'),
       spyOn(viewerStub0, 'onWinscopeEvent'),
@@ -245,7 +250,7 @@ describe('Mediator', () => {
 
     resetSpyCalls();
     await mediator.onWinscopeEvent(new AppTraceViewRequest());
-    await checkLoadTraceViewEvents(uploadTracesComponent);
+    checkLoadTraceViewEvents(uploadTracesComponent);
     userNotifierChecker.expectNotified([]);
   });
 
@@ -257,7 +262,8 @@ describe('Mediator', () => {
       }),
     );
     userNotifierChecker.expectNone();
-    await checkLoadTraceViewEvents(collectTracesComponent);
+    checkLoadTraceViewEvents(collectTracesComponent);
+    checkUploadTracesComponentTraceViewEvents();
   });
 
   it('handles invalid collected traces from Winscope', async () => {
@@ -311,6 +317,7 @@ describe('Mediator', () => {
       ]),
     );
     expect(appComponent.onWinscopeEvent).not.toHaveBeenCalled();
+    checkUploadTracesComponentTraceViewEvents();
   });
 
   it('handles empty collected traces from Winscope', async () => {
@@ -346,6 +353,7 @@ describe('Mediator', () => {
       ]),
     );
     expect(appComponent.onWinscopeEvent).toHaveBeenCalled();
+    checkUploadTracesComponentTraceViewEvents();
   });
 
   it('handles app reset request', async () => {
@@ -370,7 +378,7 @@ describe('Mediator', () => {
     ];
     await loadFiles(dumpFiles);
     await mediator.onWinscopeEvent(new AppTraceViewRequest());
-    await checkLoadTraceViewEvents(uploadTracesComponent);
+    checkLoadTraceViewEvents(uploadTracesComponent);
 
     await mediator.onWinscopeEvent(new AppRefreshDumpsRequest());
     expect(collectTracesComponent.onWinscopeEvent).toHaveBeenCalled();
@@ -481,7 +489,7 @@ describe('Mediator', () => {
 
     resetSpyCalls();
     await mediator.onWinscopeEvent(new AppTraceViewRequest());
-    await checkLoadTraceViewEvents(uploadTracesComponent);
+    checkLoadTraceViewEvents(uploadTracesComponent);
     userNotifierChecker.expectNotified([]);
   });
 
@@ -504,7 +512,7 @@ describe('Mediator', () => {
 
     resetSpyCalls();
     await mediator.onWinscopeEvent(new AppTraceViewRequest());
-    await checkLoadTraceViewEvents(uploadTracesComponent, undefined, [
+    checkLoadTraceViewEvents(uploadTracesComponent, undefined, [
       new IncompleteFrameMapping(errorMsg),
     ]);
   });
@@ -823,7 +831,7 @@ describe('Mediator', () => {
     resetSpyCalls();
     await mediator.onWinscopeEvent(new AppTraceViewRequest());
 
-    await checkLoadTraceViewEvents(uploadTracesComponent, expectedViewers);
+    checkLoadTraceViewEvents(uploadTracesComponent, expectedViewers);
 
     // Simulate notification of TraceViewComponent about initially selected/focused tab
     resetSpyCalls();
@@ -838,7 +846,7 @@ describe('Mediator', () => {
     userNotifierChecker.expectNotified([]);
   }
 
-  async function checkLoadTraceViewEvents(
+  function checkLoadTraceViewEvents(
     progressListener: ProgressListener,
     expectedViewers = viewers,
     notifications: UserWarning[] = [],
@@ -856,6 +864,15 @@ describe('Mediator', () => {
       (expectedViewers as WinscopeEventListener[]).concat([timelineComponent]),
       notifications,
     );
+  }
+
+  function checkUploadTracesComponentTraceViewEvents() {
+    const uploadTracesSpy =
+      uploadTracesComponent.onWinscopeEvent as jasmine.Spy;
+    expect(uploadTracesSpy.calls.allArgs()).toEqual([
+      [new AppTraceViewRequest()],
+      [new AppTraceViewRequestHandled()],
+    ]);
   }
 
   function checkTracePositionUpdateEvents(

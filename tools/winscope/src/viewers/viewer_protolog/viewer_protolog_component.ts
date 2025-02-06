@@ -13,11 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import {Component, Input, ViewChild} from '@angular/core';
-import {PersistentStore} from 'common/store/persistent_store';
+import {Component, ViewChild} from '@angular/core';
 import {TraceType} from 'trace/trace_type';
 import {LogComponent} from 'viewers/components/log_component';
 import {viewerCardStyle} from 'viewers/components/styles/viewer_card.styles';
+import {ViewerComponent} from 'viewers/components/viewer_component';
 import {UiData} from './ui_data';
 
 @Component({
@@ -31,16 +31,13 @@ import {UiData} from './ui_data';
         [currentIndex]="inputData?.currentIndex"
         [entries]="inputData?.entries"
         [headers]="inputData?.headers"
-        [traceType]="${TraceType.PROTO_LOG}">
+        [traceType]="${TraceType.PROTO_LOG}"
+        [isFetchingData]="inputData?.isFetchingData">
       </log-view>
     </div>
   `,
   styles: [viewerCardStyle],
 })
-export class ViewerProtologComponent {
-  @Input() inputData: UiData | undefined;
-  @Input() store: PersistentStore | undefined;
-
-  @ViewChild(LogComponent)
-  logComponent?: LogComponent;
+export class ViewerProtologComponent extends ViewerComponent<UiData> {
+  @ViewChild(LogComponent) logComponent?: LogComponent;
 }

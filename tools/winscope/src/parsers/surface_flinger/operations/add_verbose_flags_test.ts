@@ -185,7 +185,7 @@ describe('AddVerboseFlags', () => {
     const expectedResult = TreeNodeUtils.makeCalculatedPropertyNode(
       expectedRoot.id,
       'verboseFlags',
-      'HIDDEN|ENABLE_BACKPRESSURE (0x101)',
+      'HIDDEN | ENABLE_BACKPRESSURE (0x101)',
     );
     expectedRoot.addOrReplaceChild(flags);
     expectedRoot.addOrReplaceChild(expectedResult);

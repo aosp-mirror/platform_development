@@ -28,6 +28,7 @@ import {UnitTestUtils} from 'test/unit/utils';
 import {CustomQueryType} from 'trace/custom_query';
 import {Trace} from 'trace/trace';
 import {Traces} from 'trace/traces';
+import {TRACE_INFO} from 'trace/trace_info';
 import {TraceType} from 'trace/trace_type';
 import {EMPTY_OBJ_STRING} from 'trace/tree_node/formatters';
 import {HierarchyTreeNode} from 'trace/tree_node/hierarchy_tree_node';
@@ -38,6 +39,8 @@ import {TextFilter} from 'viewers/common/text_filter';
 import {UiDataHierarchy} from 'viewers/common/ui_data_hierarchy';
 import {UiHierarchyTreeNode} from 'viewers/common/ui_hierarchy_tree_node';
 import {UiTreeUtils} from 'viewers/common/ui_tree_utils';
+import {ViewerEvents} from 'viewers/common/viewer_events';
+import {TraceRectType} from 'viewers/components/rects/rect_spec';
 import {Presenter} from './presenter';
 import {UiData} from './ui_data';
 
@@ -100,12 +103,80 @@ the default for its data type.`,
     },
   };
 
+  override readonly expectedInitialRectSpec = {
+    type: TraceRectType.LAYERS,
+    icon: TRACE_INFO[TraceType.SURFACE_FLINGER].icon,
+    legend: [
+      {
+        fill: '#c8e8b7',
+        desc: 'Visible',
+        border: 'var(--default-text-color)',
+        showInWireFrameMode: false,
+      },
+      {
+        fill: '#dcdcdc',
+        desc: 'Not visible',
+        border: 'var(--default-text-color)',
+        showInWireFrameMode: false,
+      },
+      {
+        fill: 'var(--selected-element-color)',
+        desc: 'Selected',
+        border: 'var(--default-text-color)',
+        showInWireFrameMode: true,
+      },
+      {
+        fill: '#ad42f5',
+        desc: 'Has view content',
+        border: 'var(--default-text-color)',
+        showInWireFrameMode: false,
+      },
+      {border: '#ffc24b', desc: 'Pinned', showInWireFrameMode: true},
+      {border: '#b34a24', desc: 'Pinned', showInWireFrameMode: true},
+    ],
+  };
+  readonly expectedInputWindowsSpec = {
+    type: TraceRectType.INPUT_WINDOWS,
+    icon: TRACE_INFO[TraceType.INPUT_EVENT_MERGED].icon,
+    legend: [
+      {
+        fill: '#c8e8b7',
+        desc: 'Visible and touchable',
+        border: 'var(--default-text-color)',
+        showInWireFrameMode: false,
+      },
+      {
+        fill: '#dcdcdc',
+        desc: 'Not visible',
+        border: 'var(--default-text-color)',
+        showInWireFrameMode: false,
+      },
+      {
+        fill: '',
+        border: 'var(--default-text-color)',
+        desc: 'Visible but not touchable',
+        showInWireFrameMode: false,
+      },
+      {
+        fill: 'var(--selected-element-color)',
+        desc: 'Selected',
+        border: 'var(--default-text-color)',
+        showInWireFrameMode: true,
+      },
+      {border: '#ffc24b', desc: 'Pinned', showInWireFrameMode: true},
+      {border: '#b34a24', desc: 'Pinned', showInWireFrameMode: true},
+    ],
+  };
   override readonly treeNodeLongName =
     'ActivityRecord{64953af u0 com.google.android.apps.nexuslauncher/.NexusLauncherActivity#96';
   override readonly treeNodeShortName =
     'ActivityRecord{64953af u0 com.google.(...).NexusLauncherActivity#96';
 
   override async setUpTestEnvironment(): Promise<void> {
+    const perfettoTrace = await UnitTestUtils.getPerfettoParser(
+      TraceType.SURFACE_FLINGER,
+      'traces/perfetto/layers_trace.perfetto-trace',
+    );
     this.traceSf = new TraceBuilder<HierarchyTreeNode>()
       .setType(TraceType.SURFACE_FLINGER)
       .setEntries([
@@ -123,6 +194,7 @@ the default for its data type.`,
         await UnitTestUtils.getTraceEntry<HierarchyTreeNode>(
           'traces/elapsed_and_real_timestamp/SurfaceFlinger_with_duplicated_ids.pb',
         ),
+        await perfettoTrace.getEntry(0),
       ])
       .build();
 
@@ -222,6 +294,11 @@ the default for its data type.`,
     expect(assertDefined((uiData as UiData).curatedProperties).flags).toEqual(
       'ENABLE_BACKPRESSURE (0x100)',
     );
+    expect((uiData as UiData).rectSpec).toEqual(this.expectedInitialRectSpec);
+    expect((uiData as UiData).allRectSpecs).toEqual([
+      this.expectedInitialRectSpec,
+      this.expectedInputWindowsSpec,
+    ]);
   }
 
   override executePropertiesChecksAfterSecondPositionUpdate(
@@ -298,6 +375,28 @@ the default for its data type.`,
       afterEach(() => {
         userNotifierChecker.expectNone();
         userNotifierChecker.reset();
+      });
+
+      it('adds event listeners', async () => {
+        const el = document.createElement('div');
+        presenter.addEventListeners(el);
+
+        let spy: jasmine.Spy = spyOn(presenter, 'onRectDoubleClick');
+        const testId = 'test';
+        el.dispatchEvent(
+          new CustomEvent(ViewerEvents.RectsDblClick, {
+            detail: {clickedRectId: testId},
+          }),
+        );
+        expect(spy).toHaveBeenCalledWith(testId);
+
+        spy = spyOn(presenter, 'onRectTypeButtonClicked');
+        el.dispatchEvent(
+          new CustomEvent(ViewerEvents.RectTypeButtonClick, {
+            detail: {type: TraceRectType.LAYERS},
+          }),
+        );
+        expect(spy).toHaveBeenCalledOnceWith(TraceRectType.LAYERS);
       });
 
       it('handles displays with no visible layers', async () => {
@@ -571,9 +670,26 @@ the default for its data type.`,
         expect(uiData.curatedProperties?.destinationFrame).toEqual(
           '(0, 0) - (1, 1)',
         );
-        expect(uiData.curatedProperties?.reqCrop).toEqual(EMPTY_OBJ_STRING);
+        expect(uiData.curatedProperties?.calcCrop).toEqual(EMPTY_OBJ_STRING);
       });
 
+      it('draws input windows', async () => {
+        await goToEntryWithInputWindows(assertDefined(this.traceSf));
+        expect(uiData.rectsToDraw.length).toEqual(72);
+        expect(uiData.rectsToDraw[1].id).toEqual(
+          '3 Display 0 name="Built-in Screen"#3',
+        );
+        presenter.onRectTypeButtonClicked(TraceRectType.INPUT_WINDOWS);
+        expect(uiData.rectsToDraw.length).toEqual(9);
+        expect(uiData.rectsToDraw[1].id).toEqual(
+          '76 com.android.systemui.ImageWallpaper#76',
+        );
+        expect(uiData.rectSpec).toEqual(this.expectedInputWindowsSpec);
+        expect(uiData.allRectSpecs).toEqual([
+          this.expectedInitialRectSpec,
+          this.expectedInputWindowsSpec,
+        ]);
+      });
       async function checkColorAndTransform(
         treeForAlphaCheck: UiHierarchyTreeNode,
         treeForTransformCheck: UiHierarchyTreeNode,
@@ -621,6 +737,16 @@ the default for its data type.`,
 
         await presenter.onAppEvent(positionUpdate);
         return [presenter, traceVc];
+      }
+
+      async function goToEntryWithInputWindows(
+        traceSf: Trace<HierarchyTreeNode>,
+      ) {
+        const entryWithInputWindows = assertDefined(traceSf?.getEntry(6));
+        const positionUpdate = TracePositionUpdate.fromTraceEntry(
+          entryWithInputWindows,
+        );
+        await presenter.onAppEvent(positionUpdate);
       }
     });
   }

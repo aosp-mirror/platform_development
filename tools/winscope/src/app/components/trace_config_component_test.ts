@@ -27,6 +27,7 @@ import {BrowserAnimationsModule} from '@angular/platform-browser/animations';
 import {assertDefined} from 'common/assert_utils';
 import {InMemoryStorage} from 'common/store/in_memory_storage';
 import {Store} from 'common/store/store';
+import {UnitTestUtils} from 'test/unit/utils';
 import {TraceType} from 'trace/trace_type';
 import {ConfigurationOptions} from 'trace_collection/trace_configuration';
 import {TraceConfigComponent} from './trace_config_component';
@@ -323,11 +324,7 @@ describe('TraceConfigComponent', () => {
     const options = panel.querySelectorAll<HTMLElement>('mat-option');
 
     const shortOption = options.item(0);
-    shortOption.dispatchEvent(new Event('mouseenter'));
-    fixture.detectChanges();
-    expect(
-      document.querySelector<HTMLElement>('.mat-tooltip-panel'),
-    ).toBeNull();
+    UnitTestUtils.checkTooltips([shortOption], [undefined], fixture);
 
     const longOption = options.item(1);
     longOption.dispatchEvent(new Event('mouseenter'));
@@ -406,7 +403,7 @@ describe('TraceConfigComponent', () => {
             {
               key: 'displays',
               name: 'displays',
-              options: ['12345', 'long_option'.repeat(20)],
+              options: ['12345', 'long_option'.repeat(100)],
               value: '',
               optional: true,
             },

@@ -1,0 +1,7 @@
+.success-snackbar {
+  @apply bg-green-500;
+}
+
+.error-snackbar {
+  @apply bg-red-500;
+}

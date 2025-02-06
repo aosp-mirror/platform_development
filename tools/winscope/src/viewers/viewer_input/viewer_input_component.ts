@@ -15,7 +15,6 @@
  */
 
 import {Component, Input} from '@angular/core';
-import {PersistentStore} from 'common/store/persistent_store';
 import {TraceType} from 'trace/trace_type';
 import {CollapsibleSections} from 'viewers/common/collapsible_sections';
 import {CollapsibleSectionType} from 'viewers/common/collapsible_section_type';
@@ -25,6 +24,7 @@ import {
   viewerCardInnerStyle,
   viewerCardStyle,
 } from 'viewers/components/styles/viewer_card.styles';
+import {ViewerComponent} from 'viewers/components/viewer_component';
 import {UiData} from './ui_data';
 
 @Component({
@@ -37,7 +37,8 @@ import {UiData} from './ui_data';
           (sectionChange)="sections.onCollapseStateChange($event, false)">
       </collapsed-sections>
 
-      <rects-view *ngIf="inputData?.rectsToDraw"
+      <rects-view
+          *ngIf="inputData?.rectsToDraw"
           class="rects-view"
           [class.collapsed]="sections.isSectionCollapsed(CollapsibleSectionType.RECTS)"
           [title]="rectsTitle"
@@ -50,6 +51,7 @@ import {UiData} from './ui_data';
           [highlightedItem]="inputData?.highlightedRect ?? ''"
           [userOptions]="inputData?.rectsUserOptions ?? {}"
           [isDarkMode]="inputData?.isDarkMode ?? false"
+          [rectSpec]="inputData?.rectSpec"
           (collapseButtonClicked)="sections.onCollapseStateChange(CollapsibleSectionType.RECTS, true)"></rects-view>
 
       <log-view
@@ -65,6 +67,7 @@ import {UiData} from './ui_data';
           [traceType]="${TraceType.INPUT_EVENT_MERGED}"
           [showTraceEntryTimes]="false"
           [showCurrentTimeButton]="false"
+          [isFetchingData]="inputData?.isFetchingData"
           (collapseButtonClicked)="sections.onCollapseStateChange(CollapsibleSectionType.LOG, true)"></log-view>
 
       <div class="properties" *ngIf="!arePropertiesCollapsed()">
@@ -113,9 +116,7 @@ import {UiData} from './ui_data';
     `,
   ],
 })
-export class ViewerInputComponent {
-  @Input() inputData: UiData | undefined;
-  @Input() store: PersistentStore | undefined;
+export class ViewerInputComponent extends ViewerComponent<UiData> {
   @Input() active = false;
   TraceType = TraceType;
   CollapsibleSectionType = CollapsibleSectionType;

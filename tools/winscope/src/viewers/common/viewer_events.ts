@@ -35,12 +35,13 @@ export enum ViewerEvents {
   HighlightedPropertyChange = 'HighlightedPropertyChange',
 
   RectsUserOptionsChange = 'RectsUserOptionsChange',
+  RectsDblClick = 'RectsDblClick',
+  MiniRectsDblClick = 'MiniRectsDblClick',
+  RectTypeButtonClick = 'RectTypeButtonClick',
 
   OverlayDblClick = 'OverlayDblClick',
 
   AdditionalPropertySelected = 'AdditionalPropertySelected',
-  RectsDblClick = 'RectsDblClick',
-  MiniRectsDblClick = 'MiniRectsDblClick',
 
   TimestampClick = 'TimestampClick',
   LogEntryClick = 'LogEntryClick',

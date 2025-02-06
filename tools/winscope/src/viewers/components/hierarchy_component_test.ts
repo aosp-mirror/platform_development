@@ -34,6 +34,7 @@ import {InMemoryStorage} from 'common/store/in_memory_storage';
 import {PersistentStore} from 'common/store/persistent_store';
 import {DuplicateLayerIds, MissingLayerIds} from 'messaging/user_warnings';
 import {HierarchyTreeBuilder} from 'test/unit/hierarchy_tree_builder';
+import {UnitTestUtils} from 'test/unit/utils';
 import {TraceType} from 'trace/trace_type';
 import {TextFilter} from 'viewers/common/text_filter';
 import {UiHierarchyTreeNode} from 'viewers/common/ui_hierarchy_tree_node';
@@ -274,21 +275,11 @@ describe('HierarchyComponent', () => {
     const spy = spyOnProperty(msgEl, 'scrollWidth').and.returnValue(
       msgEl.clientWidth,
     );
-    warningEl.dispatchEvent(new Event('mouseenter'));
-    fixture.detectChanges();
-    expect(
-      document.querySelector<HTMLElement>('.mat-tooltip-panel'),
-    ).toBeNull();
-    warningEl.dispatchEvent(new Event('mouseleave'));
-    fixture.detectChanges();
+    UnitTestUtils.checkTooltips([warningEl], [undefined], fixture);
 
     spy.and.returnValue(msgEl.clientWidth + 1);
     fixture.detectChanges();
-    warningEl.dispatchEvent(new Event('mouseenter'));
-    fixture.detectChanges();
-    expect(
-      document.querySelector<HTMLElement>('.mat-tooltip-panel')?.textContent,
-    ).toEqual(warning.getMessage());
+    UnitTestUtils.checkTooltips([warningEl], [warning.getMessage()], fixture);
   });
 
   it('handles arrow down key press', () => {

@@ -15,12 +15,12 @@
  */
 
 import {TraceType} from 'trace/trace_type';
-import {WasmEngineProxy} from 'trace_processor/wasm_engine_proxy';
+import {TraceProcessor} from 'trace_processor/trace_processor';
 
 export abstract class AbstractSearchViewFactory {
   abstract readonly traceType: TraceType;
 
-  constructor(protected traceProcessor: WasmEngineProxy) {}
+  constructor(protected traceProcessor: TraceProcessor) {}
 
   protected async createSqlTableWithDefaults(
     tableName: string,

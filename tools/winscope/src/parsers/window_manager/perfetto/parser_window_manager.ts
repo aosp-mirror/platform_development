@@ -34,7 +34,7 @@ import {TraceFile} from 'trace/trace_file';
 import {TraceType} from 'trace/trace_type';
 import {HierarchyTreeNode} from 'trace/tree_node/hierarchy_tree_node';
 import {PropertiesProvider} from 'trace/tree_node/properties_provider';
-import {WasmEngineProxy} from 'trace_processor/wasm_engine_proxy';
+import {TraceProcessor} from 'trace_processor/trace_processor';
 import {TAMPERED_PROTOS_LATEST} from './tampered_protos_latest';
 
 export class ParserWindowManager extends AbstractParser<HierarchyTreeNode> {
@@ -47,7 +47,7 @@ export class ParserWindowManager extends AbstractParser<HierarchyTreeNode> {
 
   constructor(
     traceFile: TraceFile,
-    traceProcessor: WasmEngineProxy,
+    traceProcessor: TraceProcessor,
     timestampConverter: ParserTimestampConverter,
   ) {
     super(traceFile, traceProcessor, timestampConverter);
@@ -81,7 +81,7 @@ export class ParserWindowManager extends AbstractParser<HierarchyTreeNode> {
     entriesRange: EntriesRange,
   ): Promise<CustomQueryParserResultTypeMap[Q]> {
     return new VisitableParserCustomQuery(type)
-      .visit(CustomQueryType.WM_WINDOWS_TOKEN_AND_TITLE, () => {
+      .visit(CustomQueryType.WM_WINDOWS_TOKEN_AND_TITLE, async () => {
         const result: CustomQueryParserResultTypeMap[CustomQueryType.WM_WINDOWS_TOKEN_AND_TITLE] =
           [];
 

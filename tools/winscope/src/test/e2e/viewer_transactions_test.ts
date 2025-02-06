@@ -22,6 +22,7 @@ describe('Viewer Transactions', () => {
   const totalEntries = 9534;
 
   beforeEach(async () => {
+    jasmine.DEFAULT_TIMEOUT_INTERVAL = 20000;
     await E2eTestUtils.beforeEach(2000);
     await browser.get(E2eTestUtils.WINSCOPE_URL);
   });
@@ -32,6 +33,7 @@ describe('Viewer Transactions', () => {
       'Transactions',
       viewerSelector,
     );
+    await E2eTestUtils.checkScrollPresent(viewerSelector);
     await E2eTestUtils.checkTotalScrollEntries(
       viewerSelector,
       totalEntries,
@@ -49,10 +51,27 @@ describe('Viewer Transactions', () => {
     );
     await E2eTestUtils.checkWinscopeRealTimestamp('18:05:17.505');
     await checkSelectedEntry();
-    await checkSelectFilter('.pid', ['6914'], 2);
-    await checkSelectFilter('.uid', ['10161'], 16);
-    await checkSelectFilter('.flags', ['eBackgroundBlurRadiusChanged'], 10);
-    await new Promise<void>((resolve) => setTimeout(resolve, 1000));
+    await E2eTestUtils.checkSelectFilter(
+      viewerSelector,
+      '.pid',
+      ['6914'],
+      2,
+      totalEntries,
+    );
+    await E2eTestUtils.checkSelectFilter(
+      viewerSelector,
+      '.uid',
+      ['10161'],
+      16,
+      totalEntries,
+    );
+    await E2eTestUtils.checkSelectFilter(
+      viewerSelector,
+      '.flags',
+      ['eBackgroundBlurRadiusChanged'],
+      10,
+      totalEntries,
+    );
   });
 
   async function checkSelectedEntry() {
@@ -93,33 +112,6 @@ describe('Viewer Transactions', () => {
       viewerSelector,
       'color',
       'color:\n(0.106, 0.106, 0.106)',
-    );
-  }
-
-  async function checkSelectFilter(
-    filterSelector: string,
-    options: string[],
-    expectedFilteredEntries: number,
-  ) {
-    await E2eTestUtils.toggleSelectFilterOptions(
-      viewerSelector,
-      filterSelector,
-      options,
-    );
-    await E2eTestUtils.checkTotalScrollEntries(
-      viewerSelector,
-      expectedFilteredEntries,
-    );
-
-    await E2eTestUtils.toggleSelectFilterOptions(
-      viewerSelector,
-      filterSelector,
-      options,
-    );
-    await E2eTestUtils.checkTotalScrollEntries(
-      viewerSelector,
-      totalEntries,
-      true,
     );
   }
 });

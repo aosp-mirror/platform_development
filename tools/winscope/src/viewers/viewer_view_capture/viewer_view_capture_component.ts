@@ -14,14 +14,14 @@
  * limitations under the License.
  */
 
-import {ChangeDetectionStrategy, Component, Input} from '@angular/core';
-import {PersistentStore} from 'common/store/persistent_store';
+import {ChangeDetectionStrategy, Component} from '@angular/core';
 import {TraceType} from 'trace/trace_type';
 import {CollapsibleSections} from 'viewers/common/collapsible_sections';
 import {CollapsibleSectionType} from 'viewers/common/collapsible_section_type';
 import {ShadingMode} from 'viewers/components/rects/shading_mode';
 
 import {viewerCardStyle} from 'viewers/components/styles/viewer_card.styles';
+import {ViewerComponent} from 'viewers/components/viewer_component';
 import {UiData} from './ui_data';
 
 /**
@@ -53,6 +53,7 @@ import {UiData} from './ui_data';
         [userOptions]="inputData?.rectsUserOptions ?? {}"
         [pinnedItems]="inputData?.pinnedItems ?? []"
         [isDarkMode]="inputData?.isDarkMode ?? false"
+        [rectSpec]="inputData?.rectSpec"
         (collapseButtonClicked)="sections.onCollapseStateChange(CollapsibleSectionType.RECTS, true)"></rects-view>
       <hierarchy-view
         class="hierarchy-view"
@@ -82,9 +83,7 @@ import {UiData} from './ui_data';
   `,
   styles: [viewerCardStyle],
 })
-export class ViewerViewCaptureComponent {
-  @Input() inputData: UiData | undefined;
-  @Input() store: PersistentStore | undefined;
+export class ViewerViewCaptureComponent extends ViewerComponent<UiData> {
   CollapsibleSectionType = CollapsibleSectionType;
 
   rectsTitle = 'SKETCH';

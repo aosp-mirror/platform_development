@@ -33,21 +33,19 @@ import {
   Injectable,
   Input,
   NgZone,
-  ViewChild,
   ViewEncapsulation,
 } from '@angular/core';
+import {assertDefined} from 'common/assert_utils';
 import {Subject} from 'rxjs';
 import {debounceTime, takeUntil} from 'rxjs/operators';
 
 /**
- * Animations used by the Material drawers.
+ * Animation used by the Material drawers.
  * @docs-private
  */
-export const matDrawerAnimations: {
-  readonly transformDrawer: AnimationTriggerMetadata;
-} = {
+const transformDrawer: AnimationTriggerMetadata =
   /** Animation that slides a drawer in and out. */
-  transformDrawer: trigger('transform', [
+  trigger('transform', [
     // We remove the `transform` here completely, rather than setting it to zero, because:
     // 1. Having a transform can cause elements with ripples or an animated
     //    transform to shift around in Chrome with an RTL layout (see #10023).
@@ -72,8 +70,7 @@ export const matDrawerAnimations: {
       'void <=> open, open-instant => void',
       animate('400ms cubic-bezier(0.25, 0.8, 0.25, 1)'),
     ),
-  ]),
-};
+  ]);
 
 /**
  * This component corresponds to a drawer that can be opened on the drawer container.
@@ -101,7 +98,7 @@ export const matDrawerAnimations: {
       }
     `,
   ],
-  animations: [matDrawerAnimations.transformDrawer],
+  animations: [transformDrawer],
   host: {
     class: 'mat-drawer mat-drawer-bottom',
     // must prevent the browser from aligning text based on value
@@ -145,9 +142,9 @@ export class MatDrawer {
   encapsulation: ViewEncapsulation.None,
 })
 export class MatDrawerContent /*extends MatDrawerContentBase*/ {
-  private contentMargins: {top: number | null; bottom: number | null} = {
-    top: null,
-    bottom: null,
+  contentMargins: Margins = {
+    top: undefined,
+    bottom: undefined,
   };
 
   constructor(
@@ -162,7 +159,7 @@ export class MatDrawerContent /*extends MatDrawerContentBase*/ {
     });
   }
 
-  setMargins(margins: {top: number | null; bottom: number | null}) {
+  setMargins(margins: Margins) {
     this.contentMargins = margins;
   }
 }
@@ -200,26 +197,24 @@ export class MatDrawerContent /*extends MatDrawerContentBase*/ {
 @Injectable()
 export class MatDrawerContainer /*extends MatDrawerContainerBase*/ {
   /** Drawer that belong to this container. */
-  @ContentChild(MatDrawer) drawer!: MatDrawer;
-  @ContentChild(MatDrawer, {read: ElementRef}) drawerView!: ElementRef;
+  @ContentChild(MatDrawer) drawer: MatDrawer | undefined;
+  @ContentChild(MatDrawer, {read: ElementRef}) drawerView:
+    | ElementRef
+    | undefined;
 
-  @ContentChild(MatDrawerContent) content!: MatDrawerContent;
-  @ViewChild(MatDrawerContent) userContent!: MatDrawerContent;
+  @ContentChild(MatDrawerContent) content: MatDrawerContent | undefined;
+
+  readonly contentMarginChanges = new Subject<Margins>();
 
   /**
    * Margins to be applied to the content. These are used to push / shrink the drawer content when a
    * drawer is open. We use margin rather than transform even for push mode because transform breaks
    * fixed position elements inside of the transformed element.
    */
-  contentMargins: {top: number | null; bottom: number | null} = {
-    top: null,
-    bottom: null,
+  private contentMargins: Margins = {
+    top: undefined,
+    bottom: undefined,
   };
-
-  readonly contentMarginChanges = new Subject<{
-    top: number | null;
-    bottom: number | null;
-  }>();
 
   /** Emits on every ngDoCheck. Used for debouncing reflows. */
   private readonly doCheckSubject = new Subject<void>();
@@ -231,7 +226,6 @@ export class MatDrawerContainer /*extends MatDrawerContainerBase*/ {
 
   ngAfterContentInit() {
     this.updateContentMargins();
-
     // Avoid hitting the NgZone through the debounce timeout.
     this.ngZone.runOutsideAngular(() => {
       this.doCheckSubject
@@ -261,13 +255,14 @@ export class MatDrawerContainer /*extends MatDrawerContainerBase*/ {
     // If shift is enabled want to shift the content without resizing it. We do
     // this by adding to the top or bottom margin and simultaneously subtracting
     // the same amount of margin from the other side.
-    let top = 0;
-    let bottom = 0;
+    let top: number | undefined = 0;
+    let bottom: number | undefined = 0;
 
-    const baseHeight = this.drawer.getBaseHeight();
+    const drawer = assertDefined(this.drawer);
+    const baseHeight = drawer.getBaseHeight();
     const height = this.getDrawerHeight();
     const shiftAmount =
-      this.drawer.mode === 'push' ? Math.max(0, height - baseHeight) : 0;
+      drawer.mode === 'push' ? Math.max(0, height - baseHeight) : 0;
 
     top -= shiftAmount;
     bottom += baseHeight + shiftAmount;
@@ -276,28 +271,31 @@ export class MatDrawerContainer /*extends MatDrawerContainerBase*/ {
     // allows users to specify a custom size via CSS class in SSR scenarios where the
     // measured widths will always be zero. Note that we reset to `null` here, rather
     // than below, in order to ensure that the types in the `if` below are consistent.
-    top = top || null!;
-    bottom = bottom || null!;
+    top = top || undefined;
+    bottom = bottom || undefined;
 
-    if (
-      top !== this.contentMargins.top ||
-      bottom !== this.contentMargins.bottom
-    ) {
-      this.contentMargins = {top, bottom};
-
-      this.content.setMargins(this.contentMargins);
-
-      // Pull back into the NgZone since in some cases we could be outside. We need to be careful
-      // to do it only when something changed, otherwise we can end up hitting the zone too often.
-      this.ngZone.run(() =>
-        this.contentMarginChanges.next(this.contentMargins),
-      );
-    }
+    // Pull back into the NgZone since in some cases we could be outside. We need to be careful
+    // to do it only when something changed, otherwise we can end up hitting the zone too often.
+    this.ngZone.run(() => {
+      if (
+        top !== this.contentMargins.top ||
+        bottom !== this.contentMargins.bottom
+      ) {
+        this.contentMargins = {top, bottom};
+        assertDefined(this.content).setMargins({top, bottom});
+        this.contentMarginChanges.next({top, bottom});
+      }
+    });
   }
 
   getDrawerHeight(): number {
-    return this.drawerView.nativeElement
+    return this.drawerView?.nativeElement
       ? this.drawerView.nativeElement.offsetHeight || 0
       : 0;
   }
+}
+
+interface Margins {
+  top: number | undefined;
+  bottom: number | undefined;
 }

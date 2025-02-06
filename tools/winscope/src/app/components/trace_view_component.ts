@@ -49,6 +49,7 @@ import {View, Viewer, ViewType} from 'viewers/viewer';
 interface Tab {
   view: View;
   addedToDom: boolean;
+  isTooltipStable: boolean;
 }
 
 @Component({
@@ -67,8 +68,10 @@ interface Tab {
                 [matTooltip]="getTabTooltip(tab.view)"
                 matTooltipPosition="above"
                 [matTooltipShowDelay]="300"
+                [matTooltipDisabled]="!tab.isTooltipStable"
                 (click)="onTabClick(tab)"
                 (focus)="$event.target.blur()"
+                (mouseenter)="onTabHover($event, tab)"
                 [class.last]="isLast"
                 class="tab">
               <mat-icon
@@ -303,6 +306,18 @@ export class TraceViewComponent
     return TRACE_INFO[trace.type].icon;
   }
 
+  onTabHover(event: MouseEvent, tab: Tab) {
+    if (tab.isTooltipStable) {
+      return;
+    }
+    this.ngZone.run(() => {
+      (event.target as HTMLElement).dispatchEvent(new Event('mouseleave'));
+      tab.isTooltipStable = true;
+      this.changeDetectorRef.detectChanges();
+      (event.target as HTMLElement)?.dispatchEvent(new Event('mouseenter'));
+    });
+  }
+
   async onTabClick(tab: Tab) {
     await this.showTab(tab, false);
   }
@@ -426,14 +441,9 @@ export class TraceViewComponent
         return {
           view,
           addedToDom: false,
+          isTooltipStable: false,
         };
       });
-
-    this.tabs.forEach((tab) => {
-      // TODO: setting "store" this way is a hack.
-      //       Store should be part of View's interface.
-      (tab.view.htmlElement as any).store = this.store;
-    });
 
     if (this.tabs.length > 0) {
       const tabToShow = assertDefined(
@@ -468,11 +478,13 @@ export class TraceViewComponent
   }
 
   private async showTab(tab: Tab, firstToRender: boolean) {
+    const startTimeMs = Date.now();
     if (this.currentActiveTab) {
       this.currentActiveTab.view.htmlElement.style.display = 'none';
     }
 
-    if (!tab.addedToDom) {
+    const firstSwitch = !tab.addedToDom;
+    if (firstSwitch) {
       // Workaround for b/255966194:
       // make sure that the first time a tab content is rendered
       // (added to the DOM) it has style.display == "". This fixes the
@@ -490,8 +502,15 @@ export class TraceViewComponent
     this.currentActiveTab = tab;
 
     if (!firstToRender) {
-      Analytics.Navigation.logTabSwitched(tab.view.title);
       await this.emitAppEvent(new TabbedViewSwitched(tab.view));
+      Analytics.Navigation.logTabSwitched(
+        tab.view.title,
+        Date.now() - startTimeMs,
+        firstSwitch,
+      );
+    }
+    if (firstSwitch) {
+      Analytics.Memory.logUsage('tab_initialized', {firstSwitch});
     }
   }
 

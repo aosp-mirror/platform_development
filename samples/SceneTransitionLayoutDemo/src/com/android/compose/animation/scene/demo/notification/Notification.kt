@@ -31,10 +31,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import com.android.compose.animation.scene.ContentScope
 import com.android.compose.animation.scene.MovableElementKey
 import com.android.compose.animation.scene.MutableSceneTransitionLayoutState
 import com.android.compose.animation.scene.SceneKey
-import com.android.compose.animation.scene.SceneScope
 import com.android.compose.animation.scene.SceneTransitionLayout
 import com.android.compose.animation.scene.Swipe
 import com.android.compose.animation.scene.ValueKey
@@ -64,12 +64,12 @@ interface NotificationViewModel {
     val isInteractive: Boolean
 
     /** The different contents of this notification. */
-    val collapsedContent: @Composable SceneScope.() -> Unit
-    val expandedContent: @Composable SceneScope.() -> Unit
+    val collapsedContent: @Composable ContentScope.() -> Unit
+    val expandedContent: @Composable ContentScope.() -> Unit
 }
 
 @Composable
-internal fun SceneScope.Notification(
+internal fun ContentScope.Notification(
     viewModel: NotificationViewModel,
     isFirstNotification: Boolean,
     isLastNotification: Boolean,

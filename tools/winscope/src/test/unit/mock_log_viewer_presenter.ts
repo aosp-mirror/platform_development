@@ -151,6 +151,7 @@ the default for its data type.`,
 }
 
 export class MockData implements UiDataLog {
+  isFetchingData = false;
   constructor(
     public headers: LogHeader[],
     public entries: LogEntry[],

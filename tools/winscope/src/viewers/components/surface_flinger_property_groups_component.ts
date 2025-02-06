@@ -76,7 +76,10 @@ import {viewerCardInnerStyle} from './styles/viewer_card.styles';
         <h3 class="group-header mat-subheading-2">Geometry</h3>
         <div class="left-column">
           <p class="column-header mat-small">Calculated</p>
-          <p class="property mat-body-1">Transform:</p>
+          <p
+            class="property mat-body-1"
+            matTooltip="Requested transform multiplied by any parent transforms.
+                Used on calculated crop to generate final bounds.">Transform:</p>
           <transform-matrix
             *ngIf="properties.calcTransform?.getAllChildren().length > 0"
             [matTooltip]="getTransformType(properties.calcTransform)"
@@ -85,9 +88,7 @@ import {viewerCardInnerStyle} from './styles/viewer_card.styles';
             <span
               class="mat-body-1"
               matTooltip="Raw value read from proto.bounds. This is the buffer size or
-                  requested crop cropped by parent bounds."
-              >Crop:</span
-            >
+                  requested crop, cropped by parent bounds.">Crop:</span>
             &ngsp;
             {{ properties.calcCrop }}
           </p>
@@ -96,7 +97,7 @@ import {viewerCardInnerStyle} from './styles/viewer_card.styles';
             <span
               class="mat-body-1"
               matTooltip="Raw value read from proto.screenBounds. This is the calculated crop
-                  transformed."
+                  transformed by calculated transform."
               >Final Bounds:</span
             >
             &ngsp;
@@ -105,16 +106,13 @@ import {viewerCardInnerStyle} from './styles/viewer_card.styles';
         </div>
         <div class="right-column">
           <p class="column-header mat-small">Requested</p>
-          <p class="property mat-body-1">Transform:</p>
+          <p
+            class="property mat-body-1"
+            matTooltip="Transform requested for this layer, not accounting for parent transforms.">Transform:</p>
           <transform-matrix
             *ngIf="properties.reqTransform?.getAllChildren().length > 0"
             [matTooltip]="getTransformType(properties.reqTransform)"
             [matrix]="getTransformMatrix(properties.reqTransform)"></transform-matrix>
-          <p class="mat-body-2 crop">
-            <span class="mat-body-1">Crop:</span>
-            &ngsp;
-            {{ properties.reqCrop }}
-          </p>
         </div>
       </div>
 
@@ -123,7 +121,9 @@ import {viewerCardInnerStyle} from './styles/viewer_card.styles';
       <div class="group buffer">
         <h3 class="group-header mat-subheading-2">Buffer</h3>
         <div class="left-column">
-          <p class="mat-body-2 size">
+          <p
+            class="mat-body-2 size"
+            matTooltip="Width, height, stride and format of active buffer, if available.">
             <span class="mat-body-1">Size:</span>
             &ngsp;
             {{ properties.bufferSize }}
@@ -150,9 +150,7 @@ import {viewerCardInnerStyle} from './styles/viewer_card.styles';
             <span
               class="mat-body-1"
               matTooltip="Scales buffer to the frame by overriding the requested transform
-                  for this item."
-              >Destination Frame:</span
-            >
+                  for this item.">Destination Frame:</span>
             &ngsp;
             {{ properties.destinationFrame }}
           </p>
@@ -168,16 +166,16 @@ import {viewerCardInnerStyle} from './styles/viewer_card.styles';
         <h3 class="group-header mat-subheading-2">Hierarchy</h3>
         <div class="left-column">
           <p class="mat-body-2 z-order">
-            <span class="mat-body-1">z-order:</span>
+            <span class="mat-body-1">Z-order:</span>
             &ngsp;
             {{ properties.z }}
           </p>
           <p class="mat-body-2 rel-parent inline">
             <span
               class="mat-body-1"
-              matTooltip="item is z-ordered relative to its relative parents but its bounds
+              matTooltip="Item is z-ordered relative to its relative parents but its bounds
                   and other properties are inherited from its parents."
-              >relative parent:</span>
+              >Relative Parent:</span>
             &ngsp;
             <ng-container *ngIf="!properties.relativeParent.nodeId">
               {{ properties.relativeParent }}
@@ -193,7 +191,7 @@ import {viewerCardInnerStyle} from './styles/viewer_card.styles';
             </ng-container>
           </p>
           <span class="mat-body-2 rel-children inline">
-            <span class="mat-body-1">relative children:</span>
+            <span class="mat-body-1">Relative Children:</span>
             &ngsp;
             <ng-container *ngIf="properties.relativeChildren.length === 0">
               none
@@ -219,17 +217,21 @@ import {viewerCardInnerStyle} from './styles/viewer_card.styles';
         <div class="left-column">
           <p class="column-header mat-small">Calculated</p>
           <p class="mat-body-2 color">
-            <span class="mat-body-1">Color:</span>
+            <span
+              class="mat-body-1"
+              matTooltip="Final color - alpha may be inherited from a parent layer.">Color:</span>
             &ngsp;
             {{ properties.calcColor }}
           </p>
           <p class="mat-body-2 corner-radius">
-            <span class="mat-body-1">Corner Radius:</span>
+            <span
+              class="mat-body-1"
+              matTooltip="Final corner radius - may be affected by parent corner radii.">Corner Radius:</span>
             &ngsp;
             {{ properties.calcCornerRadius }}
           </p>
           <p class="mat-body-2 shadow">
-            <span class="mat-body-1">Shadow:</span>
+            <span class="mat-body-1">Shadow Radius:</span>
             &ngsp;
             {{ properties.calcShadowRadius }}
           </p>
@@ -245,7 +247,7 @@ import {viewerCardInnerStyle} from './styles/viewer_card.styles';
             {{ properties.calcCornerRadiusCrop }}
           </p>
           <p class="mat-body-2 blur">
-            <span class="mat-body-1">Blur:</span>
+            <span class="mat-body-1">Blur Radius:</span>
             &ngsp;
             {{ properties.backgroundBlurRadius }}
           </p>
@@ -253,12 +255,16 @@ import {viewerCardInnerStyle} from './styles/viewer_card.styles';
         <div class="right-column">
           <p class="column-header mat-small">Requested</p>
           <p class="mat-body-2">
-            <span class="mat-body-1">Color:</span>
+            <span
+              class="mat-body-1"
+              matTooltip="Requested color and alpha for this layer.">Color:</span>
             &ngsp;
             {{ properties.reqColor }}
           </p>
           <p class="mat-body-2 corner-radius">
-            <span class="mat-body-1">Corner Radius:</span>
+            <span
+              class="mat-body-1"
+              matTooltip="Requested corner radius not accounting for any parent values.">Corner Radius:</span>
             &ngsp;
             {{ properties.reqCornerRadius }}
           </p>
@@ -308,7 +314,7 @@ import {viewerCardInnerStyle} from './styles/viewer_card.styles';
         </ng-container>
         <div *ngIf="!properties.hasInputChannel" class="left-column">
           <p class="mat-body-2">
-            <span class="mat-body-1">Input channel:</span>
+            <span class="mat-body-1">Input Channel:</span>
             &ngsp; not set
           </p>
         </div>

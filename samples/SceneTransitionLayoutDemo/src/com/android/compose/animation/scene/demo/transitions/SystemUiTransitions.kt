@@ -16,39 +16,28 @@
 
 package com.android.compose.animation.scene.demo.transitions
 
-import androidx.compose.animation.core.spring
 import androidx.compose.foundation.pager.PagerState
 import com.android.compose.animation.scene.InterruptionHandler
 import com.android.compose.animation.scene.InterruptionResult
 import com.android.compose.animation.scene.SceneKey
 import com.android.compose.animation.scene.content.state.TransitionState
 import com.android.compose.animation.scene.demo.Scenes
-import com.android.compose.animation.scene.demo.SpringConfiguration
 import com.android.compose.animation.scene.reveal.ContainerRevealHaptics
 import com.android.compose.animation.scene.transitions
 
-fun systemUiTransitions(
-    qsPagerState: PagerState,
-    springConfiguration: SpringConfiguration,
-    revealHaptics: ContainerRevealHaptics,
-) = transitions {
-    interruptionHandler = DemoInterruptionHandler
-    defaultSwipeSpec =
-        spring(
-            stiffness = springConfiguration.stiffness,
-            dampingRatio = springConfiguration.dampingRatio,
-            visibilityThreshold = 0.5f,
-        )
+fun systemUiTransitions(qsPagerState: PagerState, revealHaptics: ContainerRevealHaptics) =
+    transitions {
+        interruptionHandler = DemoInterruptionHandler
 
-    alwaysOnDisplayTransitions()
-    shadeTransitions(qsPagerState)
-    splitShadeTransitions()
-    quickSettingsTransitions()
-    lockscreenTransitions()
-    launcherTransitions()
-    notificationShadeTransitions(revealHaptics)
-    quickSettingsShadeTransitions(revealHaptics)
-}
+        alwaysOnDisplayTransitions()
+        shadeTransitions(qsPagerState)
+        splitShadeTransitions()
+        quickSettingsTransitions()
+        lockscreenTransitions()
+        launcherTransitions()
+        notificationShadeTransitions(revealHaptics)
+        quickSettingsShadeTransitions(revealHaptics)
+    }
 
 object DemoInterruptionHandler : InterruptionHandler {
     override fun onInterruption(

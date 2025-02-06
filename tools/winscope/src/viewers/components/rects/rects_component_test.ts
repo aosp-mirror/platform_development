@@ -18,6 +18,7 @@ import {CommonModule} from '@angular/common';
 import {Component, ViewChild} from '@angular/core';
 import {ComponentFixture, TestBed} from '@angular/core/testing';
 import {MatButtonModule} from '@angular/material/button';
+import {MatButtonToggleModule} from '@angular/material/button-toggle';
 import {MatDividerModule} from '@angular/material/divider';
 import {MatFormFieldModule} from '@angular/material/form-field';
 import {MatIconModule} from '@angular/material/icon';
@@ -31,6 +32,7 @@ import {Box3D} from 'common/geometry/box3d';
 import {TransformMatrix} from 'common/geometry/transform_matrix';
 import {PersistentStore} from 'common/store/persistent_store';
 import {HierarchyTreeBuilder} from 'test/unit/hierarchy_tree_builder';
+import {UnitTestUtils} from 'test/unit/utils';
 import {waitToBeCalled} from 'test/utils';
 import {TraceType} from 'trace/trace_type';
 import {VISIBLE_CHIP} from 'viewers/common/chip';
@@ -39,6 +41,11 @@ import {UiHierarchyTreeNode} from 'viewers/common/ui_hierarchy_tree_node';
 import {RectDblClickDetail, ViewerEvents} from 'viewers/common/viewer_events';
 import {CollapsibleSectionTitleComponent} from 'viewers/components/collapsible_section_title_component';
 import {RectsComponent} from 'viewers/components/rects/rects_component';
+import {
+  RectLegendOption,
+  RectSpec,
+  TraceRectType,
+} from 'viewers/components/rects/rect_spec';
 import {UiRect} from 'viewers/components/rects/ui_rect';
 import {UserOptionsComponent} from 'viewers/components/user_options_component';
 import {Camera} from './camera';
@@ -84,6 +91,7 @@ describe('RectsComponent', () => {
         MatSelectModule,
         BrowserAnimationsModule,
         MatFormFieldModule,
+        MatButtonToggleModule,
       ],
       declarations: [
         TestHostComponent,
@@ -823,6 +831,147 @@ describe('RectsComponent', () => {
     expect(updateLabelsSpy.calls.mostRecent().args[0].length).toEqual(1);
   });
 
+  it('handles rect type button click', async () => {
+    let clicked: TraceRectType | undefined;
+    htmlElement.addEventListener(ViewerEvents.RectTypeButtonClick, (event) => {
+      clicked = (event as CustomEvent).detail.type;
+    });
+    expect(htmlElement.querySelector('.rect-type-toggle')).toBeNull();
+
+    component.rectSpec = {
+      type: TraceRectType.LAYERS,
+      icon: 'layers',
+      legend: [],
+    };
+    fixture.detectChanges();
+    expect(htmlElement.querySelector('.rect-type-toggle')).toBeNull();
+
+    component.allRectSpecs = [
+      component.rectSpec,
+      {
+        type: TraceRectType.INPUT_WINDOWS,
+        icon: 'touch_app',
+        legend: [],
+      },
+    ];
+    fixture.detectChanges();
+    const buttons = Array.from(
+      htmlElement.querySelectorAll<HTMLElement>('.rect-type-icon'),
+    );
+    expect(buttons[0].textContent?.trim()).toEqual('layers');
+    expect(buttons[1].textContent?.trim()).toEqual('touch_app');
+    await UnitTestUtils.checkTooltips(
+      buttons,
+      ['Show layers', 'Show input windows'],
+      fixture,
+    );
+    buttons[0].click();
+    fixture.detectChanges();
+    expect(clicked).toBeUndefined();
+    buttons[1].click();
+    fixture.detectChanges();
+    expect(clicked).toEqual(TraceRectType.INPUT_WINDOWS);
+  });
+
+  it('shows warning for any rect type set after the first', async () => {
+    component.rectSpec = {
+      type: TraceRectType.LAYERS,
+      icon: 'layers',
+      legend: [],
+    };
+    fixture.detectChanges();
+    expect(htmlElement.querySelector('.warning')).toBeNull();
+
+    component.rectSpec = {
+      type: TraceRectType.INPUT_WINDOWS,
+      icon: 'touch_app',
+      legend: [],
+    };
+    fixture.detectChanges();
+    const warning = assertDefined(htmlElement.querySelector('.warning'));
+    expect(
+      warning.querySelector('.warning-message')?.textContent?.trim(),
+    ).toEqual('Showing input windows - change rect type via toggle above');
+
+    component.rectSpec = {
+      type: TraceRectType.LAYERS,
+      icon: 'layers',
+      legend: [],
+    };
+    fixture.detectChanges();
+    expect(htmlElement.querySelector('.warning')).toBeNull();
+  });
+
+  it('provides legend from rect spec', () => {
+    expect(htmlElement.querySelector('.rect-legend')).toBeNull();
+    const legend = [
+      {
+        fill: 'blue',
+        border: 'black',
+        desc: 'Option 1',
+        showInWireFrameMode: false,
+      },
+      {
+        fill: '',
+        border: 'red',
+        desc: 'Option 2',
+        showInWireFrameMode: true,
+      },
+      {
+        border: 'green',
+        desc: 'Option 3',
+        showInWireFrameMode: true,
+      },
+    ];
+    component.rectSpec = {
+      type: TraceRectType.LAYERS,
+      icon: 'layers',
+      legend,
+    };
+    fixture.detectChanges();
+    const legendEl = assertDefined(
+      htmlElement.querySelector<HTMLElement>('.rect-legend'),
+    );
+    expect(legendEl.querySelector('.rect-legend-expand-button')).toBeNull();
+
+    const optionsWrapper = assertDefined(
+      legendEl.querySelector<HTMLElement>('.shading-opts'),
+    );
+    expect(optionsWrapper.className).not.toContain('force-show-all');
+
+    let options = optionsWrapper.querySelectorAll<HTMLElement>('.shading-opt');
+    expect(options.length).toEqual(3);
+    options.forEach((option, i) => checkShadingOpt(option, i, legend));
+
+    updateShadingMode(ShadingMode.GRADIENT, ShadingMode.WIRE_FRAME);
+    options = optionsWrapper.querySelectorAll<HTMLElement>('.shading-opt');
+    expect(options.length).toEqual(2);
+    options.forEach((option, i) => checkShadingOpt(option, i + 1, legend));
+
+    optionsWrapper.style.width = optionsWrapper.clientWidth / 2 + 'px';
+    fixture.detectChanges(); // halve wrapper width so options no longer all fit
+    const expandButton = assertDefined(
+      legendEl.querySelector<HTMLElement>('.rect-legend-expand-button'),
+    );
+    expect(expandButton.textContent).toEqual('more_horiz');
+    expandButton.click();
+    fixture.detectChanges();
+    expect(optionsWrapper.className).toContain('force-show-all');
+    expect(expandButton.textContent).toEqual('expand_circle_down');
+
+    expandButton.click();
+    fixture.detectChanges();
+    expect(expandButton.textContent).toEqual('more_horiz');
+    expect(optionsWrapper.className).not.toContain('force-show-all');
+
+    expandButton.click();
+    fixture.detectChanges(); // click again to show expanded view
+
+    optionsWrapper.style.width = '';
+    fixture.detectChanges(); // button disappears now that options all fit in available space
+    expect(legendEl.querySelector('.rect-legend-expand-button')).toBeNull();
+  });
+
   function resetSpies() {
     [
       updateViewPositionSpy,
@@ -996,6 +1145,19 @@ describe('RectsComponent', () => {
     ].forEach((spy) => expect(spy).toHaveBeenCalledTimes(times));
   }
 
+  function checkShadingOpt(
+    option: HTMLElement,
+    i: number,
+    l: RectLegendOption[],
+  ) {
+    const square = assertDefined(option.querySelector<HTMLElement>('.square'));
+    expect(square.style.backgroundColor).toEqual(l[i].fill ?? '');
+    expect(square.style.borderColor).toEqual(l[i].border);
+    expect(option.textContent).toEqual(
+      l[i].fill !== undefined ? l[i].desc : 'question_mark' + l[i].desc,
+    );
+  }
+
   @Component({
     selector: 'host-component',
     template: `
@@ -1011,7 +1173,9 @@ describe('RectsComponent', () => {
         [dependencies]="dependencies"
         [pinnedItems]="pinnedItems"
         [isDarkMode]="isDarkMode"
-        [highlightedItem]="highlightedItem"></rects-view>
+        [highlightedItem]="highlightedItem"
+        [rectSpec]="rectSpec"
+        [allRectSpecs]="allRectSpecs"></rects-view>
     `,
   })
   class TestHostComponent {
@@ -1036,6 +1200,8 @@ describe('RectsComponent', () => {
     pinnedItems: UiHierarchyTreeNode[] = [];
     isDarkMode = false;
     highlightedItem = '';
+    rectSpec: RectSpec | undefined;
+    allRectSpecs: RectSpec[] | undefined;
 
     @ViewChild(RectsComponent)
     rectsComponent: RectsComponent | undefined;

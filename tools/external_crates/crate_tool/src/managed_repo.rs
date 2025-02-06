@@ -13,24 +13,25 @@
 // limitations under the License.
 
 use std::{
-    collections::{BTreeMap, BTreeSet},
+    cell::OnceCell,
+    collections::BTreeSet,
     env,
-    fs::{create_dir, create_dir_all, read_dir, remove_file, write},
+    fs::{create_dir, create_dir_all, read_dir, write},
     os::unix::fs::symlink,
     path::Path,
     process::Command,
-    str::from_utf8,
 };
 
-use anyhow::{anyhow, Context, Result};
+use anyhow::{anyhow, bail, Context, Result};
 use crates_index::DependencyKind;
-use glob::glob;
 use google_metadata::GoogleMetadata;
 use itertools::Itertools;
 use license_checker::find_licenses;
-use name_and_version::{NameAndVersionMap, NameAndVersionRef, NamedAndVersioned};
+use name_and_version::{NameAndVersion, NameAndVersionRef, NamedAndVersioned};
+use repo_config::RepoConfig;
 use rooted_path::RootedPath;
-use semver::Version;
+use semver::{Version, VersionReq};
+use serde::Serialize;
 use spdx::Licensee;
 
 use crate::{
@@ -42,12 +43,26 @@ use crate::{
     license::{most_restrictive_type, update_module_license_files},
     managed_crate::ManagedCrate,
     pseudo_crate::{CargoVendorDirty, PseudoCrate},
-    upgradable::{IsUpgradableTo, MatchesRelaxed},
+    upgradable::{IsUpgradableTo, MatchesWithCompatibilityRule, SemverCompatibilityRule},
     SuccessOrError,
 };
 
+#[derive(Serialize, Default, Debug)]
+struct UpdateSuggestions {
+    updates: Vec<UpdateSuggestion>,
+}
+
+#[derive(Serialize, Default, Debug)]
+struct UpdateSuggestion {
+    name: String,
+    #[serde(skip)]
+    old_version: String,
+    version: String,
+}
+
 pub struct ManagedRepo {
     path: RootedPath,
+    config: OnceCell<RepoConfig>,
     crates_io: CratesIoIndex,
 }
 
@@ -55,7 +70,20 @@ impl ManagedRepo {
     pub fn new(path: RootedPath, offline: bool) -> Result<ManagedRepo> {
         Ok(ManagedRepo {
             path,
+            config: OnceCell::new(),
             crates_io: if offline { CratesIoIndex::new_offline()? } else { CratesIoIndex::new()? },
+        })
+    }
+    pub fn config(&self) -> &RepoConfig {
+        self.config.get_or_init(|| {
+            RepoConfig::read(self.path.abs()).unwrap_or_else(|e| {
+                panic!(
+                    "Failed to read crate config {}/{}: {}",
+                    self.path,
+                    repo_config::CONFIG_FILE_NAME,
+                    e
+                )
+            })
         })
     }
     fn pseudo_crate(&self) -> PseudoCrate<CargoVendorDirty> {
@@ -76,7 +104,6 @@ impl ManagedRepo {
                 let cc = self.legacy_crates_for(crate_name)?;
                 let nv = NameAndVersionRef::new(crate_name, v);
                 Ok(cc
-                    .map_field()
                     .get(&nv as &dyn NamedAndVersioned)
                     .ok_or(anyhow!("Failed to find crate {} v{}", crate_name, v))?
                     .path()
@@ -120,257 +147,6 @@ impl ManagedRepo {
         }
         Ok(managed_dirs)
     }
-    pub fn migration_health(
-        &self,
-        crate_name: &str,
-        verbose: bool,
-        unpinned: bool,
-        version: Option<&Version>,
-    ) -> Result<Version> {
-        if self.contains(crate_name) {
-            return Err(anyhow!("Crate {} already exists in {}/crates", crate_name, self.path));
-        }
-
-        let cc = self.legacy_crates_for(crate_name)?;
-        let krate = match version {
-            Some(v) => {
-                let nv = NameAndVersionRef::new(crate_name, v);
-                match cc.map_field().get(&nv as &dyn NamedAndVersioned) {
-                    Some(k) => k,
-                    None => {
-                        return Err(anyhow!("Did not find crate {} v{}", crate_name, v));
-                    }
-                }
-            }
-            None => {
-                if cc.map_field().len() != 1 {
-                    return Err(anyhow!(
-                        "Expected a single crate version for {}, but found {}. Specify a version with --versions={}=<version>",
-                        crate_name,
-                        cc.get_versions(crate_name).map(|(nv, _)| nv.version()).join(", "),
-                        crate_name
-                    ));
-                }
-                cc.map_field().values().next().unwrap()
-            }
-        };
-        println!("Found {} v{} in {}", krate.name(), krate.version(), krate.path());
-
-        let mut healthy_self_contained = true;
-        if krate.is_migration_denied() {
-            println!("This crate is on the migration denylist");
-            healthy_self_contained = false;
-        }
-
-        let mc = ManagedCrate::new(Crate::from(krate.path().clone())?).into_legacy();
-        if !mc.android_bp().abs().exists() {
-            println!("There is no Android.bp file in {}", krate.path());
-            healthy_self_contained = false;
-        }
-        if !mc.cargo_embargo_json().abs().exists() {
-            println!("There is no cargo_embargo.json file in {}", krate.path());
-            healthy_self_contained = false;
-        }
-        if healthy_self_contained {
-            let mc = mc.stage()?;
-            if !mc.cargo_embargo_success() {
-                println!("cargo_embargo execution did not succeed for {}", mc.staging_path(),);
-                if verbose {
-                    println!(
-                        "stdout:\n{}\nstderr:\n{}",
-                        from_utf8(&mc.cargo_embargo_output().stdout)?,
-                        from_utf8(&mc.cargo_embargo_output().stderr)?,
-                    );
-                }
-                healthy_self_contained = false;
-            } else if !mc.android_bp_unchanged() {
-                println!(
-                    "Running cargo_embargo on {} produced changes to the Android.bp file",
-                    mc.staging_path()
-                );
-                if verbose {
-                    println!("{}", from_utf8(&mc.android_bp_diff().stdout)?);
-                }
-                healthy_self_contained = false;
-            }
-        }
-
-        if !healthy_self_contained {
-            println!("Crate {} is UNHEALTHY", crate_name);
-            return Err(anyhow!("Crate {} is unhealthy", crate_name));
-        }
-
-        let pseudo_crate = self.pseudo_crate();
-        if unpinned {
-            pseudo_crate.cargo_add_unpinned(krate)
-        } else {
-            pseudo_crate.cargo_add(krate)
-        }
-        .inspect_err(|_e| {
-            let _ = pseudo_crate.remove(krate.name());
-        })?;
-        let pseudo_crate = pseudo_crate.vendor()?;
-
-        let mc = ManagedCrate::new(Crate::from(krate.path().clone())?).stage(&pseudo_crate)?;
-
-        pseudo_crate.remove(krate.name())?;
-
-        let version = mc.vendored_version().clone();
-        if mc.android_version() != mc.vendored_version() {
-            println!(
-                "Source and destination versions are different: {} -> {}",
-                mc.android_version(),
-                mc.vendored_version()
-            );
-        }
-        if !mc.patch_success() {
-            println!("Patches did not apply successfully to the migrated crate");
-            if verbose {
-                for output in mc.patch_output() {
-                    if !output.1.status.success() {
-                        println!(
-                            "Failed to apply {}\nstdout:\n{}\nstderr:\n:{}",
-                            output.0,
-                            from_utf8(&output.1.stdout)?,
-                            from_utf8(&output.1.stderr)?
-                        );
-                    }
-                }
-            }
-        }
-        if !mc.cargo_embargo_success() {
-            println!("cargo_embargo execution did not succeed for the migrated crate");
-            if verbose {
-                println!(
-                    "stdout:\n{}\nstderr:\n{}",
-                    from_utf8(&mc.cargo_embargo_output().stdout)?,
-                    from_utf8(&mc.cargo_embargo_output().stderr)?,
-                );
-            }
-        } else if !mc.android_bp_unchanged() {
-            println!("Running cargo_embargo for the migrated crate produced changes to the Android.bp file");
-            if verbose {
-                println!("{}", from_utf8(&mc.android_bp_diff().stdout)?);
-            }
-        }
-
-        let mut diff_cmd = Command::new("diff");
-        diff_cmd.args(["-u", "-r", "-w", "--no-dereference"]);
-        if !verbose {
-            diff_cmd.arg("-q");
-        }
-        let diff_status = diff_cmd
-            .args(IGNORED_FILES.iter().map(|ignored| format!("--exclude={}", ignored)))
-            .args(["-I", r#"default_team: "trendy_team_android_rust""#])
-            .arg(mc.android_crate_path().rel())
-            .arg(mc.staging_path().rel())
-            .current_dir(self.path.root())
-            .spawn()?
-            .wait()?;
-        if !diff_status.success() {
-            println!(
-                "Found differences between {} and {}",
-                mc.android_crate_path(),
-                mc.staging_path()
-            );
-        }
-        if verbose {
-            println!("All diffs:");
-            Command::new("diff")
-                .args(["-u", "-r", "-w", "-q", "--no-dereference"])
-                .arg(mc.android_crate_path().rel())
-                .arg(mc.staging_path().rel())
-                .current_dir(self.path.root())
-                .spawn()?
-                .wait()?;
-        }
-
-        // Patching and running cargo_embargo *must* succeed. But if we are migrating with a version change,
-        // there could be some changes to the Android.bp.
-        if !mc.patch_success()
-            || !mc.cargo_embargo_success()
-            || (!mc.android_bp_unchanged() && !unpinned)
-        {
-            println!("Crate {} is UNHEALTHY", crate_name);
-            return Err(anyhow!("Crate {} is unhealthy", crate_name));
-        }
-
-        if diff_status.success() && mc.android_bp_unchanged() {
-            println!("Crate {} is healthy", crate_name);
-            return Ok(version);
-        }
-
-        if unpinned {
-            println!("The crate was added with an unpinned version, and diffs were found which must be inspected manually");
-            return Ok(version);
-        }
-
-        println!("Crate {} is UNHEALTHY", crate_name);
-        Err(anyhow!("Crate {} is unhealthy", crate_name))
-    }
-    pub fn migrate<T: AsRef<str>>(
-        &self,
-        crates: Vec<T>,
-        verbose: bool,
-        unpinned: &BTreeSet<String>,
-        versions: &BTreeMap<String, Version>,
-    ) -> Result<()> {
-        let pseudo_crate = self.pseudo_crate();
-        for crate_name in &crates {
-            let crate_name = crate_name.as_ref();
-            let version = self.migration_health(
-                crate_name,
-                verbose,
-                unpinned.contains(crate_name),
-                versions.get(crate_name),
-            )?;
-            let src_dir = self.legacy_dir_for(
-                crate_name,
-                if unpinned.contains(crate_name) { None } else { Some(&version) },
-            )?;
-
-            let monorepo_crate_dir = self.managed_dir();
-            if !monorepo_crate_dir.abs().exists() {
-                create_dir(monorepo_crate_dir)?;
-            }
-            copy_dir(src_dir, self.managed_dir_for(crate_name))?;
-            if unpinned.contains(crate_name) {
-                pseudo_crate.cargo_add_unpinned(&NameAndVersionRef::new(crate_name, &version))?;
-            } else {
-                pseudo_crate.cargo_add(&NameAndVersionRef::new(crate_name, &version))?;
-            }
-        }
-
-        self.regenerate(crates.iter(), false)?;
-
-        for crate_name in &crates {
-            let crate_name = crate_name.as_ref();
-            let src_dir = self.legacy_dir_for(
-                crate_name,
-                if unpinned.contains(crate_name) { None } else { versions.get(crate_name) },
-            )?;
-            for entry in glob(
-                src_dir
-                    .abs()
-                    .join("*.bp")
-                    .to_str()
-                    .ok_or(anyhow!("Failed to convert path *.bp to str"))?,
-            )? {
-                remove_file(entry?)?;
-            }
-            remove_file(src_dir.join("cargo_embargo.json")?)?;
-            let test_mapping = src_dir.join("TEST_MAPPING")?;
-            if test_mapping.abs().exists() {
-                remove_file(test_mapping)?;
-            }
-            write(
-                src_dir.join("Android.bp")?,
-                format!("// This crate has been migrated to {}.\n", self.path),
-            )?;
-        }
-
-        Ok(())
-    }
     pub fn analyze_import(&self, crate_name: &str) -> Result<()> {
         if self.contains(crate_name) {
             println!("Crate already imported at {}", self.managed_dir_for(crate_name));
@@ -379,6 +155,11 @@ impl ManagedRepo {
         let legacy_dir = self.legacy_dir_for(crate_name, None)?;
         if legacy_dir.abs().exists() {
             println!("Legacy crate already imported at {}", legacy_dir);
+            return Ok(());
+        }
+
+        if !self.config().is_allowed(crate_name) {
+            println!("Crate {crate_name} is on the import denylist");
             return Ok(());
         }
 
@@ -393,18 +174,21 @@ impl ManagedRepo {
             let mut found_problems = false;
             for (dep, req) in version.android_deps_with_version_reqs() {
                 println!("Found dep {}", dep.crate_name());
-                let cc = if managed_crates.contains_name(dep.crate_name()) {
+                let cc = if managed_crates.contains_crate(dep.crate_name()) {
                     &managed_crates
                 } else {
                     &legacy_crates
                 };
-                if !cc.contains_name(dep.crate_name()) {
+                if !cc.contains_crate(dep.crate_name()) {
                     found_problems = true;
                     println!(
                         "  Dep {} {} has not been imported to Android",
                         dep.crate_name(),
                         dep.requirement()
                     );
+                    if !self.config().is_allowed(dep.crate_name()) {
+                        println!("    And {} is on the import denylist", dep.crate_name());
+                    }
                     // This is a no-op because our dependency code only considers normal deps anyway.
                     // TODO: Fix the deps code.
                     if matches!(dep.kind(), DependencyKind::Dev) {
@@ -416,8 +200,12 @@ impl ManagedRepo {
                     continue;
                 }
                 let versions = cc.get_versions(dep.crate_name()).collect::<Vec<_>>();
-                let has_matching_version =
-                    versions.iter().any(|(nv, _)| req.matches_relaxed(nv.version()));
+                let has_matching_version = versions.iter().any(|(nv, _)| {
+                    req.matches_with_compatibility_rule(
+                        nv.version(),
+                        SemverCompatibilityRule::Loose,
+                    )
+                });
                 if !has_matching_version {
                     found_problems = true;
                 }
@@ -430,7 +218,14 @@ impl ManagedRepo {
                             "  Dep {} {} is {}satisfied by v{} at {}",
                             dep.crate_name(),
                             dep.requirement(),
-                            if req.matches_relaxed(dep_crate.version()) { "" } else { "not " },
+                            if req.matches_with_compatibility_rule(
+                                dep_crate.version(),
+                                SemverCompatibilityRule::Loose
+                            ) {
+                                ""
+                            } else {
+                                "not "
+                            },
                             dep_crate.version(),
                             dep_crate.path()
                         );
@@ -445,11 +240,14 @@ impl ManagedRepo {
     }
     pub fn import(&self, crate_name: &str, version: &str, autoconfig: bool) -> Result<()> {
         if self.contains(crate_name) {
-            return Err(anyhow!("Crate already imported at {}", self.managed_dir_for(crate_name)));
+            bail!("Crate already imported at {}", self.managed_dir_for(crate_name));
         }
         let legacy_dir = self.legacy_dir_for(crate_name, None)?;
         if legacy_dir.abs().exists() {
-            return Err(anyhow!("Legacy crate already imported at {}", legacy_dir));
+            bail!("Legacy crate already imported at {}", legacy_dir);
+        }
+        if !self.config().is_allowed(crate_name) {
+            bail!("Crate {crate_name} is on the import denylist");
         }
 
         let pseudo_crate = self.pseudo_crate();
@@ -512,10 +310,7 @@ impl ManagedRepo {
         if licenses.satisfied.len() == 1 && licenses.unsatisfied.is_empty() {
             let license_file = krate.path().join("LICENSE")?;
             if !license_file.abs().exists() {
-                symlink(
-                    licenses.satisfied.iter().next().unwrap().1.file_name().unwrap(),
-                    license_file,
-                )?;
+                symlink(licenses.satisfied.iter().next().unwrap().1, license_file)?;
             }
         }
 
@@ -544,37 +339,22 @@ impl ManagedRepo {
         // no Android.bp. So create an empty one.
         write(krate.path().abs().join("Android.bp"), "")?;
 
-        self.regenerate([&crate_name].iter(), true)?;
+        self.regenerate([&crate_name].iter())?;
         println!("Please edit {} and run 'regenerate' for this crate", managed_dir);
-
-        // TODO: Create TEST_MAPPING
 
         Ok(())
     }
-    pub fn regenerate<T: AsRef<str>>(
-        &self,
-        crates: impl Iterator<Item = T>,
-        update_metadata: bool,
-    ) -> Result<()> {
+    pub fn regenerate<T: AsRef<str>>(&self, crates: impl Iterator<Item = T>) -> Result<()> {
         let pseudo_crate = self.pseudo_crate().vendor()?;
         for crate_name in crates {
             println!("Regenerating {}", crate_name.as_ref());
             let mc = self.managed_crate_for(crate_name.as_ref())?;
             // TODO: Don't give up if there's a failure.
-            mc.regenerate(update_metadata, &pseudo_crate)?;
+            mc.regenerate(&pseudo_crate)?;
         }
 
         pseudo_crate.regenerate_crate_list()?;
 
-        Ok(())
-    }
-    pub fn stage<T: AsRef<str>>(&self, crates: impl Iterator<Item = T>) -> Result<()> {
-        let pseudo_crate = self.pseudo_crate().vendor()?;
-        for crate_name in crates {
-            let mc = self.managed_crate_for(crate_name.as_ref())?.stage(&pseudo_crate)?;
-            // TODO: Don't give up if there's a failure.
-            mc.check_staged()?;
-        }
         Ok(())
     }
     pub fn preupload_check(&self, files: &[String]) -> Result<()> {
@@ -588,10 +368,21 @@ impl ManagedRepo {
                 self.managed_dir(), managed_dirs.difference(&deps).join(", "), deps.difference(&managed_dirs).join(", ")));
         }
 
-        let crate_list = pseudo_crate.read_crate_list()?;
-        if deps.iter().ne(crate_list.iter()) {
-            return Err(anyhow!("Deps in pseudo_crate/Cargo.toml don't match deps in crate-list.txt\nCargo.toml: {}\ncrate-list.txt: {}",
-                deps.iter().join(", "), crate_list.iter().join(", ")));
+        let crate_list = pseudo_crate.read_crate_list("crate-list.txt")?;
+        if !deps.is_subset(&crate_list) {
+            bail!("Deps in pseudo_crate/Cargo.toml don't match deps in crate-list.txt\nCargo.toml: {}\ncrate-list.txt: {}",
+                deps.iter().join(", "), crate_list.iter().join(", "));
+        }
+
+        let expected_deleted_crates =
+            crate_list.difference(&deps).cloned().collect::<BTreeSet<_>>();
+        let deleted_crates = pseudo_crate.read_crate_list("deleted-crates.txt")?;
+        if deleted_crates != expected_deleted_crates {
+            bail!(
+                "Deleted crate list is inconsistent. Expected: {}, Found: {}",
+                expected_deleted_crates.iter().join(", "),
+                deleted_crates.iter().join(", ")
+            );
         }
 
         // Per https://android.googlesource.com/platform/tools/repohooks/,
@@ -617,18 +408,6 @@ impl ManagedRepo {
         }
         Ok(())
     }
-    pub fn fix_licenses<T: AsRef<str>>(&self, crates: impl Iterator<Item = T>) -> Result<()> {
-        for crate_name in crates {
-            self.managed_crate_for(crate_name.as_ref())?.fix_licenses()?;
-        }
-        Ok(())
-    }
-    pub fn fix_metadata<T: AsRef<str>>(&self, crates: impl Iterator<Item = T>) -> Result<()> {
-        for crate_name in crates {
-            self.managed_crate_for(crate_name.as_ref())?.fix_metadata()?;
-        }
-        Ok(())
-    }
     pub fn recontextualize_patches<T: AsRef<str>>(
         &self,
         crates: impl Iterator<Item = T>,
@@ -643,7 +422,7 @@ impl ManagedRepo {
         let mut cc = self.new_cc();
         cc.add_from(self.managed_dir().rel())?;
 
-        for krate in cc.map_field().values() {
+        for krate in cc.values() {
             let cio_crate = self.crates_io.get_crate(krate.name())?;
             let upgrades =
                 cio_crate.versions_gt(krate.version()).map(|v| v.version()).collect::<Vec<_>>();
@@ -698,9 +477,15 @@ impl ManagedRepo {
             println!("Version {}", version.version());
             let mut found_problems = false;
             let parsed_version = semver::Version::parse(version.version())?;
-            if !krate.android_version().is_upgradable_to(&parsed_version) {
+            if !krate
+                .android_version()
+                .is_upgradable_to(&parsed_version, SemverCompatibilityRule::Strict)
+            {
                 found_problems = true;
-                if !krate.android_version().is_upgradable_to_relaxed(&parsed_version) {
+                if !krate
+                    .android_version()
+                    .is_upgradable_to(&parsed_version, SemverCompatibilityRule::Loose)
+                {
                     println!("  Not semver-compatible, even by relaxed standards");
                 } else {
                     println!("  Semver-compatible, but only by relaxed standards since major version is 0");
@@ -712,12 +497,12 @@ impl ManagedRepo {
             // * If a dep is missing, but the same dep exists for the current version of the crate, it's probably not actually necessary.
             // * Use relaxed version requirements, treating 0.x and 0.y as compatible, even though they aren't according to semver rules.
             for (dep, req) in version.android_deps_with_version_reqs() {
-                let cc = if managed_crates.contains_name(dep.crate_name()) {
+                let cc = if managed_crates.contains_crate(dep.crate_name()) {
                     &managed_crates
                 } else {
                     &legacy_crates
                 };
-                if !cc.contains_name(dep.crate_name()) {
+                if !cc.contains_crate(dep.crate_name()) {
                     found_problems = true;
                     println!(
                         "  Dep {} {} has not been imported to Android",
@@ -731,7 +516,10 @@ impl ManagedRepo {
                     }
                 }
                 for (_, dep_crate) in cc.get_versions(dep.crate_name()) {
-                    if !req.matches_relaxed(dep_crate.version()) {
+                    if !req.matches_with_compatibility_rule(
+                        dep_crate.version(),
+                        SemverCompatibilityRule::Loose,
+                    ) {
                         found_problems = true;
                         println!(
                             "  Dep {} {} is not satisfied by v{} at {}",
@@ -753,22 +541,29 @@ impl ManagedRepo {
 
         Ok(())
     }
-    pub fn suggest_updates(&self, consider_patched_crates: bool) -> Result<Vec<(String, String)>> {
-        let mut suggestions = Vec::new();
+    pub fn suggest_updates(
+        &self,
+        consider_patched_crates: bool,
+        semver_compatibility: SemverCompatibilityRule,
+        json: bool,
+    ) -> Result<()> {
+        let mut suggestions = UpdateSuggestions::default();
         let mut managed_crates = self.new_cc();
         managed_crates.add_from(self.managed_dir().rel())?;
         let legacy_crates = self.legacy_crates()?;
 
-        for krate in managed_crates.map_field().values() {
+        for krate in managed_crates.values() {
             let cio_crate = self.crates_io.get_crate(krate.name())?;
 
             let base_version = cio_crate.get_version(krate.version());
             if base_version.is_none() {
-                println!(
-                    "Skipping crate {} v{} because it was not found in crates.io",
-                    krate.name(),
-                    krate.version()
-                );
+                if !json {
+                    println!(
+                        "Skipping crate {} v{} because it was not found in crates.io",
+                        krate.name(),
+                        krate.version()
+                    );
+                }
                 continue;
             }
             let base_version = base_version.unwrap();
@@ -776,96 +571,113 @@ impl ManagedRepo {
 
             let patch_dir = krate.path().join("patches").unwrap();
             if patch_dir.abs().exists() && !consider_patched_crates {
-                println!(
-                    "Skipping crate {} v{} because it has patches",
-                    krate.name(),
-                    krate.version()
-                );
+                if !json {
+                    println!(
+                        "Skipping crate {} v{} because it has patches",
+                        krate.name(),
+                        krate.version()
+                    );
+                }
                 continue;
             }
 
             for version in cio_crate.versions_gt(krate.version()).rev() {
                 let parsed_version = semver::Version::parse(version.version())?;
-                if !krate.version().is_upgradable_to_relaxed(&parsed_version) {
+                if !krate.version().is_upgradable_to(&parsed_version, semver_compatibility) {
                     continue;
                 }
                 if !version.android_deps_with_version_reqs().any(|(dep, req)| {
                     if !dep.is_changed_dep(&base_deps) {
                         return false;
                     }
-                    let cc = if managed_crates.contains_name(dep.crate_name()) {
+                    let cc = if managed_crates.contains_crate(dep.crate_name()) {
                         &managed_crates
                     } else {
                         &legacy_crates
                     };
                     for (_, dep_crate) in cc.get_versions(dep.crate_name()) {
-                        if req.matches_relaxed(dep_crate.version()) {
+                        if req.matches_with_compatibility_rule(
+                            dep_crate.version(),
+                            SemverCompatibilityRule::Loose,
+                        ) {
                             return false;
                         }
                     }
                     true
                 }) {
-                    println!(
-                        "Upgrade crate {} v{} to {}",
-                        krate.name(),
-                        krate.version(),
-                        version.version()
-                    );
-                    suggestions.push((krate.name().to_string(), version.version().to_string()));
+                    suggestions.updates.push(UpdateSuggestion {
+                        name: krate.name().to_string(),
+                        old_version: krate.version().to_string(),
+                        version: version.version().to_string(),
+                    });
                     break;
                 }
             }
         }
-        Ok(suggestions)
-    }
-    pub fn update(&self, crate_name: impl AsRef<str>, version: impl AsRef<str>) -> Result<()> {
-        let pseudo_crate = self.pseudo_crate();
-        let version = Version::parse(version.as_ref())?;
-        let nv = NameAndVersionRef::new(crate_name.as_ref(), &version);
-        pseudo_crate.remove(&crate_name)?;
-        pseudo_crate.cargo_add(&nv)?;
-        self.regenerate([&crate_name].iter(), true)?;
-        Ok(())
-    }
-    pub fn try_updates(&self) -> Result<()> {
-        let output = Command::new("git")
-            .args(["status", "--porcelain", "."])
-            .current_dir(&self.path)
-            .output()?
-            .success_or_error()?;
-        if !output.stdout.is_empty() {
-            return Err(anyhow!("Crate repo {} has uncommitted changes", self.path));
+
+        if json {
+            println!("{}", serde_json::to_string_pretty(&suggestions)?)
+        } else {
+            for suggestion in suggestions.updates {
+                println!(
+                    "Upgrade crate {} v{} to {}",
+                    suggestion.name, suggestion.old_version, suggestion.version,
+                );
+            }
         }
 
-        for (crate_name, version) in self.suggest_updates(true)? {
-            println!("Trying to update {} to {}", crate_name, version);
-            Command::new("git")
-                .args(["restore", "."])
-                .current_dir(&self.path)
-                .output()?
-                .success_or_error()?;
-            Command::new("git")
-                .args(["clean", "-f", "."])
-                .current_dir(&self.path)
-                .output()?
-                .success_or_error()?;
-            if let Err(e) = self.update(&crate_name, &version) {
-                println!("Updating {} to {} failed: {}", crate_name, version, e);
-                continue;
-            }
-            let build_result = Command::new("/usr/bin/bash")
-                .args(["-c", "source build/envsetup.sh && lunch aosp_husky-trunk_staging-eng && cd external/rust && mm"])
-                .env_remove("OUT_DIR")
-                .current_dir(self.path.root())
-                .spawn().context("Failed to spawn mm")?
-                .wait().context("Failed to wait on mm")?
-                .success_or_error();
-            if let Err(e) = build_result {
-                println!("Faild to build {} {}: {}", crate_name, version, e);
-                continue;
-            }
-            println!("Update {} to {} succeeded", crate_name, version);
+        Ok(())
+    }
+    pub fn update(&self, crate_name: impl AsRef<str>, version: impl AsRef<str>) -> Result<()> {
+        let crate_name = crate_name.as_ref();
+        let version = Version::parse(version.as_ref())?;
+
+        let pseudo_crate = self.pseudo_crate();
+        let managed_crate = self.managed_crate_for(crate_name)?;
+        let mut crate_updates = vec![NameAndVersion::new(crate_name.to_string(), version.clone())];
+
+        let cio_crate = self.crates_io.get_crate(crate_name)?;
+        let cio_crate_version = cio_crate
+            .get_version(&version)
+            .ok_or(anyhow!("Could not find {crate_name} {version} on crates.io"))?;
+
+        for dependent_crate_name in managed_crate.config().update_with() {
+            let dep = cio_crate_version
+                .dependencies()
+                .iter()
+                .find(|dep| dep.crate_name() == dependent_crate_name)
+                .ok_or(anyhow!(
+                    "Could not find crate {dependent_crate_name} as a dependency of {crate_name}"
+                ))?;
+            let req = VersionReq::parse(dep.requirement())?;
+            let dep_cio_crate = self.crates_io.get_crate(dependent_crate_name)?;
+            let version = dep_cio_crate
+                .safe_versions()
+                .find(|v| {
+                    if let Ok(parsed_version) = Version::parse(v.version()) {
+                        req.matches(&parsed_version)
+                    } else {
+                        false
+                    }
+                })
+                .ok_or(anyhow!(
+                    "Failed to find a version of {dependent_crate_name} that satisfies {}",
+                    dep.requirement()
+                ))?;
+            println!("Also updating {dependent_crate_name} to {}", version.version());
+            crate_updates.push(NameAndVersion::new(
+                dependent_crate_name.to_string(),
+                Version::parse(version.version())?,
+            ));
         }
+
+        for nv in &crate_updates {
+            pseudo_crate.remove(nv.name())?;
+        }
+        for nv in &crate_updates {
+            pseudo_crate.cargo_add(nv)?;
+        }
+        self.regenerate(crate_updates.iter().map(|nv| nv.name()))?;
         Ok(())
     }
     pub fn init(&self) -> Result<()> {
@@ -878,13 +690,6 @@ impl ManagedRepo {
         self.pseudo_crate().init()?;
         Ok(())
     }
-    pub fn fix_test_mapping<T: AsRef<str>>(&self, crates: impl Iterator<Item = T>) -> Result<()> {
-        for crate_name in crates {
-            let mc = self.managed_crate_for(crate_name.as_ref())?;
-            mc.fix_test_mapping()?;
-        }
-        Ok(())
-    }
     pub fn verify_checksums<T: AsRef<str>>(&self, crates: impl Iterator<Item = T>) -> Result<()> {
         for krate in crates {
             println!("Verifying checksums for {}", krate.as_ref());
@@ -893,71 +698,3 @@ impl ManagedRepo {
         Ok(())
     }
 }
-
-// Files that are ignored when migrating a crate to the monorepo.
-static IGNORED_FILES: &[&str] = &[
-    ".appveyor.yml",
-    ".bazelci",
-    ".bazelignore",
-    ".bazelrc",
-    ".bazelversion",
-    ".buildkite",
-    ".cargo",
-    ".cargo-checksum.json",
-    ".cargo_vcs_info.json",
-    ".circleci",
-    ".cirrus.yml",
-    ".clang-format",
-    ".clang-tidy",
-    ".clippy.toml",
-    ".clog.toml",
-    ".clog.toml",
-    ".codecov.yaml",
-    ".codecov.yml",
-    ".editorconfig",
-    ".envrc",
-    ".gcloudignore",
-    ".gdbinit",
-    ".git",
-    ".git-blame-ignore-revs",
-    ".git-ignore-revs",
-    ".gitallowed",
-    ".gitattributes",
-    ".github",
-    ".gitignore",
-    ".idea",
-    ".ignore",
-    ".istanbul.yml",
-    ".mailmap",
-    ".md-inc.toml",
-    ".mdl-style.rb",
-    ".mdlrc",
-    ".pylintrc",
-    ".pylintrc-examples",
-    ".pylintrc-tests",
-    ".reuse",
-    ".rspec",
-    ".rustfmt.toml",
-    ".shellcheckrc",
-    ".standard-version",
-    ".tarpaulin.toml",
-    ".tokeignore",
-    ".travis.yml",
-    ".versionrc",
-    ".vim",
-    ".vscode",
-    ".yapfignore",
-    ".yardopts",
-    "BUILD",
-    "Cargo.lock",
-    "Cargo.lock.saved",
-    "Cargo.toml.orig",
-    "OWNERS",
-    // Deprecated config file for rules.mk.
-    "cargo2rulesmk.json",
-    // cargo_embargo intermediates.
-    "Android.bp.orig",
-    "cargo.metadata",
-    "cargo.out",
-    "target.tmp",
-];

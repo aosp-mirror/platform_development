@@ -19,15 +19,16 @@ package com.android.compose.animation.scene.demo
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.overscroll
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import com.android.compose.animation.scene.Back
+import com.android.compose.animation.scene.ContentScope
 import com.android.compose.animation.scene.ElementKey
 import com.android.compose.animation.scene.SceneKey
-import com.android.compose.animation.scene.SceneScope
 import com.android.compose.animation.scene.Swipe
 
 object Stub {
@@ -46,7 +47,7 @@ object Stub {
 }
 
 @Composable
-fun SceneScope.Stub(
+fun ContentScope.Stub(
     rootKey: ElementKey,
     textKey: ElementKey,
     text: String,
@@ -58,7 +59,7 @@ fun SceneScope.Stub(
     ) {
         Text(
             text,
-            modifier = modifier.element(textKey),
+            modifier = Modifier.overscroll(horizontalOverscrollEffect).element(textKey),
             style = MaterialTheme.typography.titleLarge,
             color = MaterialTheme.colorScheme.onBackground,
         )

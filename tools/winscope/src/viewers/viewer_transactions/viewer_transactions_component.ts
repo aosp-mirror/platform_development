@@ -13,12 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import {Component, Input, ViewChild} from '@angular/core';
+import {Component, ViewChild} from '@angular/core';
 import {TraceType} from 'trace/trace_type';
 import {CollapsibleSections} from 'viewers/common/collapsible_sections';
 import {CollapsibleSectionType} from 'viewers/common/collapsible_section_type';
 import {LogComponent} from 'viewers/components/log_component';
 import {viewerCardStyle} from 'viewers/components/styles/viewer_card.styles';
+import {ViewerComponent} from 'viewers/components/viewer_component';
 import {UiData} from './ui_data';
 
 @Component({
@@ -38,7 +39,8 @@ import {UiData} from './ui_data';
         [currentIndex]="inputData?.currentIndex"
         [entries]="inputData?.entries"
         [headers]="inputData?.headers"
-        [traceType]="${TraceType.TRANSACTIONS}">
+        [traceType]="${TraceType.TRANSACTIONS}"
+        [isFetchingData]="inputData?.isFetchingData">
       </log-view>
 
       <properties-view
@@ -63,11 +65,8 @@ import {UiData} from './ui_data';
     viewerCardStyle,
   ],
 })
-export class ViewerTransactionsComponent {
-  @Input() inputData: UiData | undefined;
-
-  @ViewChild(LogComponent)
-  logComponent?: LogComponent;
+export class ViewerTransactionsComponent extends ViewerComponent<UiData> {
+  @ViewChild(LogComponent) logComponent?: LogComponent;
 
   CollapsibleSectionType = CollapsibleSectionType;
 

@@ -37,7 +37,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-import com.android.compose.animation.scene.SceneScope
+import com.android.compose.animation.scene.ContentScope
 import com.android.compose.animation.scene.animateSceneFloatAsState
 import com.android.compose.animation.scene.content.state.TransitionState
 import kotlin.math.ceil
@@ -46,7 +46,7 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
 @Composable
-fun SceneScope.QuickSettingsPager(
+fun ContentScope.QuickSettingsPager(
     pagerState: PagerState,
     tiles: List<QuickSettingsTileViewModel>,
     nRows: Int,
@@ -114,7 +114,7 @@ fun nQuickSettingsPages(nTiles: Int, nRows: Int, nColumns: Int): Int {
  * that are not shared and appearing.
  */
 @Composable
-fun SceneScope.GridAnchor(isExpanded: Boolean, modifier: Modifier = Modifier) {
+fun ContentScope.GridAnchor(isExpanded: Boolean, modifier: Modifier = Modifier) {
     // The width of this anchor does not matter, but the height is used to anchor the size of the
     // (dis)appearing tiles.
     Spacer(modifier.element(QuickSettingsGrid.Elements.GridAnchor).height(tileHeight(isExpanded)))
@@ -122,7 +122,7 @@ fun SceneScope.GridAnchor(isExpanded: Boolean, modifier: Modifier = Modifier) {
 
 @Composable
 @OptIn(ExperimentalFoundationApi::class)
-private fun SceneScope.PagerIndicators(
+private fun ContentScope.PagerIndicators(
     pagerState: PagerState,
     activeColor: Color,
     inactiveColor: Color,
@@ -148,7 +148,7 @@ private fun SceneScope.PagerIndicators(
  */
 @Composable
 @OptIn(ExperimentalFoundationApi::class)
-private fun SceneScope.PagerStateResetter(pagerState: PagerState) {
+private fun ContentScope.PagerStateResetter(pagerState: PagerState) {
     if (
         pagerState.currentPage != 0 &&
             layoutState.isTransitioning(from = Scenes.QuickSettings, to = Scenes.Shade)

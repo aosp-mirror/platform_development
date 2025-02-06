@@ -426,6 +426,13 @@ public final class VdmService extends Hilt_VdmService {
             }
 
             if (mVirtualDevice != null) {
+                Log.d(TAG, "openAudio on virtual device id: " + mVirtualDevice.getDeviceId()
+                        + " with playbackAudioSessionId: " + mPlaybackAudioSessionId
+                        + " and recordingAudioSessionId: " + mRecordingAudioSessionId
+                        + " Audio virtual device capabilities: "
+                        + " output: " + mDeviceCapabilities.getSupportsAudioOutput()
+                        + " input: " + mDeviceCapabilities.getSupportsAudioInput());
+
                 if (mDeviceCapabilities.getSupportsAudioOutput()) {
                     mAudioStreamer.start(mVirtualDevice.getDeviceId(), mPlaybackAudioSessionId);
                 } else {

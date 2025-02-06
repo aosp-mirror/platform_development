@@ -14,56 +14,54 @@
  * limitations under the License.
  */
 
+import {assertDefined} from 'common/assert_utils';
 import {Store} from 'common/store/store';
-import {WinscopeEvent} from 'messaging/winscope_event';
-import {EmitEvent} from 'messaging/winscope_event_emitter';
+import {TimestampConverter} from 'common/time/timestamp_converter';
 import {Trace} from 'trace/trace';
 import {Traces} from 'trace/traces';
-import {TRACE_INFO} from 'trace/trace_info';
 import {TraceType} from 'trace/trace_type';
 import {QueryResult} from 'trace_processor/query_result';
-import {View, Viewer, ViewType} from 'viewers/viewer';
+import {AbstractViewer} from 'viewers/abstract_viewer';
+import {ViewType} from 'viewers/viewer';
 import {Presenter} from './presenter';
 import {UiData} from './ui_data';
 import {ViewerSearchComponent} from './viewer_search_component';
 
-export class ViewerSearch implements Viewer {
+export class ViewerSearch extends AbstractViewer<QueryResult> {
   static readonly DEPENDENCIES: TraceType[] = [TraceType.SEARCH];
 
-  private readonly htmlElement: HTMLElement;
-  private readonly presenter: Presenter;
-  private readonly traces: Traces;
-  private readonly view: View;
+  private traces: Traces | undefined;
 
-  constructor(traces: Traces, storage: Store) {
-    this.htmlElement = document.createElement('viewer-search');
+  constructor(
+    traces: Traces,
+    store: Store,
+    timestampConverter: TimestampConverter,
+  ) {
+    super(undefined, traces, 'viewer-search', store, timestampConverter);
+  }
+
+  override getTraces(): Array<Trace<QueryResult>> {
+    return assertDefined(this.traces).getTraces(TraceType.SEARCH);
+  }
+
+  protected override initializePresenter(
+    trace: Trace<QueryResult>,
+    traces: Traces,
+    store: Store,
+    timestampConverter: TimestampConverter,
+  ): Presenter {
+    this.traces = traces;
     const notifyViewCallback = (data: UiData) => {
       (this.htmlElement as unknown as ViewerSearchComponent).inputData = data;
     };
-    this.presenter = new Presenter(traces, storage, notifyViewCallback);
-    this.presenter.addEventListeners(this.htmlElement);
-    this.traces = traces;
-    this.view = new View(
-      ViewType.GLOBAL_SEARCH,
-      this.getTraces(),
-      this.htmlElement,
-      TRACE_INFO[TraceType.SEARCH].name,
-    );
+    return new Presenter(traces, store, notifyViewCallback, timestampConverter);
   }
 
-  async onWinscopeEvent(event: WinscopeEvent) {
-    await this.presenter.onAppEvent(event);
+  protected override getTraceTypeForViewTitle(): TraceType {
+    return TraceType.SEARCH;
   }
 
-  setEmitEvent(callback: EmitEvent) {
-    this.presenter.setEmitEvent(callback);
-  }
-
-  getViews(): View[] {
-    return [this.view];
-  }
-
-  getTraces(): Array<Trace<QueryResult>> {
-    return this.traces.getTraces(TraceType.SEARCH);
+  protected override getViewType(): ViewType {
+    return ViewType.GLOBAL_SEARCH;
   }
 }

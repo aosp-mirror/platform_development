@@ -29,6 +29,7 @@ import {TextFilter} from 'viewers/common/text_filter';
 import {UiHierarchyTreeNode} from 'viewers/common/ui_hierarchy_tree_node';
 import {UiTreeUtils} from 'viewers/common/ui_tree_utils';
 import {UserOptions} from 'viewers/common/user_options';
+import {RectSpec} from 'viewers/components/rects/rect_spec';
 import {Chip} from './chip';
 import {UiDataHierarchy} from './ui_data_hierarchy';
 
@@ -130,6 +131,7 @@ export abstract class AbstractHierarchyViewerPresenterTest<
       if (this.shouldExecuteRectTests) {
         it('sets properties tree and associated ui data from rect', async () => {
           await presenter.onAppEvent(this.getPositionUpdate());
+          expect(uiData.rectSpec).toEqual(this.expectedInitialRectSpec);
 
           const rect = assertDefined(uiData.rectsToDraw?.at(2));
           await presenter.onHighlightedIdChange(rect.id);
@@ -140,6 +142,7 @@ export abstract class AbstractHierarchyViewerPresenterTest<
           assertDefined(this.executeSpecializedChecksForPropertiesFromRect)(
             uiData,
           );
+          expect(uiData.rectSpec).toEqual(this.expectedInitialRectSpec);
 
           await presenter.onHighlightedIdChange(rect.id);
           expect(uiData.highlightedItem).toEqual('');
@@ -205,6 +208,7 @@ export abstract class AbstractHierarchyViewerPresenterTest<
   abstract readonly expectedHierarchyOpts: UserOptions;
   abstract readonly expectedPropertiesOpts: UserOptions;
 
+  readonly expectedInitialRectSpec?: RectSpec;
   readonly expectedRectsOpts?: UserOptions;
   readonly treeNodeLongName?: string;
   readonly treeNodeShortName?: string;

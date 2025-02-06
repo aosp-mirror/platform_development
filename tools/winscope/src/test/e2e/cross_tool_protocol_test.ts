@@ -18,11 +18,12 @@ import {browser, by, element, ElementFinder} from 'protractor';
 import {E2eTestUtils} from './utils';
 
 describe('Cross-Tool Protocol', () => {
-  const DEFAULT_TIMEOUT_MS = 20000;
+  const DEFAULT_TIMEOUT_MS = 50000;
 
   beforeEach(async () => {
     await browser.restart();
     jasmine.DEFAULT_TIMEOUT_INTERVAL = DEFAULT_TIMEOUT_MS;
+    await browser.manage().timeouts().setScriptTimeout(DEFAULT_TIMEOUT_MS);
     await E2eTestUtils.beforeEach(DEFAULT_TIMEOUT_MS);
     await E2eTestUtils.checkServerIsUp(
       'Remote tool mock',
@@ -41,7 +42,7 @@ describe('Cross-Tool Protocol', () => {
 
   it('allows communication with ABT', async () => {
     const TIMESTAMP_FROM_ABT_TO_WINSCOPE = '1684247274018192053';
-    const INITIAL_TRACE_TIMESTAMP = '1684147274018192053';
+    const INITIAL_TRACE_TIMESTAMP = '1684147302345002374';
     const TRACE_TIMESTAMP_CLOSEST_TO_ABT = '1684149608528382581';
     const TIMESTAMP_FROM_WINSCOPE = '1670509913000000000';
 

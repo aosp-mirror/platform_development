@@ -19,10 +19,12 @@ import {Trace} from 'trace/trace';
 import {Traces} from 'trace/traces';
 import {ImeTraceType, TraceType} from 'trace/trace_type';
 import {HierarchyTreeNode} from 'trace/tree_node/hierarchy_tree_node';
+import {NotifyHierarchyViewCallbackType} from 'viewers/common/abstract_hierarchy_viewer_presenter';
 import {AbstractViewerInputMethod} from 'viewers/common/abstract_viewer_input_method';
+import {ImeUiData} from 'viewers/common/ime_ui_data';
 import {PresenterInputMethodService} from './presenter_input_method_service';
 
-class ViewerInputMethodService extends AbstractViewerInputMethod {
+export class ViewerInputMethodService extends AbstractViewerInputMethod {
   static readonly DEPENDENCIES: ImeTraceType[] = [
     TraceType.INPUT_METHOD_SERVICE,
   ];
@@ -31,18 +33,17 @@ class ViewerInputMethodService extends AbstractViewerInputMethod {
     super(trace, traces, storage);
   }
 
-  override initializePresenter(
+  override createPresenter(
     trace: Trace<HierarchyTreeNode>,
     traces: Traces,
     storage: Store,
+    imeUiCallback: NotifyHierarchyViewCallbackType<ImeUiData>,
   ) {
     return new PresenterInputMethodService(
       trace,
       traces,
       storage,
-      this.imeUiCallback,
+      imeUiCallback,
     );
   }
 }
-
-export {ViewerInputMethodService};

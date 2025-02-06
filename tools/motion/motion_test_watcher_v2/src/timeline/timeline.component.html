@@ -1,0 +1,55 @@
+<div *ngIf="selectedGolden" class="w-full h-[500px] p-4 relative">
+  <div class="flex flex-col items-stretch h-full bg-white rounded shadow-md p-4">
+    <div class="flex-grow">
+      <app-graph
+        *ngIf="expandedGraphIdx !== -1 && !loading"
+        [expectedData]="expectedData"
+        [actualData]="actualData"
+        [featureName]="getSelectedFeatureName()"
+        [isExpanded]="true"
+        (expand)="toggleGraph($event)"
+      ></app-graph>
+
+       <div class="grid grid-cols-3 gap-4" *ngIf="expandedGraphIdx === -1 && !loading && actualData && actualData.features">
+        <app-graph
+          *ngFor="let feature of actualData.features; let i = index"
+          class="h-96 w-full"
+          [expectedData]="expectedData"
+          [actualData]="actualData"
+          [featureName]="getFeatureName(i)"
+          (expand)="toggleGraph($event)"
+        >
+        </app-graph>
+      </div>
+
+      <div *ngIf="loading">Loading...</div>
+    </div>
+  </div>
+
+  <div class="mt-4 flex justify-center space-x-2" *ngIf="expandedGraphIdx !== -1">
+    <button
+      class="px-3 py-1 rounded bg-gray-200 hover:bg-gray-300"
+      (click)="onPrevious()"
+    >
+      &#16;
+    </button>
+    <button
+      class="px-3 py-1 rounded bg-gray-200 hover:bg-gray-300"
+      (click)="onNext()"
+    >
+      &#17;
+    </button>
+  </div>
+  <div class="mt-4 flex justify-center space-x-2">
+    <button
+      class="px-3 py-1 rounded bg-red-500 hover:bg-red-700 text-white"
+      (click)="updateGolden()"
+    >
+      Update Golden
+    </button>
+  </div>
+</div>
+
+<div *ngIf="!selectedGolden" class="w-full h-[500px] p-4 flex justify-center items-center">
+  <p class="text-center text-gray-500">No test selected.</p>
+</div>

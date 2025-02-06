@@ -25,6 +25,7 @@ import {CustomQueryType} from 'trace/custom_query';
 import {Trace} from 'trace/trace';
 import {Traces} from 'trace/traces';
 import {TraceEntryFinder} from 'trace/trace_entry_finder';
+import {TRACE_INFO} from 'trace/trace_info';
 import {TraceType} from 'trace/trace_type';
 import {HierarchyTreeNode} from 'trace/tree_node/hierarchy_tree_node';
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
@@ -42,6 +43,11 @@ import {TextFilter} from 'viewers/common/text_filter';
 import {UiHierarchyTreeNode} from 'viewers/common/ui_hierarchy_tree_node';
 import {UI_RECT_FACTORY} from 'viewers/common/ui_rect_factory';
 import {UserOptions} from 'viewers/common/user_options';
+import {ViewerEvents} from 'viewers/common/viewer_events';
+import {
+  RectLegendFactory,
+  TraceRectType,
+} from 'viewers/components/rects/rect_spec';
 import {UiRect} from 'viewers/components/rects/ui_rect';
 import {UiData} from './ui_data';
 
@@ -135,7 +141,13 @@ the default for its data type.`,
     storage: Readonly<Store>,
     notifyViewCallback: NotifyHierarchyViewCallbackType<UiData>,
   ) {
-    super(undefined, traces, storage, notifyViewCallback, new UiData());
+    const uiData = new UiData();
+    uiData.rectSpec = {
+      type: TraceRectType.VIEWS,
+      icon: TRACE_INFO[TraceType.VIEW_CAPTURE].icon,
+      legend: RectLegendFactory.makeLegendForViewRects(),
+    };
+    super(undefined, traces, storage, notifyViewCallback, uiData);
     this.viewCaptureTraces = traces.getTraces(TraceType.VIEW_CAPTURE);
     this.surfaceFlingerTrace = traces.getTrace(TraceType.SURFACE_FLINGER);
   }
@@ -201,6 +213,17 @@ the default for its data type.`,
     this.uiData.sfRects = this.sfRects;
     this.uiData.curatedProperties = this.curatedProperties;
     this.refreshHierarchyViewerUiData();
+  }
+
+  protected override addViewerSpecificListeners(
+    htmlElement: HTMLElement,
+  ): void {
+    htmlElement.addEventListener(
+      ViewerEvents.MiniRectsDblClick,
+      async (event) => {
+        await this.onMiniRectsDoubleClick();
+      },
+    );
   }
 
   private async initializePackageNamesIfNeeded() {

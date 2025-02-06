@@ -14,13 +14,13 @@
  * limitations under the License.
  */
 
+@file:OptIn(ExperimentalMaterial3ExpressiveApi::class)
+
 package com.android.compose.animation.scene.demo
 
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.core.FiniteAnimationSpec
 import androidx.compose.animation.core.Spring
-import androidx.compose.animation.expandVertically
-import androidx.compose.foundation.border
+import androidx.compose.animation.core.spring
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -28,7 +28,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
@@ -36,20 +35,16 @@ import androidx.compose.material.icons.filled.Remove
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Checkbox
-import androidx.compose.material3.FilledTonalButton
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.MotionScheme
 import androidx.compose.material3.Slider
 import androidx.compose.material3.Text
 import androidx.compose.material3.TriStateCheckbox
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.mapSaver
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -67,7 +62,7 @@ data class DemoConfiguration(
     val isFullscreen: Boolean = false,
     val canChangeSceneOrOverlays: Boolean = true,
     val transitionInterceptionThreshold: Float = 0.05f,
-    val springConfigurations: DemoSpringConfigurations = DemoSpringConfigurations.presets[0],
+    val motion: MotionConfig = MotionConfig.Default,
     val lsToShadeRequiresFullSwipe: ToggleableState = ToggleableState.Indeterminate,
     val enableOverlays: Boolean = false,
     val transitionBorder: Boolean = true,
@@ -82,8 +77,7 @@ data class DemoConfiguration(
             val isFullscreenKey = "isFullscreen"
             val canChangeSceneOrOverlaysKey = "canChangeSceneOrOverlays"
             val transitionInterceptionThresholdKey = "transitionInterceptionThreshold"
-            val springConfigurationsKey = "springConfigurations"
-            val overscrollProgress = "overscrollProgress"
+            val motionSchemeKey = "motionScheme"
             val lsToShadeRequiresFullSwipe = "lsToShadeRequiresFullSwipe"
             val enableOverlays = "enableOverlays"
             val transitionBorder = "transitionBorder"
@@ -99,7 +93,7 @@ data class DemoConfiguration(
                         isFullscreenKey to it.isFullscreen,
                         canChangeSceneOrOverlaysKey to it.canChangeSceneOrOverlays,
                         transitionInterceptionThresholdKey to it.transitionInterceptionThreshold,
-                        springConfigurationsKey to it.springConfigurations.save(),
+                        motionSchemeKey to it.motion.name,
                         lsToShadeRequiresFullSwipe to it.lsToShadeRequiresFullSwipe,
                         enableOverlays to it.enableOverlays,
                         transitionBorder to it.transitionBorder,
@@ -116,8 +110,7 @@ data class DemoConfiguration(
                         canChangeSceneOrOverlays = it[canChangeSceneOrOverlaysKey] as Boolean,
                         transitionInterceptionThreshold =
                             it[transitionInterceptionThresholdKey] as Float,
-                        springConfigurations =
-                            it[springConfigurationsKey].restoreSpringConfigurations(),
+                        motion = MotionConfig.fromName(it[motionSchemeKey] as String),
                         lsToShadeRequiresFullSwipe =
                             it[lsToShadeRequiresFullSwipe] as ToggleableState,
                         enableOverlays = it[enableOverlays] as Boolean,
@@ -129,145 +122,70 @@ data class DemoConfiguration(
     }
 }
 
-data class DemoSpringConfigurations(
-    val name: String,
-    val systemUiSprings: SpringConfiguration,
-    val notificationSprings: SpringConfiguration,
-) {
-    fun save(): String =
-        listOf(
-                systemUiSprings.stiffness,
-                systemUiSprings.dampingRatio,
-                notificationSprings.stiffness,
-                notificationSprings.dampingRatio,
-            )
-            .joinToString(",")
-
+class MotionConfig(val name: String, val scheme: MotionScheme) {
     companion object {
-        val presets =
+        val Options =
             listOf(
-                DemoSpringConfigurations(
-                    name = "Default",
-                    systemUiSprings =
-                        SpringConfiguration(
-                            Spring.StiffnessMediumLow,
-                            Spring.DampingRatioLowBouncy,
-                        ),
-                    notificationSprings =
-                        SpringConfiguration(Spring.StiffnessMediumLow, Spring.DampingRatioLowBouncy),
+                MotionConfig("standard", MotionScheme.standard()),
+                MotionConfig("expressive", MotionScheme.expressive()),
+                MotionConfig(
+                    "bouncy",
+                    CustomMotionScheme(
+                        spatial = spring(Spring.DampingRatioHighBouncy, Spring.StiffnessVeryLow),
+                        effects = spring(Spring.DampingRatioNoBouncy, Spring.StiffnessVeryLow),
+                    ),
                 ),
-                DemoSpringConfigurations(
-                    name = "NotBouncy Fast",
-                    systemUiSprings =
-                        SpringConfiguration(Spring.StiffnessMedium, Spring.DampingRatioNoBouncy),
-                    notificationSprings =
-                        SpringConfiguration(Spring.StiffnessMedium, Spring.DampingRatioNoBouncy),
+                MotionConfig(
+                    "stiff",
+                    CustomMotionScheme(
+                        spatial = spring(Spring.DampingRatioLowBouncy, Spring.StiffnessHigh),
+                        effects = spring(Spring.DampingRatioNoBouncy, Spring.StiffnessHigh),
+                    ),
                 ),
-                DemoSpringConfigurations(
-                    name = "NotBouncy Normal",
-                    systemUiSprings =
-                        SpringConfiguration(Spring.StiffnessMediumLow, Spring.DampingRatioNoBouncy),
-                    notificationSprings =
-                        SpringConfiguration(Spring.StiffnessMediumLow, Spring.DampingRatioNoBouncy),
+                MotionConfig(
+                    "high bouncy & stiff",
+                    CustomMotionScheme(
+                        spatial = spring(Spring.DampingRatioHighBouncy, Spring.StiffnessHigh),
+                        effects = spring(Spring.DampingRatioNoBouncy, Spring.StiffnessHigh),
+                    ),
                 ),
-                DemoSpringConfigurations(
-                    name = "SlowBouncy",
-                    systemUiSprings =
-                        SpringConfiguration(
-                            stiffness = (Spring.StiffnessLow + Spring.StiffnessVeryLow) / 2f,
-                            dampingRatio = 0.85f,
-                        ),
-                    notificationSprings =
-                        SpringConfiguration(Spring.StiffnessMediumLow, Spring.DampingRatioLowBouncy),
-                ),
-                DemoSpringConfigurations(
-                    name = "Less Bouncy",
-                    systemUiSprings =
-                        SpringConfiguration(
-                            stiffness = (Spring.StiffnessMediumLow + Spring.StiffnessLow) / 2f,
-                            dampingRatio = 0.8f,
-                        ),
-                    notificationSprings =
-                        SpringConfiguration(
-                            stiffness = Spring.StiffnessMediumLow,
-                            dampingRatio = 0.8f,
-                        ),
-                ),
-                DemoSpringConfigurations(
-                    name = "Bouncy",
-                    systemUiSprings =
-                        SpringConfiguration(
-                            stiffness = (Spring.StiffnessMediumLow + Spring.StiffnessLow) / 2f,
-                            dampingRatio = Spring.DampingRatioLowBouncy,
-                        ),
-                    notificationSprings =
-                        SpringConfiguration(Spring.StiffnessMediumLow, Spring.DampingRatioLowBouncy),
-                ),
-                DemoSpringConfigurations(
-                    name = "VeryBouncy",
-                    systemUiSprings =
-                        SpringConfiguration(Spring.StiffnessLow, Spring.DampingRatioMediumBouncy),
-                    notificationSprings =
-                        SpringConfiguration(
-                            Spring.StiffnessMediumLow,
-                            Spring.DampingRatioMediumBouncy,
-                        ),
+                MotionConfig(
+                    "low bouncy & stiff",
+                    CustomMotionScheme(
+                        spatial = spring(Spring.DampingRatioLowBouncy, Spring.StiffnessVeryLow),
+                        effects = spring(Spring.DampingRatioNoBouncy, Spring.StiffnessVeryLow),
+                    ),
                 ),
             )
 
-        private fun List<Pair<Float, String>>.addIntermediateValues(): List<Pair<Float, String>> =
-            flatMapIndexed { index, curr ->
-                if (index == 0) {
-                    listOf(curr)
-                } else {
-                    val prev = get(index - 1)
-                    val incr = (curr.first - prev.first) / 4f
-                    listOf(
-                        prev.first + incr * 1f to "${prev.second}+",
-                        prev.first + incr * 2f to "${prev.second}++",
-                        prev.first + incr * 3f to "${prev.second}+++",
-                        curr,
-                    )
-                }
-            }
+        val Default: MotionConfig = Options[1]
 
-        private val stiffnessPairs =
-            listOf(
-                    Spring.StiffnessVeryLow to "VeryLow",
-                    Spring.StiffnessLow to "Low",
-                    Spring.StiffnessMediumLow to "MediumLow",
-                    Spring.StiffnessMedium to "Medium",
-                    Spring.StiffnessHigh to "High",
-                )
-                .addIntermediateValues()
+        fun fromName(name: String) = Options.first { it.name == name }
+    }
 
-        val stiffnessNames = stiffnessPairs.toMap()
-        val stiffnessValues = stiffnessPairs.map { it.first }
+    // Implementation inspired by MotionScheme.standard()
+    @Suppress("UNCHECKED_CAST")
+    class CustomMotionScheme(
+        private val spatial: FiniteAnimationSpec<Any>,
+        private val effects: FiniteAnimationSpec<Any>,
+        private val fastSpatial: FiniteAnimationSpec<Any> = spatial,
+        private val fastEffects: FiniteAnimationSpec<Any> = effects,
+        private val slowSpatial: FiniteAnimationSpec<Any> = spatial,
+        private val slowEffects: FiniteAnimationSpec<Any> = effects,
+    ) : MotionScheme {
+        override fun <T> defaultSpatialSpec() = spatial as FiniteAnimationSpec<T>
 
-        private val dampingRatioPairs =
-            listOf(
-                    Spring.DampingRatioNoBouncy to "NoBouncy",
-                    0.85f to "VeryLow",
-                    Spring.DampingRatioLowBouncy to "Low",
-                    Spring.DampingRatioMediumBouncy to "Medium",
-                    Spring.DampingRatioHighBouncy to "High",
-                )
-                .addIntermediateValues()
-        val dampingRatioNames = dampingRatioPairs.toMap()
-        val dampingRatioValues = dampingRatioPairs.map { it.first }
+        override fun <T> fastSpatialSpec() = fastSpatial as FiniteAnimationSpec<T>
+
+        override fun <T> slowSpatialSpec() = slowSpatial as FiniteAnimationSpec<T>
+
+        override fun <T> defaultEffectsSpec() = effects as FiniteAnimationSpec<T>
+
+        override fun <T> fastEffectsSpec() = fastEffects as FiniteAnimationSpec<T>
+
+        override fun <T> slowEffectsSpec() = slowEffects as FiniteAnimationSpec<T>
     }
 }
-
-private fun Any?.restoreSpringConfigurations(): DemoSpringConfigurations {
-    val p = (this as String).split(",").map { it.toFloat() }
-    return DemoSpringConfigurations(
-        name = "Custom",
-        systemUiSprings = SpringConfiguration(stiffness = p[0], dampingRatio = p[1]),
-        notificationSprings = SpringConfiguration(stiffness = p[2], dampingRatio = p[3]),
-    )
-}
-
-data class SpringConfiguration(val stiffness: Float, val dampingRatio: Float)
 
 @Composable
 fun DemoConfigurationDialog(
@@ -328,13 +246,14 @@ fun DemoConfigurationDialog(
                     },
                 )
 
-                Text(text = "Springs", style = MaterialTheme.typography.titleMedium)
+                Text(text = "Theme", style = MaterialTheme.typography.titleMedium)
 
-                SpringsPicker(
-                    value = configuration.springConfigurations,
-                    onValue = {
-                        onConfigurationChange(configuration.copy(springConfigurations = it))
-                    },
+                Text(text = "Motion: ${configuration.motion.name}")
+                Slider(
+                    value = configuration.motion,
+                    onValueChange = { onConfigurationChange(configuration.copy(motion = it)) },
+                    values = MotionConfig.Options,
+                    onValueNotFound = { 0 },
                 )
 
                 Text(text = "Scrollable", style = MaterialTheme.typography.titleMedium)
@@ -520,134 +439,4 @@ private fun Slider(
         valueRange = valueRange,
         steps = ((valueRange.endInclusive - valueRange.start) / stepSize).toInt() - 1,
     )
-}
-
-@Composable
-fun SpringsPicker(value: DemoSpringConfigurations, onValue: (DemoSpringConfigurations) -> Unit) {
-    Text(text = "Selected: ${value.name}")
-    Slider(value = value, onValueChange = onValue, values = DemoSpringConfigurations.presets)
-
-    var isExpanded by remember { mutableStateOf(value.name == "Custom") }
-    DisposableEffect(value) { onDispose { isExpanded = true } }
-    if (!isExpanded) FilledTonalButton(onClick = { isExpanded = true }) { Text("Show more") }
-
-    AnimatedVisibility(isExpanded, enter = expandVertically()) {
-        Column(
-            Modifier.animateContentSize()
-                .border(1.dp, color = MaterialTheme.colorScheme.primary, RoundedCornerShape(8.dp))
-                .padding(4.dp)
-                .fillMaxWidth()
-        ) {
-            Text(text = "System Ui")
-
-            Text(
-                text =
-                    buildString {
-                        append("stiffness: ")
-                        append(String.format("%.2f", value.systemUiSprings.stiffness))
-                        append(" (")
-                        append(
-                            DemoSpringConfigurations.stiffnessNames[value.systemUiSprings.stiffness]
-                        )
-                        append(")")
-                    }
-            )
-
-            Slider(
-                value = value.systemUiSprings.stiffness,
-                onValueChange = {
-                    onValue(
-                        value.copy(
-                            name = "Custom",
-                            systemUiSprings = value.systemUiSprings.copy(stiffness = it),
-                        )
-                    )
-                },
-                values = DemoSpringConfigurations.stiffnessValues,
-            )
-
-            Text(
-                text =
-                    buildString {
-                        append("dampingRatio: ")
-                        append(String.format("%.2f", value.systemUiSprings.dampingRatio))
-                        append(" (")
-                        append(
-                            DemoSpringConfigurations.dampingRatioNames[
-                                    value.systemUiSprings.dampingRatio]
-                        )
-                        append(")")
-                    }
-            )
-
-            Slider(
-                value = value.systemUiSprings.dampingRatio,
-                onValueChange = {
-                    onValue(
-                        value.copy(
-                            name = "Custom",
-                            systemUiSprings = value.systemUiSprings.copy(dampingRatio = it),
-                        )
-                    )
-                },
-                DemoSpringConfigurations.dampingRatioValues,
-            )
-
-            Text(text = "Notification")
-
-            Text(
-                text =
-                    buildString {
-                        append("stiffness: ")
-                        append(String.format("%.2f", value.notificationSprings.stiffness))
-                        append(" (")
-                        append(
-                            DemoSpringConfigurations.stiffnessNames[
-                                    value.notificationSprings.stiffness]
-                        )
-                        append(")")
-                    }
-            )
-
-            Slider(
-                value = value.notificationSprings.stiffness,
-                onValueChange = {
-                    onValue(
-                        value.copy(
-                            name = "Custom",
-                            notificationSprings = value.notificationSprings.copy(stiffness = it),
-                        )
-                    )
-                },
-                DemoSpringConfigurations.stiffnessValues,
-            )
-
-            Text(
-                text =
-                    buildString {
-                        append("dampingRatio: ")
-                        append(String.format("%.2f", value.notificationSprings.dampingRatio))
-                        append(" (")
-                        append(
-                            DemoSpringConfigurations.dampingRatioNames[
-                                    value.notificationSprings.dampingRatio]
-                        )
-                        append(")")
-                    }
-            )
-
-            Slider(
-                value = value.notificationSprings.dampingRatio,
-                onValueChange = {
-                    onValue(
-                        value.copy(
-                            name = "Custom",
-                            notificationSprings = value.notificationSprings.copy(dampingRatio = it),
-                        )
-                    )
-                },
-                DemoSpringConfigurations.dampingRatioValues,
-            )
-        }
-    }
 }

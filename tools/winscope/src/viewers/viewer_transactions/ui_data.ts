@@ -36,6 +36,8 @@ export class UiData implements UiDataLog {
     public propertiesUserOptions: UserOptions,
   ) {}
 
+  isFetchingData = false;
+
   static createEmpty(): UiData {
     return new UiData([], [], undefined, undefined, undefined, undefined, {});
   }

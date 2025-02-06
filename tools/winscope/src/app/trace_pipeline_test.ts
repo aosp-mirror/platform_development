@@ -16,7 +16,6 @@
 
 import {assertDefined} from 'common/assert_utils';
 import {FileUtils} from 'common/file_utils';
-import {FunctionUtils} from 'common/function_utils';
 import {
   TimestampConverterUtils,
   timestampEqualityTester,
@@ -36,7 +35,7 @@ import {TracesUtils} from 'test/unit/traces_utils';
 import {UserNotifierChecker} from 'test/unit/user_notifier_checker';
 import {TraceType} from 'trace/trace_type';
 import {QueryResult} from 'trace_processor/query_result';
-import {WasmEngineProxy} from 'trace_processor/wasm_engine_proxy';
+import {TraceProcessor} from 'trace_processor/trace_processor';
 import {FilesSource} from './files_source';
 import {TracePipeline} from './trace_pipeline';
 
@@ -274,17 +273,16 @@ describe('TracePipeline', () => {
     queryResultObj.numRows.and.returnValue(1);
     queryResultObj.firstRow.and.returnValue({value: 2n});
     queryResultObj.waitAllRows.and.returnValue(Promise.resolve(queryResultObj));
-    const spyQueryResult = FunctionUtils.mixin(
-      queryResultObj,
-      Promise.resolve(queryResultObj),
-    );
 
-    const spy = spyOn(WasmEngineProxy.prototype, 'query').and.callThrough();
+    const spy = spyOn(
+      TraceProcessor.prototype,
+      'queryAllRows',
+    ).and.callThrough();
     spy
       .withArgs(
         "select name, value from stats where name = 'traced_buf_trace_writer_packet_loss'",
       )
-      .and.returnValue(spyQueryResult);
+      .and.returnValue(Promise.resolve(queryResultObj));
 
     await loadFiles(file);
     await expectLoadResult(1, [

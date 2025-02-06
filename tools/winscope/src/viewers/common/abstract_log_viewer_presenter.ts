@@ -17,17 +17,16 @@
 import {DOMUtils} from 'common/dom_utils';
 import {FunctionUtils} from 'common/function_utils';
 import {Timestamp} from 'common/time/time';
+import {Analytics} from 'logging/analytics';
 import {
   TracePositionUpdate,
   WinscopeEvent,
   WinscopeEventType,
 } from 'messaging/winscope_event';
-import {
-  EmitEvent,
-  WinscopeEventEmitter,
-} from 'messaging/winscope_event_emitter';
+import {EmitEvent} from 'messaging/winscope_event_emitter';
 import {Trace, TraceEntry} from 'trace/trace';
 import {TraceEntryFinder} from 'trace/trace_entry_finder';
+import {TRACE_INFO} from 'trace/trace_info';
 import {TracePosition} from 'trace/trace_position';
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
 import {PropertiesPresenter} from 'viewers/common/properties_presenter';
@@ -47,8 +46,7 @@ export type NotifyLogViewCallbackType<UiData> = (uiData: UiData) => void;
 export abstract class AbstractLogViewerPresenter<
   UiData extends UiDataLog,
   TraceEntryType extends object,
-> implements WinscopeEventEmitter
-{
+> {
   protected static readonly VALUE_NA = 'N/A';
   protected emitAppEvent: EmitEvent = FunctionUtils.DO_NOTHING_ASYNC;
   protected abstract logPresenter: LogPresenter<LogEntry>;
@@ -125,15 +123,35 @@ export abstract class AbstractLogViewerPresenter<
       if (!isViewerVisible || !isPositionChange) {
         return;
       }
+      event.preventDefault();
       await this.onPositionChangeByKeyPress(event);
     });
+
+    this.addViewerSpecificListeners(htmlElement);
   }
 
   async onAppEvent(event: WinscopeEvent) {
     await event.visit(
       WinscopeEventType.TRACE_POSITION_UPDATE,
       async (event) => {
-        await this.applyTracePositionUpdate(event);
+        if (this.uiData.isFetchingData) {
+          return;
+        }
+        if (!this.isInitialized) {
+          this.uiData.isFetchingData = true;
+          this.notifyViewChanged();
+          if (this.initializeTraceSpecificData) {
+            await this.initializeTraceSpecificData();
+          }
+          this.makeUiData().then(async () => {
+            await this.applyTracePositionUpdate(event);
+            this.uiData.isFetchingData = false;
+            this.notifyViewChanged();
+            this.isInitialized = true;
+          });
+        } else {
+          await this.applyTracePositionUpdate(event);
+        }
       },
     );
     await event.visit(WinscopeEventType.DARK_MODE_TOGGLED, async (event) => {
@@ -258,6 +276,10 @@ export abstract class AbstractLogViewerPresenter<
     }
   }
 
+  protected addViewerSpecificListeners(htmlElement: HTMLElement) {
+    // do nothing
+  }
+
   protected refreshUiData() {
     this.uiData.headers = this.logPresenter.getHeaders();
     this.uiData.entries = this.logPresenter.getFilteredEntries();
@@ -272,8 +294,7 @@ export abstract class AbstractLogViewerPresenter<
     }
   }
 
-  protected async applyTracePositionUpdate(event: TracePositionUpdate) {
-    await this.initializeIfNeeded();
+  private async applyTracePositionUpdate(event: TracePositionUpdate) {
     let entry: TraceEntry<TraceEntryType> | undefined;
     if (event.position.entry?.getFullTrace() === this.trace) {
       entry = event.position.entry as TraceEntry<TraceEntryType>;
@@ -299,6 +320,9 @@ export abstract class AbstractLogViewerPresenter<
 
   protected async updatePropertiesTree(updateDefaultAllowlist = true) {
     if (this.propertiesPresenter) {
+      const traceName = TRACE_INFO[this.trace.type].name;
+      const propertiesStartTime = Date.now();
+
       const tree = this.getPropertiesTree();
       this.propertiesPresenter.setPropertiesTree(tree);
       if (updateDefaultAllowlist && this.updateDefaultAllowlist) {
@@ -308,30 +332,27 @@ export abstract class AbstractLogViewerPresenter<
         undefined,
         undefined,
         this.keepCalculated ?? false,
+        this.trace.type,
       );
       this.uiData.propertiesTree = this.propertiesPresenter.getFormattedTree();
+      Analytics.Navigation.logFetchComponentDataTime(
+        'properties',
+        traceName,
+        false,
+        Date.now() - propertiesStartTime,
+      );
     }
   }
 
-  private async initializeIfNeeded() {
-    if (this.isInitialized) {
-      return;
-    }
-
-    if (this.initializeTraceSpecificData) {
-      await this.initializeTraceSpecificData();
-    }
-
+  private async makeUiData() {
     const headers = this.makeHeaders();
     const allEntries = await this.makeUiDataEntries(headers);
     if (this.updateFiltersInHeaders) {
       this.updateFiltersInHeaders(headers, allEntries);
     }
-
     this.logPresenter.setAllEntries(allEntries);
     this.logPresenter.setHeaders(headers);
     this.refreshUiData();
-    this.isInitialized = true;
   }
 
   private updateIndicesUiData() {

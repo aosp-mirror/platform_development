@@ -16,7 +16,9 @@
 
 import {assertDefined} from 'common/assert_utils';
 import {InMemoryStorage} from 'common/store/in_memory_storage';
+import {Analytics} from 'logging/analytics';
 import {Trace, TraceEntry} from 'trace/trace';
+import {TRACE_INFO} from 'trace/trace_info';
 import {TraceType} from 'trace/trace_type';
 import {HierarchyTreeNode} from 'trace/tree_node/hierarchy_tree_node';
 import {Operation} from 'trace/tree_node/operations/operation';
@@ -427,10 +429,17 @@ export class HierarchyPresenter {
       const prevEntryUiTree = prevTree
         ? UiHierarchyTreeNode.from(prevTree)
         : undefined;
+
+      const startTimeMs = Date.now();
       await new AddDiffsHierarchyTree(
         HierarchyPresenter.isHierarchyTreeModified,
         this.denylistProperties,
       ).executeInPlace(uiTree, prevEntryUiTree);
+      Analytics.Navigation.logDiffComputationTime(
+        'hierarchy',
+        TRACE_INFO[trace.type].name,
+        Date.now() - startTimeMs,
+      );
     }
 
     if (this.userOptions['flat']?.enabled) {

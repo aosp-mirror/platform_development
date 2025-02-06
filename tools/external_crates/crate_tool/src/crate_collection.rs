@@ -13,23 +13,18 @@
 // limitations under the License.
 
 use name_and_version::{NameAndVersion, NameAndVersionMap, NamedAndVersioned};
-use name_and_version_proc_macros::NameAndVersionMap;
 use rooted_path::RootedPath;
 
-use std::{
-    collections::HashSet,
-    path::{Path, PathBuf},
-};
+use std::path::{Path, PathBuf};
 
 use anyhow::{anyhow, Result};
-use semver::Version;
 use walkdir::WalkDir;
 
 use crate::{crate_type::Crate, CrateError};
 
 use std::collections::BTreeMap;
 
-#[derive(NameAndVersionMap, Debug)]
+#[derive(Debug)]
 pub struct CrateCollection {
     crates: BTreeMap<NameAndVersion, Crate>,
     repo_root: PathBuf,
@@ -63,5 +58,20 @@ impl CrateCollection {
             }
         }
         Ok(())
+    }
+    pub fn get(&self, nv: &dyn NamedAndVersioned) -> Option<&Crate> {
+        self.crates.get(nv)
+    }
+    pub fn values(&self) -> impl Iterator<Item = &Crate> {
+        self.crates.values()
+    }
+    pub fn get_versions(
+        &self,
+        crate_name: impl AsRef<str>,
+    ) -> Box<dyn Iterator<Item = (&NameAndVersion, &Crate)> + '_> {
+        self.crates.get_versions(crate_name.as_ref())
+    }
+    pub fn contains_crate(&self, crate_name: impl AsRef<str>) -> bool {
+        self.crates.contains_name(crate_name.as_ref())
     }
 }

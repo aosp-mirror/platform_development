@@ -17,10 +17,12 @@
 import {assertDefined} from 'common/assert_utils';
 import {PersistentStoreProxy} from 'common/store/persistent_store_proxy';
 import {Store} from 'common/store/store';
+import {Analytics} from 'logging/analytics';
 import {TabbedViewSwitchRequest} from 'messaging/winscope_event';
 import {CustomQueryType} from 'trace/custom_query';
 import {Trace, TraceEntry, TraceEntryLazy} from 'trace/trace';
 import {Traces} from 'trace/traces';
+import {TRACE_INFO} from 'trace/trace_info';
 import {TraceType} from 'trace/trace_type';
 import {HierarchyTreeNode} from 'trace/tree_node/hierarchy_tree_node';
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
@@ -39,10 +41,15 @@ import {UI_RECT_FACTORY} from 'viewers/common/ui_rect_factory';
 import {UserOptions} from 'viewers/common/user_options';
 import {ViewerEvents} from 'viewers/common/viewer_events';
 import {
+  RectLegendFactory,
+  TraceRectType,
+} from 'viewers/components/rects/rect_spec';
+import {
   convertRectIdToLayerorDisplayName,
   makeDisplayIdentifiers,
 } from 'viewers/viewer_surface_flinger/presenter';
 import {DispatchEntryFormatter} from './operations/dispatch_entry_formatter';
+import {InputCoordinatePropagator} from './operations/input_coordinate_propagator';
 import {InputEntry, UiData} from './ui_data';
 
 enum InputEventType {
@@ -88,7 +95,8 @@ export class Presenter extends AbstractLogViewerPresenter<
 
   private readonly traces: Traces;
   private readonly surfaceFlingerTrace: Trace<HierarchyTreeNode> | undefined;
-  protected override uiData: UiData = UiData.createEmpty();
+
+  private readonly inputCoordinatePropagator = new InputCoordinatePropagator();
 
   private readonly layerIdToName = new Map<number, string>();
   private readonly allInputLayerIds = new Set<number>();
@@ -105,6 +113,7 @@ export class Presenter extends AbstractLogViewerPresenter<
     Presenter.DENYLIST_DISPATCH_PROPERTIES,
     [new DispatchEntryFormatter(this.layerIdToName)],
   );
+  protected override keepCalculated = true;
   private readonly currentTargetWindowIds = new Set<string>();
 
   private readonly rectsPresenter = new RectsPresenter(
@@ -126,7 +135,7 @@ export class Presenter extends AbstractLogViewerPresenter<
     ),
     (tree: HierarchyTreeNode) =>
       UI_RECT_FACTORY.makeInputRects(tree, (id) =>
-        this.currentTargetWindowIds.has(id),
+        this.currentTargetWindowIds.has(id.split(' ')[0]),
       ),
     makeDisplayIdentifiers,
     convertRectIdToLayerorDisplayName,
@@ -140,6 +149,11 @@ export class Presenter extends AbstractLogViewerPresenter<
   ) {
     const uiData = UiData.createEmpty();
     uiData.isDarkMode = storage.get('dark-mode') === 'true';
+    uiData.rectSpec = {
+      type: TraceRectType.INPUT_WINDOWS,
+      icon: TRACE_INFO[TraceType.INPUT_EVENT_MERGED].icon,
+      legend: RectLegendFactory.makeLegendForInputWindowRects(false),
+    };
     super(
       mergedInputEventTrace,
       (uiData) => notifyInputViewCallback(uiData as UiData),
@@ -252,6 +266,7 @@ export class Presenter extends AbstractLogViewerPresenter<
     traceEntry: TraceEntryLazy<PropertyTreeNode>,
   ): Promise<InputEntry> {
     const wrapperTree = await traceEntry.getValue();
+    this.inputCoordinatePropagator.apply(wrapperTree);
 
     let eventTree = wrapperTree.getChildByName('keyEvent');
     let type = InputEventType.KEY;
@@ -391,6 +406,7 @@ export class Presenter extends AbstractLogViewerPresenter<
       undefined,
       undefined,
       this.keepCalculated ?? false,
+      this.trace.type,
     );
     this.uiData.dispatchPropertiesTree =
       this.dispatchPropertiesPresenter.getFormattedTree();
@@ -413,10 +429,18 @@ export class Presenter extends AbstractLogViewerPresenter<
       });
 
     if (inputEntry?.surfaceFlingerEntry !== undefined) {
+      const startTimeMs = Date.now();
       const node = await inputEntry.surfaceFlingerEntry.getValue();
       this.rectsPresenter.applyHierarchyTreesChange([
         {trace: this.surfaceFlingerTrace, trees: [node]},
       ]);
+      Analytics.Navigation.logFetchComponentDataTime(
+        'rects',
+        TRACE_INFO[TraceType.INPUT_EVENT_MERGED].name,
+        false,
+        Date.now() - startTimeMs,
+      );
+
       this.uiData.rectsToDraw = this.rectsPresenter.getRectsToDraw();
       this.uiData.rectIdToShowState =
         this.rectsPresenter.getRectIdToShowState();
@@ -439,9 +463,7 @@ export class Presenter extends AbstractLogViewerPresenter<
     return entries[index];
   }
 
-  override addEventListeners(htmlElement: HTMLElement) {
-    super.addEventListeners(htmlElement);
-
+  protected override addViewerSpecificListeners(htmlElement: HTMLElement) {
     htmlElement.addEventListener(
       ViewerEvents.HighlightedPropertyChange,
       (event) =>

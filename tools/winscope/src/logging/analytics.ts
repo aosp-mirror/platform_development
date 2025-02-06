@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import {FilesSource} from 'app/files_source';
 import {globalConfig} from 'common/global_config';
 import {CoarseVersion} from 'trace/coarse_version';
 import {Parser} from 'trace/parser';
@@ -24,31 +25,44 @@ export class Analytics {
   private static BUGANIZER_OPENED = 'buganizer_opened';
   private static CROSS_TOOL_SYNC = 'cross_tool_sync';
   private static DARK_MODE_ENABLED = 'dark_mode_enabled';
+  private static DIFF_COMPUTATION_TIME = 'diff_computation_time';
   private static DOCUMENTATION_OPENED = 'documentation_opened';
   private static EXPANDED_TIMELINE_OPENED = 'expanded_timeline_opened';
+  private static FETCH_COMPONENT_DATA_TIME = 'fetch_component_data_time';
+  private static FILE_EXTRACTION_TIME = 'file_extraction_time';
+  private static FILE_PARSING_TIME = 'file_parsing_time';
+  private static FRAME_MAP_BUILD_TIME = 'frame_map_build_time';
+  private static FRAME_MAP_ERROR = 'frame_map_error';
   private static GLOBAL_EXCEPTION = 'global_exception';
   private static HIERARCHY_SETTINGS = 'hierarchy_settings';
+  private static JS_MEMORY_USAGE = 'js_memory_usage';
   private static NAVIGATION_ZOOM_EVENT = 'navigation_zoom';
   private static PROPERTIES_SETTINGS = 'properties_settings';
   private static PROXY_ERROR = 'proxy_error';
   private static PROXY_SERVER_NOT_FOUND = 'proxy_server_not_found';
   private static PROXY_NO_FILES_FOUND = 'proxy_no_files_found';
+  private static RECT_SETTINGS = 'rect_settings';
+  private static REFRESH_DUMPS = 'refresh_dumps';
+  private static TP_GENERAL_QUERY_TIME = 'tp_general_query_time';
   private static TP_QUERY_EXECUTION_TIME = 'tp_query_execution_time';
   private static TP_QUERY_REQUESTED = 'tp_query_requested';
   private static TP_QUERY_FAILED = 'tp_query_failed';
   private static TP_QUERY_SAVED = 'tp_query_saved';
-  private static RECT_SETTINGS = 'rect_settings';
-  private static REFRESH_DUMPS = 'refresh_dumps';
+  private static TP_SEARCH_INITIALIZATION_TIME =
+    'tp_search_initialization_time';
   private static TIME_BOOKMARK = 'time_bookmark';
   private static TIME_COPIED = 'time_copied';
   private static TIME_INPUT = 'time_input';
+  private static TIME_PROPAGATED = 'time_propagated';
   private static TRACE_TAB_SWITCHED = 'trace_tab_switched';
   private static TRACE_TIMELINE_DESELECTED = 'trace_timeline_deselected';
-  private static TRACING_LOADED_EVENT = 'tracing_trace_loaded';
   private static TRACING_COLLECT_DUMP = 'tracing_collect_dump';
   private static TRACING_COLLECT_TRACE = 'tracing_collect_trace';
+  private static TRACING_LOADED_EVENT = 'tracing_trace_loaded';
   private static TRACING_OPEN_FROM_ABT = 'tracing_from_abt';
+  private static TRACING_START_TIME = 'tracing_start_time';
   private static USER_WARNING = 'user_warning';
+  private static VIEWER_INITIALIZATION_TIME = 'viewer_initialization_time';
 
   static Error = class {
     static logGlobalException(description: string) {
@@ -58,6 +72,11 @@ export class Analytics {
     }
     static logProxyError(description: string) {
       Analytics.doLogEvent(Analytics.PROXY_ERROR, {
+        description,
+      } as Gtag.CustomParams);
+    }
+    static logFrameMapError(description: string) {
+      Analytics.doLogEvent(Analytics.FRAME_MAP_ERROR, {
         description,
       } as Gtag.CustomParams);
     }
@@ -73,9 +92,89 @@ export class Analytics {
     }
   };
 
+  static Loading = class {
+    static logFileExtractionTime(
+      type: 'bugreport' | 'device',
+      ms: number,
+      file_size: number,
+    ) {
+      Analytics.logTimeMs(Analytics.FILE_EXTRACTION_TIME, ms, {
+        type,
+        file_size,
+      });
+    }
+
+    static logFileParsingTime(
+      type: 'perfetto' | 'legacy',
+      files_source: FilesSource,
+      ms: number,
+    ) {
+      Analytics.logTimeMs(Analytics.FILE_PARSING_TIME, ms, {
+        files_source,
+        type,
+      });
+    }
+
+    static logFrameMapBuildTime(ms: number) {
+      Analytics.logTimeMs(Analytics.FRAME_MAP_BUILD_TIME, ms);
+    }
+
+    static logViewerInitializationTime(
+      traceType: string,
+      files_source: FilesSource,
+      ms: number,
+    ) {
+      Analytics.logTimeMs(Analytics.VIEWER_INITIALIZATION_TIME, ms, {
+        files_source,
+        traceType,
+      });
+    }
+  };
+
+  static Memory = class {
+    static logUsage(stage: string, params: object = {}) {
+      const memory: Memory | undefined = (performance as any).memory;
+      if (memory) {
+        Object.assign(params, {
+          stage,
+          heapSizeLimit: memory.jsHeapSizeLimit,
+          allocatedHeapSize: memory.totalJSHeapSize,
+          fractionAllocated: memory.totalJSHeapSize / memory.jsHeapSizeLimit,
+          usedHeapSize: memory.usedJSHeapSize,
+          fractionUsed: memory.usedJSHeapSize / memory.jsHeapSizeLimit,
+        });
+        Analytics.doLogEvent(Analytics.JS_MEMORY_USAGE, params);
+      }
+    }
+  };
+
   static Navigation = class {
+    static logDiffComputationTime(
+      component: 'hierarchy' | 'properties',
+      traceType: string,
+      ms: number,
+    ) {
+      Analytics.logTimeMs(Analytics.DIFF_COMPUTATION_TIME, ms, {
+        component,
+        traceType,
+      });
+    }
+
     static logExpandedTimelineOpened() {
       Analytics.doLogEvent(Analytics.EXPANDED_TIMELINE_OPENED);
+    }
+
+    static logFetchComponentDataTime(
+      component: 'hierarchy' | 'properties' | 'rects',
+      traceType: string,
+      withDiffs: boolean,
+      ms: number,
+    ) {
+      Analytics.logTimeMs(Analytics.FETCH_COMPONENT_DATA_TIME, ms, {
+        component,
+        traceType,
+        withDiffs,
+      });
     }
 
     static logHierarchySettingsChanged(
@@ -114,10 +213,19 @@ export class Analytics {
       } as Gtag.CustomParams);
     }
 
-    static logTabSwitched(tabTraceType: string) {
-      Analytics.doLogEvent(Analytics.TRACE_TAB_SWITCHED, {
+    static logTabSwitched(
+      tabTraceType: string,
+      ms: number,
+      first_switch: boolean,
+    ) {
+      Analytics.logTimeMs(Analytics.TRACE_TAB_SWITCHED, ms, {
         type: tabTraceType,
-      } as Gtag.CustomParams);
+        first_switch,
+      });
+    }
+
+    static logTimeBookmark() {
+      Analytics.doLogEvent(Analytics.TIME_BOOKMARK);
     }
 
     static logTimeCopied(type: 'ns' | 'human') {
@@ -132,8 +240,8 @@ export class Analytics {
       } as Gtag.CustomParams);
     }
 
-    static logTimeBookmark() {
-      Analytics.doLogEvent(Analytics.TIME_BOOKMARK);
+    static logTimePropagated(target: string, ms: number) {
+      Analytics.logTimeMs(Analytics.TIME_PROPAGATED, ms, {target});
     }
 
     static logTraceTimelineDeselected(type: string) {
@@ -176,11 +284,22 @@ export class Analytics {
     }
   };
 
+  static TraceProcessor = class {
+    static logQueryExecutionTime(ms: number, waitAllRows: boolean) {
+      Analytics.logTimeMs(Analytics.TP_GENERAL_QUERY_TIME, ms, {
+        waitAllRows,
+      });
+    }
+  };
+
   static TraceSearch = class {
-    static logQueryExecutionTime(value: number) {
-      Analytics.doLogEvent(Analytics.TP_QUERY_EXECUTION_TIME, {
-        value,
-      } as Gtag.CustomParams);
+    static logInitializationTime(traceType: string, ms: number) {
+      Analytics.logTimeMs(Analytics.TP_SEARCH_INITIALIZATION_TIME, ms, {
+        traceType,
+      });
+    }
+    static logQueryExecutionTime(ms: number) {
+      Analytics.logTimeMs(Analytics.TP_QUERY_EXECUTION_TIME, ms);
     }
     static logQueryFailure() {
       Analytics.doLogEvent(Analytics.TP_QUERY_FAILED);
@@ -219,6 +338,10 @@ export class Analytics {
       });
     }
 
+    static logStartTime(ms: number) {
+      Analytics.logTimeMs(Analytics.TRACING_START_TIME, ms);
+    }
+
     static logOpenFromABT() {
       Analytics.doLogEvent(Analytics.TRACING_OPEN_FROM_ABT);
     }
@@ -245,4 +368,27 @@ export class Analytics {
       gtag('event', eventName, eventParams);
     }
   }
+
+  private static logTimeMs(
+    eventName: string,
+    ms: number,
+    params?: Gtag.CustomParams,
+  ) {
+    if (ms > 0) {
+      const finalParams = Object.assign({value: ms}, params);
+      Analytics.doLogEvent(eventName, finalParams);
+    }
+  }
+}
+
+// https://developer.mozilla.org/en-US/docs/Web/API/Performance/memory
+// This feature is deprecated so may not work in all browsers. We collect
+// metrics from the field based on the JS heap because the replacement API,
+// measureUserAgentSpecificMemory(), requires the app to be cross-origin
+// isolated, which is incompatible with Winscope cross-tool integration.
+
+interface Memory {
+  jsHeapSizeLimit: number; // Maximum heap size, in bytes, available to the context.
+  totalJSHeapSize: number; // Total allocated heap size, in bytes.
+  usedJSHeapSize: number; // Currently active segment of JS heap, in bytes.
 }

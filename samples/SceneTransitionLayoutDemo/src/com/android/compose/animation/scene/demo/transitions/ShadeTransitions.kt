@@ -19,6 +19,7 @@ package com.android.compose.animation.scene.demo.transitions
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.gestures.Orientation
 import androidx.compose.foundation.pager.PagerState
+import androidx.compose.ui.unit.dp
 import com.android.compose.animation.scene.ContentKey
 import com.android.compose.animation.scene.Edge
 import com.android.compose.animation.scene.SceneTransitionsBuilder
@@ -42,8 +43,10 @@ fun SceneTransitionsBuilder.shadeTransitions(qsPagerState: PagerState) {
                 toContent: ContentKey,
                 orientation: Orientation,
             ): Float {
-                val distance = Shade.Elements.Scrim.targetOffset(Scenes.Shade)?.y ?: return 0f
-                check(distance > 0f) { "Scrim target offset in Shade is equal to $distance" }
+                val distance =
+                    (Shade.Elements.Scrim.targetOffset(Scenes.Shade)?.y ?: return 0f).coerceAtLeast(
+                        100.dp.toPx()
+                    )
 
                 // Use the bottom of the QS grid for the minimum distance, so that the distance is
                 // not too small if the scrim was scrolled at the top because it has a lot of

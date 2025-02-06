@@ -16,6 +16,7 @@
 
 import {assertTrue} from 'common/assert_utils';
 import {Store} from 'common/store/store';
+import {TimestampConverter} from 'common/time/timestamp_converter';
 import {Trace} from 'trace/trace';
 import {Traces} from 'trace/traces';
 import {TraceType, TraceTypeUtils} from 'trace/trace_type';
@@ -35,7 +36,7 @@ import {ViewerTransitions} from './viewer_transitions/viewer_transitions';
 import {ViewerViewCapture} from './viewer_view_capture/viewer_view_capture';
 import {ViewerWindowManager} from './viewer_window_manager/viewer_window_manager';
 
-class ViewerFactory {
+export class ViewerFactory {
   static readonly SINGLE_TRACE_VIEWERS = [
     ViewerSurfaceFlinger,
     ViewerWindowManager,
@@ -55,12 +56,16 @@ class ViewerFactory {
     ViewerScreenshot,
   ];
 
-  createViewers(traces: Traces, storage: Store): Viewer[] {
+  createViewers(
+    traces: Traces,
+    store: Store,
+    timestampConverter: TimestampConverter,
+  ): Viewer[] {
     const viewers: Viewer[] = [];
 
     for (const trace of traces) {
       if (trace.isPerfetto()) {
-        viewers.push(new ViewerSearch(traces, storage));
+        viewers.push(new ViewerSearch(traces, store, timestampConverter));
         break;
       }
     }
@@ -71,7 +76,7 @@ class ViewerFactory {
         assertTrue(Viewer.DEPENDENCIES.length === 1);
         const isViewerDepSatisfied = trace.type === Viewer.DEPENDENCIES[0];
         if (isViewerDepSatisfied) {
-          viewers.push(new Viewer(trace as Trace<any>, traces, storage));
+          viewers.push(new Viewer(trace as Trace<any>, traces, store));
         }
       });
     });
@@ -84,7 +89,7 @@ class ViewerFactory {
         (traceType: TraceType) => availableTraceTypes.has(traceType),
       );
       if (isViewerDepSatisfied) {
-        viewers.push(new Viewer(traces, storage));
+        viewers.push(new Viewer(traces, store));
       }
     });
 
@@ -118,5 +123,3 @@ class ViewerFactory {
     });
   }
 }
-
-export {ViewerFactory};

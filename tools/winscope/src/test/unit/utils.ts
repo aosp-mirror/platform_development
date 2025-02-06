@@ -29,7 +29,12 @@ import {TraceFile} from 'trace/trace_file';
 import {TraceMetadata} from 'trace/trace_metadata';
 import {TraceEntryTypeMap, TraceType} from 'trace/trace_type';
 import {HierarchyTreeNode} from 'trace/tree_node/hierarchy_tree_node';
-import {QueryResult, Row, RowIterator} from 'trace_processor/query_result';
+import {
+  ColumnType,
+  QueryResult,
+  Row,
+  RowIterator,
+} from 'trace_processor/query_result';
 import {TraceProcessorFactory} from 'trace_processor/trace_processor_factory';
 import {getFixtureFile} from './fixture_utils';
 import {TraceBuilder} from './trace_builder';
@@ -303,9 +308,16 @@ class UnitTestUtils {
     sectionTitle: string,
   ) {
     const section = assertDefined(htmlElement.querySelector(selector));
+    expect(
+      assertDefined(
+        section.querySelector<HTMLElement>(
+          'collapsible-section-title .mat-title',
+        ),
+      ).textContent,
+    ).toEqual(sectionTitle);
     const collapseButton = assertDefined(
-      section.querySelector('collapsible-section-title button'),
-    ) as HTMLElement;
+      section.querySelector<HTMLElement>('collapsible-section-title button'),
+    );
     collapseButton.click();
     fixture.detectChanges();
     expect(section.classList).toContain('collapsed');
@@ -315,7 +327,9 @@ class UnitTestUtils {
     const collapsedSection = assertDefined(
       collapsedSections.querySelector('.collapsed-section'),
     ) as HTMLElement;
-    expect(collapsedSection.textContent).toContain(sectionTitle);
+    expect(collapsedSection.textContent?.trim()).toEqual(
+      sectionTitle + '  arrow_right',
+    );
     collapsedSection.click();
     fixture.detectChanges();
     UnitTestUtils.checkNoCollapsedSectionButtons(htmlElement);
@@ -344,6 +358,7 @@ class UnitTestUtils {
 
   static makeSearchTraceSpies(
     ts?: Timestamp,
+    value?: ColumnType,
   ): [jasmine.SpyObj<QueryResult>, jasmine.SpyObj<RowIterator<Row>>] {
     const spyQueryResult = jasmine.createSpyObj<QueryResult>('result', [
       'numRows',
@@ -351,19 +366,24 @@ class UnitTestUtils {
       'iter',
     ]);
     spyQueryResult.numRows.and.returnValue(1);
-    spyQueryResult.columns.and.returnValue(
-      ts === undefined ? ['property'] : ['ts', 'property'],
-    );
+    const columns: string[] = [];
+    if (ts !== undefined) columns.push('ts');
+    columns.push('property');
+    if (value !== undefined) columns.push('value');
+    spyQueryResult.columns.and.returnValue(columns);
 
     const spyIter = jasmine.createSpyObj<RowIterator<Row>>('iter', [
       'valid',
       'next',
       'get',
     ]);
-    if (ts) {
+    if (ts !== undefined) {
       spyIter.get.withArgs('ts').and.returnValue(ts.getValueNs());
     }
-    spyIter.get.withArgs('property').and.returnValue('test_value');
+    spyIter.get.withArgs('property').and.returnValue('test_property');
+    if (value !== undefined) {
+      spyIter.get.withArgs('value').and.returnValue(value);
+    }
     spyIter.valid.and.returnValue(true);
     spyIter.next.and.callFake(() =>
       assertDefined(spyIter).valid.and.returnValue(false),
@@ -375,7 +395,27 @@ class UnitTestUtils {
 
   static async runQueryAndGetResult(query: string): Promise<QueryResult> {
     const tp = await TraceProcessorFactory.getSingleInstance();
-    return tp.query(query).waitAllRows();
+    return tp.queryAllRows(query);
+  }
+
+  static async checkTooltips<T>(
+    elements: Element[],
+    expTooltips: Array<string | undefined>,
+    fixture: ComponentFixture<T>,
+  ) {
+    for (const [index, el] of elements.entries()) {
+      el.dispatchEvent(new Event('mouseenter'));
+      fixture.detectChanges();
+      const panel = document.querySelector<HTMLElement>('.mat-tooltip-panel');
+      if (expTooltips[index] !== undefined) {
+        expect(panel?.textContent).toEqual(expTooltips[index]);
+      } else {
+        expect(panel).toBeNull();
+      }
+      el.dispatchEvent(new Event('mouseleave'));
+      fixture.detectChanges();
+      await fixture.whenStable();
+    }
   }
 }
 

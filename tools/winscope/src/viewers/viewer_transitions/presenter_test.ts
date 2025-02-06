@@ -17,6 +17,7 @@
 import {assertDefined} from 'common/assert_utils';
 import {InMemoryStorage} from 'common/store/in_memory_storage';
 import {TimestampConverterUtils} from 'common/time/test_utils';
+import {TimeUtils} from 'common/time/time_utils';
 import {TracePositionUpdate} from 'messaging/winscope_event';
 import {ParserBuilder} from 'test/unit/parser_builder';
 import {PropertyTreeBuilder} from 'test/unit/property_tree_builder';
@@ -108,7 +109,7 @@ class PresenterTransitionsTest extends AbstractLogViewerPresenterTest<UiData> {
           '100%',
         ),
       ),
-      options: ['TRANSIT_FLAG_IS_RECENTS', '0'],
+      options: ['TRANSIT_FLAG_IS_RECENTS', '0x0'],
     },
     {
       header: new LogHeader(
@@ -221,6 +222,9 @@ class PresenterTransitionsTest extends AbstractLogViewerPresenterTest<UiData> {
           positionUpdate,
         );
         await presenter.onAppEvent(positionUpdate);
+        await TimeUtils.wait(
+          () => uiData !== undefined && !uiData.isFetchingData,
+        );
         expect(uiData?.entries).toEqual([]);
       });
     });

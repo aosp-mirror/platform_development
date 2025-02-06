@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 import {CommonModule} from '@angular/common';
 import {Component, ViewChild} from '@angular/core';
 import {
@@ -21,7 +22,8 @@ import {
   TestBed,
 } from '@angular/core/testing';
 import {FormsModule} from '@angular/forms';
-import {MatOptionModule} from '@angular/material/core';
+import {MatOptionModule, MatPseudoCheckboxModule} from '@angular/material/core';
+import {MatDividerModule} from '@angular/material/divider';
 import {MatFormFieldModule} from '@angular/material/form-field';
 import {MatInputModule} from '@angular/material/input';
 import {MatSelectModule} from '@angular/material/select';
@@ -46,6 +48,8 @@ describe('SelectWithFilterComponent', () => {
         MatInputModule,
         BrowserAnimationsModule,
         FormsModule,
+        MatPseudoCheckboxModule,
+        MatDividerModule,
       ],
     }).compileComponents();
     fixture = TestBed.createComponent(TestHostComponent);
@@ -82,7 +86,7 @@ describe('SelectWithFilterComponent', () => {
     const options = getOptions();
     checkHiddenOptions(options, []);
 
-    (options.item(0) as HTMLElement).click();
+    options[0].click();
     fixture.detectChanges();
     checkSelectValue(spy, ['0']);
 
@@ -91,13 +95,13 @@ describe('SelectWithFilterComponent', () => {
     dispatchInput(inputEl, '2');
     checkHiddenOptions(options, [0, 1]);
 
-    (options.item(2) as HTMLElement).click();
+    options[2].click();
     checkSelectValue(spy, ['0', '2']);
 
     dispatchInput(inputEl, '');
     checkHiddenOptions(options, []);
 
-    (options.item(1) as HTMLElement).click();
+    options[1].click();
     checkSelectValue(spy, ['0', '1', '2']);
   });
 
@@ -110,11 +114,31 @@ describe('SelectWithFilterComponent', () => {
 
     const options = getOptions();
 
-    (options.item(0) as HTMLElement).click();
+    options[0].click();
     checkSelectValue(spy, ['0']);
 
-    (options.item(0) as HTMLElement).click();
+    options[0].click();
     checkSelectValue(spy, []);
+  });
+
+  it('applies deselection from pinned selected options', () => {
+    const spy = spyOn(
+      assertDefined(component.selectWithFilterComponent).selectChange,
+      'emit',
+    );
+    openSelectPanel();
+
+    const options = getOptions();
+    options[0].click();
+    fixture.detectChanges();
+    checkSelectValue(spy, ['0']);
+
+    const pinnedOptions = getPinnedOptions();
+    expect(pinnedOptions.length).toEqual(1);
+    pinnedOptions[0].click();
+    fixture.detectChanges();
+    checkSelectValue(spy, []);
+    expect(getPinnedOptions().length).toEqual(0);
   });
 
   it('resets filter on close', async () => {
@@ -127,13 +151,72 @@ describe('SelectWithFilterComponent', () => {
     dispatchInput(inputEl, 'A');
     checkHiddenOptions(options, [0, 1, 2]);
 
-    (document.querySelector('.cdk-overlay-backdrop') as HTMLElement).click();
+    document.querySelector<HTMLElement>('.cdk-overlay-backdrop')?.click();
     fixture.detectChanges();
     await fixture.whenStable();
 
     openSelectPanel();
     checkHiddenOptions(getOptions(), []);
   });
+
+  function openSelectPanel() {
+    assertDefined(
+      htmlElement.querySelector<HTMLElement>('.mat-select-trigger'),
+    ).click();
+  }
+
+  function getOptions(): HTMLElement[] {
+    return Array.from(
+      document.querySelectorAll<HTMLElement>('.mat-select-panel .option'),
+    );
+  }
+
+  function checkHiddenOptions(options: HTMLElement[], hidden: number[]) {
+    expect(options.length).toEqual(3);
+    options.forEach((option, index) => {
+      expect(option.textContent).toContain(`${index}`);
+      if (hidden.includes(index)) {
+        expect(option.className).toContain('hidden-option');
+      } else {
+        expect(option.className).not.toContain('hidden-option');
+      }
+    });
+  }
+
+  function getFilterInput(): HTMLInputElement {
+    return assertDefined(
+      document.querySelector<HTMLInputElement>(
+        '.mat-select-panel .select-filter input',
+      ),
+    );
+  }
+
+  function dispatchInput(inputEl: HTMLInputElement, input: string) {
+    inputEl.value = input;
+    inputEl.dispatchEvent(new Event('input'));
+    fixture.detectChanges();
+  }
+
+  function getPinnedOptions(): HTMLElement[] {
+    return Array.from(
+      document.querySelectorAll<HTMLElement>(
+        '.mat-select-panel .selected-options .mat-option',
+      ),
+    ).slice(1);
+  }
+
+  function checkSelectValue(spy: jasmine.Spy, expected: string[]) {
+    expect(spy).toHaveBeenCalled();
+    expect(assertDefined(spy.calls.mostRecent().args[0]).value).toEqual(
+      expected,
+    );
+    if (!document.querySelector('.mat-select-panel')) {
+      openSelectPanel();
+    }
+    expect(
+      Array.from(getPinnedOptions()).map((o) => o.textContent?.trim()),
+    ).toEqual(expected);
+  }
 
   @Component({
     selector: 'host-component',
@@ -149,49 +232,5 @@ describe('SelectWithFilterComponent', () => {
 
     @ViewChild(SelectWithFilterComponent)
     selectWithFilterComponent: SelectWithFilterComponent | undefined;
-  }
-
-  function openSelectPanel() {
-    const trigger = assertDefined(
-      htmlElement.querySelector('.mat-select-trigger'),
-    ) as HTMLElement;
-    trigger.click();
-  }
-
-  function getOptions(): NodeList {
-    return document.querySelectorAll('.mat-select-panel .mat-option');
-  }
-
-  function checkHiddenOptions(options: NodeList, hidden: number[]) {
-    expect(options.length).toEqual(3);
-    options.forEach((option, index) => {
-      expect(option.textContent).toContain(`${index}`);
-      if (hidden.includes(index)) {
-        expect((option as HTMLElement).className).toContain('hidden-option');
-      } else {
-        expect((option as HTMLElement).className).not.toContain(
-          'hidden-option',
-        );
-      }
-    });
-  }
-
-  function getFilterInput(): HTMLInputElement {
-    return assertDefined(
-      document.querySelector('.mat-select-panel .select-filter input'),
-    ) as HTMLInputElement;
-  }
-
-  function dispatchInput(inputEl: HTMLInputElement, input: string) {
-    inputEl.value = input;
-    inputEl.dispatchEvent(new Event('input'));
-    fixture.detectChanges();
-  }
-
-  function checkSelectValue(spy: jasmine.Spy, expected: string[]) {
-    expect(spy).toHaveBeenCalled();
-    expect(assertDefined(spy.calls.mostRecent().args[0]).value).toEqual(
-      expected,
-    );
   }
 });

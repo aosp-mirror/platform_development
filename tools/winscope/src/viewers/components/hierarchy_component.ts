@@ -136,25 +136,6 @@ import {viewerCardInnerStyle} from './styles/viewer_card.styles';
       tree-view {
         overflow: auto;
       }
-
-      .warning {
-        display: flex;
-        align-items: center;
-        padding: 2px 12px;
-        background-color: var(--warning-background-color);
-      }
-      .warning-message {
-        padding-inline-start: 2px;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        width: 100%;
-      }
-      .warning-icon {
-        font-size: 18px;
-        min-width: 18px;
-        height: 18px;
-      }
     `,
     nodeStyles,
     viewerCardInnerStyle,

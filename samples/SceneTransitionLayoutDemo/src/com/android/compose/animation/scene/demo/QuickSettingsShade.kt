@@ -20,19 +20,21 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
 import com.android.compose.animation.scene.Back
+import com.android.compose.animation.scene.ContentScope
 import com.android.compose.animation.scene.ElementKey
-import com.android.compose.animation.scene.SceneScope
 import com.android.compose.animation.scene.Swipe
 import com.android.compose.animation.scene.UserActionResult
+import com.android.compose.animation.scene.UserActionResult.ShowOverlay
+import com.android.compose.animation.scene.UserActionResult.ShowOverlay.HideCurrentOverlays
 
 object QuickSettingsShade {
     object Elements {
+        val Root = ElementKey("QuickSettingsShadeRoot")
         val Content = ElementKey("QuickSettingsShadeContent")
     }
 
@@ -41,25 +43,26 @@ object QuickSettingsShade {
             Back to UserActionResult.HideOverlay(Overlays.QuickSettings),
             Swipe.Up to UserActionResult.HideOverlay(Overlays.QuickSettings),
             Swipe.Down(fromSource = SceneContainerEdge.TopStart) to
-                UserActionResult.ReplaceByOverlay(Overlays.Notifications),
+                ShowOverlay(
+                    Overlays.Notifications,
+                    hideCurrentOverlays = HideCurrentOverlays.Some(Overlays.QuickSettings),
+                ),
         )
 }
 
 @Composable
-fun SceneScope.QuickSettingsShade(
-    qsPager: @Composable SceneScope.() -> Unit,
-    mediaPlayer: @Composable (SceneScope.() -> Unit)?,
+fun ContentScope.QuickSettingsShade(
+    qsPager: @Composable ContentScope.() -> Unit,
+    mediaPlayer: @Composable (ContentScope.() -> Unit)?,
     modifier: Modifier = Modifier,
 ) {
-    PartialShade(modifier) {
+    PartialShade(QuickSettingsShade.Elements.Root, modifier) {
         Column(Modifier.element(QuickSettingsShade.Elements.Content)) {
-            val horizontalPaddingModifier = Modifier.padding(horizontal = 16.dp)
-
-            Clock(MaterialTheme.colorScheme.onSurfaceVariant, horizontalPaddingModifier)
-
             if (mediaPlayer != null) {
                 // Ensure that the media player is above the QS tiles when they fade in.
-                Box(horizontalPaddingModifier.zIndex(1f)) { mediaPlayer() }
+                Box(Modifier.padding(top = 16.dp, start = 16.dp, end = 16.dp).zIndex(1f)) {
+                    mediaPlayer()
+                }
             }
 
             Spacer(Modifier.padding(top = 16.dp))

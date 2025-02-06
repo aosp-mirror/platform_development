@@ -14,11 +14,11 @@
  * limitations under the License.
  */
 import {Component, Input} from '@angular/core';
-import {PersistentStore} from 'common/store/persistent_store';
 import {TraceType} from 'trace/trace_type';
 import {CollapsibleSections} from 'viewers/common/collapsible_sections';
 import {CollapsibleSectionType} from 'viewers/common/collapsible_section_type';
 import {ImeUiData} from 'viewers/common/ime_ui_data';
+import {ViewerComponent} from 'viewers/components/viewer_component';
 import {viewerCardStyle} from './styles/viewer_card.styles';
 
 @Component({
@@ -78,9 +78,7 @@ import {viewerCardStyle} from './styles/viewer_card.styles';
     viewerCardStyle,
   ],
 })
-export class ViewerInputMethodComponent {
-  @Input() inputData: ImeUiData | undefined;
-  @Input() store: PersistentStore = new PersistentStore();
+export class ViewerInputMethodComponent extends ViewerComponent<ImeUiData> {
   @Input() active = false;
 
   CollapsibleSectionType = CollapsibleSectionType;

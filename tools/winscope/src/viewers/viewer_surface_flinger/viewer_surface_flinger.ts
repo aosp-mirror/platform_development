@@ -15,67 +15,31 @@
  */
 
 import {Store} from 'common/store/store';
-import {WinscopeEvent} from 'messaging/winscope_event';
-import {EmitEvent} from 'messaging/winscope_event_emitter';
 import {Trace} from 'trace/trace';
 import {Traces} from 'trace/traces';
-import {TRACE_INFO} from 'trace/trace_info';
 import {TraceType} from 'trace/trace_type';
 import {HierarchyTreeNode} from 'trace/tree_node/hierarchy_tree_node';
-import {ViewerEvents} from 'viewers/common/viewer_events';
-import {View, Viewer, ViewType} from 'viewers/viewer';
+import {AbstractViewer} from 'viewers/abstract_viewer';
 import {Presenter} from './presenter';
 import {UiData} from './ui_data';
 import {ViewerSurfaceFlingerComponent} from './viewer_surface_flinger_component';
 
-export class ViewerSurfaceFlinger implements Viewer {
+export class ViewerSurfaceFlinger extends AbstractViewer<HierarchyTreeNode> {
   static readonly DEPENDENCIES: TraceType[] = [TraceType.SURFACE_FLINGER];
 
-  private readonly trace: Trace<HierarchyTreeNode>;
-  private readonly htmlElement: HTMLElement;
-  private readonly presenter: Presenter;
-  private readonly view: View;
+  constructor(trace: Trace<HierarchyTreeNode>, traces: Traces, store: Store) {
+    super(trace, traces, 'viewer-surface-flinger', store);
+  }
 
-  constructor(trace: Trace<HierarchyTreeNode>, traces: Traces, storage: Store) {
-    this.trace = trace;
-    this.htmlElement = document.createElement('viewer-surface-flinger');
-
+  protected override initializePresenter(
+    trace: Trace<HierarchyTreeNode>,
+    traces: Traces,
+    store: Store,
+  ): Presenter {
     const notifyViewCallback = (uiData: UiData) => {
       (this.htmlElement as unknown as ViewerSurfaceFlingerComponent).inputData =
         uiData;
     };
-    this.presenter = new Presenter(trace, traces, storage, notifyViewCallback);
-    this.presenter.addEventListeners(this.htmlElement);
-
-    this.htmlElement.addEventListener(
-      ViewerEvents.RectsDblClick,
-      async (event) => {
-        const rectId = (event as CustomEvent).detail.clickedRectId;
-        await this.presenter.onRectDoubleClick(rectId);
-      },
-    );
-
-    this.view = new View(
-      ViewType.TRACE_TAB,
-      this.getTraces(),
-      this.htmlElement,
-      TRACE_INFO[TraceType.SURFACE_FLINGER].name,
-    );
-  }
-
-  setEmitEvent(callback: EmitEvent) {
-    this.presenter.setEmitEvent(callback);
-  }
-
-  async onWinscopeEvent(event: WinscopeEvent) {
-    await this.presenter.onAppEvent(event);
-  }
-
-  getViews(): View[] {
-    return [this.view];
-  }
-
-  getTraces(): Array<Trace<HierarchyTreeNode>> {
-    return [this.trace];
+    return new Presenter(trace, traces, store, notifyViewCallback);
   }
 }

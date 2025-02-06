@@ -386,7 +386,7 @@ describe('ViewerSearchComponent', () => {
     const accordionItems = htmlElement.querySelectorAll<HTMLElement>(
       '.how-to-search .accordion-item',
     );
-    expect(accordionItems.length).toEqual(3);
+    expect(accordionItems.length).toEqual(6);
     accordionItems.forEach((item) => checkAccordionItemCollapsed(item));
 
     clickAccordionItemHeader(accordionItems.item(0));

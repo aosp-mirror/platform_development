@@ -205,3 +205,29 @@ log-view .headers .mat-form-field-infix {
 .result-tabs .mat-tab-body-wrapper {
     height: 100%;
 }
+
+.rect-type-toggle .mat-button-toggle-label-content {
+    padding: 0 4px;
+    line-height: 24px;
+}
+
+.mat-button-toggle-group:not([class*=mat-elevation-z]), body.dark-mode .mat-button-toggle-group:not([class*=mat-elevation-z]) {
+    box-shadow: none;
+}
+
+.mat-button-toggle-group {
+    border: solid 1px var(--disabled-color);
+    border-radius: 4px;
+}
+
+.mat-button-toggle {
+    background-color: var(--disabled-color);
+}
+
+.mat-button-toggle-checked, body.dark-mode .mat-button-toggle-checked {
+    background-color: var(--card-title-background-color);
+}
+
+.mat-active.no-focus {
+    background-color: unset;
+}

@@ -29,37 +29,25 @@ describe('DispatchEntryFormatter', () => {
     operation = new DispatchEntryFormatter(layerIdToName);
   });
 
-  it('formats windowId node', () => {
+  it('formats dispatch entry node', () => {
     const dispatchEntries = new PropertyTreeBuilder()
       .setRootId('entries')
       .setName('dispatchEntries');
     dispatchEntries.setChildren([
-      {name: '0', children: [{name: 'windowId', value: 0}]},
-      {name: '1', children: [{name: 'windowId', value: 1}]},
+      {name: '0', children: [{name: 'windowId', value: 1}]},
+      {name: '1', children: [{name: 'windowId', value: 0}]},
       {name: '2', children: [{name: 'windowId', value: 2}]},
     ]);
 
     const root = UiPropertyTreeNode.from(dispatchEntries.build());
 
     operation.apply(root);
-    expect(
-      root.getChildByName('0')?.getChildByName('windowId')?.getDisplayName(),
-    ).toEqual('TargetWindow');
-    expect(
-      root.getChildByName('0')?.getChildByName('windowId')?.formattedValue(),
-    ).toEqual('0 - <Unknown Name>');
-    expect(
-      root.getChildByName('1')?.getChildByName('windowId')?.getDisplayName(),
-    ).toEqual('TargetWindow');
-    expect(
-      root.getChildByName('1')?.getChildByName('windowId')?.formattedValue(),
-    ).toEqual('1 - one');
-    expect(
-      root.getChildByName('2')?.getChildByName('windowId')?.getDisplayName(),
-    ).toEqual('TargetWindow');
-    expect(
-      root.getChildByName('2')?.getChildByName('windowId')?.formattedValue(),
-    ).toEqual('2 - two');
+    expect(root.getDisplayName()).toEqual('TargetWindows');
+    expect(root.getChildByName('0')?.getDisplayName()).toEqual('one');
+    expect(root.getChildByName('1')?.getDisplayName()).toEqual(
+      'WindowId: 0 - <Unknown Name>',
+    );
+    expect(root.getChildByName('2')?.getDisplayName()).toEqual('two');
   });
 
   it('formats dispatched pointers', () => {
@@ -102,6 +90,10 @@ describe('DispatchEntryFormatter', () => {
                       },
                     ],
                   },
+                  {
+                    name: 'xInDisplay',
+                    value: 4.777777,
+                  },
                 ],
               },
             ],
@@ -140,6 +132,19 @@ describe('DispatchEntryFormatter', () => {
                         ],
                       },
                     ],
+                  },
+                  {
+                    name: 'xInDisplay',
+                    value: 123,
+                  },
+
+                  {
+                    name: 'yInDisplay',
+                    value: 0.024,
+                  },
+                  {
+                    name: 'pointerId',
+                    value: 21,
                   },
                 ],
               },
@@ -187,37 +192,68 @@ describe('DispatchEntryFormatter', () => {
         .getChildByName('0')
         ?.getChildByName('dispatchedPointer')
         ?.getDisplayName(),
-    ).toEqual('DispatchedPointersInWindowSpace');
+    ).toEqual('DispatchedPointers');
     expect(
       root
         .getChildByName('0')
         ?.getChildByName('dispatchedPointer')
         ?.formattedValue(),
     ).toEqual('<none>');
+
     expect(
       root
         .getChildByName('1')
         ?.getChildByName('dispatchedPointer')
         ?.getDisplayName(),
-    ).toEqual('DispatchedPointersInWindowSpace');
+    ).toEqual('DispatchedPointers');
     expect(
       root
         .getChildByName('1')
         ?.getChildByName('dispatchedPointer')
+        ?.getChildByName('0')
+        ?.getDisplayName(),
+    ).toEqual('0 - Pointer');
+    expect(
+      root
+        .getChildByName('1')
+        ?.getChildByName('dispatchedPointer')
+        ?.getChildByName('0')
         ?.formattedValue(),
-    ).toEqual('(2, 3)');
+    ).toEqual('ID: ?, XY: (2.00, 3.00), RawXY: (4.78, ?)');
 
     expect(
       root
         .getChildByName('2')
         ?.getChildByName('dispatchedPointer')
         ?.getDisplayName(),
-    ).toEqual('DispatchedPointersInWindowSpace');
+    ).toEqual('DispatchedPointers');
     expect(
       root
         .getChildByName('2')
         ?.getChildByName('dispatchedPointer')
+        ?.getChildByName('0')
+        ?.getDisplayName(),
+    ).toEqual('0 - Pointer');
+    expect(
+      root
+        .getChildByName('2')
+        ?.getChildByName('dispatchedPointer')
+        ?.getChildByName('0')
         ?.formattedValue(),
-    ).toEqual('(4, ?), (5, 6)');
+    ).toEqual('ID: 21, XY: (4.00, ?), RawXY: (123.00, 0.02)');
+    expect(
+      root
+        .getChildByName('2')
+        ?.getChildByName('dispatchedPointer')
+        ?.getChildByName('2')
+        ?.getDisplayName(),
+    ).toEqual('1 - Pointer');
+    expect(
+      root
+        .getChildByName('2')
+        ?.getChildByName('dispatchedPointer')
+        ?.getChildByName('2')
+        ?.formattedValue(),
+    ).toEqual('ID: ?, XY: (5.00, 6.00), RawXY: (?, ?)');
   });
 });

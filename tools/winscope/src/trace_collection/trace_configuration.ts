@@ -242,7 +242,7 @@ const traceDefaultConfig: TraceConfigurationMap = {
     types: [TraceType.WAYLAND, TraceType.WAYLAND_DUMP],
   },
   eventlog: {
-    name: TRACE_INFO[TraceType.EVENT_LOG].name,
+    name: TRACE_INFO[TraceType.EVENT_LOG].name + " (CUJs)",
     config: {
       enabled: false,
       checkboxConfigs: [],
@@ -278,7 +278,7 @@ const traceDefaultConfig: TraceConfigurationMap = {
   input: {
     name: 'Input',
     config: {
-      enabled: false,
+      enabled: true,
       checkboxConfigs: [],
       selectionConfigs: [],
     },

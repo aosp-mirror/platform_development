@@ -15,61 +15,39 @@
  */
 
 import {Store} from 'common/store/store';
-import {WinscopeEvent} from 'messaging/winscope_event';
-import {EmitEvent} from 'messaging/winscope_event_emitter';
 import {Trace} from 'trace/trace';
 import {Traces} from 'trace/traces';
-import {TRACE_INFO} from 'trace/trace_info';
 import {TraceType} from 'trace/trace_type';
 import {HierarchyTreeNode} from 'trace/tree_node/hierarchy_tree_node';
-import {ViewerEvents} from 'viewers/common/viewer_events';
-import {View, Viewer, ViewType} from 'viewers/viewer';
+import {AbstractViewer} from 'viewers/abstract_viewer';
+import {ViewerComponent} from 'viewers/components/viewer_component';
 import {Presenter} from './presenter';
 import {UiData} from './ui_data';
 
-export class ViewerViewCapture implements Viewer {
+export class ViewerViewCapture extends AbstractViewer<HierarchyTreeNode> {
   static readonly DEPENDENCIES: TraceType[] = [TraceType.VIEW_CAPTURE];
 
-  private readonly htmlElement: HTMLElement;
-  private readonly presenter: Presenter;
-  private readonly view: View;
+  constructor(traces: Traces, store: Store) {
+    super(undefined, traces, 'viewer-view-capture', store);
+  }
 
-  constructor(traces: Traces, storage: Store) {
-    this.htmlElement = document.createElement('viewer-view-capture');
+  override getTraces(): Array<Trace<HierarchyTreeNode>> {
+    return (this.presenter as Presenter).getTraces();
+  }
+
+  protected override initializePresenter(
+    trace: undefined,
+    traces: Traces,
+    store: Store,
+  ): Presenter {
     const notifyViewCallback = (uiData: UiData) => {
-      (this.htmlElement as any).inputData = uiData;
+      (this.htmlElement as unknown as ViewerComponent<UiData>).inputData =
+        uiData;
     };
-    this.presenter = new Presenter(traces, storage, notifyViewCallback);
-    this.presenter.addEventListeners(this.htmlElement);
-
-    this.htmlElement.addEventListener(
-      ViewerEvents.MiniRectsDblClick,
-      async (event) => {
-        await this.presenter.onMiniRectsDoubleClick();
-      },
-    );
-
-    this.view = new View(
-      ViewType.TRACE_TAB,
-      this.getTraces(),
-      this.htmlElement,
-      TRACE_INFO[TraceType.VIEW_CAPTURE].name,
-    );
+    return new Presenter(traces, store, notifyViewCallback);
   }
 
-  setEmitEvent(callback: EmitEvent) {
-    this.presenter.setEmitEvent(callback);
-  }
-
-  async onWinscopeEvent(event: WinscopeEvent) {
-    await this.presenter.onAppEvent(event);
-  }
-
-  getViews(): View[] {
-    return [this.view];
-  }
-
-  getTraces(): Array<Trace<HierarchyTreeNode>> {
-    return this.presenter.getTraces();
+  protected override getTraceTypeForViewTitle(): TraceType {
+    return TraceType.VIEW_CAPTURE;
   }
 }

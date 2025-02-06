@@ -130,7 +130,14 @@ import {
         </ng-container>
       </div>
 
-      <div class="placeholder-text mat-body-1" *ngIf="entries.length === 0"> No entries found. </div>
+      <div class="placeholder-text mat-body-1" *ngIf="!isFetchingData && entries.length === 0"> No entries found. </div>
+
+      <div class="fetching-data mat-body-1" *ngIf="isFetchingData">
+        <span class="message-with-spinner">
+          <span>Fetching all data</span>
+          <mat-spinner [diameter]="20"></mat-spinner>
+        </span>
+      </div>
 
       <cdk-virtual-scroll-viewport
           *ngIf="isTransactions()"
@@ -221,6 +228,12 @@ import {
         flex-direction: column;
         flex: 0 0 auto
       }
+      .message-with-spinner {
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        justify-content: center;
+      }
     `,
     selectedElementStyle,
     currentElementStyle,
@@ -246,6 +259,7 @@ export class LogComponent {
   @Input() showTraceEntryTimes = true;
   @Input() showFiltersInTitle = false;
   @Input() padEntries = true;
+  @Input() isFetchingData = false;
 
   @Output() collapseButtonClicked = new EventEmitter();
 

@@ -28,9 +28,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import com.android.compose.animation.scene.ContentScope
 import com.android.compose.animation.scene.ElementKey
 import com.android.compose.animation.scene.SceneKey
-import com.android.compose.animation.scene.SceneScope
 import com.android.compose.animation.scene.Swipe
 import com.android.compose.animation.scene.UserAction
 import com.android.compose.animation.scene.UserActionResult
@@ -64,7 +64,7 @@ object Launcher {
 }
 
 @Composable
-fun SceneScope.Launcher(columnsCount: Int, modifier: Modifier = Modifier) {
+fun ContentScope.Launcher(columnsCount: Int, modifier: Modifier = Modifier) {
     Column(modifier.element(Launcher.Elements.Scene)) {
         SmartSpace(
             MaterialTheme.colorScheme.onBackground,

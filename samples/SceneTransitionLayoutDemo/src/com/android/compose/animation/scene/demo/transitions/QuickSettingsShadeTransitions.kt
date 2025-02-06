@@ -22,9 +22,9 @@ import com.android.compose.animation.scene.and
 import com.android.compose.animation.scene.demo.Clock
 import com.android.compose.animation.scene.demo.MediaPlayer
 import com.android.compose.animation.scene.demo.Overlays
-import com.android.compose.animation.scene.demo.PartialShade
 import com.android.compose.animation.scene.demo.QuickSettings
 import com.android.compose.animation.scene.demo.QuickSettingsGrid
+import com.android.compose.animation.scene.demo.QuickSettingsShade
 import com.android.compose.animation.scene.demo.Scenes
 import com.android.compose.animation.scene.demo.notification.NotificationList
 import com.android.compose.animation.scene.inContent
@@ -39,9 +39,7 @@ fun SceneTransitionsBuilder.quickSettingsShadeTransitions(revealHaptics: Contain
         spec = tween(500)
 
         sharedElement(MediaPlayer.Elements.MediaPlayer, elevateInContent = Overlays.QuickSettings)
-        sharedElement(Clock.Elements.Clock, elevateInContent = Overlays.QuickSettings)
-
-        verticalContainerReveal(PartialShade.Elements.Root, revealHaptics)
+        verticalContainerReveal(QuickSettingsShade.Elements.Root, revealHaptics)
     }
 
     from(Overlays.QuickSettings, to = Overlays.Notifications) {
@@ -54,11 +52,10 @@ fun SceneTransitionsBuilder.quickSettingsShadeTransitions(revealHaptics: Contain
         // Elevate the media player so that they are not clipped when shared with the split
         // lockscreen.
         sharedElement(MediaPlayer.Elements.MediaPlayer, elevateInContent = Overlays.QuickSettings)
-        sharedElement(Clock.Elements.Clock, elevateInContent = Overlays.QuickSettings)
+        sharedElement(Clock.Elements.Clock, enabled = false)
 
         fractionRange(end = QuickSettingsToNotificationShadeFadeProgress) {
             fade(MediaPlayer.Elements.MediaPlayer)
-            fade(Clock.Elements.Clock)
             fade(QuickSettingsGrid.Elements.Tiles)
             fade(QuickSettings.Elements.PagerIndicators)
             fade(
@@ -67,6 +64,7 @@ fun SceneTransitionsBuilder.quickSettingsShadeTransitions(revealHaptics: Contain
             )
         }
         fractionRange(start = QuickSettingsToNotificationShadeFadeProgress) {
+            fade(Clock.Elements.Clock)
             fade(NotificationList.Elements.Notifications and inContent(Overlays.Notifications))
         }
     }

@@ -27,8 +27,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.android.compose.animation.scene.ContentScope
 import com.android.compose.animation.scene.SceneKey
-import com.android.compose.animation.scene.SceneScope
 
 object SplitLockscreen {
     fun userActions(
@@ -46,12 +46,13 @@ object SplitLockscreen {
 }
 
 @Composable
-fun SceneScope.SplitLockscreen(
-    notificationList: @Composable SceneScope.() -> Unit,
-    mediaPlayer: @Composable (SceneScope.() -> Unit)?,
+fun ContentScope.SplitLockscreen(
+    notificationList: @Composable ContentScope.() -> Unit,
+    mediaPlayer: @Composable (ContentScope.() -> Unit)?,
     isDismissable: Boolean,
     onToggleDismissable: () -> Unit,
     onChangeScene: (SceneKey) -> Unit,
+    configuration: DemoConfiguration,
     modifier: Modifier = Modifier,
 ) {
     Column(modifier.element(Lockscreen.Elements.Scene).fillMaxSize()) {
@@ -62,11 +63,22 @@ fun SceneScope.SplitLockscreen(
                 SmartSpace(MaterialTheme.colorScheme.onSurface)
 
                 if (mediaPlayer != null) {
-                    Box(Modifier.padding(top = 32.dp, start = 16.dp)) { mediaPlayer() }
+                    val endPadding = if (configuration.enableOverlays) 16.dp else 0.dp
+                    Box(Modifier.padding(top = 32.dp, start = 16.dp, end = endPadding)) {
+                        mediaPlayer()
+                    }
+                }
+
+                if (configuration.enableOverlays) {
+                    notificationList()
                 }
             }
 
-            Box(Modifier.weight(1f).padding(16.dp)) { notificationList() }
+            Box(Modifier.weight(1f).padding(16.dp)) {
+                if (!configuration.enableOverlays) {
+                    notificationList()
+                }
+            }
         }
 
         LockButton(

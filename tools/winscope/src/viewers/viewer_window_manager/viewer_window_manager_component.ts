@@ -14,12 +14,12 @@
  * limitations under the License.
  */
 import {Component, Input} from '@angular/core';
-import {PersistentStore} from 'common/store/persistent_store';
 import {TraceType} from 'trace/trace_type';
 import {CollapsibleSections} from 'viewers/common/collapsible_sections';
 import {CollapsibleSectionType} from 'viewers/common/collapsible_section_type';
 import {ShadingMode} from 'viewers/components/rects/shading_mode';
 import {viewerCardStyle} from 'viewers/components/styles/viewer_card.styles';
+import {ViewerComponent} from 'viewers/components/viewer_component';
 import {UiData} from './ui_data';
 
 @Component({
@@ -44,6 +44,7 @@ import {UiData} from './ui_data';
         [userOptions]="inputData?.rectsUserOptions ?? {}"
         [pinnedItems]="inputData?.pinnedItems ?? []"
         [isDarkMode]="inputData?.isDarkMode ?? false"
+        [rectSpec]="inputData?.rectSpec"
         (collapseButtonClicked)="sections.onCollapseStateChange(CollapsibleSectionType.RECTS, true)"></rects-view>
       <hierarchy-view
         class="hierarchy-view"
@@ -73,9 +74,7 @@ import {UiData} from './ui_data';
   `,
   styles: [viewerCardStyle],
 })
-export class ViewerWindowManagerComponent {
-  @Input() inputData: UiData | undefined;
-  @Input() store: PersistentStore | undefined;
+export class ViewerWindowManagerComponent extends ViewerComponent<UiData> {
   @Input() active = false;
   TraceType = TraceType;
   CollapsibleSectionType = CollapsibleSectionType;

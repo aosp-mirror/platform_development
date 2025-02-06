@@ -33,7 +33,7 @@ import {
 import {EntriesRange} from 'trace/index_types';
 import {TraceFile} from 'trace/trace_file';
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
-import {WasmEngineProxy} from 'trace_processor/wasm_engine_proxy';
+import {TraceProcessor} from 'trace_processor/trace_processor';
 
 export abstract class AbstractInputEventParser extends AbstractParser<PropertyTreeNode> {
   protected static readonly WrapperProto = TamperedMessageType.tamper(
@@ -54,7 +54,7 @@ export abstract class AbstractInputEventParser extends AbstractParser<PropertyTr
 
   protected constructor(
     traceFile: TraceFile,
-    traceProcessor: WasmEngineProxy,
+    traceProcessor: TraceProcessor,
     timestampConverter: ParserTimestampConverter,
   ) {
     super(traceFile, traceProcessor, timestampConverter);
@@ -81,7 +81,7 @@ export abstract class AbstractInputEventParser extends AbstractParser<PropertyTr
         WHERE d.event_id = ${eventId}
         ORDER BY d.id;
     `;
-    const result = await this.traceProcessor.query(sql).waitAllRows();
+    const result = await this.traceProcessor.queryAllRows(sql);
 
     const dispatchEvents: perfetto.protos.AndroidWindowInputDispatchEvent[] =
       [];

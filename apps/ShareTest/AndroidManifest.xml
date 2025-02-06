@@ -18,11 +18,24 @@
      package="com.android.sharetest">
 
     <application android:label="Share Test"
+        android:name="com.android.sharetest.ShareTestApp"
         android:icon="@drawable/launcher_icon">
         <activity
             android:name="com.android.sharetest.ShareTestActivity"
             android:exported="true"
             android:theme="@style/ShareTest">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN"/>
+                <category android:name="android.intent.category.DEFAULT"/>
+                <category android:name="android.intent.category.LAUNCHER"/>
+            </intent-filter>
+        </activity>
+
+        <activity
+            android:name="com.android.sharetest.InteractiveShareTestActivity"
+            android:exported="true"
+            android:label="Interactive Share Test"
+            android:taskAffinity="com.android.sharetest.InteractiveShareTask">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>
                 <category android:name="android.intent.category.DEFAULT"/>

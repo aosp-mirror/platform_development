@@ -17,6 +17,7 @@
 import {assertDefined} from 'common/assert_utils';
 import {InMemoryStorage} from 'common/store/in_memory_storage';
 import {TimestampConverterUtils} from 'common/time/test_utils';
+import {TimeUtils} from 'common/time/time_utils';
 import {
   TabbedViewSwitchRequest,
   TracePositionUpdate,
@@ -30,6 +31,7 @@ import {CustomQueryType} from 'trace/custom_query';
 import {Parser} from 'trace/parser';
 import {Trace} from 'trace/trace';
 import {Traces} from 'trace/traces';
+import {TRACE_INFO} from 'trace/trace_info';
 import {TraceRectBuilder} from 'trace/trace_rect_builder';
 import {TraceType} from 'trace/trace_type';
 import {HierarchyTreeNode} from 'trace/tree_node/hierarchy_tree_node';
@@ -42,6 +44,7 @@ import {TextFilter} from 'viewers/common/text_filter';
 import {LogField, LogHeader} from 'viewers/common/ui_data_log';
 import {UserOptions} from 'viewers/common/user_options';
 import {ViewerEvents} from 'viewers/common/viewer_events';
+import {TraceRectType} from 'viewers/components/rects/rect_spec';
 import {Presenter} from './presenter';
 import {UiData} from './ui_data';
 
@@ -254,18 +257,9 @@ class PresenterInputTest extends AbstractLogViewerPresenterTest<UiData> {
     const dispatchProperties = assertDefined(uiData.dispatchPropertiesTree);
     expect(dispatchProperties.getAllChildren().length).toEqual(5);
 
-    expect(
-      dispatchProperties
-        .getChildByName('0')
-        ?.getChildByName('windowId')
-        ?.getDisplayName(),
-    ).toEqual('TargetWindow');
-    expect(
-      dispatchProperties
-        .getChildByName('0')
-        ?.getChildByName('windowId')
-        ?.formattedValue(),
-    ).toEqual('212 - win-212');
+    expect(dispatchProperties.getChildByName('0')?.getDisplayName()).toEqual(
+      'win-212',
+    );
   }
 
   private expectEventPresented(
@@ -388,7 +382,7 @@ class PresenterInputTest extends AbstractLogViewerPresenterTest<UiData> {
         await this.setUpTestEnvironment();
       });
 
-      it('adds events listeners', async () => {
+      it('adds event listeners', async () => {
         const element = document.createElement('div');
         const presenter = await this.createPresenter(
           (uiDataLog) => (uiData = uiDataLog as UiData),
@@ -440,6 +434,7 @@ class PresenterInputTest extends AbstractLogViewerPresenterTest<UiData> {
         const presenter = await this.createPresenter(
           (uiDataLog) => (uiData = uiDataLog as UiData),
         );
+        await TimeUtils.wait(() => !uiData.isFetchingData);
 
         const keyEntry = assertDefined(this.trace).getEntry(7);
         await presenter.onAppEvent(
@@ -471,8 +466,8 @@ class PresenterInputTest extends AbstractLogViewerPresenterTest<UiData> {
         const traces = new Traces();
         traces.addTrace(assertDefined(this.trace));
 
-        const lastMotion = await assertDefined(this.trace).getEntry(5);
-        const firstKey = await assertDefined(this.trace).getEntry(6);
+        const lastMotion = assertDefined(this.trace).getEntry(5);
+        const firstKey = assertDefined(this.trace).getEntry(6);
         const diffNs =
           firstKey.getTimestamp().getValueNs() -
           lastMotion.getTimestamp().getValueNs();
@@ -491,8 +486,9 @@ class PresenterInputTest extends AbstractLogViewerPresenterTest<UiData> {
           (uiDataLog) => (uiData = uiDataLog as UiData),
         );
 
-        await presenter.onAppEvent(
+        await sendFirstPositionUpdate(
           TracePositionUpdate.fromTraceEntry(otherTrace.getEntry(0)),
+          presenter,
         );
         this.expectEventPresented(uiData, 313395000, 'ACTION_MOVE');
 
@@ -547,8 +543,9 @@ class PresenterInputTest extends AbstractLogViewerPresenterTest<UiData> {
           (uiDataLog) => (uiData = uiDataLog as UiData),
         );
 
-        await presenter.onAppEvent(
+        await sendFirstPositionUpdate(
           TracePositionUpdate.fromTraceEntry(otherTrace.getEntry(0)),
+          presenter,
         );
         this.expectEventPresented(uiData, 330184796, 'ACTION_DOWN');
 
@@ -569,8 +566,9 @@ class PresenterInputTest extends AbstractLogViewerPresenterTest<UiData> {
         const presenter = await this.createPresenter(
           (uiDataLog) => (uiData = uiDataLog as UiData),
         );
-        await presenter.onAppEvent(this.getPositionUpdate());
+        await sendFirstPositionUpdate(this.getPositionUpdate(), presenter);
         expect(uiData.rectsToDraw).toBeUndefined();
+        checkRectSpec();
       });
 
       it('empty trace no rects defined without SF trace', async () => {
@@ -579,8 +577,9 @@ class PresenterInputTest extends AbstractLogViewerPresenterTest<UiData> {
         const presenter = await this.createPresenterWithEmptyTrace(
           (uiDataLog) => (uiData = uiDataLog as UiData),
         );
-        await presenter.onAppEvent(this.getPositionUpdate());
+        await sendFirstPositionUpdate(this.getPositionUpdate(), presenter);
         expect(uiData.rectsToDraw).toBeUndefined();
+        checkRectSpec();
       });
 
       it('rects defined with SF trace', async () => {
@@ -588,9 +587,10 @@ class PresenterInputTest extends AbstractLogViewerPresenterTest<UiData> {
         const presenter = await this.createPresenter(
           (uiDataLog) => (uiData = uiDataLog as UiData),
         );
-        await presenter.onAppEvent(this.getPositionUpdate());
+        await sendFirstPositionUpdate(this.getPositionUpdate(), presenter);
         expect(uiData.rectsToDraw).toBeDefined();
         expect(uiData.rectsToDraw).toEqual([]);
+        checkRectSpec();
       });
 
       it('empty trace rects defined with SF trace', async () => {
@@ -598,7 +598,7 @@ class PresenterInputTest extends AbstractLogViewerPresenterTest<UiData> {
         const presenter = await this.createPresenterWithEmptyTrace(
           (uiDataLog) => (uiData = uiDataLog as UiData),
         );
-        await presenter.onAppEvent(this.getPositionUpdate());
+        await sendFirstPositionUpdate(this.getPositionUpdate(), presenter);
         expect(uiData.rectsToDraw).toBeDefined();
         expect(uiData.rectsToDraw).toEqual([]);
       });
@@ -615,8 +615,9 @@ class PresenterInputTest extends AbstractLogViewerPresenterTest<UiData> {
           (uiDataLog) => (uiData = uiDataLog as UiData),
         );
 
-        await presenter.onAppEvent(
+        await sendFirstPositionUpdate(
           TracePositionUpdate.fromTraceEntry(trace.getEntry(0)),
+          presenter,
         );
         expect(uiData.rectsToDraw).toEqual([]);
 
@@ -645,7 +646,7 @@ class PresenterInputTest extends AbstractLogViewerPresenterTest<UiData> {
         const presenter = await this.createPresenter(
           (uiDataLog) => (uiData = uiDataLog as UiData),
         );
-        await presenter.onAppEvent(this.getPositionUpdate());
+        await sendFirstPositionUpdate(this.getPositionUpdate(), presenter);
         await presenter.onLogEntryClick(3);
         expect(
           assertDefined(uiData.dispatchPropertiesTree).getAllChildren().length,
@@ -678,8 +679,9 @@ class PresenterInputTest extends AbstractLogViewerPresenterTest<UiData> {
           traces,
           (uiDataLog) => (uiData = uiDataLog as UiData),
         );
-        await presenter.onAppEvent(
+        await sendFirstPositionUpdate(
           TracePositionUpdate.fromTraceEntry(trace.getEntry(1)),
+          presenter,
         );
         expect(uiData.rectsToDraw).toHaveSize(1);
 
@@ -712,8 +714,9 @@ class PresenterInputTest extends AbstractLogViewerPresenterTest<UiData> {
           traces,
           (uiDataLog) => (uiData = uiDataLog as UiData),
         );
-        await presenter.onAppEvent(
+        await sendFirstPositionUpdate(
           TracePositionUpdate.fromTraceEntry(trace.getEntry(1)),
+          presenter,
         );
         expect(uiData.rectsToDraw).toHaveSize(1);
 
@@ -781,6 +784,53 @@ class PresenterInputTest extends AbstractLogViewerPresenterTest<UiData> {
           .build();
         traces.addTrace(sfTrace);
         return traces;
+      }
+
+      function checkRectSpec() {
+        expect(uiData.rectSpec).toEqual({
+          type: TraceRectType.INPUT_WINDOWS,
+          icon: TRACE_INFO[TraceType.INPUT_EVENT_MERGED].icon,
+          legend: [
+            {
+              fill: '#c8e8b7',
+              desc: 'Visible and touchable',
+              border: 'var(--default-text-color)',
+              showInWireFrameMode: false,
+            },
+            {
+              fill: '#dcdcdc',
+              desc: 'Not visible',
+              border: 'var(--default-text-color)',
+              showInWireFrameMode: false,
+            },
+            {
+              fill: '',
+              border: 'var(--default-text-color)',
+              desc: 'Visible but not touchable',
+              showInWireFrameMode: false,
+            },
+            {
+              fill: 'var(--selected-element-color)',
+              desc: 'Selected',
+              border: 'var(--default-text-color)',
+              showInWireFrameMode: true,
+            },
+            {
+              fill: '#ad42f5',
+              desc: 'Has input',
+              border: 'var(--default-text-color)',
+              showInWireFrameMode: false,
+            },
+          ],
+        });
+      }
+      async function sendFirstPositionUpdate(
+        update: TracePositionUpdate,
+        presenter: Presenter,
+      ) {
+        await presenter.onAppEvent(update);
+        expect(uiData.isFetchingData).toBeTrue();
+        await TimeUtils.wait(() => !uiData.isFetchingData);
       }
     });
   }

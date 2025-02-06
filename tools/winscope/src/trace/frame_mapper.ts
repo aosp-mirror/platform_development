@@ -147,7 +147,7 @@ export class FrameMapper {
     surfaceFlingerEntries.forEach((srcEntry) => {
       const vsyncId = srcEntry.getValue();
       const srcFrames = srcEntry.getFramesRange();
-      if (!srcFrames) {
+      if (!srcFrames || vsyncId === -1n || vsyncId === 0n) {
         return;
       }
       let frames = vsyncIdToFrames.get(vsyncId);

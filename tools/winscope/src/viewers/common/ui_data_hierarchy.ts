@@ -17,6 +17,7 @@
 import {TextFilter} from 'viewers/common/text_filter';
 import {UiHierarchyTreeNode} from 'viewers/common/ui_hierarchy_tree_node';
 import {UserOptions} from 'viewers/common/user_options';
+import {RectSpec} from 'viewers/components/rects/rect_spec';
 import {UiRect} from 'viewers/components/rects/ui_rect';
 import {DisplayIdentifier} from './display_identifier';
 import {RectShowState} from './rect_show_state';
@@ -37,4 +38,5 @@ export interface UiDataHierarchy {
   rectIdToShowState?: Map<string, RectShowState> | undefined;
   displays?: DisplayIdentifier[];
   rectsUserOptions?: UserOptions;
+  rectSpec?: RectSpec;
 }

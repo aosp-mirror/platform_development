@@ -44,6 +44,7 @@ import {UpdateSfSubtreeDisplayNames} from './operations/update_sf_subtree_displa
 import {PropertiesPresenter} from './properties_presenter';
 import {UiHierarchyTreeNode} from './ui_hierarchy_tree_node';
 import {UiTreeUtils} from './ui_tree_utils';
+import {ViewerEvents} from './viewer_events';
 
 export abstract class AbstractPresenterInputMethod extends AbstractHierarchyViewerPresenter<ImeUiData> {
   protected getHierarchyTreeNameStrategy = (
@@ -248,6 +249,16 @@ the default for its data type.`,
         }
       }
     }
+  }
+
+  protected override addViewerSpecificListeners(htmlElement: HTMLElement) {
+    htmlElement.addEventListener(
+      ViewerEvents.AdditionalPropertySelected,
+      async (event) =>
+        await this.onAdditionalPropertySelected(
+          (event as CustomEvent).detail.selectedItem,
+        ),
+    );
   }
 
   private async makeSfSubtrees(

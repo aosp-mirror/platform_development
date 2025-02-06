@@ -1,0 +1,27 @@
+<mat-toolbar class="bg-blue-500 text-white">
+  <span class="font-medium text-lg">Motion Test Watcher</span>
+</mat-toolbar>
+
+<div class="flex h-screen p-4 bg-gray-100">
+  <div class="w-1/4 bg-white rounded-md shadow-md overflow-y-auto mr-4">
+    <app-test-list
+      [goldens]="goldens"
+      (refreshRequest)="refreshGoldens($event)"
+      (selectedGoldenChange)="setSelectedGolden($event)"
+    ></app-test-list>
+  </div>
+
+  <div class="flex flex-col flex-grow space-y-4">
+    <div class="bg-white rounded-md shadow-md overflow-hidden h-1/3">
+      <app-preview [selectedGolden]="selectedGolden"></app-preview>
+    </div>
+    <div class="bg-white rounded-md shadow-md p-4 overflow-hidden h-2/3">
+      <app-timeline [selectedGolden]="selectedGolden"></app-timeline>
+    </div>
+  </div>
+</div>
+
+<div
+  *ngIf="showProgress"
+  class="fixed top-0 left-0 w-full h-1 bg-blue-500 transition-all duration-300 ease-in-out"
+></div>

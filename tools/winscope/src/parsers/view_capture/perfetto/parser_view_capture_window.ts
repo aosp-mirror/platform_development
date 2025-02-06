@@ -19,6 +19,7 @@ import {ParserTimestampConverter} from 'common/time/timestamp_converter';
 import {AddDefaults} from 'parsers/operations/add_defaults';
 import {SetFormatters} from 'parsers/operations/set_formatters';
 import {AbstractParser} from 'parsers/perfetto/abstract_parser';
+import {FakeProto, FakeProtoBuilder} from 'parsers/perfetto/fake_proto_builder';
 import {FakeProtoTransformer} from 'parsers/perfetto/fake_proto_transformer';
 import {Utils} from 'parsers/perfetto/utils';
 import {TamperedMessageType} from 'parsers/tampered_message_type';
@@ -39,7 +40,7 @@ import {PropertiesProvider} from 'trace/tree_node/properties_provider';
 import {PropertiesProviderBuilder} from 'trace/tree_node/properties_provider_builder';
 import {PropertyTreeBuilderFromProto} from 'trace/tree_node/property_tree_builder_from_proto';
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
-import {WasmEngineProxy} from 'trace_processor/wasm_engine_proxy';
+import {TraceProcessor} from 'trace_processor/trace_processor';
 import {HierarchyTreeBuilderVc} from './hierarchy_tree_builder_vc';
 
 export class ParserViewCaptureWindow extends AbstractParser<HierarchyTreeNode> {
@@ -61,23 +62,27 @@ export class ParserViewCaptureWindow extends AbstractParser<HierarchyTreeNode> {
 
   private readonly packageName: string;
   private readonly windowName: string;
-  private readonly protoTransformer: FakeProtoTransformer;
+  private readonly snapshotProtoTransformer: FakeProtoTransformer;
+  private readonly viewProtoTransformer: FakeProtoTransformer;
 
   constructor(
     traceFile: TraceFile,
-    traceProcessor: WasmEngineProxy,
+    traceProcessor: TraceProcessor,
     timestampConverter: ParserTimestampConverter,
     packageName: string,
     windowName: string,
   ) {
     super(traceFile, traceProcessor, timestampConverter);
-
     this.packageName = packageName;
     this.windowName = windowName;
-
-    this.protoTransformer = new FakeProtoTransformer(
+    this.snapshotProtoTransformer = new FakeProtoTransformer(
       assertDefined(
         ParserViewCaptureWindow.PROTO_VIEWCAPTURE_FIELD.tamperedMessageType,
+      ),
+    );
+    this.viewProtoTransformer = new FakeProtoTransformer(
+      assertDefined(
+        ParserViewCaptureWindow.PROTO_VIEW_FIELD.tamperedMessageType,
       ),
     );
   }
@@ -91,15 +96,18 @@ export class ParserViewCaptureWindow extends AbstractParser<HierarchyTreeNode> {
   }
 
   override async getEntry(index: number): Promise<HierarchyTreeNode> {
-    let entry = (await Utils.queryEntry(
+    let snapshotProto = (await Utils.queryEntry(
       this.traceProcessor,
       this.getTableName(),
       this.entryIndexToRowIdMap,
       index,
     )) as perfetto.protos.IViewCapture;
-    entry = this.protoTransformer.transform(entry);
+    snapshotProto = this.snapshotProtoTransformer.transform(snapshotProto);
 
-    const views = this.makeViewPropertyProviders(entry);
+    const viewProtos = (await this.queryViews(index)).map((viewProto) =>
+      this.viewProtoTransformer.transform(viewProto),
+    );
+    const views = this.makeViewPropertyProviders(viewProtos);
 
     const rootView = assertDefined(
       views.find((view) => {
@@ -109,7 +117,6 @@ export class ParserViewCaptureWindow extends AbstractParser<HierarchyTreeNode> {
         return parentId === -1;
       }),
     );
-
     const childrenViews = views.filter((view) => view !== rootView);
 
     return new HierarchyTreeBuilderVc()
@@ -152,9 +159,7 @@ export class ParserViewCaptureWindow extends AbstractParser<HierarchyTreeNode> {
           args.string_value = '${this.windowName}'
         ORDER BY vc.ts;
     `;
-    const result = await this.traceProcessor
-      .query(sqlRowIdAndTimestamp)
-      .waitAllRows();
+    const result = await this.traceProcessor.queryAllRows(sqlRowIdAndTimestamp);
     const entryIndexToRowId: number[] = [];
     for (const it = result.iter({}); it.valid(); it.next()) {
       const rowId = Number(it.get('id') as bigint);
@@ -163,10 +168,55 @@ export class ParserViewCaptureWindow extends AbstractParser<HierarchyTreeNode> {
     return entryIndexToRowId;
   }
 
+  private async queryViews(
+    index: number,
+  ): Promise<perfetto.protos.ViewCapture.IView[]> {
+    const idToBuilder = new Map<number, FakeProtoBuilder>();
+    const getBuilder = (id: number) => {
+      if (!idToBuilder.has(id)) {
+        idToBuilder.set(id, new FakeProtoBuilder());
+      }
+      return assertDefined(idToBuilder.get(id));
+    };
+
+    const sql = `
+      SELECT
+          vcv.snapshot_id,
+          vcv.id as node_id,
+          args.key,
+          args.value_type,
+          args.int_value,
+          args.string_value,
+          args.real_value
+      FROM
+          __intrinsic_viewcapture_view as vcv
+          INNER JOIN args ON vcv.arg_set_id = args.arg_set_id
+      WHERE snapshot_id = ${this.entryIndexToRowIdMap[index]};
+    `;
+    const result = await this.traceProcessor.queryAllRows(sql);
+
+    for (const it = result.iter({}); it.valid(); it.next()) {
+      const builder = getBuilder(it.get('node_id') as number);
+      builder.addArg(
+        it.get('key') as string,
+        it.get('value_type') as string,
+        it.get('int_value') as bigint | undefined,
+        it.get('real_value') as number | undefined,
+        it.get('string_value') as string | undefined,
+      );
+    }
+
+    const viewProtos: perfetto.protos.ViewCapture.IView[] = [];
+    idToBuilder.forEach((builder) => {
+      viewProtos.push(builder.build());
+    });
+    return viewProtos;
+  }
+
   private makeViewPropertyProviders(
-    entry: perfetto.protos.IViewCapture,
+    views: perfetto.protos.ViewCapture.View[],
   ): PropertiesProvider[] {
-    const providers = (entry.views ?? []).map((view) => {
+    const providers = views.map((view) => {
       const allProperties = this.makeViewPropertyTree(view);
       const provider = new PropertiesProviderBuilder()
         .setEagerProperties(allProperties)
@@ -182,7 +232,7 @@ export class ParserViewCaptureWindow extends AbstractParser<HierarchyTreeNode> {
   private makeViewPropertyTree(
     view: perfetto.protos.ViewCapture.IView,
   ): PropertyTreeNode {
-    const rootName = `${(view as any).className}@${view.hashcode}`;
+    const rootName = `${(view as FakeProto).className}@${view.hashcode}`;
 
     const nodeProperties = new PropertyTreeBuilderFromProto()
       .setData(view)

@@ -26,6 +26,7 @@ import androidx.compose.foundation.LocalIndication
 import androidx.compose.foundation.interaction.InteractionSource
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.safeDrawingPadding
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Typography
 import androidx.compose.material3.dynamicDarkColorScheme
@@ -54,6 +55,7 @@ class DemoActivity : ComponentActivity() {
         const val INITIAL_SCENE_EXTRA = "initial_scene"
         const val FULLSCREEN_EXTRA = "fullscreen"
         const val DISABLE_RIPPLE_EXTRA = "disable_ripple"
+        const val NOTIFICATIONS_IN_SHADE = "notifications_in_shade"
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -67,22 +69,28 @@ class DemoActivity : ComponentActivity() {
 
         val isFullscreen = intent.extras?.getBoolean(FULLSCREEN_EXTRA) ?: false
         val disableRipple = intent.extras?.getBoolean(DISABLE_RIPPLE_EXTRA) ?: false
+        val notificationsInShade = intent.extras?.getInt(NOTIFICATIONS_IN_SHADE, 10) ?: 10
 
         setContent {
-            DemoTheme {
-                var configuration by
-                    rememberSaveable(stateSaver = DemoConfiguration.Saver) {
-                        mutableStateOf(DemoConfiguration(isFullscreen = isFullscreen))
-                    }
-
-                SideEffect {
-                    if (configuration.isFullscreen) {
-                        window.insetsController?.hide(WindowInsets.Type.statusBars())
-                    } else {
-                        window.insetsController?.show(WindowInsets.Type.statusBars())
-                    }
+            var configuration by
+                rememberSaveable(stateSaver = DemoConfiguration.Saver) {
+                    mutableStateOf(
+                        DemoConfiguration(
+                            isFullscreen = isFullscreen,
+                            notificationsInShade = notificationsInShade,
+                        )
+                    )
                 }
 
+            SideEffect {
+                if (configuration.isFullscreen) {
+                    window.insetsController?.hide(WindowInsets.Type.statusBars())
+                } else {
+                    window.insetsController?.show(WindowInsets.Type.statusBars())
+                }
+            }
+
+            DemoTheme(configuration) {
                 val indication = if (disableRipple) NoIndication else LocalIndication.current
                 CompositionLocalProvider(LocalIndication provides indication) {
                     SystemUi(
@@ -101,8 +109,9 @@ class DemoActivity : ComponentActivity() {
     }
 }
 
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
-private fun DemoTheme(content: @Composable () -> Unit) {
+private fun DemoTheme(configuration: DemoConfiguration, content: @Composable () -> Unit) {
     val context = LocalContext.current
     val colorScheme =
         if (isSystemInDarkTheme()) dynamicDarkColorScheme(context)
@@ -113,6 +122,7 @@ private fun DemoTheme(content: @Composable () -> Unit) {
     MaterialTheme(
         colorScheme = colorScheme,
         typography = typographyWithGoogleSans,
+        motionScheme = configuration.motion.scheme,
         content = content,
     )
 }

@@ -375,16 +375,10 @@ describe('TraceViewComponent', () => {
     expect(visibleTabContents[0].innerHTML).toEqual('Content1');
   });
 
-  it('shows tooltips for tabs with trace descriptors', () => {
+  it('shows tooltips for tabs with trace descriptors', async () => {
     const tabs = htmlElement.querySelectorAll('.tab');
     const wmTab = tabs.item(1);
-    wmTab.dispatchEvent(new Event('mouseenter'));
-    fixture.detectChanges();
-    expect(
-      document.querySelector<HTMLElement>('.mat-tooltip-panel')?.textContent,
-    ).toEqual('file_1');
-    wmTab.dispatchEvent(new Event('mouseleave'));
-    fixture.detectChanges();
+    await UnitTestUtils.checkTooltips([wmTab], ['file_1'], fixture);
   });
 
   function getVisibleTabContents() {

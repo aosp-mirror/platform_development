@@ -233,7 +233,7 @@ class RectSfFactory {
       .setY(inputWindowRect.y)
       .setWidth(inputWindowRect.w)
       .setHeight(inputWindowRect.h)
-      .setId(`${assertDefined(layer.getEagerPropertyByName('id')).getValue()}`)
+      .setId(layer.id)
       .setName(name)
       .setCornerRadius(0)
       .setTransform(layerTransform)

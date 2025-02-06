@@ -18,4 +18,19 @@ export class TimeUtils {
   static async sleepMs(ms: number) {
     await new Promise<void>((resolve) => setTimeout(resolve, ms));
   }
+
+  static async wait(
+    condition: () => boolean,
+    timeoutMs = 5000,
+    intervalMs = 100,
+  ) {
+    const startTimeMs = Date.now();
+    while (Date.now() - startTimeMs < timeoutMs) {
+      if (condition()) {
+        return;
+      }
+      await TimeUtils.sleepMs(intervalMs);
+    }
+    throw new Error('Timed out waiting for condition');
+  }
 }
