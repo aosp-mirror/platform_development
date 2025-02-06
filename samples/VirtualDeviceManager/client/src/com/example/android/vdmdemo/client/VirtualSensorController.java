@@ -37,6 +37,7 @@ import dagger.hilt.android.scopes.ActivityScoped;
 import java.util.List;
 import java.util.Objects;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import javax.inject.Inject;
@@ -93,7 +94,7 @@ final class VirtualSensorController implements AutoCloseable {
                         mSensorManager.getDefaultSensor(Sensor.TYPE_PROXIMITY))
                 .filter(Objects::nonNull)
                 .map(VirtualSensorController::createSensorCapabilitiesFromSensor)
-                .toList();
+                .collect(Collectors.toList());
     }
 
     private static SensorCapabilities createSensorCapabilitiesFromSensor(Sensor sensor) {
