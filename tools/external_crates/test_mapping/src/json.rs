@@ -18,7 +18,7 @@ use std::collections::BTreeSet;
 
 use serde::{Deserialize, Serialize};
 
-use crate::TestMappingError;
+use crate::Error;
 
 #[derive(Serialize, Deserialize, Default, Debug)]
 pub(crate) struct TestMappingJson {
@@ -43,10 +43,10 @@ pub(crate) struct TestMappingPath {
 }
 
 impl TestMappingJson {
-    pub fn parse(mut contents: String) -> Result<TestMappingJson, TestMappingError> {
+    pub fn parse(mut contents: String) -> Result<TestMappingJson, Error> {
         let contents = contents.as_mut_str();
         // Comments are not part of the JSON spec (although they are often used), and Serde won't parse them.
-        json_strip_comments::strip(contents).map_err(TestMappingError::StripJsonCommentsError)?;
+        json_strip_comments::strip(contents).map_err(Error::StripJsonCommentsError)?;
         let parsed: TestMappingJson = serde_json::from_str(contents)?;
         Ok(parsed)
     }
@@ -134,7 +134,7 @@ mod tests {
 "###;
 
     #[test]
-    fn parse() -> Result<(), TestMappingError> {
+    fn parse() -> Result<(), Error> {
         TestMappingJson::parse("{}".to_string())?;
         TestMappingJson::parse("//comment\n{}".to_string())?;
         TestMappingJson::parse(TEST_JSON.to_string())?;
@@ -143,7 +143,7 @@ mod tests {
     }
 
     #[test]
-    fn all_test_names() -> Result<(), TestMappingError> {
+    fn all_test_names() -> Result<(), Error> {
         let json = TestMappingJson::parse(TEST_JSON.to_string())?;
         assert_eq!(
             json.all_test_names(),
@@ -153,7 +153,7 @@ mod tests {
     }
 
     #[test]
-    fn set_presubmits() -> Result<(), TestMappingError> {
+    fn set_presubmits() -> Result<(), Error> {
         let mut json = TestMappingJson::parse(TEST_JSON.to_string())?;
         json.set_presubmits(&BTreeSet::from(["asdf".to_string()]));
         assert_eq!(json.presubmit, vec![TestMappingName { name: "asdf".to_string() }]);
@@ -162,7 +162,7 @@ mod tests {
     }
 
     #[test]
-    fn add_new_tests_to_postsubmit() -> Result<(), TestMappingError> {
+    fn add_new_tests_to_postsubmit() -> Result<(), Error> {
         let mut json = TestMappingJson::parse(TEST_JSON.to_string())?;
         assert!(!json.add_new_tests_to_postsubmit(&BTreeSet::from(["bar".to_string()])));
         assert!(json
@@ -178,7 +178,7 @@ mod tests {
     }
 
     #[test]
-    fn is_empty() -> Result<(), TestMappingError> {
+    fn is_empty() -> Result<(), Error> {
         let json = TestMappingJson::parse(TEST_JSON.to_string())?;
         assert!(!json.is_empty());
         assert!(TestMappingJson::default().is_empty());

@@ -23,14 +23,19 @@ use serde::Deserialize;
 pub struct CrateConfig {
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     deletions: Vec<String>,
+
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    update_with: Vec<String>,
 }
 
-#[allow(missing_docs)]
+/// Error types for the 'crate_config' crate.
 #[derive(thiserror::Error, Debug)]
 pub enum Error {
-    #[error("TOML parse error")]
+    /// Error parsing TOML.
+    #[error(transparent)]
     TomlParseError(#[from] toml::de::Error),
-    #[error("IO error")]
+    /// Error reading TOML file.
+    #[error(transparent)]
     IoError(#[from] io::Error),
 }
 
@@ -51,6 +56,10 @@ impl CrateConfig {
     /// Get an iterator over directories and files to delete.
     pub fn deletions(&self) -> impl Iterator<Item = &str> {
         self.deletions.iter().map(|d| d.as_str())
+    }
+    /// Get an iterator of crates that also need to be updated at the same time as this crate.
+    pub fn update_with(&self) -> impl Iterator<Item = &str> {
+        self.update_with.iter().map(|d| d.as_str())
     }
 }
 
