@@ -25,7 +25,7 @@ use std::{
 
 use android_bp::BluePrint;
 
-use crate::{blueprint::RustDeps, TestMappingError};
+use crate::{blueprint::RustDeps, Error};
 
 #[derive(Clone)]
 pub(crate) struct ReverseDeps {
@@ -52,7 +52,7 @@ impl ReverseDeps {
     pub fn get(&self, name: &str) -> Option<&BTreeSet<String>> {
         self.rdeps.get(name)
     }
-    fn grep_and_parse<P: Into<PathBuf>>(repo_root: P) -> Result<ReverseDeps, TestMappingError> {
+    fn grep_and_parse<P: Into<PathBuf>>(repo_root: P) -> Result<ReverseDeps, Error> {
         let repo_root = repo_root.into();
         // Empirically, TEST_MAPPING files for 3rd party crates only
         // have imports from external, packages, system, and tools.
@@ -75,8 +75,7 @@ impl ReverseDeps {
             if EXCLUDED_PATHS.iter().any(|excluded| line.starts_with(excluded)) {
                 continue;
             }
-            let (dir, _) =
-                line.rsplit_once('/').ok_or(TestMappingError::GrepParseError(line.to_string()))?;
+            let (dir, _) = line.rsplit_once('/').ok_or(Error::GrepParseError(line.to_string()))?;
             if let Ok(bp) = BluePrint::from_file(repo_root.join(line)) {
                 for rustlib in bp.rust_deps() {
                     rdeps.entry(rustlib).or_insert(BTreeSet::new()).insert(dir.to_string());

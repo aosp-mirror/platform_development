@@ -25,12 +25,14 @@ pub struct RepoConfig {
     crate_denylist: BTreeSet<String>,
 }
 
-#[allow(missing_docs)]
+/// Error types for the 'repo_config' crate.
 #[derive(thiserror::Error, Debug)]
 pub enum Error {
-    #[error("TOML parse error")]
+    /// Error parsing TOML.
+    #[error(transparent)]
     TomlParseError(#[from] toml::de::Error),
-    #[error("IO error")]
+    /// Error reading TOML file.
+    #[error(transparent)]
     IoError(#[from] io::Error),
 }
 
