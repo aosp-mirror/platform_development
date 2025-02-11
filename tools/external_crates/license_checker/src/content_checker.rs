@@ -32,18 +32,22 @@ fn strip_punctuation(text: &str) -> String {
     processed.trim().to_string()
 }
 
-// TODO: It's possible for some license files to contain multiple licenses concatenated together
-pub(crate) fn classify_license_file_contents(contents: &str) -> Option<LicenseReq> {
+pub(crate) fn classify_license_file_contents(contents: &str) -> Vec<LicenseReq> {
     let contents = strip_punctuation(contents);
 
     // Exact match
+    let mut matches = Vec::new();
     for (req, required_text) in LICENSE_CONTENT_CLASSIFICATION.iter() {
         if contents.contains(required_text) {
-            return Some(req.clone());
+            matches.push(req.clone());
         }
     }
+    if !matches.is_empty() {
+        return matches;
+    }
 
-    // Fuzzy match. This is expensive, so start with licenses that are closest in length to the file.
+    // Fuzzy match. This is expensive, so start with licenses that are closest in length to the file,
+    // and only return a single match at most.
     #[cfg(feature = "fuzzy_content_match")]
     for (req, required_text) in LICENSE_CONTENT_CLASSIFICATION.iter().sorted_by(|a, b| {
         let mut ra = a.1.len() as f32 / contents.len() as f32;
@@ -58,11 +62,12 @@ pub(crate) fn classify_license_file_contents(contents: &str) -> Option<LicenseRe
     }) {
         let similarity = ratcliff_obershelp(contents.as_str(), required_text);
         if similarity > 0.95 {
-            return Some(req.clone());
+            matches.push(req.clone());
+            break;
         }
     }
 
-    None
+    matches
 }
 
 static LICENSE_CONTENT_CLASSIFICATION: LazyLock<Vec<(LicenseReq, String)>> = LazyLock::new(|| {
@@ -73,8 +78,11 @@ static LICENSE_CONTENT_CLASSIFICATION: LazyLock<Vec<(LicenseReq, String)>> = Laz
         ("MPL-2.0", include_str!("licenses/MPL-2.0.txt")),
         ("BSD-2-Clause", include_str!("licenses/BSD-2-Clause.txt")),
         ("BSD-3-Clause", include_str!("licenses/BSD-3-Clause.txt")),
+        ("Unicode-3.0", include_str!("licenses/Unicode-3.0.txt")),
         ("Unlicense", include_str!("licenses/Unlicense.txt")),
         ("Zlib", include_str!("licenses/Zlib.txt")),
+        ("OpenSSL", include_str!("licenses/OpenSSL.txt")),
+        ("NCSA", include_str!("licenses/NCSA.txt")),
     ]
     .into_iter()
     .map(|(req, tokens)| {
@@ -108,10 +116,10 @@ mod tests {
 
     #[test]
     fn test_classify() {
-        assert!(classify_license_file_contents("foo").is_none());
+        assert!(classify_license_file_contents("foo").is_empty());
         assert_eq!(
             classify_license_file_contents(include_str!("testdata/LICENSE-MIT-aarch64-paging.txt")),
-            Some(Licensee::parse("MIT").unwrap().into_req())
+            vec![Licensee::parse("MIT").unwrap().into_req()]
         );
     }
 
@@ -120,7 +128,25 @@ mod tests {
     fn test_classify_fuzzy() {
         assert_eq!(
             classify_license_file_contents(include_str!("testdata/BSD-3-Clause-bindgen.txt")),
-            Some(Licensee::parse("BSD-3-Clause").unwrap().into_req())
+            vec![Licensee::parse("BSD-3-Clause").unwrap().into_req()]
+        );
+    }
+
+    #[test]
+    fn concatenated_licenses() {
+        assert_eq!(
+            classify_license_file_contents(
+                format!(
+                    "{}\n\n{}",
+                    include_str!("licenses/Apache-2.0.txt"),
+                    include_str!("licenses/MIT.txt")
+                )
+                .as_str()
+            ),
+            vec![
+                Licensee::parse("MIT").unwrap().into_req(),
+                Licensee::parse("Apache-2.0").unwrap().into_req()
+            ]
         );
     }
 }

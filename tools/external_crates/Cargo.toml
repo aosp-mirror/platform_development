@@ -1,11 +1,12 @@
 [workspace]
 members = [
     "checksum",
+    "crate_config",
     "crate_tool",
     "google_metadata",
     "license_checker",
     "name_and_version",
-    "name_and_version_proc_macros",
+    "repo_config",
     "rooted_path",
     "test_mapping",
 ]
