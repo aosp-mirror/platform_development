@@ -31,34 +31,46 @@ use blueprint::RustTests;
 use json::{TestMappingJson, TestMappingPath};
 use rdeps::ReverseDeps;
 use rooted_path::RootedPath;
-use thiserror::Error;
 
-#[derive(Error, Debug)]
-pub enum TestMappingError {
+/// Error types for the 'test_mapping' crate.
+#[derive(thiserror::Error, Debug)]
+pub enum Error {
+    /// Blueprint file not found
     #[error("Blueprint file {0} not found")]
     BlueprintNotFound(PathBuf),
+    /// Blueprint parse error
     #[error("Blueprint parse error: {0}")]
     BlueprintParseError(String),
+    /// Blueprint rule has no name
     #[error("Blueprint rule has no name")]
     RuleWithoutName(String),
 
-    #[error("Error stripping JSON comments")]
+    /// Error stripping JSON comments
+    #[error("Error stripping JSON comments: {0}")]
     StripJsonCommentsError(io::Error),
-    #[error("JSON parse error")]
+    /// JSON parse error
+    #[error(transparent)]
     JsonParseError(#[from] serde_json::Error),
 
-    #[error("IO error")]
+    /// I/O Error
+    #[error(transparent)]
     IoError(#[from] io::Error),
-    #[error("Command output not UTF-8")]
+    /// Command output not UTF-8
+    #[error(transparent)]
     Utf8Error(#[from] Utf8Error),
+    /// Failed to split grep output on '/'
     #[error("Failed to split grep output line {0} on '/'")]
     GrepParseError(String),
 }
 
+/// A parsed TEST_MAPPING file
 #[derive(Debug)]
 pub struct TestMapping {
+    /// The path of the crate directory.
     path: RootedPath,
+    /// The contents of TEST_MAPPING
     json: TestMappingJson,
+    /// The parsed Android.bp file
     bp: BluePrint,
 }
 
@@ -67,13 +79,12 @@ impl TestMapping {
     /// If there is no TEST_MAPPING file, a default value is returned.
     /// Also reads the Android.bp in the directory, because we need that
     /// information to update the TEST_MAPPING.
-    pub fn read(path: RootedPath) -> Result<TestMapping, TestMappingError> {
+    pub fn read(path: RootedPath) -> Result<TestMapping, Error> {
         let bpfile = path.join("Android.bp").unwrap();
         if !bpfile.abs().exists() {
-            return Err(TestMappingError::BlueprintNotFound(bpfile.rel().to_path_buf()));
+            return Err(Error::BlueprintNotFound(bpfile.rel().to_path_buf()));
         }
-        let bp = BluePrint::from_file(bpfile)
-            .map_err(|e: String| TestMappingError::BlueprintParseError(e))?;
+        let bp = BluePrint::from_file(bpfile).map_err(|e: String| Error::BlueprintParseError(e))?;
         let test_mapping_path = path.join("TEST_MAPPING").unwrap();
         let json = if test_mapping_path.abs().exists() {
             TestMappingJson::parse(read_to_string(test_mapping_path)?)?
@@ -83,7 +94,7 @@ impl TestMapping {
         Ok(TestMapping { path, json, bp })
     }
     /// Write the TEST_MAPPING file.
-    pub fn write(&self) -> Result<(), TestMappingError> {
+    pub fn write(&self) -> Result<(), Error> {
         if self.json.is_empty() && self.test_mapping().abs().exists() {
             remove_file(self.test_mapping())?;
         } else {
@@ -93,18 +104,23 @@ impl TestMapping {
         }
         Ok(())
     }
+    /// Remove tests from TEST_MAPPING that are no longer in the
+    /// Android.bp file
+    pub fn remove_unknown_tests(&mut self) -> Result<bool, Error> {
+        Ok(self.json.remove_unknown_tests(&self.bp.rust_tests()?))
+    }
     /// Update the presubmit and presubmit_rust fields to the
     /// set of test targets in the Android.bp file.
     /// Since adding new tests directly to presubmits is discouraged,
     /// It's preferable to use add_new_tests_to_postsubmit and
     /// convert_postsubmit_tests instead.
-    pub fn update_presubmits(&mut self) -> Result<(), TestMappingError> {
+    pub fn update_presubmits(&mut self) -> Result<(), Error> {
         self.json.set_presubmits(&self.bp.rust_tests()?);
         Ok(())
     }
     /// Add tests that aren't already mentioned in TEST_MAPPING
     /// as post-submit tests.
-    pub fn add_new_tests_to_postsubmit(&mut self) -> Result<bool, TestMappingError> {
+    pub fn add_new_tests_to_postsubmit(&mut self) -> Result<bool, Error> {
         Ok(self.json.add_new_tests_to_postsubmit(&self.bp.rust_tests()?))
     }
     /// Convert post-submit tests to run at presubmit.
@@ -130,7 +146,7 @@ impl TestMapping {
     }
     /// Update the imports section of TEST_MAPPING to contain all the
     /// paths that depend on this crate.
-    pub fn update_imports(&mut self) -> Result<(), TestMappingError> {
+    pub fn update_imports(&mut self) -> Result<(), Error> {
         let all_rdeps = ReverseDeps::for_repo(self.path.root());
         let mut rdeps = BTreeSet::new();
         for lib in self.libs()? {
@@ -149,7 +165,7 @@ impl TestMapping {
     fn test_mapping(&self) -> RootedPath {
         self.path.join("TEST_MAPPING").unwrap()
     }
-    fn libs(&self) -> Result<Vec<String>, TestMappingError> {
+    fn libs(&self) -> Result<Vec<String>, Error> {
         let mut libs = Vec::new();
         for module in &self.bp.modules {
             if matches!(
@@ -159,7 +175,7 @@ impl TestMapping {
                 libs.push(
                     module
                         .get_string("name")
-                        .ok_or(TestMappingError::RuleWithoutName(module.typ.clone()))?
+                        .ok_or(Error::RuleWithoutName(module.typ.clone()))?
                         .clone(),
                 );
             }

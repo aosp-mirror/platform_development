@@ -744,7 +744,7 @@ mod tests {
                     .collect::<Vec<Crate>>()
                 })
                 .collect::<Vec<Vec<Crate>>>();
-            assert_that!(format!("{crates:#?}"), eq(format!("{expected_crates:#?}")));
+            assert_that!(format!("{crates:#?}"), eq(&format!("{expected_crates:#?}")));
         }
     }
 }
