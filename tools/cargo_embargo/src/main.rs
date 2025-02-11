@@ -1196,32 +1196,28 @@ fn crate_to_bp_modules(
         m.props.set_if_nonempty("shared_libs", process_lib_deps(crate_.shared_libs.clone()));
         m.props.set_if_nonempty("aliases", aliases);
 
-        if package_cfg.device_supported {
-            if !crate_type.is_test() {
-                if cfg.native_bridge_supported {
-                    m.props.set("native_bridge_supported", true);
-                }
-                if cfg.product_available {
-                    m.props.set("product_available", true);
-                }
-                if cfg.ramdisk_available {
-                    m.props.set("ramdisk_available", true);
-                }
-                if cfg.recovery_available {
-                    m.props.set("recovery_available", true);
-                }
-                if cfg.vendor_available {
-                    m.props.set("vendor_available", true);
-                }
-                if cfg.vendor_ramdisk_available {
-                    m.props.set("vendor_ramdisk_available", true);
-                }
+        if package_cfg.device_supported && !crate_type.is_test() {
+            if cfg.native_bridge_supported {
+                m.props.set("native_bridge_supported", true);
             }
-            if crate_type.is_library() {
-                m.props.set_if_nonempty("apex_available", cfg.apex_available.clone());
-                if let Some(min_sdk_version) = &cfg.min_sdk_version {
-                    m.props.set("min_sdk_version", min_sdk_version.clone());
-                }
+            if cfg.product_available {
+                m.props.set("product_available", true);
+            }
+            if cfg.ramdisk_available {
+                m.props.set("ramdisk_available", true);
+            }
+            if cfg.recovery_available {
+                m.props.set("recovery_available", true);
+            }
+            if cfg.vendor_available {
+                m.props.set("vendor_available", true);
+            }
+            if cfg.vendor_ramdisk_available {
+                m.props.set("vendor_ramdisk_available", true);
+            }
+            m.props.set_if_nonempty("apex_available", cfg.apex_available.clone());
+            if let Some(min_sdk_version) = &cfg.min_sdk_version {
+                m.props.set("min_sdk_version", min_sdk_version.clone());
             }
         }
         if crate_type.is_test() {
@@ -1369,6 +1365,7 @@ mod tests {
     use super::*;
     use googletest::matchers::eq;
     use googletest::prelude::assert_that;
+    use googletest::GoogleTestSupport;
     use std::env::{current_dir, set_current_dir};
     use std::fs::{self, read_to_string};
     use std::path::PathBuf;
@@ -1460,7 +1457,7 @@ mod tests {
                 .unwrap();
             }
 
-            assert_that!(output, eq(&expected_output));
+            assert_that!(output, eq(&expected_output), "for {}", testdata_directory_path.display());
 
             set_current_dir(old_current_dir).unwrap();
         }
