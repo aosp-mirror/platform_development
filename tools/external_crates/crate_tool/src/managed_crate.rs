@@ -14,16 +14,18 @@
 
 use std::{
     cell::OnceCell,
-    fs::{copy, read_dir, read_link, read_to_string, remove_dir_all, remove_file, rename, write},
+    collections::BTreeSet,
+    fs::{copy, read_dir, read_to_string, remove_dir_all, remove_file, rename, write},
     os::unix::fs::symlink,
-    path::PathBuf,
+    path::{Path, PathBuf},
     process::Command,
 };
 
-use anyhow::{anyhow, bail, ensure, Context, Result};
+use anyhow::{anyhow, bail, Context, Result};
 use crate_config::CrateConfig;
 use glob::glob;
 use google_metadata::GoogleMetadata;
+use itertools::Itertools;
 use license_checker::find_licenses;
 use name_and_version::NamedAndVersioned;
 use rooted_path::RootedPath;
@@ -71,8 +73,6 @@ static CUSTOMIZATIONS: &[&str] = &[
     "METADATA",
     "TEST_MAPPING",
 ];
-
-static SYMLINKS: &[&str] = &["LICENSE"];
 
 impl<State: ManagedCrateState> ManagedCrate<State> {
     pub fn name(&self) -> &str {
@@ -277,20 +277,6 @@ impl ManagedCrate<Vendored> {
                 }
             }
         }
-        for link in SYMLINKS {
-            let src_path = self.android_crate.path().join(link)?;
-            if src_path.abs().is_symlink() {
-                let dest = read_link(src_path)?;
-                if dest.exists() {
-                    return Err(anyhow!(
-                        "Can't symlink {} -> {} because destination exists",
-                        link,
-                        dest.display(),
-                    ));
-                }
-                symlink(dest, dest_dir.join(link)?)?;
-            }
-        }
         Ok(())
     }
     /// Applies patches from the patches/ directory in a deterministic order.
@@ -324,6 +310,45 @@ impl ManagedCrate<Vendored> {
         // SOME license must apply to the code. If none apply, that's an error.
         if state.satisfied.is_empty() {
             bail!("No license terms were found for this crate");
+        }
+
+        // TODO: Maybe remove unused license files.
+
+        // Per http://go/thirdpartyreviewers#license:
+        // "There must be a file called LICENSE containing an allowed third party license."
+
+        let license_files =
+            state.satisfied.values().map(|path| path.as_path()).collect::<BTreeSet<_>>();
+        let canonical_license_file_name = Path::new("LICENSE");
+        let canonical_license_path = self.temporary_build_directory().abs().join("LICENSE");
+        if license_files.len() == 1 {
+            // If there's a single applicable license file, it must either
+            // be called LICENSE, or else we need to symlink LICENSE to it.
+            let license_file = license_files.first().unwrap();
+            if *license_file != canonical_license_file_name {
+                if canonical_license_path.exists() {
+                    // TODO: Maybe just blindly delete LICENSE and replace it with a symlink.
+                    // Currently, we have to use a deletions config in android_config.toml
+                    // to remove it.
+                    bail!("Found a single license file {}, but we can't create a symlink to it because a file named LICENSE already exists", license_file.display());
+                } else {
+                    symlink(license_file, canonical_license_path)?;
+                }
+            }
+        } else {
+            // We found multiple license files. Per go/thirdparty/licenses#multiple they should
+            // be concatenated into a single LICENSE file, separated by dashed line dividers.
+            let mut license_contents = Vec::new();
+            for file in license_files {
+                license_contents
+                    .push(read_to_string(self.temporary_build_directory().abs().join(file))?);
+            }
+            // TODO: Maybe warn if LICENSE file exists. But there are cases where we can't just delete it
+            // because it contains *some* of the necessary license texts.
+            write(
+                canonical_license_path,
+                license_contents.iter().join("\n\n------------------\n\n"),
+            )?;
         }
 
         update_module_license_files(&self.temporary_build_directory(), &state)?;
@@ -397,8 +422,11 @@ impl ManagedCrate<Vendored> {
         // android_config.toml
         for deletion in self.config().deletions() {
             let dir = self.temporary_build_directory().join(deletion)?;
-            ensure!(dir.abs().is_dir(), "{dir} is not a directory");
-            remove_dir_all(dir)?;
+            if dir.abs().is_dir() {
+                remove_dir_all(dir)?;
+            } else {
+                remove_file(dir)?;
+            }
         }
 
         self.apply_patches()?;
