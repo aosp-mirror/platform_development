@@ -59,9 +59,6 @@ impl CrateCollection {
         }
         Ok(())
     }
-    pub fn len(&self) -> usize {
-        self.crates.len()
-    }
     pub fn get(&self, nv: &dyn NamedAndVersioned) -> Option<&Crate> {
         self.crates.get(nv)
     }
