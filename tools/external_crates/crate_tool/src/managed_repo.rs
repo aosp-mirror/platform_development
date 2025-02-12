@@ -17,7 +17,6 @@ use std::{
     collections::BTreeSet,
     env,
     fs::{create_dir_all, read_dir, write},
-    os::unix::fs::symlink,
     path::Path,
 };
 
