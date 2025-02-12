@@ -275,25 +275,25 @@ pub struct VariantConfig {
     /// Value to use for every generated module's `defaults` field.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub global_defaults: Option<String>,
-    /// Value to use for every generated library module's `apex_available` field.
+    /// Value to use for every generated non-test module's `apex_available` field.
     #[serde(default = "default_apex_available", skip_serializing_if = "is_default_apex_available")]
     pub apex_available: Vec<String>,
-    /// Value to use for every generated library module's `native_bridge_supported` field.
+    /// Value to use for every generated non-test module's `native_bridge_supported` field.
     #[serde(default, skip_serializing_if = "is_false")]
     pub native_bridge_supported: bool,
-    /// Value to use for every generated library module's `product_available` field.
+    /// Value to use for every generated non-test module's `product_available` field.
     #[serde(default = "default_true", skip_serializing_if = "is_true")]
     pub product_available: bool,
-    /// Value to use for every generated library module's `ramdisk_available` field.
+    /// Value to use for every generated non-test module's `ramdisk_available` field.
     #[serde(default, skip_serializing_if = "is_false")]
     pub ramdisk_available: bool,
-    /// Value to use for every generated library module's `recovery_available` field.
+    /// Value to use for every generated non-test module's `recovery_available` field.
     #[serde(default, skip_serializing_if = "is_false")]
     pub recovery_available: bool,
-    /// Value to use for every generated library module's `vendor_available` field.
+    /// Value to use for every generated non-test module's `vendor_available` field.
     #[serde(default = "default_true", skip_serializing_if = "is_true")]
     pub vendor_available: bool,
-    /// Value to use for every generated library module's `vendor_ramdisk_available` field.
+    /// Value to use for every generated non-test module's `vendor_ramdisk_available` field.
     #[serde(default, skip_serializing_if = "is_false")]
     pub vendor_ramdisk_available: bool,
     /// Minimum SDK version.

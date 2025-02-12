@@ -21,6 +21,7 @@ cargo_pkg_version: "0.1.74",
 crate_root: "src/lib.rs",
 edition: "2021",
 rustlibs: ["libproc_macro2", "libquote", "libsyn"],
+apex_available: ["//apex_available:platform", "//apex_available:anyapex"],
 product_available: true,
 vendor_available: true,
 }
