@@ -49,7 +49,9 @@ static LICENSE_FILE_NAME_CLASSIFICATION: LazyLock<BTreeMap<OsString, LicenseReq>
             ("LICENSE-APACHE", "Apache-2.0"),
             ("LICENSE-APACHE-2.0", "Apache-2.0"),
             ("LICENSES/Apache-2.0", "Apache-2.0"),
+            ("LICENSE-Apache-2.0_WITH_LLVM-exception", "Apache-2.0 WITH LLVM-exception"),
 
+            ("LICENSE-BSD", "BSD-2-Clause"),
             ("LICENSE-BSD-2-Clause", "BSD-2-Clause"),
             ("LICENSE-BSD-3-Clause", "BSD-3-Clause"),
 
@@ -58,8 +60,10 @@ static LICENSE_FILE_NAME_CLASSIFICATION: LazyLock<BTreeMap<OsString, LicenseReq>
             ("LICENSE-0BSD", "0BSD"),
 
             ("LICENSE-ZLIB", "Zlib"),
-
             ("UNLICENSE", "Unlicense"),
+            ("LICENSE-BOOST", "BSL-1.0"),
+            ("LICENSES/CC0-1.0", "CC0-1.0"),
+            ("LICENSE-LGPL", "LGPL-3.0"),
         ]
         .into_iter()
         .map(|(file, req)| (OsString::from(file.to_uppercase()), Licensee::parse(req).unwrap().into_req()))
