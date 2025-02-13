@@ -22,9 +22,8 @@ use std::{
 
 use spdx::LicenseReq;
 
-mod content_checker;
 mod expression_parser;
-mod file_name_checker;
+mod file_classifier;
 mod license_file_finder;
 
 /// Error types for the 'license_checker' crate.
@@ -91,7 +90,7 @@ pub fn find_licenses(
     let mut possible_license_files = license_file_finder::find_license_files(crate_path)?;
 
     possible_license_files.retain(|file| {
-        if let Some(req) = file_name_checker::classify_license_file_name(file) {
+        if let Some(req) = file_classifier::classify_license_file_name(file) {
             if state.unsatisfied.remove(&req) {
                 state.satisfied.insert(req, file.clone());
                 return false;
@@ -103,7 +102,7 @@ pub fn find_licenses(
     if !state.unsatisfied.is_empty() {
         possible_license_files.retain(|file| {
             let contents = read_to_string(crate_path.join(file)).unwrap();
-            let matches = content_checker::classify_license_file_contents(&contents);
+            let matches = file_classifier::classify_license_file_contents(&contents);
             for req in &matches {
                 if state.unsatisfied.remove(req) {
                     state.satisfied.insert(req.clone(), file.clone());
