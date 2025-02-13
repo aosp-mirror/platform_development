@@ -45,14 +45,17 @@ static LICENSE_FILE_NAME_CLASSIFICATION: LazyLock<BTreeMap<OsString, LicenseReq>
         vec![
             ("LICENSE-MIT", "MIT"),
             ("LICENSES/MIT", "MIT"),
+            ("docs/LICENSE-MIT", "MIT"),
 
             ("LICENSE-APACHE", "Apache-2.0"),
             ("LICENSE-APACHE-2.0", "Apache-2.0"),
             ("LICENSES/Apache-2.0", "Apache-2.0"),
             ("LICENSE-Apache-2.0_WITH_LLVM-exception", "Apache-2.0 WITH LLVM-exception"),
+            ("docs/LICENSE-APACHE", "Apache-2.0"),
 
             ("LICENSE-BSD", "BSD-2-Clause"),
             ("LICENSE-BSD-2-Clause", "BSD-2-Clause"),
+            ("LICENSE.BSD-2-Clause", "BSD-2-Clause"),
             ("LICENSE-BSD-3-Clause", "BSD-3-Clause"),
 
             ("LICENSE-UNICODE", "Unicode-DFS-2016"),
