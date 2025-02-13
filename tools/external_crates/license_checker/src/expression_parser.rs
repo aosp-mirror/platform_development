@@ -20,17 +20,37 @@ use std::{
 
 use crate::Error;
 
-pub(crate) fn get_chosen_licenses(
-    crate_name: &str,
-    cargo_toml_license: Option<&str>,
-) -> Result<BTreeSet<LicenseReq>, Error> {
-    Ok(BTreeSet::from_iter(
-        Expression::parse(&get_spdx_expr(crate_name, cargo_toml_license)?)?
-            .minimized_requirements(LICENSE_PREFERENCE.iter())?,
-    ))
+/// The result of parsing and evaluating an SPDX license expression.
+#[derive(Debug, PartialEq)]
+pub(crate) struct LicenseTerms {
+    /// The license terms we are required to follow.
+    pub required: BTreeSet<LicenseReq>,
+    /// Additional terms mentioned in the license expression that we
+    /// do not need to follow.
+    pub not_required: BTreeSet<LicenseReq>,
 }
 
-fn get_spdx_expr(crate_name: &str, cargo_toml_license: Option<&str>) -> Result<String, Error> {
+/// Evaluate the SPDX license expression from Cargo.toml for a given crate.
+/// Slashes such as "MIT/Apache-2.0" are interpreted as OR.
+/// A limited set of exceptions are applied for crates where the license terms are
+/// known to be missing or incorrect.
+pub(crate) fn evaluate_license_expr(
+    crate_name: &str,
+    cargo_toml_license: Option<&str>,
+) -> Result<LicenseTerms, Error> {
+    let expr = Expression::parse(&get_corrected_license_expr(crate_name, cargo_toml_license)?)?;
+    let required = BTreeSet::from_iter(expr.minimized_requirements(LICENSE_PREFERENCE.iter())?);
+    let not_required = expr
+        .requirements()
+        .filter_map(|req| if !required.contains(&req.req) { Some(req.req.clone()) } else { None })
+        .collect::<BTreeSet<_>>();
+    Ok(LicenseTerms { required, not_required })
+}
+
+fn get_corrected_license_expr(
+    crate_name: &str,
+    cargo_toml_license: Option<&str>,
+) -> Result<String, Error> {
     // Check special cases.
     if let Some((raw, expr)) = LICENSE_EXPR_SPECIAL_CASES.get(crate_name) {
         if *raw != cargo_toml_license {
@@ -44,11 +64,7 @@ fn get_spdx_expr(crate_name: &str, cargo_toml_license: Option<&str>) -> Result<S
     }
     // Default. Look at the license field in Cargo.toml, and treat '/' as OR.
     if let Some(lic) = cargo_toml_license {
-        if lic.contains('/') {
-            Ok(lic.replace('/', " OR "))
-        } else {
-            Ok(lic.to_string())
-        }
+        Ok(lic.replace('/', " OR "))
     } else {
         Err(Error::MissingLicenseField(crate_name.to_string()))
     }
@@ -90,64 +106,90 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_get_spdx_expr() -> Result<(), Error> {
-        assert_eq!(get_spdx_expr("foo", Some("MIT"))?, "MIT");
+    fn test_get_corrected_license_expr() -> Result<(), Error> {
+        assert_eq!(get_corrected_license_expr("foo", Some("MIT"))?, "MIT");
 
         // No license, no exception
-        assert!(get_spdx_expr("foo", None).is_err());
+        assert!(get_corrected_license_expr("foo", None).is_err());
 
         // '/' treated as OR
-        assert_eq!(get_spdx_expr("foo", Some("MIT/Apache-2.0"))?, "MIT OR Apache-2.0");
+        assert_eq!(get_corrected_license_expr("foo", Some("MIT/Apache-2.0"))?, "MIT OR Apache-2.0");
 
         // Exceptions.
         assert_eq!(
-            get_spdx_expr("libfuzzer-sys", Some("MIT/Apache-2.0/NCSA"))?,
+            get_corrected_license_expr("libfuzzer-sys", Some("MIT/Apache-2.0/NCSA"))?,
             "(MIT OR Apache-2.0) AND NCSA"
         );
-        assert_eq!(get_spdx_expr("ring", None)?, "MIT AND ISC AND OpenSSL");
+        assert_eq!(get_corrected_license_expr("ring", None)?, "MIT AND ISC AND OpenSSL");
 
         // Exceptions. Raw license in Cargo.toml must match, if present.
-        assert!(get_spdx_expr("libfuzzer-sys", Some("blah")).is_err());
-        assert!(get_spdx_expr("libfuzzer-sys", None).is_err());
-        assert!(get_spdx_expr("ring", Some("blah")).is_err());
+        assert!(get_corrected_license_expr("libfuzzer-sys", Some("blah")).is_err());
+        assert!(get_corrected_license_expr("libfuzzer-sys", None).is_err());
+        assert!(get_corrected_license_expr("ring", Some("blah")).is_err());
 
         Ok(())
     }
 
     #[test]
-    fn test_get_chosen_licenses() -> Result<(), Error> {
+    fn test_evaluate_license_expr() -> Result<(), Error> {
         assert_eq!(
-            get_chosen_licenses("foo", Some("MIT"))?,
-            BTreeSet::from([Licensee::parse("MIT").unwrap().into_req()]),
+            evaluate_license_expr("foo", Some("MIT"))?,
+            LicenseTerms {
+                required: BTreeSet::from([Licensee::parse("MIT").unwrap().into_req()]),
+                not_required: BTreeSet::new()
+            },
             "Simple case"
         );
         assert_eq!(
-            get_chosen_licenses("foo", Some("MIT OR Apache-2.0"))?,
-            BTreeSet::from([Licensee::parse("Apache-2.0").unwrap().into_req()]),
+            evaluate_license_expr("foo", Some("MIT OR Apache-2.0"))?,
+            LicenseTerms {
+                required: BTreeSet::from([Licensee::parse("Apache-2.0").unwrap().into_req()]),
+                not_required: BTreeSet::from([Licensee::parse("MIT").unwrap().into_req()]),
+            },
             "Apache preferred to MIT"
         );
-        assert!(get_chosen_licenses("foo", Some("GPL")).is_err(), "Unacceptable license");
-        assert!(get_chosen_licenses("foo", Some("blah")).is_err(), "Unrecognized license");
+        assert!(evaluate_license_expr("foo", Some("GPL")).is_err(), "Unacceptable license");
+        assert!(evaluate_license_expr("foo", Some("blah")).is_err(), "Unrecognized license");
         assert_eq!(
-            get_chosen_licenses("foo", Some("MIT AND Apache-2.0"))?,
-            BTreeSet::from([
-                Licensee::parse("Apache-2.0").unwrap().into_req(),
-                Licensee::parse("MIT").unwrap().into_req()
-            ]),
+            evaluate_license_expr("foo", Some("MIT AND Apache-2.0"))?,
+            LicenseTerms {
+                required: BTreeSet::from([
+                    Licensee::parse("Apache-2.0").unwrap().into_req(),
+                    Licensee::parse("MIT").unwrap().into_req()
+                ]),
+                not_required: BTreeSet::new(),
+            },
             "Apache preferred to MIT"
         );
         assert_eq!(
-            get_chosen_licenses("foo", Some("MIT AND (MIT OR Apache-2.0)"))?,
-            BTreeSet::from([Licensee::parse("MIT").unwrap().into_req()]),
+            evaluate_license_expr("foo", Some("MIT AND (MIT OR Apache-2.0)"))?,
+            LicenseTerms {
+                required: BTreeSet::from([Licensee::parse("MIT").unwrap().into_req()]),
+                not_required: BTreeSet::from([Licensee::parse("Apache-2.0").unwrap().into_req()]),
+            },
             "Complex expression from libm 0.2.11"
         );
         assert_eq!(
-            get_chosen_licenses("webpki", None)?,
-            BTreeSet::from([
-                Licensee::parse("ISC").unwrap().into_req(),
-                Licensee::parse("BSD-3-Clause").unwrap().into_req()
-            ]),
-            "Exception"
+            evaluate_license_expr("webpki", None)?,
+            LicenseTerms {
+                required: BTreeSet::from([
+                    Licensee::parse("ISC").unwrap().into_req(),
+                    Licensee::parse("BSD-3-Clause").unwrap().into_req()
+                ]),
+                not_required: BTreeSet::new(),
+            },
+            "Exception, webpki"
+        );
+        assert_eq!(
+            evaluate_license_expr("libfuzzer-sys", Some("MIT/Apache-2.0/NCSA"))?,
+            LicenseTerms {
+                required: BTreeSet::from([
+                    Licensee::parse("Apache-2.0").unwrap().into_req(),
+                    Licensee::parse("NCSA").unwrap().into_req()
+                ]),
+                not_required: BTreeSet::from([Licensee::parse("MIT").unwrap().into_req(),]),
+            },
+            "Exception, libfuzzer-sys"
         );
         Ok(())
     }

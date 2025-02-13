@@ -86,7 +86,8 @@ pub fn find_licenses(
     let crate_path = crate_path.as_ref();
     let mut state = LicenseState { unsatisfied: BTreeSet::new(), satisfied: BTreeMap::new() };
 
-    state.unsatisfied = expression_parser::get_chosen_licenses(crate_name, cargo_toml_license)?;
+    state.unsatisfied =
+        expression_parser::evaluate_license_expr(crate_name, cargo_toml_license)?.required;
     let mut possible_license_files = license_file_finder::find_license_files(crate_path)?;
 
     possible_license_files.retain(|file| {
