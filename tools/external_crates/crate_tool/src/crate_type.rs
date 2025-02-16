@@ -73,14 +73,6 @@ impl Crate {
     pub fn path(&self) -> &RootedPath {
         &self.path
     }
-
-    pub fn is_migration_denied(&self) -> bool {
-        const MIGRATION_DENYLIST: &[&str] = &[
-            "external/rust/crates/openssl/", // It's complicated.
-            "external/rust/cxx/",            // It's REALLY complicated.
-        ];
-        MIGRATION_DENYLIST.iter().any(|prefix| self.path().rel().starts_with(prefix))
-    }
 }
 
 #[cfg(test)]
