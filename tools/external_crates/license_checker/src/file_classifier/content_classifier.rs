@@ -78,6 +78,7 @@ static LICENSE_CONTENT_CLASSIFICATION: LazyLock<Vec<(LicenseReq, String)>> = Laz
         ("BSD-2-Clause", include_str!("licenses/BSD-2-Clause.txt")),
         ("BSD-3-Clause", include_str!("licenses/BSD-3-Clause.txt")),
         ("Unicode-3.0", include_str!("licenses/Unicode-3.0.txt")),
+        ("Unicode-DFS-2016", include_str!("licenses/Unicode-DFS-2016.txt")),
         ("Unlicense", include_str!("licenses/Unlicense.txt")),
         ("Zlib", include_str!("licenses/Zlib.txt")),
         ("OpenSSL", include_str!("licenses/OpenSSL.txt")),
