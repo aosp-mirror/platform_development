@@ -16,10 +16,10 @@
 
 use std::{
     collections::{BTreeMap, BTreeSet},
-    fs::read_to_string,
     path::{Path, PathBuf},
 };
 
+use file_classifier::Classifier;
 use spdx::LicenseReq;
 
 mod expression_parser;
@@ -87,29 +87,21 @@ pub fn find_licenses(
 
     state.unsatisfied =
         expression_parser::evaluate_license_expr(crate_name, cargo_toml_license)?.required;
-    let mut possible_license_files = license_file_finder::find_license_files(crate_path)?;
+    let possible_license_files = license_file_finder::find_license_files(crate_path)?;
 
-    possible_license_files.retain(|file| {
-        if let Some(req) = file_classifier::classify_license_file_name(file) {
-            if state.unsatisfied.remove(&req) {
-                state.satisfied.insert(req, file.clone());
-                return false;
+    for file in &possible_license_files {
+        let classifier = Classifier::new(crate_path, file.clone());
+        if let Some(req) = classifier.by_name() {
+            if state.unsatisfied.remove(req) {
+                state.satisfied.insert(req.clone(), file.clone());
             }
-        }
-        true
-    });
-
-    if !state.unsatisfied.is_empty() {
-        possible_license_files.retain(|file| {
-            let contents = read_to_string(crate_path.join(file)).unwrap();
-            let matches = file_classifier::classify_license_file_contents(&contents);
-            for req in &matches {
+        } else {
+            for req in classifier.by_content() {
                 if state.unsatisfied.remove(req) {
                     state.satisfied.insert(req.clone(), file.clone());
                 }
             }
-            !matches.is_empty()
-        });
+        }
     }
 
     Ok(state)

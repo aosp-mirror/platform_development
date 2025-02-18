@@ -15,5 +15,37 @@
 mod content_classifier;
 mod name_classifier;
 
-pub(crate) use content_classifier::classify_license_file_contents;
-pub(crate) use name_classifier::classify_license_file_name;
+use content_classifier::classify_license_file_contents;
+use name_classifier::classify_license_file_name;
+use spdx::LicenseReq;
+use std::{cell::OnceCell, fs::read_to_string, path::PathBuf};
+
+#[derive(Debug)]
+pub(crate) struct Classifier {
+    crate_path: PathBuf,
+    file_path: PathBuf,
+    by_name: Option<LicenseReq>,
+    by_content: OnceCell<Vec<LicenseReq>>,
+}
+
+impl Classifier {
+    pub fn new<CP: Into<PathBuf>, FP: Into<PathBuf>>(crate_path: CP, file_path: FP) -> Classifier {
+        let file_path = file_path.into();
+        let by_name = classify_license_file_name(&file_path);
+        Classifier {
+            crate_path: crate_path.into(),
+            file_path,
+            by_name,
+            by_content: OnceCell::new(),
+        }
+    }
+    pub fn by_name(&self) -> Option<&LicenseReq> {
+        self.by_name.as_ref()
+    }
+    pub fn by_content(&self) -> &Vec<LicenseReq> {
+        self.by_content.get_or_init(|| {
+            let contents = read_to_string(self.crate_path.join(&self.file_path)).unwrap();
+            classify_license_file_contents(&contents)
+        })
+    }
+}
