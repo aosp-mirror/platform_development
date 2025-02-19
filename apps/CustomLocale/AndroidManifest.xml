@@ -21,8 +21,6 @@
     package="com.android.customlocale2"
     >
 
-    <uses-sdk android:minSdkVersion="3" />
-
     <uses-permission android:name="android.permission.WRITE_SETTINGS" />
     <uses-permission android:name="android.permission.CHANGE_CONFIGURATION" />
 
@@ -32,7 +30,8 @@
 
         <activity
             android:label="@string/app_name"
-            android:name="CustomLocaleActivity" >
+            android:name="CustomLocaleActivity"
+            android:exported="true" >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
@@ -41,9 +40,11 @@
 
         <activity
             android:theme="@android:style/Theme.Dialog"
-            android:name="NewLocaleDialog" />
+            android:name="NewLocaleDialog"
+            android:exported="true" />
 
-        <receiver android:name="CustomLocaleReceiver" >
+        <receiver android:name="CustomLocaleReceiver"
+            android:exported="true" >
             <intent-filter>
                 <action android:name="com.android.intent.action.SET_LOCALE" />
             </intent-filter>
