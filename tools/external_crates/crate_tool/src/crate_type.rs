@@ -12,12 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use anyhow::{anyhow, Result};
-use cargo::{
-    core::{Manifest, SourceId},
-    util::toml::read_manifest,
-    Config,
-};
+use anyhow::{bail, Result};
+use cargo_metadata::Package;
 use name_and_version::{NameAndVersionRef, NamedAndVersioned};
 use rooted_path::RootedPath;
 use semver::Version;
@@ -26,16 +22,16 @@ use crate::CrateError;
 
 #[derive(Debug, Clone)]
 pub struct Crate {
-    manifest: Manifest,
+    metadata: Package,
     path: RootedPath,
 }
 
 impl NamedAndVersioned for Crate {
     fn name(&self) -> &str {
-        self.manifest.name().as_str()
+        self.metadata.name.as_str()
     }
     fn version(&self) -> &Version {
-        self.manifest.version()
+        &self.metadata.version
     }
     fn key(&self) -> NameAndVersionRef {
         NameAndVersionRef::new(self.name(), self.version())
@@ -43,32 +39,30 @@ impl NamedAndVersioned for Crate {
 }
 
 impl Crate {
-    pub fn new(manifest: Manifest, path: RootedPath) -> Crate {
-        Crate { manifest, path }
+    pub fn new(metadata: Package, path: RootedPath) -> Crate {
+        Crate { metadata, path }
     }
     pub fn from(manifest_dir: RootedPath) -> Result<Crate> {
-        let source_id = SourceId::for_path(manifest_dir.abs())?;
-        let (manifest, _nested) = read_manifest(
-            manifest_dir.join("Cargo.toml").unwrap().as_ref(),
-            source_id,
-            &Config::default()?,
-        )?;
-        match manifest {
-            cargo::core::EitherManifest::Real(r) => Ok(Crate::new(r, manifest_dir)),
-            cargo::core::EitherManifest::Virtual(_) => {
-                Err(anyhow!(CrateError::VirtualCrate(manifest_dir.as_ref().to_path_buf())))
-            }
+        let manifest_path = manifest_dir.abs().join("Cargo.toml");
+        let metadata = cargo_metadata::MetadataCommand::new()
+            .manifest_path(manifest_path)
+            .no_deps()
+            .other_options(["--frozen".to_string()])
+            .exec()?;
+        if metadata.packages.len() != 1 {
+            bail!(CrateError::VirtualCrate(manifest_dir.as_ref().to_path_buf()));
         }
+        Ok(Crate::new(metadata.packages[0].clone(), manifest_dir))
     }
 
     pub fn description(&self) -> &str {
-        self.manifest.metadata().description.as_deref().unwrap_or("")
+        self.metadata.description.as_deref().unwrap_or("")
     }
     pub fn license(&self) -> Option<&str> {
-        self.manifest.metadata().license.as_deref()
+        self.metadata.license.as_deref()
     }
     pub fn repository(&self) -> Option<&str> {
-        self.manifest.metadata().repository.as_deref()
+        self.metadata.repository.as_deref()
     }
     pub fn path(&self) -> &RootedPath {
         &self.path
