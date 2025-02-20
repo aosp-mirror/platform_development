@@ -170,7 +170,6 @@ impl ManagedRepo {
             println!("Version {}", version.version());
             let mut found_problems = false;
             for (dep, req) in version.android_deps_with_version_reqs() {
-                println!("Found dep {}", dep.crate_name());
                 let cc = if managed_crates.contains_crate(dep.crate_name()) {
                     &managed_crates
                 } else {
