@@ -50,6 +50,7 @@ pub(crate) struct Classifier {
     #[allow(dead_code)]
     by_inexact_name: Option<InexactLicenseType>,
     by_content: OnceCell<Vec<LicenseReq>>,
+    by_content_fuzzy: OnceCell<Option<LicenseReq>>,
 }
 
 impl Classifier {
@@ -63,6 +64,7 @@ impl Classifier {
             by_name,
             by_inexact_name,
             by_content: OnceCell::new(),
+            by_content_fuzzy: OnceCell::new(),
         }
     }
     pub fn by_name(&self) -> Option<&LicenseReq> {
@@ -77,5 +79,13 @@ impl Classifier {
             let contents = read_to_string(self.crate_path.join(&self.file_path)).unwrap();
             classify_license_file_contents(&contents)
         })
+    }
+    pub fn by_content_fuzzy(&self) -> Option<&LicenseReq> {
+        self.by_content_fuzzy
+            .get_or_init(|| {
+                let contents = read_to_string(self.crate_path.join(&self.file_path)).unwrap();
+                content_classifier::classify_license_file_contents_fuzzy(&contents)
+            })
+            .as_ref()
     }
 }
