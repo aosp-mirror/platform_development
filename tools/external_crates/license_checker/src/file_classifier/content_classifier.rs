@@ -76,6 +76,7 @@ static LICENSE_CONTENT_CLASSIFICATION: LazyLock<Vec<(LicenseReq, String)>> = Laz
         ("Apache-2.0", include_str!("licenses/Apache-2.0.txt")),
         ("ISC", include_str!("licenses/ISC.txt")),
         ("MPL-2.0", include_str!("licenses/MPL-2.0.txt")),
+        ("MPL-2.0", include_str!("licenses/MPL-2.0-source-code-form.txt")),
         ("BSD-2-Clause", include_str!("licenses/BSD-2-Clause.txt")),
         ("BSD-3-Clause", include_str!("licenses/BSD-3-Clause.txt")),
         ("Unicode-3.0", include_str!("licenses/Unicode-3.0.txt")),
