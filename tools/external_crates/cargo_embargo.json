@@ -30,6 +30,7 @@
   "tests": true,
   "workspace": true,
   "workspace_excludes": [
-    "crate_tool"
+    "crate_tool",
+    "crates_io_util"
   ]
 }
