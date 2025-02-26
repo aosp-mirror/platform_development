@@ -87,10 +87,12 @@ pub fn find_licenses(
 
     state.unsatisfied =
         expression_parser::evaluate_license_expr(crate_name, cargo_toml_license)?.required;
-    let possible_license_files = license_file_finder::find_license_files(crate_path)?;
+    let possible_license_files = license_file_finder::find_license_files(crate_path)?
+        .into_iter()
+        .map(|f| (f.clone(), Classifier::new(crate_path, f)))
+        .collect::<BTreeMap<_, _>>();
 
-    for file in &possible_license_files {
-        let classifier = Classifier::new(crate_path, file.clone());
+    for (file, classifier) in &possible_license_files {
         if let Some(req) = classifier.by_name() {
             if state.unsatisfied.remove(req) {
                 state.satisfied.insert(req.clone(), file.clone());
@@ -99,6 +101,22 @@ pub fn find_licenses(
             for req in classifier.by_content() {
                 if state.unsatisfied.remove(req) {
                     state.satisfied.insert(req.clone(), file.clone());
+                }
+            }
+        }
+    }
+
+    if !state.unsatisfied.is_empty() {
+        for (file, classifier) in &possible_license_files {
+            if classifier.by_name().is_some() || !classifier.by_content().is_empty() {
+                continue;
+            }
+            if let Some(req) = classifier.by_content_fuzzy() {
+                if state.unsatisfied.remove(req) {
+                    state.satisfied.insert(req.clone(), file.clone());
+                    if state.unsatisfied.is_empty() {
+                        break;
+                    }
                 }
             }
         }

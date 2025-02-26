@@ -12,11 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#[cfg(feature = "fuzzy_content_match")]
 use itertools::Itertools;
 use spdx::{LicenseReq, Licensee};
 use std::sync::LazyLock;
-#[cfg(feature = "fuzzy_content_match")]
 use textdistance::str::ratcliff_obershelp;
 
 fn strip_punctuation(text: &str) -> String {
@@ -32,7 +30,7 @@ fn strip_punctuation(text: &str) -> String {
     processed.trim().to_string()
 }
 
-pub(crate) fn classify_license_file_contents(contents: &str) -> Vec<LicenseReq> {
+pub(super) fn classify_license_file_contents(contents: &str) -> Vec<LicenseReq> {
     let contents = strip_punctuation(contents);
 
     // Exact match
@@ -42,13 +40,14 @@ pub(crate) fn classify_license_file_contents(contents: &str) -> Vec<LicenseReq> 
             matches.push(req.clone());
         }
     }
-    if !matches.is_empty() {
-        return matches;
-    }
+    matches
+}
+
+pub(super) fn classify_license_file_contents_fuzzy(contents: &str) -> Option<LicenseReq> {
+    let contents = strip_punctuation(contents);
 
     // Fuzzy match. This is expensive, so start with licenses that are closest in length to the file,
     // and only return a single match at most.
-    #[cfg(feature = "fuzzy_content_match")]
     for (req, required_text) in LICENSE_CONTENT_CLASSIFICATION.iter().sorted_by(|a, b| {
         let mut ra = a.1.len() as f32 / contents.len() as f32;
         let mut rb = b.1.len() as f32 / contents.len() as f32;
@@ -62,12 +61,11 @@ pub(crate) fn classify_license_file_contents(contents: &str) -> Vec<LicenseReq> 
     }) {
         let similarity = ratcliff_obershelp(contents.as_str(), required_text);
         if similarity > 0.95 {
-            matches.push(req.clone());
-            break;
+            return Some(req.clone());
         }
     }
 
-    matches
+    None
 }
 
 static LICENSE_CONTENT_CLASSIFICATION: LazyLock<Vec<(LicenseReq, String)>> = LazyLock::new(|| {
@@ -80,6 +78,7 @@ static LICENSE_CONTENT_CLASSIFICATION: LazyLock<Vec<(LicenseReq, String)>> = Laz
         ("BSD-2-Clause", include_str!("licenses/BSD-2-Clause.txt")),
         ("BSD-3-Clause", include_str!("licenses/BSD-3-Clause.txt")),
         ("Unicode-3.0", include_str!("licenses/Unicode-3.0.txt")),
+        ("Unicode-DFS-2016", include_str!("licenses/Unicode-DFS-2016.txt")),
         ("Unlicense", include_str!("licenses/Unlicense.txt")),
         ("Zlib", include_str!("licenses/Zlib.txt")),
         ("OpenSSL", include_str!("licenses/OpenSSL.txt")),
@@ -124,12 +123,13 @@ mod tests {
         );
     }
 
-    #[cfg(feature = "fuzzy_content_match")]
     #[test]
     fn test_classify_fuzzy() {
+        assert!(classify_license_file_contents(include_str!("testdata/BSD-3-Clause-bindgen.txt"))
+            .is_empty());
         assert_eq!(
-            classify_license_file_contents(include_str!("testdata/BSD-3-Clause-bindgen.txt")),
-            vec![Licensee::parse("BSD-3-Clause").unwrap().into_req()]
+            classify_license_file_contents_fuzzy(include_str!("testdata/BSD-3-Clause-bindgen.txt")),
+            Some(Licensee::parse("BSD-3-Clause").unwrap().into_req())
         );
     }
 

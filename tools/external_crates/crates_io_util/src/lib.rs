@@ -64,7 +64,7 @@ pub enum Error {
     HttpHeader,
     /// Error fetching HTTP data
     #[error(transparent)]
-    Reqwest(#[from] reqwest::Error),
+    HttpFetch(#[from] ureq::Error),
     /// Propagated crates_index::Error
     #[error(transparent)]
     CratesIndex(#[from] crates_index::Error),

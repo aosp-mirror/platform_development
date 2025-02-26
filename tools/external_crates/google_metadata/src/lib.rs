@@ -26,6 +26,7 @@ mod metadata_proto {
     pub use google_metadata_proto::metadata::Identifier;
     pub use google_metadata_proto::metadata::LicenseType;
     pub use google_metadata_proto::metadata::MetaData;
+    pub use google_metadata_proto::metadata::ThirdPartyMetaData;
 }
 
 #[cfg(not(soong))]
@@ -34,6 +35,7 @@ mod metadata_proto {
     pub use crate::metadata::Identifier;
     pub use crate::metadata::LicenseType;
     pub use crate::metadata::MetaData;
+    pub use crate::metadata::ThirdPartyMetaData;
 }
 
 pub use metadata_proto::*;
@@ -73,11 +75,11 @@ impl GoogleMetadata {
         Ok(GoogleMetadata { path, metadata })
     }
     /// Initializes a new METADATA file.
-    pub fn init<P: Into<PathBuf>, Q: Into<String>, R: Into<String>, S: Into<String>>(
+    pub fn init<P: Into<PathBuf>, V: Into<String>>(
         path: P,
-        name: Q,
-        version: R,
-        desc: S,
+        name: impl AsRef<str>,
+        version: V,
+        description: impl AsRef<str>,
         license_type: LicenseType,
     ) -> Result<Self, Error> {
         let path = path.into();
@@ -85,14 +87,7 @@ impl GoogleMetadata {
             return Err(Error::FileExists(path));
         }
         let mut metadata = GoogleMetadata { path, metadata: MetaData::new() };
-        let name = name.into();
-        metadata.set_date_to_today()?;
-        metadata.metadata.set_name(name.clone());
-        metadata.set_version_and_urls(&name, version)?;
-        let third_party = metadata.metadata.third_party.mut_or_insert_default();
-        third_party.set_homepage(crates_io_homepage(&name));
-        third_party.set_license_type(license_type);
-        metadata.metadata.set_description(desc.into());
+        metadata.update(name, version, description, license_type);
         Ok(metadata)
     }
     /// Writes to the METADATA file.
@@ -101,50 +96,55 @@ impl GoogleMetadata {
     pub fn write(&self) -> Result<(), Error> {
         Ok(write(&self.path, protobuf::text_format::print_to_string_pretty(&self.metadata))?)
     }
+    fn third_party(&mut self) -> &mut ThirdPartyMetaData {
+        self.metadata.third_party.mut_or_insert_default()
+    }
     /// Sets the date fields to today's date.
-    pub fn set_date_to_today(&mut self) -> Result<(), Error> {
+    fn set_date_to_today(&mut self) {
         let now = chrono::Utc::now();
-        let date = self
-            .metadata
-            .third_party
-            .mut_or_insert_default()
-            .last_upgrade_date
-            .mut_or_insert_default();
+        let date = self.third_party().last_upgrade_date.mut_or_insert_default();
         date.set_day(now.day().try_into().unwrap());
         date.set_month(now.month().try_into().unwrap());
         date.set_year(now.year());
-        Ok(())
     }
-    /// Sets the version and URL fields.
-    ///
-    /// Sets third_party.homepage and third_party.version, and
-    /// a single "Archive" identifier with crate archive URL and version.
-    pub fn set_version_and_urls<Q: Into<String>>(
+    /// Updates the METADATA based on the crate name, version, description, and license.
+    /// Also migrates and fixes up deprecated fields.
+    pub fn update<V: Into<String>>(
         &mut self,
         name: impl AsRef<str>,
-        version: Q,
-    ) -> Result<(), Error> {
-        let name_in_metadata = self.metadata.name.as_ref().ok_or(Error::CrateNameMissing)?;
-        if name_in_metadata != name.as_ref() {
-            return Err(Error::CrateNameMismatch(
-                name_in_metadata.clone(),
-                name.as_ref().to_string(),
-            ));
-        }
-        let third_party = self.metadata.third_party.mut_or_insert_default();
-        third_party.set_homepage(crates_io_homepage(&name));
+        version: V,
+        description: impl AsRef<str>,
+        license_type: LicenseType,
+    ) {
+        self.migrate_homepage();
+        self.migrate_archive();
+        self.remove_deprecated_url();
+
+        let name = name.as_ref();
+        self.third_party().set_homepage(crates_io_homepage(name));
+        self.metadata.set_name(name.to_string());
+        let description = description.as_ref();
+        self.metadata.set_description(
+            description.trim().replace("\n", " ").replace("“", "\"").replace("”", "\""),
+        );
+        self.third_party().set_homepage(crates_io_homepage(name));
+        self.third_party().set_license_type(license_type);
+
         let version = version.into();
-        third_party.set_version(version.clone());
+        if self.third_party().version() != version {
+            self.set_date_to_today();
+        }
+        self.third_party().set_version(version.clone());
+
         let mut identifier = Identifier::new();
         identifier.set_type("Archive".to_string());
         identifier.set_value(crate_archive_url(name, &version));
         identifier.set_version(version);
-        self.metadata.third_party.mut_or_insert_default().identifier.clear();
-        self.metadata.third_party.mut_or_insert_default().identifier.push(identifier);
-        Ok(())
+        self.third_party().identifier.clear();
+        self.third_party().identifier.push(identifier);
     }
     /// Migrate homepage from an identifier to its own field.
-    pub fn migrate_homepage(&mut self) -> bool {
+    fn migrate_homepage(&mut self) -> bool {
         let mut homepage = None;
         for (idx, identifier) in self.metadata.third_party.identifier.iter().enumerate() {
             if identifier.type_.as_ref().unwrap_or(&String::new()).to_lowercase() == "homepage" {
@@ -155,14 +155,14 @@ impl GoogleMetadata {
             }
         }
         let Some(homepage) = homepage else { return false };
-        self.metadata.third_party.mut_or_insert_default().identifier.remove(homepage.0);
-        self.metadata.third_party.mut_or_insert_default().homepage = homepage.1.value;
+        self.third_party().identifier.remove(homepage.0);
+        self.third_party().homepage = homepage.1.value;
         true
     }
     /// Normalize case of 'Archive' identifiers.
-    pub fn migrate_archive(&mut self) -> bool {
+    fn migrate_archive(&mut self) -> bool {
         let mut updated = false;
-        for identifier in self.metadata.third_party.mut_or_insert_default().identifier.iter_mut() {
+        for identifier in self.third_party().identifier.iter_mut() {
             if identifier.type_ == Some("ARCHIVE".to_string()) {
                 identifier.type_ = Some("Archive".to_string());
                 updated = true;
@@ -171,9 +171,9 @@ impl GoogleMetadata {
         updated
     }
     /// Remove deprecate URL fields.
-    pub fn remove_deprecated_url(&mut self) -> bool {
+    fn remove_deprecated_url(&mut self) -> bool {
         let updated = !self.metadata.third_party.url.is_empty();
-        self.metadata.third_party.mut_or_insert_default().url.clear();
+        self.third_party().url.clear();
         updated
     }
 }
