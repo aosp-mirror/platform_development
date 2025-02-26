@@ -22,6 +22,7 @@ use std::{
 
 use anyhow::{anyhow, bail, Context, Result};
 use crates_index::DependencyKind;
+use crates_io_util::CratesIoIndex;
 use google_metadata::GoogleMetadata;
 use itertools::Itertools;
 use license_checker::find_licenses;
@@ -36,7 +37,7 @@ use crate::{
     copy_dir,
     crate_collection::CrateCollection,
     crate_type::Crate,
-    crates_io::{AndroidDependencies, CratesIoIndex, DependencyChanges, SafeVersions},
+    crates_io::{AndroidDependencies, DependencyChanges, SafeVersions},
     license::{most_restrictive_type, update_module_license_files},
     managed_crate::ManagedCrate,
     pseudo_crate::{CargoVendorDirty, PseudoCrate},
@@ -170,7 +171,6 @@ impl ManagedRepo {
             println!("Version {}", version.version());
             let mut found_problems = false;
             for (dep, req) in version.android_deps_with_version_reqs() {
-                println!("Found dep {}", dep.crate_name());
                 let cc = if managed_crates.contains_crate(dep.crate_name()) {
                     &managed_crates
                 } else {

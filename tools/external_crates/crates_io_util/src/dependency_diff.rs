@@ -20,7 +20,6 @@ use crate::DepSet;
 
 // Diff dependencies between two versions of a crate.
 pub struct DependencyDiffer<'a> {
-    base: &'a Version,
     base_deps: DepSet<'a>,
 }
 
@@ -42,7 +41,7 @@ pub struct DependencyDiff<'base, 'other> {
 impl<'a> DependencyDiffer<'a> {
     pub fn new(base: &'a Version) -> DependencyDiffer<'a> {
         let base_deps = BTreeMap::from_iter(base.dependencies().iter().map(|d| (d.name(), d)));
-        DependencyDiffer { base, base_deps }
+        DependencyDiffer { base_deps }
     }
     pub fn diff<'other>(&'a self, other: &'other Version) -> DependencyDiff<'a, 'other> {
         let other_deps = BTreeMap::from_iter(other.dependencies().iter().map(|d| (d.name(), d)));
