@@ -11,7 +11,7 @@
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
- * limitations under the License.d
+ * limitations under the License.
  */
 
 import {CdkVirtualScrollViewport} from '@angular/cdk/scrolling';
@@ -20,8 +20,12 @@ import {assertDefined} from 'common/assert_utils';
 import {animationFrameScheduler} from 'rxjs';
 import {ViewerProtologComponent} from 'viewers/viewer_protolog/viewer_protolog_component';
 import {ViewerTransactionsComponent} from 'viewers/viewer_transactions/viewer_transactions_component';
+import {ViewerTransitionsComponent} from 'viewers/viewer_transitions/viewer_transitions_component';
 
-type ScrollComponent = ViewerProtologComponent | ViewerTransactionsComponent;
+type ScrollComponent =
+  | ViewerProtologComponent
+  | ViewerTransactionsComponent
+  | ViewerTransitionsComponent;
 
 export function executeScrollComponentTests(
   setUpTestEnvironment: () => Promise<

@@ -66,19 +66,19 @@ describe('Canvas', () => {
     it('handles zero size canvas element', () => {
       const canvasRendererSetSizeSpy = spyOn(canvas.renderer, 'setSize');
       canvasWidthSpy.and.returnValue(0);
-      canvas.updateViewPosition(camera, boundingBox);
+      canvas.updateViewPosition(camera, boundingBox, boundingBox.depth);
       expect(canvasRendererSetSizeSpy).not.toHaveBeenCalled();
 
       canvasWidthSpy.and.returnValue(100);
       canvasHeightSpy.and.returnValue(0);
-      canvas.updateViewPosition(camera, boundingBox);
+      canvas.updateViewPosition(camera, boundingBox, boundingBox.depth);
       expect(canvasRendererSetSizeSpy).not.toHaveBeenCalled();
     });
 
     it('changes camera lrtb and maintains scene translated position based on canvas aspect ratio', () => {
       camera.panScreenDistance = new Distance(2, 2);
 
-      canvas.updateViewPosition(camera, boundingBox);
+      canvas.updateViewPosition(camera, boundingBox, boundingBox.depth);
       const [l, r, t, b] = [
         graphicsCamera.left,
         graphicsCamera.right,
@@ -88,7 +88,7 @@ describe('Canvas', () => {
       const prevPosition = graphicsScene.position.clone();
 
       canvasWidthSpy.and.returnValue(200);
-      canvas.updateViewPosition(camera, boundingBox);
+      canvas.updateViewPosition(camera, boundingBox, boundingBox.depth);
 
       expect(graphicsCamera.left).toBeLessThan(l);
       expect(graphicsCamera.right).toBeGreaterThan(r);
@@ -98,7 +98,7 @@ describe('Canvas', () => {
 
       canvasWidthSpy.and.returnValue(100);
       canvasHeightSpy.and.returnValue(200);
-      canvas.updateViewPosition(camera, boundingBox);
+      canvas.updateViewPosition(camera, boundingBox, boundingBox.depth);
 
       expect(graphicsCamera.left).toEqual(l);
       expect(graphicsCamera.right).toEqual(r);
@@ -108,12 +108,12 @@ describe('Canvas', () => {
     });
 
     it('changes scene translated position on change in pan screen distance', () => {
-      canvas.updateViewPosition(camera, boundingBox);
+      canvas.updateViewPosition(camera, boundingBox, boundingBox.depth);
       const prevPosition = graphicsScene.position.clone();
       const prevScale = graphicsScene.scale.clone();
 
       camera.panScreenDistance = new Distance(2, 2);
-      canvas.updateViewPosition(camera, boundingBox);
+      canvas.updateViewPosition(camera, boundingBox, boundingBox.depth);
 
       expect(graphicsScene.position.x).toBeGreaterThan(prevPosition.x);
       expect(graphicsScene.position.y).toBeLessThan(prevPosition.y);
@@ -122,24 +122,24 @@ describe('Canvas', () => {
     });
 
     it('changes scene scale and scene translated position on change in zoom factor', () => {
-      canvas.updateViewPosition(camera, boundingBox);
+      canvas.updateViewPosition(camera, boundingBox, boundingBox.depth);
       const prevPosition = graphicsScene.position.clone();
       const sceneScale = graphicsScene.scale.clone();
 
       camera.zoomFactor = 2;
-      canvas.updateViewPosition(camera, boundingBox);
+      canvas.updateViewPosition(camera, boundingBox, boundingBox.depth);
 
       expect(graphicsScene.scale).toEqual(sceneScale.multiplyScalar(2));
       expect(graphicsScene.position).toEqual(prevPosition.multiplyScalar(2));
     });
 
     it('changes camera position and scene translated x-position on change in rotation angle x', () => {
-      canvas.updateViewPosition(camera, boundingBox);
+      canvas.updateViewPosition(camera, boundingBox, boundingBox.depth);
       const prevScenePos = graphicsScene.position.clone();
       const prevCameraPos = graphicsCamera.position.clone();
 
       camera.rotationAngleX = 1.5;
-      canvas.updateViewPosition(camera, boundingBox);
+      canvas.updateViewPosition(camera, boundingBox, boundingBox.depth);
 
       expect(graphicsScene.position.x).toBeLessThan(prevScenePos.x);
       expect(graphicsScene.position.y).toEqual(prevScenePos.y);
@@ -151,12 +151,12 @@ describe('Canvas', () => {
     });
 
     it('changes camera position and scene translated y-position on change in rotation angle y', () => {
-      canvas.updateViewPosition(camera, boundingBox);
+      canvas.updateViewPosition(camera, boundingBox, boundingBox.depth);
       const prevScenePos = graphicsScene.position.clone();
       const prevCameraPos = graphicsCamera.position.clone();
 
       camera.rotationAngleY = 1.5;
-      canvas.updateViewPosition(camera, boundingBox);
+      canvas.updateViewPosition(camera, boundingBox, boundingBox.depth);
 
       expect(graphicsScene.position.x).toEqual(prevScenePos.x);
       expect(graphicsScene.position.y).toBeLessThan(prevScenePos.y);
@@ -168,46 +168,53 @@ describe('Canvas', () => {
     });
 
     it('changes scene scale and translated position on change in box diagonal', () => {
-      canvas.updateViewPosition(camera, boundingBox);
+      canvas.updateViewPosition(camera, boundingBox, boundingBox.depth);
       const prevPosition = graphicsScene.position.clone();
       const sceneScale = graphicsScene.scale.clone();
 
       boundingBox.diagonal = 2;
-      canvas.updateViewPosition(camera, boundingBox);
+      canvas.updateViewPosition(camera, boundingBox, boundingBox.depth);
 
       expect(graphicsScene.scale).toEqual(sceneScale.multiplyScalar(0.5));
       expect(graphicsScene.position).toEqual(prevPosition.multiplyScalar(0.5));
     });
 
-    it('changes translated position on change in box depth', () => {
+    it('changes translated position on change in box depth or zDepth', () => {
       camera.rotationAngleX = 1;
       camera.rotationAngleY = 1;
-      canvas.updateViewPosition(camera, boundingBox);
+      canvas.updateViewPosition(camera, boundingBox, boundingBox.depth);
       const prevPosition = graphicsScene.position.clone();
       const prevScale = graphicsScene.scale.clone();
 
       boundingBox.depth = 2;
-      canvas.updateViewPosition(camera, boundingBox);
+      canvas.updateViewPosition(camera, boundingBox, boundingBox.depth);
       expect(graphicsScene.position).toEqual(prevPosition.multiplyScalar(2));
+      expect(graphicsScene.scale).toEqual(prevScale);
+
+      canvas.updateViewPosition(camera, boundingBox, 4);
+      expect(graphicsScene.position).toEqual(
+        prevPosition.multiply(new THREE.Vector3(1, 1, 2)),
+      );
       expect(graphicsScene.scale).toEqual(prevScale);
     });
 
     it('changes translated position on change in box center', () => {
       camera.rotationAngleX = 1;
       camera.rotationAngleY = 1;
-      canvas.updateViewPosition(camera, boundingBox);
+      canvas.updateViewPosition(camera, boundingBox, boundingBox.depth);
       const prevPosition = graphicsScene.position.clone();
       const prevScale = graphicsScene.scale.clone();
 
       boundingBox.center = new Point3D(3, 3, 3);
-      canvas.updateViewPosition(camera, boundingBox);
+      canvas.updateViewPosition(camera, boundingBox, boundingBox.depth);
       expect(graphicsScene.position).not.toEqual(prevPosition);
       expect(graphicsScene.scale).toEqual(prevScale);
     });
 
     it('robust to no labels canvas', () => {
       const canvas = new Canvas(canvasRects);
-      canvas.updateViewPosition(makeCamera(), makeBoundingBox());
+      const box = makeBoundingBox();
+      canvas.updateViewPosition(makeCamera(), box, box.depth);
     });
   });
 
@@ -789,7 +796,8 @@ describe('Canvas', () => {
       const canvasRects = document.createElement('canvas');
       const canvasLabels = document.createElement('canvas');
       canvas = new Canvas(canvasRects, canvasLabels);
-      canvas.updateViewPosition(makeCamera(), makeBoundingBox());
+      const box = makeBoundingBox();
+      canvas.updateViewPosition(makeCamera(), box, box.depth);
       canvas.renderView();
     });
 

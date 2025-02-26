@@ -22,7 +22,7 @@ import {Parser} from 'trace/parser';
 import {TraceType} from 'trace/trace_type';
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
 
-describe('ShellFileParserTransitions', () => {
+describe('ParserTransitionsShell', () => {
   let parser: Parser<PropertyTreeNode>;
 
   beforeAll(async () => {

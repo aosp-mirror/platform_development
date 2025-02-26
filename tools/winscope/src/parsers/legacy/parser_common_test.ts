@@ -34,6 +34,7 @@ describe('Parser', () => {
     const parsers = await new ParserFactory().createParsers(
       [trace],
       TimestampConverterUtils.TIMESTAMP_CONVERTER,
+      {},
     );
     expect(parsers.length).toEqual(0);
   });
@@ -48,6 +49,7 @@ describe('Parser', () => {
     const parsers = await new ParserFactory().createParsers(
       [trace],
       TimestampConverterUtils.TIMESTAMP_CONVERTER,
+      {},
     );
     expect(parsers.length).toEqual(0);
   });
@@ -60,6 +62,7 @@ describe('Parser', () => {
     const parsers = await new ParserFactory().createParsers(
       [trace],
       TimestampConverterUtils.TIMESTAMP_CONVERTER,
+      {},
     );
     expect(parsers.length).toEqual(0);
   });

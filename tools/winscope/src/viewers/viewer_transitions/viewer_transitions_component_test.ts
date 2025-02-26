@@ -13,43 +13,57 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 import {ClipboardModule} from '@angular/cdk/clipboard';
-import {ScrollingModule} from '@angular/cdk/scrolling';
+import {
+  CdkVirtualScrollViewport,
+  ScrollingModule,
+} from '@angular/cdk/scrolling';
 import {
   ComponentFixture,
   ComponentFixtureAutoDetect,
   TestBed,
 } from '@angular/core/testing';
+import {FormsModule} from '@angular/forms';
+import {MatButtonModule} from '@angular/material/button';
 import {MatDividerModule} from '@angular/material/divider';
+import {MatFormFieldModule} from '@angular/material/form-field';
 import {MatIconModule} from '@angular/material/icon';
+import {MatInputModule} from '@angular/material/input';
+import {MatSelectModule} from '@angular/material/select';
+import {BrowserAnimationsModule} from '@angular/platform-browser/animations';
 import {assertDefined} from 'common/assert_utils';
 import {PropertyTreeBuilder} from 'test/unit/property_tree_builder';
 import {TimestampConverterUtils} from 'test/unit/timestamp_converter_utils';
 import {TraceBuilder} from 'test/unit/trace_builder';
 import {UnitTestUtils} from 'test/unit/utils';
 import {Trace, TraceEntry} from 'trace/trace';
+import {TraceType} from 'trace/trace_type';
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
-import {LogComponent} from 'viewers/common/log_component';
-import {LogField, LogFieldType} from 'viewers/common/ui_data_log';
+import {LogSelectFilter} from 'viewers/common/log_filters';
+import {executeScrollComponentTests} from 'viewers/common/scroll_component_tests';
+import {LogHeader} from 'viewers/common/ui_data_log';
 import {CollapsedSectionsComponent} from 'viewers/components/collapsed_sections_component';
 import {CollapsibleSectionTitleComponent} from 'viewers/components/collapsible_section_title_component';
+import {LogComponent} from 'viewers/components/log_component';
 import {PropertiesComponent} from 'viewers/components/properties_component';
 import {PropertyTreeNodeDataViewComponent} from 'viewers/components/property_tree_node_data_view_component';
+import {SearchBoxComponent} from 'viewers/components/search_box_component';
+import {SelectWithFilterComponent} from 'viewers/components/select_with_filter_component';
 import {TreeComponent} from 'viewers/components/tree_component';
 import {TreeNodeComponent} from 'viewers/components/tree_node_component';
-import {Presenter} from './presenter';
-import {TransitionsEntry, TransitionStatus, UiData} from './ui_data';
+import {TransitionsScrollDirective} from './scroll_strategy/transitions_scroll_directive';
+import {TransitionsEntry, UiData} from './ui_data';
 import {ViewerTransitionsComponent} from './viewer_transitions_component';
 
 describe('ViewerTransitionsComponent', () => {
-  let fixture: ComponentFixture<ViewerTransitionsComponent>;
-  let component: ViewerTransitionsComponent;
-  let htmlElement: HTMLElement;
-
+  const testSpec = {name: 'Test Column', cssClass: 'test-class'};
+  const testField = {spec: testSpec, value: 'VALUE'};
   let transitionTree: PropertyTreeNode;
   let trace: Trace<PropertyTreeNode>;
   let entry: TraceEntry<PropertyTreeNode>;
+  let fixture: ComponentFixture<ViewerTransitionsComponent>;
+  let component: ViewerTransitionsComponent;
+  let htmlElement: HTMLElement;
 
   beforeAll(() => {
     transitionTree = new PropertyTreeBuilder()
@@ -58,13 +72,83 @@ describe('ViewerTransitionsComponent', () => {
       .setName('transition')
       .build();
     trace = new TraceBuilder<PropertyTreeNode>()
+      .setType(TraceType.TRANSITION)
       .setEntries([transitionTree])
       .setTimestamps([TimestampConverterUtils.makeElapsedTimestamp(20n)])
       .build();
     entry = trace.getEntry(0);
   });
 
-  beforeEach(async () => {
+  describe('Main component', () => {
+    beforeEach(async () => {
+      await setUpTestEnvironment();
+    });
+
+    it('can be created', () => {
+      expect(component).toBeTruthy();
+    });
+
+    it('renders headers with filters', () => {
+      expect(
+        htmlElement.querySelector(
+          `.headers .filter.${testSpec.cssClass.split(' ')[0]}`,
+        ),
+      ).toBeTruthy();
+    });
+
+    it('renders entries with field values and no trace timestamp', () => {
+      expect(htmlElement.querySelector('.scroll')).toBeTruthy();
+      const entry = assertDefined(
+        htmlElement.querySelector(
+          `.scroll .entry .${testSpec.cssClass.split(' ')[0]}`,
+        ),
+      );
+      expect(entry.textContent).toContain('VALUE');
+      expect(htmlElement.querySelector('.scroll .entry .time')).toBeNull();
+    });
+
+    it('hides go to current time button', () => {
+      expect(htmlElement.querySelector('.go-to-current-time')).toBeNull();
+    });
+
+    it('renders properties', () => {
+      expect(htmlElement.querySelector('.properties-view')).toBeTruthy();
+    });
+
+    it('shows message when no transition is selected', () => {
+      assertDefined(component.inputData).propertiesTree = undefined;
+      fixture.detectChanges();
+      expect(
+        htmlElement.querySelector('.properties-view .placeholder-text')
+          ?.innerHTML,
+      ).toContain('No current or selected transition');
+    });
+
+    it('creates collapsed sections with no buttons', () => {
+      UnitTestUtils.checkNoCollapsedSectionButtons(htmlElement);
+    });
+
+    it('handles properties section collapse/expand', () => {
+      UnitTestUtils.checkSectionCollapseAndExpand(
+        htmlElement,
+        fixture,
+        '.properties-view',
+        'SELECTED TRANSITION',
+      );
+    });
+  });
+
+  describe('Scroll component', () => {
+    executeScrollComponentTests(setUpTestEnvironment);
+  });
+
+  async function setUpTestEnvironment(): Promise<
+    [
+      ComponentFixture<ViewerTransitionsComponent>,
+      HTMLElement,
+      CdkVirtualScrollViewport,
+    ]
+  > {
     await TestBed.configureTestingModule({
       providers: [{provide: ComponentFixtureAutoDetect, useValue: true}],
       imports: [
@@ -72,6 +156,12 @@ describe('ViewerTransitionsComponent', () => {
         ScrollingModule,
         MatIconModule,
         ClipboardModule,
+        MatFormFieldModule,
+        MatButtonModule,
+        MatInputModule,
+        BrowserAnimationsModule,
+        FormsModule,
+        MatSelectModule,
       ],
       declarations: [
         ViewerTransitionsComponent,
@@ -82,121 +172,48 @@ describe('ViewerTransitionsComponent', () => {
         CollapsedSectionsComponent,
         CollapsibleSectionTitleComponent,
         LogComponent,
+        SearchBoxComponent,
+        TransitionsScrollDirective,
+        SelectWithFilterComponent,
       ],
-      schemas: [],
     }).compileComponents();
-
     fixture = TestBed.createComponent(ViewerTransitionsComponent);
     component = fixture.componentInstance;
     htmlElement = fixture.nativeElement;
-
     component.inputData = makeUiData();
     fixture.detectChanges();
-  });
-
-  it('can be created', () => {
-    expect(component).toBeTruthy();
-  });
-
-  it('renders entries', () => {
-    expect(htmlElement.querySelector('.scroll')).toBeTruthy();
-
-    const entry = assertDefined(htmlElement.querySelector('.scroll .entry'));
-    expect(entry.innerHTML).toContain('TO_FRONT');
-    expect(entry.innerHTML).toContain('10ns');
-  });
-
-  it('shows message when no transition is selected', () => {
-    assertDefined(component.inputData).propertiesTree = undefined;
-    fixture.detectChanges();
-    expect(
-      htmlElement.querySelector('.properties-view .placeholder-text')
-        ?.innerHTML,
-    ).toContain('No selected transition');
-  });
-
-  it('creates collapsed sections with no buttons', () => {
-    UnitTestUtils.checkNoCollapsedSectionButtons(htmlElement);
-  });
-
-  it('handles properties section collapse/expand', () => {
-    UnitTestUtils.checkSectionCollapseAndExpand(
-      htmlElement,
-      fixture,
-      '.properties-view',
-      'SELECTED TRANSITION',
-    );
-  });
+    const viewport = assertDefined(component.logComponent?.scrollComponent);
+    return [fixture, htmlElement, viewport];
+  }
 
   function makeUiData(): UiData {
-    let mockTransitionIdCounter = 0;
-
-    const transitions = [
-      createMockTransition(entry, 20, 30, mockTransitionIdCounter++),
-      createMockTransition(
-        entry,
-        42,
-        50,
-        mockTransitionIdCounter++,
-        TransitionStatus.MERGED,
-      ),
-      createMockTransition(entry, 46, 49, mockTransitionIdCounter++),
-      createMockTransition(
-        entry,
-        58,
-        70,
-        mockTransitionIdCounter++,
-        TransitionStatus.ABORTED,
-      ),
-    ];
-
+    const transitions = [];
+    for (let i = 0; i < 200; i++) {
+      transitions.push(createMockTransition(entry, i));
+    }
     const uiData = UiData.createEmpty();
+    uiData.headers = [new LogHeader(testSpec, new LogSelectFilter([]))];
     uiData.entries = transitions;
     uiData.selectedIndex = 0;
-    uiData.headers = Presenter.FIELD_TYPES;
     return uiData;
   }
 
   function createMockTransition(
     entry: TraceEntry<PropertyTreeNode>,
-    sendTimeNanos: number,
-    finishTimeNanos: number,
-    id: number,
-    status = TransitionStatus.PLAYED,
+    i: number,
   ): TransitionsEntry {
-    const fields: LogField[] = [
-      {
-        type: LogFieldType.TRANSITION_ID,
-        value: id,
-      },
-      {
-        type: LogFieldType.TRANSITION_TYPE,
-        value: 'TO_FRONT',
-      },
-      {
-        type: LogFieldType.SEND_TIME,
-        value: TimestampConverterUtils.makeElapsedTimestamp(
-          BigInt(sendTimeNanos),
-        ),
-      },
-      {
-        type: LogFieldType.DISPATCH_TIME,
-        value: TimestampConverterUtils.makeElapsedTimestamp(
-          BigInt(sendTimeNanos) + 5n,
-        ),
-      },
-      {
-        type: LogFieldType.DURATION,
-        value: (finishTimeNanos - sendTimeNanos).toString() + 'ns',
-      },
-      {
-        type: LogFieldType.STATUS,
-        value: status,
-        icon: 'check',
-        iconColor: 'green',
-      },
-    ];
-
-    return new TransitionsEntry(entry, fields, transitionTree);
+    return new TransitionsEntry(
+      entry,
+      [
+        testField,
+        testField,
+        testField,
+        testField,
+        testField,
+        testField,
+        {spec: testSpec, value: i % 2 === 0 ? 'VALUE' : 'VALUE'.repeat(40)},
+      ],
+      transitionTree,
+    );
   }
 });

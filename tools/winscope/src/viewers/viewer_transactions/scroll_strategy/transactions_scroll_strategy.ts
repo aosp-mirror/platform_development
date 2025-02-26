@@ -1,5 +1,5 @@
 /*
- * Copyright 2023, The Android Open Source Project
+ * Copyright (C) 2023 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,8 +14,6 @@
  * limitations under the License.
  */
 
-import {assertDefined} from 'common/assert_utils';
-import {LogFieldType} from 'viewers/common/ui_data_log';
 import {VariableHeightScrollStrategy} from 'viewers/common/variable_height_scroll_strategy';
 import {TransactionsEntry} from 'viewers/viewer_transactions/ui_data';
 
@@ -26,8 +24,7 @@ export class TransactionsScrollStrategy extends VariableHeightScrollStrategy {
 
   protected override predictScrollItemHeight(entry: TransactionsEntry): number {
     const flagsHeight = this.subItemHeight(
-      assertDefined(entry.fields.find((f) => f.type === LogFieldType.FLAGS))
-        .value as string,
+      entry.fields[6].value as string,
       this.flagCharsPerRow,
     );
     const timestampHeight = this.subItemHeight(

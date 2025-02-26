@@ -51,11 +51,7 @@ export class PresenterInputMethodClients extends AbstractPresenterInputMethod {
       },
       this.storage,
     ),
-    PersistentStoreProxy.new<TextFilter>(
-      'ImeHierarchyFilter',
-      new TextFilter('', []),
-      this.storage,
-    ),
+    new TextFilter(),
     [],
     true,
     false,
