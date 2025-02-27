@@ -18,47 +18,59 @@ import {assertDefined} from 'common/assert_utils';
 import {HierarchyTreeNode} from 'trace/tree_node/hierarchy_tree_node';
 
 export class LayerExtractor {
-  static extractLayersSortedByZ(layer: HierarchyTreeNode): HierarchyTreeNode[] {
+  static extractLayersTopToBottom(
+    layer: HierarchyTreeNode,
+  ): HierarchyTreeNode[] {
     const traverseList: HierarchyTreeNode[] = [];
 
-    if (!layer.isRoot()) traverseList.push(layer);
+    const sortedZChildren = layer
+      .getRelativeChildren()
+      .concat(
+        layer.getAllChildren().filter((child) => child.getZParent() === layer),
+      )
+      .sort((a, b) => LayerExtractor.compareByZAndLayerId(a, b));
 
-    const allChildrenSortedByZ = layer
-      .getAllChildren()
-      .slice()
-      .sort(LayerExtractor.compareByZOrderPath);
+    if (layer.isRoot()) {
+      sortedZChildren.forEach((c) => {
+        traverseList.push(...LayerExtractor.extractLayersTopToBottom(c));
+      });
+    } else {
+      const layerZ = LayerExtractor.getZ(layer);
+      const sortedZChildrenBelowRoot = sortedZChildren.filter(
+        (child) => LayerExtractor.getZ(child) < layerZ,
+      );
+      const sortedZChildrenAboveRoot = sortedZChildren.filter(
+        (child) => LayerExtractor.getZ(child) >= layerZ,
+      );
 
-    allChildrenSortedByZ.forEach((c) => {
-      traverseList.push(...LayerExtractor.extractLayersSortedByZ(c));
-    });
-
-    traverseList.sort(LayerExtractor.compareByZOrderPath);
+      sortedZChildrenAboveRoot.forEach((c) => {
+        traverseList.push(...LayerExtractor.extractLayersTopToBottom(c));
+      });
+      traverseList.push(layer);
+      sortedZChildrenBelowRoot.forEach((c) => {
+        traverseList.push(...LayerExtractor.extractLayersTopToBottom(c));
+      });
+    }
     return traverseList;
   }
 
-  private static compareByZOrderPath(
+  private static compareByZAndLayerId(
     a: HierarchyTreeNode,
     b: HierarchyTreeNode,
   ): number {
-    const aZOrderPath: number[] = assertDefined(
-      a.getEagerPropertyByName('zOrderPath'),
-    )
-      .getAllChildren()
-      .map((child) => child.getValue());
-    const bZOrderPath: number[] = assertDefined(
-      b.getEagerPropertyByName('zOrderPath'),
-    )
-      .getAllChildren()
-      .map((child) => child.getValue());
+    const aZ = LayerExtractor.getZ(a);
+    const bZ = LayerExtractor.getZ(b);
 
-    const zipLength = Math.min(aZOrderPath.length, bZOrderPath.length);
-    for (let i = 0; i < zipLength; ++i) {
-      const zOrderA = aZOrderPath[i];
-      const zOrderB = bZOrderPath[i];
-      if (zOrderA > zOrderB) return -1;
-      if (zOrderA < zOrderB) return 1;
-    }
+    if (aZ > bZ) return -1;
+    if (aZ < bZ) return 1;
+
     // When z-order is the same, the layer with larger ID is on top
-    return a.id > b.id ? -1 : 1;
+    const aId = a.getEagerPropertyByName('id')?.getValue();
+    const bId = b.getEagerPropertyByName('id')?.getValue();
+    return aId < bId ? 1 : -1;
+  }
+
+  private static getZ(node: HierarchyTreeNode): number {
+    return assertDefined(node.getEagerPropertyByName('z')).getValue();
   }
 }

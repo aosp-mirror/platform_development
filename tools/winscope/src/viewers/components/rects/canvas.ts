@@ -90,7 +90,7 @@ export class Canvas {
     }
   }
 
-  updateViewPosition(camera: Camera, bounds: Box3D) {
+  updateViewPosition(camera: Camera, bounds: Box3D, zDepth: number) {
     // Must set 100% width and height so the HTML element expands to the parent's
     // boundaries and the correct clientWidth and clientHeight values can be read
     this.canvasRects.style.width = '100%';
@@ -128,7 +128,7 @@ export class Canvas {
       scaleFactor *
         ((-bounds.depth * camera.rotationAngleY ** 2) / 2 + bounds.center.y) -
         cameraHeight * panFactorY,
-      scaleFactor * -bounds.depth,
+      scaleFactor * -zDepth, // keeps camera in front of first rect
     );
     this.scene
       .translateX(translatedPos.x - (this.lastScene.translatedPos?.x ?? 0))

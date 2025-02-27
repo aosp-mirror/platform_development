@@ -19,20 +19,12 @@ import {TraceType} from 'trace/trace_type';
 import {HierarchyTreeNode} from 'trace/tree_node/hierarchy_tree_node';
 import {PropertySource} from 'trace/tree_node/property_tree_node';
 import {AbstractPresenterInputMethodTest} from 'viewers/common/abstract_presenter_input_method_test';
-import {TextFilter} from 'viewers/common/text_filter';
 import {PresenterInputMethodClients} from './presenter_input_method_clients';
 
 class PresenterInputMethodClientsTest extends AbstractPresenterInputMethodTest {
-  override readonly numberOfDefaultProperties = 1;
-  override readonly numberOfNonDefaultProperties = 2;
-  override readonly propertiesFilter = new TextFilter('where', []);
-  override readonly numberOfFilteredProperties = 1;
-
   protected override readonly PresenterInputMethod =
     PresenterInputMethodClients;
   protected override readonly imeTraceType = TraceType.INPUT_METHOD_CLIENTS;
-  protected override readonly numberOfFlattenedChildren = 11;
-  protected override readonly numberOfVisibleChildren = 1;
   protected override readonly numberOfNestedChildren = 2;
 
   override getSelectedNode(): HierarchyTreeNode {

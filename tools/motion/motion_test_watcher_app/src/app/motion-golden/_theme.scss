@@ -3,7 +3,8 @@
 
 @mixin color($theme) {
   .golden-card {
-    background-color: mat.get-theme-color($theme, surface-container-low);
+    background-color: white; 
+    // mat.get-theme-color($theme, surface-container-low);
   }
 }
 

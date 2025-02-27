@@ -40,9 +40,10 @@ export class TranslateIntDef implements Operation<PropertyTreeNode> {
         this.apply(value, field);
       });
     } else {
-      if (typeof value.getValue() === 'number' && value.getValue() !== -1) {
+      const propertyValue = Number(value.getValue());
+      if (!Number.isNaN(propertyValue) && propertyValue !== -1) {
         const translation = this.translateIntDefToStringIfNeeded(
-          value.getValue(),
+          propertyValue,
           field,
         );
         if (typeof translation === 'string') {
@@ -91,9 +92,8 @@ export class TranslateIntDef implements Operation<PropertyTreeNode> {
     annotationType: string,
   ): string {
     let flags = '';
-
     const mapping =
-      intDefMapping[annotationType as keyof typeof intDefMapping].values;
+      intDefMapping[annotationType as keyof typeof intDefMapping]?.values ?? {};
 
     const knownFlagValues = Object.keys(mapping)
       .reverse()
@@ -126,7 +126,7 @@ export class TranslateIntDef implements Operation<PropertyTreeNode> {
 
     if (leftOver) {
       // If 0 is a valid flag value that isn't in the intDefMapping it will be ignored
-      flags += leftOver;
+      flags += ' | ' + leftOver;
     }
 
     return flags;
@@ -169,5 +169,7 @@ export class TranslateIntDef implements Operation<PropertyTreeNode> {
       'android.view.WindowInsets.Type.InsetsType',
     'WindowStateProto.requestedVisibleTypes':
       'android.view.WindowInsets.Type.InsetsType',
+    'Target.flags': 'android.window.TransitionInfo.ChangeFlags',
+    'Transition.flags': 'android.view.WindowManager.TransitionFlags',
   };
 }

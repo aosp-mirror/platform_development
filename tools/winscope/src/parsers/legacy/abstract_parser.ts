@@ -25,6 +25,7 @@ import {
 import {AbsoluteEntryIndex, EntriesRange} from 'trace/index_types';
 import {Parser} from 'trace/parser';
 import {TraceFile} from 'trace/trace_file';
+import {TraceMetadata} from 'trace/trace_metadata';
 import {TraceType} from 'trace/trace_type';
 import {ParsingUtils} from './parsing_utils';
 
@@ -35,15 +36,21 @@ export abstract class AbstractParser<T extends object = object>
   protected traceFile: TraceFile;
   protected decodedEntries: any[] = [];
   protected timestampConverter: ParserTimestampConverter;
+  protected readonly metadata: TraceMetadata | undefined;
 
   protected abstract getMagicNumber(): undefined | number[];
-  protected abstract decodeTrace(trace: Uint8Array): any[];
+  protected abstract decodeTrace(trace: Uint8Array): any[] | Promise<any[]>;
   protected abstract getTimestamp(decodedEntry: any): Timestamp;
   protected abstract processDecodedEntry(index: number, decodedEntry: any): any;
 
-  constructor(trace: TraceFile, timestampConverter: ParserTimestampConverter) {
+  constructor(
+    trace: TraceFile,
+    timestampConverter: ParserTimestampConverter,
+    metadata?: TraceMetadata,
+  ) {
     this.traceFile = trace;
     this.timestampConverter = timestampConverter;
+    this.metadata = metadata;
   }
 
   async parse() {
@@ -52,7 +59,7 @@ export abstract class AbstractParser<T extends object = object>
       traceBuffer,
       this.getMagicNumber(),
     );
-    this.decodedEntries = this.decodeTrace(traceBuffer);
+    this.decodedEntries = await this.decodeTrace(traceBuffer);
   }
 
   getDescriptors(): string[] {
