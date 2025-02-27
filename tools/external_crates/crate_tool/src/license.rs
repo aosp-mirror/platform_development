@@ -72,6 +72,7 @@ static MODULE_LICENSE_FILES: LazyLock<BTreeMap<LicenseReq, &'static str>> = Lazy
     vec![
         ("Apache-2.0", "MODULE_LICENSE_APACHE2"),
         ("MIT", "MODULE_LICENSE_MIT"),
+        ("MIT-0", "MODULE_LICENSE_MIT_0"),
         ("BSD-3-Clause", "MODULE_LICENSE_BSD"),
         ("BSD-2-Clause", "MODULE_LICENSE_BSD"),
         ("ISC", "MODULE_LICENSE_ISC"),
@@ -92,6 +93,7 @@ static LICENSE_TYPES: LazyLock<BTreeMap<LicenseReq, LicenseType>> = LazyLock::ne
     vec![
         ("Apache-2.0", LicenseType::NOTICE),
         ("MIT", LicenseType::NOTICE),
+        ("MIT-0", LicenseType::PERMISSIVE),
         ("BSD-3-Clause", LicenseType::NOTICE),
         ("BSD-2-Clause", LicenseType::NOTICE),
         ("ISC", LicenseType::NOTICE),

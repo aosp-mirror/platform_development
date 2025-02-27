@@ -85,6 +85,7 @@ static LICENSE_PREFERENCE: LazyLock<Vec<Licensee>> = LazyLock::new(|| {
         "Unicode-DFS-2016",
         "NCSA",
         "OpenSSL",
+        "MIT-0",
     ]
     .into_iter()
     .map(|l| Licensee::parse(l).unwrap())
