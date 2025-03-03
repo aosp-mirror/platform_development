@@ -14,15 +14,21 @@
  * limitations under the License.
  */
 import {Component, EventEmitter, Input, Output} from '@angular/core';
+import {proxySetupStyles} from 'app/styles/proxy_setup.styles';
 import {Download} from 'common/download';
 import {getRootUrl} from 'common/url_utils';
 import {ConnectionState} from 'trace_collection/connection_state';
-import {ProxyConnection} from 'trace_collection/proxy_connection';
+import {WinscopeProxyConnection} from 'trace_collection/winscope_proxy/winscope_proxy_connection';
 
 @Component({
-  selector: 'adb-proxy',
+  selector: 'winscope-proxy-setup',
   template: `
     <ng-container [ngSwitch]="state">
+      <ng-container *ngSwitchCase="${ConnectionState.CONNECTING}">
+        <p class="connecting-message mat-body-1">
+          Connecting...
+        </p>
+      </ng-container>
       <ng-container *ngSwitchCase="${ConnectionState.NOT_FOUND}">
         <div class="further-adb-info-text">
           <p class="mat-body-1">
@@ -121,24 +127,6 @@ import {ProxyConnection} from 'trace_collection/proxy_connection';
   `,
   styles: [
     `
-      .icon-information {
-        display: flex;
-        flex-direction: row;
-        align-items: center;
-      }
-      .further-adb-info-text {
-        display: flex;
-        flex-direction: column;
-        overflow-wrap: break-word;
-        gap: 10px;
-        margin-bottom: 10px;
-      }
-      .further-adb-info-actions {
-        display: flex;
-        flex-direction: row;
-        flex-wrap: wrap;
-        gap: 10px;
-      }
       /* TODO(b/300063426): remove after migration to angular 15, replace with subscriptSizing */
       ::ng-deep .proxy-command-form .mat-form-field-wrapper {
         padding: 0;
@@ -147,20 +135,18 @@ import {ProxyConnection} from 'trace_collection/proxy_connection';
         user-select: all;
         overflow: auto;
       }
-      .adb-info {
-        margin-left: 5px;
-      }
     `,
+    proxySetupStyles,
   ],
 })
-export class AdbProxyComponent {
+export class WinscopeProxySetupComponent {
   @Input() state: ConnectionState | undefined;
   @Output() readonly retryConnection = new EventEmitter<string>();
 
   readonly downloadProxyUrl: string = getRootUrl() + 'winscope_proxy.py';
   readonly proxyCommand: string =
     'python3 $ANDROID_BUILD_TOP/development/tools/winscope/src/adb/winscope_proxy.py';
-  readonly proxyVersion = ProxyConnection.VERSION;
+  readonly proxyVersion = WinscopeProxyConnection.VERSION;
   proxyToken = '';
 
   onRetryButtonClick() {

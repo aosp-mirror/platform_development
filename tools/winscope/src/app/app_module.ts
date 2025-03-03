@@ -83,7 +83,6 @@ import {TransitionsScrollDirective} from 'viewers/viewer_transitions/scroll_stra
 import {ViewerTransitionsComponent} from 'viewers/viewer_transitions/viewer_transitions_component';
 import {ViewerViewCaptureComponent} from 'viewers/viewer_view_capture/viewer_view_capture_component';
 import {ViewerWindowManagerComponent} from 'viewers/viewer_window_manager/viewer_window_manager_component';
-import {AdbProxyComponent} from './components/adb_proxy_component';
 import {AppComponent} from './components/app_component';
 import {
   MatDrawer,
@@ -104,6 +103,7 @@ import {TraceConfigComponent} from './components/trace_config_component';
 import {TraceViewComponent} from './components/trace_view_component';
 import {UploadTracesComponent} from './components/upload_traces_component';
 import {WarningDialogComponent} from './components/warning_dialog_component';
+import {WinscopeProxySetupComponent} from './components/winscope_proxy_setup_component';
 import {GlobalErrorHandler} from './global_error_handler';
 
 @NgModule({
@@ -122,7 +122,7 @@ import {GlobalErrorHandler} from './global_error_handler';
     ViewerSearchComponent,
     CollectTracesComponent,
     UploadTracesComponent,
-    AdbProxyComponent,
+    WinscopeProxySetupComponent,
     TraceConfigComponent,
     HierarchyComponent,
     PropertiesComponent,

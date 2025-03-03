@@ -29,9 +29,9 @@ import {UserNotifierChecker} from 'test/unit/user_notifier_checker';
 import {waitToBeCalled} from 'test/utils';
 import {AdbDevice} from 'trace_collection/adb_device';
 import {ConnectionState} from 'trace_collection/connection_state';
-import {ProxyConnection} from 'trace_collection/proxy_connection';
-import {ProxyEndpoint} from './proxy_endpoint';
-import {TraceRequest} from './trace_request';
+import {TraceRequest} from 'trace_collection/trace_request';
+import {WinscopeProxyConnection} from 'trace_collection/winscope_proxy/winscope_proxy_connection';
+import {Endpoint} from './endpoint';
 
 type HttpRequestGetType = (
   path: string,
@@ -45,7 +45,7 @@ type HttpRequestPostType = (
   jsonRequest?: object,
 ) => Promise<HttpResponse>;
 
-describe('ProxyConnection', () => {
+describe('WinscopeProxyConnection', () => {
   const detectStateChangesInUi = jasmine.createSpy();
   const configOptionsChangeCallback = jasmine.createSpy();
   const availableTracesChangeCallback = jasmine.createSpy();
@@ -60,7 +60,7 @@ describe('ProxyConnection', () => {
     name: 'layers_trace',
     config: [],
   };
-  const getVersionHeader = () => ProxyConnection.VERSION;
+  const getVersionHeader = () => WinscopeProxyConnection.VERSION;
   const successfulEndTraceResponse: HttpResponse = {
     status: HttpRequestStatus.SUCCESS,
     type: '',
@@ -69,7 +69,7 @@ describe('ProxyConnection', () => {
     getHeader: getVersionHeader,
   };
 
-  let connection: ProxyConnection;
+  let connection: WinscopeProxyConnection;
   let getSpy: jasmine.Spy<HttpRequestGetType>;
   let postSpy: jasmine.Spy<HttpRequestPostType>;
 
@@ -106,8 +106,8 @@ describe('ProxyConnection', () => {
       const requestObj = [mockTraceRequest];
       await connection.startTrace(mockDevice, requestObj);
       expect(postSpy).toHaveBeenCalledOnceWith(
-        ProxyConnection.WINSCOPE_PROXY_URL +
-          ProxyEndpoint.START_TRACE +
+        WinscopeProxyConnection.WINSCOPE_PROXY_URL +
+          Endpoint.START_TRACE +
           `${mockDevice.id}/`,
         [['Winscope-Token', '']],
         requestObj,
@@ -142,14 +142,14 @@ describe('ProxyConnection', () => {
     });
 
     it('invalid version - old minor', async () => {
-      const [major, minor, patch] = ProxyConnection.VERSION.split('.');
+      const [major, minor, patch] = WinscopeProxyConnection.VERSION.split('.');
       await checkInvalidVersion(() =>
         [major, Number(minor) - 1, patch].join('.'),
       );
     });
 
     it('invalid version - old patch', async () => {
-      const [major, minor, patch] = ProxyConnection.VERSION.split('.');
+      const [major, minor, patch] = WinscopeProxyConnection.VERSION.split('.');
       await checkInvalidVersion(() =>
         [major, minor, Number(patch) - 1].join('.'),
       );
@@ -232,7 +232,7 @@ describe('ProxyConnection', () => {
     it('uses stored token on initialization', async () => {
       resetSpies();
       connection.setSecurityToken('test_initial_token');
-      connection = await createProxyConnection();
+      connection = await createWinscopeProxyConnection();
       checkGetDevicesRequest('test_initial_token');
     });
 
@@ -245,7 +245,7 @@ describe('ProxyConnection', () => {
 
     it('does not set empty token', async () => {
       connection.setSecurityToken('test_initial_token');
-      connection = await createProxyConnection();
+      connection = await createWinscopeProxyConnection();
       resetSpies();
       connection.setSecurityToken('');
       await connection.restartConnection();
@@ -378,15 +378,15 @@ describe('ProxyConnection', () => {
       await connection.startTrace(mockDevice, requestObj);
 
       expect(postSpy).toHaveBeenCalledWith(
-        ProxyConnection.WINSCOPE_PROXY_URL +
-          ProxyEndpoint.START_TRACE +
+        WinscopeProxyConnection.WINSCOPE_PROXY_URL +
+          Endpoint.START_TRACE +
           `${mockDevice.id}/`,
         [['Winscope-Token', '']],
         requestObj,
       );
       expect(postSpy).toHaveBeenCalledWith(
-        ProxyConnection.WINSCOPE_PROXY_URL +
-          ProxyEndpoint.END_TRACE +
+        WinscopeProxyConnection.WINSCOPE_PROXY_URL +
+          Endpoint.END_TRACE +
           `${mockDevice.id}/`,
         [['Winscope-Token', '']],
         undefined,
@@ -426,8 +426,8 @@ describe('ProxyConnection', () => {
         getHeader: getVersionHeader,
       });
       expect(postSpy).toHaveBeenCalledOnceWith(
-        ProxyConnection.WINSCOPE_PROXY_URL +
-          ProxyEndpoint.END_TRACE +
+        WinscopeProxyConnection.WINSCOPE_PROXY_URL +
+          Endpoint.END_TRACE +
           `${mockDevice.id}/`,
         [['Winscope-Token', '']],
         undefined,
@@ -496,8 +496,8 @@ describe('ProxyConnection', () => {
 
     function checkTraceEndedSuccessfully() {
       expect(postSpy).toHaveBeenCalledOnceWith(
-        ProxyConnection.WINSCOPE_PROXY_URL +
-          ProxyEndpoint.END_TRACE +
+        WinscopeProxyConnection.WINSCOPE_PROXY_URL +
+          Endpoint.END_TRACE +
           `${mockDevice.id}/`,
         [['Winscope-Token', '']],
         undefined,
@@ -514,8 +514,8 @@ describe('ProxyConnection', () => {
       await connection.startTrace(mockDevice, requests);
 
       expect(postSpy).toHaveBeenCalledOnceWith(
-        ProxyConnection.WINSCOPE_PROXY_URL +
-          ProxyEndpoint.START_TRACE +
+        WinscopeProxyConnection.WINSCOPE_PROXY_URL +
+          Endpoint.START_TRACE +
           `${mockDevice.id}/`,
         [['Winscope-Token', '']],
         updatedRequests,
@@ -537,8 +537,8 @@ describe('ProxyConnection', () => {
       await connection.dumpState(mockDevice, requests);
 
       expect(postSpy).toHaveBeenCalledOnceWith(
-        ProxyConnection.WINSCOPE_PROXY_URL +
-          ProxyEndpoint.DUMP +
+        WinscopeProxyConnection.WINSCOPE_PROXY_URL +
+          Endpoint.DUMP +
           `${mockDevice.id}/`,
         [['Winscope-Token', '']],
         updatedRequests,
@@ -636,7 +636,7 @@ describe('ProxyConnection', () => {
       expect(connection.getState()).toEqual(ConnectionState.IDLE);
       expect(connection.getDevices()).toEqual([mockDevice]);
       expect(getSpy).toHaveBeenCalledWith(
-        ProxyConnection.WINSCOPE_PROXY_URL + ProxyEndpoint.CHECK_WAYLAND,
+        WinscopeProxyConnection.WINSCOPE_PROXY_URL + Endpoint.CHECK_WAYLAND,
         [['Winscope-Token', '']],
         undefined,
       );
@@ -650,7 +650,7 @@ describe('ProxyConnection', () => {
       expect(connection.getState()).toEqual(ConnectionState.IDLE);
       expect(connection.getDevices()).toEqual([mockDevice]);
       expect(getSpy).not.toHaveBeenCalledWith(
-        ProxyConnection.WINSCOPE_PROXY_URL + ProxyEndpoint.CHECK_WAYLAND,
+        WinscopeProxyConnection.WINSCOPE_PROXY_URL + Endpoint.CHECK_WAYLAND,
         [['Winscope-Token', '']],
         undefined,
       );
@@ -768,8 +768,8 @@ describe('ProxyConnection', () => {
       await connection.fetchLastTracingSessionData(mockDevice);
 
       expect(getSpy).toHaveBeenCalledOnceWith(
-        ProxyConnection.WINSCOPE_PROXY_URL +
-          ProxyEndpoint.FETCH +
+        WinscopeProxyConnection.WINSCOPE_PROXY_URL +
+          Endpoint.FETCH +
           `${mockDevice.id}/`,
         [['Winscope-Token', '']],
         'arraybuffer',
@@ -786,8 +786,8 @@ describe('ProxyConnection', () => {
       const files = await connection.fetchLastTracingSessionData(mockDevice);
 
       expect(getSpy).toHaveBeenCalledOnceWith(
-        ProxyConnection.WINSCOPE_PROXY_URL +
-          ProxyEndpoint.FETCH +
+        WinscopeProxyConnection.WINSCOPE_PROXY_URL +
+          Endpoint.FETCH +
           `${mockDevice.id}/`,
         [['Winscope-Token', '']],
         'arraybuffer',
@@ -803,8 +803,8 @@ describe('ProxyConnection', () => {
       const files = await connection.fetchLastTracingSessionData(mockDevice);
 
       expect(getSpy).toHaveBeenCalledOnceWith(
-        ProxyConnection.WINSCOPE_PROXY_URL +
-          ProxyEndpoint.FETCH +
+        WinscopeProxyConnection.WINSCOPE_PROXY_URL +
+          Endpoint.FETCH +
           `${mockDevice.id}/`,
         [['Winscope-Token', '']],
         'arraybuffer',
@@ -821,12 +821,12 @@ describe('ProxyConnection', () => {
     postSpy = spyOn(HttpRequest, 'post').and.returnValue(
       Promise.resolve(response),
     );
-    connection = await createProxyConnection();
+    connection = await createWinscopeProxyConnection();
   }
 
   function checkGetDevicesRequest(header = '') {
     expect(getSpy).toHaveBeenCalledWith(
-      ProxyConnection.WINSCOPE_PROXY_URL + ProxyEndpoint.DEVICES,
+      WinscopeProxyConnection.WINSCOPE_PROXY_URL + Endpoint.DEVICES,
       [['Winscope-Token', header]],
       undefined,
     );
@@ -844,8 +844,8 @@ describe('ProxyConnection', () => {
     postSpy.calls.reset();
   }
 
-  async function createProxyConnection() {
-    const connection = new ProxyConnection();
+  async function createWinscopeProxyConnection() {
+    const connection = new WinscopeProxyConnection();
     await connection.initialize(
       detectStateChangesInUi,
       availableTracesChangeCallback,

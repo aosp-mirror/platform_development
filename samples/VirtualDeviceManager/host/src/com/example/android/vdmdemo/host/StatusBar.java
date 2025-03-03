@@ -17,6 +17,7 @@ package com.example.android.vdmdemo.host;
 
 import static android.view.WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_ALWAYS;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Insets;
@@ -96,6 +97,9 @@ public class StatusBar extends LinearLayout {
         windowManager.removeViewImmediate(this);
     }
 
+    // The status bar may only be created if the relevant preference is enabled, which can only
+    // happen on B+ with the relevant flag enabled.
+    @SuppressLint("NewApi")
     static StatusBar create(Context displayContext) {
         final int statusBarHeight =
                 displayContext.getResources().getDimensionPixelSize(R.dimen.status_bar_height);

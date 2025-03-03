@@ -26,7 +26,7 @@ use crate_config::CrateConfig;
 use glob::glob;
 use google_metadata::GoogleMetadata;
 use itertools::Itertools;
-use license_checker::find_licenses;
+use license_checker::{find_licenses, LicenseState};
 use name_and_version::NamedAndVersioned;
 use rooted_path::RootedPath;
 use semver::Version;
@@ -37,7 +37,7 @@ use crate::{
     copy_dir,
     crate_type::Crate,
     ensure_exists_and_empty,
-    license::update_module_license_files,
+    license::{most_restrictive_type, update_module_license_files},
     patch::Patch,
     pseudo_crate::{CargoVendorClean, PseudoCrate},
     SuccessOrError,
@@ -53,14 +53,27 @@ pub struct ManagedCrate<State: ManagedCrateState> {
 
 #[derive(Debug)]
 pub struct New {}
+
+/// Crate state indicating we have run `cargo vendor` on the pseudo-crate.
 #[derive(Debug)]
 pub struct Vendored {
     /// The vendored copy of the crate, from running `cargo vendor`
     vendored_crate: Crate,
 }
+
+/// Crate state indicating we have copied the vendored code to a temporary build
+/// directory, copied over Android customizations, and applied patches.
+#[derive(Debug)]
+pub struct CopiedAndPatched {
+    /// The vendored copy of the crate, from running `cargo vendor`
+    vendored_crate: Crate,
+    /// The license terms and associated license files.
+    licenses: LicenseState,
+}
 pub trait ManagedCrateState {}
 impl ManagedCrateState for New {}
 impl ManagedCrateState for Vendored {}
+impl ManagedCrateState for CopiedAndPatched {}
 
 static CUSTOMIZATIONS: &[&str] = &[
     "*.bp",
@@ -98,6 +111,14 @@ impl<State: ManagedCrateState> ManagedCrate<State> {
     }
     fn patch_dir(&self) -> RootedPath {
         self.android_crate_path().join("patches").unwrap()
+    }
+    fn temporary_build_directory(&self) -> RootedPath {
+        self.android_crate
+            .path()
+            .with_same_root("out/rust-crate-temporary-build")
+            .unwrap()
+            .join(self.name())
+            .unwrap()
     }
     pub fn patches(&self) -> Result<Vec<PathBuf>> {
         let mut patches = Vec::new();
@@ -212,21 +233,22 @@ impl ManagedCrate<New> {
     pub fn regenerate(
         self,
         pseudo_crate: &PseudoCrate<CargoVendorClean>,
-    ) -> Result<ManagedCrate<Vendored>> {
-        let vendored = self.into_vendored(pseudo_crate)?;
-        vendored.regenerate()?;
-        Ok(vendored)
+    ) -> Result<ManagedCrate<CopiedAndPatched>> {
+        let regenerated = self.into_vendored(pseudo_crate)?.regenerate()?;
+        Ok(regenerated)
     }
 }
 
 impl ManagedCrate<Vendored> {
-    fn temporary_build_directory(&self) -> RootedPath {
-        self.android_crate
-            .path()
-            .with_same_root("out/rust-crate-temporary-build")
-            .unwrap()
-            .join(self.name())
-            .unwrap()
+    fn into_copied_and_patched(
+        self,
+        licenses: LicenseState,
+    ) -> Result<ManagedCrate<CopiedAndPatched>> {
+        Ok(ManagedCrate {
+            android_crate: self.android_crate,
+            config: self.config,
+            extra: CopiedAndPatched { vendored_crate: self.extra.vendored_crate, licenses },
+        })
     }
     /// Makes a clean copy of the vendored crates in a temporary build directory.
     fn copy_to_temporary_build_directory(&self) -> Result<()> {
@@ -294,21 +316,66 @@ impl ManagedCrate<Vendored> {
         }
         Ok(())
     }
-    fn update_license_files(&self) -> Result<()> {
-        let state = find_licenses(
+    pub fn regenerate(self) -> Result<ManagedCrate<CopiedAndPatched>> {
+        self.copy_to_temporary_build_directory()?;
+        self.copy_customizations()?;
+
+        // Delete stuff that we don't want to keep around, as specified in the
+        // android_config.toml
+        for deletion in self.config().deletions() {
+            let dir = self.temporary_build_directory().join(deletion)?;
+            if dir.abs().is_dir() {
+                remove_dir_all(dir)?;
+            } else {
+                remove_file(dir)?;
+            }
+        }
+
+        self.apply_patches()?;
+
+        let licenses = find_licenses(
             self.temporary_build_directory(),
             self.name(),
             self.android_crate.license(),
         )?;
+        let regenerated = self.into_copied_and_patched(licenses)?;
+        regenerated.regenerate()?;
+        Ok(regenerated)
+    }
+}
 
+impl ManagedCrate<CopiedAndPatched> {
+    pub fn regenerate(&self) -> Result<()> {
+        // License logic must happen AFTER applying patches, because we use patches
+        // to add missing license files. It must also happen BEFORE cargo_embargo,
+        // because cargo_embargo needs to put license information in the Android.bp.
+        self.update_license_files()?;
+
+        self.run_cargo_embargo()?;
+
+        self.update_metadata()?;
+        self.fix_test_mapping()?;
+        // Fails on dangling symlinks, which happens when we run on the log crate.
+        checksum::generate(self.temporary_build_directory())?;
+
+        let android_crate_dir = self.android_crate.path();
+        remove_dir_all(android_crate_dir)?;
+        rename(self.temporary_build_directory(), android_crate_dir)?;
+
+        Ok(())
+    }
+    fn update_license_files(&self) -> Result<()> {
         // For every chosen license, we must be able to find an associated
         // license file.
-        if !state.unsatisfied.is_empty() {
-            bail!("Could not find license files for some licenses: {:?}", state.unsatisfied);
+        if !self.extra.licenses.unsatisfied.is_empty() {
+            bail!(
+                "Could not find license files for some licenses: {:?}",
+                self.extra.licenses.unsatisfied
+            );
         }
 
         // SOME license must apply to the code. If none apply, that's an error.
-        if state.satisfied.is_empty() {
+        if self.extra.licenses.satisfied.is_empty() {
             bail!("No license terms were found for this crate");
         }
 
@@ -317,8 +384,13 @@ impl ManagedCrate<Vendored> {
         // Per http://go/thirdpartyreviewers#license:
         // "There must be a file called LICENSE containing an allowed third party license."
 
-        let license_files =
-            state.satisfied.values().map(|path| path.as_path()).collect::<BTreeSet<_>>();
+        let license_files = self
+            .extra
+            .licenses
+            .satisfied
+            .values()
+            .map(|path| path.as_path())
+            .collect::<BTreeSet<_>>();
         let canonical_license_file_name = Path::new("LICENSE");
         let canonical_license_path = self.temporary_build_directory().abs().join("LICENSE");
         if license_files.len() == 1 {
@@ -351,7 +423,7 @@ impl ManagedCrate<Vendored> {
             )?;
         }
 
-        update_module_license_files(&self.temporary_build_directory(), &state)?;
+        update_module_license_files(&self.temporary_build_directory(), &self.extra.licenses)?;
         Ok(())
     }
     /// Runs cargo_embargo on the crate in the temporary build directory.
@@ -383,20 +455,13 @@ impl ManagedCrate<Vendored> {
     fn update_metadata(&self) -> Result<()> {
         let mut metadata =
             GoogleMetadata::try_from(self.temporary_build_directory().join("METADATA").unwrap())?;
-        let mut writeback = false;
-        writeback |= metadata.migrate_homepage();
-        writeback |= metadata.migrate_archive();
-        writeback |= metadata.remove_deprecated_url();
-        let vendored_version = self.extra.vendored_crate.version();
-        if self.android_crate.version() != vendored_version {
-            metadata.set_date_to_today()?;
-            metadata.set_version_and_urls(self.name(), vendored_version.to_string())?;
-            writeback |= true;
-        }
-        if writeback {
-            println!("Updating METADATA for {}", self.name());
-            metadata.write()?;
-        }
+        metadata.update(
+            self.name(),
+            self.extra.vendored_crate.version().to_string(),
+            self.extra.vendored_crate.description(),
+            most_restrictive_type(&self.extra.licenses),
+        );
+        metadata.write()?;
 
         Ok(())
     }
@@ -412,41 +477,6 @@ impl ManagedCrate<Vendored> {
             println!("Updating TEST_MAPPING for {}", self.name());
             tm.write()?;
         }
-        Ok(())
-    }
-    pub fn regenerate(&self) -> Result<()> {
-        self.copy_to_temporary_build_directory()?;
-        self.copy_customizations()?;
-
-        // Delete stuff that we don't want to keep around, as specified in the
-        // android_config.toml
-        for deletion in self.config().deletions() {
-            let dir = self.temporary_build_directory().join(deletion)?;
-            if dir.abs().is_dir() {
-                remove_dir_all(dir)?;
-            } else {
-                remove_file(dir)?;
-            }
-        }
-
-        self.apply_patches()?;
-
-        // License logic must happen AFTER applying patches, because we use patches
-        // to add missing license files. It must also happen BEFORE cargo_embargo,
-        // because cargo_embargo needs to put license information in the Android.bp.
-        self.update_license_files()?;
-
-        self.run_cargo_embargo()?;
-
-        self.update_metadata()?;
-        self.fix_test_mapping()?;
-        // Fails on dangling symlinks, which happens when we run on the log crate.
-        checksum::generate(self.temporary_build_directory())?;
-
-        let android_crate_dir = self.android_crate.path();
-        remove_dir_all(android_crate_dir)?;
-        rename(self.temporary_build_directory(), android_crate_dir)?;
-
         Ok(())
     }
 }

@@ -12,28 +12,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use std::{
-    collections::BTreeMap,
-    ffi::{OsStr, OsString},
-    path::Path,
-    sync::LazyLock,
-};
+use std::{collections::BTreeMap, ffi::OsString, path::Path, sync::LazyLock};
 
 use spdx::{LicenseReq, Licensee};
 
-pub(crate) fn classify_license_file_name(file: impl AsRef<Path>) -> Option<LicenseReq> {
-    // File should be relative
-    let file = file.as_ref();
-    let mut basename = if file.extension() == Some(OsStr::new("txt"))
-        || file.extension() == Some(OsStr::new("md"))
-    {
-        file.with_extension("")
-    } else {
-        file.to_owned()
-    };
-    let uppercase_name = basename.as_mut_os_string();
-    uppercase_name.make_ascii_uppercase();
-    if let Some(req) = LICENSE_FILE_NAME_CLASSIFICATION.get(uppercase_name) {
+use super::normalize_filename;
+
+pub(super) fn classify_license_file_name(file: impl AsRef<Path>) -> Option<LicenseReq> {
+    if let Some(req) = LICENSE_FILE_NAME_CLASSIFICATION.get(&normalize_filename(file)) {
         return Some(req.clone());
     }
     None
@@ -53,12 +39,9 @@ static LICENSE_FILE_NAME_CLASSIFICATION: LazyLock<BTreeMap<OsString, LicenseReq>
             ("LICENSE-Apache-2.0_WITH_LLVM-exception", "Apache-2.0 WITH LLVM-exception"),
             ("docs/LICENSE-APACHE", "Apache-2.0"),
 
-            ("LICENSE-BSD", "BSD-2-Clause"),
             ("LICENSE-BSD-2-Clause", "BSD-2-Clause"),
             ("LICENSE.BSD-2-Clause", "BSD-2-Clause"),
             ("LICENSE-BSD-3-Clause", "BSD-3-Clause"),
-
-            ("LICENSE-UNICODE", "Unicode-DFS-2016"),
 
             ("LICENSE-0BSD", "0BSD"),
 
@@ -66,7 +49,6 @@ static LICENSE_FILE_NAME_CLASSIFICATION: LazyLock<BTreeMap<OsString, LicenseReq>
             ("UNLICENSE", "Unlicense"),
             ("LICENSE-BOOST", "BSL-1.0"),
             ("LICENSES/CC0-1.0", "CC0-1.0"),
-            ("LICENSE-LGPL", "LGPL-3.0"),
         ]
         .into_iter()
         .map(|(file, req)| (OsString::from(file.to_uppercase()), Licensee::parse(req).unwrap().into_req()))

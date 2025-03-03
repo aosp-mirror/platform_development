@@ -149,10 +149,11 @@ export class FileUtils {
     const decompressionStream = new (window as any).DecompressionStream('gzip');
     const decompressedStream = file.stream().pipeThrough(decompressionStream);
     const fileBlob = await new Response(decompressedStream).blob();
-    return new File(
-      [fileBlob],
-      FileUtils.removeExtensionFromFilename(file.name),
-    );
+    const filename =
+      FileUtils.getFileExtension(file.name) === 'gz'
+        ? FileUtils.removeExtensionFromFilename(file.name)
+        : file.name;
+    return new File([fileBlob], filename);
   }
 
   /**

@@ -147,3 +147,36 @@ $(call dist-for-goals,sdk,$(full_target):system-server-data/annotations.zip)
 # ============ SDK AIDL ============
 $(eval $(call copy-one-file,$(FRAMEWORK_AIDL),$(TARGET_OUT_COMMON_INTERMEDIATES)/PACKAGING/framework.aidl))
 ALL_SDK_FILES += $(TARGET_OUT_COMMON_INTERMEDIATES)/PACKAGING/framework.aidl
+
+
+# ===== Wear SDK jar file of stubs =====
+# the "current" version of the public Wear SDK (used in the even that the prebuilt API is not yet finalized)
+wear_sdk_current_stubs_target := $(if $(findstring wear-sdk.stubs.exportable,$(ALL_MODULES)), \
+    $(call intermediates-dir-for,JAVA_LIBRARIES,wear-sdk.stubs.exportable,,COMMON)/classes.jar, \
+    )
+
+# the prebuilt version of the public Wear SDK (contains only finalized API)
+wear_sdk_prebuilt_stubs_target := $(TOPDIR)prebuilts/sdk/opt/wear/$(patsubst "%",%,$(PLATFORM_SDK_VERSION_FULL))/public/wear-sdk.jar
+
+# wear-sdk.jar is what we put in the SDK package (as an optional jar).
+wear_sdk_jar_intermediates := $(call intermediates-dir-for,PACKAGING,wear_sdk_jar,,COMMON)
+wear_sdk_jar_full_target := $(wear_sdk_jar_intermediates)/wear-sdk.jar
+
+# The only explicit dependency for the optional jar is the current stub, however if the prebuilt (finalized) stub
+# exists, then we should be using it (availability of the current stub however, avoids breakage pre-finalization)
+# The one caveat here is on branches that do *NOT* contain wear projects (e.g. vendorless) - in that case we just
+# touch an empty target to ensure that we avoid breakage (we don't release from these branches, so empty is fine)
+$(wear_sdk_jar_full_target): PRIVATE_PREBUILT_STUBS_TARGET := $(wear_sdk_prebuilt_stubs_target)
+$(wear_sdk_jar_full_target): PRIVATE_CURRENT_STUBS_TARGET := $(wear_sdk_current_stubs_target)
+$(wear_sdk_jar_full_target): $(wear_sdk_current_stubs_target) $(wildcard $(PRIVATE_PREBUILT_STUBS_TARGET))
+	@echo Package Wear SDK Stubs: $@
+	$(hide) mkdir -p $(dir $@)
+	$(if $(wildcard $(PRIVATE_PREBUILT_STUBS_TARGET)), \
+		$(ACP) $(PRIVATE_PREBUILT_STUBS_TARGET) $@, \
+		$(if $(strip $(PRIVATE_CURRENT_STUBS_TARGET)), \
+			$(ACP) $(PRIVATE_CURRENT_STUBS_TARGET) $@, \
+			touch $@ \
+                ) \
+        )
+
+ALL_SDK_FILES += $(wear_sdk_jar_full_target)

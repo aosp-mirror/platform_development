@@ -35,13 +35,16 @@ import {PropertiesPresenter} from 'viewers/common/properties_presenter';
 import {RectsPresenter} from 'viewers/common/rects_presenter';
 import {TextFilter} from 'viewers/common/text_filter';
 import {UiHierarchyTreeNode} from 'viewers/common/ui_hierarchy_tree_node';
+import {UiPropertyTreeNode} from 'viewers/common/ui_property_tree_node';
 import {UI_RECT_FACTORY} from 'viewers/common/ui_rect_factory';
 import {UserOptions} from 'viewers/common/user_options';
+import {ViewerEvents} from 'viewers/common/viewer_events';
 import {
   RectLegendFactory,
   TraceRectType,
 } from 'viewers/components/rects/rect_spec';
 import {UiRect} from 'viewers/components/rects/ui_rect';
+import {PropagateHashCodes} from './operations/propagate_hash_codes';
 import {UpdateDisplayNames} from './operations/update_display_names';
 import {UiData} from './ui_data';
 
@@ -127,6 +130,7 @@ the default for its data type.`,
     ),
     new TextFilter(),
     Presenter.DENYLIST_PROPERTY_NAMES,
+    [new PropagateHashCodes()],
   );
   protected override multiTraceType = undefined;
 
@@ -143,6 +147,29 @@ the default for its data type.`,
       legend: RectLegendFactory.makeLegendForWindowStateRects(),
     };
     super(trace, traces, storage, notifyViewCallback, uiData);
+  }
+
+  async onPropagatePropertyClick(node: UiPropertyTreeNode) {
+    if (node.name !== 'hashCode') {
+      return;
+    }
+    const token = (node.getValue() ?? 0).toString(16);
+    const target = this.uiData.hierarchyTrees
+      ?.at(0)
+      ?.findDfs((node) => node.id.includes(token));
+    if (target) {
+      await this.onHighlightedNodeChange(target);
+    }
+  }
+
+  protected override addViewerSpecificListeners(htmlElement: HTMLElement) {
+    htmlElement.addEventListener(
+      ViewerEvents.PropagatePropertyClick,
+      async (event) => {
+        const node = (event as CustomEvent).detail;
+        await this.onPropagatePropertyClick(node);
+      },
+    );
   }
 
   override async onHighlightedNodeChange(item: UiHierarchyTreeNode) {

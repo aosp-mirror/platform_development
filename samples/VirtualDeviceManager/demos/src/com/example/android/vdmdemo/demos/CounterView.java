@@ -65,7 +65,8 @@ public class CounterView extends View {
 
     @Override
     protected void onDraw(Canvas canvas) {
-        canvas.drawText(String.valueOf(mCounter), 0, 200, mTextPaint);
+        canvas.drawText(String.valueOf(mCounter), (float) getWidth() / 2, (float) getHeight() / 2,
+                mTextPaint);
         Log.e(TAG, "Rendered counter: " + mCounter);
         mCounter++;
     }

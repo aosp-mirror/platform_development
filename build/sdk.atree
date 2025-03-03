@@ -54,7 +54,7 @@ ${OUT_DIR}/target/common/obj/JAVA_LIBRARIES/android_uiautomator_intermediates/cl
 # Android Automotive OS stubs.
 ${OUT_DIR}/target/common/obj/JAVA_LIBRARIES/android.car-stubs_intermediates/classes.jar         platforms/${PLATFORM_NAME}/optional/android.car.jar
 # Wear OS platform SDK stubs.
-prebuilts/sdk/opt/wear/${PLATFORM_SDK_API_VERSION}/public/wear-sdk.jar                         platforms/${PLATFORM_NAME}/optional/wear-sdk.jar
+${OUT_DIR}/target/common/obj/PACKAGING/wear_sdk_jar_intermediates/wear-sdk.jar                   platforms/${PLATFORM_NAME}/optional/wear-sdk.jar
 # Test APIs
 ${OUT_DIR}/target/common/obj/JAVA_LIBRARIES/android.test.mock.stubs_intermediates/classes.jar   platforms/${PLATFORM_NAME}/optional/android.test.mock.jar
 ${OUT_DIR}/target/common/obj/JAVA_LIBRARIES/android.test.base.stubs_intermediates/classes.jar   platforms/${PLATFORM_NAME}/optional/android.test.base.jar

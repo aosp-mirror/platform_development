@@ -40,7 +40,7 @@ object Clock {
 
 @Composable
 fun ContentScope.Clock(color: Color, modifier: Modifier = Modifier) {
-    Element(Clock.Elements.Clock, modifier) {
+    ElementWithValues(Clock.Elements.Clock, modifier) {
         val color by animateElementColorAsState(color, Clock.Values.TextColor)
 
         content {

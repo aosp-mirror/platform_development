@@ -22,7 +22,7 @@ import {DENYLIST_PROPERTIES} from 'parsers/window_manager/denylist_properties';
 import {EAGER_PROPERTIES} from 'parsers/window_manager/eager_properties';
 import {ProtoType} from 'parsers/window_manager/proto_type';
 import {TamperedProtos} from 'parsers/window_manager/tampered_protos';
-import {RECT_FORMATTER} from 'trace/tree_node/formatters';
+import {HEX_FORMATTER, RECT_FORMATTER} from 'trace/tree_node/formatters';
 import {Operation} from 'trace/tree_node/operations/operation';
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
 import {AddIsVisible} from './add_is_visible';
@@ -34,13 +34,18 @@ export interface OperationLists {
   lazy: Array<Operation<PropertyTreeNode>>;
 }
 
+const commonFormatters = new Map([['hashCode', HEX_FORMATTER]]);
+
 export class WmOperationLists {
   private readonly LISTS = new Map<ProtoType, OperationLists>([
     [
       ProtoType.WindowManagerService,
       {
         common: [
-          new SetFormatters(this.tamperedProtos.windowManagerServiceField),
+          new SetFormatters(
+            this.tamperedProtos.windowManagerServiceField,
+            commonFormatters,
+          ),
           new TranslateIntDef(this.tamperedProtos.windowManagerServiceField),
         ],
         eager: [
@@ -63,7 +68,10 @@ export class WmOperationLists {
       ProtoType.RootWindowContainer,
       {
         common: [
-          new SetFormatters(this.tamperedProtos.rootWindowContainerField),
+          new SetFormatters(
+            this.tamperedProtos.rootWindowContainerField,
+            commonFormatters,
+          ),
           new TranslateIntDef(this.tamperedProtos.rootWindowContainerField),
         ],
         eager: [
@@ -86,7 +94,10 @@ export class WmOperationLists {
       ProtoType.WindowContainer,
       {
         common: [
-          new SetFormatters(this.tamperedProtos.windowContainerField),
+          new SetFormatters(
+            this.tamperedProtos.windowContainerField,
+            commonFormatters,
+          ),
           new TranslateIntDef(this.tamperedProtos.windowContainerField),
         ],
         eager: [
@@ -110,7 +121,10 @@ export class WmOperationLists {
       ProtoType.DisplayContent,
       {
         common: [
-          new SetFormatters(this.tamperedProtos.displayContentField),
+          new SetFormatters(
+            this.tamperedProtos.displayContentField,
+            commonFormatters,
+          ),
           new TranslateIntDef(this.tamperedProtos.displayContentField),
         ],
         eager: [
@@ -133,7 +147,10 @@ export class WmOperationLists {
       ProtoType.DisplayArea,
       {
         common: [
-          new SetFormatters(this.tamperedProtos.displayAreaField),
+          new SetFormatters(
+            this.tamperedProtos.displayAreaField,
+            commonFormatters,
+          ),
           new TranslateIntDef(this.tamperedProtos.displayAreaField),
         ],
         eager: [
@@ -156,7 +173,7 @@ export class WmOperationLists {
       ProtoType.Task,
       {
         common: [
-          new SetFormatters(this.tamperedProtos.taskField),
+          new SetFormatters(this.tamperedProtos.taskField, commonFormatters),
           new TranslateIntDef(this.tamperedProtos.taskField),
         ],
         eager: [
@@ -179,7 +196,10 @@ export class WmOperationLists {
       ProtoType.Activity,
       {
         common: [
-          new SetFormatters(this.tamperedProtos.activityField),
+          new SetFormatters(
+            this.tamperedProtos.activityField,
+            commonFormatters,
+          ),
           new TranslateIntDef(this.tamperedProtos.activityField),
         ],
         eager: [
@@ -203,7 +223,10 @@ export class WmOperationLists {
       ProtoType.WindowToken,
       {
         common: [
-          new SetFormatters(this.tamperedProtos.windowTokenField),
+          new SetFormatters(
+            this.tamperedProtos.windowTokenField,
+            commonFormatters,
+          ),
           new TranslateIntDef(this.tamperedProtos.windowTokenField),
         ],
         eager: [
@@ -231,6 +254,7 @@ export class WmOperationLists {
             new Map([
               ['containingFrame', RECT_FORMATTER],
               ['parentFrame', RECT_FORMATTER],
+              ...Array.from(commonFormatters.entries()),
             ]),
           ),
           new TranslateIntDef(this.tamperedProtos.windowStateField),
@@ -257,7 +281,10 @@ export class WmOperationLists {
       ProtoType.TaskFragment,
       {
         common: [
-          new SetFormatters(this.tamperedProtos.taskFragmentField),
+          new SetFormatters(
+            this.tamperedProtos.taskFragmentField,
+            commonFormatters,
+          ),
           new TranslateIntDef(this.tamperedProtos.taskFragmentField),
         ],
         eager: [

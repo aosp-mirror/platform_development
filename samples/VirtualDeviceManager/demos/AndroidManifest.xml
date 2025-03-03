@@ -5,7 +5,7 @@
 
     <uses-sdk
         android:minSdkVersion="34"
-        android:targetSdkVersion="35" />
+        android:targetSdkVersion="36" />
 
     <uses-permission android:name="android.permission.READ_CONTACTS" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />

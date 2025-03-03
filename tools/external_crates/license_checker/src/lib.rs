@@ -16,15 +16,14 @@
 
 use std::{
     collections::{BTreeMap, BTreeSet},
-    fs::read_to_string,
     path::{Path, PathBuf},
 };
 
+use file_classifier::Classifier;
 use spdx::LicenseReq;
 
-mod content_checker;
 mod expression_parser;
-mod file_name_checker;
+mod file_classifier;
 mod license_file_finder;
 
 /// Error types for the 'license_checker' crate.
@@ -86,30 +85,41 @@ pub fn find_licenses(
     let crate_path = crate_path.as_ref();
     let mut state = LicenseState { unsatisfied: BTreeSet::new(), satisfied: BTreeMap::new() };
 
-    state.unsatisfied = expression_parser::get_chosen_licenses(crate_name, cargo_toml_license)?;
-    let mut possible_license_files = license_file_finder::find_license_files(crate_path)?;
+    state.unsatisfied =
+        expression_parser::evaluate_license_expr(crate_name, cargo_toml_license)?.required;
+    let possible_license_files = license_file_finder::find_license_files(crate_path)?
+        .into_iter()
+        .map(|f| (f.clone(), Classifier::new(crate_path, f)))
+        .collect::<BTreeMap<_, _>>();
 
-    possible_license_files.retain(|file| {
-        if let Some(req) = file_name_checker::classify_license_file_name(file) {
-            if state.unsatisfied.remove(&req) {
-                state.satisfied.insert(req, file.clone());
-                return false;
+    for (file, classifier) in &possible_license_files {
+        if let Some(req) = classifier.by_name() {
+            if state.unsatisfied.remove(req) {
+                state.satisfied.insert(req.clone(), file.clone());
             }
-        }
-        true
-    });
-
-    if !state.unsatisfied.is_empty() {
-        possible_license_files.retain(|file| {
-            let contents = read_to_string(crate_path.join(file)).unwrap();
-            let matches = content_checker::classify_license_file_contents(&contents);
-            for req in &matches {
+        } else {
+            for req in classifier.by_content() {
                 if state.unsatisfied.remove(req) {
                     state.satisfied.insert(req.clone(), file.clone());
                 }
             }
-            !matches.is_empty()
-        });
+        }
+    }
+
+    if !state.unsatisfied.is_empty() {
+        for (file, classifier) in &possible_license_files {
+            if classifier.by_name().is_some() || !classifier.by_content().is_empty() {
+                continue;
+            }
+            if let Some(req) = classifier.by_content_fuzzy() {
+                if state.unsatisfied.remove(req) {
+                    state.satisfied.insert(req.clone(), file.clone());
+                    if state.unsatisfied.is_empty() {
+                        break;
+                    }
+                }
+            }
+        }
     }
 
     Ok(state)

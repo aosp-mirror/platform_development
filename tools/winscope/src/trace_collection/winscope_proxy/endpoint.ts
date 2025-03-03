@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-export enum ProxyEndpoint {
+export enum Endpoint {
   DEVICES = '/devices/',
   START_TRACE = '/start/',
   END_TRACE = '/end/',

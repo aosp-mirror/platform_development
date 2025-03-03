@@ -27,10 +27,14 @@ import android.hardware.SensorManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.view.View;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.graphics.Insets;
 import androidx.core.os.BuildCompat;
+import androidx.core.view.ViewCompat;
+import androidx.core.view.WindowInsetsCompat;
 
 import java.util.List;
 import java.util.Objects;
@@ -53,6 +57,15 @@ public final class SensorDemoActivity extends AppCompatActivity implements Senso
         super.onCreate(savedInstanceState);
 
         setContentView(R.layout.sensor_demo_activity);
+
+        View deviceChangeView = (View) requireViewById(R.id.current_device).getParent();
+        ViewCompat.setOnApplyWindowInsetsListener(deviceChangeView, (v, windowInsets) -> {
+            Insets insets = windowInsets.getInsets(WindowInsetsCompat.Type.systemBars());
+            LinearLayout.LayoutParams lp = (LinearLayout.LayoutParams) v.getLayoutParams();
+            lp.topMargin = insets.top;
+            v.setLayoutParams(lp);
+            return WindowInsetsCompat.CONSUMED;
+        });
 
         mBeam = requireViewById(R.id.beam);
 

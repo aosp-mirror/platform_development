@@ -417,6 +417,24 @@ class UnitTestUtils {
       await fixture.whenStable();
     }
   }
+
+  static makeFakeWebSocket(): jasmine.SpyObj<WebSocket> {
+    const socket = jasmine.createSpyObj<WebSocket>(
+      'WebSocket',
+      ['onmessage', 'onclose', 'send', 'close'],
+      {'readyState': WebSocket.OPEN, binaryType: 'arraybuffer'},
+    );
+    socket.close.and.callFake(() => {
+      socket.onclose!(new CloseEvent(''));
+    });
+    return socket;
+  }
+
+  static makeFakeWebSocketMessage(
+    data: Blob | ArrayBuffer | number | string,
+  ): MessageEvent {
+    return jasmine.createSpyObj<MessageEvent>([], {'data': data});
+  }
 }
 
 export {UnitTestUtils};

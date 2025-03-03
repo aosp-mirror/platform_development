@@ -6,7 +6,7 @@ edition = "2021"
 [dependencies]
 cfg-expr = "0.17"
 crates-index = "3.2.0"
-reqwest = { version = "0.12.5", features = ["blocking", "gzip"] }
+ureq = "3"
 semver = "1"
 thiserror = "1"
 

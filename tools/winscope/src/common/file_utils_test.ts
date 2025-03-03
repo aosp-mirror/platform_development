@@ -92,6 +92,16 @@ describe('FileUtils', () => {
     expect(unzippedFile.size).toEqual(377137);
   });
 
+  it('decompresses gzipped file without gz ext', async () => {
+    const gzippedFile = await getFixtureFile(
+      'traces/WindowManager.pb.gz',
+      'traces/WindowManager.pb',
+    );
+    const unzippedFile = await FileUtils.decompressGZipFile(gzippedFile);
+    expect(unzippedFile.name).toEqual('traces/WindowManager.pb');
+    expect(unzippedFile.size).toEqual(377137);
+  });
+
   it('decompresses gzipped archive', async () => {
     const gzippedFile = await getFixtureFile('traces/WindowManager.zip.gz');
     const unzippedFile = await FileUtils.decompressGZipFile(gzippedFile);

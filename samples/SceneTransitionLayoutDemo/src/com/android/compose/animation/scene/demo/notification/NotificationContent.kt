@@ -152,7 +152,7 @@ private fun ContentScope.Icon(icon: ImageVector, modifier: Modifier = Modifier) 
 @Composable
 private fun ContentScope.Chevron(rotate: Boolean, modifier: Modifier = Modifier) {
     val key = NotificationContent.Elements.Chevron
-    Element(key, modifier) {
+    ElementWithValues(key, modifier) {
         val rotation by
             animateElementIntAsState(
                 if (rotate) 180 else 0,

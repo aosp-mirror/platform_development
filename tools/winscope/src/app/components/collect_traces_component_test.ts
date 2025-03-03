@@ -46,12 +46,12 @@ import {TraceType} from 'trace/trace_type';
 import {AdbConnection} from 'trace_collection/adb_connection';
 import {AdbDevice} from 'trace_collection/adb_device';
 import {ConnectionState} from 'trace_collection/connection_state';
-import {ProxyConnection} from 'trace_collection/proxy_connection';
-import {AdbProxyComponent} from './adb_proxy_component';
+import {WinscopeProxyConnection} from 'trace_collection/winscope_proxy/winscope_proxy_connection';
 import {CollectTracesComponent} from './collect_traces_component';
 import {LoadProgressComponent} from './load_progress_component';
 import {TraceConfigComponent} from './trace_config_component';
 import {WarningDialogComponent} from './warning_dialog_component';
+import {WinscopeProxySetupComponent} from './winscope_proxy_setup_component';
 
 describe('CollectTracesComponent', () => {
   let fixture: ComponentFixture<TestHostComponent>;
@@ -92,7 +92,7 @@ describe('CollectTracesComponent', () => {
       declarations: [
         TestHostComponent,
         CollectTracesComponent,
-        AdbProxyComponent,
+        WinscopeProxySetupComponent,
         TraceConfigComponent,
         LoadProgressComponent,
         WarningDialogComponent,
@@ -687,13 +687,13 @@ describe('CollectTracesComponent', () => {
     checkMediaBasedConfigUpdates(true);
   });
 
-  describe('ProxyConnection', () => {
+  describe('WinscopeProxyConnection', () => {
     beforeEach(async () => {
-      await startProxyConnection();
+      await startWinscopeProxyConnection();
     });
 
     it('displays adb proxy element', () => {
-      expect(htmlElement.querySelector('adb-proxy')).toBeTruthy();
+      expect(htmlElement.querySelector('winscope-proxy-setup')).toBeTruthy();
     });
 
     it('adds security token and restarts connection', async () => {
@@ -769,12 +769,12 @@ describe('CollectTracesComponent', () => {
     ).toBeFalse();
   }
 
-  async function startProxyConnection() {
+  async function startWinscopeProxyConnection() {
     const collectTracesComponent = getCollectTracesComponent();
     collectTracesComponent.adbSuccess = jasmine
       .createSpy()
       .and.returnValue(false);
-    component.adbConnection = new ProxyConnection();
+    component.adbConnection = new WinscopeProxyConnection();
     fixture.detectChanges();
     await fixture.whenStable();
   }

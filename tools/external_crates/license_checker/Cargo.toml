@@ -5,10 +5,7 @@ edition = "2021"
 
 [dependencies]
 glob = "0.3"
-itertools = { version = "0.11", optional = true }
+itertools = "0.14"
 spdx = "0.10"
-textdistance = { version = "1.1.1", optional = true }
+textdistance = "1.1.1"
 thiserror = "1.0"
-
-[features]
-fuzzy_content_match = ["dep:textdistance", "dep:itertools"]

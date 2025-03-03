@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import {byteArrayToString} from 'common/buffer_utils';
 import {StringUtils} from 'common/string_utils';
 import {Timestamp} from 'common/time/time';
 import {AbstractParser} from 'parsers/legacy/abstract_parser';
@@ -66,7 +67,7 @@ class ParserEventLog extends AbstractParser<PropertyTreeNode, Event> {
   }
 
   private decodeByteArray(bytes: Uint8Array): string[] {
-    const allLogsString = new TextDecoder().decode(bytes);
+    const allLogsString = byteArrayToString(bytes);
     const splitLogs = allLogsString.split('\n');
 
     const firstIndexOfEventLogTrace = splitLogs.findIndex((substring) => {

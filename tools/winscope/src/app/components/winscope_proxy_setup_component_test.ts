@@ -25,11 +25,11 @@ import {BrowserAnimationsModule} from '@angular/platform-browser/animations';
 import {assertDefined} from 'common/assert_utils';
 import {Download} from 'common/download';
 import {ConnectionState} from 'trace_collection/connection_state';
-import {AdbProxyComponent} from './adb_proxy_component';
+import {WinscopeProxySetupComponent} from './winscope_proxy_setup_component';
 
-describe('AdbProxyComponent', () => {
-  let fixture: ComponentFixture<AdbProxyComponent>;
-  let component: AdbProxyComponent;
+describe('WinscopeProxySetupComponent', () => {
+  let fixture: ComponentFixture<WinscopeProxySetupComponent>;
+  let component: WinscopeProxySetupComponent;
   let htmlElement: HTMLElement;
 
   beforeEach(async () => {
@@ -43,10 +43,10 @@ describe('AdbProxyComponent', () => {
         MatButtonModule,
         FormsModule,
       ],
-      declarations: [AdbProxyComponent],
+      declarations: [WinscopeProxySetupComponent],
       schemas: [NO_ERRORS_SCHEMA],
     }).compileComponents();
-    fixture = TestBed.createComponent(AdbProxyComponent);
+    fixture = TestBed.createComponent(WinscopeProxySetupComponent);
     component = fixture.componentInstance;
     htmlElement = fixture.nativeElement;
     component.state = ConnectionState.CONNECTING;
@@ -54,6 +54,13 @@ describe('AdbProxyComponent', () => {
 
   it('can be created', () => {
     expect(component).toBeTruthy();
+  });
+
+  it('correct connecting message', () => {
+    fixture.detectChanges();
+    expect(
+      htmlElement.querySelector('.connecting-message')?.textContent,
+    ).toContain('Connecting...');
   });
 
   it('correct icon and message displays if no proxy', () => {

@@ -32,12 +32,16 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
 import android.widget.GridView;
+import android.widget.LinearLayout;
 
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts.RequestPermission;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 import androidx.core.content.ContextCompat;
+import androidx.core.graphics.Insets;
+import androidx.core.view.ViewCompat;
+import androidx.core.view.WindowInsetsCompat;
 
 import dagger.hilt.android.AndroidEntryPoint;
 
@@ -99,6 +103,15 @@ public class MainActivity extends Hilt_MainActivity {
         setContentView(R.layout.activity_main);
         Toolbar toolbar = requireViewById(R.id.main_tool_bar);
         setSupportActionBar(toolbar);
+
+        // Apply the insets as a margin to the toolbar.
+        ViewCompat.setOnApplyWindowInsetsListener(toolbar, (v, windowInsets) -> {
+            Insets insets = windowInsets.getInsets(WindowInsetsCompat.Type.systemBars());
+            LinearLayout.LayoutParams lp = (LinearLayout.LayoutParams) v.getLayoutParams();
+            lp.topMargin = insets.top;
+            v.setLayoutParams(lp);
+            return WindowInsetsCompat.CONSUMED;
+        });
 
         mHomeDisplayButton = requireViewById(R.id.create_home_display);
         mHomeDisplayButton.setVisibility(View.GONE);

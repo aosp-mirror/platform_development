@@ -46,7 +46,6 @@ import {AdbConnection} from 'trace_collection/adb_connection';
 import {AdbDevice} from 'trace_collection/adb_device';
 import {AdbFiles, RequestedTraceTypes} from 'trace_collection/adb_files';
 import {ConnectionState} from 'trace_collection/connection_state';
-import {ProxyConnection} from 'trace_collection/proxy_connection';
 import {
   CheckboxConfiguration,
   makeDefaultDumpConfigMap,
@@ -57,6 +56,7 @@ import {
   updateConfigsFromStore,
 } from 'trace_collection/trace_configuration';
 import {TraceRequest, TraceRequestConfig} from 'trace_collection/trace_request';
+import {WinscopeProxyConnection} from 'trace_collection/winscope_proxy/winscope_proxy_connection';
 import {LoadProgressComponent} from './load_progress_component';
 import {
   WarningDialogComponent,
@@ -71,10 +71,6 @@ import {
       <mat-card-title class="title">Collect Traces</mat-card-title>
 
       <mat-card-content *ngIf="adbConnection" class="collect-card-content">
-        <p *ngIf="adbConnection.getState() === ${ConnectionState.CONNECTING}" class="connecting-message mat-body-1">
-          Connecting...
-        </p>
-
         <div *ngIf="!adbSuccess()" class="set-up-adb">
           <button
             class="proxy-tab"
@@ -84,10 +80,10 @@ import {
             ADB Proxy
           </button>
           <!-- <button class="web-tab" color="primary" mat-raised-button [ngClass]="tabClass(false)" (click)="displayWebAdbTab()">Web ADB</button> -->
-          <adb-proxy
+          <winscope-proxy-setup
             *ngIf="isAdbProxy()"
             [state]="adbConnection.getState()"
-            (retryConnection)="onRetryConnection($event)"></adb-proxy>
+            (retryConnection)="onRetryConnection($event)"></winscope-proxy-setup>
           <!-- <web-adb *ngIf="!isAdbProxy()"></web-adb> TODO: fix web adb workflow -->
         </div>
 
@@ -696,7 +692,7 @@ export class CollectTracesComponent
   }
 
   isAdbProxy(): boolean {
-    return this.adbConnection instanceof ProxyConnection;
+    return this.adbConnection instanceof WinscopeProxyConnection;
   }
 
   tabClass(adbTab: boolean) {

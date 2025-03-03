@@ -50,7 +50,7 @@ object SmartSpace {
 
 @Composable
 fun ContentScope.SmartSpace(textColor: Color, modifier: Modifier = Modifier) {
-    Element(SmartSpace.Elements.SmartSpace, modifier) {
+    ElementWithValues(SmartSpace.Elements.SmartSpace, modifier) {
         val color = animateElementColorAsState(textColor, SmartSpace.Values.TextColor)
 
         content {

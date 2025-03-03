@@ -18,7 +18,6 @@ use crate::feature::{FeaturesAndOptionalDeps, TypedFeatures};
 
 // Diff features between two versions of a crate.
 pub struct FeatureDiffer<'a> {
-    base: &'a Version,
     base_features: TypedFeatures<'a>,
 }
 
@@ -31,7 +30,7 @@ pub struct FeatureDiff<'base, 'other> {
 impl<'a> FeatureDiffer<'a> {
     pub fn new(base: &'a Version) -> FeatureDiffer<'a> {
         let base_features = base.features_and_optional_deps();
-        FeatureDiffer { base, base_features }
+        FeatureDiffer { base_features }
     }
     pub fn diff<'other>(&'a self, other: &'other Version) -> FeatureDiff<'a, 'other> {
         let other_features = other.features_and_optional_deps();

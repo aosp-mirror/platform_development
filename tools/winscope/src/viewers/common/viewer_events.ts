@@ -42,6 +42,7 @@ export enum ViewerEvents {
   OverlayDblClick = 'OverlayDblClick',
 
   AdditionalPropertySelected = 'AdditionalPropertySelected',
+  PropagatePropertyClick = 'PropagatePropertyClick',
 
   TimestampClick = 'TimestampClick',
   LogEntryClick = 'LogEntryClick',

@@ -19,6 +19,7 @@ import {InMemoryStorage} from 'common/store/in_memory_storage';
 import {Store} from 'common/store/store';
 import {TracePositionUpdate} from 'messaging/winscope_event';
 import {TraceBuilder} from 'test/unit/trace_builder';
+import {TreeNodeUtils} from 'test/unit/tree_node_utils';
 import {UnitTestUtils} from 'test/unit/utils';
 import {Trace} from 'trace/trace';
 import {Traces} from 'trace/traces';
@@ -30,7 +31,9 @@ import {AbstractHierarchyViewerPresenterTest} from 'viewers/common/abstract_hier
 import {VISIBLE_CHIP} from 'viewers/common/chip';
 import {TextFilter} from 'viewers/common/text_filter';
 import {UiHierarchyTreeNode} from 'viewers/common/ui_hierarchy_tree_node';
+import {UiPropertyTreeNode} from 'viewers/common/ui_property_tree_node';
 import {UiTreeUtils} from 'viewers/common/ui_tree_utils';
+import {ViewerEvents} from 'viewers/common/viewer_events';
 import {TraceRectType} from 'viewers/components/rects/rect_spec';
 import {Presenter} from './presenter';
 import {UiData} from './ui_data';
@@ -200,6 +203,11 @@ the default for its data type.`,
     expect(
       assertDefined(propertiesTree.getChildByName('state')).formattedValue(),
     ).toEqual('STOPPED');
+    expect(
+      assertDefined(
+        propertiesTree.findDfs((node) => node.name === 'hashCode'),
+      ).formattedValue(),
+    ).toEqual('0xf7092ed');
     expect(uiData.displays).toEqual([
       {
         displayId: 'DisplayContent 1f3454e Built-in Screen',
@@ -220,6 +228,69 @@ the default for its data type.`,
     expect(
       assertDefined(propertiesTree.getChildByName('state')).formattedValue(),
     ).toEqual('RESUMED');
+  }
+
+  override executeSpecializedTests(): void {
+    const invalidNode = UiPropertyTreeNode.from(
+      TreeNodeUtils.makeUiPropertyNode('', '', 0),
+    );
+
+    describe('Specialized tests', () => {
+      let presenter: Presenter;
+      let uiData: UiData;
+
+      beforeAll(async () => {
+        await this.setUpTestEnvironment();
+      });
+
+      beforeEach(() => {
+        const notifyViewCallback = (newData: UiData) => {
+          uiData = newData;
+        };
+        presenter = this.createPresenter(
+          notifyViewCallback as NotifyHierarchyViewCallbackType<UiData>,
+          new InMemoryStorage(),
+        );
+      });
+
+      it('adds event listeners', async () => {
+        const el = document.createElement('div');
+        presenter.addEventListeners(el);
+
+        const spy: jasmine.Spy = spyOn(presenter, 'onPropagatePropertyClick');
+        el.dispatchEvent(
+          new CustomEvent(ViewerEvents.PropagatePropertyClick, {
+            detail: invalidNode,
+          }),
+        );
+        expect(spy).toHaveBeenCalledWith(invalidNode);
+      });
+
+      it('does not propagate hashcode if name does not match', async () => {
+        await presenter.onPropagatePropertyClick(invalidNode);
+        expect(uiData.highlightedItem).toEqual('');
+      });
+
+      it('does not propagate hashcode if matching node not found', async () => {
+        const missingHashcode = UiPropertyTreeNode.from(
+          TreeNodeUtils.makeUiPropertyNode('', 'hashCode', 0),
+        );
+        await presenter.onPropagatePropertyClick(missingHashcode);
+        expect(uiData.highlightedItem).toEqual('');
+      });
+
+      it('propagates node with matching hashcode', async () => {
+        const validHashcode = UiPropertyTreeNode.from(
+          TreeNodeUtils.makeUiPropertyNode('', 'hashCode', 32720206),
+        );
+        await presenter.onAppEvent(this.getPositionUpdate());
+        console.log(uiData.hierarchyTrees?.at(0)?.getAllChildren()[0].id);
+        await presenter.onPropagatePropertyClick(validHashcode);
+        expect(uiData.highlightedItem).toEqual(
+          'DisplayContent 1f3454e Built-in Screen',
+        );
+      });
+    });
   }
 }
 

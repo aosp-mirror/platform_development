@@ -210,12 +210,14 @@ export class Mediator {
           'Downloading files...',
           undefined,
         );
+        console.log('App reset for remote tool download.');
       },
     );
 
     await event.visit(
       WinscopeEventType.REMOTE_TOOL_FILES_RECEIVED,
       async (event) => {
+        console.log('Remote tool files received.');
         await this.processRemoteFilesReceived(
           event.files,
           FilesSource.REMOTE_TOOL,
@@ -360,11 +362,13 @@ export class Mediator {
   }
 
   private async loadFiles(files: File[], source: FilesSource) {
+    const startTimeMs = Date.now();
     await this.tracePipeline.loadFiles(
       files,
       source,
       this.currentProgressListener,
     );
+    Analytics.Loading.logLoadFilesTime(Date.now() - startTimeMs, source);
   }
 
   private async propagateTracePosition(
@@ -486,6 +490,7 @@ export class Mediator {
   }
 
   private async loadViewers(source: FilesSource) {
+    const e2eStartTimeMs = Date.now();
     this.currentProgressListener?.onProgressUpdate(
       'Computing frame mapping...',
       undefined,
@@ -574,6 +579,7 @@ export class Mediator {
     // Meaning the viewer could perform twice the initial heavy pre-processing,
     // thus increasing UI initialization times.
     await this.appComponent.onWinscopeEvent(new ViewersLoaded(this.viewers));
+    Analytics.Loading.logLoadViewersTime(Date.now() - e2eStartTimeMs);
   }
 
   private getInitialTracePosition(): TracePosition | undefined {
@@ -634,6 +640,8 @@ export class Mediator {
   }
 
   private findViewerByType(type: TraceType): Viewer | undefined {
-    return this.viewers.find((viewer) => viewer.getTraces()[0].type === type);
+    return this.viewers.find(
+      (viewer) => viewer.getTraces().at(0)?.type === type,
+    );
   }
 }

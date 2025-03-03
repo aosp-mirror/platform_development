@@ -27,10 +27,12 @@ import android.service.chooser.ChooserAction
 import android.service.chooser.ChooserTarget
 import android.text.TextUtils
 import androidx.core.os.bundleOf
+import java.util.concurrent.atomic.AtomicInteger
 import kotlin.math.roundToLong
 
 const val REFINEMENT_ACTION = "com.android.sharetest.REFINEMENT"
-private const val EXTRA_IS_INITIAL = "isInitial"
+private const val EXTRA_IS_INITIAL = "com.android.sharetest.IS_INITIAL"
+private const val EXTRA_ID = "com.android.sharetest.ID"
 
 fun createAlternateIntent(intent: Intent): Intent {
     val text = buildString {
@@ -116,6 +118,12 @@ var Intent.isInitial: Boolean
     }
     get() = getBooleanExtra(EXTRA_IS_INITIAL, true)
 
+var Intent.id: Int
+    set(value) {
+        putExtra(EXTRA_ID, value)
+    }
+    get() = getIntExtra(EXTRA_ID, -1)
+
 fun createCallerTarget(context: Context, text: String) =
     ChooserTarget(
         "Caller Target",
@@ -125,6 +133,8 @@ fun createCallerTarget(context: Context, text: String) =
         bundleOf(Intent.EXTRA_TEXT to text),
     )
 
+private val counter = AtomicInteger(0)
+
 fun createRefinementIntentSender(context: Context, isInitial: Boolean) =
     PendingIntent.getBroadcast(
             context,
@@ -132,6 +142,7 @@ fun createRefinementIntentSender(context: Context, isInitial: Boolean) =
             Intent(REFINEMENT_ACTION).apply {
                 setPackage(context.packageName)
                 this.isInitial = isInitial
+                id = counter.incrementAndGet()
             },
             PendingIntent.FLAG_MUTABLE or
                 PendingIntent.FLAG_CANCEL_CURRENT or

@@ -23,6 +23,7 @@ export class UiPropertyTreeNode extends PropertyTreeNode implements DiffNode {
   private diff: DiffType = DiffType.NONE;
   private displayName: string = this.name;
   private oldValue = 'null';
+  private propagate = false;
 
   static from(node: PropertyTreeNode): UiPropertyTreeNode {
     const displayNode = new UiPropertyTreeNode(
@@ -71,5 +72,13 @@ export class UiPropertyTreeNode extends PropertyTreeNode implements DiffNode {
 
   getOldValue(): string {
     return this.oldValue;
+  }
+
+  canPropagate(): boolean {
+    return this.propagate;
+  }
+
+  setCanPropagate(value: boolean) {
+    this.propagate = value;
   }
 }

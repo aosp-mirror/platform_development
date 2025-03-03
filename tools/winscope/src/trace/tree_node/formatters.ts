@@ -253,6 +253,13 @@ class CujTypeFormatter implements PropertyFormatter {
 }
 const CUJ_TYPE_FORMATTER = new CujTypeFormatter();
 
+class HexFormatter implements PropertyFormatter {
+  format(node: PropertyTreeNode): string {
+    return formatAsHex(node.getValue() ?? 0);
+  }
+}
+const HEX_FORMATTER = new HexFormatter();
+
 export {
   EMPTY_OBJ_STRING,
   EMPTY_ARRAY_STRING,
@@ -272,4 +279,5 @@ export {
   TIMESTAMP_NODE_FORMATTER,
   MATRIX_FORMATTER,
   CUJ_TYPE_FORMATTER,
+  HEX_FORMATTER,
 };

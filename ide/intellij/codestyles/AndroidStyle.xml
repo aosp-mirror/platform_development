@@ -19,6 +19,8 @@
         <emptyLine />
         <package name="com" withSubpackages="true" static="true" />
         <emptyLine />
+        <package name="dagger" withSubpackages="true" static="true" />
+        <emptyLine />
         <package name="gov" withSubpackages="true" static="true" />
         <emptyLine />
         <package name="junit" withSubpackages="true" static="true" />
@@ -26,6 +28,8 @@
         <package name="junitparams" withSubpackages="true" static="true" />
         <emptyLine />
         <package name="kotlin" withSubpackages="true" static="true" />
+        <emptyLine />
+        <package name="kotlinx" withSubpackages="true" static="true" />
         <emptyLine />
         <package name="net" withSubpackages="true" static="true" />
         <emptyLine />
@@ -58,6 +62,8 @@
         <package name="junitparams" withSubpackages="true" static="false" />
         <emptyLine />
         <package name="kotlin" withSubpackages="true" static="false" />
+        <emptyLine />
+        <package name="kotlinx" withSubpackages="true" static="false" />
         <emptyLine />
         <package name="net" withSubpackages="true" static="false" />
         <emptyLine />

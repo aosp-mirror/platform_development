@@ -36,6 +36,8 @@ export class Analytics {
   private static GLOBAL_EXCEPTION = 'global_exception';
   private static HIERARCHY_SETTINGS = 'hierarchy_settings';
   private static JS_MEMORY_USAGE = 'js_memory_usage';
+  private static LOAD_FILES_TIME = 'load_files_time';
+  private static LOAD_VIEWERS_TIME = 'load_viewer_time';
   private static NAVIGATION_ZOOM_EVENT = 'navigation_zoom';
   private static PROPERTIES_SETTINGS = 'properties_settings';
   private static PROXY_ERROR = 'proxy_error';
@@ -117,6 +119,14 @@ export class Analytics {
 
     static logFrameMapBuildTime(ms: number) {
       Analytics.logTimeMs(Analytics.FRAME_MAP_BUILD_TIME, ms);
+    }
+
+    static logLoadFilesTime(ms: number, files_source: FilesSource) {
+      Analytics.logTimeMs(Analytics.LOAD_FILES_TIME, ms, {files_source});
+    }
+
+    static logLoadViewersTime(ms: number) {
+      Analytics.logTimeMs(Analytics.LOAD_VIEWERS_TIME, ms);
     }
 
     static logViewerInitializationTime(

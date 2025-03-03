@@ -16,16 +16,21 @@
 
 package com.android.sharetest
 
+import android.app.AlertDialog
+import android.app.Dialog
+import android.content.BroadcastReceiver
 import android.content.ClipData
+import android.content.Context
 import android.content.Intent
+import android.content.IntentFilter
 import android.content.res.Configuration
 import android.os.Bundle
 import android.provider.MediaStore
 import android.service.chooser.ChooserSession
 import android.service.chooser.ChooserSession.ChooserController
 import android.util.Log
-import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -35,6 +40,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.material3.Button
+import androidx.compose.material3.Checkbox
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
@@ -43,6 +49,7 @@ import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
@@ -51,6 +58,8 @@ import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.unit.dp
 import androidx.core.os.bundleOf
+import androidx.fragment.app.DialogFragment
+import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.lifecycleScope
@@ -68,12 +77,24 @@ private const val KEY_SESSION = "chooser-session"
 private const val EXTRA_CHOOSER_INTERACTIVE_CALLBACK =
     "com.android.extra.EXTRA_CHOOSER_INTERACTIVE_CALLBACK"
 
-@AndroidEntryPoint(value = ComponentActivity::class)
+@AndroidEntryPoint(value = FragmentActivity::class)
 class InteractiveShareTestActivity : Hilt_InteractiveShareTestActivity() {
     private val TAG = "ShareTest/$hashId"
     private var chooserWindowTopOffset = MutableStateFlow(-1)
     private val isInMultiWindowMode = MutableStateFlow<Boolean>(false)
     private val chooserSession = MutableStateFlow<ChooserSession?>(null)
+    private val useRefinementFlow = MutableStateFlow<Boolean>(false)
+    private val refinementReceiver =
+        object : BroadcastReceiver() {
+            override fun onReceive(context: Context?, intent: Intent) {
+                // Need to show refinement in another activity because this one is beneath the
+                // sharesheet.
+                val activityIntent =
+                    Intent(this@InteractiveShareTestActivity, RefinementActivity::class.java)
+                activityIntent.putExtras(intent)
+                startActivity(activityIntent)
+            }
+        }
 
     private val sessionStateListener =
         object : ChooserSession.ChooserSessionUpdateListener {
@@ -139,6 +160,7 @@ class InteractiveShareTestActivity : Hilt_InteractiveShareTestActivity() {
             //     .collectAsStateWithLifecycle(false)
             val isChooserRunning by
                 chooserSession.map { it?.isActive == true }.collectAsStateWithLifecycle(false)
+            val userRefinement by useRefinementFlow.collectAsStateWithLifecycle(false)
             ActivityTheme {
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
                     Column(
@@ -149,10 +171,13 @@ class InteractiveShareTestActivity : Hilt_InteractiveShareTestActivity() {
                             Button(onClick = { startCameraApp() }) { Text("Pick Camera App") }
                             Button(onClick = { launchActivity() }) { Text("Launch Activity") }
                         }
-                        if (showLaunchInSplitScreen) {
-                            Button(onClick = { launchSelfInSplitScreen() }) {
-                                Text("Launch Self in Split-Screen")
+                        Row(horizontalArrangement = Arrangement.spacedBy(spacing)) {
+                            if (showLaunchInSplitScreen) {
+                                Button(onClick = { launchSelfInSplitScreen() }) {
+                                    Text("Launch Self in Split-Screen")
+                                }
                             }
+                            Button(onClick = { launchDialog() }) { Text("Launch Dialog") }
                         }
                         Row(
                             modifier = Modifier.fillMaxWidth().wrapContentHeight(),
@@ -176,6 +201,20 @@ class InteractiveShareTestActivity : Hilt_InteractiveShareTestActivity() {
                                     }
                                 }
                             }
+                        }
+                        Row(
+                            horizontalArrangement = Arrangement.spacedBy(spacing),
+                            modifier = Modifier.clickable { updateRefinement() },
+                        ) {
+                            Checkbox(
+                                checked = userRefinement,
+                                onCheckedChange = {},
+                                modifier = Modifier.align(Alignment.CenterVertically),
+                            )
+                            Text(
+                                "Use Refinement",
+                                modifier = Modifier.align(Alignment.CenterVertically),
+                            )
                         }
                         if (isChooserRunning) {
                             Button(onClick = { closeChooser() }) { Text("Close Chooser") }
@@ -228,6 +267,9 @@ class InteractiveShareTestActivity : Hilt_InteractiveShareTestActivity() {
 
     override fun onDestroy() {
         Log.d(TAG, "onDestroy")
+        if (useRefinementFlow.value) {
+            unregisterReceiver(refinementReceiver)
+        }
         super.onDestroy()
     }
 
@@ -242,6 +284,21 @@ class InteractiveShareTestActivity : Hilt_InteractiveShareTestActivity() {
         super.onConfigurationChanged(newConfig)
     }
 
+    private fun updateRefinement() {
+        useRefinementFlow.update {
+            if (it) {
+                unregisterReceiver(refinementReceiver)
+            } else {
+                registerReceiver(
+                    refinementReceiver,
+                    IntentFilter(REFINEMENT_ACTION),
+                    RECEIVER_EXPORTED,
+                )
+            }
+            !it
+        }
+    }
+
     private fun startCameraApp() {
         val targetIntent = Intent(MediaStore.ACTION_IMAGE_CAPTURE)
         startOrUpdate(Intent.createChooser(targetIntent, null))
@@ -249,6 +306,11 @@ class InteractiveShareTestActivity : Hilt_InteractiveShareTestActivity() {
 
     private fun launchActivity() {
         startActivity(Intent(this, SendTextActivity::class.java))
+    }
+
+    private fun launchDialog() {
+        val dialog = TestDialog()
+        dialog.show(supportFragmentManager, "dialog")
     }
 
     private fun launchSelfInSplitScreen() {
@@ -304,6 +366,12 @@ class InteractiveShareTestActivity : Hilt_InteractiveShareTestActivity() {
 
     private fun startOrUpdate(chooserIntent: Intent) {
         val chooserController = chooserSession.value?.takeIf { it.isActive }?.chooserController
+        if (useRefinementFlow.value) {
+            chooserIntent.putExtra(
+                Intent.EXTRA_CHOOSER_REFINEMENT_INTENT_SENDER,
+                createRefinementIntentSender(this@InteractiveShareTestActivity, true),
+            )
+        }
         if (chooserController == null) {
             val session = ChooserSession()
             chooserSession.value = session
@@ -315,5 +383,14 @@ class InteractiveShareTestActivity : Hilt_InteractiveShareTestActivity() {
         } else {
             chooserController.updateIntent(chooserIntent)
         }
+    }
+}
+
+class TestDialog : DialogFragment() {
+    override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
+        return AlertDialog.Builder(requireContext())
+            .setMessage("Just a test dialog")
+            .setPositiveButton("Close") { _, _ -> dismiss() }
+            .create()
     }
 }

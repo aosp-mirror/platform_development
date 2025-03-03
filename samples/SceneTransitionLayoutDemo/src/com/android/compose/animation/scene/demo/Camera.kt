@@ -79,7 +79,7 @@ fun ContentScope.CameraButton(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    Element(Camera.Elements.Button, modifier) {
+    ElementWithValues(Camera.Elements.Button, modifier) {
         val backgroundColor by
             animateElementColorAsState(backgroundColor, Camera.Values.ButtonColor)
         val iconColor by
