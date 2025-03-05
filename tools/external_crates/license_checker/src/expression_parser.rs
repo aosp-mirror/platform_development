@@ -85,6 +85,8 @@ static LICENSE_PREFERENCE: LazyLock<Vec<Licensee>> = LazyLock::new(|| {
         "Unicode-DFS-2016",
         "NCSA",
         "OpenSSL",
+        "MIT-0",
+        "CC0-1.0",
     ]
     .into_iter()
     .map(|l| Licensee::parse(l).unwrap())
@@ -96,7 +98,9 @@ static LICENSE_EXPR_SPECIAL_CASES: LazyLock<
     BTreeMap::from([
         ("futures-channel", (Some("MIT OR Apache-2.0"), "(MIT OR Apache-2.0) AND BSD-2-Clause")),
         ("libfuzzer-sys", (Some("MIT/Apache-2.0/NCSA"), "(MIT OR Apache-2.0) AND NCSA")),
+        ("merge", (Some("Apache-2.0 OR MIT"), "(Apache-2.0 OR MIT) AND CC0-1.0")),
         ("ring", (None, "MIT AND ISC AND OpenSSL")),
+        ("tonic", (Some("MIT"), "MIT AND Apache-2.0")),
         ("webpki", (None, "ISC AND BSD-3-Clause")),
     ])
 });
