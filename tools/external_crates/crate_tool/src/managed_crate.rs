@@ -233,8 +233,9 @@ impl ManagedCrate<New> {
     pub fn regenerate(
         self,
         pseudo_crate: &PseudoCrate<CargoVendorClean>,
+        run_cargo_embargo: bool,
     ) -> Result<ManagedCrate<CopiedAndPatched>> {
-        let regenerated = self.into_vendored(pseudo_crate)?.regenerate()?;
+        let regenerated = self.into_vendored(pseudo_crate)?.regenerate(run_cargo_embargo)?;
         Ok(regenerated)
     }
 }
@@ -316,7 +317,7 @@ impl ManagedCrate<Vendored> {
         }
         Ok(())
     }
-    pub fn regenerate(self) -> Result<ManagedCrate<CopiedAndPatched>> {
+    pub fn regenerate(self, run_cargo_embargo: bool) -> Result<ManagedCrate<CopiedAndPatched>> {
         self.copy_to_temporary_build_directory()?;
         self.copy_customizations()?;
 
@@ -339,19 +340,25 @@ impl ManagedCrate<Vendored> {
             self.android_crate.license(),
         )?;
         let regenerated = self.into_copied_and_patched(licenses)?;
-        regenerated.regenerate()?;
+        regenerated.regenerate(run_cargo_embargo)?;
         Ok(regenerated)
     }
 }
 
 impl ManagedCrate<CopiedAndPatched> {
-    pub fn regenerate(&self) -> Result<()> {
+    pub fn regenerate(&self, run_cargo_embargo: bool) -> Result<()> {
         // License logic must happen AFTER applying patches, because we use patches
         // to add missing license files. It must also happen BEFORE cargo_embargo,
         // because cargo_embargo needs to put license information in the Android.bp.
         self.update_license_files()?;
 
-        self.run_cargo_embargo()?;
+        // If the crate has an out/ directory, that means we cannot skip running cargo_embargo.
+        // The out/ directory is used by cargo_embargo to preserve files generated
+        // by a build script. Soong can't run build scripts, so we rely on cargo_embargo
+        // to run `cargo build` and save the intermediates.
+        if run_cargo_embargo || self.android_crate_path().abs().join("out").exists() {
+            self.run_cargo_embargo()?;
+        }
 
         self.update_metadata()?;
         self.fix_test_mapping()?;
