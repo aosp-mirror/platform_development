@@ -71,6 +71,7 @@ pub(super) fn classify_license_file_contents_fuzzy(contents: &str) -> Option<Lic
 static LICENSE_CONTENT_CLASSIFICATION: LazyLock<Vec<(LicenseReq, String)>> = LazyLock::new(|| {
     vec![
         ("MIT", include_str!("licenses/MIT.txt")),
+        ("MIT-0", include_str!("licenses/MIT-0.txt")),
         ("Apache-2.0", include_str!("licenses/Apache-2.0.txt")),
         ("ISC", include_str!("licenses/ISC.txt")),
         ("MPL-2.0", include_str!("licenses/MPL-2.0.txt")),

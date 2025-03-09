@@ -379,7 +379,23 @@ impl ManagedCrate<CopiedAndPatched> {
             bail!("No license terms were found for this crate");
         }
 
-        // TODO: Maybe remove unused license files.
+        // There should be no license files for terms not mentioned in Cargo.toml
+        // license expression. For example, if Cargo.toml says "Apache-2.0" and we
+        // find a file named "LICENSE-MIT", that suggests that something suspicious might
+        // be going on.
+        if !self.extra.licenses.unexpected.is_empty() {
+            bail!(
+                "Found unexpected license files that don't correspond to any terms of {}: {:?}",
+                self.android_crate.license().unwrap_or("<license terms not found in Cargo.toml>"),
+                self.extra.licenses.unexpected
+            );
+        }
+
+        // Per go/thirdparty/licenses#multiple:
+        // "Delete any LICENSE files or license texts that were not selected and are not in use."
+        for unneeded_license_file in self.extra.licenses.unneeded.values() {
+            remove_file(self.temporary_build_directory().abs().join(unneeded_license_file))?;
+        }
 
         // Per http://go/thirdpartyreviewers#license:
         // "There must be a file called LICENSE containing an allowed third party license."
