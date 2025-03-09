@@ -46,7 +46,7 @@ import {viewerCardInnerStyle} from './styles/viewer_card.styles';
           [title]="title"
           (collapseButtonClicked)="collapseButtonClicked.emit()"></collapsible-section-title>
         <search-box
-          *ngIf="showFilter"
+          formFieldClass="applied-field"
           [textFilter]="textFilter"
           (filterChange)="onFilterChange($event)"></search-box>
       </div>
@@ -91,10 +91,6 @@ import {viewerCardInnerStyle} from './styles/viewer_card.styles';
         flex-direction: column;
       }
 
-      .padded-title {
-        padding-bottom: 8px;
-      }
-
       .property-groups {
         overflow-y: auto;
       }
@@ -117,17 +113,16 @@ export class PropertiesComponent {
   ViewerEvents = ViewerEvents;
 
   @Input() title = 'PROPERTIES';
-  @Input() showFilter = true;
   @Input() userOptions: UserOptions = {};
   @Input() placeholderText = '';
   @Input() propertiesTree: UiPropertyTreeNode | undefined;
   @Input() highlightedProperty = '';
   @Input() curatedProperties: CuratedProperties | undefined;
-  @Input() displayPropertyGroups = false;
   @Input() isProtoDump = false;
   @Input() traceType: TraceType | undefined;
   @Input() store: PersistentStore | undefined;
   @Input() textFilter: TextFilter | undefined;
+  @Input() filterEventName = ViewerEvents.PropertiesFilterChange;
 
   @Output() collapseButtonClicked = new EventEmitter();
 
@@ -136,7 +131,7 @@ export class PropertiesComponent {
   constructor(@Inject(ElementRef) private elementRef: ElementRef) {}
 
   onFilterChange(detail: TextFilter) {
-    const event = new CustomEvent(ViewerEvents.PropertiesFilterChange, {
+    const event = new CustomEvent(this.filterEventName, {
       bubbles: true,
       detail,
     });

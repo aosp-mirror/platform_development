@@ -16,12 +16,14 @@
 
 package com.android.compose.animation.scene.demo.notification
 
+import androidx.compose.foundation.OverscrollEffect
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.withoutVisualEffect
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.key
@@ -36,6 +38,7 @@ import com.android.compose.animation.scene.SceneTransitionLayoutState
 import com.android.compose.animation.scene.demo.DemoConfiguration
 import com.android.compose.animation.scene.demo.Scenes
 import com.android.compose.animation.scene.observableTransitionState
+import com.android.compose.modifiers.thenIf
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.filter
@@ -57,6 +60,8 @@ fun SceneScope.NotificationList(
     maxNotificationCount: Int?,
     demoConfiguration: DemoConfiguration,
     modifier: Modifier = Modifier,
+    isScrollable: Boolean = true,
+    overscrollEffect: OverscrollEffect? = null,
 ) {
     if (demoConfiguration.interactiveNotifications) {
         ExpandFirstNotificationWhenSwipingFromLockscreenToShade(notifications)
@@ -66,9 +71,15 @@ fun SceneScope.NotificationList(
     // SceneTransitionLayout bounds.
     // TODO(b/291025415): Make sure everything still works when using `LazyColumn` instead of a
     // scrollable `Column`.
-    val scrollState = rememberScrollState()
+    val scrollState = if (isScrollable) rememberScrollState() else null
+
     Column(
-        modifier.verticalScroll(scrollState).fillMaxWidth().padding(16.dp),
+        modifier
+            .thenIf(scrollState != null) {
+                Modifier.verticalScroll(scrollState!!, overscrollEffect?.withoutVisualEffect())
+            }
+            .fillMaxWidth()
+            .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(2.dp),
     ) {
         val n = maxNotificationCount ?: notifications.size

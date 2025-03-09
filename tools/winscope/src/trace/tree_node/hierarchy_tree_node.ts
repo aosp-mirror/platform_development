@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import {UserWarning} from 'messaging/user_warning';
 import {TraceRect} from 'trace/trace_rect';
 import {PropertiesProvider} from 'trace/tree_node/properties_provider';
 import {PropertyTreeNode} from './property_tree_node';
@@ -24,6 +25,8 @@ export class HierarchyTreeNode extends TreeNode {
   private secondaryRects: TraceRect[] | undefined;
   private zParent: HierarchyTreeNode | undefined;
   private parent: this | undefined;
+  private relativeChildren: HierarchyTreeNode[] = [];
+  private warnings: UserWarning[] = [];
 
   constructor(
     id: string,
@@ -61,8 +64,8 @@ export class HierarchyTreeNode extends TreeNode {
     return this.secondaryRects;
   }
 
-  setZParent(parent: HierarchyTreeNode): void {
-    this.zParent = parent;
+  setZParent(value: HierarchyTreeNode): void {
+    this.zParent = value;
   }
 
   getZParent(): HierarchyTreeNode | undefined {
@@ -77,6 +80,14 @@ export class HierarchyTreeNode extends TreeNode {
     return this.parent;
   }
 
+  addRelativeChild(value: HierarchyTreeNode): void {
+    this.relativeChildren.push(value);
+  }
+
+  getRelativeChildren(): HierarchyTreeNode[] {
+    return this.relativeChildren;
+  }
+
   override isRoot(): boolean {
     return !this.parent;
   }
@@ -89,5 +100,13 @@ export class HierarchyTreeNode extends TreeNode {
     }
 
     return ancestor;
+  }
+
+  getWarnings(): UserWarning[] {
+    return this.warnings;
+  }
+
+  addWarning(warning: UserWarning) {
+    this.warnings.push(warning);
   }
 }
