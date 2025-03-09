@@ -23,6 +23,7 @@ import com.android.compose.animation.scene.demo.Clock
 import com.android.compose.animation.scene.demo.MediaPlayer
 import com.android.compose.animation.scene.demo.NotificationShade
 import com.android.compose.animation.scene.demo.Overlays
+import com.android.compose.animation.scene.demo.PartialShade
 import com.android.compose.animation.scene.demo.notification.NotificationList
 import com.android.compose.animation.scene.reveal.ContainerRevealHaptics
 import com.android.compose.animation.scene.reveal.verticalContainerReveal
@@ -51,5 +52,5 @@ fun SceneTransitionsBuilder.notificationShadeTransitions(revealHaptics: Containe
 val ToNotificationShadeStartFadeProgress = 0.5f
 
 private fun TransitionBuilder.toNotificationShade(revealHaptics: ContainerRevealHaptics) {
-    verticalContainerReveal(NotificationShade.Elements.Root, revealHaptics)
+    verticalContainerReveal(NotificationShade.Elements.Root, PartialShade.MotionSpec, revealHaptics)
 }

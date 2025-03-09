@@ -71,6 +71,7 @@ public class ConnectionManager {
     @ApplicationContext private final Context mContext;
     private final ConnectivityManager mConnectivityManager;
     private final Handler mBackgroundHandler;
+    private String mChannel = "";
 
     private CompletableFuture<WifiAwareSession> mWifiAwareSessionFuture = new CompletableFuture<>();
 
@@ -133,19 +134,27 @@ public class ConnectionManager {
     }
 
     /** Publish a local service so remote devices can discover this device. */
-    public void startHostSession() {
+    public void startHostSession(String channel) {
+        mChannel = channel;
+        final String serviceName = getServiceName(channel);
         var unused = createWifiAwareSession().thenAccept(session -> session.publish(
-                    new PublishConfig.Builder().setServiceName(CONNECTION_SERVICE_ID).build(),
+                    new PublishConfig.Builder().setServiceName(serviceName).build(),
                     new HostDiscoverySessionCallback(),
                     mBackgroundHandler));
     }
 
     /** Looks for published services from remote devices and subscribes to them. */
-    public void startClientSession() {
+    public void startClientSession(String channel) {
+        mChannel = channel;
+        final String serviceName = getServiceName(channel);
         var unused = createWifiAwareSession().thenAccept(session -> session.subscribe(
-                new SubscribeConfig.Builder().setServiceName(CONNECTION_SERVICE_ID).build(),
+                new SubscribeConfig.Builder().setServiceName(serviceName).build(),
                 new ClientDiscoverySessionCallback(),
                 mBackgroundHandler));
+    }
+
+    private String getServiceName(String channel) {
+        return CONNECTION_SERVICE_ID + channel;
     }
 
     private boolean isConnected() {
@@ -382,7 +391,7 @@ public class ConnectionManager {
         @Override
         public void onLost(@NonNull Network network) {
             super.onLost(network);
-            startClientSession();
+            startClientSession(mChannel);
         }
     }
 }

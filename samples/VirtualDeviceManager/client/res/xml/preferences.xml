@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- LINT.IfChange -->
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto" >
+
+    <PreferenceCategory
+        android:key="debug"
+        android:title="Debug"
+        app:iconSpaceReserved="false">
+
+        <ListPreference
+            android:key="@string/pref_network_channel"
+            android:title="Network channel"
+            android:entries="@array/network_channels"
+            android:entryValues="@array/network_channels"
+            android:defaultValue="0"
+            app:useSimpleSummaryProvider="true"
+            app:iconSpaceReserved="false" />
+    </PreferenceCategory>
+
+</PreferenceScreen>
+<!-- LINT.ThenChange(/samples/VirtualDeviceManager/README.md:client_options) -->

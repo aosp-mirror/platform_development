@@ -159,6 +159,15 @@
             android:summary="Store the host's media encoder output to a local file"
             android:defaultValue="false"
             app:iconSpaceReserved="false" />
+
+        <ListPreference
+            android:key="@string/pref_network_channel"
+            android:title="Network channel"
+            android:entries="@array/network_channels"
+            android:entryValues="@array/network_channels"
+            android:defaultValue="0"
+            app:useSimpleSummaryProvider="true"
+            app:iconSpaceReserved="false" />
     </PreferenceCategory>
 
 </PreferenceScreen>

@@ -22,6 +22,7 @@ import android.content.BroadcastReceiver
 import android.content.ClipData
 import android.content.Context
 import android.content.Intent
+import android.content.Intent.EXTRA_CHOOSER_RESULT_INTENT_SENDER
 import android.content.IntentFilter
 import android.content.res.Configuration
 import android.os.Bundle
@@ -372,6 +373,7 @@ class InteractiveShareTestActivity : Hilt_InteractiveShareTestActivity() {
                 createRefinementIntentSender(this@InteractiveShareTestActivity, true),
             )
         }
+        chooserIntent.putExtra(EXTRA_CHOOSER_RESULT_INTENT_SENDER, createResultIntentSender(this))
         if (chooserController == null) {
             val session = ChooserSession()
             chooserSession.value = session

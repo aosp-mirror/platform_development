@@ -321,6 +321,11 @@ you likely need to enable this in the host Settings. On a Pixel device: System
     ffplay -f h264 vdmdemo_encoder_output_<displayId>.h264
     ```
 
+-   **Network channel**: Select different communication channel between the
+    client and the host to avoid collisions with other demo setups nearby.
+    The selected channel on the host must match the selected channel on the
+    client.
+
 <!-- LINT.ThenChange(README.md) -->
 <!-- LINT.IfChange(client_options) -->
 
@@ -364,6 +369,15 @@ Run the commands below on the host device to enable this functionality.
 ```shell
 adb shell aflags enable android.companion.virtual.flags.device_aware_display_power && adb reboot
 ```
+
+### Settings
+
+#### Debug
+
+-   **Network channel**: Select different communication channel between the
+    client and the host to avoid collisions with other demo setups nearby.
+    The selected channel on the host must match the selected channel on the
+    client.
 
 <!-- LINT.ThenChange(README.md) -->
 <!-- LINT.IfChange(demos) -->

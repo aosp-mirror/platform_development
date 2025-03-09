@@ -9,4 +9,7 @@
     <string name="display_close" translatable="false">Close</string>
     <string name="input" translatable="false">Input</string>
     <string name="power" translatable="false">Power</string>
+    <string name="settings" translatable="false">Settings</string>
+
+    <string name="pref_network_channel" translatable="false">network_channel</string>
 </resources>

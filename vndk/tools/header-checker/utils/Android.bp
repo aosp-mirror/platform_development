@@ -25,10 +25,4 @@ python_binary_host {
         "create_reference_dumps.py",
         "utils.py",
     ],
-    version: {
-        py3: {
-            enabled: true,
-            embedded_launcher: true,
-        },
-    },
 }

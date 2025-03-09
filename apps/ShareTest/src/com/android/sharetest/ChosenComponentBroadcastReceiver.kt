@@ -24,23 +24,30 @@ import android.widget.Toast
 
 class ChosenComponentBroadcastReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context?, intent: Intent?) {
-        val result = intent?.getParcelableExtra(
-            Intent.EXTRA_CHOOSER_RESULT, ChooserResult::class.java)
-        val message = when (result?.type) {
-            ChooserResult.CHOOSER_RESULT_SELECTED_COMPONENT -> {
-                "Sent to ${result.selectedComponent?.packageName}"
-            }
-            ChooserResult.CHOOSER_RESULT_COPY -> {
-                "Copied to clipboard"
-            }
-            ChooserResult.CHOOSER_RESULT_EDIT -> {
-                "Opened in image editor"
-            }
+        val result =
+            intent?.getParcelableExtra(Intent.EXTRA_CHOOSER_RESULT, ChooserResult::class.java)
+        val message =
+            when (result?.type) {
+                ChooserResult.CHOOSER_RESULT_SELECTED_COMPONENT -> {
+                    buildString {
+                        append("Sent to ${result.selectedComponent?.packageName}")
+                        val id = intent.id
+                        if (id >= 0) {
+                            append(" (id: $id)")
+                        }
+                    }
+                }
+                ChooserResult.CHOOSER_RESULT_COPY -> {
+                    "Copied to clipboard"
+                }
+                ChooserResult.CHOOSER_RESULT_EDIT -> {
+                    "Opened in image editor"
+                }
 
-            else -> {
-                "Unknown ChooserResult"
+                else -> {
+                    "Unknown ChooserResult"
+                }
             }
-        }
         Toast.makeText(context, message, Toast.LENGTH_LONG).show()
     }
 }

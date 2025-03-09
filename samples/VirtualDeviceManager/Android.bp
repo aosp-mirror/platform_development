@@ -45,6 +45,7 @@ android_app {
         "VdmCommonLib",
         "androidx.annotation_annotation",
         "androidx.appcompat_appcompat",
+        "androidx.preference_preference",
         "androidx.recyclerview_recyclerview",
         "androidx-constraintlayout_constraintlayout",
         "guava",

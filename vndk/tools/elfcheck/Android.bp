@@ -37,9 +37,4 @@ python_binary_host {
         "elfcheck/*.py",
         "fix_android_mk_prebuilt.py",
     ],
-    version: {
-        py3: {
-            embedded_launcher: true,
-        },
-    },
 }

@@ -36,7 +36,10 @@ android_library {
         "androidx.window_window",
     ],
 
-    kotlincflags: ["-Xjvm-default=all"],
+    kotlincflags: [
+        "-Xjvm-default=all",
+        "-P plugin:androidx.compose.compiler.plugins.kotlin:sourceInformation=true",
+    ],
     use_resource_processor: true,
 }
 

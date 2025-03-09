@@ -32,5 +32,9 @@
             android:name=".ImmersiveActivity"
             android:configChanges="orientation|screenSize|smallestScreenSize|screenLayout"
             android:theme="@style/Theme.AppCompat.Light.NoActionBar.FullScreen" />
+        <activity
+            android:name=".SettingsActivity"
+            android:exported="true"
+            android:excludeFromRecents="true" />
     </application>
 </manifest>

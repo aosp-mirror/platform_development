@@ -481,22 +481,29 @@ fun SystemUi(
                 LocalOverscrollFactory provides rememberOffsetOverscrollEffectFactory(),
             ) {
                 var isMediaPlayerPlaying by remember { mutableStateOf(false) }
-                val mediaPlayer: (@Composable ContentScope.(isSmall: Boolean) -> Unit)? =
+                val mediaPlayer:
+                    (@Composable
+                    ContentScope.(presentationStyle: DemoMediaPresentationStyle) -> Unit)? =
                     if (configuration.showMediaPlayer) {
-                        { isSmall ->
+                        { presentationStyle ->
                             MediaPlayer(
-                                isSmall = isSmall,
+                                presentationStyle = presentationStyle,
                                 isPlaying = isMediaPlayerPlaying,
                                 onIsPlayingChange = { isMediaPlayerPlaying = it },
+                                onVisibilityChange = { isVisible ->
+                                    onConfigurationChange(
+                                        configuration.copy(showMediaPlayer = isVisible)
+                                    )
+                                },
                             )
                         }
                     } else {
                         null
                     }
-                val largeMediaPlayer: (@Composable ContentScope.() -> Unit)? =
-                    mediaPlayer?.let { { it(/* isSmall= */ false) } }
-                val smallMediaPlayer: (@Composable ContentScope.() -> Unit)? =
-                    mediaPlayer?.let { { it(/* isSmall= */ true) } }
+                val defaultMediaPlayer: (@Composable ContentScope.() -> Unit)? =
+                    mediaPlayer?.let { { it(DemoMediaPresentationStyle.Default) } }
+                val compactMediaPlayer: (@Composable ContentScope.() -> Unit)? =
+                    mediaPlayer?.let { { it(DemoMediaPresentationStyle.Compact) } }
 
                 val qsPager: (@Composable ContentScope.() -> Unit) = {
                     QuickSettingsPager(
@@ -561,7 +568,7 @@ fun SystemUi(
                                             configuration.notificationsInLockscreen
                                     )
                                 },
-                                mediaPlayer = largeMediaPlayer,
+                                mediaPlayer = defaultMediaPlayer,
                                 isDismissable = isLockscreenDismissable,
                                 onToggleDismissable = {
                                     isLockscreenDismissable = !isLockscreenDismissable
@@ -584,7 +591,7 @@ fun SystemUi(
                                             configuration.notificationsInLockscreen
                                     )
                                 },
-                                mediaPlayer = largeMediaPlayer,
+                                mediaPlayer = defaultMediaPlayer,
                                 isDismissable = isLockscreenDismissable,
                                 onToggleDismissable = {
                                     isLockscreenDismissable = !isLockscreenDismissable
@@ -624,7 +631,7 @@ fun SystemUi(
                         ) {
                             QuickSettings(
                                 qsPager,
-                                mediaPlayer = largeMediaPlayer,
+                                mediaPlayer = defaultMediaPlayer,
                                 ::onSettingsButtonClicked,
                                 ::onPowerButtonClicked,
                             )
@@ -640,7 +647,7 @@ fun SystemUi(
                                         overscrollEffect = overscrollEffect,
                                     )
                                 },
-                                mediaPlayer = largeMediaPlayer,
+                                mediaPlayer = defaultMediaPlayer,
                                 quickSettingsTiles,
                                 nQuickSettingsColumns,
                             )
@@ -655,7 +662,7 @@ fun SystemUi(
                                         maxNotificationCount = configuration.notificationsInShade
                                     )
                                 },
-                                mediaPlayer = largeMediaPlayer,
+                                mediaPlayer = defaultMediaPlayer,
                                 quickSettingsTiles,
                                 nQuickSettingsSplitShadeRows,
                                 nQuickSettingsColumns,
@@ -674,7 +681,7 @@ fun SystemUi(
                             alignment = Alignment.TopEnd,
                             effectFactory = overlayEffectFactory,
                         ) {
-                            QuickSettingsShade(qsPager, smallMediaPlayer)
+                            QuickSettingsShade(qsPager, compactMediaPlayer)
                         }
 
                         overlay(
@@ -690,7 +697,7 @@ fun SystemUi(
                                     } else {
                                         { Clock(MaterialTheme.colorScheme.onSurfaceVariant) }
                                     },
-                                mediaPlayer = largeMediaPlayer,
+                                mediaPlayer = defaultMediaPlayer,
                                 notificationList = {
                                     NotificationList(
                                         maxNotificationCount = configuration.notificationsInShade,

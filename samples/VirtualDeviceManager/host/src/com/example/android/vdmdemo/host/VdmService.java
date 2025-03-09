@@ -323,7 +323,8 @@ public final class VdmService extends Hilt_VdmService {
         super.onCreate();
 
         mConnectionManager.addConnectionCallback(mConnectionCallback);
-        mConnectionManager.startHostSession();
+        mConnectionManager.startHostSession(
+                mPreferenceController.getString(R.string.pref_network_channel));
 
         mKeyguardManager = getSystemService(KeyguardManager.class);
         mDisplayManager = getSystemService(DisplayManager.class);
@@ -764,6 +765,10 @@ public final class VdmService extends Hilt_VdmService {
         observers.put(R.string.pref_enable_custom_home, v -> recreateVirtualDevice());
         observers.put(R.string.pref_display_timeout, v -> recreateVirtualDevice());
         observers.put(R.string.pref_enable_display_category, v -> recreateVirtualDevice());
+        observers.put(R.string.pref_network_channel, s -> {
+            mConnectionManager.disconnect();
+            mConnectionManager.startHostSession((String) s);
+        });
 
         return observers;
     }

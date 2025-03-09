@@ -18,6 +18,7 @@ package com.example.android.vdmdemo.client;
 
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Bundle;
@@ -35,6 +36,7 @@ import androidx.activity.result.contract.ActivityResultContracts.RequestPermissi
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 import androidx.core.content.ContextCompat;
+import androidx.preference.PreferenceManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
 
 import com.example.android.vdmdemo.common.ConnectionManager;
@@ -74,6 +76,10 @@ public class MainActivity extends Hilt_MainActivity {
     private final Consumer<RemoteEvent> mRemoteEventConsumer = this::processRemoteEvent;
     private DisplayAdapter mDisplayAdapter;
     private InputMethodManager mInputMethodManager;
+
+    private final SharedPreferences.OnSharedPreferenceChangeListener mPreferenceChangeListener =
+            this::onPreferencesChanged;
+
     private final ActivityResultLauncher<String> mRequestPermissionLauncher =
             registerForActivityResult(new RequestPermission(), isGranted -> {
                 if (isGranted) {
@@ -148,7 +154,12 @@ public class MainActivity extends Hilt_MainActivity {
                 mInputManager.sendInputEventToFocusedDisplay(
                         InputDeviceType.DEVICE_TYPE_ROTARY_ENCODER, event));
 
-        mConnectionManager.startClientSession();
+        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
+        sharedPreferences.registerOnSharedPreferenceChangeListener(mPreferenceChangeListener);
+
+        mConnectionManager.startClientSession(
+                sharedPreferences.getString(
+                        getString(R.string.pref_network_channel), String.valueOf(0)));
     }
 
     @Override
@@ -214,11 +225,21 @@ public class MainActivity extends Hilt_MainActivity {
         switch (item.getItemId()) {
             case R.id.input -> toggleInputVisibility();
             case R.id.power -> togglePowerState();
+            case R.id.settings -> startActivity(new Intent(this, SettingsActivity.class));
             default -> {
                 return super.onOptionsItemSelected(item);
             }
         }
         return true;
+    }
+
+    private void onPreferencesChanged(SharedPreferences sharedPreferences, String key) {
+        if (key.equals(getString(R.string.pref_network_channel))) {
+            mConnectionManager.disconnect();
+            mConnectionManager.startClientSession(
+                    sharedPreferences.getString(
+                            getString(R.string.pref_network_channel), String.valueOf(0)));
+        }
     }
 
     private void processRemoteEvent(RemoteEvent event) {

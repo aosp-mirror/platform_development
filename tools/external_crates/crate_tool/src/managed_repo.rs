@@ -313,19 +313,23 @@ We apologize for the inconvenience."#,
                 krate.name()
             );
         } else {
-            self.regenerate([&crate_name].iter())?;
+            self.regenerate([&crate_name].iter(), true)?;
             println!("Please edit {} and run 'regenerate' for this crate", managed_dir);
         }
 
         Ok(())
     }
-    pub fn regenerate<T: AsRef<str>>(&self, crates: impl Iterator<Item = T>) -> Result<()> {
+    pub fn regenerate<T: AsRef<str>>(
+        &self,
+        crates: impl Iterator<Item = T>,
+        run_cargo_embargo: bool,
+    ) -> Result<()> {
         let pseudo_crate = self.pseudo_crate().vendor()?;
         for crate_name in crates {
             println!("Regenerating {}", crate_name.as_ref());
             let mc = self.managed_crate_for(crate_name.as_ref())?;
             // TODO: Don't give up if there's a failure.
-            mc.regenerate(&pseudo_crate)?;
+            mc.regenerate(&pseudo_crate, run_cargo_embargo)?;
         }
 
         pseudo_crate.regenerate_crate_list()?;
@@ -652,7 +656,7 @@ We apologize for the inconvenience."#,
         for nv in &crate_updates {
             pseudo_crate.cargo_add(nv)?;
         }
-        self.regenerate(crate_updates.iter().map(|nv| nv.name()))?;
+        self.regenerate(crate_updates.iter().map(|nv| nv.name()), true)?;
         Ok(())
     }
     pub fn init(&self) -> Result<()> {

@@ -12,5 +12,10 @@
         android:icon="@drawable/power"
         android:title="@string/power"
         app:showAsAction="always" />
+    <item
+        android:id="@+id/settings"
+        android:icon="@drawable/settings"
+        android:title="@string/settings"
+        app:showAsAction="always" />
 </menu>
 <!-- LINT.ThenChange(/samples/VirtualDeviceManager/README.md:client_options) -->

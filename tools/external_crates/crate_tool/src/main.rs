@@ -70,6 +70,10 @@ enum Cmd {
     },
     /// Regenerate crates from vendored code by applying patches, running cargo_embargo, etc.
     Regenerate {
+        /// Skip running cargo_embargo and just regenerate license files and other metadata.
+        #[arg(long, default_value_t = false)]
+        metadata_only: bool,
+
         #[command(flatten)]
         crates: CrateList,
     },
@@ -158,8 +162,9 @@ fn main() -> Result<()> {
     )?;
 
     match args.command {
-        Cmd::Regenerate { crates } => {
-            managed_repo.regenerate(crates.to_list(&managed_repo)?.into_iter())
+        Cmd::Regenerate { crates, metadata_only } => {
+            let run_cargo_embargo = !metadata_only;
+            managed_repo.regenerate(crates.to_list(&managed_repo)?.into_iter(), run_cargo_embargo)
         }
         Cmd::PreuploadCheck { files } => managed_repo.preupload_check(&files),
         Cmd::AnalyzeImport { crate_name } => managed_repo.analyze_import(&crate_name),

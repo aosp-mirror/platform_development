@@ -133,7 +133,7 @@ fun createCallerTarget(context: Context, text: String) =
         bundleOf(Intent.EXTRA_TEXT to text),
     )
 
-private val counter = AtomicInteger(0)
+private val refinementCounter = AtomicInteger(0)
 
 fun createRefinementIntentSender(context: Context, isInitial: Boolean) =
     PendingIntent.getBroadcast(
@@ -142,11 +142,24 @@ fun createRefinementIntentSender(context: Context, isInitial: Boolean) =
             Intent(REFINEMENT_ACTION).apply {
                 setPackage(context.packageName)
                 this.isInitial = isInitial
-                id = counter.incrementAndGet()
+                id = refinementCounter.incrementAndGet()
             },
             PendingIntent.FLAG_MUTABLE or
                 PendingIntent.FLAG_CANCEL_CURRENT or
                 PendingIntent.FLAG_CANCEL_CURRENT,
+        )
+        .intentSender
+
+private val resultIntentSenderCounter = AtomicInteger(0)
+
+fun createResultIntentSender(context: Context) =
+    PendingIntent.getBroadcast(
+            context,
+            0,
+            Intent(context, ChosenComponentBroadcastReceiver::class.java).apply {
+                id = resultIntentSenderCounter.incrementAndGet()
+            },
+            PendingIntent.FLAG_MUTABLE or PendingIntent.FLAG_UPDATE_CURRENT,
         )
         .intentSender
 

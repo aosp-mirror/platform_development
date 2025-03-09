@@ -16,7 +16,6 @@
 
 package com.android.compose.animation.scene.demo
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -29,7 +28,6 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.withoutVisualEffect
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
@@ -44,6 +42,8 @@ import androidx.compose.ui.unit.dp
 import com.android.compose.animation.scene.ContentScope
 import com.android.compose.animation.scene.ElementKey
 import com.android.compose.modifiers.thenIf
+import com.android.mechanics.behavior.EdgeContainerExpansionSpec
+import com.android.mechanics.behavior.edgeContainerExpansionBackground
 
 object PartialShade {
     object Colors {
@@ -59,6 +59,8 @@ object PartialShade {
             )
         val SplitBackground = RoundedCornerShape(Shade.Dimensions.ScrimCornerSize)
     }
+
+    val MotionSpec = EdgeContainerExpansionSpec()
 }
 
 @Composable
@@ -69,8 +71,7 @@ fun ContentScope.PartialShade(
 ) {
     val isSplitShade = shouldUseSplitScenes(calculateWindowSizeClass())
 
-    val shape =
-        if (isSplitShade) PartialShade.Shapes.SplitBackground else PartialShade.Shapes.Background
+    // TODO(michschn) Add expansion for partial shade again
     val contentOverscrollEffect = checkNotNull(rememberOverscrollEffect())
     Box(
         modifier
@@ -79,8 +80,10 @@ fun ContentScope.PartialShade(
             .overscroll(contentOverscrollEffect)
             .thenIf(isSplitShade) { Modifier.padding(16.dp) }
             .element(rootElement)
-            .clip(shape)
-            .background(PartialShade.Colors.Background)
+            .edgeContainerExpansionBackground(
+                PartialShade.Colors.Background,
+                PartialShade.MotionSpec,
+            )
             .disableSwipesWhenScrolling()
             .verticalScroll(
                 rememberScrollState(),

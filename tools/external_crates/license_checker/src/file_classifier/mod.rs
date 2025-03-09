@@ -21,11 +21,14 @@ use inexact_name_classifier::{classify_inexact_license_file_name, InexactLicense
 use name_classifier::classify_license_file_name;
 use spdx::LicenseReq;
 use std::{
-    cell::OnceCell,
+    collections::BTreeSet,
     ffi::{OsStr, OsString},
     fs::read_to_string,
     path::{Path, PathBuf},
+    sync::OnceLock,
 };
+
+use crate::Error;
 
 fn normalize_filename(file: impl AsRef<Path>) -> OsString {
     // File should be relative
@@ -44,28 +47,45 @@ fn normalize_filename(file: impl AsRef<Path>) -> OsString {
 
 #[derive(Debug)]
 pub(crate) struct Classifier {
-    crate_path: PathBuf,
     file_path: PathBuf,
+    contents: String,
     by_name: Option<LicenseReq>,
     #[allow(dead_code)]
     by_inexact_name: Option<InexactLicenseType>,
-    by_content: OnceCell<Vec<LicenseReq>>,
-    by_content_fuzzy: OnceCell<Option<LicenseReq>>,
+    by_content: OnceLock<Vec<LicenseReq>>,
+    by_content_fuzzy: OnceLock<Option<LicenseReq>>,
 }
 
 impl Classifier {
-    pub fn new<CP: Into<PathBuf>, FP: Into<PathBuf>>(crate_path: CP, file_path: FP) -> Classifier {
+    pub fn new<FP: Into<PathBuf>>(file_path: FP, contents: String) -> Classifier {
         let file_path = file_path.into();
         let by_name = classify_license_file_name(&file_path);
         let by_inexact_name = classify_inexact_license_file_name(&file_path);
         Classifier {
-            crate_path: crate_path.into(),
             file_path,
+            contents,
             by_name,
             by_inexact_name,
-            by_content: OnceCell::new(),
-            by_content_fuzzy: OnceCell::new(),
+            by_content: OnceLock::new(),
+            by_content_fuzzy: OnceLock::new(),
         }
+    }
+    pub fn new_vec<CP: Into<PathBuf>>(
+        crate_path: CP,
+        possible_license_files: BTreeSet<PathBuf>,
+    ) -> Result<Vec<Classifier>, Error> {
+        let crate_path = crate_path.into();
+        let mut classifiers = Vec::new();
+        for file_path in possible_license_files {
+            let full_path = crate_path.join(&file_path);
+            let contents =
+                read_to_string(&full_path).map_err(|e| Error::FileReadError(full_path, e))?;
+            classifiers.push(Classifier::new(file_path, contents));
+        }
+        Ok(classifiers)
+    }
+    pub fn file_path(&self) -> &Path {
+        self.file_path.as_path()
     }
     pub fn by_name(&self) -> Option<&LicenseReq> {
         self.by_name.as_ref()
@@ -75,17 +95,43 @@ impl Classifier {
         self.by_inexact_name.clone()
     }
     pub fn by_content(&self) -> &Vec<LicenseReq> {
-        self.by_content.get_or_init(|| {
-            let contents = read_to_string(self.crate_path.join(&self.file_path)).unwrap();
-            classify_license_file_contents(&contents)
-        })
+        self.by_content.get_or_init(|| classify_license_file_contents(&self.contents))
     }
     pub fn by_content_fuzzy(&self) -> Option<&LicenseReq> {
         self.by_content_fuzzy
             .get_or_init(|| {
-                let contents = read_to_string(self.crate_path.join(&self.file_path)).unwrap();
-                content_classifier::classify_license_file_contents_fuzzy(&contents)
+                content_classifier::classify_license_file_contents_fuzzy(&self.contents)
             })
             .as_ref()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_normalize_filename() {
+        assert_eq!(normalize_filename(Path::new("LICENSE")), OsString::from("LICENSE"));
+        assert_eq!(
+            normalize_filename(Path::new("LICENSE.txt")),
+            OsString::from("LICENSE"),
+            ".txt extension removed"
+        );
+        assert_eq!(
+            normalize_filename(Path::new("LICENSE.md")),
+            OsString::from("LICENSE"),
+            ".md extension removed"
+        );
+        assert_eq!(
+            normalize_filename(Path::new("LICENSE.jpg")),
+            OsString::from("LICENSE.JPG"),
+            "Other extensions preserved"
+        );
+        assert_eq!(
+            normalize_filename(Path::new("license")),
+            OsString::from("LICENSE"),
+            "Converted to uppercase"
+        );
     }
 }

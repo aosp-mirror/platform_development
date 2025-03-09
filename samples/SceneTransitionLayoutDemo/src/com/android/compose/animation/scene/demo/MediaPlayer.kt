@@ -119,46 +119,74 @@ object MediaPlayer {
 
 @Composable
 fun ContentScope.MediaPlayer(
-    isSmall: Boolean,
+    presentationStyle: DemoMediaPresentationStyle,
     isPlaying: Boolean,
     onIsPlayingChange: (Boolean) -> Unit,
+    onVisibilityChange: (Boolean) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val key =
-        if (isSmall) MediaPlayer.Elements.SmallMediaPlayer else MediaPlayer.Elements.MediaPlayer
-    MovableElement(
-        key,
-        modifier
-            .fillMaxWidth()
-            .height(
-                if (isSmall) MediaPlayer.Dimensions.HeightSmall
-                else MediaPlayer.Dimensions.HeightLarge
-            ),
-    ) {
-        content {
-            Box(
-                Modifier.background(
-                        MaterialTheme.colorScheme.tertiary,
-                        MediaPlayer.Shapes.Background,
-                    )
-                    .padding(8.dp)
-            ) {
-                FilledIconButton(
-                    onClick = { onIsPlayingChange(!isPlaying) },
-                    Modifier.align(Alignment.CenterEnd),
-                    colors =
-                        IconButtonDefaults.filledIconButtonColors(
-                            MaterialTheme.colorScheme.onTertiary
-                        ),
+    val injectedContentOrNull = LocalDependencies.current.mediaPlayer
+    if (injectedContentOrNull != null) {
+        Element(
+            key =
+                if (presentationStyle != DemoMediaPresentationStyle.Compact) {
+                    MediaPlayer.Elements.MediaPlayer
+                } else {
+                    MediaPlayer.Elements.SmallMediaPlayer
+                },
+            modifier = modifier.fillMaxWidth(),
+        ) {
+            injectedContentOrNull(presentationStyle, onVisibilityChange)
+        }
+    } else {
+        val isSmall = presentationStyle == DemoMediaPresentationStyle.Compact
+        val key =
+            if (isSmall) {
+                MediaPlayer.Elements.SmallMediaPlayer
+            } else {
+                MediaPlayer.Elements.MediaPlayer
+            }
+
+        MovableElement(
+            key,
+            modifier
+                .fillMaxWidth()
+                .height(
+                    if (isSmall) MediaPlayer.Dimensions.HeightSmall
+                    else MediaPlayer.Dimensions.HeightLarge
+                ),
+        ) {
+            content {
+                Box(
+                    Modifier.background(
+                            MaterialTheme.colorScheme.tertiary,
+                            MediaPlayer.Shapes.Background,
+                        )
+                        .padding(8.dp)
                 ) {
-                    val color = MaterialTheme.colorScheme.tertiary
-                    if (isPlaying) {
-                        Icon(Icons.Default.Pause, null, tint = color)
-                    } else {
-                        Icon(Icons.Default.PlayArrow, null, tint = color)
+                    FilledIconButton(
+                        onClick = { onIsPlayingChange(!isPlaying) },
+                        Modifier.align(Alignment.CenterEnd),
+                        colors =
+                            IconButtonDefaults.filledIconButtonColors(
+                                MaterialTheme.colorScheme.onTertiary
+                            ),
+                    ) {
+                        val color = MaterialTheme.colorScheme.tertiary
+                        if (isPlaying) {
+                            Icon(Icons.Default.Pause, null, tint = color)
+                        } else {
+                            Icon(Icons.Default.PlayArrow, null, tint = color)
+                        }
                     }
                 }
             }
         }
     }
+}
+
+enum class DemoMediaPresentationStyle {
+    Default,
+    Compressed,
+    Compact,
 }
