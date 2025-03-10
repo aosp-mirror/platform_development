@@ -178,10 +178,8 @@ describe('AppComponent', () => {
     goToTraceView();
     checkTraceViewPage();
 
-    (
-      assertDefined(
-        htmlElement.querySelector('.upload-new'),
-      ) as HTMLButtonElement
+    assertDefined(
+      htmlElement.querySelector<HTMLButtonElement>('.upload-new'),
     ).click();
     fixture.detectChanges();
     await fixture.whenStable();
@@ -199,10 +197,8 @@ describe('AppComponent', () => {
       component.mediator,
       'onWinscopeEvent',
     ).and.callThrough();
-    (
-      assertDefined(
-        htmlElement.querySelector('.refresh-dumps'),
-      ) as HTMLButtonElement
+    assertDefined(
+      htmlElement.querySelector<HTMLButtonElement>('.refresh-dumps'),
     ).click();
     fixture.detectChanges();
     await fixture.whenStable();
@@ -319,25 +315,33 @@ describe('AppComponent', () => {
     );
   });
 
-  it('validates filename on enter key', () => {
-    const spy = spyOn(component, 'onCheckIconClick');
+  it('validates filename on enter key, escape key or focus out', () => {
+    const spy = spyOn(component, 'trySubmitFilename');
 
     component.showDataLoadedElements = true;
     fixture.detectChanges();
-
     clickEditFilenameButton();
-
     const inputField = assertDefined(
       htmlElement.querySelector('.file-name-input-field'),
     );
     const inputEl = assertDefined(
-      htmlElement.querySelector('.file-name-input-field input'),
+      htmlElement.querySelector<HTMLInputElement>(
+        '.file-name-input-field input',
+      ),
     );
-    (inputEl as HTMLInputElement).value = 'valid_file_name';
-    inputField.dispatchEvent(new KeyboardEvent('keydown', {key: 'Enter'}));
+    inputEl.value = 'valid_file_name';
 
+    inputField.dispatchEvent(new KeyboardEvent('keydown', {key: 'Enter'}));
     fixture.detectChanges();
-    expect(spy).toHaveBeenCalled();
+    expect(spy).toHaveBeenCalledTimes(1);
+
+    inputField.dispatchEvent(new KeyboardEvent('keydown', {key: 'Escape'}));
+    fixture.detectChanges();
+    expect(spy).toHaveBeenCalledTimes(2);
+
+    inputField.dispatchEvent(new FocusEvent('focusout'));
+    fixture.detectChanges();
+    expect(spy).toHaveBeenCalledTimes(3);
   });
 
   it('downloads traces from upload traces section', () => {
@@ -362,8 +366,8 @@ describe('AppComponent', () => {
   it('opens shortcuts dialog', () => {
     expect(document.querySelector('shortcuts-panel')).toBeFalsy();
     const shortcutsButton = assertDefined(
-      htmlElement.querySelector('.shortcuts'),
-    ) as HTMLElement;
+      htmlElement.querySelector<HTMLElement>('.shortcuts'),
+    );
     shortcutsButton.click();
     fixture.detectChanges();
     expect(document.querySelector('shortcuts-panel')).toBeTruthy();
@@ -395,8 +399,8 @@ describe('AppComponent', () => {
     expect(snackbar.textContent).toContain(firstMessage.getMessage());
 
     const closeButton = assertDefined(
-      snackbar.querySelector('.snack-bar-action'),
-    ) as HTMLElement;
+      snackbar.querySelector<HTMLElement>('.snack-bar-action'),
+    );
     closeButton.click();
     fixture.detectChanges();
     await fixture.whenRenderingDone();
@@ -417,29 +421,29 @@ describe('AppComponent', () => {
 
   function updateFilenameInputAndDownloadTraces(name: string, valid: boolean) {
     const inputEl = assertDefined(
-      htmlElement.querySelector('.file-name-input-field input'),
+      htmlElement.querySelector<HTMLInputElement>(
+        '.file-name-input-field input',
+      ),
     );
     const checkButton = assertDefined(
       htmlElement.querySelector('.check-button'),
     );
-    (inputEl as HTMLInputElement).value = name;
+    inputEl.value = name;
     inputEl.dispatchEvent(new Event('input'));
     fixture.detectChanges();
     checkButton.dispatchEvent(new Event('click'));
     fixture.detectChanges();
+
+    const saveButton = assertDefined(
+      htmlElement.querySelector<HTMLButtonElement>('.save-button'),
+    );
     if (valid) {
       assertDefined(htmlElement.querySelector('.download-file-info'));
-      expect(
-        (htmlElement.querySelector('.save-button') as HTMLButtonElement)
-          .disabled,
-      ).toBeFalse();
+      expect(saveButton.disabled).toBeFalse();
       clickDownloadTracesButton();
     } else {
       expect(htmlElement.querySelector('.download-file-info')).toBeFalsy();
-      expect(
-        (htmlElement.querySelector('.save-button') as HTMLButtonElement)
-          .disabled,
-      ).toBeTrue();
+      expect(saveButton.disabled).toBeTrue();
     }
   }
 
@@ -465,6 +469,7 @@ describe('AppComponent', () => {
     expect(htmlElement.querySelector('.upload-traces-card')).toBeTruthy();
     expect(htmlElement.querySelector('.viewers')).toBeFalsy();
     expect(htmlElement.querySelector('.upload-new')).toBeFalsy();
+    expect(htmlElement.querySelector('timeline')).toBeFalsy();
     checkPermanentHeaderItems();
   }
 
@@ -475,6 +480,7 @@ describe('AppComponent', () => {
     expect(htmlElement.querySelector('.upload-traces-card')).toBeFalsy();
     expect(htmlElement.querySelector('.viewers')).toBeTruthy();
     expect(htmlElement.querySelector('.upload-new')).toBeTruthy();
+    expect(htmlElement.querySelector('timeline')).toBeTruthy();
     checkPermanentHeaderItems();
   }
 

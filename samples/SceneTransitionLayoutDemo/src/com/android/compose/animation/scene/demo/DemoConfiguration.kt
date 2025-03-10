@@ -64,22 +64,24 @@ import kotlin.math.tanh
 data class DemoConfiguration(
     val notificationsInLockscreen: Int = 2,
     val notificationsInShade: Int = 10,
+    val quickSettingsRows: Int = 4,
     val interactiveNotifications: Boolean = false,
     val showMediaPlayer: Boolean = true,
     val isFullscreen: Boolean = false,
     val canChangeSceneOrOverlays: Boolean = true,
     val transitionInterceptionThreshold: Float = 0.05f,
-    val springConfigurations: DemoSpringConfigurations = DemoSpringConfigurations.presets[1],
+    val springConfigurations: DemoSpringConfigurations = DemoSpringConfigurations.presets[0],
     val useOverscrollSpec: Boolean = true,
     val overscrollProgressConverter: DemoOverscrollProgress = Tanh(maxProgress = 0.2f, tilt = 3f),
-    val enableInterruptions: Boolean = true,
     val lsToShadeRequiresFullSwipe: ToggleableState = ToggleableState.Indeterminate,
     val enableOverlays: Boolean = false,
+    val transitionBorder: Boolean = true,
 ) {
     companion object {
         val Saver = run {
             val notificationsInLockscreenKey = "notificationsInLockscreen"
             val notificationsInShadeKey = "notificationsInShade"
+            val quickSettingsRowsKey = "quickSettingsRows"
             val interactiveNotificationsKey = "interactiveNotifications"
             val showMediaPlayerKey = "showMediaPlayer"
             val isFullscreenKey = "isFullscreen"
@@ -88,14 +90,16 @@ data class DemoConfiguration(
             val springConfigurationsKey = "springConfigurations"
             val useOverscrollSpec = "useOverscrollSpec"
             val overscrollProgress = "overscrollProgress"
-            val enableInterruptions = "enableInterruptions"
             val lsToShadeRequiresFullSwipe = "lsToShadeRequiresFullSwipe"
+            val enableOverlays = "enableOverlays"
+            val transitionBorder = "transitionBorder"
 
             mapSaver(
                 save = {
                     mapOf(
                         notificationsInLockscreenKey to it.notificationsInLockscreen,
                         notificationsInShadeKey to it.notificationsInShade,
+                        quickSettingsRowsKey to it.quickSettingsRows,
                         interactiveNotificationsKey to it.interactiveNotifications,
                         showMediaPlayerKey to it.showMediaPlayer,
                         isFullscreenKey to it.isFullscreen,
@@ -104,14 +108,16 @@ data class DemoConfiguration(
                         springConfigurationsKey to it.springConfigurations.save(),
                         useOverscrollSpec to it.useOverscrollSpec,
                         overscrollProgress to it.overscrollProgressConverter.save(),
-                        enableInterruptions to it.enableInterruptions,
                         lsToShadeRequiresFullSwipe to it.lsToShadeRequiresFullSwipe,
+                        enableOverlays to it.enableOverlays,
+                        transitionBorder to it.transitionBorder,
                     )
                 },
                 restore = {
                     DemoConfiguration(
                         notificationsInLockscreen = it[notificationsInLockscreenKey] as Int,
                         notificationsInShade = it[notificationsInShadeKey] as Int,
+                        quickSettingsRows = it[quickSettingsRowsKey] as Int,
                         interactiveNotifications = it[interactiveNotificationsKey] as Boolean,
                         showMediaPlayer = it[showMediaPlayerKey] as Boolean,
                         isFullscreen = it[isFullscreenKey] as Boolean,
@@ -123,9 +129,10 @@ data class DemoConfiguration(
                         useOverscrollSpec = it[useOverscrollSpec] as Boolean,
                         overscrollProgressConverter =
                             it[overscrollProgress].restoreOverscrollProgress(),
-                        enableInterruptions = it[enableInterruptions] as Boolean,
                         lsToShadeRequiresFullSwipe =
                             it[lsToShadeRequiresFullSwipe] as ToggleableState,
+                        enableOverlays = it[enableOverlays] as Boolean,
+                        transitionBorder = it[transitionBorder] as Boolean,
                     )
                 },
             )
@@ -151,14 +158,24 @@ data class DemoSpringConfigurations(
         val presets =
             listOf(
                 DemoSpringConfigurations(
-                    name = "Fast",
+                    name = "Default",
+                    systemUiSprings =
+                        SpringConfiguration(
+                            Spring.StiffnessMediumLow,
+                            Spring.DampingRatioLowBouncy,
+                        ),
+                    notificationSprings =
+                        SpringConfiguration(Spring.StiffnessMediumLow, Spring.DampingRatioLowBouncy),
+                ),
+                DemoSpringConfigurations(
+                    name = "NotBouncy Fast",
                     systemUiSprings =
                         SpringConfiguration(Spring.StiffnessMedium, Spring.DampingRatioNoBouncy),
                     notificationSprings =
                         SpringConfiguration(Spring.StiffnessMedium, Spring.DampingRatioNoBouncy),
                 ),
                 DemoSpringConfigurations(
-                    name = "Normal",
+                    name = "NotBouncy Normal",
                     systemUiSprings =
                         SpringConfiguration(Spring.StiffnessMediumLow, Spring.DampingRatioNoBouncy),
                     notificationSprings =
@@ -336,19 +353,6 @@ fun DemoConfigurationDialog(
                     },
                 )
 
-                // Interruptions.
-                Checkbox(
-                    label = "Interruptions",
-                    checked = configuration.enableInterruptions,
-                    onCheckedChange = {
-                        onConfigurationChange(
-                            configuration.copy(
-                                enableInterruptions = !configuration.enableInterruptions
-                            )
-                        )
-                    },
-                )
-
                 // Can change scene.
                 Checkbox(
                     label = "Can change scene or overlays",
@@ -369,6 +373,17 @@ fun DemoConfigurationDialog(
                     onCheckedChange = {
                         onConfigurationChange(
                             configuration.copy(enableOverlays = !configuration.enableOverlays)
+                        )
+                    },
+                )
+
+                // Transition border.
+                Checkbox(
+                    label = "Transition border",
+                    checked = configuration.transitionBorder,
+                    onCheckedChange = {
+                        onConfigurationChange(
+                            configuration.copy(transitionBorder = !configuration.transitionBorder)
                         )
                     },
                 )
@@ -459,6 +474,16 @@ fun DemoConfigurationDialog(
                     configuration.notificationsInLockscreen,
                     onValueChange = {
                         onConfigurationChange(configuration.copy(notificationsInLockscreen = it))
+                    },
+                )
+
+                Text(text = "Quick Settings", style = MaterialTheme.typography.titleMedium)
+
+                Counter(
+                    "# quick settings rows",
+                    configuration.quickSettingsRows,
+                    onValueChange = {
+                        onConfigurationChange(configuration.copy(quickSettingsRows = it))
                     },
                 )
 

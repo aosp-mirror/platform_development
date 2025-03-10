@@ -19,6 +19,7 @@ import {PersistentStore} from 'common/persistent_store';
 import {TraceType} from 'trace/trace_type';
 import {CollapsibleSections} from 'viewers/common/collapsible_sections';
 import {CollapsibleSectionType} from 'viewers/common/collapsible_section_type';
+import {ViewerEvents} from 'viewers/common/viewer_events';
 import {ShadingMode} from 'viewers/components/rects/shading_mode';
 import {
   viewerCardInnerStyle,
@@ -60,7 +61,6 @@ import {UiData} from './ui_data';
           [currentIndex]="inputData?.currentIndex"
           [entries]="inputData?.entries"
           [headers]="inputData?.headers"
-          [filters]="inputData?.filters"
           [showFiltersInTitle]="true"
           [traceType]="${TraceType.INPUT_EVENT_MERGED}"
           [showTraceEntryTimes]="false"
@@ -77,7 +77,7 @@ import {UiData} from './ui_data';
           [traceType]="${TraceType.INPUT_EVENT_MERGED}"
           [store]="store"
           [isProtoDump]="true"
-          [showFilter]="false"
+          [textFilter]="inputData?.propertiesFilter"
           placeholderText="No selected entry."
           (collapseButtonClicked)="sections.onCollapseStateChange(CollapsibleSectionType.PROPERTIES, true)"></properties-view>
         <properties-view
@@ -89,7 +89,8 @@ import {UiData} from './ui_data';
           [traceType]="${TraceType.INPUT_EVENT_MERGED}"
           [store]="store"
           [isProtoDump]="true"
-          [showFilter]="false"
+          [textFilter]="inputData?.dispatchPropertiesFilter"
+          [filterEventName]="ViewerEvents.DispatchPropertiesFilterChange"
           placeholderText="No selected entry."
           (collapseButtonClicked)="sections.onCollapseStateChange(CollapsibleSectionType.INPUT_DISPATCH_PROPERTIES, true)"></properties-view>
       </div>
@@ -118,6 +119,7 @@ export class ViewerInputComponent {
   @Input() active = false;
   TraceType = TraceType;
   CollapsibleSectionType = CollapsibleSectionType;
+  ViewerEvents = ViewerEvents;
 
   rectsTitle = 'INPUT WINDOWS';
   eventLogTitle = 'EVENT LOG';

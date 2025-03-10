@@ -31,21 +31,24 @@ export class UserNotifierChecker {
   }
 
   expectAdded(notifications: UserNotification[]) {
-    notifications.forEach((n) =>
-      expect(this.userNotifierAdd).toHaveBeenCalledWith(n),
-    );
+    this.checkAdded(notifications);
     expect(this.userNotifierNotify).not.toHaveBeenCalled();
   }
 
   expectNotified(notifications: UserNotification[]) {
-    notifications.forEach((n) =>
-      expect(this.userNotifierAdd).toHaveBeenCalledWith(n),
-    );
+    this.checkAdded(notifications);
     expect(this.userNotifierNotify).toHaveBeenCalled();
   }
 
   reset() {
     this.userNotifierAdd.calls.reset();
     this.userNotifierNotify.calls.reset();
+  }
+
+  private checkAdded(notifications: UserNotification[]) {
+    expect(this.userNotifierAdd).toHaveBeenCalledTimes(notifications.length);
+    notifications.forEach((n) =>
+      expect(this.userNotifierAdd).toHaveBeenCalledWith(n),
+    );
   }
 }

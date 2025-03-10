@@ -41,6 +41,8 @@ import androidx.core.content.ContextCompat;
 
 import dagger.hilt.android.AndroidEntryPoint;
 
+import java.util.function.Consumer;
+
 import javax.inject.Inject;
 
 /**
@@ -55,6 +57,7 @@ public class MainActivity extends Hilt_MainActivity {
     private Button mHomeDisplayButton = null;
     private Button mMirrorDisplayButton = null;
     private LauncherAdapter mLauncherAdapter = null;
+    private final Consumer<Boolean> mVirtualDeviceListener = this::updateLauncherVisibility;
 
     private final ActivityResultLauncher<String> mRequestPermissionLauncher =
             registerForActivityResult(new RequestPermission(), isGranted -> {
@@ -75,8 +78,7 @@ public class MainActivity extends Hilt_MainActivity {
                 public void onServiceConnected(ComponentName className, IBinder binder) {
                     Log.i(TAG, "Connected to VDM Service");
                     mVdmService = ((VdmService.LocalBinder) binder).getService();
-                    mVdmService.setVirtualDeviceListener(
-                            MainActivity.this::updateLauncherVisibility);
+                    mVdmService.addVirtualDeviceListener(mVirtualDeviceListener);
                     updateLauncherVisibility(mVdmService.isVirtualDeviceActive());
                 }
 
@@ -100,12 +102,8 @@ public class MainActivity extends Hilt_MainActivity {
 
         mHomeDisplayButton = requireViewById(R.id.create_home_display);
         mHomeDisplayButton.setVisibility(View.GONE);
-        mHomeDisplayButton.setEnabled(
-                mPreferenceController.getBoolean(R.string.internal_pref_home_displays_supported));
         mMirrorDisplayButton = requireViewById(R.id.create_mirror_display);
         mMirrorDisplayButton.setVisibility(View.GONE);
-        mMirrorDisplayButton.setEnabled(
-                mPreferenceController.getBoolean(R.string.internal_pref_mirror_displays_supported));
 
         mLauncherAdapter = new LauncherAdapter(this, mPreferenceController);
         mLauncher = requireViewById(R.id.app_grid);
@@ -171,7 +169,7 @@ public class MainActivity extends Hilt_MainActivity {
     protected void onStop() {
         super.onStop();
         if (mVdmService != null) {
-            mVdmService.setVirtualDeviceListener(null);
+            mVdmService.removeVirtualDeviceListener(mVirtualDeviceListener);
         }
         unbindService(mServiceConnection);
     }
@@ -205,9 +203,14 @@ public class MainActivity extends Hilt_MainActivity {
                         mLauncher.setVisibility(visibility);
                     }
                     if (mHomeDisplayButton != null) {
+                        mHomeDisplayButton.setEnabled(
+                                mPreferenceController.getBoolean(
+                                        R.string.internal_pref_home_displays_supported));
                         mHomeDisplayButton.setVisibility(visibility);
                     }
                     if (mMirrorDisplayButton != null) {
+                        mMirrorDisplayButton.setEnabled(
+                                VdmCompat.isMirrorDisplaySupported(this, mPreferenceController));
                         mMirrorDisplayButton.setVisibility(visibility);
                     }
                 });

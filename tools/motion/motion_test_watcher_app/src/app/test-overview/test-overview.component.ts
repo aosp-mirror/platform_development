@@ -57,7 +57,6 @@ export class TestOverviewComponent implements OnChanges, AfterViewInit {
 
   constructor() {
     this.dataSource.sortingDataAccessor = (data, sortHeaderIdstring) => {
-      console.log(sortHeaderIdstring);
       switch (sortHeaderIdstring) {
         case 'status':
           return data.result;
