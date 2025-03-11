@@ -15,9 +15,4 @@ python_binary_host {
     proto: {
         canonical_path_from_root: false,
     },
-    version: {
-        py3: {
-            embedded_launcher: true,
-        },
-    }
 }

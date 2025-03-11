@@ -26,7 +26,7 @@ export class PropertyTreeBuilder extends TreeBuilder<
   PropertyTreeNode,
   ChildProperty
 > {
-  isRoot: boolean = false;
+  isRoot = false;
   source = PropertySource.PROTO;
   value: any;
   formatter: PropertyFormatter | undefined;

@@ -90,7 +90,7 @@ describe('PropertiesComponent', () => {
         isUnavailable: false,
       },
     };
-    component.textFilter = new TextFilter('', []);
+    component.textFilter = new TextFilter();
     component.traceType = TraceType.SURFACE_FLINGER;
 
     fixture.detectChanges();
