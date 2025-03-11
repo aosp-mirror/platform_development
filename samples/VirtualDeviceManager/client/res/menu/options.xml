@@ -7,5 +7,10 @@
         android:icon="@drawable/input"
         android:title="@string/input"
         app:showAsAction="always" />
+    <item
+        android:id="@+id/power"
+        android:icon="@drawable/power"
+        android:title="@string/power"
+        app:showAsAction="always" />
 </menu>
 <!-- LINT.ThenChange(/samples/VirtualDeviceManager/README.md:client_options) -->

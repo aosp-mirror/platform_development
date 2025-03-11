@@ -67,196 +67,203 @@ import {MiniTimelineComponent} from './mini-timeline/mini_timeline_component';
   selector: 'timeline',
   encapsulation: ViewEncapsulation.None,
   template: `
-    <div id="toggle" *ngIf="timelineData.hasMoreThanOneDistinctTimestamp()">
-      <button
-        mat-icon-button
-        [class]="TOGGLE_BUTTON_CLASS"
-        color="basic"
-        aria-label="Toggle Expanded Timeline"
-        (click)="toggleExpand()">
-          <mat-icon *ngIf="!expanded" class="material-symbols-outlined">expand_circle_up</mat-icon>
-          <mat-icon *ngIf="expanded" class="material-symbols-outlined">expand_circle_down</mat-icon>
-        </button>
-    </div>
-    <div id="expanded-nav" *ngIf="expanded">
-      <div id="video-content" *ngIf="videoUrl !== undefined">
-        <video
-          *ngIf="getVideoCurrentTime() !== undefined"
-          id="video"
-          [currentTime]="getVideoCurrentTime()"
-          [src]="videoUrl"></video>
-        <div *ngIf="getVideoCurrentTime() === undefined" class="no-video-message">
-          <p>No screenrecording frame to show</p>
-          <p>Current timestamp before first screenrecording frame.</p>
-        </div>
+    <div
+      *ngIf="isDisabled"
+      class="disabled-message user-notification mat-body-1"> Timeline disabled due to ongoing search query </div>
+    <div [class.disabled-component]="isDisabled">
+      <div id="toggle" *ngIf="timelineData.hasMoreThanOneDistinctTimestamp()">
+        <button
+          mat-icon-button
+          [class]="TOGGLE_BUTTON_CLASS"
+          color="basic"
+          aria-label="Toggle Expanded Timeline"
+          (click)="toggleExpand()">
+            <mat-icon *ngIf="!expanded" class="material-symbols-outlined">expand_circle_up</mat-icon>
+            <mat-icon *ngIf="expanded" class="material-symbols-outlined">expand_circle_down</mat-icon>
+          </button>
       </div>
-      <expanded-timeline
-        [timelineData]="timelineData"
-        (onTracePositionUpdate)="updatePosition($event)"
-        (onScrollEvent)="updateScrollEvent($event)"
-        (onTraceClicked)="onExpandedTimelineTraceClicked($event)"
-        (onMouseXRatioUpdate)="updateExpandedTimelineMouseXRatio($event)"
-        id="expanded-timeline"></expanded-timeline>
-    </div>
-    <div class="navbar-toggle">
-      <div class="navbar" #collapsedTimeline>
-        <ng-template [ngIf]="timelineData.hasTimestamps()">
-          <div id="time-selector">
-            <form [formGroup]="timestampForm" class="time-selector-form">
-              <mat-form-field
-                class="time-input human"
-                appearance="fill"
-                (keydown.enter)="onKeydownEnterTimeInputField($event)"
-                (change)="onHumanTimeInputChange($event)">
-                <mat-icon
-                  [matTooltip]="getHumanTimeTooltip()"
-                  matTooltipClass="multline-tooltip"
-                  matPrefix>schedule</mat-icon>
-                <input
-                  matInput
-                  name="humanTimeInput"
-                  [formControl]="selectedTimeFormControl" />
-                <div class="field-suffix" matSuffix>
-                  <span class="time-difference"> {{ getUTCOffset() }} </span>
-                  <button
-                    mat-icon-button
-                    [matTooltip]="getCopyHumanTimeTooltip()"
-                    matTooltipClass="multline-tooltip"
-                    [cdkCopyToClipboard]="getHumanTime()"
-                    (cdkCopyToClipboardCopied)="onTimeCopied('human')"
-                    matSuffix>
-                    <mat-icon>content_copy</mat-icon>
-                  </button>
-                </div>
-              </mat-form-field>
-              <mat-form-field
-                class="time-input nano"
-                appearance="fill"
-                (keydown.enter)="onKeydownEnterNanosecondsTimeInputField($event)"
-                (change)="onNanosecondsInputTimeChange($event)">
-                <mat-icon
-                  class="bookmark-icon"
-                  [class.material-symbols-outlined]="!currentPositionBookmarked()"
-                  matTooltip="bookmark timestamp"
-                  (click)="toggleBookmarkCurrentPosition($event)"
-                  matPrefix>flag</mat-icon>
-                <input matInput name="nsTimeInput" [formControl]="selectedNsFormControl" />
-                <div class="field-suffix" matSuffix>
-                  <button
-                    mat-icon-button
-                    [matTooltip]="getCopyPositionTooltip(selectedNsFormControl.value)"
-                    matTooltipClass="multline-tooltip"
-                    [cdkCopyToClipboard]="selectedNsFormControl.value"
-                    (cdkCopyToClipboardCopied)="onTimeCopied('ns')"
-                    matSuffix>
-                    <mat-icon>content_copy</mat-icon>
-                  </button>
-                </div>
-              </mat-form-field>
-            </form>
-            <div class="time-controls">
-              <button
-                mat-icon-button
-                id="prev_entry_button"
-                matTooltip="Go to previous entry"
-                (click)="moveToPreviousEntry()"
-                [class.disabled]="!hasPrevEntry()"
-                [disabled]="!hasPrevEntry()">
-                <mat-icon>chevron_left</mat-icon>
-              </button>
-              <button
-                mat-icon-button
-                id="next_entry_button"
-                matTooltip="Go to next entry"
-                (click)="moveToNextEntry()"
-                [class.disabled]="!hasNextEntry()"
-                [disabled]="!hasNextEntry()">
-                <mat-icon>chevron_right</mat-icon>
-              </button>
-            </div>
+      <div id="expanded-nav" *ngIf="expanded">
+        <div id="video-content" *ngIf="videoUrl !== undefined">
+          <video
+            *ngIf="getVideoCurrentTime() !== undefined"
+            id="video"
+            [currentTime]="getVideoCurrentTime()"
+            [src]="videoUrl"></video>
+          <div *ngIf="getVideoCurrentTime() === undefined" class="no-video-message">
+            <p>No screenrecording frame to show</p>
+            <p>Current timestamp before first screenrecording frame.</p>
           </div>
-          <div id="trace-selector">
-            <mat-form-field appearance="none">
-              <mat-select #traceSelector [formControl]="selectedTracesFormControl" multiple>
-                <div class="select-traces-panel">
-                  <div class="tip">Filter traces in the timeline</div>
-                  <mat-option
-                    *ngFor="let trace of sortedTraces"
-                    [value]="trace"
-                    [style]="{
-                      color: 'var(--blue-text-color)',
-                      opacity: isOptionDisabled(trace) ? 0.5 : 1.0
-                    }"
-                    [disabled]="isOptionDisabled(trace)"
-                    (click)="applyNewTraceSelection(trace)">
-                    <mat-icon
-                      [style]="{
-                        color: TRACE_INFO[trace.type].color
-                      }"
-                    >{{ TRACE_INFO[trace.type].icon }}</mat-icon>
-                    {{ getTitle(trace) }}
-                  </mat-option>
-                  <div class="actions">
-                    <button mat-flat-button color="primary" (click)="traceSelector.close()">
-                      Done
+        </div>
+        <expanded-timeline
+          [timelineData]="timelineData"
+          (onTracePositionUpdate)="updatePosition($event)"
+          (onScrollEvent)="updateScrollEvent($event)"
+          (onTraceClicked)="onExpandedTimelineTraceClicked($event)"
+          (onMouseXRatioUpdate)="updateExpandedTimelineMouseXRatio($event)"
+          id="expanded-timeline"></expanded-timeline>
+      </div>
+      <div class="navbar-toggle">
+        <div class="navbar" #collapsedTimeline>
+          <ng-template [ngIf]="timelineData.hasTimestamps()">
+            <div id="time-selector">
+              <form [formGroup]="timestampForm" class="time-selector-form">
+                <mat-form-field
+                  class="time-input human"
+                  appearance="fill"
+                  (keydown.esc)="$event.target.blur()"
+                  (keydown.enter)="onKeydownEnterTimeInputField($event)"
+                  (change)="onHumanTimeInputChange($event)">
+                  <mat-icon
+                    [matTooltip]="getHumanTimeTooltip()"
+                    matTooltipClass="multline-tooltip"
+                    matPrefix>schedule</mat-icon>
+                  <input
+                    matInput
+                    name="humanTimeInput"
+                    [formControl]="selectedTimeFormControl" />
+                  <div class="field-suffix" matSuffix>
+                    <span class="time-difference"> {{ getUTCOffset() }} </span>
+                    <button
+                      mat-icon-button
+                      [matTooltip]="getCopyHumanTimeTooltip()"
+                      matTooltipClass="multline-tooltip"
+                      [cdkCopyToClipboard]="getHumanTime()"
+                      (cdkCopyToClipboardCopied)="onTimeCopied('human')"
+                      matSuffix>
+                      <mat-icon>content_copy</mat-icon>
                     </button>
                   </div>
-                </div>
-                <mat-select-trigger class="shown-selection">
-                  <div class="filter-header">
-                    <span class="mat-body-2"> Filter </span>
-                    <mat-icon class="material-symbols-outlined">expand_circle_up</mat-icon>
+                </mat-form-field>
+                <mat-form-field
+                  class="time-input nano"
+                  appearance="fill"
+                  (keydown.esc)="$event.target.blur()"
+                  (keydown.enter)="onKeydownEnterNanosecondsTimeInputField($event)"
+                  (change)="onNanosecondsInputTimeChange($event)">
+                  <mat-icon
+                    class="bookmark-icon"
+                    [class.material-symbols-outlined]="!currentPositionBookmarked()"
+                    matTooltip="bookmark timestamp"
+                    (click)="toggleBookmarkCurrentPosition($event)"
+                    matPrefix>flag</mat-icon>
+                  <input matInput name="nsTimeInput" [formControl]="selectedNsFormControl" />
+                  <div class="field-suffix" matSuffix>
+                    <button
+                      mat-icon-button
+                      [matTooltip]="getCopyPositionTooltip(selectedNsFormControl.value)"
+                      matTooltipClass="multline-tooltip"
+                      [cdkCopyToClipboard]="selectedNsFormControl.value"
+                      (cdkCopyToClipboardCopied)="onTimeCopied('ns')"
+                      matSuffix>
+                      <mat-icon>content_copy</mat-icon>
+                    </button>
                   </div>
+                </mat-form-field>
+              </form>
+              <div class="time-controls">
+                <button
+                  mat-icon-button
+                  id="prev_entry_button"
+                  matTooltip="Go to previous entry"
+                  (click)="moveToPreviousEntry()"
+                  [class.disabled]="!hasPrevEntry()"
+                  [disabled]="!hasPrevEntry()">
+                  <mat-icon>chevron_left</mat-icon>
+                </button>
+                <button
+                  mat-icon-button
+                  id="next_entry_button"
+                  matTooltip="Go to next entry"
+                  (click)="moveToNextEntry()"
+                  [class.disabled]="!hasNextEntry()"
+                  [disabled]="!hasNextEntry()">
+                  <mat-icon>chevron_right</mat-icon>
+                </button>
+              </div>
+            </div>
+            <div id="trace-selector">
+              <mat-form-field appearance="none">
+                <mat-select #traceSelector [formControl]="selectedTracesFormControl" multiple>
+                  <div class="select-traces-panel">
+                    <div class="tip">Filter traces in the timeline</div>
+                    <mat-option
+                      *ngFor="let trace of sortedTraces"
+                      [value]="trace"
+                      [style]="{
+                        color: 'var(--blue-text-color)',
+                        opacity: isOptionDisabled(trace) ? 0.5 : 1.0
+                      }"
+                      [disabled]="isOptionDisabled(trace)"
+                      (click)="applyNewTraceSelection(trace)">
+                      <mat-icon
+                        [style]="{
+                          color: TRACE_INFO[trace.type].color
+                        }"
+                      >{{ TRACE_INFO[trace.type].icon }}</mat-icon>
+                      {{ getTitle(trace) }}
+                    </mat-option>
+                    <div class="actions">
+                      <button mat-flat-button color="primary" (click)="traceSelector.close()">
+                        Done
+                      </button>
+                    </div>
+                  </div>
+                  <mat-select-trigger class="shown-selection">
+                    <div class="filter-header">
+                      <span class="mat-body-2"> Filter </span>
+                      <mat-icon class="material-symbols-outlined">expand_circle_up</mat-icon>
+                    </div>
 
-                  <div class="trace-icons">
-                    <mat-icon
-                      class="trace-icon"
-                      *ngFor="let selectedTrace of getSelectedTracesToShow()"
-                      [style]="{color: TRACE_INFO[selectedTrace.type].color}"
-                      [matTooltip]="getTraceTooltip(selectedTrace)"
-                      #tooltip="matTooltip"
-                      (mouseenter)="tooltip.disabled = false"
-                      (mouseleave)="tooltip.disabled = true">
-                      {{ TRACE_INFO[selectedTrace.type].icon }}
-                    </mat-icon>
-                    <mat-icon
-                      class="trace-icon"
-                      *ngIf="selectedTraces.length > 8">
-                      more_horiz
-                    </mat-icon>
-                  </div>
-                </mat-select-trigger>
-              </mat-select>
-            </mat-form-field>
+                    <div class="trace-icons">
+                      <mat-icon
+                        class="trace-icon"
+                        *ngFor="let selectedTrace of getSelectedTracesToShow()"
+                        [style]="{color: TRACE_INFO[selectedTrace.type].color}"
+                        [matTooltip]="getTraceTooltip(selectedTrace)"
+                        #tooltip="matTooltip"
+                        (mouseenter)="tooltip.disabled = false"
+                        (mouseleave)="tooltip.disabled = true">
+                        {{ TRACE_INFO[selectedTrace.type].icon }}
+                      </mat-icon>
+                      <mat-icon
+                        class="trace-icon"
+                        *ngIf="selectedTraces.length > 8">
+                        more_horiz
+                      </mat-icon>
+                    </div>
+                  </mat-select-trigger>
+                </mat-select>
+              </mat-form-field>
+            </div>
+            <mini-timeline
+              *ngIf="timelineData.hasMoreThanOneDistinctTimestamp()"
+              [timelineData]="timelineData"
+              [currentTracePosition]="getCurrentTracePosition()"
+              [selectedTraces]="selectedTraces"
+              [initialZoom]="initialZoom"
+              [expandedTimelineScrollEvent]="expandedTimelineScrollEvent"
+              [expandedTimelineMouseXRatio]="expandedTimelineMouseXRatio"
+              [bookmarks]="bookmarks"
+              [store]="store"
+              (onTracePositionUpdate)="updatePosition($event)"
+              (onSeekTimestampUpdate)="updateSeekTimestamp($event)"
+              (onRemoveAllBookmarks)="removeAllBookmarks()"
+              (onToggleBookmark)="toggleBookmarkRange($event.range, $event.rangeContainsBookmark)"
+              (onTraceClicked)="onMiniTimelineTraceClicked($event)"
+              id="mini-timeline"
+              #miniTimeline></mini-timeline>
+          </ng-template>
+          <div
+            *ngIf="!timelineData.hasMoreThanOneDistinctTimestamp()"
+            class="no-timeline-msg">
+              <p class="mat-body-2">No timeline to show!</p>
+              <p
+                *ngIf="timelineData.hasTimestamps()"
+                class="mat-body-1">Only a single timestamp has been recorded.</p>
+              <p
+                *ngIf="!timelineData.hasTimestamps()"
+                class="mat-body-1">All loaded traces contain no timestamps.</p>
           </div>
-          <mini-timeline
-            *ngIf="timelineData.hasMoreThanOneDistinctTimestamp()"
-            [timelineData]="timelineData"
-            [currentTracePosition]="getCurrentTracePosition()"
-            [selectedTraces]="selectedTraces"
-            [initialZoom]="initialZoom"
-            [expandedTimelineScrollEvent]="expandedTimelineScrollEvent"
-            [expandedTimelineMouseXRatio]="expandedTimelineMouseXRatio"
-            [bookmarks]="bookmarks"
-            [store]="store"
-            (onTracePositionUpdate)="updatePosition($event)"
-            (onSeekTimestampUpdate)="updateSeekTimestamp($event)"
-            (onRemoveAllBookmarks)="removeAllBookmarks()"
-            (onToggleBookmark)="toggleBookmarkRange($event.range, $event.rangeContainsBookmark)"
-            (onTraceClicked)="onMiniTimelineTraceClicked($event)"
-            id="mini-timeline"
-            #miniTimeline></mini-timeline>
-        </ng-template>
-        <div
-          *ngIf="!timelineData.hasMoreThanOneDistinctTimestamp()"
-          class="no-timeline-msg">
-            <p class="mat-body-2">No timeline to show!</p>
-            <p
-              *ngIf="timelineData.hasTimestamps()"
-              class="mat-body-1">Only a single timestamp has been recorded.</p>
-            <p
-              *ngIf="!timelineData.hasTimestamps()"
-              class="mat-body-1">All loaded traces contain no timestamps.</p>
         </div>
       </div>
     </div>
@@ -473,6 +480,13 @@ import {MiniTimelineComponent} from './mini-timeline/mini_timeline_component';
         flex-direction: column;
         width: 100%;
       }
+      .disabled-message {
+        z-index: 100;
+        position: absolute;
+        top: 10%;
+        left: 50%;
+        opacity: 1;
+      }
     `,
     multlineTooltip,
   ],
@@ -514,6 +528,7 @@ export class TimelineComponent
   isInputFormFocused = false;
   storeKeyDeselectedTraces = 'miniTimeline.deselectedTraces';
   bookmarks: Timestamp[] = [];
+  isDisabled = false;
 
   private expanded = false;
   private emitEvent: EmitEvent = FunctionUtils.DO_NOTHING_ASYNC;
@@ -637,6 +652,42 @@ export class TimelineComponent
       }
       await this.miniTimeline?.drawer?.draw();
     });
+    await event.visit(WinscopeEventType.TRACE_ADD_REQUEST, async (event) => {
+      this.sortedTraces.unshift(event.trace);
+      this.sortedTraces.sort((a, b) =>
+        TraceTypeUtils.compareByDisplayOrder(a.type, b.type),
+      );
+      this.selectedTracesFormControl.setValue(
+        (this.selectedTracesFormControl.value ?? []).concat([event.trace]),
+      );
+      this.applyNewTraceSelection(event.trace);
+      await this.miniTimeline?.drawer?.draw();
+    });
+    await event.visit(WinscopeEventType.TRACE_REMOVE_REQUEST, async (event) => {
+      this.sortedTraces = this.sortedTraces.filter(
+        (trace) => trace !== event.trace,
+      );
+      this.selectedTracesFormControl.setValue(
+        this.selectedTracesFormControl.value?.filter(
+          (trace) => trace !== event.trace,
+        ) ?? [],
+      );
+      this.applyNewTraceSelection(event.trace);
+      await this.miniTimeline?.drawer?.draw();
+    });
+    await event.visit(
+      WinscopeEventType.INITIALIZE_TRACE_SEARCH_REQUEST,
+      async () => this.setIsDisabled(true),
+    );
+    await event.visit(WinscopeEventType.TRACE_SEARCH_REQUEST, async () =>
+      this.setIsDisabled(true),
+    );
+    await event.visit(WinscopeEventType.TRACE_SEARCH_INITIALIZED, async () =>
+      this.setIsDisabled(false),
+    );
+    await event.visit(WinscopeEventType.TRACE_SEARCH_COMPLETED, async () =>
+      this.setIsDisabled(false),
+    );
   }
 
   async toggleExpand() {
@@ -709,6 +760,7 @@ export class TimelineComponent
   @HostListener('document:keydown', ['$event'])
   async handleKeyboardEvent(event: KeyboardEvent) {
     if (
+      this.isDisabled ||
       this.isInputFormFocused ||
       !assertDefined(this.timelineData).hasMoreThanOneDistinctTimestamp()
     ) {
@@ -1001,5 +1053,10 @@ export class TimelineComponent
   private validateNsFormat(control: FormControl): ValidationErrors | null {
     const valid = TimestampUtils.isNsFormat(control.value ?? '');
     return !valid ? {invalidInput: control.value} : null;
+  }
+
+  private setIsDisabled(value: boolean) {
+    this.isDisabled = value;
+    this.changeDetectorRef.detectChanges();
   }
 }

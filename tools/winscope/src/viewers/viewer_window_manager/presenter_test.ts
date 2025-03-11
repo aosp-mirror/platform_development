@@ -15,7 +15,6 @@
  */
 
 import {assertDefined} from 'common/assert_utils';
-import {Rect} from 'common/geometry/rect';
 import {InMemoryStorage} from 'common/in_memory_storage';
 import {Store} from 'common/store';
 import {TracePositionUpdate} from 'messaging/winscope_event';
@@ -27,7 +26,7 @@ import {TraceType} from 'trace/trace_type';
 import {HierarchyTreeNode} from 'trace/tree_node/hierarchy_tree_node';
 import {NotifyHierarchyViewCallbackType} from 'viewers/common/abstract_hierarchy_viewer_presenter';
 import {AbstractHierarchyViewerPresenterTest} from 'viewers/common/abstract_hierarchy_viewer_presenter_test';
-import {DiffType} from 'viewers/common/diff_type';
+import {VISIBLE_CHIP} from 'viewers/common/chip';
 import {TextFilter} from 'viewers/common/text_filter';
 import {UiHierarchyTreeNode} from 'viewers/common/ui_hierarchy_tree_node';
 import {UiTreeUtils} from 'viewers/common/ui_tree_utils';
@@ -41,31 +40,61 @@ class PresenterWindowManagerTest extends AbstractHierarchyViewerPresenterTest<Ui
   private selectedTree: UiHierarchyTreeNode | undefined;
   private selectedTreeAfterPositionUpdate: UiHierarchyTreeNode | undefined;
 
-  override readonly shouldExecuteFlatTreeTest = true;
   override readonly shouldExecuteRectTests = true;
-  override readonly shouldExecuteShowDiffTests = true;
-  override readonly shouldExecuteDumpTests = true;
   override readonly shouldExecuteSimplifyNamesTest = true;
+  override readonly keepCalculatedPropertiesInChild = false;
+  override readonly keepCalculatedPropertiesInRoot = false;
+  override readonly expectedHierarchyOpts = {
+    showDiff: {
+      name: 'Show diff',
+      enabled: false,
+      isUnavailable: true,
+    },
+    showOnlyVisible: {
+      name: 'Show only',
+      chip: VISIBLE_CHIP,
+      enabled: false,
+    },
+    simplifyNames: {
+      name: 'Simplify names',
+      enabled: true,
+    },
+    flat: {
+      name: 'Flat',
+      enabled: false,
+    },
+  };
+  override readonly expectedPropertiesOpts = {
+    showDiff: {
+      name: 'Show diff',
+      enabled: false,
+      isUnavailable: true,
+    },
+    showDefaults: {
+      name: 'Show defaults',
+      enabled: false,
+      tooltip: `If checked, shows the value of all properties.
+Otherwise, hides all properties whose value is
+the default for its data type.`,
+    },
+  };
+  override readonly expectedRectsOpts = {
+    ignoreRectShowState: {
+      name: 'Ignore',
+      icon: 'visibility',
+      enabled: false,
+    },
+    showOnlyVisible: {
+      name: 'Show only',
+      chip: VISIBLE_CHIP,
+      enabled: false,
+    },
+  };
 
-  override readonly numberOfDefaultProperties = 29;
-  override readonly numberOfNonDefaultProperties = 21;
-  override readonly expectedFirstRect = new Rect(0, 0, 1080, 2400);
-  override readonly propertiesFilter = new TextFilter('requested', []);
-  override readonly expectedTotalRects = 12;
-  override readonly expectedVisibleRects = 7;
   override readonly treeNodeLongName =
     'f7092ed com.google.android.apps.nexuslauncher/.NexusLauncherActivity';
   override readonly treeNodeShortName =
     'com.google.(...).NexusLauncherActivity';
-  override readonly numberOfFilteredProperties = 2;
-  override readonly hierarchyFilter = new TextFilter('ScreenDecor', []);
-  override readonly expectedHierarchyChildrenAfterStringFilter = 2;
-  override readonly propertyWithDiff = 'animator';
-  override readonly expectedPropertyDiffType = DiffType.ADDED;
-
-  private readonly numberOfFlattenedChildren = 68;
-  private readonly numberOfVisibleChildren = 6;
-  private readonly numberOfNestedChildren = 1;
 
   override async setUpTestEnvironment(): Promise<void> {
     this.trace = new TraceBuilder<HierarchyTreeNode>()
@@ -85,12 +114,20 @@ class PresenterWindowManagerTest extends AbstractHierarchyViewerPresenterTest<Ui
     const firstEntryDataTree = await firstEntry.getValue();
     this.selectedTree = UiHierarchyTreeNode.from(
       assertDefined(
-        firstEntryDataTree.findDfs(UiTreeUtils.makeNodeFilter('93d3f3c')),
+        firstEntryDataTree.findDfs(
+          UiTreeUtils.makeNodeFilter(
+            new TextFilter('93d3f3c').getFilterPredicate(),
+          ),
+        ),
       ),
     );
     this.selectedTreeAfterPositionUpdate = UiHierarchyTreeNode.from(
       assertDefined(
-        firstEntryDataTree.findDfs(UiTreeUtils.makeNodeFilter('f7092ed')),
+        firstEntryDataTree.findDfs(
+          UiTreeUtils.makeNodeFilter(
+            new TextFilter('f7092ed').getFilterPredicate(),
+          ),
+        ),
       ),
     );
   }
@@ -98,23 +135,7 @@ class PresenterWindowManagerTest extends AbstractHierarchyViewerPresenterTest<Ui
   override createPresenterWithEmptyTrace(
     callback: NotifyHierarchyViewCallbackType<UiData>,
   ): Presenter {
-    const trace = new TraceBuilder<HierarchyTreeNode>()
-      .setType(TraceType.WINDOW_MANAGER)
-      .setEntries([])
-      .build();
-    const traces = new Traces();
-    traces.addTrace(trace);
-    return new Presenter(trace, traces, new InMemoryStorage(), callback);
-  }
-
-  override createPresenterWithCorruptedTrace(
-    callback: NotifyHierarchyViewCallbackType<UiData>,
-  ): Presenter {
-    const trace = new TraceBuilder<HierarchyTreeNode>()
-      .setType(TraceType.WINDOW_MANAGER)
-      .setEntries([assertDefined(this.selectedTree)])
-      .setIsCorrupted(true)
-      .build();
+    const trace = UnitTestUtils.makeEmptyTrace(TraceType.WINDOW_MANAGER);
     const traces = new Traces();
     traces.addTrace(trace);
     return new Presenter(trace, traces, new InMemoryStorage(), callback);
@@ -138,30 +159,6 @@ class PresenterWindowManagerTest extends AbstractHierarchyViewerPresenterTest<Ui
     return assertDefined(this.secondPositionUpdate);
   }
 
-  override getShowDiffPositionUpdate(): TracePositionUpdate {
-    return assertDefined(this.positionUpdate);
-  }
-
-  override getExpectedChildrenBeforeVisibilityFilter(): number {
-    return this.numberOfFlattenedChildren;
-  }
-
-  override getExpectedChildrenAfterVisibilityFilter(): number {
-    return this.numberOfVisibleChildren;
-  }
-
-  override getExpectedChildrenBeforeFlatFilter(): number {
-    return this.numberOfNestedChildren;
-  }
-
-  override getExpectedChildrenAfterFlatFilter(): number {
-    return this.numberOfFlattenedChildren;
-  }
-
-  override getExpectedHierarchyChildrenBeforeStringFilter(): number {
-    return this.numberOfFlattenedChildren;
-  }
-
   override getSelectedTree(): UiHierarchyTreeNode {
     return assertDefined(this.selectedTree);
   }
@@ -170,7 +167,7 @@ class PresenterWindowManagerTest extends AbstractHierarchyViewerPresenterTest<Ui
     return assertDefined(this.selectedTreeAfterPositionUpdate);
   }
 
-  override executeChecksForPropertiesTreeAfterPositionUpdate(uiData: UiData) {
+  override executePropertiesChecksAfterPositionUpdate(uiData: UiData) {
     const propertiesTree = assertDefined(uiData.propertiesTree);
     expect(
       assertDefined(propertiesTree.getChildByName('state')).formattedValue(),
@@ -185,9 +182,12 @@ class PresenterWindowManagerTest extends AbstractHierarchyViewerPresenterTest<Ui
     ]);
   }
 
-  override executeChecksForPropertiesTreeAfterSecondPositionUpdate(
-    uiData: UiData,
-  ) {
+  override executeSpecializedChecksForPropertiesFromRect(uiData: UiData) {
+    const propertiesTree = assertDefined(uiData.propertiesTree);
+    expect(propertiesTree.getAllChildren().length).toEqual(10);
+  }
+
+  override executePropertiesChecksAfterSecondPositionUpdate(uiData: UiData) {
     const propertiesTree = assertDefined(uiData.propertiesTree);
     expect(
       assertDefined(propertiesTree.getChildByName('state')).formattedValue(),

@@ -14,15 +14,27 @@
  * limitations under the License.
  */
 
+import {FilterFlag} from 'common/filter_flag';
 import {UserOptions} from 'viewers/common/user_options';
 import {RectShowState} from './rect_show_state';
 import {TextFilter} from './text_filter';
 
+export class TextFilterValues {
+  private constructor(
+    public filterString: string,
+    public flags: FilterFlag[],
+  ) {}
+
+  static fromTextFilter(textFilter: TextFilter) {
+    return new TextFilterValues(textFilter.filterString, textFilter.flags);
+  }
+}
+
 export interface PresetHierarchy {
   hierarchyUserOptions: UserOptions;
-  hierarchyFilter: TextFilter;
+  hierarchyFilter: TextFilterValues;
   propertiesUserOptions: UserOptions;
-  propertiesFilter: TextFilter;
+  propertiesFilter: TextFilterValues;
   rectsUserOptions?: UserOptions;
   rectIdToShowState?: Map<string, RectShowState> | undefined;
 }

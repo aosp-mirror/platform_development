@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import {MissingLayerIds} from 'messaging/user_warnings';
+import {DuplicateLayerIds, MissingLayerIds} from 'messaging/user_warnings';
 import {UserNotifierChecker} from 'test/unit/user_notifier_checker';
 import {EntryHierarchyTreeFactory} from './entry_hierarchy_tree_factory';
 import {ParserSurfaceFlinger} from './legacy/parser_surface_flinger';
@@ -46,6 +46,29 @@ describe('EntryHierarchyTreeFactory', () => {
     );
     expect(tree.getAllChildren().length).toEqual(1);
     expect(tree.getChildByName('Test layer')).toBeDefined();
-    userNotifierChecker.expectNotified([new MissingLayerIds()]);
+    expect(tree.getWarnings()).toEqual([new MissingLayerIds()]);
+  });
+
+  it('handles duplicate layer ids', () => {
+    const entryProto = {};
+    const layerProtos = [
+      {
+        id: 0,
+        name: 'Test layer',
+      },
+      {
+        id: 0,
+        name: 'Test layer',
+      },
+    ];
+    const tree = factory.makeEntryHierarchyTree(
+      entryProto,
+      layerProtos,
+      ParserSurfaceFlinger,
+    );
+    expect(tree.getAllChildren().length).toEqual(2);
+    expect(tree.getChildByName('Test layer')).toBeDefined();
+    expect(tree.getChildByName('Test layer duplicate(1)')).toBeDefined();
+    expect(tree.getWarnings()).toEqual([new DuplicateLayerIds([0])]);
   });
 });

@@ -19,6 +19,7 @@ export const timeButtonStyle = `
       padding: 0px;
       line-height: normal;
       text-align: left;
+      white-space: normal;
     }
 `;
 

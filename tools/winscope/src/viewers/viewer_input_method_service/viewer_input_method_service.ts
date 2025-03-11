@@ -17,11 +17,9 @@
 import {Store} from 'common/store';
 import {Trace} from 'trace/trace';
 import {Traces} from 'trace/traces';
-import {TRACE_INFO} from 'trace/trace_info';
 import {ImeTraceType, TraceType} from 'trace/trace_type';
 import {HierarchyTreeNode} from 'trace/tree_node/hierarchy_tree_node';
 import {AbstractViewerInputMethod} from 'viewers/common/abstract_viewer_input_method';
-import {View, ViewType} from 'viewers/viewer';
 import {PresenterInputMethodService} from './presenter_input_method_service';
 
 class ViewerInputMethodService extends AbstractViewerInputMethod {
@@ -29,16 +27,8 @@ class ViewerInputMethodService extends AbstractViewerInputMethod {
     TraceType.INPUT_METHOD_SERVICE,
   ];
 
-  override readonly view: View;
-
   constructor(trace: Trace<HierarchyTreeNode>, traces: Traces, storage: Store) {
     super(trace, traces, storage);
-    this.view = new View(
-      ViewType.TAB,
-      this.getTraces(),
-      this.htmlElement,
-      TRACE_INFO[TraceType.INPUT_METHOD_SERVICE].name,
-    );
   }
 
   override initializePresenter(

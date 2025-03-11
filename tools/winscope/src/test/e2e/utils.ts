@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 import * as path from 'path';
-import {browser, by, element, ElementFinder} from 'protractor';
+import {browser, by, element, ElementFinder, protractor} from 'protractor';
 
 class E2eTestUtils {
   static readonly WINSCOPE_URL = 'http://localhost:8080';
@@ -78,12 +78,7 @@ class E2eTestUtils {
 
   static async clickCloseIcon() {
     const button = element.all(by.css('.uploaded-files button')).first();
-    await browser.executeScript(
-      `
-      arguments[0].click();
-    `,
-      button,
-    );
+    await button.click();
   }
 
   static async clickDownloadTracesButton() {
@@ -124,9 +119,7 @@ class E2eTestUtils {
     const text = await traceSelector.getText();
     expect(text).toContain(trace.icon);
 
-    const icons: ElementFinder[] = await element.all(
-      by.css('.shown-selection .mat-icon'),
-    );
+    const icons = await element.all(by.css('.shown-selection .mat-icon'));
     const iconColors: string[] = [];
     for (const icon of icons) {
       iconColors.push(await icon.getCssValue('color'));
@@ -266,19 +259,25 @@ class E2eTestUtils {
 
   static async checkTotalScrollEntries(
     viewerSelector: string,
-    scrollViewport: Function,
     numberOfEntries: number,
-    scrollToBottomOffset?: number | undefined,
+    scrollToBottom = false,
   ) {
-    if (scrollToBottomOffset !== undefined) {
+    if (scrollToBottom) {
       const viewport = element(by.css(`${viewerSelector} .scroll`));
-      await browser.executeAsyncScript(
-        scrollViewport,
-        viewport,
-        scrollToBottomOffset,
+      let lastId: string | undefined;
+      let lastScrollEntryItemId = await E2eTestUtils.getLastScrollEntryItemId(
+        viewerSelector,
       );
+      while (lastId !== lastScrollEntryItemId) {
+        lastId = lastScrollEntryItemId;
+        await viewport.sendKeys(protractor.Key.END);
+        await new Promise<void>((resolve) => setTimeout(resolve, 500));
+        lastScrollEntryItemId = await E2eTestUtils.getLastScrollEntryItemId(
+          viewerSelector,
+        );
+      }
     }
-    const entries: ElementFinder[] = await element.all(
+    const entries = await element.all(
       by.css(`${viewerSelector} .scroll .entry`),
     );
     expect(await entries[entries.length - 1].getAttribute('item-id')).toEqual(
@@ -286,17 +285,25 @@ class E2eTestUtils {
     );
   }
 
+  static async getLastScrollEntryItemId(
+    viewerSelector: string,
+  ): Promise<string> {
+    const entries = await element.all(
+      by.css(`${viewerSelector} .scroll .entry`),
+    );
+    return await entries[entries.length - 1].getAttribute('item-id');
+  }
+
   static async toggleSelectFilterOptions(
     viewerSelector: string,
     filterSelector: string,
     options: string[],
   ) {
-    const selectFilter = element(
+    await element(
       by.css(
-        `${viewerSelector} .filters ${filterSelector} .mat-select-trigger`,
+        `${viewerSelector} .headers ${filterSelector} .mat-select-trigger`,
       ),
-    );
-    await selectFilter.click();
+    ).click();
 
     const optionElements: ElementFinder[] = await element.all(
       by.css('.mat-select-panel .mat-option'),
@@ -308,7 +315,9 @@ class E2eTestUtils {
       }
     }
 
-    const backdrop = element(by.css('.cdk-overlay-backdrop'));
+    const backdrop = await element(
+      by.css('.cdk-overlay-backdrop'),
+    ).getWebElement();
     await browser.actions().mouseMove(backdrop, {x: 0, y: 0}).click().perform();
   }
 
