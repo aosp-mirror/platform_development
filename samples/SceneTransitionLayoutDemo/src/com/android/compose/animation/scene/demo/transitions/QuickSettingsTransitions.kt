@@ -56,10 +56,6 @@ fun SceneTransitionsBuilder.quickSettingsTransitions(configuration: DemoConfigur
     }
 
     if (configuration.useOverscrollSpec) {
-        overscroll(Scenes.QuickSettings, Orientation.Vertical) {
-            translate(QuickSettings.Elements.BrightnessSlider, y = { absoluteDistance })
-            translate(QuickSettings.Elements.ExpandedGrid, y = { absoluteDistance })
-            translate(MediaPlayer.Elements.MediaPlayer, y = { absoluteDistance })
-        }
+        overscrollDisabled(Scenes.QuickSettings, Orientation.Vertical)
     }
 }

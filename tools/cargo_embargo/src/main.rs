@@ -811,6 +811,7 @@ fn choose_licenses(license: &str) -> Result<Vec<&str>> {
         "MIT OR LGPL-3.0-or-later" => vec!["MIT"],
         "MIT/BSD-3-Clause" => vec!["MIT"],
         "MIT AND (MIT OR Apache-2.0)" => vec!["MIT"],
+        "0BSD OR MIT OR Apache-2.0" => vec!["Apache-2.0"],
 
         "LGPL-2.1-only OR BSD-2-Clause" => vec!["BSD-2-Clause"],
         _ => {
@@ -1145,6 +1146,7 @@ fn crate_to_bp_modules(
                 .clone()
                 .into_iter()
                 .filter(|crate_cfg| !cfg.cfg_blocklist.contains(crate_cfg))
+                .map(|crate_cfg| crate_cfg.replace(r#"""#, r#"\""#))
                 .collect(),
         );
 
@@ -1519,6 +1521,26 @@ mod tests {
                     raw_block: None
                 }
             }]
+        );
+    }
+
+    #[test]
+    fn escape_cfgs() {
+        let c = Crate {
+            name: "name".to_string(),
+            package_name: "package_name".to_string(),
+            edition: "2021".to_string(),
+            types: vec![CrateType::Lib],
+            cfgs: vec![r#"foo="bar""#.to_string()],
+            ..Default::default()
+        };
+        let cfg = VariantConfig { ..Default::default() };
+        let package_cfg = PackageVariantConfig { ..Default::default() };
+        let modules = crate_to_bp_modules(&c, &cfg, &package_cfg, &[]).unwrap();
+
+        assert_eq!(
+            modules[0].props.map.get("cfgs"),
+            Some(&BpValue::List(vec![BpValue::String(r#"foo=\"bar\""#.to_string())]))
         );
     }
 

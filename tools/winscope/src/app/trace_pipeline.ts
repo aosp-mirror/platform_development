@@ -27,12 +27,14 @@ import {CorruptedArchive, NoValidFiles} from 'messaging/user_warnings';
 import {FileAndParsers} from 'parsers/file_and_parsers';
 import {ParserFactory as LegacyParserFactory} from 'parsers/legacy/parser_factory';
 import {ParserFactory as PerfettoParserFactory} from 'parsers/perfetto/parser_factory';
+import {ParserSearch} from 'parsers/search/parser_search';
 import {TracesParserFactory} from 'parsers/traces/traces_parser_factory';
 import {FrameMapper} from 'trace/frame_mapper';
 import {Trace} from 'trace/trace';
 import {Traces} from 'trace/traces';
 import {TraceFile} from 'trace/trace_file';
 import {TraceEntryTypeMap, TraceType, TraceTypeUtils} from 'trace/trace_type';
+import {QueryResult} from 'trace_processor/query_result';
 import {FilesSource} from './files_source';
 import {LoadedParsers} from './loaded_parsers';
 import {TraceFileFilter} from './trace_file_filter';
@@ -174,6 +176,20 @@ export class TracePipeline {
     return (await screenRecording.getEntry(0).getValue()).videoData;
   }
 
+  async tryCreateSearchTrace(
+    query: string,
+  ): Promise<Trace<QueryResult> | undefined> {
+    try {
+      const parser = new ParserSearch(query, this.timestampConverter);
+      await parser.parse();
+      const trace = Trace.fromParser(parser);
+      this.traces.addTrace(trace);
+      return trace;
+    } catch (e) {
+      return undefined;
+    }
+  }
+
   clear() {
     this.loadedParsers.clear();
     this.traces = new Traces();
@@ -200,6 +216,7 @@ export class TracePipeline {
     const legacyParsers = await new LegacyParserFactory().createParsers(
       filterResult.legacy,
       this.timestampConverter,
+      filterResult.metadata,
       progressListener,
     );
 
@@ -284,6 +301,7 @@ export class TracePipeline {
 
     progressListener?.onProgressUpdate(progressMessage, 0);
 
+    const currArchive: UnzippedArchive = [];
     for (let i = 0; i < files.length; i++) {
       let file = files[i];
 
@@ -309,11 +327,12 @@ export class TracePipeline {
           UserNotifier.add(new CorruptedArchive(file));
         }
       } else {
-        unzippedArchives.push([new TraceFile(file, undefined)]);
-        onSubProgressUpdate(100);
+        currArchive.push(new TraceFile(file, undefined));
       }
     }
-
+    if (currArchive.length > 0) {
+      unzippedArchives.push(currArchive);
+    }
     progressListener?.onProgressUpdate(progressMessage, 100);
 
     return unzippedArchives;

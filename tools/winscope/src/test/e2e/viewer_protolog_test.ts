@@ -14,13 +14,12 @@
  * limitations under the License.
  */
 
-import {browser, ElementFinder} from 'protractor';
+import {browser} from 'protractor';
 import {E2eTestUtils} from './utils';
 
 describe('Viewer Protolog', () => {
   const viewerSelector = 'viewer-protolog';
   const totalEntries = 7295;
-  const scrollToTotalBottomOffset = 700000;
 
   beforeEach(async () => {
     await E2eTestUtils.beforeEach(1000);
@@ -35,9 +34,8 @@ describe('Viewer Protolog', () => {
     );
     await E2eTestUtils.checkTotalScrollEntries(
       viewerSelector,
-      scrollViewport,
       totalEntries,
-      scrollToTotalBottomOffset,
+      true,
     );
     await E2eTestUtils.checkTimelineTraceSelector({
       icon: 'notes',
@@ -62,16 +60,11 @@ describe('Viewer Protolog', () => {
 
     await E2eTestUtils.checkTotalScrollEntries(
       viewerSelector,
-      scrollViewport,
       totalEntries,
-      scrollToTotalBottomOffset,
+      true,
     );
     await filterByText('FREEZE');
-    await E2eTestUtils.checkTotalScrollEntries(
-      viewerSelector,
-      scrollViewport,
-      4,
-    );
+    await E2eTestUtils.checkTotalScrollEntries(viewerSelector, 4);
   });
 
   async function checkSelectFilter(
@@ -86,7 +79,6 @@ describe('Viewer Protolog', () => {
     );
     await E2eTestUtils.checkTotalScrollEntries(
       viewerSelector,
-      scrollViewport,
       expectedFilteredEntries,
     );
 
@@ -97,26 +89,16 @@ describe('Viewer Protolog', () => {
     );
     await E2eTestUtils.checkTotalScrollEntries(
       viewerSelector,
-      scrollViewport,
       totalEntries,
-      scrollToTotalBottomOffset,
+      true,
     );
   }
 
   async function filterByText(filterString: string) {
     await E2eTestUtils.updateInputField(
-      `${viewerSelector} .filters .text`,
+      `${viewerSelector} .headers .text`,
       'Search text',
       filterString,
     );
-  }
-
-  function scrollViewport(
-    viewportEl: ElementFinder,
-    offset: number,
-    done: () => void,
-  ) {
-    viewportEl['scrollTop'] = offset;
-    window.requestAnimationFrame(() => done());
   }
 });

@@ -25,6 +25,7 @@ import {
 } from 'trace/tree_node/property_tree_node';
 import {TreeNode} from 'trace/tree_node/tree_node';
 import {IsModifiedCallbackType} from 'viewers/common/add_diffs';
+import {TextFilter} from 'viewers/common/text_filter';
 import {UiHierarchyTreeNode} from 'viewers/common/ui_hierarchy_tree_node';
 import {TreeNodeFilter, UiTreeUtils} from 'viewers/common/ui_tree_utils';
 import {UserOptions} from 'viewers/common/user_options';
@@ -35,7 +36,6 @@ import {Filter} from './operations/filter';
 import {FlattenChildren} from './operations/flatten_children';
 import {SimplifyNames} from './operations/simplify_names';
 import {PropertiesPresenter} from './properties_presenter';
-import {TextFilter} from './text_filter';
 import {UiTreeFormatter} from './ui_tree_formatter';
 
 export type GetHierarchyTreeNameType = (
@@ -85,8 +85,7 @@ export class HierarchyPresenter {
     >,
   ) {
     this.hierarchyFilter = UiTreeUtils.makeNodeFilter(
-      textFilter.filterString,
-      textFilter.flags,
+      textFilter.getFilterPredicate(),
     );
   }
 
@@ -109,11 +108,9 @@ export class HierarchyPresenter {
   getAllCurrentHierarchyTrees():
     | Array<[Trace<HierarchyTreeNode>, HierarchyTreeNode[]]>
     | undefined {
-    const currentTrees = [];
-    for (const entry of this.currentHierarchyTrees?.entries() ?? []) {
-      currentTrees.push(entry);
-    }
-    return currentTrees;
+    return this.currentHierarchyTrees
+      ? Array.from(this.currentHierarchyTrees.entries())
+      : undefined;
   }
 
   getCurrentHierarchyTreeNames(
@@ -227,8 +224,8 @@ export class HierarchyPresenter {
       const trace = entry.getFullTrace();
       currEntries.set(trace, entry);
 
-      const tree: HierarchyTreeNode | undefined = await entry?.getValue();
-      if (tree) currTrees.set(trace, [tree]);
+      const tree = await entry.getValue();
+      currTrees.set(trace, [tree]);
 
       const entryIndex = entry.getIndex();
       if (entryIndex > 0) {
@@ -322,22 +319,25 @@ export class HierarchyPresenter {
 
   async applyHierarchyUserOptionsChange(userOptions: UserOptions) {
     this.userOptions = userOptions;
-    this.currentFormattedTrees =
-      await this.formatHierarchyTreesAndUpdatePinnedItems(
-        this.currentHierarchyTrees,
-      );
+    if (this.currentHierarchyTrees) {
+      this.currentFormattedTrees =
+        await this.formatHierarchyTreesAndUpdatePinnedItems(
+          this.currentHierarchyTrees,
+        );
+    }
   }
 
   async applyHierarchyFilterChange(textFilter: TextFilter) {
     this.textFilter = textFilter;
     this.hierarchyFilter = UiTreeUtils.makeNodeFilter(
-      textFilter.filterString,
-      textFilter.flags,
+      textFilter.getFilterPredicate(),
     );
-    this.currentFormattedTrees =
-      await this.formatHierarchyTreesAndUpdatePinnedItems(
-        this.currentHierarchyTrees,
-      );
+    if (this.currentHierarchyTrees) {
+      this.currentFormattedTrees =
+        await this.formatHierarchyTreesAndUpdatePinnedItems(
+          this.currentHierarchyTrees,
+        );
+    }
   }
 
   getTextFilter(): TextFilter {
@@ -376,14 +376,9 @@ export class HierarchyPresenter {
   }
 
   private async formatHierarchyTreesAndUpdatePinnedItems(
-    hierarchyTrees:
-      | Map<Trace<HierarchyTreeNode>, HierarchyTreeNode[]>
-      | undefined,
+    hierarchyTrees: Map<Trace<HierarchyTreeNode>, HierarchyTreeNode[]>,
   ): Promise<Map<Trace<HierarchyTreeNode>, UiHierarchyTreeNode[]> | undefined> {
     this.pinnedItems = [];
-
-    if (!hierarchyTrees) return undefined;
-
     const formattedTrees = new Map<
       Trace<HierarchyTreeNode>,
       UiHierarchyTreeNode[]
@@ -508,12 +503,10 @@ export class HierarchyPresenter {
   }
 
   static isHierarchyTreeModified: IsModifiedCallbackType = async (
-    newTree: TreeNode | undefined,
-    oldTree: TreeNode | undefined,
+    newTree: TreeNode,
+    oldTree: TreeNode,
     denylistProperties: string[],
   ) => {
-    if (!newTree && !oldTree) return false;
-    if (!newTree || !oldTree) return true;
     if ((newTree as UiHierarchyTreeNode).isRoot()) return false;
     const newProperties = await (
       newTree as UiHierarchyTreeNode

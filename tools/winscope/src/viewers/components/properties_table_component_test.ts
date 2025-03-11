@@ -23,7 +23,6 @@ describe('PropertiesTableComponent', () => {
   beforeAll(async () => {
     await TestBed.configureTestingModule({
       declarations: [PropertiesTableComponent],
-      schemas: [],
     }).compileComponents();
   });
 

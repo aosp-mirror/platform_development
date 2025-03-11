@@ -14,10 +14,12 @@
  * limitations under the License.
  */
 
+import {Store} from 'common/store';
 import {WinscopeEvent} from 'messaging/winscope_event';
 import {EmitEvent} from 'messaging/winscope_event_emitter';
 import {Trace} from 'trace/trace';
 import {Traces} from 'trace/traces';
+import {TRACE_INFO} from 'trace/trace_info';
 import {TraceType} from 'trace/trace_type';
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
 import {View, Viewer, ViewType} from 'viewers/viewer';
@@ -32,20 +34,20 @@ export class ViewerJankCujs implements Viewer {
   private readonly presenter: Presenter;
   private readonly view: View;
 
-  constructor(trace: Trace<PropertyTreeNode>, traces: Traces) {
+  constructor(trace: Trace<PropertyTreeNode>, traces: Traces, storage: Store) {
     this.trace = trace;
     this.htmlElement = document.createElement('viewer-jank-cujs');
     const notifyViewCallback = (data: UiData) => {
       (this.htmlElement as any).inputData = data;
     };
-    this.presenter = new Presenter(trace, notifyViewCallback);
+    this.presenter = new Presenter(trace, storage, notifyViewCallback);
     this.presenter.addEventListeners(this.htmlElement);
 
     this.view = new View(
-      ViewType.TAB,
+      ViewType.TRACE_TAB,
       this.getTraces(),
       this.htmlElement,
-      'Jank CUJs',
+      TRACE_INFO[TraceType.CUJS].name,
     );
   }
 

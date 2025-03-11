@@ -8,4 +8,5 @@
     <string name="display_fullscreen" translatable="false">Fullscreen</string>
     <string name="display_close" translatable="false">Close</string>
     <string name="input" translatable="false">Input</string>
+    <string name="power" translatable="false">Power</string>
 </resources>

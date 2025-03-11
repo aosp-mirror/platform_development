@@ -40,11 +40,18 @@ import {TimeRange} from 'common/time';
 import {
   ActiveTraceChanged,
   ExpandedTimelineToggled,
+  InitializeTraceSearchRequest,
+  TraceAddRequest,
   TracePositionUpdate,
+  TraceRemoveRequest,
+  TraceSearchCompleted,
+  TraceSearchInitialized,
+  TraceSearchRequest,
   WinscopeEvent,
 } from 'messaging/winscope_event';
 import {TimestampConverterUtils} from 'test/unit/timestamp_converter_utils';
 import {TracesBuilder} from 'test/unit/traces_builder';
+import {UnitTestUtils} from 'test/unit/utils';
 import {Trace} from 'trace/trace';
 import {Traces} from 'trace/traces';
 import {TRACE_INFO} from 'trace/trace_info';
@@ -275,7 +282,7 @@ describe('TimelineComponent', () => {
 
   it('handles undefined active trace input', async () => {
     const traces = new TracesBuilder()
-      .setTimestamps(TraceType.SCREEN_RECORDING, [time100, time110])
+      .setTimestamps(TraceType.EVENT_LOG, [time100, time110])
       .build();
 
     const timelineData = assertDefined(component.timelineData);
@@ -1025,6 +1032,54 @@ describe('TimelineComponent', () => {
     expect(position).toBeDefined();
   });
 
+  it('adds/removes trace and redraws timeline', async () => {
+    loadSfWmTraces();
+    const timelineComponent = assertDefined(component.timeline);
+    const initialTraces = timelineComponent.sortedTraces.slice();
+    const spy = spyOn(
+      assertDefined(timelineComponent.miniTimeline?.drawer),
+      'draw',
+    );
+    const trace = UnitTestUtils.makeEmptyTrace(TraceType.SEARCH);
+
+    await timelineComponent.onWinscopeEvent(new TraceAddRequest(trace));
+    expect(spy).toHaveBeenCalledTimes(1);
+    expect(timelineComponent.sortedTraces).not.toEqual(initialTraces);
+    expect(timelineComponent.sortedTraces[0]).toEqual(trace);
+
+    await timelineComponent.onWinscopeEvent(new TraceRemoveRequest(trace));
+    expect(spy).toHaveBeenCalledTimes(2);
+    expect(timelineComponent.sortedTraces).toEqual(initialTraces);
+  });
+
+  it('disables or enables timeline on winscope events', async () => {
+    loadSfWmTraces();
+    const timelineComponent = assertDefined(component.timeline);
+    checkTimelineEnabled();
+
+    await timelineComponent.onWinscopeEvent(new InitializeTraceSearchRequest());
+    checkTimelineDisabled();
+    await timelineComponent.onWinscopeEvent(new TraceSearchInitialized([]));
+    checkTimelineEnabled();
+
+    await timelineComponent.onWinscopeEvent(new TraceSearchRequest(''));
+    checkTimelineDisabled();
+    await timelineComponent.onWinscopeEvent(new TraceSearchCompleted());
+    checkTimelineEnabled();
+  });
+
+  it('does not handle arrow key presses if component disabled', () => {
+    loadSfWmTraces();
+    const timelineComponent = assertDefined(component.timeline);
+    timelineComponent.isDisabled = true;
+    fixture.detectChanges();
+
+    const spyNextEntry = spyOn(timelineComponent, 'moveToNextEntry');
+    document.dispatchEvent(new KeyboardEvent('keydown', {key: 'ArrowRight'}));
+    fixture.detectChanges();
+    expect(spyNextEntry).not.toHaveBeenCalled();
+  });
+
   function loadSfWmTraces(hostComponent = component, hostFixture = fixture) {
     const traces = new TracesBuilder()
       .setTimestamps(TraceType.SURFACE_FLINGER, [time100, time110])
@@ -1312,6 +1367,16 @@ describe('TimelineComponent', () => {
     );
     options.item(1).click();
     fixture.detectChanges();
+  }
+
+  function checkTimelineEnabled() {
+    expect(htmlElement.querySelector('.disabled-component')).toBeNull();
+    expect(htmlElement.querySelector('.disabled-message')).toBeNull();
+  }
+
+  function checkTimelineDisabled() {
+    expect(htmlElement.querySelector('.disabled-component')).toBeTruthy();
+    expect(htmlElement.querySelector('.disabled-message')).toBeTruthy();
   }
 
   @Component({
