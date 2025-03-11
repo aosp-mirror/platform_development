@@ -19,12 +19,14 @@ package com.android.compose.animation.scene.demo
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
@@ -43,6 +45,7 @@ import com.android.compose.modifiers.thenIf
 
 object PartialShade {
     object Elements {
+        val Root = ElementKey("PartialShadeRoot", placeAllCopies = true)
         val Background =
             ElementKey("PartialShadeBackground", contentPicker = LowestZIndexContentPicker)
     }
@@ -65,30 +68,31 @@ object PartialShade {
 @Composable
 fun SceneScope.PartialShade(
     modifier: Modifier = Modifier,
-    outerPadding: PaddingValues = PaddingValues(16.dp),
-    innerPadding: PaddingValues = PaddingValues(16.dp),
     content: @Composable BoxScope.() -> Unit,
 ) {
     val isSplitShade = shouldUseSplitScenes(calculateWindowSizeClass())
 
+    val shape =
+        if (isSplitShade) PartialShade.Shapes.SplitBackground else PartialShade.Shapes.Background
     Box(
-        modifier.fillMaxWidth(if (isSplitShade) 0.5f else 1f).thenIf(isSplitShade) {
-            Modifier.padding(outerPadding)
-        }
+        modifier
+            .fillMaxWidth(if (isSplitShade) 0.5f else 1f)
+            .thenIf(isSplitShade) { Modifier.padding(16.dp) }
+            .element(PartialShade.Elements.Root)
+            .clip(shape)
     ) {
         val backgroundColor = PartialShade.Colors.Background
         Box(
             Modifier.element(PartialShade.Elements.Background)
                 .matchParentSize()
                 .thenIf(!isSplitShade) { Modifier.then(ExtraBackgroundElement(backgroundColor)) }
-                .background(
-                    backgroundColor,
-                    if (isSplitShade) PartialShade.Shapes.SplitBackground
-                    else PartialShade.Shapes.Background,
-                )
+                .background(backgroundColor)
         )
 
-        Box(Modifier.padding(innerPadding), content = content)
+        Box(
+            Modifier.verticalNestedScrollToScene().verticalScroll(rememberScrollState()),
+            content = content,
+        )
     }
 }
 

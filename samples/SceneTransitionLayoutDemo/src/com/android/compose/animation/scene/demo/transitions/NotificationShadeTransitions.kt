@@ -18,35 +18,46 @@ package com.android.compose.animation.scene.demo.transitions
 
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.gestures.Orientation
-import com.android.compose.animation.scene.Edge
+import com.android.compose.animation.scene.BaseTransitionBuilder
 import com.android.compose.animation.scene.SceneTransitionsBuilder
 import com.android.compose.animation.scene.TransitionBuilder
-import com.android.compose.animation.scene.demo.NotificationShade
 import com.android.compose.animation.scene.demo.Overlays
+import com.android.compose.animation.scene.demo.PartialShade
 import com.android.compose.animation.scene.demo.notification.NotificationList
+import com.android.compose.animation.scene.reveal.ContainerRevealHaptics
+import com.android.compose.animation.scene.reveal.verticalContainerReveal
 
-fun SceneTransitionsBuilder.notificationShadeTransitions() {
+fun SceneTransitionsBuilder.notificationShadeTransitions(revealHaptics: ContainerRevealHaptics) {
     to(Overlays.Notifications) {
         spec = tween(500)
-        toNotificationShade()
+        toNotificationShade(revealHaptics)
+        sharedElement(
+            NotificationList.Elements.Notifications,
+            elevateInContent = Overlays.Notifications,
+        )
     }
 
     from(Overlays.Notifications) {
         spec = tween(500)
-        reversed { toNotificationShade() }
+        reversed { toNotificationShade(revealHaptics) }
         sharedElement(NotificationList.Elements.Notifications, enabled = false)
     }
 
-    overscroll(Overlays.Notifications, Orientation.Vertical) {
-        translate(NotificationShade.Elements.Root, y = { absoluteDistance })
-    }
+    overscrollDisabled(Overlays.Notifications, Orientation.Vertical)
 
-    overscroll(Overlays.Notifications, Orientation.Horizontal) {
-        translate(NotificationShade.Elements.Root, x = { absoluteDistance })
-    }
+    overscrollDisabled(Overlays.Notifications, Orientation.Horizontal)
 }
 
-private fun TransitionBuilder.toNotificationShade() {
-    translate(NotificationShade.Elements.Root, Edge.Top)
-    fractionRange(start = 0.5f) { fade(NotificationList.Elements.Notifications) }
+val ToNotificationShadeStartFadeProgress = 0.5f
+
+private fun TransitionBuilder.toNotificationShade(revealHaptics: ContainerRevealHaptics) {
+    verticalContainerReveal(PartialShade.Elements.Root, revealHaptics)
+}
+
+fun BaseTransitionBuilder.notifyStlThatShadeDoesNotResizeDuringThisTransition() {
+    // Let STL know that the shade and its background are not expected to change during this
+    // transition. This allows better handling of the size during interruptions. See
+    // b/290930950#comment22 for details.
+    scaleSize(PartialShade.Elements.Root, width = 1f, height = 1f)
+    scaleSize(PartialShade.Elements.Background, width = 1f, height = 1f)
 }

@@ -45,6 +45,7 @@ import {viewerCardInnerStyle} from './styles/viewer_card.styles';
           title="HIERARCHY"
           (collapseButtonClicked)="collapseButtonClicked.emit()"></collapsible-section-title>
         <search-box
+          formFieldClass="applied-field"
           [textFilter]="textFilter"
           (filterChange)="onFilterChange($event)"></search-box>
       </div>
@@ -55,6 +56,16 @@ import {viewerCardInnerStyle} from './styles/viewer_card.styles';
         [traceType]="dependencies[0]"
         [logCallback]="Analytics.Navigation.logHierarchySettingsChanged">
       </user-options>
+      <ng-container *ngIf="tree && tree.getWarnings().length > 0">
+        <span
+          *ngFor="let warning of tree.getWarnings()"
+          class="mat-body-1 warning"
+          [matTooltip]="warning.getMessage()"
+          [matTooltipDisabled]="disableTooltip(warningEl)">
+          <mat-icon class="warning-icon"> warning </mat-icon>
+          <span class="warning-message" #warningEl>{{warning.getMessage()}}</span>
+        </span>
+      </ng-container>
       <properties-table
         *ngIf="tableProperties"
         class="properties-table"
@@ -62,7 +73,7 @@ import {viewerCardInnerStyle} from './styles/viewer_card.styles';
       <div *ngIf="pinnedItems.length > 0" class="pinned-items">
         <tree-node
           *ngFor="let pinnedItem of pinnedItems"
-          class="node"
+          class="node full-opacity"
           [class]="pinnedItem.getDiff()"
           [class.selected]="isHighlighted(pinnedItem, highlightedItem)"
           [class.clickable]="true"
@@ -133,6 +144,25 @@ import {viewerCardInnerStyle} from './styles/viewer_card.styles';
       tree-view {
         overflow: auto;
       }
+
+      .warning {
+        display: flex;
+        align-items: center;
+        padding: 2px 12px;
+        background-color: var(--warning-background-color);
+      }
+      .warning-message {
+        padding-inline-start: 2px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        width: 100%;
+      }
+      .warning-icon {
+        font-size: 18px;
+        min-width: 18px;
+        height: 18px;
+      }
     `,
     nodeStyles,
     viewerCardInnerStyle,
@@ -201,5 +231,9 @@ export class HierarchyComponent {
       detail: {pinnedItem: item},
     });
     this.elementRef.nativeElement.dispatchEvent(event);
+  }
+
+  disableTooltip(el: HTMLElement) {
+    return el.scrollWidth === el.clientWidth;
   }
 }

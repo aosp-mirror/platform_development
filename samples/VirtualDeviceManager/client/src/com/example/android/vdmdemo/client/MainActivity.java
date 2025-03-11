@@ -26,6 +26,7 @@ import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.WindowManager;
 import android.view.inputmethod.InputMethodManager;
 
 import androidx.activity.result.ActivityResultLauncher;
@@ -40,6 +41,7 @@ import com.example.android.vdmdemo.common.ConnectionManager;
 import com.example.android.vdmdemo.common.DpadFragment;
 import com.example.android.vdmdemo.common.NavTouchpadFragment;
 import com.example.android.vdmdemo.common.RemoteEventProto.DeviceCapabilities;
+import com.example.android.vdmdemo.common.RemoteEventProto.DeviceState;
 import com.example.android.vdmdemo.common.RemoteEventProto.InputDeviceType;
 import com.example.android.vdmdemo.common.RemoteEventProto.RemoteEvent;
 import com.example.android.vdmdemo.common.RemoteIo;
@@ -66,6 +68,8 @@ public class MainActivity extends Hilt_MainActivity {
     @Inject VirtualCameraController mVirtualCameraController;
     @Inject AudioPlayer mAudioPlayer;
     @Inject AudioRecorder mAudioRecorder;
+
+    private boolean mPowerOn = false;
 
     private final Consumer<RemoteEvent> mRemoteEventConsumer = this::processRemoteEvent;
     private DisplayAdapter mDisplayAdapter;
@@ -209,6 +213,7 @@ public class MainActivity extends Hilt_MainActivity {
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
             case R.id.input -> toggleInputVisibility();
+            case R.id.power -> togglePowerState();
             default -> {
                 return super.onOptionsItemSelected(item);
             }
@@ -235,6 +240,10 @@ public class MainActivity extends Hilt_MainActivity {
                 mInputMethodManager.hideSoftInputFromWindow(
                         getWindow().getDecorView().getWindowToken(), 0);
             }
+        } else if (event.hasDeviceState()) {
+            mPowerOn = event.getDeviceState().getPowerOn();
+        } else if (event.hasBrightnessEvent()) {
+            runOnUiThread(() -> setBrightness(event.getBrightnessEvent().getBrightness()));
         }
     }
 
@@ -244,6 +253,20 @@ public class MainActivity extends Hilt_MainActivity {
         dpad.setVisibility(visibility);
         requireViewById(R.id.nav_touchpad_fragment_container).setVisibility(visibility);
         requireViewById(R.id.rotary_fragment_container).setVisibility(visibility);
+    }
+
+    private void togglePowerState() {
+        mPowerOn = !mPowerOn;
+        mRemoteIo.sendMessage(RemoteEvent.newBuilder()
+                .setDeviceState(DeviceState.newBuilder().setPowerOn(mPowerOn))
+                .build());
+
+    }
+
+    private void setBrightness(float brightness) {
+        WindowManager.LayoutParams layout = getWindow().getAttributes();
+        layout.screenBrightness = brightness;
+        getWindow().setAttributes(layout);
     }
 
     private static boolean hasRecordAudioPermission(Context context) {

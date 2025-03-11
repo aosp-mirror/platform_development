@@ -82,7 +82,7 @@ export class TraceBuilder<T> {
     type: Q,
     result: CustomQueryParserResultTypeMap[Q],
   ): TraceBuilder<T> {
-    this.parserCustomQueryResult.set(type, result);
+    this.parserCustomQueryResult.set(type, result ?? {});
     return this;
   }
 
