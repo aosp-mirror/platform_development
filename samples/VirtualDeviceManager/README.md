@@ -435,7 +435,11 @@ which showcases implicit intent handling.
 
 ## SDK Version
 
-### Android 16 / Baklava
+### Beyond Android 16
+
+-   Added support for virtual sensor additional info.
+
+### Android 16 / Baklava / SDK level 36
 
 -   Added `COMPANION_DEVICE_NEARBY_SENSOR_STREAMING` device profile.
 

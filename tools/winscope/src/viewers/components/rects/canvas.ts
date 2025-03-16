@@ -353,7 +353,8 @@ export class Canvas {
           ),
         );
       }
-      case ColorType.HIGHLIGHTED: {
+      case ColorType.HIGHLIGHTED:
+      case ColorType.HIGHLIGHTED_WITH_OPACITY: {
         return this.isDarkMode()
           ? Canvas.RECT_COLOR_HIGHLIGHTED_DARK_MODE
           : Canvas.RECT_COLOR_HIGHLIGHTED_LIGHT_MODE;
@@ -373,7 +374,7 @@ export class Canvas {
     }
   }
 
-  private getVisibleRectColor(darkFactor: number) {
+  private getVisibleRectColor(darkFactor: number): THREE.Color {
     const color = Canvas.RECT_COLOR_VISIBLE.clone();
     color.r *= this.getColorScalingValue(45, color.r, darkFactor);
     color.g *= this.getColorScalingValue(182, color.g, darkFactor);
@@ -381,7 +382,11 @@ export class Canvas {
     return color;
   }
 
-  private getColorScalingValue(l: number, u: number, darkFactor: number) {
+  private getColorScalingValue(
+    l: number,
+    u: number,
+    darkFactor: number,
+  ): number {
     const scale = l / u / 255;
     return darkFactor * (1 - scale) + scale;
   }
@@ -535,7 +540,8 @@ export class Canvas {
       let opacity: number | undefined;
       if (
         rect.colorType === ColorType.VISIBLE_WITH_OPACITY ||
-        rect.colorType === ColorType.HAS_CONTENT_AND_OPACITY
+        rect.colorType === ColorType.HAS_CONTENT_AND_OPACITY ||
+        rect.colorType === ColorType.HIGHLIGHTED_WITH_OPACITY
       ) {
         opacity = rect.darkFactor;
       } else {

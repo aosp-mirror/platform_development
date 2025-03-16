@@ -7,6 +7,33 @@
     android:orientation="vertical"
     android:padding="10dp">
 
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:gravity="center"
+        android:orientation="horizontal"
+        android:padding="10dp">
+
+        <TextView
+            android:id="@+id/current_device"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:gravity="center"
+            android:padding="8dp"
+            android:text="@string/current_device"
+            android:textStyle="bold" />
+
+        <Button
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:gravity="center"
+            android:onClick="onChangeDevice"
+            android:text="@string/change_device" />
+    </LinearLayout>
+
     <Button
         android:id="@+id/request_device_aware_permissions"
         android:layout_width="match_parent"
@@ -15,17 +42,17 @@
         android:text="@string/request_device_aware_permissions" />
 
     <Button
-        android:id="@+id/revoke_device_aware_permissions"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:onClick="onRevokePermissions"
-        android:text="@string/revoke_device_aware_permissions" />
-
-    <Button
         android:id="@+id/request_non_device_aware_permissions"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:onClick="onRequestPermissions"
         android:text="@string/request_non_device_aware_permissions" />
+
+    <Button
+        android:id="@+id/revoke_all_permissions"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:onClick="onRevokePermissions"
+        android:text="@string/revoke_all_permissions" />
 
 </LinearLayout>

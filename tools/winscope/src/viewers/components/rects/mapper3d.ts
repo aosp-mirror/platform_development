@@ -271,9 +271,10 @@ class Mapper3D {
           ? assertDefined(rect2d.opacity)
           : (visibleRectsTotal - visibleRectsSoFar++) / visibleRectsTotal;
       } else {
-        darkFactor =
-          (nonVisibleRectsTotal - nonVisibleRectsSoFar++) /
-          nonVisibleRectsTotal;
+        darkFactor = this.isShadedByOpacity()
+          ? 0.5
+          : (nonVisibleRectsTotal - nonVisibleRectsSoFar++) /
+            nonVisibleRectsTotal;
       }
       let fillRegion: Rect3D[] | undefined;
       if (rect2d.fillRegion) {
@@ -307,6 +308,9 @@ class Mapper3D {
 
   private getColorType(rect2d: UiRect): ColorType {
     if (this.isHighlighted(rect2d)) {
+      if (this.isShadedByOpacity()) {
+        return ColorType.HIGHLIGHTED_WITH_OPACITY;
+      }
       return ColorType.HIGHLIGHTED;
     }
     if (this.isWireFrame()) {

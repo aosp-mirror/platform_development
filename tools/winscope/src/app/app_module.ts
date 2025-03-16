@@ -103,6 +103,7 @@ import {TraceConfigComponent} from './components/trace_config_component';
 import {TraceViewComponent} from './components/trace_view_component';
 import {UploadTracesComponent} from './components/upload_traces_component';
 import {WarningDialogComponent} from './components/warning_dialog_component';
+import {WdpSetupComponent} from './components/wdp_setup_component';
 import {WinscopeProxySetupComponent} from './components/winscope_proxy_setup_component';
 import {GlobalErrorHandler} from './global_error_handler';
 
@@ -123,6 +124,7 @@ import {GlobalErrorHandler} from './global_error_handler';
     CollectTracesComponent,
     UploadTracesComponent,
     WinscopeProxySetupComponent,
+    WdpSetupComponent,
     TraceConfigComponent,
     HierarchyComponent,
     PropertiesComponent,

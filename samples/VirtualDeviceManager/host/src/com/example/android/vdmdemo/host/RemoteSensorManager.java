@@ -16,9 +16,13 @@
 
 package com.example.android.vdmdemo.host;
 
+import static android.hardware.SensorAdditionalInfo.TYPE_INTERNAL_TEMPERATURE;
+
 import android.companion.virtual.sensor.VirtualSensor;
+import android.companion.virtual.sensor.VirtualSensorAdditionalInfo;
 import android.companion.virtual.sensor.VirtualSensorCallback;
 import android.companion.virtual.sensor.VirtualSensorEvent;
+import android.companion.virtualdevice.flags.Flags;
 import android.os.SystemClock;
 import android.util.SparseArray;
 
@@ -87,10 +91,19 @@ final class RemoteSensorManager implements AutoCloseable {
         if (remoteEvent.hasSensorEvent()) {
             RemoteSensorEvent sensorEvent = remoteEvent.getSensorEvent();
             VirtualSensor sensor = mVirtualSensors.get(sensorEvent.getSensorType());
-            if (sensor != null) {
+            if (sensor == null) {
+                return;
+            }
+            if (sensorEvent.getAdditionalInfoType() < 0) {
                 sensor.sendEvent(
                         new VirtualSensorEvent.Builder(Floats.toArray(sensorEvent.getValuesList()))
                                 .setTimestampNanos(SystemClock.elapsedRealtimeNanos())
+                                .build());
+            } else if (Flags.virtualSensorAdditionalInfo()
+                    && sensorEvent.getAdditionalInfoType() == TYPE_INTERNAL_TEMPERATURE) {
+                sensor.sendAdditionalInfo(
+                        new VirtualSensorAdditionalInfo.Builder(TYPE_INTERNAL_TEMPERATURE)
+                                .addValues(Floats.toArray(sensorEvent.getValuesList()))
                                 .build());
             }
         }

@@ -78,6 +78,7 @@ message SensorCapabilities {
   int32 max_delay_us = 8;
   bool is_wake_up_sensor = 9;
   int32 reporting_mode = 10;
+  bool is_additional_info_supported = 11;
 }
 
 message CameraCapabilities {
@@ -177,6 +178,7 @@ message SensorConfiguration {
 message RemoteSensorEvent {
   int32 sensor_type = 1;
   repeated float values = 2;
+  int32 additional_info_type = 3;
 }
 
 message StartAudio {}

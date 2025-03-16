@@ -16,10 +16,9 @@
 
 export enum Endpoint {
   DEVICES = '/devices/',
-  START_TRACE = '/start/',
-  END_TRACE = '/end/',
-  DUMP = '/dump/',
-  FETCH = '/fetch/',
   STATUS = '/status/',
-  CHECK_WAYLAND = '/checkwayland/',
+  FETCH = '/fetch/',
+  START_TRACE = '/starttrace/',
+  END_TRACE = '/endtrace/',
+  RUN_ADB_CMD = '/runadbcmd/',
 }

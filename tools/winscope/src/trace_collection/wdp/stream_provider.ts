@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-import {AdbDevice} from 'trace_collection/adb_device';
 import {AdbWebSocketStream, DataListener} from './adb_websocket_stream';
 import {DevicesMsgListener, DevicesStream} from './devices_stream';
 import {ShellStream} from './shell_stream';
@@ -26,22 +25,27 @@ export class StreamProvider {
   private devicesStream: DevicesStream | undefined;
 
   createSyncStream(
-    device: AdbDevice,
+    deviceSerialNumber: string,
     sock: WebSocket,
     errorListener: ErrorListener,
   ): SyncStream {
-    const stream = new SyncStream(sock, device, errorListener);
+    const stream = new SyncStream(sock, deviceSerialNumber, errorListener);
     this.streams.push(stream);
     return stream;
   }
 
   createShellStream(
-    device: AdbDevice,
+    deviceSerialNumber: string,
     sock: WebSocket,
     dataListener: DataListener,
     errorListener: ErrorListener,
   ): ShellStream {
-    const stream = new ShellStream(sock, device, dataListener, errorListener);
+    const stream = new ShellStream(
+      sock,
+      deviceSerialNumber,
+      dataListener,
+      errorListener,
+    );
     this.streams.push(stream);
     return stream;
   }

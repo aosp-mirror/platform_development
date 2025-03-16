@@ -55,9 +55,7 @@ import {
   WinscopeEventType,
 } from 'messaging/winscope_event';
 import {WinscopeEventListener} from 'messaging/winscope_event_listener';
-import {AdbConnection} from 'trace_collection/adb_connection';
 import {AdbFiles} from 'trace_collection/adb_files';
-import {WinscopeProxyConnection} from 'trace_collection/winscope_proxy/winscope_proxy_connection';
 import {iconDividerStyle} from 'viewers/components/styles/icon_divider.styles';
 import {ViewerInputMethodComponent} from 'viewers/components/viewer_input_method_component';
 import {Viewer} from 'viewers/viewer';
@@ -233,8 +231,7 @@ import {UploadTracesComponent} from './upload_traces_component';
           <div class="card-grid landing-grid">
             <collect-traces
               class="collect-traces-card homepage-card"
-              [storage]="traceConfigStorage"
-              [adbConnection]="adbConnection"
+              [storage]="traceCollectionStorage"
               (filesCollected)="onFilesCollected($event)"></collect-traces>
 
             <upload-traces
@@ -363,8 +360,8 @@ export class AppComponent implements WinscopeEventListener {
       Validators.pattern(FileUtils.DOWNLOAD_FILENAME_REGEX),
     ]),
   );
-  adbConnection: AdbConnection = new WinscopeProxyConnection();
-  traceConfigStorage: Store;
+
+  traceCollectionStorage: Store;
   downloadProgress: number | undefined;
 
   @ViewChild(UploadTracesComponent)
@@ -472,7 +469,7 @@ export class AppComponent implements WinscopeEventListener {
       );
     }
 
-    this.traceConfigStorage =
+    this.traceCollectionStorage =
       globalConfig.MODE === 'PROD'
         ? new PersistentStore()
         : new InMemoryStorage();

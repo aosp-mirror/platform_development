@@ -1,56 +1,49 @@
-import { Component, DoCheck } from '@angular/core';
-import { MatButtonModule } from '@angular/material/button';
-import { MatDividerModule } from '@angular/material/divider';
-import { MatIconModule } from '@angular/material/icon';
-import { MatProgressBarModule } from '@angular/material/progress-bar';
+import { ProgressTracker } from './../util/progress';
+import { GoldensService } from './../service/goldens.service';
+import { Component, DoCheck, OnInit } from '@angular/core';
 import { MatToolbarModule } from '@angular/material/toolbar';
-import { RouterOutlet } from '@angular/router';
+import { TestListComponent } from '../test-list/test-list.component';
+import { PreviewComponent } from '../preview/preview.component';
+import { TimelineComponent } from '../timeline/timeline.component';
+import { MotionGolden } from '../model/golden';
 import { finalize } from 'rxjs';
-
-import { MotionGolden } from './golden';
-import { GoldensService } from './goldens.service';
-import { TestOverviewComponent } from './test-overview/test-overview.component';
-import { ProgressTracker } from '../utils/progress';
+import { NgIf } from '@angular/common';
 
 @Component({
   selector: 'app-root',
-  standalone: true,
   imports: [
-    RouterOutlet,
     MatToolbarModule,
-    TestOverviewComponent,
-    MatIconModule,
-    MatDividerModule,
-    MatButtonModule,
-    MatDividerModule,
-    MatProgressBarModule,
+    TestListComponent,
+    PreviewComponent,
+    TimelineComponent,
+    NgIf,
   ],
   templateUrl: './app.component.html',
-  styleUrl: './app.component.scss',
+  styleUrl: './app.component.css',
 })
-export class AppComponent implements DoCheck {
+export class AppComponent implements DoCheck, OnInit {
   constructor(
     private goldenService: GoldensService,
-    private progressTracker: ProgressTracker,
+    private progressTracker: ProgressTracker
   ) {}
 
-  ngDoCheck() {
+  showProgress = false;
+  goldens: MotionGolden[] = [];
+  selectedGolden: MotionGolden | null = null;
+
+  ngDoCheck(): void {
     this.showProgress = this.progressTracker.isActive;
   }
-
-  goldens: MotionGolden[] = [];
-
-  showProgress = false;
 
   ngOnInit(): void {
     this.fetchGoldens();
   }
 
   fetchGoldens(): void {
-    this.progressTracker.beginProgress();
+    this.progressTracker.beginProgress;
     this.goldenService
       .getGoldens()
-      .pipe(finalize(() => this.progressTracker.endProgress()))
+      .pipe(finalize(() => this.progressTracker.endProgress))
       .subscribe((goldens) => (this.goldens = goldens));
   }
 
@@ -58,7 +51,11 @@ export class AppComponent implements DoCheck {
     this.progressTracker.beginProgress();
     this.goldenService
       .refreshGoldens(clear)
-      .pipe(finalize(() => this.progressTracker.endProgress()))
+      .pipe(finalize(() => this.progressTracker.endProgress))
       .subscribe((goldens) => (this.goldens = goldens));
+  }
+
+  setSelectedGolden(golden: MotionGolden): void {
+    this.selectedGolden = golden;
   }
 }

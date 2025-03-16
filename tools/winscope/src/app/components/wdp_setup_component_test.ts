@@ -55,6 +55,7 @@ describe('WdpSetupComponent', () => {
       htmlElement.querySelector('.connecting-message')?.textContent,
     ).toContain('Connecting...');
     expect(htmlElement.querySelector('.retry')).toBeNull();
+    expect(htmlElement.querySelector('.install')).toBeNull();
   });
 
   it('correct icon and message displays if no proxy', () => {
@@ -67,7 +68,17 @@ describe('WdpSetupComponent', () => {
       "Failed to connect. Web Device Proxy doesn't seem to be running.",
     );
     expect(text).toContain('Please check you have Web Device Proxy installed.');
-    expect(htmlElement.querySelector('.retry')).toBeTruthy();
+    checkRetryButton();
+
+    const windowSpy = spyOn(window, 'open');
+    assertDefined(
+      htmlElement.querySelector<HTMLButtonElement>('.install'),
+    ).click();
+    fixture.detectChanges();
+    expect(windowSpy).toHaveBeenCalledOnceWith(
+      'https://tools.google.com/dlpage/android_web_device_proxy',
+      '_blank',
+    );
   });
 
   it('correct icon and message displays if unauthorized proxy', () => {
@@ -77,19 +88,16 @@ describe('WdpSetupComponent', () => {
       'Web Device Proxy not yet authorized. Enable popups and try again.',
     );
     expect(htmlElement.querySelector('.adb-icon')?.textContent).toEqual('lock');
-    expect(htmlElement.querySelector('.retry')).toBeTruthy();
+    checkRetryButton();
+    expect(htmlElement.querySelector('.install')).toBeNull();
   });
 
-  it('retry button emits event', () => {
-    component.state = ConnectionState.UNAUTH;
-    fixture.detectChanges();
-
+  function checkRetryButton() {
     const spy = spyOn(assertDefined(component.retryConnection), 'emit');
-    const button = assertDefined(
+    assertDefined(
       htmlElement.querySelector<HTMLButtonElement>('.retry'),
-    );
-    button.click();
+    ).click();
     fixture.detectChanges();
     expect(spy).toHaveBeenCalled();
-  });
+  }
 });

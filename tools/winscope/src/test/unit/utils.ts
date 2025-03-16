@@ -421,7 +421,7 @@ class UnitTestUtils {
   static makeFakeWebSocket(): jasmine.SpyObj<WebSocket> {
     const socket = jasmine.createSpyObj<WebSocket>(
       'WebSocket',
-      ['onmessage', 'onclose', 'send', 'close'],
+      ['onmessage', 'onclose', 'send', 'close', 'onerror'],
       {'readyState': WebSocket.OPEN, binaryType: 'arraybuffer'},
     );
     socket.close.and.callFake(() => {

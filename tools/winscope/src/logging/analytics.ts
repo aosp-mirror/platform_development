@@ -274,8 +274,8 @@ export class Analytics {
   };
 
   static Proxy = class {
-    static logServerNotFound() {
-      Analytics.doLogEvent(Analytics.PROXY_SERVER_NOT_FOUND);
+    static logServerNotFound(connectionType: string) {
+      Analytics.doLogEvent(Analytics.PROXY_SERVER_NOT_FOUND, {connectionType});
     }
 
     static logNoFilesFound() {

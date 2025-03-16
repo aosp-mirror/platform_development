@@ -20,17 +20,10 @@ import {
   stringToByteArray,
 } from 'common/buffer_utils';
 import {UnitTestUtils} from 'test/unit/utils';
-import {AdbDevice} from 'trace_collection/adb_device';
 import {SyncStream} from './sync_stream';
 
 describe('SyncStream', () => {
-  const mockDevice: AdbDevice = {
-    id: '123',
-    authorized: true,
-    model: '',
-    displays: [],
-    multiDisplayScreenRecordingAvailable: false,
-  };
+  const serialNumber = '123';
   const errorListener = jasmine.createSpy();
   const testFileDataString = 'test file data';
   const testFileData = stringToByteArray(testFileDataString);
@@ -47,7 +40,7 @@ describe('SyncStream', () => {
   beforeEach(async () => {
     webSocket = UnitTestUtils.makeFakeWebSocket();
     errorListener.calls.reset();
-    stream = new SyncStream(webSocket, mockDevice, errorListener);
+    stream = new SyncStream(webSocket, serialNumber, errorListener);
     await stream.connect();
   });
 
@@ -59,7 +52,7 @@ describe('SyncStream', () => {
     expect(webSocket.send).toHaveBeenCalledOnceWith(
       JSON.stringify({
         header: {
-          serialNumber: mockDevice.id,
+          serialNumber,
           command: 'sync:',
         },
       }),
@@ -72,7 +65,7 @@ describe('SyncStream', () => {
     ]);
     const receivedData = await stream.pullFile(testFilepath);
     expect(errorListener).toHaveBeenCalledOnceWith(
-      `Could not parse data: \nReceived: {"error":{"type":"","message":"failed"}}` +
+      `Could not parse data:\nReceived: {"error":{"type":"","message":"failed"}}` +
         `\nError: Expected message data to be ArrayBuffer or Blob.` +
         `\nADB Error: failed`,
     );
@@ -84,7 +77,7 @@ describe('SyncStream', () => {
     setMessageResponses(['unknown error']);
     const receivedData = await stream.pullFile(testFilepath);
     expect(errorListener).toHaveBeenCalledOnceWith(
-      `Could not parse data: \nReceived: unknown error` +
+      `Could not parse data:\nReceived: unknown error` +
         `\nError: Expected message data to be ArrayBuffer or Blob.`,
     );
     expect(receivedData).toEqual(Uint8Array.from([]));
@@ -95,7 +88,7 @@ describe('SyncStream', () => {
     setMessageResponses([200]);
     const receivedData = await stream.pullFile(testFilepath);
     expect(errorListener).toHaveBeenCalledOnceWith(
-      `Could not parse data: \nReceived: 200` +
+      `Could not parse data:\nReceived: 200` +
         `\nError: Expected message data to be ArrayBuffer or Blob.`,
     );
     expect(receivedData).toEqual(Uint8Array.from([]));

@@ -14,10 +14,8 @@
  * limitations under the License.
  */
 
-/**
- * Represents the current state of the connection between the Winscope web client
- * and the Winscope service.
- */
+// A reactive state which changes based on adb host/device state, or tracing session state
+// Used to change what is displayed in the UI
 export enum ConnectionState {
   ERROR,
   CONNECTING,

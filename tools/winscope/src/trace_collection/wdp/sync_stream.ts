@@ -20,7 +20,6 @@ import {
   byteArrayToString,
   ResizableBuffer,
 } from 'common/buffer_utils';
-import {AdbDevice} from 'trace_collection/adb_device';
 import {AdbWebSocketStream} from './adb_websocket_stream';
 import {ErrorListener} from './websocket_stream';
 
@@ -33,10 +32,10 @@ export class SyncStream extends AdbWebSocketStream {
 
   constructor(
     sock: WebSocket,
-    device: AdbDevice,
+    deviceSerialNumber: string,
     errorListener: ErrorListener,
   ) {
-    super(sock, device, 'sync', errorListener);
+    super(sock, deviceSerialNumber, 'sync', errorListener);
   }
 
   async pullFile(filepath: string): Promise<Uint8Array> {

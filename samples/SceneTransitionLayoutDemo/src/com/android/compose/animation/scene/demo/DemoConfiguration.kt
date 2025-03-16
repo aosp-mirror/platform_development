@@ -66,6 +66,8 @@ data class DemoConfiguration(
     val lsToShadeRequiresFullSwipe: ToggleableState = ToggleableState.Indeterminate,
     val enableOverlays: Boolean = false,
     val transitionBorder: Boolean = true,
+    val deferTransitionProgress: Boolean = false,
+    val firstCompositionDelay: Long = 0L,
 ) {
     companion object {
         val Saver = run {
@@ -81,6 +83,8 @@ data class DemoConfiguration(
             val lsToShadeRequiresFullSwipe = "lsToShadeRequiresFullSwipe"
             val enableOverlays = "enableOverlays"
             val transitionBorder = "transitionBorder"
+            val deferTransitionProgress = "deferTransitionProgress"
+            val firstCompositionDelay = "firstCompositionDelay"
 
             mapSaver(
                 save = {
@@ -97,6 +101,8 @@ data class DemoConfiguration(
                         lsToShadeRequiresFullSwipe to it.lsToShadeRequiresFullSwipe,
                         enableOverlays to it.enableOverlays,
                         transitionBorder to it.transitionBorder,
+                        deferTransitionProgress to it.deferTransitionProgress,
+                        firstCompositionDelay to it.firstCompositionDelay,
                     )
                 },
                 restore = {
@@ -115,6 +121,8 @@ data class DemoConfiguration(
                             it[lsToShadeRequiresFullSwipe] as ToggleableState,
                         enableOverlays = it[enableOverlays] as Boolean,
                         transitionBorder = it[transitionBorder] as Boolean,
+                        deferTransitionProgress = it[deferTransitionProgress] as Boolean,
+                        firstCompositionDelay = it[firstCompositionDelay] as Long,
                     )
                 },
             )
@@ -244,6 +252,30 @@ fun DemoConfigurationDialog(
                             configuration.copy(transitionBorder = !configuration.transitionBorder)
                         )
                     },
+                )
+
+                // Defer transition progress.
+                Checkbox(
+                    label = "Defer transition progress",
+                    checked = configuration.deferTransitionProgress,
+                    onCheckedChange = {
+                        onConfigurationChange(
+                            configuration.copy(
+                                deferTransitionProgress = !configuration.deferTransitionProgress
+                            )
+                        )
+                    },
+                )
+
+                // First composition delay.
+                Text(text = "First composition delay: ${configuration.firstCompositionDelay}ms")
+                Slider(
+                    value = configuration.firstCompositionDelay,
+                    onValueChange = {
+                        onConfigurationChange(configuration.copy(firstCompositionDelay = it))
+                    },
+                    values = List(21) { it * 10L },
+                    onValueNotFound = { 0 },
                 )
 
                 Text(text = "Theme", style = MaterialTheme.typography.titleMedium)

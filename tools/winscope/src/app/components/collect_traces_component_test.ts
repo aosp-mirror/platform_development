@@ -27,10 +27,14 @@ import {MatCardModule} from '@angular/material/card';
 import {MatCheckboxModule} from '@angular/material/checkbox';
 import {MatDialogModule} from '@angular/material/dialog';
 import {MatDividerModule} from '@angular/material/divider';
+import {MatFormFieldModule} from '@angular/material/form-field';
 import {MatIconModule} from '@angular/material/icon';
+import {MatInputModule} from '@angular/material/input';
 import {MatListModule} from '@angular/material/list';
 import {MatProgressBarModule} from '@angular/material/progress-bar';
+import {MatSelectModule} from '@angular/material/select';
 import {MatSnackBar, MatSnackBarModule} from '@angular/material/snack-bar';
+import {MatTabsModule} from '@angular/material/tabs';
 import {BrowserAnimationsModule} from '@angular/platform-browser/animations';
 import {assertDefined} from 'common/assert_utils';
 import {InMemoryStorage} from 'common/store/in_memory_storage';
@@ -40,37 +44,38 @@ import {
   NoTraceTargetsSelected,
   WinscopeEvent,
 } from 'messaging/winscope_event';
-import {MockAdbConnection} from 'test/unit/mock_adb_connection';
 import {UserNotifierChecker} from 'test/unit/user_notifier_checker';
+import {waitToBeCalled} from 'test/utils';
 import {TraceType} from 'trace/trace_type';
-import {AdbConnection} from 'trace_collection/adb_connection';
-import {AdbDevice} from 'trace_collection/adb_device';
+import {
+  AdbDeviceConnection,
+  AdbDeviceState,
+} from 'trace_collection/adb/adb_device_connection';
+import {AdbConnectionType} from 'trace_collection/adb_connection_type';
 import {ConnectionState} from 'trace_collection/connection_state';
-import {WinscopeProxyConnection} from 'trace_collection/winscope_proxy/winscope_proxy_connection';
+import {MockAdbDeviceConnection} from 'trace_collection/mock/mock_adb_device_connection';
+import {UiTraceTarget} from 'trace_collection/ui/ui_trace_target';
+import {WdpDeviceConnection} from 'trace_collection/wdp/wdp_device_connection';
+import {WinscopeProxyDeviceConnection} from 'trace_collection/winscope_proxy/winscope_proxy_device_connection';
 import {CollectTracesComponent} from './collect_traces_component';
 import {LoadProgressComponent} from './load_progress_component';
 import {TraceConfigComponent} from './trace_config_component';
 import {WarningDialogComponent} from './warning_dialog_component';
+import {WdpSetupComponent} from './wdp_setup_component';
 import {WinscopeProxySetupComponent} from './winscope_proxy_setup_component';
 
 describe('CollectTracesComponent', () => {
   let fixture: ComponentFixture<TestHostComponent>;
-  let component: TestHostComponent;
+  let hostComponent: TestHostComponent;
+  let component: CollectTracesComponent;
   let htmlElement: HTMLElement;
-  const mockDevice: AdbDevice = {
-    id: '35562',
-    model: 'Pixel 6',
-    authorized: true,
-    displays: [],
-    multiDisplayScreenRecordingAvailable: false,
-  };
-  const mockDeviceWatch: AdbDevice = {
-    id: '75432',
-    model: 'Pixel Watch',
-    authorized: true,
-    displays: [],
-    multiDisplayScreenRecordingAvailable: false,
-  };
+  let mockDevice: MockAdbDeviceConnection;
+  let mockDeviceWatch: MockAdbDeviceConnection;
+  const testFile = new File([], 'test_file');
+
+  beforeAll(() => {
+    spyOn(window, 'open');
+  });
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
@@ -87,12 +92,17 @@ describe('CollectTracesComponent', () => {
         MatDialogModule,
         MatCheckboxModule,
         FormsModule,
+        MatTabsModule,
+        MatSelectModule,
+        MatFormFieldModule,
+        MatInputModule,
       ],
       providers: [MatSnackBar],
       declarations: [
         TestHostComponent,
         CollectTracesComponent,
         WinscopeProxySetupComponent,
+        WdpSetupComponent,
         TraceConfigComponent,
         LoadProgressComponent,
         WarningDialogComponent,
@@ -100,9 +110,22 @@ describe('CollectTracesComponent', () => {
       schemas: [NO_ERRORS_SCHEMA],
     }).compileComponents();
     fixture = TestBed.createComponent(TestHostComponent);
-    component = fixture.componentInstance;
+    hostComponent = fixture.componentInstance;
     htmlElement = fixture.nativeElement;
     fixture.detectChanges();
+    component = assertDefined(hostComponent.components?.get(0));
+    mockDevice = new MockAdbDeviceConnection(
+      '35562',
+      'Pixel 6',
+      AdbDeviceState.AVAILABLE,
+      component,
+    );
+    mockDeviceWatch = new MockAdbDeviceConnection(
+      '75432',
+      'Pixel Watch',
+      AdbDeviceState.AVAILABLE,
+      component,
+    );
   });
 
   it('can be created', () => {
@@ -111,99 +134,70 @@ describe('CollectTracesComponent', () => {
 
   it('renders the expected card title', () => {
     const title = assertDefined(htmlElement.querySelector('.title'));
-    expect(title.innerHTML).toContain('Collect Traces');
+    expect(title.textContent).toContain('Collect Traces');
   });
 
-  it('displays connecting message', () => {
-    getConnection().state = ConnectionState.CONNECTING;
-    fixture.detectChanges();
-
-    const connectingMessage = assertDefined(
-      htmlElement.querySelector('.connecting-message'),
+  it('defaults to overriding host', () => {
+    expect(component.controller?.getConnectionType()).toEqual(
+      AdbConnectionType.MOCK,
     );
-    expect(connectingMessage.innerHTML).toContain('Connecting...');
   });
 
-  it('displays adb set up', () => {
-    getCollectTracesComponent().adbSuccess = jasmine
-      .createSpy()
-      .and.returnValue(false);
-    fixture.detectChanges();
-
-    const setUpAdbEl = assertDefined(htmlElement.querySelector('.set-up-adb'));
-    expect(setUpAdbEl.querySelector('.proxy-tab')).toBeTruthy();
+  it('refreshes connection', () => {
+    const controller = assertDefined(component.controller);
+    const spy = spyOn(controller, 'restartConnection');
+    assertDefined(
+      htmlElement.querySelector<HTMLElement>('.refresh-connection'),
+    ).click();
+    expect(spy).toHaveBeenCalled();
   });
 
   it('displays no connected devices', () => {
-    getConnection().state = ConnectionState.IDLE;
-    fixture.detectChanges();
-
+    setSpyWithDevices([]);
     const el = assertDefined(htmlElement.querySelector('.devices-connecting'));
-    expect(el.innerHTML).toContain('No devices detected');
+    expect(el.textContent).toContain('No devices detected');
   });
 
   it('displays connected authorized devices', () => {
-    const connection = getConnection();
-    connection.state = ConnectionState.IDLE;
-    connection.devices = [mockDevice];
-    fixture.detectChanges();
-
+    setSpyWithDevices([mockDevice]);
     const el = assertDefined(htmlElement.querySelector('.devices-connecting'));
-    expect(el.innerHTML).toContain('Pixel 6');
-    expect(el.innerHTML).toContain('smartphone');
+    expect(el.textContent).toContain('Pixel 6');
+    expect(el.textContent).toContain('smartphone');
   });
 
   it('displays connected unauthorized devices', () => {
-    const connection = getConnection();
-    connection.state = ConnectionState.IDLE;
-    connection.devices = [
-      {
-        id: '35562',
-        model: 'Pixel 6',
-        authorized: false,
-        displays: [],
-        multiDisplayScreenRecordingAvailable: false,
-      },
-    ];
-    fixture.detectChanges();
-
+    setSpyWithDevices([
+      new MockAdbDeviceConnection(
+        '35562',
+        '',
+        AdbDeviceState.UNAUTHORIZED,
+        component,
+      ),
+    ]);
     const el = assertDefined(htmlElement.querySelector('.devices-connecting'));
-    expect(el.innerHTML).toContain('unauthorized');
-    expect(el.innerHTML).toContain('screen_lock_portrait');
+    expect(el.textContent).toContain('unauthorized');
+    expect(el.textContent).toContain('screen_lock_portrait');
   });
 
   it('detects changes in devices', async () => {
-    const connection = getConnection();
-    connection.state = ConnectionState.IDLE;
-    fixture.detectChanges();
-
+    const spy = setSpyWithDevices([]);
     const el = assertDefined(htmlElement.querySelector('.devices-connecting'));
     expect(el.textContent).toContain('No devices detected');
 
-    connection.devices = [mockDevice];
+    spy.and.returnValue([mockDevice]);
     fixture.detectChanges();
     await fixture.whenStable();
-
-    expect(el.textContent).toContain(
+    expect(el.textContent?.trim()).toContain(
       'Select a device: smartphone  Pixel 6 (35562)',
     );
   });
 
   it('displays connected devices again if selected device no longer present', () => {
-    const connection = getConnection();
-    connection.state = ConnectionState.IDLE;
-    connection.devices = [mockDevice];
-    fixture.detectChanges();
+    const spy = setSpyWithDevices([mockDevice]);
+    clickAvailableDevice();
 
-    const device = assertDefined(
-      htmlElement.querySelector<HTMLElement>('.available-device'),
-    );
-    device.click();
+    spy.and.returnValue([mockDeviceWatch]);
     fixture.detectChanges();
-
-    connection.devices = [mockDeviceWatch];
-    fixture.detectChanges();
-
     const el = assertDefined(htmlElement.querySelector('.devices-connecting'));
     expect(el.textContent).toContain(
       'Select a device: smartphone  Pixel Watch (75432)',
@@ -211,22 +205,14 @@ describe('CollectTracesComponent', () => {
   });
 
   it('auto selects last device', () => {
-    const connection = getConnection();
-    connection.state = ConnectionState.IDLE;
-    connection.devices = [mockDevice];
-    fixture.detectChanges();
-
-    const device = assertDefined(
-      htmlElement.querySelector<HTMLElement>('.available-device'),
-    );
-    device.click();
-    fixture.detectChanges();
+    const spy = setSpyWithDevices([mockDevice]);
+    clickAvailableDevice();
     let configSection = assertDefined(
       htmlElement.querySelector('.trace-collection-config'),
     );
     expect(configSection.textContent).toContain('Pixel 6');
 
-    connection.devices = [mockDeviceWatch];
+    spy.and.returnValue([mockDeviceWatch]);
     fixture.detectChanges();
 
     const el = assertDefined(htmlElement.querySelector('.devices-connecting'));
@@ -235,7 +221,7 @@ describe('CollectTracesComponent', () => {
     );
     expect(htmlElement.querySelector('.trace-collection-config')).toBeNull();
 
-    connection.devices = [mockDevice];
+    spy.and.returnValue([mockDevice]);
     fixture.detectChanges();
     configSection = assertDefined(
       htmlElement.querySelector('.trace-collection-config'),
@@ -243,15 +229,15 @@ describe('CollectTracesComponent', () => {
     expect(configSection.textContent).toContain('Pixel 6');
   });
 
-  it('displays trace collection config elements', () => {
+  it('displays trace collection config elements', async () => {
     goToConfigSection();
 
     const el = assertDefined(
       htmlElement.querySelector('.trace-collection-config'),
     );
-    expect(el.innerHTML).toContain('smartphone');
-    expect(el.innerHTML).toContain('Pixel 6');
-    expect(el.innerHTML).toContain('35562');
+    expect(el.textContent).toContain('smartphone');
+    expect(el.textContent).toContain('Pixel 6');
+    expect(el.textContent).toContain('35562');
 
     const traceSection = assertDefined(
       htmlElement.querySelector('.trace-section'),
@@ -263,6 +249,7 @@ describe('CollectTracesComponent', () => {
       'Start trace',
     );
 
+    await changeTab(1);
     const dumpSection = assertDefined(
       htmlElement.querySelector('.dump-section'),
     );
@@ -278,32 +265,30 @@ describe('CollectTracesComponent', () => {
     goToConfigSection();
     await fixture.whenStable();
     fixture.detectChanges();
-
-    clickCheckboxAndCheckTraceConfig('window_trace', false);
-    clickCheckboxAndCheckTraceConfig('window_dump', true);
+    clickCheckboxAndCheckTraceConfig(UiTraceTarget.WINDOW_MANAGER_TRACE, false);
+    await changeTab(1);
+    clickCheckboxAndCheckTraceConfig(UiTraceTarget.WINDOW_MANAGER_DUMP, true);
   });
 
   it('start trace button works as expected', async () => {
     goToConfigSection();
-
-    const spy = spyOn(getConnection(), 'startTrace');
+    const spy = spyOn(assertDefined(component.controller), 'startTrace');
     await clickStartTraceButton();
     expect(spy).toHaveBeenCalled();
   });
 
   it('emits event if no trace targets selected', async () => {
     goToConfigSection();
-    const collectTracesComponent = getCollectTracesComponent();
-
     let lastEvent: WinscopeEvent | undefined;
-    collectTracesComponent.setEmitEvent(async (event: WinscopeEvent) => {
+    component.setEmitEvent(async (event: WinscopeEvent) => {
       lastEvent = event;
     });
 
-    Object.values(collectTracesComponent.traceConfig).forEach(
+    Object.values(component.traceConfig).forEach(
       (c) => (c.config.enabled = false),
     );
-    const spy = spyOn(getConnection(), 'startTrace');
+    const controller = assertDefined(component.controller);
+    const spy = spyOn(controller, 'startTrace');
     await clickStartTraceButton();
 
     expect(lastEvent).toEqual(new NoTraceTargetsSelected());
@@ -312,33 +297,37 @@ describe('CollectTracesComponent', () => {
 
   it('dump state button works as expected', async () => {
     goToConfigSection();
+    await changeTab(1);
+    const filesSpy = spyOn(component.filesCollected, 'emit');
+    const controller = assertDefined(component.controller);
+    spyOn(controller, 'fetchLastSessionData').and.returnValue(
+      Promise.resolve([testFile]),
+    );
 
-    const filesSpy = spyOn(getCollectTracesComponent().filesCollected, 'emit');
     await clickDumpStateButton();
-
+    await waitToBeCalled(filesSpy);
     expect(filesSpy).toHaveBeenCalledOnceWith({
       requested: [
         {name: 'Window Manager', types: [TraceType.WINDOW_MANAGER]},
         {name: 'Surface Flinger', types: [TraceType.SURFACE_FLINGER]},
         {name: 'Screenshot', types: [TraceType.SCREENSHOT]},
       ],
-      collected: getConnection().files,
+      collected: [testFile],
     });
   });
 
   it('emits event if no dump targets selected', async () => {
     goToConfigSection();
-    const collectTracesComponent = getCollectTracesComponent();
-
+    await changeTab(1);
     let lastEvent: WinscopeEvent | undefined;
-    collectTracesComponent.setEmitEvent(async (event: WinscopeEvent) => {
+    component.setEmitEvent(async (event: WinscopeEvent) => {
       lastEvent = event;
     });
 
-    Object.values(collectTracesComponent.dumpConfig).forEach(
+    Object.values(component.dumpConfig).forEach(
       (c) => (c.config.enabled = false),
     );
-    const filesSpy = spyOn(getCollectTracesComponent().filesCollected, 'emit');
+    const filesSpy = spyOn(component.filesCollected, 'emit');
     await clickDumpStateButton();
 
     expect(lastEvent).toEqual(new NoTraceTargetsSelected());
@@ -347,11 +336,11 @@ describe('CollectTracesComponent', () => {
 
   it('does not collect files if dumping fails', async () => {
     goToConfigSection();
-
-    const filesSpy = spyOn(getCollectTracesComponent().filesCollected, 'emit');
-    const connection = getConnection();
-    spyOn(connection, 'dumpState').and.callFake(async () => {
-      connection.state = ConnectionState.ERROR;
+    await changeTab(1);
+    const filesSpy = spyOn(component.filesCollected, 'emit');
+    const controller = assertDefined(component.controller);
+    spyOn(controller, 'dumpState').and.callFake(async () => {
+      component.state = ConnectionState.ERROR;
     });
     await clickDumpStateButton();
 
@@ -360,30 +349,26 @@ describe('CollectTracesComponent', () => {
 
   it('change device button works as expected', () => {
     goToConfigSection();
-    expect(getCollectTracesComponent().getSelectedDevice()).toBeDefined();
+    expect(component.getSelectedDevice()).toBeDefined();
 
-    const spy = spyOn(getConnection(), 'restartConnection');
-
-    const change = assertDefined(
+    const controller = assertDefined(component.controller);
+    const spy = spyOn(controller, 'restartConnection');
+    assertDefined(
       htmlElement.querySelector<HTMLElement>('.change-btn'),
-    );
-    change.click();
-
+    ).click();
     expect(spy).toHaveBeenCalled();
   });
 
-  it('fetch existing traces button emits files and restarts connection if no files found', async () => {
-    const connection = getConnection();
-    connection.files = [];
-    const emitSpy = spyOn(getCollectTracesComponent().filesCollected, 'emit');
-    const restartSpy = spyOn(connection, 'restartConnection');
+  it('fetch existing traces button emits files and restarts host if no files found', async () => {
+    const controller = assertDefined(component.controller);
+    spyOn(controller, 'fetchLastSessionData').and.returnValue(
+      Promise.resolve([]),
+    );
+    const emitSpy = spyOn(component.filesCollected, 'emit');
+    const restartSpy = spyOn(controller, 'restartConnection');
     goToConfigSection();
 
-    const fetchButton = assertDefined(
-      htmlElement.querySelector<HTMLElement>('.fetch-btn'),
-    );
-
-    fetchButton.click();
+    assertDefined(htmlElement.querySelector<HTMLElement>('.fetch-btn')).click();
     fixture.detectChanges();
     await fixture.whenStable();
 
@@ -394,19 +379,16 @@ describe('CollectTracesComponent', () => {
     expect(restartSpy).toHaveBeenCalledTimes(1);
   });
 
-  it('fetch existing traces button emits files and does not restart connection if files found', async () => {
-    const connection = getConnection();
-    const testFile = new File([], 'test_file');
-    connection.files = [testFile];
-    const emitSpy = spyOn(getCollectTracesComponent().filesCollected, 'emit');
-    const restartSpy = spyOn(connection, 'restartConnection');
+  it('fetch existing traces button emits files and does not restart host if files found', async () => {
+    const controller = assertDefined(component.controller);
+    spyOn(controller, 'fetchLastSessionData').and.returnValue(
+      Promise.resolve([testFile]),
+    );
+    const emitSpy = spyOn(component.filesCollected, 'emit');
+    const restartSpy = spyOn(controller, 'restartConnection');
     goToConfigSection();
 
-    const fetchButton = assertDefined(
-      htmlElement.querySelector<HTMLElement>('.fetch-btn'),
-    );
-
-    fetchButton.click();
+    assertDefined(htmlElement.querySelector<HTMLElement>('.fetch-btn')).click();
     fixture.detectChanges();
     await fixture.whenStable();
 
@@ -418,59 +400,46 @@ describe('CollectTracesComponent', () => {
   });
 
   it('displays unknown error message', () => {
-    const connection = getConnection();
-    connection.state = ConnectionState.ERROR;
+    component.state = ConnectionState.ERROR;
     fixture.detectChanges();
 
     const testErrorMessage = 'bad things are happening';
-    connection.errorText = testErrorMessage;
+    component.errorText = testErrorMessage;
     fixture.detectChanges();
 
     const el = assertDefined(htmlElement.querySelector('.unknown-error'));
-    expect(el.innerHTML).toContain('Error:');
-    expect(el.innerHTML).toContain(testErrorMessage);
+    expect(el.textContent).toContain('Error:');
+    expect(el.textContent).toContain(testErrorMessage);
 
-    const spy = spyOn(connection, 'restartConnection').and.callThrough();
-    const retryButton = assertDefined(
-      htmlElement.querySelector<HTMLElement>('.retry-btn'),
-    );
-    retryButton.click();
+    const controller = assertDefined(component.controller);
+    const spy = spyOn(controller, 'restartConnection');
+    assertDefined(htmlElement.querySelector<HTMLElement>('.retry-btn')).click();
     expect(spy).toHaveBeenCalled();
   });
 
   it('displays starting trace elements', () => {
     goToConfigSection();
-    const connection = getConnection();
-    connection.state = ConnectionState.STARTING_TRACE;
+    component.onConnectionStateChange(ConnectionState.STARTING_TRACE);
     fixture.detectChanges();
-
-    const el = assertDefined(htmlElement.querySelector('.starting-trace'));
-    const progress = assertDefined(el.querySelector('load-progress'));
-    expect(progress.innerHTML).toContain('Starting trace...');
-
-    const endButton = assertDefined(
-      el.querySelector<HTMLButtonElement>('.end-btn button'),
-    );
-    expect(endButton.disabled).toBeTrue();
+    checkTracingProgress('Starting trace...', true);
   });
 
   it('displays tracing elements and ends trace correctly', async () => {
     goToConfigSection();
-    const connection = getConnection();
-    connection.state = ConnectionState.TRACING;
+    component.onConnectionStateChange(ConnectionState.TRACING);
     fixture.detectChanges();
+    checkTracingProgress('Tracing...', false);
 
-    const el = assertDefined(htmlElement.querySelector('.tracing'));
-    const progress = assertDefined(el.querySelector('load-progress'));
-    expect(progress.innerHTML).toContain('Tracing...');
-    expect(progress.innerHTML).toContain('cable');
-
-    const endSpy = spyOn(connection, 'endTrace').and.callThrough();
-    const fetchSpy = spyOn(connection, 'fetchLastTracingSessionData');
-    const endButton = assertDefined(
-      el.querySelector<HTMLElement>('.end-btn button'),
+    const controller = assertDefined(component.controller);
+    const endSpy = spyOn(controller, 'endTrace').and.callFake(async () => {
+      component.onConnectionStateChange(ConnectionState.ENDING_TRACE);
+    });
+    const fetchSpy = spyOn(controller, 'fetchLastSessionData').and.returnValue(
+      Promise.resolve([]),
     );
-    endButton.click();
+    assertDefined(
+      htmlElement.querySelector<HTMLElement>('.end-btn button'),
+    ).click();
     fixture.detectChanges();
     await fixture.whenStable();
     expect(endSpy).toHaveBeenCalled();
@@ -479,49 +448,30 @@ describe('CollectTracesComponent', () => {
 
   it('displays ending trace elements', () => {
     goToConfigSection();
-    const connection = getConnection();
-    connection.state = ConnectionState.ENDING_TRACE;
+    component.onConnectionStateChange(ConnectionState.ENDING_TRACE);
     fixture.detectChanges();
-
-    const el = assertDefined(htmlElement.querySelector('.ending-trace'));
-    const progress = assertDefined(el.querySelector('load-progress'));
-    expect(progress.innerHTML).toContain('Ending trace...');
-    expect(progress.innerHTML).toContain('cable');
-
-    const endButton = assertDefined(
-      el.querySelector<HTMLButtonElement>('.end-btn button'),
-    );
-    expect(endButton.disabled).toBeTrue();
+    checkTracingProgress('Ending trace...', true);
   });
 
-  it('displays dumping state elements', () => {
+  it('displays dumping state elements', async () => {
     goToConfigSection();
-    const connection = getConnection();
-    connection.state = ConnectionState.DUMPING_STATE;
+    await changeTab(1);
+    component.onConnectionStateChange(ConnectionState.DUMPING_STATE);
     fixture.detectChanges();
-
     const progress = assertDefined(htmlElement.querySelector('.dumping-state'));
     expect(progress.querySelector('.end-btn button')).toBeNull();
   });
 
-  it('displays loading data elements', () => {
+  it('displays loading data elements', async () => {
     goToConfigSection();
-    const connection = getConnection();
-    connection.state = ConnectionState.LOADING_DATA;
+    await component.onConnectionStateChange(ConnectionState.LOADING_DATA);
     fixture.detectChanges();
-
-    const el = assertDefined(htmlElement.querySelector('.load-data'));
-    const progress = assertDefined(el.querySelector('load-progress'));
-    expect(progress.innerHTML).toContain('Fetching...');
-
-    const endButton = assertDefined(
-      el.querySelector<HTMLButtonElement>('.end-btn button'),
-    );
-    expect(endButton.disabled).toBeTrue();
+    checkTracingProgress('Fetching...');
   });
 
   it('starts traces after IME warning dialog', async () => {
-    const spy = spyOn(getConnection(), 'startTrace');
+    const controller = assertDefined(component.controller);
+    const spy = spyOn(controller, 'startTrace');
     goToConfigSection();
     const dialog = await openAndReturnDialog();
 
@@ -535,22 +485,22 @@ describe('CollectTracesComponent', () => {
   });
 
   it('goes back to edit config display after IME warning dialog', async () => {
-    const spy = spyOn(getConnection(), 'startTrace');
+    const controller = assertDefined(component.controller);
+    const spy = spyOn(controller, 'startTrace');
     goToConfigSection();
     const dialog = await openAndReturnDialog();
-
-    const button = assertDefined(
+    assertDefined(
       dialog.querySelector<HTMLElement>('.warning-action-buttons button'),
-    );
-    button.click();
+    ).click();
     fixture.detectChanges();
     await fixture.whenStable();
     expect(spy).not.toHaveBeenCalled();
     expect(htmlElement.querySelector('trace-config')).toBeTruthy();
   });
 
-  it('does not show IME warning dialog again in same session if user selects "Do not show again"', async () => {
-    const spy = spyOn(getConnection(), 'startTrace');
+  it('does not show IME warning dialog again in same controller if user selects "Do not show again"', async () => {
+    const controller = assertDefined(component.controller);
+    const spy = spyOn(controller, 'startTrace');
     goToConfigSection();
     const dialog = await openAndReturnDialog();
 
@@ -563,71 +513,60 @@ describe('CollectTracesComponent', () => {
     option.click();
     fixture.detectChanges();
 
-    const button = assertDefined(
+    assertDefined(
       dialog.querySelector<HTMLElement>('.warning-action-buttons button'),
-    );
-    button.click();
+    ).click();
     fixture.detectChanges();
     await fixture.whenStable();
-
     expect(spy).not.toHaveBeenCalled();
     expect(htmlElement.querySelector('trace-config')).toBeTruthy();
 
     await clickStartTraceButton();
-
     expect(spy).toHaveBeenCalled();
     expect(document.querySelector('warning-dialog')).toBeNull();
   });
 
   it('handles successful external operations', () => {
     goToConfigSection();
-    const collectTracesComponent = getCollectTracesComponent();
-
-    collectTracesComponent.onProgressUpdate('test operation', 0);
-    const el = assertDefined(htmlElement.querySelector('.load-data'));
-    const progress = assertDefined(el.querySelector('load-progress'));
-    expect(progress.textContent).toContain('test operation');
-
-    collectTracesComponent.onOperationFinished(true);
-    expect(htmlElement.querySelector('.load-data')).toBeNull();
+    component.onProgressUpdate('test operation', 0);
+    checkTracingProgress('test operation');
+    component.onOperationFinished(true);
+    expect(htmlElement.querySelector('.tracing-progress')).toBeNull();
     expect(htmlElement.querySelector('.trace-collection-config')).toBeTruthy();
   });
 
-  it('restarts connection on unsuccessful external operation', () => {
+  it('restarts host on unsuccessful external operation', () => {
     goToConfigSection();
-    const collectTracesComponent = getCollectTracesComponent();
-
-    collectTracesComponent.onProgressUpdate('test operation', 0);
-
-    const spy = spyOn(getConnection(), 'restartConnection');
-    collectTracesComponent.onOperationFinished(false);
+    component.onProgressUpdate('test operation', 0);
+    const controller = assertDefined(component.controller);
+    const spy = spyOn(controller, 'restartConnection');
+    component.onOperationFinished(false);
     expect(spy).toHaveBeenCalledTimes(1);
   });
 
   it('refreshes dumps', async () => {
     goToConfigSection();
-    const collectTracesComponent = getCollectTracesComponent();
-    const spy = spyOn(getConnection(), 'dumpState');
-    collectTracesComponent.refreshDumps = true;
-    fixture.detectChanges();
-
-    getConnection().setState(ConnectionState.IDLE);
+    const controller = assertDefined(component.controller);
+    const spy = spyOn(controller, 'dumpState');
+    component.refreshDumps = true;
+    await component.onConnectionStateChange(ConnectionState.CONNECTING);
     fixture.detectChanges();
     await fixture.whenStable();
     expect(spy).toHaveBeenCalledOnceWith(mockDevice, [
-      {name: 'window_dump', config: []},
-      {name: 'layers_dump', config: []},
-      {name: 'screenshot', config: [{key: 'displays', value: []}]},
-      {name: 'perfetto_dump', config: []},
+      {target: UiTraceTarget.WINDOW_MANAGER_DUMP, config: []},
+      {target: UiTraceTarget.SURFACE_FLINGER_DUMP, config: []},
+      {
+        target: UiTraceTarget.SCREENSHOT,
+        config: [{key: 'displays', value: []}],
+      },
     ]);
   });
 
   it('does not refresh dumps if no device selected', async () => {
-    const connection = getConnection();
-    connection.state = ConnectionState.IDLE;
-    const collectTracesComponent = getCollectTracesComponent();
-    collectTracesComponent.refreshDumps = true;
-    const spy = spyOn(connection, 'dumpState');
+    const controller = assertDefined(component.controller);
+    const spy = spyOn(controller, 'dumpState');
+    component.refreshDumps = true;
+    await component.onConnectionStateChange(ConnectionState.CONNECTING);
     fixture.detectChanges();
     await fixture.whenStable();
     expect(spy).not.toHaveBeenCalled();
@@ -637,74 +576,147 @@ describe('CollectTracesComponent', () => {
     goToConfigSection();
     await fixture.whenStable();
     fixture.detectChanges();
-    clickCheckboxAndCheckTraceConfig('window_dump', true);
+    await changeTab(1);
+    clickCheckboxAndCheckTraceConfig(UiTraceTarget.WINDOW_MANAGER_DUMP, true);
 
-    component.showSecondComponent = true;
+    hostComponent.showFirstComponent = false;
     fixture.detectChanges();
-    const newComponent = getCollectTracesComponent(1);
-    const spy = spyOn(getConnection(), 'dumpState');
+    hostComponent.showSecondComponent = true;
+    fixture.detectChanges();
+    await fixture.whenStable();
+    const newComponent = assertDefined(hostComponent.components?.get(0));
+    const controller = assertDefined(newComponent.controller);
+    const spy = spyOn(controller, 'dumpState');
     await newComponent.onWinscopeEvent(new AppRefreshDumpsRequest());
     fixture.detectChanges();
 
-    getConnection().setState(ConnectionState.IDLE);
+    await newComponent.onConnectionStateChange(ConnectionState.CONNECTING);
     fixture.detectChanges();
     await fixture.whenStable();
-    expect(spy).toHaveBeenCalledOnceWith(mockDevice, [
-      {name: 'layers_dump', config: []},
-      {name: 'screenshot', config: [{key: 'displays', value: []}]},
-      {name: 'perfetto_dump', config: []},
+    const newDevice = new MockAdbDeviceConnection(
+      '35562',
+      'Pixel 6',
+      AdbDeviceState.AVAILABLE,
+      newComponent,
+    );
+    expect(spy).toHaveBeenCalledOnceWith(newDevice, [
+      {target: UiTraceTarget.SURFACE_FLINGER_DUMP, config: []},
+      {
+        target: UiTraceTarget.SCREENSHOT,
+        config: [{key: 'displays', value: []}],
+      },
     ]);
   });
 
-  it('update available traces from connection', () => {
-    const config = getCollectTracesComponent().traceConfig;
-    expect(config['wayland_trace']?.available).toBeFalse();
-    getConnection().availableTracesChangeCallback(['wayland_trace']);
+  it('update available traces from host', () => {
+    const config = component.traceConfig;
+    expect(config[UiTraceTarget.WAYLAND]?.available).toBeFalse();
+    component.onAvailableTracesChange([UiTraceTarget.WAYLAND], []);
     fixture.detectChanges();
-    expect(config['wayland_trace']?.available).toBeTrue();
+    expect(config[UiTraceTarget.WAYLAND]?.available).toBeTrue();
+    component.onAvailableTracesChange([], [UiTraceTarget.WAYLAND]);
+    fixture.detectChanges();
+    expect(config[UiTraceTarget.WAYLAND]?.available).toBeFalse();
   });
 
-  it('fetches tracing data if trace times out', async () => {
+  it('sets error state onError', async () => {
+    const msg = 'test error message';
+    await component.onError(msg);
+    expect(component.state).toEqual(ConnectionState.ERROR);
+    expect(component.errorText).toEqual(msg);
+  });
+
+  it('ends trace if trace times out', async () => {
     goToConfigSection();
     const userNotifierChecker = new UserNotifierChecker();
-    const connection = getConnection();
-    const emitSpy = spyOn(getCollectTracesComponent().filesCollected, 'emit');
-    connection.setState(ConnectionState.TRACE_TIMEOUT);
-
+    const spy = spyOn(component, 'endTrace').and.callThrough();
+    await component.onConnectionStateChange(ConnectionState.TRACE_TIMEOUT);
     await fixture.whenStable();
-    expect(emitSpy).toHaveBeenCalledOnceWith({
-      requested: [],
-      collected: connection.files,
-    });
+    expect(spy).toHaveBeenCalledTimes(1);
     userNotifierChecker.expectAdded([new ProxyTraceTimeout()]);
   });
 
-  it('updates options in media based config on devices change from connection', () => {
+  it('updates options in media based config on devices change from host', () => {
     checkMediaBasedConfigUpdates(false);
   });
 
-  it('updates multiple selection in screen recording config on devices change from connection', () => {
+  it('updates multiple selection in screen recording config on devices change from host', () => {
     checkMediaBasedConfigUpdates(true);
   });
 
-  describe('WinscopeProxyConnection', () => {
+  it('changes host type on mat select change', async () => {
+    await changeConnection(1);
+    expect(component.controller?.getConnectionType()).toEqual(
+      AdbConnectionType.WDP,
+    );
+    await changeConnection(0);
+    expect(component.controller?.getConnectionType()).toEqual(
+      AdbConnectionType.WINSCOPE_PROXY,
+    );
+  });
+
+  it('changes host type by default if in store', async () => {
+    await changeConnection(1);
+    hostComponent.showFirstComponent = false;
+    fixture.detectChanges();
+    hostComponent.showSecondComponent = true;
+    fixture.detectChanges();
+    await fixture.whenStable();
+    const component = assertDefined(hostComponent.components?.get(0));
+    expect(component.controller?.getConnectionType()).toEqual(
+      AdbConnectionType.WDP,
+    );
+  });
+
+  it('cancels device requests', async () => {
+    const controller = assertDefined(component.controller);
+    const spy = spyOn(controller, 'cancelDeviceRequests');
+    await component.onConnectionStateChange(ConnectionState.CONNECTING);
+    expect(spy).not.toHaveBeenCalled();
+
+    const cancelStates = [
+      ConnectionState.ERROR,
+      ConnectionState.NOT_FOUND,
+      ConnectionState.INVALID_VERSION,
+      ConnectionState.UNAUTH,
+      ConnectionState.STARTING_TRACE,
+      ConnectionState.TRACING,
+      ConnectionState.ENDING_TRACE,
+      ConnectionState.DUMPING_STATE,
+      ConnectionState.LOADING_DATA,
+    ];
+    for (const [index, state] of cancelStates.entries()) {
+      await component.onConnectionStateChange(state);
+      expect(spy).toHaveBeenCalledTimes(index + 1);
+    }
+  });
+
+  describe('WinscopeProxyHostConnection', () => {
     beforeEach(async () => {
-      await startWinscopeProxyConnection();
+      hostComponent.showFirstComponent = false;
+      hostComponent.storage = new InMemoryStorage();
+      hostComponent.showSecondComponent = true;
+      fixture.detectChanges();
+      await fixture.whenStable();
+      component = assertDefined(hostComponent.components?.get(0));
+      component.state = ConnectionState.UNAUTH;
+      fixture.detectChanges();
     });
 
-    it('displays adb proxy element', () => {
+    it('defaults to winscope proxy host', () => {
+      expect(component.controller?.getConnectionType()).toEqual(
+        AdbConnectionType.WINSCOPE_PROXY,
+      );
+    });
+
+    it('displays proxy element if not adb success', () => {
       expect(htmlElement.querySelector('winscope-proxy-setup')).toBeTruthy();
     });
 
-    it('adds security token and restarts connection', async () => {
-      spyOn(assertDefined(component.adbConnection), 'getState').and.returnValue(
-        ConnectionState.UNAUTH,
-      );
-      fixture.detectChanges();
-
-      const connection = assertDefined(component.adbConnection);
-      const securityTokenSpy = spyOn(connection, 'setSecurityToken');
-      const restartSpy = spyOn(connection, 'restartConnection');
+    it('adds security token and restarts host', async () => {
+      const controller = assertDefined(component.controller);
+      const securityTokenSpy = spyOn(controller, 'setSecurityToken');
+      const restartSpy = spyOn(controller, 'restartConnection');
 
       const proxyTokenInput = assertDefined(
         htmlElement.querySelector<HTMLInputElement>(
@@ -722,26 +734,109 @@ describe('CollectTracesComponent', () => {
       expect(securityTokenSpy).toHaveBeenCalledOnceWith('12345');
       expect(restartSpy).toHaveBeenCalledTimes(1);
     });
+
+    it('does not show authorize device button', () => {
+      const device = new WinscopeProxyDeviceConnection('35562', component, []);
+      const stateSpy = spyOn(device, 'getState');
+      setSpyWithDevices([device]);
+      stateSpy.and.returnValue(AdbDeviceState.OFFLINE);
+      fixture.detectChanges();
+      expect(htmlElement.querySelector('.authorize-btn')).toBeNull();
+
+      stateSpy.and.returnValue(AdbDeviceState.AVAILABLE);
+      fixture.detectChanges();
+      expect(htmlElement.querySelector('.authorize-btn')).toBeNull();
+
+      stateSpy.and.returnValue(AdbDeviceState.UNAUTHORIZED);
+      fixture.detectChanges();
+      expect(htmlElement.querySelector('.authorize-btn')).toBeNull();
+    });
   });
 
-  function goToConfigSection() {
-    const connection = getConnection();
-    connection.state = ConnectionState.IDLE;
-    connection.devices = [mockDevice];
+  describe('WdpHostConnection', () => {
+    beforeEach(async () => {
+      hostComponent.showSecondComponent = true;
+      hostComponent.showFirstComponent = false;
+      fixture.detectChanges();
+      await fixture.whenStable();
+      component = assertDefined(hostComponent.components?.get(0));
+      await changeConnection(1);
+      component.state = ConnectionState.UNAUTH;
+      fixture.detectChanges();
+    });
+
+    it('displays proxy element if not adb success', () => {
+      expect(htmlElement.querySelector('wdp-setup')).toBeTruthy();
+    });
+
+    it('restarts host', async () => {
+      const controller = assertDefined(component.controller);
+      const securityTokenSpy = spyOn(controller, 'setSecurityToken');
+      const restartSpy = spyOn(controller, 'restartConnection');
+
+      assertDefined(
+        htmlElement.querySelector<HTMLElement>('wdp-setup .retry'),
+      ).click();
+      fixture.detectChanges();
+      await fixture.whenStable();
+      expect(securityTokenSpy).not.toHaveBeenCalled();
+      expect(restartSpy).toHaveBeenCalledTimes(1);
+    });
+
+    it('tries to authorize device', () => {
+      const device = new WdpDeviceConnection('35562', component);
+      const authorizeSpy = spyOn(device, 'tryAuthorize');
+      const stateSpy = spyOn(device, 'getState');
+      setSpyWithDevices([device]);
+      stateSpy.and.returnValue(AdbDeviceState.OFFLINE);
+      fixture.detectChanges();
+      expect(htmlElement.querySelector('.authorize-btn')).toBeNull();
+
+      stateSpy.and.returnValue(AdbDeviceState.AVAILABLE);
+      fixture.detectChanges();
+      expect(htmlElement.querySelector('.authorize-btn')).toBeNull();
+
+      stateSpy.and.returnValue(AdbDeviceState.UNAUTHORIZED);
+      fixture.detectChanges();
+      assertDefined(
+        htmlElement.querySelector<HTMLElement>('.authorize-btn'),
+      ).click();
+      fixture.detectChanges();
+      expect(authorizeSpy).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  function setSpyWithDevices(
+    devices: AdbDeviceConnection[],
+    c = component,
+  ): jasmine.Spy {
+    const controller = assertDefined(c.controller);
+    c.state = ConnectionState.IDLE;
+    const spy = spyOn(controller, 'getDevices').and.returnValue(devices);
     fixture.detectChanges();
-    const device = assertDefined(
+    return spy;
+  }
+
+  function goToConfigSection() {
+    setSpyWithDevices([mockDevice], component);
+    clickAvailableDevice();
+  }
+
+  function clickAvailableDevice() {
+    assertDefined(
       htmlElement.querySelector<HTMLElement>('.available-device'),
-    );
-    device.click();
+    ).click();
     fixture.detectChanges();
   }
 
-  function clickCheckboxAndCheckTraceConfig(key: string, isDump: boolean) {
-    const collectTracesComponent = getCollectTracesComponent();
+  function clickCheckboxAndCheckTraceConfig(
+    key: UiTraceTarget,
+    isDump: boolean,
+  ) {
     expect(
       isDump
-        ? collectTracesComponent.dumpConfig[key].config.enabled
-        : collectTracesComponent.traceConfig[key].config.enabled,
+        ? component.dumpConfig[key].config.enabled
+        : component.traceConfig[key].config.enabled,
     ).toBeTrue();
 
     const checkboxSection = assertDefined(
@@ -752,8 +847,8 @@ describe('CollectTracesComponent', () => {
     );
 
     const expectedName = isDump
-      ? collectTracesComponent.dumpConfig[key].name
-      : collectTracesComponent.traceConfig[key].name;
+      ? component.dumpConfig[key].name
+      : component.traceConfig[key].name;
     const traceBox = assertDefined(
       traceBoxes.find((box) => box.textContent?.includes(expectedName)),
     );
@@ -764,25 +859,15 @@ describe('CollectTracesComponent', () => {
     fixture.detectChanges();
     expect(
       isDump
-        ? collectTracesComponent.dumpConfig[key].config.enabled
-        : collectTracesComponent.traceConfig[key].config.enabled,
+        ? component.dumpConfig[key].config.enabled
+        : component.traceConfig[key].config.enabled,
     ).toBeFalse();
   }
 
-  async function startWinscopeProxyConnection() {
-    const collectTracesComponent = getCollectTracesComponent();
-    collectTracesComponent.adbSuccess = jasmine
-      .createSpy()
-      .and.returnValue(false);
-    component.adbConnection = new WinscopeProxyConnection();
-    fixture.detectChanges();
-    await fixture.whenStable();
-  }
-
   function updateTraceConfigToInvalidIMEFrameMapping() {
-    const config = assertDefined(getCollectTracesComponent().traceConfig);
-    config['ime'].config.enabled = true;
-    config['layers_trace'].config.enabled = false;
+    const config = assertDefined(component.traceConfig);
+    config[UiTraceTarget.IME].config.enabled = true;
+    config[UiTraceTarget.SURFACE_FLINGER_TRACE].config.enabled = false;
   }
 
   async function clickStartTraceButton() {
@@ -794,11 +879,23 @@ describe('CollectTracesComponent', () => {
     await fixture.whenStable();
   }
 
+  function checkTracingProgress(message: string, endButtonDisabled?: boolean) {
+    const el = assertDefined(htmlElement.querySelector('.tracing-progress'));
+    const progress = assertDefined(el.querySelector('load-progress'));
+    expect(progress.textContent).toContain(message);
+    const endButton = el.querySelector<HTMLButtonElement>('.end-btn button');
+    if (endButtonDisabled === undefined) {
+      expect(endButton).toBeNull();
+    } else {
+      expect(progress.innerHTML).toContain('cable');
+      expect(endButton?.disabled).toEqual(endButtonDisabled);
+    }
+  }
+
   async function clickDumpStateButton() {
-    const dump = assertDefined(
+    assertDefined(
       htmlElement.querySelector<HTMLElement>('.dump-btn button'),
-    );
-    dump.click();
+    ).click();
     fixture.detectChanges();
     await fixture.whenStable();
   }
@@ -815,59 +912,51 @@ describe('CollectTracesComponent', () => {
     return dialog;
   }
 
-  function getCollectTracesComponent(index = 0): CollectTracesComponent {
-    return assertDefined(component.collectTracesComponents?.get(index));
-  }
-
-  function getConnection(): MockAdbConnection {
-    const connection = assertDefined(component.adbConnection);
-    expect(connection).toBeInstanceOf(MockAdbConnection);
-    return connection as MockAdbConnection;
-  }
-
-  function checkMediaBasedConfigUpdates(
-    multiDisplayScreenRecordingAvailable: boolean,
-  ) {
+  function checkMediaBasedConfigUpdates(multiDisplayScreenRecording: boolean) {
     checkMediaBasedConfig([], false);
 
-    const validDeviceWithDisplays: AdbDevice = {
-      id: '35562',
-      model: 'Pixel 6',
-      authorized: true,
-      displays: ['12345 Extra Info'],
-      multiDisplayScreenRecordingAvailable,
-    };
-
+    const device1 = new MockAdbDeviceConnection(
+      '35562',
+      'Pixel 6',
+      AdbDeviceState.AVAILABLE,
+      component,
+      ['12345 Extra Info'],
+      multiDisplayScreenRecording,
+    );
     // does not update if no selected device
-    getConnection().devicesChangeCallback([validDeviceWithDisplays]);
+    component.onDevicesChange([device1]);
     fixture.detectChanges();
     checkMediaBasedConfig([], false);
 
     goToConfigSection();
 
     // does not update if selected device not in new devices
-    getConnection().devicesChangeCallback([
-      {
-        id: '99',
-        model: 'Pixel 6',
-        authorized: true,
-        displays: ['12345 Extra Info'],
-        multiDisplayScreenRecordingAvailable,
-      },
-    ]);
+    const device2 = new MockAdbDeviceConnection(
+      '99',
+      'Pixel 6',
+      AdbDeviceState.AVAILABLE,
+      component,
+      ['12345 Extra Info'],
+      multiDisplayScreenRecording,
+    );
+    component.onDevicesChange([device2]);
     fixture.detectChanges();
     checkMediaBasedConfig([], false);
 
-    getConnection().devicesChangeCallback([validDeviceWithDisplays]);
+    component.onDevicesChange([device1]);
     fixture.detectChanges();
-    checkMediaBasedConfig(
-      ['12345 Extra Info'],
-      multiDisplayScreenRecordingAvailable,
-    );
+    checkMediaBasedConfig(['12345 Extra Info'], multiDisplayScreenRecording);
 
-    if (multiDisplayScreenRecordingAvailable) {
-      validDeviceWithDisplays.multiDisplayScreenRecordingAvailable = false;
-      getConnection().devicesChangeCallback([validDeviceWithDisplays]);
+    if (multiDisplayScreenRecording) {
+      const device3 = new MockAdbDeviceConnection(
+        '35562',
+        'Pixel 6',
+        AdbDeviceState.AVAILABLE,
+        component,
+        ['12345 Extra Info'],
+        false,
+      );
+      component.onDevicesChange([device3]);
       fixture.detectChanges();
       checkMediaBasedConfig(['12345 Extra Info'], false);
     }
@@ -875,40 +964,63 @@ describe('CollectTracesComponent', () => {
 
   function checkMediaBasedConfig(
     displays: string[],
-    multiDisplayScreenRecordingAvailable: boolean,
+    multiDisplayScreenRecording: boolean,
   ) {
     const screenRecordingConfig = assertDefined(
-      getCollectTracesComponent().traceConfig['screen_recording'].config,
+      component.traceConfig[UiTraceTarget.SCREEN_RECORDING].config,
     ).selectionConfigs[0];
     const screenshotConfig = assertDefined(
-      getCollectTracesComponent().dumpConfig['screenshot'].config,
+      component.dumpConfig[UiTraceTarget.SCREENSHOT].config,
     ).selectionConfigs[0];
     expect(screenRecordingConfig.options).toEqual(displays);
     expect(screenshotConfig.options).toEqual(displays);
     expect(screenRecordingConfig.value).toEqual(
-      multiDisplayScreenRecordingAvailable ? [] : '',
+      multiDisplayScreenRecording ? [] : '',
     );
+  }
+
+  async function changeConnection(index: number) {
+    assertDefined(
+      htmlElement.querySelector<HTMLElement>('.mat-select-trigger'),
+    ).click();
+    fixture.detectChanges();
+    await fixture.whenStable();
+    const options = document.querySelectorAll<HTMLElement>('.mat-option');
+    options.item(index).click();
+    fixture.detectChanges();
+  }
+
+  async function changeTab(index: number) {
+    const labels = htmlElement.querySelectorAll<HTMLElement>(
+      '.target-tabs .mat-tab-label',
+    );
+    labels[index].click();
+    fixture.detectChanges();
+    await fixture.whenStable();
   }
 
   @Component({
     selector: 'host-component',
     template: `
       <collect-traces
-        [adbConnection]="adbConnection"
+        *ngIf="showFirstComponent"
         [storage]="storage"></collect-traces>
 
       <collect-traces
         *ngIf="showSecondComponent"
-        [adbConnection]="adbConnection"
         [storage]="storage"></collect-traces>
     `,
   })
   class TestHostComponent {
-    adbConnection: AdbConnection = new MockAdbConnection();
     storage = new InMemoryStorage();
+    showFirstComponent = true;
     showSecondComponent = false;
 
+    constructor() {
+      this.storage.add('adbConnectionType', AdbConnectionType.MOCK);
+    }
+
     @ViewChildren(CollectTracesComponent)
-    collectTracesComponents: QueryList<CollectTracesComponent> | undefined;
+    components: QueryList<CollectTracesComponent> | undefined;
   }
 });

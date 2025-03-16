@@ -26,8 +26,10 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.rememberScrollState
@@ -105,6 +107,7 @@ import com.android.compose.animation.scene.demo.transitions.systemUiTransitions
 import com.android.compose.gesture.effect.rememberOffsetOverscrollEffectFactory
 import com.android.compose.modifiers.thenIf
 import com.android.compose.windowsizeclass.calculateWindowSizeClass
+import com.android.mechanics.behavior.VerticalExpandContainerSpec
 import kotlin.math.max
 
 object Scenes {
@@ -290,9 +293,13 @@ fun SystemUi(
 
     val hapticFeedback = LocalHapticFeedback.current
     val revealHaptics = remember(hapticFeedback) { DemoContainerRevealHaptics(hapticFeedback) }
+    val shadeMotionSpec =
+        remember(shouldUseSplitScenes) {
+            VerticalExpandContainerSpec(isFloating = shouldUseSplitScenes)
+        }
     val transitions =
-        remember(quickSettingsPagerState, revealHaptics) {
-            systemUiTransitions(quickSettingsPagerState, revealHaptics)
+        remember(quickSettingsPagerState, revealHaptics, shouldUseSplitScenes) {
+            systemUiTransitions(quickSettingsPagerState, revealHaptics, shadeMotionSpec)
         }
 
     val sceneSaver =
@@ -354,6 +361,7 @@ fun SystemUi(
                 canShowOverlay = { configuration.canChangeSceneOrOverlays },
                 canHideOverlay = { configuration.canChangeSceneOrOverlays },
                 canReplaceOverlay = { _, _ -> configuration.canChangeSceneOrOverlays },
+                deferTransitionProgress = configuration.deferTransitionProgress,
             )
         }
 
@@ -458,21 +466,22 @@ fun SystemUi(
         val borderColor = MaterialTheme.colorScheme.onSurface
 
         Surface(
-            Modifier.thenIf(!configuration.isFullscreen) {
-                Modifier.padding(3.dp)
-                    .then(
-                        if (configuration.transitionBorder) {
-                            Modifier.border(
-                                5.dp,
-                                if (layoutState.isTransitioning()) Color.Red else Color.Green,
-                                shape,
-                            )
-                        } else {
-                            Modifier.border(1.dp, borderColor, shape)
-                        }
-                    )
-                    .clip(shape)
-            },
+            Modifier.semantics { testTagsAsResourceId = true }
+                .thenIf(!configuration.isFullscreen) {
+                    Modifier.padding(3.dp)
+                        .then(
+                            if (configuration.transitionBorder) {
+                                Modifier.border(
+                                    5.dp,
+                                    if (layoutState.isTransitioning()) Color.Red else Color.Green,
+                                    shape,
+                                )
+                            } else {
+                                Modifier.border(1.dp, borderColor, shape)
+                            }
+                        )
+                        .clip(shape)
+                },
             color = MaterialTheme.colorScheme.surfaceVariant,
         ) {
             val stretchOverscrollFactory = LocalOverscrollFactory.current
@@ -526,24 +535,19 @@ fun SystemUi(
                             configuration.transitionInterceptionThreshold,
                         modifier =
                             // Make this layout accessible to UiAutomator.
-                            Modifier.semantics { testTagsAsResourceId = true }
-                                .thenIf(layoutState.currentTransition == null) {
-                                    Modifier.testTag("SystemUiSceneTransitionLayout:idle")
-                                },
+                            Modifier.thenIf(layoutState.currentTransition == null) {
+                                Modifier.testTag("SystemUiSceneTransitionLayout:idle")
+                            },
                         swipeSourceDetector =
                             if (configuration.enableOverlays) {
-                                remember {
-                                    SplitEdgeDetector(
-                                        topEdgeSplitFraction = { 0.5f },
-                                        edgeSize = 60.dp,
-                                    )
-                                }
+                                remember { SceneContainerSwipeDetector(edgeSize = 60.dp) }
                             } else {
                                 DefaultEdgeDetector
                             },
                         implicitTestTags = true,
                     ) {
                         scene(Scenes.Launcher, Launcher.userActions(shadeScene, configuration)) {
+                            FirstCompositionDelay(configuration)
                             Launcher(launcherColumns)
                         }
                         scene(
@@ -561,6 +565,7 @@ fun SystemUi(
                                 configuration,
                             ),
                         ) {
+                            FirstCompositionDelay(configuration)
                             Lockscreen(
                                 notificationList = {
                                     NotificationList(
@@ -584,6 +589,7 @@ fun SystemUi(
                                 configuration,
                             ),
                         ) {
+                            FirstCompositionDelay(configuration)
                             SplitLockscreen(
                                 notificationList = {
                                     NotificationList(
@@ -601,6 +607,7 @@ fun SystemUi(
                             )
                         }
                         scene(Scenes.StubStart, Stub.startUserActions(lockscreenScene)) {
+                            FirstCompositionDelay(configuration)
                             Stub(
                                 rootKey = Stub.Elements.SceneStart,
                                 textKey = Stub.Elements.TextStart,
@@ -608,14 +615,19 @@ fun SystemUi(
                             )
                         }
                         scene(Scenes.StubEnd, Stub.endUserActions(lockscreenScene)) {
+                            FirstCompositionDelay(configuration)
                             Stub(
                                 rootKey = Stub.Elements.SceneEnd,
                                 textKey = Stub.Elements.TextEnd,
                                 text = "Stub scene (end)",
                             )
                         }
-                        scene(Scenes.Camera, Camera.userActions(lockscreenScene)) { Camera() }
+                        scene(Scenes.Camera, Camera.userActions(lockscreenScene)) {
+                            FirstCompositionDelay(configuration)
+                            Camera()
+                        }
                         scene(Scenes.Bouncer, Bouncer.userActions(lockscreenScene)) {
+                            FirstCompositionDelay(configuration)
                             Bouncer(
                                 onBouncerCancelled = { onChangeScene(lockscreenScene) },
                                 onBouncerSolved = { onChangeScene(Scenes.Launcher) },
@@ -629,6 +641,7 @@ fun SystemUi(
                                 isLockscreenDismissed,
                             ),
                         ) {
+                            FirstCompositionDelay(configuration)
                             QuickSettings(
                                 qsPager,
                                 mediaPlayer = defaultMediaPlayer,
@@ -640,6 +653,7 @@ fun SystemUi(
                             Scenes.Shade,
                             Shade.userActions(isLockscreenDismissed, lockscreenScene),
                         ) {
+                            FirstCompositionDelay(configuration)
                             Shade(
                                 notificationList = { overscrollEffect ->
                                     NotificationList(
@@ -656,6 +670,7 @@ fun SystemUi(
                             Scenes.SplitShade,
                             SplitShade.userActions(isLockscreenDismissed, lockscreenScene),
                         ) {
+                            FirstCompositionDelay(configuration)
                             SplitShade(
                                 notificationList = {
                                     NotificationList(
@@ -672,6 +687,7 @@ fun SystemUi(
                         }
 
                         scene(Scenes.AlwaysOnDisplay) {
+                            FirstCompositionDelay(configuration)
                             AlwaysOnDisplay(Modifier.clickable { onChangeScene(lockscreenScene) })
                         }
 
@@ -681,6 +697,7 @@ fun SystemUi(
                             alignment = Alignment.TopEnd,
                             effectFactory = overlayEffectFactory,
                         ) {
+                            FirstCompositionDelay(configuration)
                             QuickSettingsShade(qsPager, compactMediaPlayer)
                         }
 
@@ -690,6 +707,7 @@ fun SystemUi(
                             alignment = Alignment.TopStart,
                             effectFactory = overlayEffectFactory,
                         ) {
+                            FirstCompositionDelay(configuration)
                             NotificationShade(
                                 clock =
                                     if (shouldUseSplitScenes) {
@@ -707,9 +725,24 @@ fun SystemUi(
                             )
                         }
                     }
+
+                    // Add 2 empty boxes for each half of the STL. This is used by overlay benchmark
+                    // tests to swipe on the start or end half of the STL.
+                    Row {
+                        Box(Modifier.testTag("StlStartHalf").fillMaxHeight().weight(1f))
+                        Box(Modifier.testTag("StlEndHalf").fillMaxHeight().weight(1f))
+                    }
                 }
             }
         }
+    }
+}
+
+@Composable
+private fun FirstCompositionDelay(configuration: DemoConfiguration) {
+    val delay = configuration.firstCompositionDelay
+    if (delay > 0L) {
+        remember<Any> { Thread.sleep(delay) }
     }
 }
 

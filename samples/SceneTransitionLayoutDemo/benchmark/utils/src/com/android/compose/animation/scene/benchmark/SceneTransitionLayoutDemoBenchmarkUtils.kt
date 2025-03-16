@@ -91,14 +91,18 @@ fun swipeFromScene(
     toContent: String,
     direction: Direction,
     toContentIsOverlay: Boolean,
+    swipeOn: BySelector? = null,
 ) {
     // Swipe in the given direction.
     val densityDpi = context().resources.configuration.densityDpi
     val density = densityDpi.toFloat() / DisplayMetrics.DENSITY_DEFAULT
     val swipeSpeed = 1_500 // in dp/s
     val device = device()
+
+    val swipeOn = swipeOn ?: StlDemoConstants.ROOT_STL_SELECTOR_IDLE
+    device.waitForObject(swipeOn)
     device
-        .findObject(StlDemoConstants.ROOT_STL_SELECTOR_IDLE)
+        .findObject(swipeOn)
         .swipe(direction, /* percent= */ 0.9f, /* speed= */ (swipeSpeed * density).roundToInt())
 
     if (!toContentIsOverlay) {
@@ -165,6 +169,7 @@ object StlDemoConstants {
     val SHADE_SCENE by AdaptiveScene("Shade", "SplitShade")
     const val QUICK_SETTINGS_SCENE = "QuickSettings"
     const val NOTIFICATIONS_OVERLAY = "NotificationsOverlay"
+    const val QUICK_SETTINGS_OVERLAY = "QuickSettingsOverlay"
 
     internal const val INITIAL_SCENE_EXTRA = "initial_scene"
     internal const val FULLSCREEN_EXTRA = "fullscreen"
@@ -172,6 +177,8 @@ object StlDemoConstants {
     internal const val NOTIFICATIONS_IN_SHADE = "notifications_in_shade"
     internal const val OVERLAYS_EXTRA = "overlays"
     internal val ROOT_STL_SELECTOR_IDLE = By.res("SystemUiSceneTransitionLayout:idle")
+    val STL_START_HALF_SELECTOR = By.res("StlStartHalf")
+    val STL_END_HALF_SELECTOR = By.res("StlEndHalf")
 }
 
 /** A scene whose key depends on whether we are using split scenes or not. */

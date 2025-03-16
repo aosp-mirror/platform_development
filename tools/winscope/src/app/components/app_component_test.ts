@@ -41,6 +41,7 @@ import {MatProgressBarModule} from '@angular/material/progress-bar';
 import {MatSelectModule} from '@angular/material/select';
 import {MatSliderModule} from '@angular/material/slider';
 import {MatSnackBarModule} from '@angular/material/snack-bar';
+import {MatTabsModule} from '@angular/material/tabs';
 import {MatToolbarModule} from '@angular/material/toolbar';
 import {MatTooltipModule} from '@angular/material/tooltip';
 import {Title} from '@angular/platform-browser';
@@ -76,6 +77,7 @@ import {TimelineComponent} from './timeline/timeline_component';
 import {TraceConfigComponent} from './trace_config_component';
 import {TraceViewComponent} from './trace_view_component';
 import {UploadTracesComponent} from './upload_traces_component';
+import {WdpSetupComponent} from './wdp_setup_component';
 import {WinscopeProxySetupComponent} from './winscope_proxy_setup_component';
 
 describe('AppComponent', () => {
@@ -109,9 +111,11 @@ describe('AppComponent', () => {
         MatListModule,
         MatProgressBarModule,
         OverlayModule,
+        MatTabsModule,
       ],
       declarations: [
         WinscopeProxySetupComponent,
+        WdpSetupComponent,
         AppComponent,
         CollectTracesComponent,
         MatDrawer,

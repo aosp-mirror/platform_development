@@ -42,7 +42,7 @@ object QuickSettingsShade {
         mapOf(
             Back to UserActionResult.HideOverlay(Overlays.QuickSettings),
             Swipe.Up to UserActionResult.HideOverlay(Overlays.QuickSettings),
-            Swipe.Down(fromSource = SceneContainerEdge.TopStart) to
+            Swipe.Down(fromSource = SceneContainerArea.StartHalf) to
                 ShowOverlay(
                     Overlays.Notifications,
                     hideCurrentOverlays = HideCurrentOverlays.Some(Overlays.QuickSettings),

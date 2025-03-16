@@ -18,7 +18,7 @@ import {proxySetupStyles} from 'app/styles/proxy_setup.styles';
 import {Download} from 'common/download';
 import {getRootUrl} from 'common/url_utils';
 import {ConnectionState} from 'trace_collection/connection_state';
-import {WinscopeProxyConnection} from 'trace_collection/winscope_proxy/winscope_proxy_connection';
+import {VERSION} from 'trace_collection/winscope_proxy/utils';
 
 @Component({
   selector: 'winscope-proxy-setup',
@@ -146,7 +146,7 @@ export class WinscopeProxySetupComponent {
   readonly downloadProxyUrl: string = getRootUrl() + 'winscope_proxy.py';
   readonly proxyCommand: string =
     'python3 $ANDROID_BUILD_TOP/development/tools/winscope/src/adb/winscope_proxy.py';
-  readonly proxyVersion = WinscopeProxyConnection.VERSION;
+  readonly proxyVersion = VERSION;
   proxyToken = '';
 
   onRetryButtonClick() {

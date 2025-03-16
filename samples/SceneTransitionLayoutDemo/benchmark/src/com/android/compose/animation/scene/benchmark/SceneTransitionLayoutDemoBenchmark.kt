@@ -24,6 +24,7 @@ import androidx.benchmark.macro.StartupMode
 import androidx.benchmark.macro.StartupTimingMetric
 import androidx.benchmark.macro.junit4.MacrobenchmarkRule
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import androidx.test.uiautomator.BySelector
 import androidx.test.uiautomator.Direction
 import org.junit.Rule
 import org.junit.Test
@@ -80,6 +81,18 @@ class SceneTransitionLayoutDemoBenchmark {
             toContent = StlDemoConstants.NOTIFICATIONS_OVERLAY,
             direction = Direction.DOWN,
             toContentIsOverlay = true,
+            swipeOn = StlDemoConstants.STL_START_HALF_SELECTOR,
+        )
+    }
+
+    @Test
+    fun lockscreenToQuickSettingsOverlay() {
+        benchmarkSwipeFromScene(
+            fromScene = StlDemoConstants.LOCKSCREEN_SCENE,
+            toContent = StlDemoConstants.QUICK_SETTINGS_OVERLAY,
+            direction = Direction.DOWN,
+            toContentIsOverlay = true,
+            swipeOn = StlDemoConstants.STL_END_HALF_SELECTOR,
         )
     }
 
@@ -88,6 +101,7 @@ class SceneTransitionLayoutDemoBenchmark {
         toContent: String,
         direction: Direction,
         toContentIsOverlay: Boolean = false,
+        swipeOn: BySelector? = null,
     ) {
         benchmarkRule.measureRepeated(
             packageName = StlDemoConstants.PACKAGE,
@@ -99,7 +113,7 @@ class SceneTransitionLayoutDemoBenchmark {
                 benchmarkScope().setupSwipeFromScene(fromScene, toContent, toContentIsOverlay)
             },
         ) {
-            swipeFromScene(fromScene, toContent, direction, toContentIsOverlay)
+            swipeFromScene(fromScene, toContent, direction, toContentIsOverlay, swipeOn)
         }
     }
 

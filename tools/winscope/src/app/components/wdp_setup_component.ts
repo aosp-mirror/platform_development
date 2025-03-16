@@ -36,8 +36,12 @@ import {ConnectionState} from 'trace_collection/connection_state';
             Please check you have Web Device Proxy installed.
           </p>
         </div>
-
         <div class="further-adb-info-actions">
+          <button
+            color="primary"
+            mat-stroked-button
+            class="install"
+            (click)="onInstallButtonClick()">Install Web Device Proxy</button>
           <button
             color="primary"
             mat-stroked-button
@@ -71,6 +75,13 @@ import {ConnectionState} from 'trace_collection/connection_state';
 export class WdpSetupComponent {
   @Input() state: ConnectionState | undefined;
   @Output() readonly retryConnection = new EventEmitter();
+
+  onInstallButtonClick() {
+    window.open(
+      'https://tools.google.com/dlpage/android_web_device_proxy',
+      '_blank',
+    );
+  }
 
   onRetryButtonClick() {
     this.retryConnection.emit();

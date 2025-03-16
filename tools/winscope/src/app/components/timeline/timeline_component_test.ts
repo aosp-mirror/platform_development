@@ -1135,7 +1135,7 @@ describe('TimelineComponent', () => {
       wheelEvent,
     );
     fixture.detectChanges();
-    expect(expandedDrawSpy).toHaveBeenCalledTimes(6); // 4 entries total + 2 selected
+    expect(expandedDrawSpy).toHaveBeenCalledTimes(5); // 3 entries total + 2 selected
     expect(miniDrawSpy).toHaveBeenCalledTimes(1); // all on one canvas so spy called once
 
     // scroll from mini timeline

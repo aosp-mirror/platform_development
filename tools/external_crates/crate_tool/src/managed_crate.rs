@@ -313,7 +313,11 @@ impl ManagedCrate<Vendored> {
                 .arg(&patch)
                 .current_dir(self.temporary_build_directory())
                 .output()?
-                .success_or_error()?;
+                .success_or_error()
+                .context(format!(
+                    "Failed to apply patch file {}",
+                    patch.file_name().unwrap_or_default().to_string_lossy()
+                ))?;
         }
         Ok(())
     }

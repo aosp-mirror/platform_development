@@ -74,7 +74,10 @@ import {viewerCardInnerStyle} from './styles/viewer_card.styles';
         *ngIf="tableProperties"
         class="properties-table"
         [properties]="tableProperties"></properties-table>
-      <div *ngIf="pinnedItems.length > 0" class="pinned-items">
+      <div
+        *ngIf="pinnedItems.length > 0"
+        class="pinned-items"
+        [style.padding]="getPinnedItemsPadding()">
         <tree-node
           *ngFor="let pinnedItem of pinnedItems"
           class="node full-opacity"
@@ -90,7 +93,7 @@ import {viewerCardInnerStyle} from './styles/viewer_card.styles';
       </div>
     </div>
     <mat-divider></mat-divider>
-    <span class="mat-body-1 placeholder-text" *ngIf="showPlaceholderText()"> {{ placeholderText }} </span>
+    <span class="mat-body-1 placeholder-text" *ngIf="showPlaceholderText()"> {{ placeholderText + ' Try changing timeline position.' }} </span>
     <div class="hierarchy-content tree-wrapper">
       <div class="trees">
         <tree-view
@@ -214,6 +217,11 @@ export class HierarchyComponent {
 
   disableTooltip(el: HTMLElement) {
     return el.scrollWidth === el.clientWidth;
+  }
+
+  getPinnedItemsPadding() {
+    const addGutter = (this.rectIdToShowState?.size ?? 0) > 0;
+    return `0px 10.5px 0px ${addGutter ? 22.5 : 10.5}px`;
   }
 
   @HostListener('document:keydown', ['$event'])

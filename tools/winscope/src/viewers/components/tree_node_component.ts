@@ -60,7 +60,7 @@ import {nodeInnerItemStyles} from 'viewers/components/styles/node.styles';
         mat-icon-button
         class="icon-button pin-node-btn"
         (click)="pinNode($event)">
-        <mat-icon [class.material-symbols-outlined]="!isPinned"> push_pin </mat-icon>
+        <mat-icon [class.material-symbols-outlined]="!isPinned">push_pin</mat-icon>
       </button>
     </div>
 

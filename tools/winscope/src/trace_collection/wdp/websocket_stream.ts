@@ -42,8 +42,4 @@ export abstract class WebSocketStream {
   isOpen(): boolean {
     return this.sock.readyState === WebSocket.OPEN;
   }
-
-  isClosed(): boolean {
-    return this.sock.readyState === WebSocket.CLOSED;
-  }
 }

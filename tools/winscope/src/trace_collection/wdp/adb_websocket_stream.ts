@@ -15,7 +15,6 @@
  */
 
 import {FunctionUtils} from 'common/function_utils';
-import {AdbDevice} from 'trace_collection/adb_device';
 import {ErrorListener, WebSocketStream} from './websocket_stream';
 
 interface AdbResponse {
@@ -32,7 +31,7 @@ export abstract class AdbWebSocketStream extends WebSocketStream {
 
   constructor(
     sock: WebSocket,
-    private device: AdbDevice,
+    private deviceSerialNumber: string,
     private service: string,
     errorListener: ErrorListener,
   ) {
@@ -64,7 +63,7 @@ export abstract class AdbWebSocketStream extends WebSocketStream {
           }
         }
         this.onError(
-          `Could not parse data: \nReceived: ${e.data}` +
+          `Could not parse data:\nReceived: ${e.data}` +
             `\nError: ${(error as Error).message}.` +
             (adbError ? `\nADB Error: ` + adbError : ''),
         );
@@ -76,7 +75,7 @@ export abstract class AdbWebSocketStream extends WebSocketStream {
     await this.write(
       JSON.stringify({
         header: {
-          serialNumber: this.device.id,
+          serialNumber: this.deviceSerialNumber,
           command: this.service + ':' + args,
         },
       }),

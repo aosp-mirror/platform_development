@@ -16,17 +16,10 @@
 
 import {TimeUtils} from 'common/time/time_utils';
 import {UnitTestUtils} from 'test/unit/utils';
-import {AdbDevice} from 'trace_collection/adb_device';
 import {ShellStream} from './shell_stream';
 
 describe('ShellStream', () => {
-  const mockDevice: AdbDevice = {
-    id: '123',
-    authorized: true,
-    model: '',
-    displays: [],
-    multiDisplayScreenRecordingAvailable: false,
-  };
+  const serialNumber = '123';
   const dataListener = jasmine.createSpy();
   const errorListener = jasmine.createSpy();
   let stream: ShellStream;
@@ -37,7 +30,7 @@ describe('ShellStream', () => {
     errorListener.calls.reset();
     stream = new ShellStream(
       webSocket,
-      mockDevice,
+      serialNumber,
       dataListener,
       errorListener,
     );
@@ -52,7 +45,7 @@ describe('ShellStream', () => {
     expect(webSocket.send).toHaveBeenCalledOnceWith(
       JSON.stringify({
         header: {
-          serialNumber: mockDevice.id,
+          serialNumber,
           command: 'shell:',
         },
       }),
@@ -64,7 +57,7 @@ describe('ShellStream', () => {
     expect(webSocket.send).toHaveBeenCalledOnceWith(
       JSON.stringify({
         header: {
-          serialNumber: mockDevice.id,
+          serialNumber,
           command: 'shell:test command',
         },
       }),
@@ -103,7 +96,7 @@ describe('ShellStream', () => {
     const message = UnitTestUtils.makeFakeWebSocketMessage(data);
     webSocket.onmessage!(message);
     expect(errorListener).toHaveBeenCalledOnceWith(
-      `Could not parse data: \nReceived: {"error":{"type":"","message":"failed"}}` +
+      `Could not parse data:\nReceived: {"error":{"type":"","message":"failed"}}` +
         `\nError: Expected message data to be ArrayBuffer or Blob.` +
         `\nADB Error: failed`,
     );
@@ -114,7 +107,7 @@ describe('ShellStream', () => {
     const message = UnitTestUtils.makeFakeWebSocketMessage('unknown error');
     webSocket.onmessage!(message);
     expect(errorListener).toHaveBeenCalledOnceWith(
-      `Could not parse data: \nReceived: unknown error` +
+      `Could not parse data:\nReceived: unknown error` +
         `\nError: Expected message data to be ArrayBuffer or Blob.`,
     );
     errorListener.calls.reset();
@@ -124,7 +117,7 @@ describe('ShellStream', () => {
     const message = UnitTestUtils.makeFakeWebSocketMessage(200);
     webSocket.onmessage!(message);
     expect(errorListener).toHaveBeenCalledOnceWith(
-      `Could not parse data: \nReceived: 200` +
+      `Could not parse data:\nReceived: 200` +
         `\nError: Expected message data to be ArrayBuffer or Blob.`,
     );
     errorListener.calls.reset();

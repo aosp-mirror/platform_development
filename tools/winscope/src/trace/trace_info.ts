@@ -78,13 +78,6 @@ export const TRACE_INFO: TraceInfoMap = {
     downloadArchiveDir: 'sf',
     legacyExt: '.winscope',
   },
-  [TraceType.TRANSACTIONS_LEGACY]: {
-    name: 'Transactions Legacy',
-    icon: TRANSACTION_ICON,
-    color: '#0D652D',
-    downloadArchiveDir: 'sf',
-    legacyExt: '.winscope',
-  },
   [TraceType.WAYLAND]: {
     name: 'Wayland',
     icon: WAYLAND_ICON,

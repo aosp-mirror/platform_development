@@ -25,7 +25,6 @@ export enum TraceType {
   SCREEN_RECORDING,
   SCREENSHOT,
   TRANSACTIONS,
-  TRANSACTIONS_LEGACY,
   WAYLAND,
   WAYLAND_DUMP,
   PROTO_LOG,
@@ -59,7 +58,6 @@ export interface TraceEntryTypeMap {
   [TraceType.SCREENSHOT]: MediaBasedTraceEntry;
   [TraceType.SYSTEM_UI]: object;
   [TraceType.TRANSACTIONS]: PropertyTreeNode;
-  [TraceType.TRANSACTIONS_LEGACY]: object;
   [TraceType.WAYLAND]: object;
   [TraceType.WAYLAND_DUMP]: object;
   [TraceType.WINDOW_MANAGER]: HierarchyTreeNode;
@@ -104,7 +102,6 @@ export class TraceTypeUtils {
     TraceType.INPUT_METHOD_MANAGER_SERVICE,
     TraceType.INPUT_METHOD_SERVICE,
     TraceType.TRANSACTIONS,
-    TraceType.TRANSACTIONS_LEGACY,
     TraceType.PROTO_LOG,
     TraceType.VIEW_CAPTURE,
     TraceType.TRANSITION,

@@ -24,20 +24,24 @@ import com.android.compose.animation.scene.content.state.TransitionState
 import com.android.compose.animation.scene.demo.Scenes
 import com.android.compose.animation.scene.reveal.ContainerRevealHaptics
 import com.android.compose.animation.scene.transitions
+import com.android.mechanics.behavior.VerticalExpandContainerSpec
 
-fun systemUiTransitions(qsPagerState: PagerState, revealHaptics: ContainerRevealHaptics) =
-    transitions {
-        interruptionHandler = DemoInterruptionHandler
+fun systemUiTransitions(
+    qsPagerState: PagerState,
+    revealHaptics: ContainerRevealHaptics,
+    shadeMotionSpec: VerticalExpandContainerSpec,
+) = transitions {
+    interruptionHandler = DemoInterruptionHandler
 
-        alwaysOnDisplayTransitions()
-        shadeTransitions(qsPagerState)
-        splitShadeTransitions()
-        quickSettingsTransitions()
-        lockscreenTransitions()
-        launcherTransitions()
-        notificationShadeTransitions(revealHaptics)
-        quickSettingsShadeTransitions(revealHaptics)
-    }
+    alwaysOnDisplayTransitions()
+    shadeTransitions(qsPagerState)
+    splitShadeTransitions()
+    quickSettingsTransitions()
+    lockscreenTransitions()
+    launcherTransitions()
+    notificationShadeTransitions(revealHaptics, shadeMotionSpec)
+    quickSettingsShadeTransitions(revealHaptics, shadeMotionSpec)
+}
 
 object DemoInterruptionHandler : InterruptionHandler {
     override fun onInterruption(

@@ -140,10 +140,10 @@ export const nodeInnerItemStyles = `
         vertical-align: middle;
         word-break: break-all;
         flex-basis: 0;
+        align-content: center;
     }
 
     .leaf-node-icon-wrapper {
-        margin-left: 6px;
         min-height: 24px;
         width: 24px;
     }

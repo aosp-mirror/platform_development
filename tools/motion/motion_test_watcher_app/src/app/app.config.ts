@@ -4,9 +4,9 @@ import { provideRouter } from '@angular/router';
 import { provideAnimationsAsync } from '@angular/platform-browser/animations/async';
 
 import { routes } from './app.routes';
-import { ACCESS_TOKEN, SERVICE_PORT } from './goldens.service';
-import { ProgressTracker } from '../utils/progress';
-import { Preferences } from '../utils/preferences';
+import { ACCESS_TOKEN, SERVICE_PORT } from '../service/goldens.service';
+import { ProgressTracker } from '../util/progress';
+import { Preferences } from '../util/preferences';
 import {
   APP_BASE_HREF,
   LocationStrategy,
@@ -29,7 +29,7 @@ export class PreserveQueryParamsPathLocationStrategy extends PathLocationStrateg
   constructor(
     private platformLocation: PlatformLocation,
     private urlSerializer: UrlSerializer,
-    @Optional() @Inject(APP_BASE_HREF) _baseHref?: string,
+    @Optional() @Inject(APP_BASE_HREF) _baseHref?: string
   ) {
     super(platformLocation, _baseHref);
   }

@@ -156,11 +156,11 @@ describe('HierarchyComponent', () => {
 
   it('renders placeholder text', () => {
     component.trees = [];
-    component.placeholderText = 'Placeholder text';
+    component.placeholderText = 'Placeholder text.';
     fixture.detectChanges();
     expect(
-      htmlElement.querySelector('.placeholder-text')?.textContent,
-    ).toContain('Placeholder text');
+      htmlElement.querySelector('.placeholder-text')?.textContent?.trim(),
+    ).toEqual('Placeholder text. Try changing timeline position.');
   });
 
   it('handles pinned node click', () => {

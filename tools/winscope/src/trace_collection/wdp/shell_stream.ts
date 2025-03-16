@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-import {AdbDevice} from 'trace_collection/adb_device';
 import {AdbWebSocketStream, DataListener} from './adb_websocket_stream';
 import {ErrorListener} from './websocket_stream';
 
@@ -28,11 +27,11 @@ export class ShellStream extends AdbWebSocketStream {
 
   constructor(
     sock: WebSocket,
-    device: AdbDevice,
+    deviceSerialNumber: string,
     stdoutListener: DataListener,
     errorListener: ErrorListener,
   ) {
-    super(sock, device, 'shell', errorListener);
+    super(sock, deviceSerialNumber, 'shell', errorListener);
     this.onData = stdoutListener;
     this.onClose = () => {
       if (this.completeResolve) {

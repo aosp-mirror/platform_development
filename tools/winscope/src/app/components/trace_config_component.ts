@@ -31,7 +31,7 @@ import {
   SelectionConfiguration,
   TraceConfigurationMap,
   updateConfigsFromStore,
-} from 'trace_collection/trace_configuration';
+} from 'trace_collection/ui/ui_trace_configuration';
 import {userOptionStyle} from 'viewers/components/styles/user_option.styles';
 
 @Component({
@@ -155,11 +155,10 @@ import {userOptionStyle} from 'viewers/components/styles/user_option.styles';
 })
 export class TraceConfigComponent {
   changeDetectionWorker: number | undefined;
-  traceConfig: TraceConfigurationMap | undefined;
 
   @Input() title: string | undefined;
   @Input() traceConfigStoreKey: string | undefined;
-  @Input() initialTraceConfig: TraceConfigurationMap | undefined;
+  @Input() traceConfig: TraceConfigurationMap | undefined;
   @Input() storage: Store | undefined;
   @Output() readonly traceConfigChange =
     new EventEmitter<TraceConfigurationMap>();
@@ -174,7 +173,7 @@ export class TraceConfigComponent {
   ngOnInit() {
     this.traceConfig = updateConfigsFromStore(
       assertDefined(
-        JSON.parse(JSON.stringify(assertDefined(this.initialTraceConfig))),
+        JSON.parse(JSON.stringify(assertDefined(this.traceConfig))),
         () => 'component initialized without config',
       ),
       assertDefined(this.storage),

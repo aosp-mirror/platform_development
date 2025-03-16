@@ -78,6 +78,7 @@ import com.android.compose.animation.scene.UserActionResult
 import com.android.compose.animation.scene.ValueKey
 import com.android.compose.animation.scene.animateElementFloatAsState
 import com.android.compose.animation.scene.animateSceneFloatAsState
+import com.android.compose.gesture.NestedScrollableBound
 import com.android.compose.modifiers.thenIf
 import com.android.compose.nestedscroll.LargeTopAppBarNestedScrollConnection
 import com.android.compose.nestedscroll.PriorityNestedScrollConnection
@@ -213,24 +214,25 @@ private fun ContentScope.ShadeLayout(
                 {
                     val flingBehavior = ScrollableDefaults.flingBehavior()
                     Box(
-                        Modifier.nestedScroll(
-                            remember(
-                                scrimOffset,
-                                underScrimHeight,
-                                density,
-                                scrimMinTopPadding,
-                                flingBehavior,
-                            ) {
-                                scrimNestedScrollConnection(
-                                    scrimOffset = { scrimOffset.value },
-                                    onScrimOffsetChange = { scrimOffset.value = it },
-                                    underScrimHeight = { underScrimHeight.value },
-                                    density = density,
-                                    scrimMinTopPadding = scrimMinTopPadding,
-                                    flingBehavior = flingBehavior,
-                                )
-                            }
-                        )
+                        Modifier.disableSwipesWhenScrolling(NestedScrollableBound.BottomRight)
+                            .nestedScroll(
+                                remember(
+                                    scrimOffset,
+                                    underScrimHeight,
+                                    density,
+                                    scrimMinTopPadding,
+                                    flingBehavior,
+                                ) {
+                                    scrimNestedScrollConnection(
+                                        scrimOffset = { scrimOffset.value },
+                                        onScrimOffsetChange = { scrimOffset.value = it },
+                                        underScrimHeight = { underScrimHeight.value },
+                                        density = density,
+                                        scrimMinTopPadding = scrimMinTopPadding,
+                                        flingBehavior = flingBehavior,
+                                    )
+                                }
+                            )
                     ) {
                         scrim()
                     }

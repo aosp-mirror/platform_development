@@ -179,6 +179,7 @@ export class Mediator {
         }
       } else {
         UserNotifier.add(new NoValidFiles());
+        this.currentProgressListener?.onOperationFinished(false);
       }
       UserNotifier.notify();
     });

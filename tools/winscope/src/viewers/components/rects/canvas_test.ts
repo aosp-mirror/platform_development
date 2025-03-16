@@ -316,6 +316,23 @@ describe('Canvas', () => {
         Canvas.OPACITY_REGULAR,
       );
 
+      isDarkMode = false;
+      const highlightedWithOpacity = makeUiRect3D(rectId);
+      highlightedWithOpacity.colorType = ColorType.HIGHLIGHTED_WITH_OPACITY;
+      canvas.updateRects([highlightedWithOpacity]);
+      checkMaterialColorAndOpacity(
+        rectMesh,
+        Canvas.RECT_COLOR_HIGHLIGHTED_LIGHT_MODE,
+        highlightedWithOpacity.darkFactor,
+      );
+      isDarkMode = true;
+      canvas.updateRects([highlightedWithOpacity]);
+      checkMaterialColorAndOpacity(
+        rectMesh,
+        Canvas.RECT_COLOR_HIGHLIGHTED_DARK_MODE,
+        highlightedWithOpacity.darkFactor,
+      );
+
       const contentAndOpacity = makeUiRect3D(rectId);
       contentAndOpacity.colorType = ColorType.HAS_CONTENT_AND_OPACITY;
       canvas.updateRects([contentAndOpacity]);

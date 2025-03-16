@@ -593,6 +593,9 @@ public final class VdmService extends Hilt_VdmService {
                     builder.setWakeUpSensor(sensor.getIsWakeUpSensor())
                             .setReportingMode(sensor.getReportingMode());
                 }
+                if (Flags.virtualSensorAdditionalInfo()) {
+                    builder.setAdditionalInfoSupported(sensor.getIsAdditionalInfoSupported());
+                }
                 virtualDeviceBuilder.addVirtualSensorConfig(builder.build());
             }
 

@@ -39,6 +39,9 @@ describe('FileUtils', () => {
     expect(FileUtils.removeExtensionFromFilename('win.scope.zip')).toEqual(
       'win.scope',
     );
+    expect(FileUtils.removeExtensionFromFilename('winscopezip')).toEqual(
+      'winscopezip',
+    );
   });
 
   it('creates zip archive', async () => {
