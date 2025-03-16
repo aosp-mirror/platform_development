@@ -18,6 +18,8 @@ import {ArrayUtils} from 'common/array_utils';
 import {assertDefined} from 'common/assert_utils';
 import {INVALID_TIME_NS, Timestamp} from 'common/time';
 import {TimestampUtils} from 'common/timestamp_utils';
+import {TracesParserInput} from 'parsers/input/perfetto/traces_parser_input';
+import {AbstractParser as AbstractPerfettoParser} from 'parsers/perfetto/abstract_parser';
 import {
   CustomQueryParamTypeMap,
   CustomQueryParserResultTypeMap,
@@ -175,6 +177,12 @@ export class Trace<T> {
 
   getParser(): Parser<T> {
     return this.parser;
+  }
+
+  canSearch(): boolean {
+    return [AbstractPerfettoParser, TracesParserInput].some(
+      (ParserType) => this.parser instanceof ParserType,
+    );
   }
 
   setFrameInfo(frameMap: FrameMap, framesRange: FramesRange | undefined) {

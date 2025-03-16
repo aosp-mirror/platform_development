@@ -17,13 +17,11 @@
 import {FunctionUtils} from 'common/function_utils';
 import {WinscopeEvent} from 'messaging/winscope_event';
 import {EmitEvent} from 'messaging/winscope_event_emitter';
-import {TraceBuilder} from 'test/unit/trace_builder';
 import {Trace} from 'trace/trace';
-import {TraceType} from 'trace/trace_type';
 import {View, Viewer, ViewType} from './viewer';
 
 class ViewerStub implements Viewer {
-  private readonly trace: Trace<object>;
+  private readonly traces: Array<Trace<object>> = [];
   private htmlElement: HTMLElement;
   private title: string;
   private view: View;
@@ -43,13 +41,10 @@ class ViewerStub implements Viewer {
     } else {
       this.htmlElement = undefined as unknown as HTMLElement;
     }
-
-    this.trace =
-      trace ??
-      new TraceBuilder<object>().setType(TraceType.WINDOW_MANAGER).build();
+    if (trace) this.traces = [trace];
 
     this.view = new View(
-      viewType ?? ViewType.TAB,
+      viewType ?? ViewType.TRACE_TAB,
       this.getTraces(),
       this.htmlElement,
       this.title,
@@ -73,7 +68,7 @@ class ViewerStub implements Viewer {
   }
 
   getTraces(): Array<Trace<object>> {
-    return [this.trace];
+    return this.traces;
   }
 }
 

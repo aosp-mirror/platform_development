@@ -16,9 +16,9 @@
 
 import {Timestamp} from 'common/time';
 import {TraceEntry} from 'trace/trace';
-import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
-import {TextFilter} from './text_filter';
-import {LogFieldType} from './ui_data_log';
+import {TextFilter} from 'viewers/common/text_filter';
+import {Search} from 'viewers/viewer_search/ui_data';
+import {LogHeader} from './ui_data_log';
 
 export enum ViewerEvents {
   HighlightedNodeChange = 'HighlightedNodeChange',
@@ -31,6 +31,7 @@ export enum ViewerEvents {
 
   PropertiesUserOptionsChange = 'PropertiesUserOptionsChange',
   PropertiesFilterChange = 'PropertiesFilterChange',
+  DispatchPropertiesFilterChange = 'DispatchPropertiesFilterChange',
   HighlightedPropertyChange = 'HighlightedPropertyChange',
 
   RectsUserOptionsChange = 'RectsUserOptionsChange',
@@ -45,6 +46,11 @@ export enum ViewerEvents {
   LogTextFilterChange = 'LogTextFilterChange',
   ArrowDownPress = 'ArrowDownPress',
   ArrowUpPress = 'ArrowUpPress',
+
+  GlobalSearchSectionClick = 'GlobalSearchSectionClick',
+  SearchQueryClick = 'SearchQueryClick',
+  SaveQueryClick = 'SaveQueryClick',
+  DeleteSavedQueryClick = 'DeleteSavedQueryClick',
 }
 
 export class RectDblClickDetail {
@@ -53,15 +59,27 @@ export class RectDblClickDetail {
 
 export class TimestampClickDetail {
   constructor(
-    public entry?: TraceEntry<PropertyTreeNode>,
+    public entry?: TraceEntry<object>,
     public timestamp?: Timestamp,
   ) {}
 }
 
 export class LogFilterChangeDetail {
-  constructor(public type: LogFieldType, public value: string[] | string) {}
+  constructor(public header: LogHeader, public value: string[]) {}
 }
 
 export class LogTextFilterChangeDetail {
-  constructor(public type: LogFieldType, public filter: TextFilter) {}
+  constructor(public header: LogHeader, public filter: TextFilter) {}
+}
+
+export class QueryClickDetail {
+  constructor(public query: string) {}
+}
+
+export class SaveQueryClickDetail {
+  constructor(public query: string, public name: string) {}
+}
+
+export class DeleteSavedQueryClickDetail {
+  constructor(public search: Search) {}
 }

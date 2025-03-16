@@ -317,6 +317,7 @@ describe('LoadedParsers', () => {
     it('when a perfetto parser is already loaded', () => {
       loadParsers([parserSf0], [parserSf1]);
       expectLoadResult([parserSf1], [new TraceOverridden(filename)]);
+      userNotifierChecker.reset();
 
       loadParsers([parserSf0], []);
       expectLoadResult([parserSf1], [new TraceOverridden(filename)]);
