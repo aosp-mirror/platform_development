@@ -59,7 +59,7 @@ export class GraphComponent implements OnChanges {
     }
 
     canvasElement.width = width;
-    canvasElement.height = 64;
+    canvasElement.height = this.feature.visualization.height;
     this._renderGraph();
   }
 

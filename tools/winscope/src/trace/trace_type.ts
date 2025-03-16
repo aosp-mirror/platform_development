@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import {QueryResult} from 'trace_processor/query_result';
 import {MediaBasedTraceEntry} from './media_based_trace_entry';
 import {HierarchyTreeNode} from './tree_node/hierarchy_tree_node';
 import {PropertyTreeNode} from './tree_node/property_tree_node';
@@ -43,6 +44,7 @@ export enum TraceType {
   INPUT_MOTION_EVENT,
   INPUT_KEY_EVENT,
   INPUT_EVENT_MERGED,
+  SEARCH,
 }
 
 export type ImeTraceType =
@@ -75,6 +77,7 @@ export interface TraceEntryTypeMap {
   [TraceType.INPUT_MOTION_EVENT]: PropertyTreeNode;
   [TraceType.INPUT_KEY_EVENT]: PropertyTreeNode;
   [TraceType.INPUT_EVENT_MERGED]: PropertyTreeNode;
+  [TraceType.SEARCH]: QueryResult;
 }
 
 export class TraceTypeUtils {
@@ -91,6 +94,7 @@ export class TraceTypeUtils {
   ];
 
   private static TRACES_WITH_VIEWERS_DISPLAY_ORDER = [
+    TraceType.SEARCH,
     TraceType.SCREEN_RECORDING,
     TraceType.SCREENSHOT,
     TraceType.SURFACE_FLINGER,

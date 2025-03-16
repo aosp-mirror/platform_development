@@ -16,6 +16,8 @@
 
 package com.example.android.vdmdemo.host;
 
+import static android.Manifest.permission.ADD_ALWAYS_UNLOCKED_DISPLAY;
+import static android.Manifest.permission.ADD_TRUSTED_DISPLAY;
 import static android.os.Build.VERSION.SDK_INT;
 import static android.os.Build.VERSION_CODES.TIRAMISU;
 import static android.os.Build.VERSION_CODES.UPSIDE_DOWN_CAKE;
@@ -25,6 +27,7 @@ import android.companion.AssociationRequest;
 import android.companion.virtual.flags.Flags;
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
 import android.util.ArrayMap;
 import android.util.Log;
 
@@ -65,13 +68,14 @@ final class PreferenceController {
                     .withDefaultValue(AssociationRequest.DEVICE_PROFILE_APP_STREAMING),
 
             new BoolRule(R.string.pref_hide_from_recents, UPSIDE_DOWN_CAKE)
-                    .withDefaultValue(true),
+                    .withRequiredPermissions(ADD_TRUSTED_DISPLAY),
 
             new BoolRule(R.string.pref_enable_cross_device_clipboard,
-                    VANILLA_ICE_CREAM, Flags::crossDeviceClipboard),
+                    VANILLA_ICE_CREAM, Flags::crossDeviceClipboard)
+                    .withRequiredPermissions(ADD_TRUSTED_DISPLAY),
 
-            new BoolRule(R.string.pref_enable_custom_activity_policy,
-                    VANILLA_ICE_CREAM,  // TODO: update to post-V once available
+            // TODO(b/379277747): Change to BAKLAVA
+            new BoolRule(R.string.pref_enable_custom_activity_policy, VANILLA_ICE_CREAM,
                     Flags::dynamicPolicy,
                     android.companion.virtualdevice.flags.Flags::activityControlApi),
 
@@ -88,28 +92,48 @@ final class PreferenceController {
             new BoolRule(R.string.pref_enable_display_category, UPSIDE_DOWN_CAKE),
 
             new BoolRule(R.string.pref_always_unlocked_device, TIRAMISU)
-                    .withDefaultValue(true),
+                    .withRequiredPermissions(ADD_ALWAYS_UNLOCKED_DISPLAY),
 
-            new BoolRule(R.string.pref_show_pointer_icon, TIRAMISU),
+            new BoolRule(R.string.pref_show_pointer_icon, TIRAMISU)
+                    .withRequiredPermissions(ADD_TRUSTED_DISPLAY),
 
-            new BoolRule(R.string.pref_enable_custom_home, VANILLA_ICE_CREAM, Flags::vdmCustomHome),
+            new BoolRule(R.string.pref_enable_custom_home, VANILLA_ICE_CREAM, Flags::vdmCustomHome)
+                    .withRequiredPermissions(ADD_TRUSTED_DISPLAY),
 
-            new BoolRule(R.string.pref_enable_custom_status_bar,
-                    VANILLA_ICE_CREAM,  // TODO: update to post-V once available
-                    android.companion.virtualdevice.flags.Flags::statusBarAndInsets),
+            // TODO(b/379277747): Change to BAKLAVA
+            new BoolRule(R.string.pref_enable_custom_status_bar, VANILLA_ICE_CREAM,
+                    android.companion.virtualdevice.flags.Flags::statusBarAndInsets)
+                    .withRequiredPermissions(ADD_TRUSTED_DISPLAY),
+
+            // TODO(b/379277747): Change to BAKLAVA
+            new StringRule(R.string.pref_display_timeout, VANILLA_ICE_CREAM,
+                    android.companion.virtualdevice.flags.Flags::deviceAwareDisplayPower,
+                    android.companion.virtualdevice.flags.Flags::displayPowerManagerApis)
+                    .withDefaultValue(String.valueOf(0)),
+
+            // TODO(b/379277747): Change to BAKLAVA
+            new StringRule(R.string.pref_enable_client_brightness, VANILLA_ICE_CREAM,
+                    android.companion.virtualdevice.flags.Flags::deviceAwareDisplayPower,
+                    android.companion.virtualdevice.flags.Flags::displayPowerManagerApis),
 
             new StringRule(R.string.pref_display_ime_policy, VANILLA_ICE_CREAM, Flags::vdmCustomIme)
+                    .withRequiredPermissions(ADD_TRUSTED_DISPLAY)
                     .withDefaultValue(String.valueOf(0)),
 
             new BoolRule(R.string.pref_enable_client_native_ime,
-                    VANILLA_ICE_CREAM, Flags::vdmCustomIme),
+                    VANILLA_ICE_CREAM, Flags::vdmCustomIme)
+                    .withRequiredPermissions(ADD_TRUSTED_DISPLAY),
 
             new BoolRule(R.string.pref_record_encoder_output, TIRAMISU),
+
+            new BoolRule(R.string.pref_enable_update_audio_policy_mixes, VANILLA_ICE_CREAM)
+                    .withDefaultValue(true),
 
             // Internal-only switches not exposed in the settings page.
             // All of these are booleans acting as switches, while the above ones may be any type.
 
-            new InternalBoolRule(R.string.internal_pref_home_displays_supported, TIRAMISU),
+            new InternalBoolRule(R.string.internal_pref_home_displays_supported, TIRAMISU)
+                    .withRequiredPermissions(ADD_TRUSTED_DISPLAY),
 
             new InternalBoolRule(R.string.internal_pref_mirror_displays_supported,
                     VANILLA_ICE_CREAM),
@@ -117,12 +141,14 @@ final class PreferenceController {
             new InternalBoolRule(R.string.internal_pref_virtual_stylus_supported,
                     VANILLA_ICE_CREAM, Flags::virtualStylus),
 
+            // TODO(b/379277747): Change to BAKLAVA
             new InternalBoolRule(R.string.internal_pref_virtual_rotary_supported,
-                    VANILLA_ICE_CREAM,  // TODO: update to post-V once available
+                    VANILLA_ICE_CREAM,
                     android.companion.virtualdevice.flags.Flags::virtualRotary),
 
+            // TODO(b/379277747): Change to BAKLAVA
             new InternalBoolRule(R.string.internal_pref_display_rotation_supported,
-                    VANILLA_ICE_CREAM,  // TODO: update to post-V once available
+                    VANILLA_ICE_CREAM,
                     android.companion.virtualdevice.flags.Flags::virtualDisplayRotationApi)
     );
     // LINT.ThenChange(/samples/VirtualDeviceManager/README.md:host_options)
@@ -138,11 +164,7 @@ final class PreferenceController {
     PreferenceController(@ApplicationContext Context context) {
         mContext = context;
         mSharedPreferences = PreferenceManager.getDefaultSharedPreferences(mContext);
-
-        SharedPreferences.Editor editor = mSharedPreferences.edit();
-        RULES.forEach(r -> r.evaluate(mContext, mSharedPreferences, editor));
-        editor.commit();
-
+        evaluate();
         mSharedPreferences.registerOnSharedPreferenceChangeListener(mPreferenceChangeListener);
     }
 
@@ -179,6 +201,12 @@ final class PreferenceController {
         RULES.forEach(r -> r.evaluate(mContext, preferenceManager));
     }
 
+    void evaluate() {
+        SharedPreferences.Editor editor = mSharedPreferences.edit();
+        RULES.forEach(r -> r.evaluate(mContext, mSharedPreferences, editor));
+        editor.commit();
+    }
+
     boolean getBoolean(@StringRes int resId) {
         return mSharedPreferences.getBoolean(mContext.getString(resId), false);
     }
@@ -207,6 +235,7 @@ final class PreferenceController {
         final int mMinSdk;
         final BooleanSupplier[] mRequiredFlags;
 
+        protected String[] mRequiredPermissions = null;
         protected T mDefaultValue;
 
         PrefRule(@StringRes int key, T defaultValue, int minSdk, BooleanSupplier... requiredFlags) {
@@ -218,7 +247,7 @@ final class PreferenceController {
 
         void evaluate(Context context, SharedPreferences prefs, SharedPreferences.Editor editor) {
             String preferenceName = context.getString(mKey);
-            if (!prefs.contains(preferenceName) || !isSatisfied(preferenceName)) {
+            if (!prefs.contains(preferenceName) || !isSatisfied(context, preferenceName)) {
                 reset(context, editor);
             }
         }
@@ -227,7 +256,7 @@ final class PreferenceController {
             String preferenceName = context.getString(mKey);
             Preference preference = preferenceManager.findPreference(preferenceName);
             if (preference != null) {
-                boolean enabled = isSatisfied(preferenceName);
+                boolean enabled = isSatisfied(context, preferenceName);
                 if (preference.isEnabled() != enabled) {
                     preference.setEnabled(enabled);
                 }
@@ -236,7 +265,15 @@ final class PreferenceController {
 
         protected abstract void reset(Context context, SharedPreferences.Editor editor);
 
-        protected boolean isSatisfied(String preferenceName) {
+        protected boolean isSatisfied(Context context, String preferenceName) {
+            if (mRequiredPermissions != null) {
+                for (String requiredPermission : mRequiredPermissions) {
+                    if (context.checkCallingOrSelfPermission(requiredPermission)
+                            != PackageManager.PERMISSION_GRANTED) {
+                        return false;
+                    }
+                }
+            }
             try {
                 return isSdkVersionSatisfied()
                         && Arrays.stream(mRequiredFlags).allMatch(BooleanSupplier::getAsBoolean);
@@ -252,6 +289,11 @@ final class PreferenceController {
 
         PrefRule<T> withDefaultValue(T defaultValue) {
             mDefaultValue = defaultValue;
+            return this;
+        }
+
+        PrefRule<T> withRequiredPermissions(String... permissions) {
+            mRequiredPermissions = permissions;
             return this;
         }
     }
@@ -275,7 +317,7 @@ final class PreferenceController {
         @Override
         void evaluate(Context context, SharedPreferences prefs, SharedPreferences.Editor editor) {
             String preferenceName = context.getString(mKey);
-            editor.putBoolean(preferenceName, isSatisfied(preferenceName));
+            editor.putBoolean(preferenceName, isSatisfied(context, preferenceName));
         }
     }
 

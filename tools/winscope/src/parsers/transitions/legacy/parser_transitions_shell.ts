@@ -16,7 +16,7 @@
 
 import {Timestamp} from 'common/time';
 import {AbstractParser} from 'parsers/legacy/abstract_parser';
-import {ParserTransitionsUtils} from 'parsers/transitions/parser_transitions_utils';
+import {EntryPropertiesTreeFactory} from 'parsers/transitions/entry_properties_tree_factory';
 import root from 'protos/transitions/udc/json';
 import {com} from 'protos/transitions/udc/static';
 import {TraceType} from 'trace/trace_type';
@@ -113,15 +113,15 @@ export class ParserTransitionsShell extends AbstractParser<PropertyTreeNode> {
   ): PropertyTreeNode {
     this.validateShellTransitionEntry(entryProto);
 
-    const shellEntryTree = ParserTransitionsUtils.makeShellPropertiesTree({
+    const shellEntryTree = EntryPropertiesTreeFactory.makeShellPropertiesTree({
       entry: entryProto,
       realToBootTimeOffsetNs: this.realToBootTimeOffsetNs,
       handlerMapping: this.handlerMapping,
       timestampConverter: this.timestampConverter,
     });
-    const wmEntryTree = ParserTransitionsUtils.makeWmPropertiesTree();
+    const wmEntryTree = EntryPropertiesTreeFactory.makeWmPropertiesTree();
 
-    return ParserTransitionsUtils.makeTransitionPropertiesTree(
+    return EntryPropertiesTreeFactory.makeTransitionPropertiesTree(
       shellEntryTree,
       wmEntryTree,
     );

@@ -448,14 +448,35 @@ describe('TracePipeline', () => {
   });
 
   it('can filter traces without visualization', async () => {
-    await loadFiles([validSfFile, shellTransitionFile]);
-    await expectLoadResult(2, []);
+    await loadFiles([shellTransitionFile]);
+    await expectLoadResult(1, []);
 
     tracePipeline.filterTracesWithoutVisualization();
-    expect(tracePipeline.getTraces().getSize()).toEqual(1);
+    expect(tracePipeline.getTraces().getSize()).toEqual(0);
     expect(
       tracePipeline.getTraces().getTrace(TraceType.SHELL_TRANSITION),
     ).toBeUndefined();
+  });
+
+  it('tries to create search trace', async () => {
+    const perfettoFile = await UnitTestUtils.getFixtureFile(
+      'traces/perfetto/layers_trace.perfetto-trace',
+    );
+    await loadFiles([perfettoFile]);
+    const validQuery = 'select ts from surfaceflinger_layers_snapshot';
+    expect(await tracePipeline.tryCreateSearchTrace(validQuery)).toBeDefined();
+    expect(await tracePipeline.tryCreateSearchTrace('fail')).toBeUndefined();
+  });
+
+  it('creates screen recording using metadata', async () => {
+    const screenRecording = await UnitTestUtils.getFixtureFile(
+      'traces/elapsed_and_real_timestamp/screen_recording_no_metadata.mp4',
+    );
+    const metadata = await UnitTestUtils.getFixtureFile(
+      'traces/elapsed_and_real_timestamp/screen_recording_metadata.json',
+    );
+    await loadFiles([screenRecording, metadata]);
+    await expectLoadResult(1, []);
   });
 
   async function loadFiles(

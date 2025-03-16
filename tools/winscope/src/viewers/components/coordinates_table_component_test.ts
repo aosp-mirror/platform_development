@@ -24,7 +24,6 @@ describe('CoordinatesTableComponent', () => {
   beforeAll(async () => {
     await TestBed.configureTestingModule({
       declarations: [CoordinatesTableComponent],
-      schemas: [],
     }).compileComponents();
   });
 

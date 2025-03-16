@@ -15,7 +15,7 @@
  */
 import {Component, Input, ViewChild} from '@angular/core';
 import {TraceType} from 'trace/trace_type';
-import {LogComponent} from 'viewers/common/log_component';
+import {LogComponent} from 'viewers/components/log_component';
 import {viewerCardStyle} from 'viewers/components/styles/viewer_card.styles';
 import {UiData} from './ui_data';
 

@@ -26,8 +26,11 @@ import {Parser} from 'trace/parser';
 import {Trace} from 'trace/trace';
 import {Traces} from 'trace/traces';
 import {TraceFile} from 'trace/trace_file';
+import {TraceMetadata} from 'trace/trace_metadata';
 import {TraceEntryTypeMap, TraceType} from 'trace/trace_type';
 import {HierarchyTreeNode} from 'trace/tree_node/hierarchy_tree_node';
+import {QueryResult, Row, RowIterator} from 'trace_processor/query_result';
+import {TraceProcessorFactory} from 'trace_processor/trace_processor_factory';
 import {TimestampConverterUtils} from './timestamp_converter_utils';
 import {TraceBuilder} from './trace_builder';
 
@@ -72,11 +75,13 @@ class UnitTestUtils {
     filename: string,
     converter = UnitTestUtils.getTimestampConverter(),
     initializeRealToElapsedTimeOffsetNs = true,
+    metadata: TraceMetadata = {},
   ): Promise<Parser<object>> {
     const parsers = await UnitTestUtils.getParsers(
       filename,
       converter,
       initializeRealToElapsedTimeOffsetNs,
+      metadata,
     );
 
     expect(parsers.length)
@@ -90,6 +95,7 @@ class UnitTestUtils {
     filename: string,
     converter = UnitTestUtils.getTimestampConverter(),
     initializeRealToElapsedTimeOffsetNs = true,
+    metadata: TraceMetadata = {},
   ): Promise<Array<Parser<object>>> {
     const file = new TraceFile(
       await UnitTestUtils.getFixtureFile(filename),
@@ -98,7 +104,7 @@ class UnitTestUtils {
     const fileAndParsers = await new LegacyParserFactory().createParsers(
       [file],
       converter,
-      undefined,
+      metadata,
     );
 
     if (initializeRealToElapsedTimeOffsetNs) {
@@ -344,6 +350,54 @@ class UnitTestUtils {
     expect(
       collapsedSections.querySelectorAll('.collapsed-section').length,
     ).toEqual(0);
+  }
+
+  static makeEmptyTrace<T extends TraceType>(
+    traceType: T,
+    descriptors: string[] = [],
+  ): Trace<TraceEntryTypeMap[T]> {
+    return new TraceBuilder<TraceEntryTypeMap[T]>()
+      .setEntries([])
+      .setTimestamps([])
+      .setDescriptors(descriptors)
+      .setType(traceType)
+      .build();
+  }
+
+  static makeSearchTraceSpies(
+    ts?: Timestamp,
+  ): [jasmine.SpyObj<QueryResult>, jasmine.SpyObj<RowIterator<Row>>] {
+    const spyQueryResult = jasmine.createSpyObj<QueryResult>('result', [
+      'numRows',
+      'columns',
+      'iter',
+    ]);
+    spyQueryResult.numRows.and.returnValue(1);
+    spyQueryResult.columns.and.returnValue(
+      ts === undefined ? ['property'] : ['ts', 'property'],
+    );
+
+    const spyIter = jasmine.createSpyObj<RowIterator<Row>>('iter', [
+      'valid',
+      'next',
+      'get',
+    ]);
+    if (ts) {
+      spyIter.get.withArgs('ts').and.returnValue(ts.getValueNs());
+    }
+    spyIter.get.withArgs('property').and.returnValue('test_value');
+    spyIter.valid.and.returnValue(true);
+    spyIter.next.and.callFake(() =>
+      assertDefined(spyIter).valid.and.returnValue(false),
+    );
+    spyQueryResult.iter.and.returnValue(spyIter);
+
+    return [spyQueryResult, spyIter];
+  }
+
+  static async runQueryAndGetResult(query: string): Promise<QueryResult> {
+    const tp = await TraceProcessorFactory.getSingleInstance();
+    return tp.query(query).waitAllRows();
   }
 
   private static testTimestamps(

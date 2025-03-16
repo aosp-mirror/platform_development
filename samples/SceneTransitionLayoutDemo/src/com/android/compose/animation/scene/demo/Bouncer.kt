@@ -21,6 +21,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.overscroll
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
@@ -73,7 +74,8 @@ fun SceneScope.Bouncer(
 
         VerticalGrid(
             columns = 3,
-            Modifier.align(Alignment.BottomCenter)
+            Modifier.overscroll(verticalOverscrollEffect)
+                .align(Alignment.BottomCenter)
                 .padding(bottom = 100.dp)
                 .element(Bouncer.Elements.Content),
             horizontalSpacing = gridSpacing,

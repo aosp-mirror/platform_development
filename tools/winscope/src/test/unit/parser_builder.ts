@@ -62,7 +62,7 @@ export class ParserBuilder<T> {
     type: Q,
     result: CustomQueryParserResultTypeMap[Q],
   ): this {
-    this.customQueryResult.set(type, result);
+    this.customQueryResult.set(type, result ?? {});
     return this;
   }
 
