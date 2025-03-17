@@ -389,7 +389,6 @@ impl Crate {
                         extra_filename = x.to_string();
                     }
                 }
-                "--cap-lints" => out.cap_lints = arg_iter.next().unwrap().to_string(),
                 "-l" => {
                     let arg = arg_iter.next().unwrap();
                     if let Some(lib) = arg.strip_prefix("static=") {
@@ -415,6 +414,9 @@ impl Crate {
                     arg_iter.next().unwrap();
                 }
                 "--check-cfg" => {
+                    arg_iter.next().unwrap();
+                }
+                "--cap-lints" => {
                     arg_iter.next().unwrap();
                 }
                 _ if arg.starts_with("--error-format=") => {}
