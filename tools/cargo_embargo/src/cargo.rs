@@ -82,7 +82,6 @@ pub struct Crate {
     pub cfgs: Vec<String>,      // non-feature --cfg
     pub externs: Vec<Extern>,
     pub codegens: Vec<String>, // -C
-    pub cap_lints: String,
     pub static_libs: Vec<String>,
     pub shared_libs: Vec<String>,
     pub edition: String,
