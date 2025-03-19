@@ -167,7 +167,7 @@ impl ManagedRepo {
 
         let cio_crate = self.crates_io.get_crate(crate_name)?;
 
-        for version in cio_crate.versions() {
+        for version in cio_crate.safe_versions() {
             println!("Version {}", version.version());
             let mut found_problems = false;
             for (dep, req) in version.android_deps_with_version_reqs() {
