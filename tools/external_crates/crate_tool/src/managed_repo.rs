@@ -314,7 +314,10 @@ We apologize for the inconvenience."#,
             );
         } else {
             self.regenerate([&crate_name].iter(), true)?;
-            println!("Please edit {} and run 'regenerate' for this crate", managed_dir);
+            println!(
+                "Please edit {} and run 'regenerate' for this crate",
+                managed_dir.rel().join("cargo_embargo.json").display()
+            );
         }
 
         Ok(())
