@@ -19,13 +19,21 @@ use std::{
     path::{Path, PathBuf},
 };
 
-use expression_parser::LicenseTerms;
 use file_classifier::Classifier;
+use license_data::{CrateLicenseSpecialCase, License};
+use license_terms::LicenseTerms;
+use licenses::LICENSE_DATA;
+use parsed_license_data::{CrateLicenseSpecialCases, ParsedLicense};
 use spdx::LicenseReq;
 
-mod expression_parser;
 mod file_classifier;
+mod license_data;
+mod license_data_tests;
 mod license_file_finder;
+mod license_terms;
+mod licenses;
+mod parsed_license_data;
+mod util;
 
 /// Error types for the 'license_checker' crate.
 #[derive(thiserror::Error, Debug)]
@@ -44,7 +52,7 @@ pub enum Error {
     StripPrefixError(#[from] std::path::StripPrefixError),
     /// License expression special case doesn't match what's in Cargo.toml
     #[error("Found a license expression special case for crate {crate_name} but the Cargo.toml license field doesn't match. Expected '{expected_license}', found '{cargo_toml_license}'")]
-    LicenseExpressionSpecialCase {
+    LicenseExpressionSpecialCaseMismatch {
         /// The name of the crate
         crate_name: String,
         /// The expected license expression in special case
@@ -57,13 +65,54 @@ pub enum Error {
     MissingLicenseField(String),
     /// Error parsing SPDX license expression
     #[error(transparent)]
-    ParseError(#[from] spdx::ParseError),
+    LicenseParseError(#[from] spdx::ParseError),
     /// Error minimizing SPDX expression
     #[error(transparent)]
     MinimizeError(#[from] spdx::expression::MinimizeError),
     /// Failed to read file
     #[error("Failed to read {0}: {1}")]
     FileReadError(PathBuf, std::io::Error),
+    /// The set of known licenses is empty.
+    #[error("The set of known licenses is empty")]
+    NoLicenses,
+    /// License with neither text nor file names.
+    #[error("License {0} has neither text nor file names")]
+    LicenseWithoutTextOrFileNames(String),
+    /// Duplicate license
+    #[error("Duplicate license {0}")]
+    DuplicateLicense(String),
+    /// Duplicate crate license special case
+    #[error("Duplicate license special case for crate {0}")]
+    DuplicateCrateLicenseSpecialCase(String),
+    /// The license text is empty.
+    #[error("The license text for {0} is empty")]
+    EmptyLicenseText(String),
+    /// License text is ambiguous because it is a substring of another license text.
+    #[error("The license text for {0} is a substring of the license text for {0}")]
+    AmbiguousLicenseText(String, String),
+    /// Duplicate license file name
+    #[error("The file name {file_name} matches multiple licenses: {license} and {other_license}")]
+    DuplicateLicenseFileName {
+        /// The name of the license file.
+        file_name: String,
+        /// The license associated with the filename.
+        license: String,
+        /// The other license that is also associated with the same filename.
+        other_license: String,
+    },
+    /// License file name not findable by any known license file glob patterns.
+    #[error(
+        "The license file name {0} for {1} is not findable by any known license file glob patterns"
+    )]
+    LicenseFileNotFindable(String, String),
+    /// Inexact license file name not findable by any known license file glob patterns.
+    #[error(
+        "The inexact license file name {0} is not findable by any known license file glob patterns"
+    )]
+    InexactLicenseFileNotFindable(String),
+    /// The list of license preferences contains an unknown license
+    #[error("The license preference list contains unknown license {0}")]
+    LicensePreferenceForUnknownLicense(String),
 }
 
 /// The result of license file verification, containing a set of acceptable licenses, and the
@@ -94,11 +143,12 @@ impl LicenseState {
         let not_required = terms.not_required;
 
         for classifier in file_classifiers {
-            if let Some(req) = classifier.by_name() {
-                if state.unsatisfied.remove(req) {
+            if let Some(licensee) = classifier.by_name() {
+                let req = licensee.clone().into_req();
+                if state.unsatisfied.remove(&req) {
                     state.satisfied.insert(req.clone(), classifier.file_path().to_owned());
-                } else if !state.satisfied.contains_key(req) {
-                    if not_required.contains(req) {
+                } else if !state.satisfied.contains_key(&req) {
+                    if not_required.contains(&req) {
                         state.unneeded.insert(req.clone(), classifier.file_path().to_owned());
                     } else {
                         state.unexpected.insert(req.clone(), classifier.file_path().to_owned());
@@ -109,16 +159,17 @@ impl LicenseState {
 
         if !state.unsatisfied.is_empty() {
             for classifier in file_classifiers {
-                for req in classifier.by_content() {
-                    if state.unsatisfied.remove(req) {
+                for licensee in classifier.by_content() {
+                    let req = licensee.clone().into_req();
+                    if state.unsatisfied.remove(&req) {
                         state.satisfied.insert(req.clone(), classifier.file_path().to_owned());
-                    } else if !state.satisfied.contains_key(req) && !not_required.contains(req) {
+                    } else if !state.satisfied.contains_key(&req) && !not_required.contains(&req) {
                         state.unexpected.insert(req.clone(), classifier.file_path().to_owned());
                     }
                 }
                 if classifier.by_content().len() == 1 {
-                    let req = &classifier.by_content()[0];
-                    if !state.satisfied.contains_key(req) && not_required.contains(req) {
+                    let req = classifier.by_content().first().unwrap().clone().into_req();
+                    if !state.satisfied.contains_key(&req) && not_required.contains(&req) {
                         state.unneeded.insert(req.clone(), classifier.file_path().to_owned());
                     }
                 }
@@ -130,8 +181,9 @@ impl LicenseState {
                 if classifier.by_name().is_some() || !classifier.by_content().is_empty() {
                     continue;
                 }
-                if let Some(req) = classifier.by_content_fuzzy() {
-                    if state.unsatisfied.remove(req) {
+                if let Some(licensee) = classifier.by_content_fuzzy() {
+                    let req = licensee.clone().into_req();
+                    if state.unsatisfied.remove(&req) {
                         state.satisfied.insert(req.clone(), classifier.file_path().to_owned());
                         if state.unsatisfied.is_empty() {
                             break;
@@ -156,7 +208,7 @@ pub fn find_licenses(
 ) -> Result<LicenseState, Error> {
     let crate_path = crate_path.as_ref();
 
-    let terms = expression_parser::evaluate_license_expr(crate_name, cargo_toml_license)?;
+    let terms = LICENSE_DATA.evaluate_crate_license(crate_name, cargo_toml_license)?;
     Ok(LicenseState::from(
         terms,
         &Classifier::new_vec(
@@ -182,16 +234,16 @@ mod tests {
     }
 
     mod license_terms {
-        use crate::{expression_parser::evaluate_license_expr, LicenseTerms};
+        use crate::{LicenseTerms, LICENSE_DATA};
 
         pub(super) fn apache() -> LicenseTerms {
-            evaluate_license_expr("foo", Some("Apache-2.0")).unwrap()
+            LICENSE_DATA.evaluate_crate_license("foo", Some("Apache-2.0")).unwrap()
         }
         pub(super) fn apache_or_mit() -> LicenseTerms {
-            evaluate_license_expr("foo", Some("Apache-2.0 OR MIT")).unwrap()
+            LICENSE_DATA.evaluate_crate_license("foo", Some("Apache-2.0 OR MIT")).unwrap()
         }
         pub(super) fn apache_or_bsd() -> LicenseTerms {
-            evaluate_license_expr("foo", Some("Apache-2.0 OR BSD-3-Clause")).unwrap()
+            LICENSE_DATA.evaluate_crate_license("foo", Some("Apache-2.0 OR BSD-3-Clause")).unwrap()
         }
     }
 
@@ -204,10 +256,7 @@ mod tests {
             Classifier::new("LICENSE-APACHE", "".to_string())
         }
         pub(super) fn apache_by_content() -> Classifier {
-            Classifier::new(
-                "LICENSE",
-                include_str!("file_classifier/licenses/Apache-2.0.txt").to_string(),
-            )
+            Classifier::new("LICENSE", include_str!("licenses/Apache-2.0.txt").to_string())
         }
         pub(super) fn unknown() -> Classifier {
             Classifier::new("LICENSE", "".to_string())
@@ -218,19 +267,19 @@ mod tests {
         pub(super) fn apache_and_mit_concatenated() -> Classifier {
             Classifier::new(
                 "LICENSE",
-                [
-                    include_str!("file_classifier/licenses/Apache-2.0.txt"),
-                    include_str!("file_classifier/licenses/MIT.txt"),
-                ]
-                .iter()
-                .join("\n\n\n-----\n\n\n"),
+                [include_str!("licenses/Apache-2.0.txt"), include_str!("licenses/MIT.txt")]
+                    .iter()
+                    .join("\n\n\n-----\n\n\n"),
             )
         }
         pub(super) fn bsd_fuzzy() -> Classifier {
             Classifier::new(
-                "LICENSE-BSD",
-                include_str!("file_classifier/testdata/BSD-3-Clause-bindgen.txt").to_string(),
+                "LICENSE",
+                include_str!("testdata/BSD-3-Clause-bindgen.txt").to_string(),
             )
+        }
+        pub(super) fn bsd_inexact() -> Classifier {
+            Classifier::new("LICENSE-BSD", "".to_string())
         }
     }
 
@@ -350,6 +399,39 @@ mod tests {
         let state = LicenseState::from(
             license_terms::apache_or_bsd(),
             &vec![classifiers::apache_by_name(), classifiers::bsd_fuzzy()],
+        );
+        assert_eq!(
+            state.satisfied,
+            BTreeMap::from([(
+                license_req::apache(),
+                classifiers::apache_by_name().file_path().to_owned()
+            )])
+        );
+        assert!(state.unsatisfied.is_empty());
+        assert!(state.unneeded.is_empty());
+        assert!(state.unexpected.is_empty());
+
+        let state = LicenseState::from(
+            license_terms::apache(),
+            &vec![classifiers::apache_by_name(), classifiers::bsd_fuzzy()],
+        );
+        assert_eq!(
+            state.satisfied,
+            BTreeMap::from([(
+                license_req::apache(),
+                classifiers::apache_by_name().file_path().to_owned()
+            )])
+        );
+        assert!(state.unsatisfied.is_empty());
+        assert!(state.unneeded.is_empty());
+        assert!(state.unexpected.is_empty());
+    }
+
+    #[test]
+    fn inexact_names_reported_as_unneeded_and_unexpected() {
+        let state = LicenseState::from(
+            license_terms::apache_or_bsd(),
+            &vec![classifiers::apache_by_name(), classifiers::bsd_inexact()],
         );
         assert_eq!(
             state.satisfied,
