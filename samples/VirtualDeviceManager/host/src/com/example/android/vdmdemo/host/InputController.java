@@ -136,7 +136,7 @@ final class InputController {
         }
     }
 
-    private static float clampMouseScroll(float val) {
+    static float clampMouseScroll(float val) {
         return Math.max(Math.min(val, 1f), -1f);
     }
 }

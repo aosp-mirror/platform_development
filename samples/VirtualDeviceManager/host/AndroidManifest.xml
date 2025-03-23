@@ -31,7 +31,7 @@
         android:name="android.permission.REQUEST_COMPANION_PROFILE_NEARBY_DEVICE_STREAMING"
         tools:ignore="ProtectedPermissions" />
     <uses-permission
-        android:name="android.permission.REQUEST_COMPANION_PROFILE_SENSOR_DEVICE_STREAMING"
+        android:name="android.permission.REQUEST_COMPANION_PROFILE_VIRTUAL_DEVICE"
         tools:ignore="ProtectedPermissions" />
     <uses-permission
         android:name="android.permission.ADD_ALWAYS_UNLOCKED_DISPLAY"
@@ -77,6 +77,10 @@
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
         </activity>
+        <activity
+            android:name=".DisplayActivity"
+            android:label="Virtual Display"
+            android:exported="false" />
         <activity
             android:name=".CustomLauncherActivity"
             android:exported="true"

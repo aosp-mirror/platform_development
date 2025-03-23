@@ -63,7 +63,6 @@ import androidx.annotation.IntDef;
 import com.example.android.vdmdemo.common.RemoteEventProto;
 import com.example.android.vdmdemo.common.RemoteEventProto.BrightnessEvent;
 import com.example.android.vdmdemo.common.RemoteEventProto.DeviceState;
-import com.example.android.vdmdemo.common.RemoteEventProto.DisplayCapabilities;
 import com.example.android.vdmdemo.common.RemoteEventProto.DisplayRotation;
 import com.example.android.vdmdemo.common.RemoteEventProto.RemoteEvent;
 import com.example.android.vdmdemo.common.RemoteEventProto.RemoteInputEvent;
@@ -105,6 +104,7 @@ class RemoteDisplay implements AutoCloseable {
 
     private final Context mContext;
     private final RemoteIo mRemoteIo;
+    private Surface mSurface;
     private final PreferenceController mPreferenceController;
     private final Consumer<RemoteEvent> mRemoteEventConsumer = this::processRemoteEvent;
     private final VirtualDisplay mVirtualDisplay;
@@ -133,6 +133,7 @@ class RemoteDisplay implements AutoCloseable {
         @Override
         public void onPaused() {
             Log.v(TAG, "VirtualDisplay paused");
+            if (mRemoteIo == null) return;
             mRemoteIo.sendMessage(RemoteEvent.newBuilder()
                     .setDeviceState(DeviceState.newBuilder().setPowerOn(false))
                     .build());
@@ -141,6 +142,7 @@ class RemoteDisplay implements AutoCloseable {
         @Override
         public void onResumed() {
             Log.v(TAG, "VirtualDisplay resumed");
+            if (mRemoteIo == null) return;
             mRemoteIo.sendMessage(RemoteEvent.newBuilder()
                     .setDeviceState(DeviceState.newBuilder().setPowerOn(true))
                     .build());
@@ -155,19 +157,24 @@ class RemoteDisplay implements AutoCloseable {
     @SuppressLint("WrongConstant")
     RemoteDisplay(
             Context context,
-            RemoteEvent event,
+            int displayId,
+            int width,
+            int height,
+            int dpi,
             VirtualDevice virtualDevice,
+            Surface surface,
             RemoteIo remoteIo,
             @DisplayType int displayType,
             PreferenceController preferenceController) {
         mContext = context;
+        mSurface = surface;
         mRemoteIo = remoteIo;
-        mRemoteDisplayId = event.getDisplayId();
+        mRemoteDisplayId = displayId;
         mVirtualDevice = virtualDevice;
         mDisplayType = displayType;
         mPreferenceController = preferenceController;
 
-        setCapabilities(event.getDisplayCapabilities());
+        setCapabilities(width, height, dpi);
 
         int flags = DEFAULT_VIRTUAL_DISPLAY_FLAGS;
         if (mPreferenceController.getBoolean(R.string.pref_enable_display_rotation)) {
@@ -200,7 +207,7 @@ class RemoteDisplay implements AutoCloseable {
                     .setDimBrightness(DIM_CLIENT_BRIGHTNESS)
                     .setBrightnessListener(
                             Executors.newSingleThreadExecutor(), this::onBrightnessChanged);
-        } else {
+        } else if (mRemoteIo != null) {
             mRemoteIo.sendMessage(RemoteEvent.newBuilder()
                     .setBrightnessEvent(BrightnessEvent.newBuilder().setBrightness(-1f))
                     .build());
@@ -235,13 +242,19 @@ class RemoteDisplay implements AutoCloseable {
                                 .setAssociatedDisplayId(getDisplayId())
                                 .build());
 
-        remoteIo.addMessageConsumer(mRemoteEventConsumer);
+        if (mRemoteIo != null) {
+            mRemoteIo.addMessageConsumer(mRemoteEventConsumer);
+        }
 
         reset();
     }
 
-    void reset(DisplayCapabilities capabilities) {
-        setCapabilities(capabilities);
+    void setSurface(Surface surface) {
+        mSurface = surface;
+    }
+
+    void reset(int width, int height, int dpi) {
+        setCapabilities(width, height, dpi);
         mVirtualDisplay.resize(mWidth, mHeight, mDpi);
         reset();
     }
@@ -250,10 +263,14 @@ class RemoteDisplay implements AutoCloseable {
         if (mVideoManager != null) {
             mVideoManager.stop();
         }
-        mVideoManager = VideoManager.createDisplayEncoder(mRemoteDisplayId, mRemoteIo,
-                mPreferenceController.getBoolean(R.string.pref_record_encoder_output));
-        Surface surface = mVideoManager.createInputSurface(mWidth, mHeight, DISPLAY_FPS);
-        mVirtualDisplay.setSurface(surface);
+        if (mSurface == null) {
+            mVideoManager = VideoManager.createDisplayEncoder(mRemoteDisplayId, mRemoteIo,
+                    mPreferenceController.getBoolean(R.string.pref_record_encoder_output));
+            Surface surface = mVideoManager.createInputSurface(mWidth, mHeight, DISPLAY_FPS);
+            mVirtualDisplay.setSurface(surface);
+        } else {
+            mVirtualDisplay.setSurface(mSurface);
+        }
 
         mRotation = mVirtualDisplay.getDisplay().getRotation();
 
@@ -284,13 +301,15 @@ class RemoteDisplay implements AutoCloseable {
                                 .setInputDeviceName("vdmdemo-touchscreen" + mRemoteDisplayId)
                                 .build());
 
-        mVideoManager.startEncoding();
+        if (mVideoManager != null) {
+            mVideoManager.startEncoding();
+        }
     }
 
-    private void setCapabilities(DisplayCapabilities capabilities) {
-        mWidth = capabilities.getViewportWidth();
-        mHeight = capabilities.getViewportHeight();
-        mDpi = capabilities.getDensityDpi();
+    private void setCapabilities(int width, int height, int dpi) {
+        mWidth = width;
+        mHeight = height;
+        mDpi = dpi;
 
         // Video encoder needs round dimensions...
         mHeight -= mHeight % 10;
@@ -317,6 +336,7 @@ class RemoteDisplay implements AutoCloseable {
     void onDisplayChanged() {
         if (mRotation != mVirtualDisplay.getDisplay().getRotation()) {
             mRotation = mVirtualDisplay.getDisplay().getRotation();
+            if (mRemoteIo == null) return;
             int rotationDegrees = displayRotationToDegrees(mRotation);
             Log.v(TAG, "Notify client for rotation event: " + rotationDegrees);
             mRemoteIo.sendMessage(
@@ -331,6 +351,7 @@ class RemoteDisplay implements AutoCloseable {
 
     private void onBrightnessChanged(float brightness) {
         Log.v(TAG, "VirtualDisplay brightness changed to " + brightness);
+        if (mRemoteIo == null) return;
         mRemoteIo.sendMessage(RemoteEvent.newBuilder()
                 .setBrightnessEvent(BrightnessEvent.newBuilder().setBrightness(brightness))
                 .build());
@@ -371,6 +392,15 @@ class RemoteDisplay implements AutoCloseable {
         mContext.startActivity(
                 homeIntent,
                 ActivityOptions.makeBasic().setLaunchDisplayId(targetDisplayId).toBundle());
+    }
+
+    void sendBack() {
+        for (int action : new int[]{VirtualKeyEvent.ACTION_DOWN, VirtualKeyEvent.ACTION_UP}) {
+            mDpad.sendKeyEvent(new VirtualKeyEvent.Builder()
+                    .setKeyCode(KeyEvent.KEYCODE_BACK)
+                    .setAction(action)
+                    .build());
+        }
     }
 
     private void processInputEvent(RemoteInputEvent inputEvent) {
@@ -416,6 +446,12 @@ class RemoteDisplay implements AutoCloseable {
                 break;
             case DEVICE_TYPE_ROTARY_ENCODER:
                 processRotaryEvent(motionEventToVirtualRotaryEncoderEvent((MotionEvent) event));
+                break;
+            case DEVICE_TYPE_MOUSE:
+                processVirtualMouseEvent(motionEventToVirtualMouseEvent((MotionEvent) event));
+                break;
+            case DEVICE_TYPE_TOUCHSCREEN:
+                mTouchscreen.sendTouchEvent(motionEventToVirtualTouchEvent((MotionEvent) event));
                 break;
             default:
                 Log.e(TAG, "processInputEvent got an invalid input device type: "
@@ -590,6 +626,36 @@ class RemoteDisplay implements AutoCloseable {
                 .build();
     }
 
+    private static Object motionEventToVirtualMouseEvent(MotionEvent event) {
+        switch (event.getAction()) {
+            case MotionEvent.ACTION_BUTTON_PRESS:
+            case MotionEvent.ACTION_BUTTON_RELEASE:
+                return new VirtualMouseButtonEvent.Builder()
+                        .setEventTimeNanos((long) (event.getEventTime() * 1e6))
+                        .setButtonCode(event.getActionButton())
+                        .setAction(event.getAction())
+                        .build();
+            case MotionEvent.ACTION_HOVER_ENTER:
+            case MotionEvent.ACTION_HOVER_EXIT:
+            case MotionEvent.ACTION_HOVER_MOVE:
+                return new VirtualMouseRelativeEvent.Builder()
+                        .setEventTimeNanos((long) (event.getEventTime() * 1e6))
+                        .setRelativeX(event.getX())
+                        .setRelativeY(event.getY())
+                        .build();
+            case MotionEvent.ACTION_SCROLL:
+                float scrollX = event.getAxisValue(MotionEvent.AXIS_HSCROLL);
+                float scrollY = event.getAxisValue(MotionEvent.AXIS_VSCROLL);
+                return new VirtualMouseScrollEvent.Builder()
+                        .setEventTimeNanos((long) (event.getEventTime() * 1e6))
+                        .setXAxisMovement(InputController.clampMouseScroll(scrollX))
+                        .setYAxisMovement(InputController.clampMouseScroll(scrollY))
+                        .build();
+            default:
+                return null;
+        }
+    }
+
     private static VirtualRotaryEncoderScrollEvent remoteEventToVirtualRotaryEncoderEvent(
             RemoteInputEvent event) {
         return new VirtualRotaryEncoderScrollEvent.Builder()
@@ -611,12 +677,14 @@ class RemoteDisplay implements AutoCloseable {
         if (mClosed.getAndSet(true)) { // Prevent double closure.
             return;
         }
-        mRemoteIo.sendMessage(
-                RemoteEvent.newBuilder()
-                        .setDisplayId(getRemoteDisplayId())
-                        .setStopStreaming(StopStreaming.newBuilder().setPause(false))
-                        .build());
-        mRemoteIo.removeMessageConsumer(mRemoteEventConsumer);
+        if (mRemoteIo != null) {
+            mRemoteIo.sendMessage(
+                    RemoteEvent.newBuilder()
+                            .setDisplayId(getRemoteDisplayId())
+                            .setStopStreaming(StopStreaming.newBuilder().setPause(false))
+                            .build());
+            mRemoteIo.removeMessageConsumer(mRemoteEventConsumer);
+        }
         mDpad.close();
         mTouchscreen.close();
         mKeyboard.close();

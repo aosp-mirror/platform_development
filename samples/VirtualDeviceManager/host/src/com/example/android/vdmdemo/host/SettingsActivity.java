@@ -17,14 +17,12 @@
 package com.example.android.vdmdemo.host;
 
 import android.os.Bundle;
-import android.widget.LinearLayout;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
-import androidx.core.graphics.Insets;
-import androidx.core.view.ViewCompat;
-import androidx.core.view.WindowInsetsCompat;
 import androidx.preference.PreferenceFragmentCompat;
+
+import com.example.android.vdmdemo.common.EdgeToEdgeUtils;
 
 import dagger.hilt.android.AndroidEntryPoint;
 
@@ -44,14 +42,9 @@ public class SettingsActivity extends Hilt_SettingsActivity {
         toolbar.setNavigationOnClickListener(v -> finish());
         setTitle(getTitle() + " " + getString(R.string.settings));
 
-        // Apply the insets as a margin to the toolbar.
-        ViewCompat.setOnApplyWindowInsetsListener(toolbar, (v, windowInsets) -> {
-            Insets insets = windowInsets.getInsets(WindowInsetsCompat.Type.systemBars());
-            LinearLayout.LayoutParams lp = (LinearLayout.LayoutParams) v.getLayoutParams();
-            lp.topMargin = insets.top;
-            v.setLayoutParams(lp);
-            return WindowInsetsCompat.CONSUMED;
-        });
+        EdgeToEdgeUtils.applyTopInsets(toolbar);
+        EdgeToEdgeUtils.applyBottomInsets(requireViewById(R.id.settings_fragment_container));
+
     }
 
     @AndroidEntryPoint(PreferenceFragmentCompat.class)

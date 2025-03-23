@@ -32,6 +32,9 @@
     <string name="button_back" translatable="false">Back</string>
     <string name="button_forward" translatable="false">Forward</string>
     <string name="button_home" translatable="false">Home</string>
+    <string name="button_close" translatable="false">Close</string>
+    <string name="button_power" translatable="false">Power</string>
+    <string name="button_pip" translatable="false">PiP</string>
 
     <string name="custom_activity_launch_blocked_message" translatable="false">Can\'t show %s here, try on your %s</string>
     <string name="custom_activity_launch_fallback_message" translatable="false">Launched %s on your %s</string>
@@ -57,6 +60,7 @@
     <string name="pref_enable_custom_status_bar" translatable="false">enable_custom_status_bar</string>
     <string name="pref_display_ime_policy" translatable="false">display_ime_policy</string>
     <string name="pref_enable_client_native_ime" translatable="false">enable_client_native_ime</string>
+    <string name="pref_standalone_host_demo" translatable="false">standalone_host_demo</string>
     <string name="pref_record_encoder_output" translatable="false">record_encoder_output</string>
     <string name="pref_network_channel" translatable="false">network_channel</string>
     <string name="pref_enable_update_audio_policy_mixes" translatable="false">enable_update_mixing_rules</string>
@@ -69,5 +73,5 @@
 
     <string name="app_streaming" translatable="false">android.app.role.COMPANION_DEVICE_APP_STREAMING</string>
     <string name="nearby_device_streaming" translatable="false">android.app.role.COMPANION_DEVICE_NEARBY_DEVICE_STREAMING</string>
-    <string name="sensor_device_streaming" translatable="false">android.app.role.COMPANION_DEVICE_SENSOR_DEVICE_STREAMING</string>
+    <string name="virtual_device" translatable="false">android.app.role.COMPANION_DEVICE_VIRTUAL_DEVICE</string>
 </resources>

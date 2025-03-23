@@ -21,7 +21,7 @@ package com.example.android.vdmdemo.common;
 option java_outer_classname = "RemoteEventProto";
 option java_package = "com.example.android.vdmdemo.common";
 
-// Next ID: 24
+// Next ID: 25
 message RemoteEvent {
   int32 display_id = 1;
 
@@ -48,11 +48,14 @@ message RemoteEvent {
     StartCameraStream start_camera_stream = 19;
     StopCameraStream stop_camera_stream = 20;
     CameraFrame camera_frame = 21;
+    RequestBluetoothDiscoverable request_bluetooth_discoverable = 24;
   }
 }
 
+// Next ID: 7
 message DeviceCapabilities {
   string device_name = 1;
+  string bluetooth_device_name = 6;
   repeated SensorCapabilities sensor_capabilities = 2;
   repeated CameraCapabilities camera_capabilities = 5;
   bool supports_audio_input = 3;
@@ -207,3 +210,5 @@ message DisplayChangeEvent {
 message KeyboardVisibilityEvent {
   bool visible = 1;
 }
+
+message RequestBluetoothDiscoverable {}

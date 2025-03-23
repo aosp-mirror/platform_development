@@ -167,7 +167,7 @@ impl ManagedRepo {
 
         let cio_crate = self.crates_io.get_crate(crate_name)?;
 
-        for version in cio_crate.versions() {
+        for version in cio_crate.safe_versions() {
             println!("Version {}", version.version());
             let mut found_problems = false;
             for (dep, req) in version.android_deps_with_version_reqs() {
@@ -284,7 +284,13 @@ impl ManagedRepo {
                 .success_or_error()
                 .context("Failed to generate cargo_embargo.json with 'cargo_embargo autoconfig'")?;
         } else {
-            write(krate.path().abs().join("cargo_embargo.json"), "{}")?;
+            write(
+                krate.path().abs().join("cargo_embargo.json"),
+                r#"{
+  "run_cargo": false,
+  "min_sdk_version": "29"
+}"#,
+            )?;
         }
 
         if !licenses.unsatisfied.is_empty() {
@@ -314,7 +320,10 @@ We apologize for the inconvenience."#,
             );
         } else {
             self.regenerate([&crate_name].iter(), true)?;
-            println!("Please edit {} and run 'regenerate' for this crate", managed_dir);
+            println!(
+                "Please edit {} and run 'regenerate' for this crate",
+                managed_dir.rel().join("cargo_embargo.json").display()
+            );
         }
 
         Ok(())

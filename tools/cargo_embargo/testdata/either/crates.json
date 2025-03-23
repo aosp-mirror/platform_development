@@ -10,7 +10,6 @@
       "cfgs": [],
       "externs": [],
       "codegens": [],
-      "cap_lints": "",
       "static_libs": [],
       "shared_libs": [],
       "edition": "2018",
@@ -37,7 +36,6 @@
         }
       ],
       "codegens": [],
-      "cap_lints": "",
       "static_libs": [],
       "shared_libs": [],
       "edition": "2018",

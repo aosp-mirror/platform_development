@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+    <item
+        android:id="@+id/back"
+        android:icon="@drawable/back"
+        android:title="@string/button_back"
+        app:showAsAction="always" />
+    <item
+        android:id="@+id/home"
+        android:icon="@drawable/home"
+        android:title="@string/button_home"
+        app:showAsAction="always" />
+    <item
+        android:id="@+id/pip"
+        android:icon="@drawable/pip"
+        android:title="@string/button_pip"
+        app:showAsAction="always" />
+    <item
+        android:id="@+id/power"
+        android:icon="@drawable/power"
+        android:title="@string/button_power"
+        app:showAsAction="always" />
+    <item
+        android:id="@+id/close"
+        android:icon="@drawable/close"
+        android:title="@string/button_close"
+        app:showAsAction="always" />
+</menu>

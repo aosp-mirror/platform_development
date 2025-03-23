@@ -21,17 +21,14 @@ import android.view.KeyEvent;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
-import android.widget.LinearLayout;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
-import androidx.core.graphics.Insets;
-import androidx.core.view.ViewCompat;
-import androidx.core.view.WindowInsetsCompat;
 import androidx.fragment.app.Fragment;
 import androidx.preference.PreferenceManager;
 
 import com.example.android.vdmdemo.common.DpadFragment;
+import com.example.android.vdmdemo.common.EdgeToEdgeUtils;
 import com.example.android.vdmdemo.common.NavTouchpadFragment;
 import com.example.android.vdmdemo.common.RemoteEventProto.InputDeviceType;
 import com.example.android.vdmdemo.common.RotaryFragment;
@@ -61,15 +58,7 @@ public class InputActivity extends Hilt_InputActivity {
         setSupportActionBar(toolbar);
         toolbar.setNavigationOnClickListener(v -> finish());
         setTitle(getTitle() + " " + getString(R.string.input));
-
-        // Apply the insets as a margin to the toolbar.
-        ViewCompat.setOnApplyWindowInsetsListener(toolbar, (v, windowInsets) -> {
-            Insets insets = windowInsets.getInsets(WindowInsetsCompat.Type.systemBars());
-            LinearLayout.LayoutParams lp = (LinearLayout.LayoutParams) v.getLayoutParams();
-            lp.topMargin = insets.top;
-            v.setLayoutParams(lp);
-            return WindowInsetsCompat.CONSUMED;
-        });
+        EdgeToEdgeUtils.applyTopInsets(toolbar);
 
         mOriginalShowPointerIconPreference =
                 mPreferenceController.getBoolean(R.string.pref_show_pointer_icon);
@@ -129,13 +118,7 @@ public class InputActivity extends Hilt_InputActivity {
         requireViewById(R.id.button_home).setOnClickListener(
                 v -> mInputController.sendHomeToFocusedDisplay());
 
-        ViewCompat.setOnApplyWindowInsetsListener(bottomNavigationView, (v, windowInsets) -> {
-            Insets insets = windowInsets.getInsets(WindowInsetsCompat.Type.systemBars());
-            LinearLayout.LayoutParams lp = (LinearLayout.LayoutParams) v.getLayoutParams();
-            lp.bottomMargin = insets.bottom;
-            v.setLayoutParams(lp);
-            return WindowInsetsCompat.CONSUMED;
-        });
+        EdgeToEdgeUtils.applyBottomInsets(bottomNavigationView);
     }
 
     private void setShowPointerIcon(boolean show) {

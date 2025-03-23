@@ -14,7 +14,9 @@
 
 use std::{
     collections::BTreeSet,
+    ffi::OsStr,
     path::{Path, PathBuf},
+    sync::LazyLock,
 };
 
 use glob::glob;
@@ -37,6 +39,13 @@ static LICENSE_GLOBS: &[&str] = &[
 
 pub(crate) fn find_license_files(path: impl AsRef<Path>) -> Result<BTreeSet<PathBuf>, Error> {
     multiglob(path, LICENSE_GLOBS.iter())
+}
+
+static LICENSE_PATTERNS: LazyLock<Vec<glob::Pattern>> =
+    LazyLock::new(|| LICENSE_GLOBS.iter().map(|p| glob::Pattern::new(p).unwrap()).collect());
+
+pub(crate) fn is_findable(license_file: &OsStr) -> bool {
+    LICENSE_PATTERNS.iter().any(|p| p.matches_path(Path::new(license_file)))
 }
 
 fn multiglob<T: AsRef<str>>(

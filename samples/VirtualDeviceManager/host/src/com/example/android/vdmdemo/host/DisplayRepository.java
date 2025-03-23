@@ -58,7 +58,10 @@ final class DisplayRepository {
 
     boolean resetDisplay(RemoteEvent event) {
         Optional<RemoteDisplay> display = getDisplayByRemoteId(event.getDisplayId());
-        display.ifPresent(d -> d.reset(event.getDisplayCapabilities()));
+        display.ifPresent(d -> d.reset(
+                event.getDisplayCapabilities().getViewportWidth(),
+                event.getDisplayCapabilities().getViewportHeight(),
+                event.getDisplayCapabilities().getDensityDpi()));
         return display.isPresent();
     }
 

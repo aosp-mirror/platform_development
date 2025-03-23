@@ -72,6 +72,9 @@ public class VdmCompat {
         if (!preferenceController.getBoolean(R.string.internal_pref_mirror_displays_supported)) {
             return false;
         }
+        if (preferenceController.getBoolean(R.string.pref_standalone_host_demo)) {
+            return false;
+        }
         if (isAtLeastB() && Flags.enableLimitedVdmRole()) {
             return context.checkCallingOrSelfPermission(ADD_MIRROR_DISPLAY)
                     == PackageManager.PERMISSION_GRANTED;

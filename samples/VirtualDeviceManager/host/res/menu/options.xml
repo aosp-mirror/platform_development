@@ -6,11 +6,11 @@
         android:id="@+id/input"
         android:icon="@drawable/input"
         android:title="@string/input"
-        app:showAsAction="ifRoom" />
+        app:showAsAction="always" />
     <item
         android:id="@+id/settings"
         android:icon="@drawable/settings"
         android:title="@string/settings"
-        app:showAsAction="ifRoom" />
+        app:showAsAction="always" />
 </menu>
 <!-- LINT.ThenChange(/samples/VirtualDeviceManager/README.md:host_options) -->
