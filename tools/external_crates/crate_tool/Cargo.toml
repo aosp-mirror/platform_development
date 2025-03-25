@@ -7,7 +7,7 @@ edition = "2021"
 
 [dependencies]
 anyhow = "1"
-cargo = "0.76"
+cargo_metadata = "0.19"
 cfg-expr = "0.17"
 chrono = "0.4"
 clap = { version = "4.4.6", features = ["derive"] }
