@@ -80,6 +80,7 @@
         <activity
             android:name=".DisplayActivity"
             android:label="Virtual Display"
+            android:supportsPictureInPicture="true"
             android:exported="false" />
         <activity
             android:name=".CustomLauncherActivity"

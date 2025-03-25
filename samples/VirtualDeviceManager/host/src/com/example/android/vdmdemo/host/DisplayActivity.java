@@ -16,15 +16,23 @@
 
 package com.example.android.vdmdemo.host;
 
+import android.app.PictureInPictureParams;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
+import android.graphics.Bitmap;
+import android.graphics.Canvas;
+import android.graphics.PixelFormat;
+import android.graphics.Rect;
 import android.graphics.SurfaceTexture;
 import android.hardware.display.DisplayManager;
+import android.media.Image;
+import android.media.ImageReader;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.util.Log;
+import android.util.Rational;
 import android.view.Display;
 import android.view.InputDevice;
 import android.view.KeyEvent;
@@ -33,8 +41,10 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.Surface;
 import android.view.TextureView;
+import android.view.View;
 
 import androidx.activity.OnBackPressedCallback;
+import androidx.annotation.GuardedBy;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
@@ -43,6 +53,8 @@ import com.example.android.vdmdemo.common.EdgeToEdgeUtils;
 import com.example.android.vdmdemo.common.RemoteEventProto;
 
 import dagger.hilt.android.AndroidEntryPoint;
+
+import java.nio.ByteBuffer;
 
 import javax.inject.Inject;
 
@@ -59,7 +71,12 @@ public class DisplayActivity extends Hilt_DisplayActivity
     // https://developer.android.com/reference/android/util/DisplayMetrics#density
     private static final float DIP_TO_DPI = 160f;
 
+    /** @see android.app.PictureInPictureParams.Builder#setAspectRatio(android.util.Rational) */
+    private static final Rational MAX_PIP_RATIO = new Rational(239, 100);
+    private static final Rational MIN_PIP_RATIO = new Rational(100, 239);
+
     static final String EXTRA_DISPLAY_ID = "displayId";
+
 
     @Inject
     InputController mInputController;
@@ -68,6 +85,9 @@ public class DisplayActivity extends Hilt_DisplayActivity
 
     private VdmService mVdmService = null;
     private int mDisplayId;
+
+    private final Object mLock = new Object();
+    @GuardedBy("mLock")
     private Surface mSurface;
     private int mSurfaceWidth;
     private int mSurfaceHeight;
@@ -75,13 +95,40 @@ public class DisplayActivity extends Hilt_DisplayActivity
 
     private RemoteDisplay mDisplay;
     private boolean mPoweredOn = true;
+    private ImageReader mImageReader;
 
     private final ServiceConnection mServiceConnection = new ServiceConnection() {
         @Override
         public void onServiceConnected(ComponentName className, IBinder binder) {
-            Log.d(TAG, "Connected to VDM Service");
-            mVdmService = ((VdmService.LocalBinder) binder).getService();
-            createDisplay();
+            synchronized (mLock) {
+                Log.d(TAG, "Connected to VDM Service");
+                mVdmService = ((VdmService.LocalBinder) binder).getService();
+                mDisplay = mVdmService.getRemoteDisplay(mDisplayId).orElseGet(() ->
+                        mVdmService.createRemoteDisplay(
+                                DisplayActivity.this, mDisplayId, 200, 200, mDpi, null));
+            }
+            if (isInPictureInPictureMode()) {
+                Log.v(TAG, "Initializing copy from display " + mDisplayId + " to PIP window");
+                mImageReader = ImageReader.newInstance(
+                        mDisplay.getWidth(), mDisplay.getHeight(), PixelFormat.RGBA_8888, 2);
+                mDisplay.setSurface(mImageReader.getSurface());
+                mImageReader.setOnImageAvailableListener((reader) -> {
+                    Image image = reader.acquireLatestImage();
+                    synchronized (mLock) {
+                        if (image != null && mSurface != null) {
+                            copyImageToSurfaceLocked(image);
+                            image.close();
+                        }
+                    }
+                }, null);
+            } else {
+                synchronized (mLock) {
+                    if (mSurface != null) {
+                        resetDisplayLocked();
+                        setPictureInPictureParams(buildPictureInPictureParams());
+                    }
+                }
+            }
         }
 
         @Override
@@ -101,13 +148,16 @@ public class DisplayActivity extends Hilt_DisplayActivity
         mDpi = (int) (getResources().getDisplayMetrics().density * DIP_TO_DPI);
 
         setContentView(R.layout.activity_display);
-        Toolbar toolbar = requireViewById(R.id.main_tool_bar);
-        setSupportActionBar(toolbar);
-        setTitle(getTitle() + " " + mDisplayId);
-        EdgeToEdgeUtils.applyTopInsets(toolbar);
-
         TextureView textureView = requireViewById(R.id.display_surface_view);
-        EdgeToEdgeUtils.applyBottomInsets(textureView);
+        Toolbar toolbar = requireViewById(R.id.main_tool_bar);
+        if (isInPictureInPictureMode()) {
+            toolbar.setVisibility(View.GONE);
+        } else {
+            setSupportActionBar(toolbar);
+            setTitle(getTitle() + " " + mDisplayId);
+            EdgeToEdgeUtils.applyTopInsets(toolbar);
+            EdgeToEdgeUtils.applyBottomInsets(textureView);
+        }
 
         textureView.setSurfaceTextureListener(new TextureView.SurfaceTextureListener() {
             @Override
@@ -116,11 +166,15 @@ public class DisplayActivity extends Hilt_DisplayActivity
             @Override
             public void onSurfaceTextureAvailable(
                     @NonNull SurfaceTexture texture, int width, int height) {
-                Log.v(TAG, "Setting surface for local display " + mDisplayId);
-                mSurface = new Surface(texture);
-                mSurfaceWidth = width;
-                mSurfaceHeight = height;
-                createDisplay();
+                synchronized (mLock) {
+                    Log.d(TAG, "onSurfaceTextureAvailable for local display " + mDisplayId);
+                    mSurfaceWidth = width;
+                    mSurfaceHeight = height;
+                    mSurface = new Surface(texture);
+                    if (!isInPictureInPictureMode() && mDisplay != null) {
+                        resetDisplayLocked();
+                    }
+                }
             }
 
             @Override
@@ -134,8 +188,12 @@ public class DisplayActivity extends Hilt_DisplayActivity
             public void onSurfaceTextureSizeChanged(
                     @NonNull SurfaceTexture texture, int width, int height) {
                 Log.v(TAG, "onSurfaceTextureSizeChanged for local display " + mDisplayId);
-                if (mDisplay != null) {
-                    mDisplay.reset(width, height, mDpi);
+                synchronized (mLock) {
+                    mSurfaceWidth = width;
+                    mSurfaceHeight = height;
+                    if (!isInPictureInPictureMode() && mDisplay != null) {
+                        resetDisplayLocked();
+                    }
                 }
             }
         });
@@ -193,6 +251,10 @@ public class DisplayActivity extends Hilt_DisplayActivity
     protected void onDestroy() {
         super.onDestroy();
         mDisplayManager.unregisterDisplayListener(this);
+        if (mImageReader != null) {
+            mImageReader.close();
+            mImageReader = null;
+        }
     }
 
     @Override
@@ -209,10 +271,9 @@ public class DisplayActivity extends Hilt_DisplayActivity
                 if (mVdmService != null) {
                     mVdmService.closeRemoteDisplay(mDisplayId);
                 }
-                finish();
                 return true;
             case R.id.pip:
-                // TODO(b/404803361): enter PiP
+                enterPictureInPictureMode(buildPictureInPictureParams());
                 return true;
             case R.id.power:
                 if (mDisplay != null) {
@@ -241,13 +302,64 @@ public class DisplayActivity extends Hilt_DisplayActivity
         return true;
     }
 
-    private synchronized void createDisplay() {
-        if (mVdmService == null || mSurface == null || mDisplay != null) {
-            return;
+    private PictureInPictureParams buildPictureInPictureParams() {
+        Rational ratio = new Rational(mDisplay.getWidth(), mDisplay.getHeight());
+        if (ratio.compareTo(MAX_PIP_RATIO) > 0) {
+            ratio = MAX_PIP_RATIO;
+        } else if (ratio.compareTo(MIN_PIP_RATIO) < 0) {
+            ratio = MIN_PIP_RATIO;
         }
+        Rect rect = new Rect();
+        View textureView = requireViewById(R.id.display_surface_view);
+        textureView.getGlobalVisibleRect(rect);
+        return new PictureInPictureParams.Builder()
+                .setAutoEnterEnabled(true)
+                .setAspectRatio(ratio)
+                .setExpandedAspectRatio(ratio)
+                .setSourceRectHint(rect)
+                .setSeamlessResizeEnabled(false)
+                .build();
+    }
 
-        mDisplay = mVdmService.createRemoteDisplay(
-                this, mDisplayId, mSurfaceWidth, mSurfaceHeight, mDpi, mSurface, null);
+    @GuardedBy("mLock")
+    private void resetDisplayLocked() {
+        if (mDisplay.getWidth() != mSurfaceWidth || mDisplay.getHeight() != mSurfaceHeight) {
+            Log.v(TAG, "Resizing display " + mDisplayId + " to " + mSurfaceWidth
+                    + "/" + mSurfaceHeight);
+            mDisplay.reset(mSurfaceWidth, mSurfaceHeight, mDpi);
+        }
+        mDisplay.setSurface(mSurface);
+    }
+
+    @GuardedBy("mLock")
+    private void copyImageToSurfaceLocked(Image image) {
+        ByteBuffer buffer = image.getPlanes()[0].getBuffer();
+        int pixelStride = image.getPlanes()[0].getPixelStride();
+        int rowStride = image.getPlanes()[0].getRowStride();
+        int pixelBytesPerRow = pixelStride * image.getWidth();
+        int rowPadding = rowStride - pixelBytesPerRow;
+
+        // Remove the row padding bytes from the buffer before converting to a Bitmap
+        ByteBuffer trimmedBuffer = ByteBuffer.allocate(buffer.remaining());
+        buffer.rewind();
+        while (buffer.hasRemaining()) {
+            for (int i = 0; i < pixelBytesPerRow; ++i) {
+                trimmedBuffer.put(buffer.get());
+            }
+            buffer.position(buffer.position() + rowPadding); // Skip the padding bytes
+        }
+        trimmedBuffer.flip(); // Prepare the trimmed buffer for reading
+
+        Canvas canvas = mSurface.lockCanvas(null);
+        Bitmap bitmap =
+                Bitmap.createBitmap(image.getWidth(), image.getHeight(), Bitmap.Config.ARGB_8888);
+        bitmap.copyPixelsFromBuffer(trimmedBuffer);
+        Bitmap scaled = Bitmap.createScaledBitmap(bitmap, mSurfaceWidth, mSurfaceHeight, false);
+        // Draw the Bitmap onto the Canvas
+        canvas.drawBitmap(scaled, 0f, 0f, null);
+
+        bitmap.recycle();
+        mSurface.unlockCanvasAndPost(canvas);
     }
 
     @Override
@@ -256,7 +368,7 @@ public class DisplayActivity extends Hilt_DisplayActivity
     @Override
     public void onDisplayRemoved(int displayId) {
         if (mDisplay != null && displayId == mDisplay.getDisplayId()) {
-            finish();
+            finishAndRemoveTask();
         }
     }
 

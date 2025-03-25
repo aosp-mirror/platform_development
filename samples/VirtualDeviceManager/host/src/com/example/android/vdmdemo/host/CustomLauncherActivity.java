@@ -19,9 +19,13 @@ package com.example.android.vdmdemo.host;
 import android.app.WallpaperManager;
 import android.content.Intent;
 import android.os.Bundle;
+import android.widget.FrameLayout;
 import android.widget.GridView;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.graphics.Insets;
+import androidx.core.view.ViewCompat;
+import androidx.core.view.WindowInsetsCompat;
 
 import dagger.hilt.android.AndroidEntryPoint;
 
@@ -49,6 +53,15 @@ public class CustomLauncherActivity extends Hilt_CustomLauncherActivity {
                         startActivity(intent);
                     }
                 });
+
+        ViewCompat.setOnApplyWindowInsetsListener(launcher, (v, windowInsets) -> {
+            Insets insets = windowInsets.getInsets(WindowInsetsCompat.Type.systemBars());
+            FrameLayout.LayoutParams lp = (FrameLayout.LayoutParams) v.getLayoutParams();
+            lp.topMargin = insets.top;
+            lp.bottomMargin = insets.bottom;
+            v.setLayoutParams(lp);
+            return WindowInsetsCompat.CONSUMED;
+        });
     }
 
     @Override

@@ -117,6 +117,24 @@ describe('TreeNodeComponent', () => {
     expect(spy).toHaveBeenCalled();
   });
 
+  it('can trigger tree expansion if node is selected and not in pinned section', () => {
+    const spy = spyOn(
+      assertDefined(component.treeNodeComponent).expandTreeChange,
+      'emit',
+    );
+    component.isInPinnedSection = true;
+    component.isSelected = true;
+    fixture.detectChanges();
+    expect(spy).not.toHaveBeenCalled();
+
+    component.isSelected = false;
+    component.isInPinnedSection = false;
+    fixture.detectChanges();
+    component.isSelected = true;
+    fixture.detectChanges();
+    expect(spy).toHaveBeenCalledTimes(1);
+  });
+
   it('assigns diff css classes to expand tree button', () => {
     const expandButton = assertDefined(
       htmlElement.querySelector<HTMLElement>('.expand-tree-btn'),
@@ -221,7 +239,7 @@ describe('TreeNodeComponent', () => {
         [node]="node"
         [isExpanded]="isExpanded"
         [isPinned]="false"
-        [isInPinnedSection]="false"
+        [isInPinnedSection]="isInPinnedSection"
         [isSelected]="isSelected"
         [isLeaf]="isLeaf"></tree-node>
     `,
@@ -238,6 +256,7 @@ describe('TreeNodeComponent', () => {
     isSelected = false;
     isLeaf = false;
     isExpanded = false;
+    isInPinnedSection = false;
 
     @ViewChild(TreeNodeComponent)
     treeNodeComponent: TreeNodeComponent | undefined;

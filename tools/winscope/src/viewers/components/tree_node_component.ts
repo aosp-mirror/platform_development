@@ -106,7 +106,7 @@ export class TreeNodeComponent {
 
   @Output() readonly toggleTreeChange = new EventEmitter<void>();
   @Output() readonly rectShowStateChange = new EventEmitter<void>();
-  @Output() readonly expandTreeChange = new EventEmitter<boolean>();
+  @Output() readonly expandTreeChange = new EventEmitter<void>();
   @Output() readonly pinNodeChange = new EventEmitter<UiHierarchyTreeNode>();
 
   collapseDiffClass = '';
@@ -123,8 +123,11 @@ export class TreeNodeComponent {
   }
 
   ngOnChanges() {
+    if (!this.isInPinnedSection && this.isSelected) {
+      this.expandTreeChange.emit();
+    }
     this.collapseDiffClass = this.updateCollapseDiffClass();
-    if (!this.isPinned && this.isSelected && !this.isNodeInView()) {
+    if (!this.isInPinnedSection && this.isSelected && !this.isNodeInView()) {
       this.el.scrollIntoView({block: 'center', inline: 'nearest'});
     }
   }
@@ -184,7 +187,7 @@ export class TreeNodeComponent {
     this.pinNodeChange.emit(assertDefined(this.node) as UiHierarchyTreeNode);
   }
 
-  updateCollapseDiffClass() {
+  updateCollapseDiffClass(): string {
     if (this.isExpanded) {
       return '';
     }
@@ -199,7 +202,7 @@ export class TreeNodeComponent {
       return '';
     }
     if (childrenDiffClasses.size === 1) {
-      const diffType = childrenDiffClasses.values().next().value;
+      const diffType = assertDefined(childrenDiffClasses.values().next().value);
       return diffType;
     }
     return DiffType.MODIFIED;

@@ -104,7 +104,6 @@ class RemoteDisplay implements AutoCloseable {
 
     private final Context mContext;
     private final RemoteIo mRemoteIo;
-    private Surface mSurface;
     private final PreferenceController mPreferenceController;
     private final Consumer<RemoteEvent> mRemoteEventConsumer = this::processRemoteEvent;
     private final VirtualDisplay mVirtualDisplay;
@@ -162,12 +161,10 @@ class RemoteDisplay implements AutoCloseable {
             int height,
             int dpi,
             VirtualDevice virtualDevice,
-            Surface surface,
             RemoteIo remoteIo,
             @DisplayType int displayType,
             PreferenceController preferenceController) {
         mContext = context;
-        mSurface = surface;
         mRemoteIo = remoteIo;
         mRemoteDisplayId = displayId;
         mVirtualDevice = virtualDevice;
@@ -250,7 +247,7 @@ class RemoteDisplay implements AutoCloseable {
     }
 
     void setSurface(Surface surface) {
-        mSurface = surface;
+        mVirtualDisplay.setSurface(surface);
     }
 
     void reset(int width, int height, int dpi) {
@@ -263,13 +260,11 @@ class RemoteDisplay implements AutoCloseable {
         if (mVideoManager != null) {
             mVideoManager.stop();
         }
-        if (mSurface == null) {
+        if (mRemoteIo != null) {
             mVideoManager = VideoManager.createDisplayEncoder(mRemoteDisplayId, mRemoteIo,
                     mPreferenceController.getBoolean(R.string.pref_record_encoder_output));
             Surface surface = mVideoManager.createInputSurface(mWidth, mHeight, DISPLAY_FPS);
             mVirtualDisplay.setSurface(surface);
-        } else {
-            mVirtualDisplay.setSurface(mSurface);
         }
 
         mRotation = mVirtualDisplay.getDisplay().getRotation();
@@ -311,9 +306,11 @@ class RemoteDisplay implements AutoCloseable {
         mHeight = height;
         mDpi = dpi;
 
-        // Video encoder needs round dimensions...
-        mHeight -= mHeight % 10;
-        mWidth -= mWidth % 10;
+        if (mRemoteIo != null) {
+            // Video encoder needs round dimensions...
+            mHeight -= mHeight % 10;
+            mWidth -= mWidth % 10;
+        }
     }
 
     void launchIntent(Intent intent) {
@@ -331,6 +328,14 @@ class RemoteDisplay implements AutoCloseable {
 
     PointF getDisplaySize() {
         return new PointF(mWidth, mHeight);
+    }
+
+    int getWidth() {
+        return mWidth;
+    }
+
+    int getHeight() {
+        return mHeight;
     }
 
     void onDisplayChanged() {

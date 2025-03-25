@@ -15,6 +15,7 @@
  */
 import {
   ChangeDetectionStrategy,
+  ChangeDetectorRef,
   Component,
   ElementRef,
   EventEmitter,
@@ -88,7 +89,8 @@ import {
         (highlightedChange)="propagateNewHighlightedItem($event)"
         (pinnedItemChange)="propagateNewPinnedItem($event)"
         (hoverStart)="childHover = true"
-        (hoverEnd)="childHover = false"></tree-view>
+        (hoverEnd)="childHover = false"
+        (expandParent)="expandTree()"></tree-view>
     </div>
   `,
   styles: [nodeStyles, treeNodeDataViewStyles, nodeInnerItemStyles],
@@ -116,12 +118,13 @@ export class TreeComponent {
   @Output() readonly pinnedItemChange = new EventEmitter<UiHierarchyTreeNode>();
   @Output() readonly hoverStart = new EventEmitter<void>();
   @Output() readonly hoverEnd = new EventEmitter<void>();
+  @Output() readonly expandParent = new EventEmitter<void>();
 
-  localExpandedState = true;
   childHover = false;
   readonly levelOffset = 24;
   nodeElement: HTMLElement;
 
+  private localExpandedState = true;
   private storeKeyCollapsedState = '';
 
   childTrackById(
@@ -131,7 +134,10 @@ export class TreeComponent {
     return child.id;
   }
 
-  constructor(@Inject(ElementRef) public elementRef: ElementRef) {
+  constructor(
+    @Inject(ElementRef) public elementRef: ElementRef,
+    @Inject(ChangeDetectorRef) private changeDetectorRef: ChangeDetectorRef,
+  ) {
     this.nodeElement = elementRef.nativeElement.querySelector('.node');
     this.nodeElement?.addEventListener(
       'mousedown',
@@ -237,6 +243,8 @@ export class TreeComponent {
 
   expandTree() {
     this.setExpandedValue(true);
+    this.changeDetectorRef.detectChanges();
+    this.expandParent.emit();
   }
 
   isExpanded() {

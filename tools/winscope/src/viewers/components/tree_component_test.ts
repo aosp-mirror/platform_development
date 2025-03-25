@@ -15,7 +15,7 @@
  */
 
 import {Clipboard, ClipboardModule} from '@angular/cdk/clipboard';
-import {Component, CUSTOM_ELEMENTS_SCHEMA, ViewChild} from '@angular/core';
+import {Component, ViewChild} from '@angular/core';
 import {ComponentFixture, TestBed} from '@angular/core/testing';
 import {MatIconModule} from '@angular/material/icon';
 import {MatTooltipModule} from '@angular/material/tooltip';
@@ -49,7 +49,6 @@ describe('TreeComponent', () => {
         PropertyTreeNodeDataViewComponent,
       ],
       imports: [MatTooltipModule, MatIconModule, ClipboardModule],
-      schemas: [CUSTOM_ELEMENTS_SCHEMA],
     }).compileComponents();
     fixture = TestBed.createComponent(TestHostComponent);
     component = fixture.componentInstance;
@@ -63,17 +62,18 @@ describe('TreeComponent', () => {
 
   it('shows node', () => {
     fixture.detectChanges();
-    const treeNode = htmlElement.querySelector('tree-node');
-    expect(treeNode).toBeTruthy();
+    expect(htmlElement.querySelector('tree-node')).toBeTruthy();
   });
 
   it('can identify if a parent node has a selected child', () => {
     fixture.detectChanges();
-    const treeComponent = assertDefined(component.treeComponent);
-    expect(treeComponent.hasSelectedChild()).toBeFalse();
+    const treeNode = assertDefined(
+      htmlElement.querySelector<HTMLElement>('tree-node'),
+    );
+    expect(treeNode.className.includes('child-selected')).toBeFalse();
     component.highlightedItem = '3 Child3';
     fixture.detectChanges();
-    expect(treeComponent.hasSelectedChild()).toBeTrue();
+    expect(treeNode.className.includes('child-selected')).toBeTrue();
   });
 
   it('highlights node and inner node upon click', () => {
@@ -97,29 +97,23 @@ describe('TreeComponent', () => {
 
   it('toggles tree upon node double click', () => {
     fixture.detectChanges();
-    const treeComponent = assertDefined(component.treeComponent);
-    const treeNode = assertDefined(
-      htmlElement.querySelector<HTMLElement>('tree-node'),
+    const toggleButton = assertDefined(
+      htmlElement.querySelector('.toggle-tree-btn'),
     );
-    const currLocalExpandedState = treeComponent.localExpandedState;
-    treeNode.dispatchEvent(new MouseEvent('click', {detail: 2}));
-    fixture.detectChanges();
-    expect(!currLocalExpandedState).toEqual(treeComponent.localExpandedState);
+    expect(toggleButton.textContent?.trim()).toEqual('arrow_drop_down');
+    checkIsExpanded(true);
+
+    doubleClickFirstNode();
+    expect(toggleButton.textContent?.trim()).toEqual('chevron_right');
+    checkIsExpanded(false);
   });
 
   it('does not toggle tree in flat mode on double click', () => {
     fixture.detectChanges();
-    const treeComponent = assertDefined(component.treeComponent);
     component.isFlattened = true;
     fixture.detectChanges();
-    const treeNode = assertDefined(
-      htmlElement.querySelector<HTMLElement>('tree-node'),
-    );
-
-    const currLocalExpandedState = treeComponent.localExpandedState;
-    treeNode.dispatchEvent(new MouseEvent('click', {detail: 2}));
-    fixture.detectChanges();
-    expect(currLocalExpandedState).toEqual(treeComponent.localExpandedState);
+    doubleClickFirstNode();
+    checkIsExpanded(true);
   });
 
   it('pins node on click', () => {
@@ -138,66 +132,73 @@ describe('TreeComponent', () => {
 
   it('expands tree on expand tree button click', () => {
     fixture.detectChanges();
-    const treeNode = assertDefined(
-      htmlElement.querySelector<HTMLElement>('tree-node'),
-    );
-    treeNode.dispatchEvent(new MouseEvent('click', {detail: 2}));
-    fixture.detectChanges();
-    expect(component.treeComponent?.localExpandedState).toEqual(false);
+    doubleClickFirstNode();
+    checkIsExpanded(false);
+
     assertDefined(
       htmlElement.querySelector<HTMLElement>('.expand-tree-btn'),
     ).click();
     fixture.detectChanges();
-    expect(component.treeComponent?.localExpandedState).toEqual(true);
+    checkIsExpanded(true);
+  });
+
+  it('expands tree recursively on node selection', () => {
+    fixture.detectChanges();
+    doubleClickFirstNode();
+    checkIsExpanded(false);
+    component.highlightedItem = '79 Child79';
+    fixture.detectChanges();
+    checkIsExpanded(true);
   });
 
   it('scrolls selected node only if not in view', () => {
     fixture.detectChanges();
-    const treeComponent = assertDefined(component.treeComponent);
-    const treeNode = assertDefined(
-      treeComponent.elementRef.nativeElement.querySelector(`#nodeChild79`),
-    );
+    checkNodeScrolling();
+  });
 
-    component.highlightedItem = 'Root node';
+  it('scrolls selected node if not in view even if pinned', () => {
+    component.pinnedItems = [
+      assertDefined(component.tree.getChildByName('Child78')),
+      assertDefined(component.tree.getChildByName('Child79')),
+    ];
     fixture.detectChanges();
-
-    const spy = spyOn(treeNode, 'scrollIntoView').and.callThrough();
-    component.highlightedItem = '79 Child79';
-    fixture.detectChanges();
-    expect(spy).toHaveBeenCalledTimes(1);
-
-    component.highlightedItem = '78 Child78';
-    fixture.detectChanges();
-    expect(spy).toHaveBeenCalledTimes(1);
+    checkNodeScrolling();
   });
 
   it('sets initial expanded state to true by default for leaf', () => {
     fixture.detectChanges();
-    expect(assertDefined(component.treeComponent).isExpanded()).toBeTrue();
+    checkIsExpanded(true);
   });
 
   it('sets initial expanded state to true by default for non root', () => {
-    component.tree = component.tree.getAllChildren()[0];
+    const child = component.tree.getAllChildren()[0] as UiHierarchyTreeNode;
+    const innerChild = UiHierarchyTreeNode.from(
+      new HierarchyTreeBuilder()
+        .setId('InnerChild')
+        .setName('child')
+        .setChildren([])
+        .build(),
+    );
+    child.addOrReplaceChild(innerChild);
+    component.tree = child;
     fixture.detectChanges();
-    expect(assertDefined(component.treeComponent).isExpanded()).toBeTrue();
+    checkIsExpanded(true);
   });
 
   it('sets initial expanded state to false if collapse state exists in store', () => {
     component.useStoredExpandedState = true;
     fixture.detectChanges();
-    const treeComponent = assertDefined(component.treeComponent);
     // tree expanded by default
-    expect(treeComponent.isExpanded()).toBeTrue();
+    checkIsExpanded(true);
 
     // tree collapsed
-    treeComponent.toggleTree();
-    fixture.detectChanges();
-    expect(treeComponent.isExpanded()).toBeFalse();
+    doubleClickFirstNode();
+    checkIsExpanded(false);
 
     // tree collapsed state retained
     component.tree = makeTree();
     fixture.detectChanges();
-    expect(treeComponent.isExpanded()).toBeFalse();
+    checkIsExpanded(false);
   });
 
   it('renders show state button if applicable', () => {
@@ -313,6 +314,35 @@ describe('TreeComponent', () => {
     );
   }
 
+  function doubleClickFirstNode() {
+    assertDefined(
+      htmlElement.querySelector<HTMLElement>('tree-node'),
+    ).dispatchEvent(new MouseEvent('click', {detail: 2}));
+    fixture.detectChanges();
+  }
+
+  function checkIsExpanded(isExpanded: boolean) {
+    expect(htmlElement.querySelector<HTMLElement>('.children')?.hidden).toEqual(
+      !isExpanded,
+    );
+  }
+
+  function checkNodeScrolling() {
+    const treeNode = assertDefined(htmlElement.querySelector(`#nodeChild79`));
+    const spy = spyOn(treeNode, 'scrollIntoView').and.callThrough();
+
+    component.highlightedItem = 'Root node';
+    fixture.detectChanges();
+
+    component.highlightedItem = '79 Child79';
+    fixture.detectChanges();
+    expect(spy).toHaveBeenCalledTimes(1);
+
+    component.highlightedItem = '78 Child78';
+    fixture.detectChanges();
+    expect(spy).toHaveBeenCalledTimes(1);
+  }
+
   @Component({
     selector: 'host-component',
     template: `
@@ -320,7 +350,7 @@ describe('TreeComponent', () => {
       <tree-view
         [node]="tree"
         [isFlattened]="isFlattened"
-        [isPinned]="false"
+        [pinnedItems]="pinnedItems"
         [highlightedItem]="highlightedItem"
         [useStoredExpandedState]="useStoredExpandedState"
         [itemsClickable]="true"
@@ -342,6 +372,7 @@ describe('TreeComponent', () => {
     isFlattened = false;
     useStoredExpandedState = false;
     rectIdToShowState: Map<string, RectShowState> | undefined;
+    pinnedItems: Array<UiHierarchyTreeNode | UiPropertyTreeNode> = [];
 
     constructor() {
       this.tree = makeTree();
