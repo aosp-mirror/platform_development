@@ -26,32 +26,32 @@ mod name_classification {
         );
         assert_eq!(
             LICENSE_DATA.classify_file_name(Path::new("UNLICENSE")),
-            Some(&Licensee::parse("Unlicense").unwrap()),
+            Some(&Licensee::parse("Unlicense").unwrap().into_req()),
             "Unlicense"
         );
         assert_eq!(
             LICENSE_DATA.classify_file_name(Path::new("LICENSE-MIT")),
-            Some(&Licensee::parse("MIT").unwrap()),
+            Some(&Licensee::parse("MIT").unwrap().into_req()),
             "Standard name"
         );
         assert_eq!(
             LICENSE_DATA.classify_file_name(Path::new("LICENSE-APACHE")),
-            Some(&Licensee::parse("Apache-2.0").unwrap()),
+            Some(&Licensee::parse("Apache-2.0").unwrap().into_req()),
             "Standard name"
         );
         assert_eq!(
             LICENSE_DATA.classify_file_name(Path::new("LICENSE-apache")),
-            Some(&Licensee::parse("Apache-2.0").unwrap()),
+            Some(&Licensee::parse("Apache-2.0").unwrap().into_req()),
             "Case-insensitive"
         );
         assert_eq!(
             LICENSE_DATA.classify_file_name(Path::new("LICENSE-APACHE.md")),
-            Some(&Licensee::parse("Apache-2.0").unwrap()),
+            Some(&Licensee::parse("Apache-2.0").unwrap().into_req()),
             ".md extension ignored"
         );
         assert_eq!(
             LICENSE_DATA.classify_file_name(Path::new("LICENSE-0BSD.txt")),
-            Some(&Licensee::parse("0BSD").unwrap()),
+            Some(&Licensee::parse("0BSD").unwrap().into_req()),
             ".txt extension ignored"
         );
         assert!(
@@ -60,12 +60,12 @@ mod name_classification {
         );
         assert_eq!(
             LICENSE_DATA.classify_file_name(Path::new("LICENSES/MIT")),
-            Some(&Licensee::parse("MIT").unwrap()),
+            Some(&Licensee::parse("MIT").unwrap().into_req()),
             "Subdirectory"
         );
         assert_eq!(
             LICENSE_DATA.classify_file_name(Path::new("LICENSES/Apache-2.0")),
-            Some(&Licensee::parse("Apache-2.0").unwrap()),
+            Some(&Licensee::parse("Apache-2.0").unwrap().into_req()),
             "Subdirectory"
         );
     }
@@ -85,7 +85,7 @@ mod content_classification {
         assert_eq!(
             LICENSE_DATA
                 .classify_file_contents(include_str!("testdata/LICENSE-MIT-aarch64-paging.txt")),
-            BTreeSet::from([Licensee::parse("MIT").unwrap()])
+            BTreeSet::from([Licensee::parse("MIT").unwrap().into_req()])
         );
     }
 
@@ -97,7 +97,7 @@ mod content_classification {
         assert_eq!(
             LICENSE_DATA
                 .classify_file_contents_fuzzy(include_str!("testdata/BSD-3-Clause-bindgen.txt")),
-            Some(Licensee::parse("BSD-3-Clause").unwrap())
+            Some(Licensee::parse("BSD-3-Clause").unwrap().into_req())
         );
     }
 
@@ -113,8 +113,8 @@ mod content_classification {
                 .as_str()
             ),
             BTreeSet::from([
-                Licensee::parse("MIT").unwrap(),
-                Licensee::parse("Apache-2.0").unwrap()
+                Licensee::parse("MIT").unwrap().into_req(),
+                Licensee::parse("Apache-2.0").unwrap().into_req()
             ])
         );
     }
