@@ -15,6 +15,7 @@
  */
 import {Component, EventEmitter, Input, Output} from '@angular/core';
 import {MatSelect, MatSelectChange} from '@angular/material/select';
+import {KeyboardEventCode} from 'common/dom_utils';
 
 @Component({
   selector: 'select-with-filter',
@@ -27,7 +28,7 @@ import {MatSelect, MatSelectChange} from '@angular/material/select';
       [class.mat-body-2]="!select.value || select.value.length === 0">
       <mat-label>{{ label }}</mat-label>
       <mat-select
-        (opened)="filter.focus()"
+        (opened)="onSelectOpened(select, filter)"
         (closed)="onSelectClosed()"
         (selectionChange)="onSelectChange($event)"
         [multiple]="true"
@@ -107,6 +108,31 @@ export class SelectWithFilterComponent {
       paddingRight: '20px',
       width: this.innerFilterWidth + 'px',
     };
+  }
+
+  onSelectOpened(select: MatSelect, filter: HTMLInputElement) {
+    const defaultHandleKeydown = select._handleKeydown.bind(select);
+    select._handleKeydown = (event) => {
+      if (event.code === KeyboardEventCode.A && event.ctrlKey) {
+        event.preventDefault();
+        event.stopPropagation();
+        this.handleKeydownCtrlA(select);
+        return;
+      }
+      defaultHandleKeydown(event);
+    };
+    filter.focus();
+  }
+
+  private handleKeydownCtrlA(select: MatSelect) {
+    const allOpts = this.options.filter((o) => !this.hideOption(o));
+    if (allOpts.every((o) => select.value?.includes(o))) {
+      select.value = select.value.filter((o: string) => !allOpts.includes(o));
+    } else {
+      const newValues = new Set((select.value ?? []).concat(allOpts));
+      select.value = Array.from(newValues);
+    }
+    this.selectChange.emit(new MatSelectChange(select, select.value));
   }
 
   onSelectClosed() {

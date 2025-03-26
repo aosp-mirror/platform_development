@@ -105,24 +105,8 @@ describe('LogComponent', () => {
   });
 
   it('renders filters', () => {
-    const filtersInTable = htmlElement.querySelectorAll('.entries .filter');
-    expect(filtersInTable.length).toEqual(2);
-    const filtersInTitle = htmlElement.querySelectorAll(
-      '.title-section .filter',
-    );
-    expect(filtersInTitle.length).toEqual(0);
-  });
-
-  it('renders filters in title', () => {
-    component.title = 'Test';
-    component.showFiltersInTitle = true;
-    fixture.detectChanges();
-    const filtersInTable = htmlElement.querySelectorAll('.entries .filter');
-    expect(filtersInTable.length).toEqual(0);
-    const filtersInTitle = htmlElement.querySelectorAll(
-      '.title-section .filter',
-    );
-    expect(filtersInTitle.length).toEqual(2);
+    const filters = htmlElement.querySelectorAll('.entries .filter');
+    expect(filters.length).toEqual(2);
   });
 
   it('renders entries', () => {

@@ -17,15 +17,33 @@
 /**
  * Utility functions for DOM manipulation.
  */
-export class DOMUtils {
-  /**
-   * Checks if an element is visible on the screen.
-   *
-   * @param element The element to check.
-   * @return True if the element is visible, false otherwise.
-   */
-  static isElementVisible(element: HTMLElement) {
-    const rect = element.getBoundingClientRect();
-    return rect.height > 0 && rect.width > 0;
-  }
+
+/**
+ * Checks if an element is visible on the screen.
+ *
+ * @param element The element to check.
+ * @return True if the element is visible, false otherwise.
+ */
+export function isElementVisible(element: HTMLElement) {
+  const rect = element.getBoundingClientRect();
+  return rect.height > 0 && rect.width > 0;
+}
+
+export enum KeyboardEventCode {
+  A = 'KeyA',
+  D = 'KeyD',
+  S = 'KeyS',
+  W = 'KeyW',
+}
+
+export enum KeyboardEventKey {
+  ARROW_DOWN = 'ArrowDown',
+  ARROW_LEFT = 'ArrowLeft',
+  ARROW_RIGHT = 'ArrowRight',
+  ARROW_UP = 'ArrowUp',
+  ENTER = 'Enter',
+}
+
+export enum KeyboardEventKeyCode {
+  SPACE = 32,
 }

@@ -140,7 +140,7 @@ body.dark-mode button.mat-flat-button.mat-primary {
     padding-bottom: 0px;
 }
 
-.no-padding-field .mat-form-field-infix, .no-border-top-field .mat-form-field-infix  {
+.no-padding-field .mat-form-field-infix {
     border-top: 0px;
 }
 

@@ -37,6 +37,7 @@ import {
 import {DomSanitizer, SafeUrl} from '@angular/platform-browser';
 import {TimelineData} from 'app/timeline_data';
 import {assertDefined} from 'common/assert_utils';
+import {KeyboardEventKey} from 'common/dom_utils';
 import {FunctionUtils} from 'common/function_utils';
 import {PersistentStore} from 'common/store/persistent_store';
 import {StringUtils} from 'common/string_utils';
@@ -772,10 +773,10 @@ export class TimelineComponent
     ) {
       return;
     }
-    if (event.key === 'ArrowLeft') {
+    if (event.key === KeyboardEventKey.ARROW_LEFT) {
       event.preventDefault();
       await this.moveToPreviousEntry();
-    } else if (event.key === 'ArrowRight') {
+    } else if (event.key === KeyboardEventKey.ARROW_RIGHT) {
       event.preventDefault();
       await this.moveToNextEntry();
     }

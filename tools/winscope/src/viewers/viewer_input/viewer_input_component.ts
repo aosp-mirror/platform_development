@@ -63,7 +63,6 @@ import {UiData} from './ui_data';
           [currentIndex]="inputData?.currentIndex"
           [entries]="inputData?.entries"
           [headers]="inputData?.headers"
-          [showFiltersInTitle]="false"
           [traceType]="${TraceType.INPUT_EVENT_MERGED}"
           [showTraceEntryTimes]="false"
           [showCurrentTimeButton]="false"

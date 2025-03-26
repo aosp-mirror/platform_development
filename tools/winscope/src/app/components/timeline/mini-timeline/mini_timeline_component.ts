@@ -28,6 +28,7 @@ import {
 } from '@angular/core';
 import {TimelineData} from 'app/timeline_data';
 import {assertDefined} from 'common/assert_utils';
+import {KeyboardEventCode} from 'common/dom_utils';
 import {PersistentStore} from 'common/store/persistent_store';
 import {TimeRange, Timestamp} from 'common/time/time';
 import {TimestampUtils} from 'common/time/timestamp_utils';
@@ -295,19 +296,22 @@ export class MiniTimelineComponent {
     if ((event.target as HTMLElement).tagName === 'INPUT') {
       return;
     }
-    if (event.code === 'KeyA') {
+    if (event.code === KeyboardEventCode.A) {
       this.updateSliderPosition(-MiniTimelineComponent.SLIDER_HORIZONTAL_STEP);
     }
-    if (event.code === 'KeyD') {
+    if (event.code === KeyboardEventCode.D) {
       this.updateSliderPosition(MiniTimelineComponent.SLIDER_HORIZONTAL_STEP);
     }
 
-    if (event.code !== 'KeyW' && event.code !== 'KeyS') {
+    if (
+      event.code !== KeyboardEventCode.W &&
+      event.code !== KeyboardEventCode.S
+    ) {
       return;
     }
 
     const zoomTo = this.hoverTimestamp;
-    const isZoomIn = event.code === 'KeyW';
+    const isZoomIn = event.code === KeyboardEventCode.W;
     Analytics.Navigation.logZoom('key', 'timeline', isZoomIn ? 'in' : 'out');
     isZoomIn ? this.zoomIn(zoomTo) : this.zoomOut(zoomTo);
   }

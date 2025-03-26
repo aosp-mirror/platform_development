@@ -118,10 +118,6 @@ export const logComponentStyles = `
     flex: 10;
   }
 
-  .title-section .filters {
-    margin-top: 8px;
-  }
-
   .transition-id {
     flex: none;
     width: 40px;

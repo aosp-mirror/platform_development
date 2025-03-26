@@ -26,6 +26,7 @@ import {
 } from '@angular/core';
 import {FormControl, Validators} from '@angular/forms';
 import {assertDefined} from 'common/assert_utils';
+import {KeyboardEventKey} from 'common/dom_utils';
 import {Analytics} from 'logging/analytics';
 
 @Component({
@@ -174,7 +175,7 @@ export class ActiveSearchComponent {
   onTextAreaKeydown(event: KeyboardEvent) {
     event.stopPropagation();
     if (
-      event.key === 'Enter' &&
+      event.key === KeyboardEventKey.ENTER &&
       !event.shiftKey &&
       !this.searchQueryDisabled()
     ) {

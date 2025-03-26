@@ -29,12 +29,14 @@ import {MatInputModule} from '@angular/material/input';
 import {MatSelectModule} from '@angular/material/select';
 import {BrowserAnimationsModule} from '@angular/platform-browser/animations';
 import {assertDefined} from 'common/assert_utils';
+import {KeyboardEventCode, KeyboardEventKeyCode} from 'common/dom_utils';
 import {SelectWithFilterComponent} from './select_with_filter_component';
 
 describe('SelectWithFilterComponent', () => {
   let fixture: ComponentFixture<TestHostComponent>;
   let component: TestHostComponent;
   let htmlElement: HTMLElement;
+  let selectChangeSpy: jasmine.Spy;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
@@ -56,6 +58,10 @@ describe('SelectWithFilterComponent', () => {
     component = fixture.componentInstance;
     htmlElement = fixture.nativeElement;
     fixture.detectChanges();
+    selectChangeSpy = spyOn(
+      assertDefined(component.selectWithFilterComponent).selectChange,
+      'emit',
+    );
   });
 
   it('can be created', () => {
@@ -77,10 +83,6 @@ describe('SelectWithFilterComponent', () => {
   });
 
   it('maintains selection even if filtered out', () => {
-    const spy = spyOn(
-      assertDefined(component.selectWithFilterComponent).selectChange,
-      'emit',
-    );
     openSelectPanel();
 
     const options = getOptions();
@@ -88,7 +90,7 @@ describe('SelectWithFilterComponent', () => {
 
     options[0].click();
     fixture.detectChanges();
-    checkSelectValue(spy, ['0']);
+    checkSelectValue(['0']);
 
     const inputEl = getFilterInput();
 
@@ -96,48 +98,40 @@ describe('SelectWithFilterComponent', () => {
     checkHiddenOptions(options, [0, 1]);
 
     options[2].click();
-    checkSelectValue(spy, ['0', '2']);
+    checkSelectValue(['0', '2']);
 
     dispatchInput(inputEl, '');
     checkHiddenOptions(options, []);
 
     options[1].click();
-    checkSelectValue(spy, ['0', '1', '2']);
+    checkSelectValue(['0', '1', '2']);
   });
 
   it('applies selection correctly', () => {
-    const spy = spyOn(
-      assertDefined(component.selectWithFilterComponent).selectChange,
-      'emit',
-    );
     openSelectPanel();
 
     const options = getOptions();
 
     options[0].click();
-    checkSelectValue(spy, ['0']);
+    checkSelectValue(['0']);
 
     options[0].click();
-    checkSelectValue(spy, []);
+    checkSelectValue([]);
   });
 
   it('applies deselection from pinned selected options', () => {
-    const spy = spyOn(
-      assertDefined(component.selectWithFilterComponent).selectChange,
-      'emit',
-    );
     openSelectPanel();
 
     const options = getOptions();
     options[0].click();
     fixture.detectChanges();
-    checkSelectValue(spy, ['0']);
+    checkSelectValue(['0']);
 
     const pinnedOptions = getPinnedOptions();
     expect(pinnedOptions.length).toEqual(1);
     pinnedOptions[0].click();
     fixture.detectChanges();
-    checkSelectValue(spy, []);
+    checkSelectValue([]);
     expect(getPinnedOptions().length).toEqual(0);
   });
 
@@ -157,6 +151,61 @@ describe('SelectWithFilterComponent', () => {
 
     openSelectPanel();
     checkHiddenOptions(getOptions(), []);
+  });
+
+  it('calls default select keydown handler', async () => {
+    openSelectPanel();
+    fixture.detectChanges();
+    await fixture.whenStable();
+    await fixture.whenRenderingDone();
+    const panel = assertDefined(document.querySelector('.mat-select-panel'));
+    panel.dispatchEvent(
+      new KeyboardEvent('keydown', {keyCode: KeyboardEventKeyCode.SPACE}),
+    );
+    fixture.detectChanges();
+    checkSelectValue(['0']);
+  });
+
+  it('calls custom select keydown handler for CTRL+A', async () => {
+    openSelectPanel();
+    fixture.detectChanges();
+    await fixture.whenStable();
+    await fixture.whenRenderingDone();
+    const keydownCtrlA = new KeyboardEvent('keydown', {
+      code: KeyboardEventCode.A,
+      ctrlKey: true,
+    });
+    const panel = assertDefined(document.querySelector('.mat-select-panel'));
+
+    panel.dispatchEvent(keydownCtrlA);
+    fixture.detectChanges();
+    checkSelectValue(['0', '1', '2']);
+
+    panel.dispatchEvent(keydownCtrlA);
+    fixture.detectChanges();
+    checkSelectValue([]);
+
+    panel.dispatchEvent(keydownCtrlA);
+    fixture.detectChanges();
+
+    const inputEl = getFilterInput(); // filters out '0' and '1' while all selected
+    dispatchInput(inputEl, '2');
+
+    panel.dispatchEvent(keydownCtrlA);
+    fixture.detectChanges();
+    checkSelectValue(['0', '1']);
+
+    panel.dispatchEvent(keydownCtrlA);
+    fixture.detectChanges();
+    checkSelectValue(['0', '1', '2']);
+
+    panel.dispatchEvent(keydownCtrlA);
+    fixture.detectChanges();
+    dispatchInput(inputEl, ''); // removes filter while '0' and '1' selected
+
+    panel.dispatchEvent(keydownCtrlA);
+    fixture.detectChanges();
+    checkSelectValue(['0', '1', '2']);
   });
 
   function openSelectPanel() {
@@ -205,11 +254,11 @@ describe('SelectWithFilterComponent', () => {
     ).slice(1);
   }
 
-  function checkSelectValue(spy: jasmine.Spy, expected: string[]) {
-    expect(spy).toHaveBeenCalled();
-    expect(assertDefined(spy.calls.mostRecent().args[0]).value).toEqual(
-      expected,
-    );
+  function checkSelectValue(expected: string[]) {
+    expect(selectChangeSpy).toHaveBeenCalled();
+    expect(
+      assertDefined(selectChangeSpy.calls.mostRecent().args[0]).value,
+    ).toEqual(expected);
     if (!document.querySelector('.mat-select-panel')) {
       openSelectPanel();
     }

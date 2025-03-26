@@ -24,6 +24,7 @@ import {
   Output,
 } from '@angular/core';
 import {Color} from 'app/colors';
+import {KeyboardEventKey} from 'common/dom_utils';
 import {InMemoryStorage} from 'common/store/in_memory_storage';
 import {PersistentStore} from 'common/store/persistent_store';
 import {Analytics} from 'logging/analytics';
@@ -230,11 +231,12 @@ export class HierarchyComponent {
     const componentVisible = domRect.height > 0 && domRect.width > 0;
     if (
       componentVisible &&
-      (event.key === 'ArrowDown' || event.key === 'ArrowUp')
+      (event.key === KeyboardEventKey.ARROW_DOWN ||
+        event.key === KeyboardEventKey.ARROW_UP)
     ) {
       event.preventDefault();
       const details = {bubbles: true, detail: this.treeStorage};
-      if (event.key === 'ArrowDown') {
+      if (event.key === KeyboardEventKey.ARROW_DOWN) {
         const arrowEvent = new CustomEvent(
           ViewerEvents.ArrowDownPress,
           details,

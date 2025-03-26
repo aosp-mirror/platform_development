@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import {DOMUtils} from 'common/dom_utils';
+import {isElementVisible, KeyboardEventKey} from 'common/dom_utils';
 import {FunctionUtils} from 'common/function_utils';
 import {Timestamp} from 'common/time/time';
 import {Analytics} from 'logging/analytics';
@@ -117,9 +117,10 @@ export abstract class AbstractLogViewerPresenter<
     );
 
     document.addEventListener('keydown', async (event: KeyboardEvent) => {
-      const isViewerVisible = DOMUtils.isElementVisible(htmlElement);
+      const isViewerVisible = isElementVisible(htmlElement);
       const isPositionChange =
-        event.key === 'ArrowRight' || event.key === 'ArrowLeft';
+        event.key === KeyboardEventKey.ARROW_RIGHT ||
+        event.key === KeyboardEventKey.ARROW_LEFT;
       if (!isViewerVisible || !isPositionChange) {
         return;
       }
@@ -238,7 +239,7 @@ export abstract class AbstractLogViewerPresenter<
   async onPositionChangeByKeyPress(event: KeyboardEvent) {
     const currIndex = this.uiData.currentIndex;
     if (this.activeTrace === this.trace && currIndex !== undefined) {
-      if (event.key === 'ArrowRight') {
+      if (event.key === KeyboardEventKey.ARROW_RIGHT) {
         event.stopImmediatePropagation();
         if (currIndex < this.uiData.entries.length - 1) {
           const currTimestamp =

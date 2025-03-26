@@ -37,6 +37,8 @@ android_library {
         "androidx.compose.runtime_runtime",
         "androidx.navigation_navigation-compose",
         "androidx.window_window",
+        "androidx-constraintlayout_constraintlayout",
+        "androidx.appcompat_appcompat",
     ],
 
     kotlincflags: ["-Xjvm-default=all"],

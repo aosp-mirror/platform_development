@@ -27,7 +27,7 @@ import {
 } from '@angular/core';
 import {MatSelectChange} from '@angular/material/select';
 
-import {DOMUtils} from 'common/dom_utils';
+import {isElementVisible, KeyboardEventKey} from 'common/dom_utils';
 import {Timestamp, TimestampFormatType} from 'common/time/time';
 import {TimeUtils} from 'common/time/time_utils';
 import {TraceType} from 'trace/trace_type';
@@ -60,21 +60,6 @@ import {
             class="log-title"
             [title]="title"
             (collapseButtonClicked)="collapseButtonClicked.emit()"></collapsible-section-title>
-
-        <div class="filters" *ngIf="showFiltersInTitle && getHeadersWithFilters().length > 0">
-          <div class="filter" *ngFor="let header of getHeadersWithFilters()"
-               [class]="header.spec.cssClass">
-            <select-with-filter
-                *ngIf="(header.filter.options?.length ?? 0) > 0"
-                [label]="header.spec.name"
-                [options]="header.filter.options"
-                [outerFilterWidth]="header.filter.outerFilterWidthCss"
-                [innerFilterWidth]="header.filter.innerFilterWidthCss"
-                formFieldClass="no-border-top-field"
-                (selectChange)="onFilterChange($event, header)">
-            </select-with-filter>
-          </div>
-        </div>
       </div>
     </div>
 
@@ -257,7 +242,6 @@ export class LogComponent {
   @Input() showCurrentTimeButton = true;
   @Input() traceType: TraceType | undefined;
   @Input() showTraceEntryTimes = true;
-  @Input() showFiltersInTitle = false;
   @Input() padEntries = true;
   @Input() isFetchingData = false;
 
@@ -368,15 +352,13 @@ export class LogComponent {
 
   @HostListener('document:keydown', ['$event'])
   async handleKeyboardEvent(event: KeyboardEvent) {
-    const logComponentVisible = DOMUtils.isElementVisible(
-      this.elementRef.nativeElement,
-    );
-    if (event.key === 'ArrowDown' && logComponentVisible) {
+    const logComponentVisible = isElementVisible(this.elementRef.nativeElement);
+    if (event.key === KeyboardEventKey.ARROW_DOWN && logComponentVisible) {
       event.stopPropagation();
       event.preventDefault();
       this.emitEvent(ViewerEvents.ArrowDownPress);
     }
-    if (event.key === 'ArrowUp' && logComponentVisible) {
+    if (event.key === KeyboardEventKey.ARROW_UP && logComponentVisible) {
       event.stopPropagation();
       event.preventDefault();
       this.emitEvent(ViewerEvents.ArrowUpPress);
