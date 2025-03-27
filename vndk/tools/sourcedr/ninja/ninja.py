@@ -207,7 +207,7 @@ class EvalStringBuilder(object):
 class Build(object):
     __slots__ = ('explicit_outs', 'implicit_outs', 'rule', 'explicit_ins',
                  'implicit_ins', 'prerequisites', 'bindings',
-                 'depfile_implicit_ins')
+                 'depfile_implicit_ins', 'validations')
 
 
 class Rule(object):
@@ -236,13 +236,14 @@ class TK(object):
     ESC_NEWLINE = 4
     IDENT = 5
     PIPE2 = 6
-    PIPE = 7
-    COLON = 8
-    ASSIGN = 9
+    PIPEAT = 7
+    PIPE = 8
+    COLON = 9
+    ASSIGN = 10
 
     # Non-trivial tokens
-    PATH = 10
-    STRING = 11
+    PATH = 11
+    STRING = 12
 
 
 class TokenMatcher(object):
@@ -340,6 +341,7 @@ class Lexer(object):
         (TK.ESC_NEWLINE, r'\$[\r\n]'),
         (TK.IDENT, r'[\w_.-]+'),
         (TK.PIPE2, r'\|\|'),
+        (TK.PIPEAT, r'\|@'),
         (TK.PIPE, r'\|'),
         (TK.COLON, r':'),
         (TK.ASSIGN, r'='),
@@ -709,13 +711,13 @@ class Parser(object):
 
         # Parse explicit ins
         explicit_ins = self._parse_path_list(
-                {TK.PIPE, TK.PIPE2, TK.NEWLINE, TK.EOF})
+                {TK.PIPE, TK.PIPE2, TK.PIPEAT, TK.NEWLINE, TK.EOF})
 
         # Parse implicit ins
         token = self._lexer.peek()
         if token.kind == TK.PIPE:
             self._lexer.lex()
-            implicit_ins = self._parse_path_list({TK.PIPE2, TK.NEWLINE, TK.EOF})
+            implicit_ins = self._parse_path_list({TK.PIPE2, TK.PIPEAT, TK.NEWLINE, TK.EOF})
         else:
             implicit_ins = tuple()
 
@@ -723,9 +725,17 @@ class Parser(object):
         token = self._lexer.peek()
         if token.kind == TK.PIPE2:
             self._lexer.lex()
-            prerequisites = self._parse_path_list({TK.NEWLINE, TK.EOF})
+            prerequisites = self._parse_path_list({TK.PIPEAT, TK.NEWLINE, TK.EOF})
         else:
             prerequisites = tuple()
+
+        # parse validations
+        token = self._lexer.peek()
+        if token.kind == TK.PIPEAT:
+            self._lexer.lex()
+            validations = self._parse_path_list({TK.NEWLINE, TK.EOF})
+        else:
+            validations = tuple()
 
         self._lexer.lex_match({TK.NEWLINE, TK.EOF})
 
@@ -746,6 +756,7 @@ class Parser(object):
         build.explicit_ins = eval_path_strings(explicit_ins, env)
         build.implicit_ins = eval_path_strings(implicit_ins, env)
         build.prerequisites = eval_path_strings(prerequisites, env)
+        build.validations = eval_path_strings(validations, env)
         build.depfile_implicit_ins = tuple()
 
         self._builds.append(build)

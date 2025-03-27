@@ -17,6 +17,8 @@ use std::{
     ffi::{OsStr, OsString},
 };
 
+use google_metadata::LicenseType;
+
 use crate::{
     license_file_finder::is_findable, util::strip_punctuation, CrateLicenseSpecialCase, Error,
     License,
@@ -30,17 +32,30 @@ pub(crate) struct ParsedLicense {
     processed_text: Option<String>,
     // A set of file names, any of which unambiguously identify the license.
     file_names: BTreeSet<OsString>,
+    /// The name of the MODULE_LICENSE_* file for this license.
+    module_license_file_name: &'static str,
+    /// The license type, per http://go/thirdpartylicenses#types
+    license_type: LicenseType,
 }
 
 impl ParsedLicense {
     pub fn licensee(&self) -> &spdx::Licensee {
         &self.licensee
     }
+    pub fn license_req(&self) -> spdx::LicenseReq {
+        self.licensee.clone().into_req()
+    }
     pub fn processed_text(&self) -> Option<&str> {
         self.processed_text.as_deref()
     }
     pub fn file_names(&self) -> &BTreeSet<OsString> {
         &self.file_names
+    }
+    pub fn module_license_file_name(&self) -> &'static str {
+        self.module_license_file_name
+    }
+    pub fn license_type(&self) -> LicenseType {
+        self.license_type
     }
     pub fn is_substring_of(&self, other: &str) -> bool {
         self.processed_text.as_ref().is_some_and(|text| other.contains(text.as_str()))
@@ -71,10 +86,28 @@ impl TryFrom<&License> for ParsedLicense {
             file_names.insert(OsString::from(license_file.to_uppercase()));
         }
 
+        if !value.module_license_file_name.starts_with("MODULE_LICENSE_") {
+            return Err(Error::InvalidModuleLicenseFileName(
+                value.module_license_file_name.to_string(),
+            ));
+        }
+
+        if matches!(
+            value.license_type,
+            LicenseType::UNKNOWN
+                | LicenseType::BY_EXCEPTION_ONLY
+                | LicenseType::RESTRICTED_IF_STATICALLY_LINKED
+                | LicenseType::RESTRICTED
+        ) {
+            return Err(Error::LicenseTypeTooRestrictive(value.license_type));
+        }
+
         Ok(ParsedLicense {
             licensee: spdx::Licensee::parse(value.name)?,
             processed_text: value.text.map(strip_punctuation),
             file_names,
+            module_license_file_name: value.module_license_file_name,
+            license_type: value.license_type,
         })
     }
 }
@@ -162,7 +195,13 @@ mod parsed_license_tests {
     #[test]
     fn invalid_license_name() {
         assert!(matches!(
-            ParsedLicense::try_from(&License { name: "foo", text: None, file_names: &["LICENSE"] }),
+            ParsedLicense::try_from(&License {
+                name: "foo",
+                text: None,
+                file_names: &["LICENSE"],
+                module_license_file_name: "MODULE_LICENSE_FOO",
+                license_type: LicenseType::NOTICE,
+            }),
             Err(Error::LicenseParseError(_))
         ));
     }
@@ -170,7 +209,13 @@ mod parsed_license_tests {
     #[test]
     fn missing_both_text_and_file_name() {
         assert!(matches!(
-            ParsedLicense::try_from(&License { name: "MIT", text: None, file_names: &[] }),
+            ParsedLicense::try_from(&License {
+                name: "MIT",
+                text: None,
+                file_names: &[],
+                module_license_file_name: "MODULE_LICENSE_MIT",
+                license_type: LicenseType::NOTICE,
+            }),
             Err(Error::LicenseWithoutTextOrFileNames(_))
         ));
     }
@@ -181,10 +226,47 @@ mod parsed_license_tests {
             ParsedLicense::try_from(&License {
                 name: "MIT",
                 text: Some(" "),
-                file_names: &["LICENSE-MIT"]
+                file_names: &["LICENSE-MIT"],
+                module_license_file_name: "MODULE_LICENSE_MIT",
+                license_type: LicenseType::NOTICE,
             }),
             Err(Error::EmptyLicenseText(_))
         ));
+    }
+
+    #[test]
+    fn invalid_module_license_file() {
+        assert!(matches!(
+            ParsedLicense::try_from(&License {
+                name: "MIT",
+                text: None,
+                file_names: &["LICENSE-MIT"],
+                module_license_file_name: "blah",
+                license_type: LicenseType::NOTICE,
+            }),
+            Err(Error::InvalidModuleLicenseFileName(_))
+        ));
+    }
+
+    #[test]
+    fn restrictive_licenses_rejected() {
+        for license_type in [
+            LicenseType::UNKNOWN,
+            LicenseType::BY_EXCEPTION_ONLY,
+            LicenseType::RESTRICTED,
+            LicenseType::RESTRICTED_IF_STATICALLY_LINKED,
+        ] {
+            assert!(matches!(
+                ParsedLicense::try_from(&License {
+                    name: "MIT",
+                    text: None,
+                    file_names: &["LICENSE-MIT"],
+                    module_license_file_name: "MODULE_LICENSE_MIT",
+                    license_type,
+                }),
+                Err(Error::LicenseTypeTooRestrictive(_))
+            ));
+        }
     }
 
     #[test]
@@ -193,6 +275,8 @@ mod parsed_license_tests {
             name: "MIT",
             text: Some("foo"),
             file_names: &["LICENSE-MIT"],
+            module_license_file_name: "MODULE_LICENSE_MIT",
+            license_type: LicenseType::NOTICE,
         })
         .unwrap();
         assert!(license.is_substring_of("foobar"));
@@ -201,6 +285,8 @@ mod parsed_license_tests {
             name: "MIT",
             text: None,
             file_names: &["LICENSE-MIT"],
+            module_license_file_name: "MODULE_LICENSE_MIT",
+            license_type: LicenseType::NOTICE,
         })
         .unwrap();
         assert!(
