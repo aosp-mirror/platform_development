@@ -84,6 +84,7 @@ final class VirtualCameraController implements AutoCloseable {
         try {
             getFrontCamera().ifPresent(mExposedCameras::add);
             getBackCamera().ifPresent(mExposedCameras::add);
+            mExposedCameras.addAll(getCamerasWithExternalLensFacing());
         } catch (CameraAccessException exception) {
             Log.e(TAG, NO_CAMERA_PERMISSION_LOG_MSG, exception);
         }
@@ -124,10 +125,23 @@ final class VirtualCameraController implements AutoCloseable {
         return Optional.empty();
     }
 
+    List<String> getCamerasWithExternalLensFacing() throws CameraAccessException {
+        final List<String> externalCameraIds = new ArrayList<>();
+        for (String cameraId : mCameraManager.getCameraIdList()) {
+            CameraCharacteristics characteristics = mCameraManager.getCameraCharacteristics(
+                    cameraId);
+
+            if (Objects.equals(characteristics.get(CameraCharacteristics.LENS_FACING),
+                    CameraCharacteristics.LENS_FACING_EXTERNAL)) {
+                externalCameraIds.add(cameraId);
+            }
+        }
+        return externalCameraIds;
+    }
+
     RemoteEventProto.CameraCapabilities getCapabilitiesForCamera(String cameraId)
             throws CameraAccessException {
         CameraCharacteristics characteristics = mCameraManager.getCameraCharacteristics(cameraId);
-
 
         return RemoteEventProto.CameraCapabilities.newBuilder()
                 .setCameraId(cameraId)
@@ -135,8 +149,7 @@ final class VirtualCameraController implements AutoCloseable {
                 .setHeight(CAMERA_HEIGHT)
                 .setFps(FPS)
                 .setLensFacing(Objects.requireNonNull(
-                        characteristics.get(
-                                CameraCharacteristics.LENS_FACING)))
+                        characteristics.get(CameraCharacteristics.LENS_FACING)))
                 .setSensorOrientation(Objects.requireNonNull(
                         characteristics.get(CameraCharacteristics.SENSOR_ORIENTATION)))
                 .build();

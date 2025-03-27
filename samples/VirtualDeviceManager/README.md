@@ -72,7 +72,7 @@ available devices, build the APKs and install them.
     adevice track VdmDemos
     ```
 
-1.  Update the device
+2. Update the device
 
     ```shell
     adevice update
@@ -80,17 +80,17 @@ available devices, build the APKs and install them.
 
 ### Manually
 
-1.  Source `build/envsetup.sh` and run `lunch` or set
+1. Source `build/envsetup.sh` and run `lunch` or set
     `UNBUNDLED_BUILD_SDKS_FROM_SOURCE=true` if there's no local build because
     the APKs need to be built against a locally built SDK.
 
-1.  Build the Host app.
+2. Build the Host app.
 
     ```shell
     m -j VdmHost
     ```
 
-1.  Install the application as a system app on the host device.
+3. Install the application as a system app on the host device.
 
     ```shell
     adb root && adb disable-verity && adb reboot  # one time
@@ -106,13 +106,13 @@ available devices, build the APKs and install them.
     \
     `adb install -r -d -g $OUT/system/priv-app/VdmHost/VdmHost.apk`
 
-1.  Build and install the Demo app on the host device.
+4. Build and install the Demo app on the host device.
 
     ```shell
     m -j VdmDemos && adb install -r -d -g $OUT/system/app/VdmDemos/VdmDemos.apk
     ```
 
-1.  Build and install the Client app on the client device.
+5. Build and install the Client app on the client device.
 
     ```shell
     m -j VdmClient && adb install -r -d -g $OUT/system/app/VdmClient/VdmClient.apk
@@ -120,19 +120,19 @@ available devices, build the APKs and install them.
 
 ## Run
 
-1.  Start both the Client and the Host apps on each respective device.
+1. Start both the Client and the Host apps on each respective device.
 
-1.  They should find each other and connect automatically. On the first launch
+2. They should find each other and connect automatically. On the first launch
     the Host app will ask to create a CDM association: allow it.
 
     WARNING: If there are other devices in the vicinity with one of these apps
     running, they might interfere.
 
-1.  Check out the different [Host Options](#host-options) and
+3. Check out the different [Host Options](#host-options) and
     [Client Options](#client-options) that allow for changing the behavior of
     the streamed apps and the virtual device in general.
 
-1.  Check out the [Demo apps](#demos) that are specifically meant to showcase
+4. Check out the [Demo apps](#demos) that are specifically meant to showcase
     the VDM features.
 
 <!-- LINT.IfChange(host_options) -->
@@ -316,7 +316,7 @@ you likely need to enable this in the host Settings. On a Pixel device: System
     The contents of the virtual displays are rendered locally in a separate
     activity.
 
-- **Record encoder output**: Enables recording the output of the encoder on
+-   **Record encoder output**: Enables recording the output of the encoder on
     the host device to a local file on the device. This can be helpful with
     debugging Encoding related issues. To download and play the file locally:
 
@@ -324,6 +324,25 @@ you likely need to enable this in the host Settings. On a Pixel device: System
     adb pull /sdcard/Download/vdmdemo_encoder_output_<displayId>.h264
     ffplay -f h264 vdmdemo_encoder_output_<displayId>.h264
     ```
+
+Note: External cameras already present on the client are mapped as virtual external
+cameras on the host virtual device. Test cameras can be created with:
+
+```shell
+adb shell start virtual_camera
+adb shell cmd virtual_camera enable_test_camera
+```
+
+For debug purposes the following VdmHost options allow additional mapping of the client's
+cameras as virtual external cameras on the virtual device:
+
+-   **Duplicate front camera**: Creates an additional external camera
+    (if external virtual cameras are supported) that duplicates the **front** camera
+    stream of the remote device (if exists).
+
+-   **Duplicate back camera**: Creates an additional external camera
+    (if external virtual cameras are supported) that duplicates the **back** camera
+    stream of the remote device (if exists).
 
 -   **Network channel**: Select different communication channel between the
     client and the host to avoid collisions with other demo setups nearby.

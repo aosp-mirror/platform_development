@@ -168,6 +168,20 @@
             android:defaultValue="false"
             app:iconSpaceReserved="false" />
 
+        <SwitchPreferenceCompat
+            android:key="@string/pref_duplicate_front_camera"
+            android:title="Duplicate front camera"
+            android:summary="Creates an external camera duplicated from the client's front camera"
+            android:defaultValue="false"
+            app:iconSpaceReserved="false" />
+
+        <SwitchPreferenceCompat
+            android:key="@string/pref_duplicate_back_camera"
+            android:title="Duplicate back camera"
+            android:summary="Creates an external camera duplicated from the client's back camera"
+            android:defaultValue="false"
+            app:iconSpaceReserved="false" />
+
         <ListPreference
             android:key="@string/pref_network_channel"
             android:title="Network channel"

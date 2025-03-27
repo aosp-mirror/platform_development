@@ -346,6 +346,11 @@ class LexerTest(unittest.TestCase):
         tok = lexer.lex()
         self.assertEqual(ninja.TK.PIPE2, tok.kind)
 
+    def test_lex_pipeat(self):
+        lexer = ninja.Lexer(['|@'])
+        tok = lexer.lex()
+        self.assertEqual(ninja.TK.PIPEAT, tok.kind)
+
     def test_lex_non_trivial(self):
         lexer = ninja.Lexer(['$name'])
         with self.assertRaises(ninja.ParseError):
@@ -537,6 +542,8 @@ class ParserTest(unittest.TestCase):
         self.assertEqual('implicit_in2', build.implicit_ins[1])
         self.assertEqual('order_only1', build.prerequisites[0])
         self.assertEqual('order_only2', build.prerequisites[1])
+        self.assertEqual('validation1', build.validations[0])
+        self.assertEqual('validation2', build.validations[1])
 
         self.assertEqual(('t', '1',), build.bindings['a'])
         self.assertEqual(('t', '2',), build.bindings['b'])

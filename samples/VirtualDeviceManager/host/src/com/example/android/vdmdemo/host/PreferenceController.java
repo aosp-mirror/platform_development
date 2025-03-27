@@ -123,6 +123,12 @@ final class PreferenceController {
             new BoolRule(R.string.pref_enable_update_audio_policy_mixes, VANILLA_ICE_CREAM)
                     .withDefaultValue(true),
 
+            new BoolRule(R.string.pref_duplicate_front_camera, BAKLAVA,
+                    Flags::externalVirtualCameras),
+
+            new BoolRule(R.string.pref_duplicate_back_camera, BAKLAVA,
+                    Flags::externalVirtualCameras),
+
             // Internal-only switches not exposed in the settings page.
             // All of these are booleans acting as switches, while the above ones may be any type.
 
