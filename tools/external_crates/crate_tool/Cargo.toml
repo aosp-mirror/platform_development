@@ -11,7 +11,7 @@ cargo_metadata = "0.19"
 cfg-expr = "0.17"
 chrono = "0.4"
 clap = { version = "4.4.6", features = ["derive"] }
-crates-index = "3.2.0"
+crates-index = "3.8"
 glob = "0.3"
 itertools = "0.11"
 protobuf = "3"

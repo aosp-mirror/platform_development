@@ -17,6 +17,7 @@ rust_library_host {
     edition: "2021",
     rustlibs: [
         "libglob",
+        "libgoogle_metadata",
         "libitertools",
         "libspdx",
         "libtextdistance",
@@ -38,6 +39,7 @@ rust_test_host {
     edition: "2021",
     rustlibs: [
         "libglob",
+        "libgoogle_metadata",
         "libitertools",
         "libspdx",
         "libtextdistance",

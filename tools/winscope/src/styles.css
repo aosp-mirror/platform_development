@@ -40,6 +40,10 @@ app-root {
     user-select: auto !important;
 }
 
+.mat-option, .mat-option-text {
+    user-select: none;
+}
+
 .card-grid {
     width: 100%;
     height: 100%;

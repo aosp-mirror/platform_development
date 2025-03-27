@@ -12,7 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use spdx::Licensee;
 use std::{
     collections::BTreeSet,
     fs::read_to_string,
@@ -26,8 +25,8 @@ use crate::{Error, LICENSE_DATA};
 pub(crate) struct Classifier {
     file_path: PathBuf,
     contents: String,
-    by_content: OnceLock<BTreeSet<Licensee>>,
-    by_content_fuzzy: OnceLock<Option<Licensee>>,
+    by_content: OnceLock<BTreeSet<spdx::LicenseReq>>,
+    by_content_fuzzy: OnceLock<Option<spdx::LicenseReq>>,
 }
 
 impl Classifier {
@@ -56,13 +55,13 @@ impl Classifier {
     pub fn file_path(&self) -> &Path {
         self.file_path.as_path()
     }
-    pub fn by_name(&self) -> Option<&Licensee> {
+    pub fn by_name(&self) -> Option<&spdx::LicenseReq> {
         LICENSE_DATA.classify_file_name(self.file_path())
     }
-    pub fn by_content(&self) -> &BTreeSet<Licensee> {
+    pub fn by_content(&self) -> &BTreeSet<spdx::LicenseReq> {
         self.by_content.get_or_init(|| LICENSE_DATA.classify_file_contents(&self.contents))
     }
-    pub fn by_content_fuzzy(&self) -> Option<&Licensee> {
+    pub fn by_content_fuzzy(&self) -> Option<&spdx::LicenseReq> {
         self.by_content_fuzzy
             .get_or_init(|| LICENSE_DATA.classify_file_contents_fuzzy(&self.contents))
             .as_ref()

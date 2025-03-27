@@ -38,6 +38,8 @@ $(hide) sed \
 	-e 's/$${TARGET_ARCH}/$(TARGET_ARCH)/' \
 	-e 's/$${TARGET_CPU_ABI}/$(TARGET_CPU_ABI)/' \
 	-e 's/$${EMULATOR_MINIMAL_VERSION}/$(EMULATOR_MINIMAL_VERSION)/' \
+	-e 's/$${SYSTEM_IMAGE_TAG_ID}/${SYSTEM_IMAGE_TAG_ID}/' \
+	-e 's/$${SYSTEM_IMAGE_TAG_DISPLAY}/${SYSTEM_IMAGE_TAG_DISPLAY}/' \
 	$< > $@ && sed -i -e '/^AndroidVersion.CodeName=\s*$$/d' $@
 endef
 

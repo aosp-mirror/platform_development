@@ -37,7 +37,6 @@ use crate::{
     copy_dir,
     crate_type::Crate,
     ensure_exists_and_empty,
-    license::{most_restrictive_type, update_module_license_files},
     patch::Patch,
     pseudo_crate::{CargoVendorClean, PseudoCrate},
     SuccessOrError,
@@ -450,7 +449,7 @@ impl ManagedCrate<CopiedAndPatched> {
             )?;
         }
 
-        update_module_license_files(&self.temporary_build_directory(), &self.extra.licenses)?;
+        self.extra.licenses.update_module_license_files(&self.temporary_build_directory())?;
         Ok(())
     }
     /// Runs cargo_embargo on the crate in the temporary build directory.
@@ -486,7 +485,7 @@ impl ManagedCrate<CopiedAndPatched> {
             self.name(),
             self.extra.vendored_crate.version().to_string(),
             self.extra.vendored_crate.description(),
-            most_restrictive_type(&self.extra.licenses),
+            self.extra.licenses.most_restrictive_type(),
         );
         metadata.write()?;
 

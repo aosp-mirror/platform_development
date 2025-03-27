@@ -9,3 +9,4 @@ itertools = "0.14"
 spdx = "0.10"
 textdistance = "1.1.1"
 thiserror = "1.0"
+google_metadata = { path = "../google_metadata"}

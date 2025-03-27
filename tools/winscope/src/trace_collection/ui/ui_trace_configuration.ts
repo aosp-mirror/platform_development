@@ -104,7 +104,7 @@ const sfTraceCheckboxConfigs: CheckboxConfiguration[] = [
     enabled: true,
   },
   {
-    name: 'metadata',
+    name: 'metadata (with offscreen layers)',
     key: 'metadata',
     enabled: false,
   },

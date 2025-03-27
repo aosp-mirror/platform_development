@@ -38,7 +38,6 @@ use crate::{
     crate_collection::CrateCollection,
     crate_type::Crate,
     crates_io::{AndroidDependencies, DependencyChanges, SafeVersions},
-    license::{most_restrictive_type, update_module_license_files},
     managed_crate::ManagedCrate,
     pseudo_crate::{CargoVendorDirty, PseudoCrate},
     upgradable::{IsUpgradableTo, MatchesWithCompatibilityRule, SemverCompatibilityRule},
@@ -265,7 +264,7 @@ impl ManagedRepo {
         println!("  Finding license files");
         let licenses = find_licenses(krate.path().abs(), krate.name(), krate.license())?;
 
-        update_module_license_files(&krate.path().abs(), &licenses)?;
+        licenses.update_module_license_files(&krate.path().abs())?;
 
         println!("  Creating METADATA");
         let metadata = GoogleMetadata::init(
@@ -273,7 +272,7 @@ impl ManagedRepo {
             krate.name(),
             krate.version().to_string(),
             krate.description(),
-            most_restrictive_type(&licenses),
+            licenses.most_restrictive_type(),
         )?;
         metadata.write()?;
 
