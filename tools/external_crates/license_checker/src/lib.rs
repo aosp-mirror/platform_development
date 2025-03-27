@@ -16,10 +16,13 @@
 
 use std::{
     collections::{BTreeMap, BTreeSet},
+    fs::{remove_file, write},
     path::{Path, PathBuf},
 };
 
 use file_classifier::Classifier;
+use glob::glob;
+use google_metadata::LicenseType;
 use license_data::{CrateLicenseSpecialCase, License};
 use license_terms::LicenseTerms;
 use licenses::LICENSE_DATA;
@@ -113,14 +116,23 @@ pub enum Error {
     /// The list of license preferences contains an unknown license
     #[error("The license preference list contains unknown license {0}")]
     LicensePreferenceForUnknownLicense(String),
+    /// Invalid MODULE_LICENSE_* file name.
+    #[error("The MODULE_LICENSE_* file name '{0}' does not begin with 'MODULE_LICENSE_'")]
+    InvalidModuleLicenseFileName(String),
+    /// License type is too restrictive.
+    #[error("The license type {0:?} is too restrictive")]
+    LicenseTypeTooRestrictive(LicenseType),
+    /// I/O error.
+    #[error(transparent)]
+    IoError(#[from] std::io::Error),
 }
 
 /// The result of license file verification, containing a set of acceptable licenses, and the
 /// corresponding license files, if present.
 #[derive(Debug)]
 pub struct LicenseState {
-    /// Unsatisfied licenses. These are licenses that are required by evaluation of SPDX license in
-    /// Cargo.toml, but for which no matching license file was found.
+    /// Unsatisfied licenses. These are licenses that are required by evaluation of the SPDX
+    /// license in Cargo.toml, but for which no matching license file was found.
     pub unsatisfied: BTreeSet<LicenseReq>,
     /// Licenses for which a license file file was found, and the path to that file.
     pub satisfied: BTreeMap<LicenseReq, PathBuf>,
@@ -143,12 +155,11 @@ impl LicenseState {
         let not_required = terms.not_required;
 
         for classifier in file_classifiers {
-            if let Some(licensee) = classifier.by_name() {
-                let req = licensee.clone().into_req();
-                if state.unsatisfied.remove(&req) {
+            if let Some(req) = classifier.by_name() {
+                if state.unsatisfied.remove(req) {
                     state.satisfied.insert(req.clone(), classifier.file_path().to_owned());
-                } else if !state.satisfied.contains_key(&req) {
-                    if not_required.contains(&req) {
+                } else if !state.satisfied.contains_key(req) {
+                    if not_required.contains(req) {
                         state.unneeded.insert(req.clone(), classifier.file_path().to_owned());
                     } else {
                         state.unexpected.insert(req.clone(), classifier.file_path().to_owned());
@@ -159,17 +170,16 @@ impl LicenseState {
 
         if !state.unsatisfied.is_empty() {
             for classifier in file_classifiers {
-                for licensee in classifier.by_content() {
-                    let req = licensee.clone().into_req();
-                    if state.unsatisfied.remove(&req) {
+                for req in classifier.by_content() {
+                    if state.unsatisfied.remove(req) {
                         state.satisfied.insert(req.clone(), classifier.file_path().to_owned());
-                    } else if !state.satisfied.contains_key(&req) && !not_required.contains(&req) {
+                    } else if !state.satisfied.contains_key(req) && !not_required.contains(req) {
                         state.unexpected.insert(req.clone(), classifier.file_path().to_owned());
                     }
                 }
                 if classifier.by_content().len() == 1 {
-                    let req = classifier.by_content().first().unwrap().clone().into_req();
-                    if !state.satisfied.contains_key(&req) && not_required.contains(&req) {
+                    let req = classifier.by_content().first().unwrap();
+                    if !state.satisfied.contains_key(req) && not_required.contains(req) {
                         state.unneeded.insert(req.clone(), classifier.file_path().to_owned());
                     }
                 }
@@ -181,9 +191,8 @@ impl LicenseState {
                 if classifier.by_name().is_some() || !classifier.by_content().is_empty() {
                     continue;
                 }
-                if let Some(licensee) = classifier.by_content_fuzzy() {
-                    let req = licensee.clone().into_req();
-                    if state.unsatisfied.remove(&req) {
+                if let Some(req) = classifier.by_content_fuzzy() {
+                    if state.unsatisfied.remove(req) {
                         state.satisfied.insert(req.clone(), classifier.file_path().to_owned());
                         if state.unsatisfied.is_empty() {
                             break;
@@ -194,6 +203,30 @@ impl LicenseState {
         }
 
         state
+    }
+
+    /// Update MODULE_LICENSE_* files in a directory based on the applicable licenses.
+    /// These files are typically empty, and their name indicates the type of license that
+    /// applies to the code, for example MODULE_LICENSE_APACHE2.
+    pub fn update_module_license_files(&self, path: &impl AsRef<Path>) -> Result<(), Error> {
+        let path = path.as_ref();
+        for old_module_license_file in glob(&path.join("MODULE_LICENSE*").to_string_lossy())? {
+            remove_file(old_module_license_file?)?;
+        }
+        for file in self.required_terms().map(|req| LICENSE_DATA.module_license_file(req).unwrap())
+        {
+            write(path.join(file), "")?; // Write an empty file. Essentially "touch".
+        }
+        Ok(())
+    }
+
+    /// Find the most restrictive type of license, for reporting in the METADATA file.
+    pub fn most_restrictive_type(&self) -> LicenseType {
+        LICENSE_DATA.most_restrictive_type(self.required_terms())
+    }
+
+    fn required_terms(&self) -> impl Iterator<Item = &LicenseReq> {
+        self.satisfied.keys().chain(&self.unsatisfied)
     }
 }
 
