@@ -72,7 +72,7 @@ available devices, build the APKs and install them.
     adevice track VdmDemos
     ```
 
-2. Update the device
+1.  Update the device
 
     ```shell
     adevice update
@@ -80,17 +80,17 @@ available devices, build the APKs and install them.
 
 ### Manually
 
-1. Source `build/envsetup.sh` and run `lunch` or set
+1.  Source `build/envsetup.sh` and run `lunch` or set
     `UNBUNDLED_BUILD_SDKS_FROM_SOURCE=true` if there's no local build because
     the APKs need to be built against a locally built SDK.
 
-2. Build the Host app.
+1.  Build the Host app.
 
     ```shell
     m -j VdmHost
     ```
 
-3. Install the application as a system app on the host device.
+1.  Install the application as a system app on the host device.
 
     ```shell
     adb root && adb disable-verity && adb reboot  # one time
@@ -106,13 +106,13 @@ available devices, build the APKs and install them.
     \
     `adb install -r -d -g $OUT/system/priv-app/VdmHost/VdmHost.apk`
 
-4. Build and install the Demo app on the host device.
+1.  Build and install the Demo app on the host device.
 
     ```shell
     m -j VdmDemos && adb install -r -d -g $OUT/system/app/VdmDemos/VdmDemos.apk
     ```
 
-5. Build and install the Client app on the client device.
+1.  Build and install the Client app on the client device.
 
     ```shell
     m -j VdmClient && adb install -r -d -g $OUT/system/app/VdmClient/VdmClient.apk
@@ -120,19 +120,20 @@ available devices, build the APKs and install them.
 
 ## Run
 
-1. Start both the Client and the Host apps on each respective device.
+1.  Start both the Client and the Host apps on each respective device.
 
-2. They should find each other and connect automatically. On the first launch
+1.  They should find each other and connect automatically. On the first launch
+
     the Host app will ask to create a CDM association: allow it.
 
     WARNING: If there are other devices in the vicinity with one of these apps
     running, they might interfere.
 
-3. Check out the different [Host Options](#host-options) and
+1.  Check out the different [Host Options](#host-options) and
     [Client Options](#client-options) that allow for changing the behavior of
     the streamed apps and the virtual device in general.
 
-4. Check out the [Demo apps](#demos) that are specifically meant to showcase
+1.  Check out the [Demo apps](#demos) that are specifically meant to showcase
     the VDM features.
 
 <!-- LINT.IfChange(host_options) -->
@@ -225,6 +226,18 @@ Each input screen has a "Back", "Home" and "Forward" buttons.
     client device into the host device. (WIP: Any context that is associated
     with the virtual device will the virtual cameras by default). \
     *Changing this will recreate the virtual device.*
+
+    Note: External cameras already present on the client are mapped as virtual external
+    cameras on the host virtual device. Test cameras can be created on the client device
+    with Android 15 or newer (SDK level 35) with:
+
+    ```shell
+    adb shell start virtual_camera
+    adb shell cmd virtual_camera enable_test_camera
+    ```
+
+    The front and back cameras of the client can be also mapped as virtual external
+    cameras on the virtual device from the **Debug** options of VdmHost.
 
 -   **Enable client Audio**: Enables audio output on the client device. Any
     context that is associated with the virtual device will play audio on the
@@ -324,17 +337,6 @@ you likely need to enable this in the host Settings. On a Pixel device: System
     adb pull /sdcard/Download/vdmdemo_encoder_output_<displayId>.h264
     ffplay -f h264 vdmdemo_encoder_output_<displayId>.h264
     ```
-
-Note: External cameras already present on the client are mapped as virtual external
-cameras on the host virtual device. Test cameras can be created with:
-
-```shell
-adb shell start virtual_camera
-adb shell cmd virtual_camera enable_test_camera
-```
-
-For debug purposes the following VdmHost options allow additional mapping of the client's
-cameras as virtual external cameras on the virtual device:
 
 -   **Duplicate front camera**: Creates an additional external camera
     (if external virtual cameras are supported) that duplicates the **front** camera

@@ -668,7 +668,10 @@ export class CollectTracesComponent
         types: this.dumpConfig[req].types,
       };
     });
-    Analytics.Tracing.logCollectDumps(requestedTraceTypes.map((t) => t.name));
+    Analytics.Tracing.logCollectDumps(
+      requestedTraceTypes.map((t) => t.name),
+      this.getConnectionType(),
+    );
 
     const requestedDumpsWithConfig: UserRequest[] = requestedDumps.map(
       (target) => {
@@ -866,6 +869,7 @@ export class CollectTracesComponent
     });
     Analytics.Tracing.logCollectTraces(
       this.requestedTraceTypes.map((t) => t.name),
+      this.getConnectionType(),
     );
 
     if (requestedTraces.length === 0) {
