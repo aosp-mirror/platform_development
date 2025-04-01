@@ -32,6 +32,7 @@ import {Trace} from 'trace/trace';
 import {Traces} from 'trace/traces';
 import {TraceType} from 'trace/trace_type';
 import {QueryResult} from 'trace_processor/query_result';
+import {makeSearchTraceSpies} from 'trace_processor/test_utils';
 import {
   ClearQueryClickDetail,
   DeleteSavedQueryClickDetail,
@@ -154,10 +155,7 @@ describe('PresenterSearch', () => {
     );
 
     const time100 = TimestampConverterUtils.makeRealTimestamp(100n);
-    const [spyQueryResult, spyIter] = UnitTestUtils.makeSearchTraceSpies(
-      time100,
-      '123',
-    );
+    const [spyQueryResult, spyIter] = makeSearchTraceSpies(time100, '123');
     spyIter.get.withArgs('property').and.returnValue('test_time_ns');
     const spyTimestamp = spyOn(
       TimestampConverterUtils.TIMESTAMP_CONVERTER,

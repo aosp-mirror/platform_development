@@ -17,6 +17,7 @@
 import {NgTemplateOutlet} from '@angular/common';
 import {Component, Input} from '@angular/core';
 import {FormControl} from '@angular/forms';
+import {isElementOverflowing} from 'common/dom_utils';
 import {ListedSearch} from './ui_data';
 
 @Component({
@@ -119,7 +120,7 @@ export class SearchListComponent {
   searchOptionsTarget: ListedSearch | undefined;
 
   showTooltip(search: ListedSearch, el: HTMLElement) {
-    return search.name !== search.query || el.scrollWidth > el.offsetWidth;
+    return search.name !== search.query || isElementOverflowing(el);
   }
 
   getTooltip(search: ListedSearch) {

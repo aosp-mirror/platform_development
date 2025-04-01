@@ -13,20 +13,31 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import {Component, EventEmitter, Input, Output} from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  EventEmitter,
+  Input,
+  Output,
+} from '@angular/core';
 import {MatOption} from '@angular/material/core';
 import {MatSelect, MatSelectChange} from '@angular/material/select';
 import {KeyboardEventCode} from 'common/dom_utils';
+import {AbstractFormFieldComponent} from './abstract_form_field_component';
 
 @Component({
   selector: 'select-with-filter',
+  changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <mat-form-field
       [style]="getOuterFormFieldStyle()"
       [style.text-align]="'unset'"
       [appearance]="appearance"
       [class]="formFieldClass"
-      [class.mat-body-2]="!select.value || select.value.length === 0">
+      [matTooltip]="label"
+      matTooltipPosition="above"
+      [matTooltipDisabled]="disableTooltip(formField)"
+      [class.mat-body-2]="!select.value || select.value.length === 0"  #formField>
       <mat-label>{{ label }}</mat-label>
       <mat-select
         (opened)="onSelectOpened(select, filter)"
@@ -79,14 +90,11 @@ import {KeyboardEventCode} from 'common/dom_utils';
     `,
   ],
 })
-export class SelectWithFilterComponent {
-  @Input() label: string = '';
+export class SelectWithFilterComponent extends AbstractFormFieldComponent {
   @Input() options: string[] = [];
   @Input() outerFilterWidth = '100px';
   @Input() innerFilterWidth = '100';
   @Input() flex = 'none';
-  @Input() appearance = '';
-  @Input() formFieldClass = '';
 
   @Output() readonly selectChange = new EventEmitter<MatSelectChange>();
 

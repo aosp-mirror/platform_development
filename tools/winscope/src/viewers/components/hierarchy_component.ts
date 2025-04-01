@@ -24,7 +24,7 @@ import {
   Output,
 } from '@angular/core';
 import {Color} from 'app/colors';
-import {KeyboardEventKey} from 'common/dom_utils';
+import {isElementOverflowing, KeyboardEventKey} from 'common/dom_utils';
 import {InMemoryStorage} from 'common/store/in_memory_storage';
 import {PersistentStore} from 'common/store/persistent_store';
 import {Analytics} from 'logging/analytics';
@@ -217,7 +217,7 @@ export class HierarchyComponent {
   }
 
   disableTooltip(el: HTMLElement) {
-    return el.scrollWidth === el.clientWidth;
+    return !isElementOverflowing(el);
   }
 
   getPinnedItemsPadding() {

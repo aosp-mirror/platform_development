@@ -22,6 +22,7 @@ import {UnitTestUtils} from 'test/unit/utils';
 import {Trace} from 'trace/trace';
 import {TraceType} from 'trace/trace_type';
 import {QueryResult, Row, RowIterator} from 'trace_processor/query_result';
+import {makeSearchTraceSpies} from 'trace_processor/test_utils';
 import {NotifyLogViewCallbackType} from 'viewers/common/abstract_log_viewer_presenter';
 import {AbstractLogViewerPresenterTest} from 'viewers/common/abstract_log_viewer_presenter_test';
 import {LogHeader} from 'viewers/common/ui_data_log';
@@ -55,10 +56,7 @@ class SearchResultPresenterTest extends AbstractLogViewerPresenterTest<SearchRes
 
   override async setUpTestEnvironment(): Promise<void> {
     const time100 = TimestampConverterUtils.makeRealTimestamp(100n);
-    const [spyQueryResult, spyIter] = UnitTestUtils.makeSearchTraceSpies(
-      time100,
-      123,
-    );
+    const [spyQueryResult, spyIter] = makeSearchTraceSpies(time100, 123);
     this.spyIter = spyIter;
     this.trace = new TraceBuilder<QueryResult>()
       .setEntries([spyQueryResult])
@@ -78,10 +76,7 @@ class SearchResultPresenterTest extends AbstractLogViewerPresenterTest<SearchRes
     callback: NotifyLogViewCallbackType<SearchResult>,
   ): Promise<SearchResultPresenter> {
     const time100 = TimestampConverterUtils.makeRealTimestamp(100n);
-    const [spyQueryResult, spyIter] = UnitTestUtils.makeSearchTraceSpies(
-      time100,
-      123,
-    );
+    const [spyQueryResult, spyIter] = makeSearchTraceSpies(time100, 123);
     this.spyIter = spyIter;
     const trace = UnitTestUtils.makeEmptyTrace(TraceType.SEARCH);
     return new SearchResultPresenter(
@@ -137,8 +132,7 @@ class SearchResultPresenterTest extends AbstractLogViewerPresenterTest<SearchRes
 
       it("does not convert 'ts' column value to timestamp if entry timestamp is not valid", async () => {
         const time0 = TimestampConverterUtils.makeZeroTimestamp();
-        const [spyQueryResult, spyIter] =
-          UnitTestUtils.makeSearchTraceSpies(time0);
+        const [spyQueryResult, spyIter] = makeSearchTraceSpies(time0);
         const trace = new TraceBuilder<QueryResult>()
           .setEntries([spyQueryResult])
           .setTimestamps([time0])

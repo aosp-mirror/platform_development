@@ -59,6 +59,7 @@ import {TRACE_INFO} from 'trace/trace_info';
 import {TracePosition} from 'trace/trace_position';
 import {TraceType} from 'trace/trace_type';
 import {QueryResult} from 'trace_processor/query_result';
+import {makeSearchTraceSpies} from 'trace_processor/test_utils';
 import {CanvasDrawer} from './expanded-timeline/canvas_drawer';
 import {DefaultTimelineRowComponent} from './expanded-timeline/default_timeline_row_component';
 import {ExpandedTimelineComponent} from './expanded-timeline/expanded_timeline_component';
@@ -344,8 +345,7 @@ describe('TimelineComponent', () => {
       TraceType.VIEW_CAPTURE,
     ];
     loadAllTraces();
-    const [spyQueryResult, spyIter] =
-      UnitTestUtils.makeSearchTraceSpies(time100);
+    const [spyQueryResult, spyIter] = makeSearchTraceSpies(time100);
     const searchTrace = new TraceBuilder<QueryResult>()
       .setEntries([spyQueryResult])
       .setTimestamps([time100])

@@ -1,27 +1,11 @@
 # Development
 
-## Checkout source tree
-
-To checkout the source tree, run the following commands:
-
-    $ mkdir aosp-clang-tools
-
-    $ cd aosp-clang-tools
-
-    $ repo init \
-          -u https://android.googlesource.com/platform/manifest \
-          -b clang-tools
-
-    $ repo sync
-
-
 ## Build instructions
 
-To build `header-abi-dumper`, `header-abi-linker` and `header-abi-diff`:
+For Googlers, check out go/repo-init/main-clang-tools and run:
 
     $ OUT_DIR=out \
           development/vndk/tools/header-checker/android/build-prebuilts.sh
-
 
 ## Alternative build instructions
 
@@ -29,7 +13,7 @@ If you have a full source tree, you may build the tools with:
 
     $ source build/envsetup.sh
 
-    $ lunch aosp_arm64-userdebug
+    $ lunch aosp_arm64-trunk_staging-userdebug
 
     $ cd development/vndk/tools/header-checker
 

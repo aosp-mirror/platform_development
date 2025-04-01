@@ -227,6 +227,27 @@ describe('PerfettoSessionModerator', () => {
         'PerfettoTrace',
         ['setup1'],
         `cat << EOF >> ${PERFETTO_TRACE_CONFIG_FILE}
+data_sources {
+  config {
+    name: "linux.process_stats"
+    target_buffer: 0
+    process_stats_config {
+      scan_all_processes_on_start: true
+    }
+  }
+}
+data_sources: {
+  config {
+    name: "linux.ftrace"
+    ftrace_config {
+      ftrace_events: "ftrace/print"
+      ftrace_events: "task/task_newtask"
+      ftrace_events: "task/task_rename"
+      atrace_categories: "ss"
+      atrace_categories: "wm"
+    }
+  }
+}
 buffers: {
   size_kb: 500000
   fill_policy: RING_BUFFER

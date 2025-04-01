@@ -29,6 +29,10 @@ export function isElementVisible(element: HTMLElement) {
   return rect.height > 0 && rect.width > 0;
 }
 
+export function isElementOverflowing(element: HTMLElement) {
+  return element.scrollWidth > element.clientWidth;
+}
+
 export enum KeyboardEventCode {
   A = 'KeyA',
   D = 'KeyD',

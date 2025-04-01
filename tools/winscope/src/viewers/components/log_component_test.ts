@@ -29,6 +29,7 @@ import {MatIconModule} from '@angular/material/icon';
 import {MatInputModule} from '@angular/material/input';
 import {MatProgressSpinnerModule} from '@angular/material/progress-spinner';
 import {MatSelectModule} from '@angular/material/select';
+import {MatTooltipModule} from '@angular/material/tooltip';
 import {BrowserAnimationsModule} from '@angular/platform-browser/animations';
 import {assertDefined} from 'common/assert_utils';
 import {TimestampConverterUtils} from 'common/time/test_utils';
@@ -82,6 +83,7 @@ describe('LogComponent', () => {
         MatIconModule,
         MatPseudoCheckboxModule,
         MatProgressSpinnerModule,
+        MatTooltipModule,
       ],
       declarations: [
         LogComponent,

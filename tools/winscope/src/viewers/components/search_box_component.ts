@@ -18,6 +18,7 @@ import {Component, EventEmitter, Input, Output} from '@angular/core';
 import {assertDefined} from 'common/assert_utils';
 import {FilterFlag} from 'common/filter_flag';
 import {TextFilter} from 'viewers/common/text_filter';
+import {AbstractFormFieldComponent} from './abstract_form_field_component';
 
 @Component({
   selector: 'search-box',
@@ -28,7 +29,10 @@ import {TextFilter} from 'viewers/common/text_filter';
       [appearance]="appearance"
       [style.height]="height"
       (keydown.esc)="$event.target.blur()"
-      (keydown.enter)="$event.target.blur()">
+      (keydown.enter)="$event.target.blur()"
+      [matTooltip]="label"
+      matTooltipPosition="above"
+      [matTooltipDisabled]="disableTooltip(formField)" #formField>
       <mat-label>{{ label }}</mat-label>
       <input
         matInput
@@ -75,14 +79,11 @@ import {TextFilter} from 'viewers/common/text_filter';
   `,
   ],
 })
-export class SearchBoxComponent {
+export class SearchBoxComponent extends AbstractFormFieldComponent {
   FilterFlag = FilterFlag;
 
   @Input() textFilter: TextFilter | undefined = new TextFilter();
-  @Input() label = 'Search';
   @Input() filterName = 'filter';
-  @Input() appearance = '';
-  @Input() formFieldClass = '';
   @Input() height = '48px';
 
   @Output() readonly filterChange = new EventEmitter<TextFilter>();

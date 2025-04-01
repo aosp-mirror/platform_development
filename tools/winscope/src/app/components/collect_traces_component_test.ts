@@ -56,6 +56,7 @@ import {ConnectionState} from 'trace_collection/connection_state';
 import {MockAdbDeviceConnection} from 'trace_collection/mock/mock_adb_device_connection';
 import {UiTraceTarget} from 'trace_collection/ui/ui_trace_target';
 import {WdpDeviceConnection} from 'trace_collection/wdp/wdp_device_connection';
+import {WdpHostConnection} from 'trace_collection/wdp/wdp_host_connection';
 import {WinscopeProxyDeviceConnection} from 'trace_collection/winscope_proxy/winscope_proxy_device_connection';
 import {CollectTracesComponent} from './collect_traces_component';
 import {LoadProgressComponent} from './load_progress_component';
@@ -74,7 +75,7 @@ describe('CollectTracesComponent', () => {
   const testFile = new File([], 'test_file');
 
   beforeAll(() => {
-    spyOn(window, 'open');
+    spyOn(WdpHostConnection.prototype, 'requestDevices');
   });
 
   beforeEach(async () => {

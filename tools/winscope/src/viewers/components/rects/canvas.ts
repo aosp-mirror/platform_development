@@ -161,8 +161,8 @@ export class Canvas {
     this.camera.top = cameraHeight / 2;
     this.camera.bottom = -cameraHeight / 2;
     const cPos = new THREE.Vector3(0, 0, Canvas.TARGET_SCENE_DIAGONAL)
-      .applyAxisAngle(new THREE.Vector3(1, 0, 0), -camera.rotationAngleX)
-      .applyAxisAngle(new THREE.Vector3(0, 1, 0), camera.rotationAngleY);
+      .applyAxisAngle(new THREE.Vector3(0, 1, 0), camera.rotationAngleY) // y axis rotation
+      .applyAxisAngle(new THREE.Vector3(1, 0, 0), -camera.rotationAngleX); // x axis rotation
     this.camera.position.set(cPos.x, cPos.y, cPos.z);
     this.camera.lookAt(0, 0, 0);
     this.camera.updateProjectionMatrix();

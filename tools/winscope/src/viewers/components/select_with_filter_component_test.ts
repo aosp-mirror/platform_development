@@ -27,6 +27,7 @@ import {MatDividerModule} from '@angular/material/divider';
 import {MatFormFieldModule} from '@angular/material/form-field';
 import {MatInputModule} from '@angular/material/input';
 import {MatSelectModule} from '@angular/material/select';
+import {MatTooltipModule} from '@angular/material/tooltip';
 import {BrowserAnimationsModule} from '@angular/platform-browser/animations';
 import {assertDefined} from 'common/assert_utils';
 import {KeyboardEventCode, KeyboardEventKeyCode} from 'common/dom_utils';
@@ -53,6 +54,7 @@ describe('SelectWithFilterComponent', () => {
         FormsModule,
         MatPseudoCheckboxModule,
         MatDividerModule,
+        MatTooltipModule,
       ],
     }).compileComponents();
     fixture = TestBed.createComponent(TestHostComponent);
@@ -63,6 +65,10 @@ describe('SelectWithFilterComponent', () => {
       assertDefined(component.selectWithFilterComponent).selectChange,
       'emit',
     );
+  });
+
+  afterAll(() => {
+    fixture.detectChanges();
   });
 
   it('can be created', () => {

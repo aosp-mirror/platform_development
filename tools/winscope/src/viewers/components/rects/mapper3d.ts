@@ -36,12 +36,10 @@ class Mapper3D {
   private static readonly CAMERA_ROTATION_FACTOR_INIT = 1;
   private static readonly DISPLAY_CLUSTER_SPACING = 750;
   private static readonly LABEL_FIRST_Y_OFFSET = 100;
+  private static readonly LABEL_Y_OFFSET = 500;
+  private static readonly SINGLE_LABEL_Y_OFFSET = 100;
   private static readonly LABEL_CIRCLE_RADIUS = 15;
-  private static readonly LABEL_SPACING_INIT_FACTOR = 12.5;
-  private static readonly LABEL_SPACING_PER_RECT_FACTOR = 5;
-  private static readonly LABEL_SPACING_MIN = 200;
   private static readonly MAX_RENDERED_LABELS = 30;
-  private static readonly SINGLE_LABEL_SPACING_FACTOR = 1.75;
   private static readonly Y_AXIS_ROTATION_FACTOR = 1.5;
   private static readonly Z_FIGHTING_EPSILON = 5;
   private static readonly ZOOM_FACTOR_INIT = 1;
@@ -174,8 +172,6 @@ class Mapper3D {
     const rects3d: UiRect3D[] = [];
     const labels3d: RectLabel[] = [];
     let clusterYOffset = 0;
-    let boundingBox: Box3D | undefined;
-
     for (const groupId of this.currentGroupIds) {
       const rects2dForGroupId = this.selectRectsToDraw(this.rects, groupId);
       rects2dForGroupId.sort(this.compareDepth); // decreasing order of depth
@@ -190,22 +186,25 @@ class Mapper3D {
       rects3d.push(...rects3dForGroupId);
       labels3d.push(...labels3dForGroupId);
 
-      boundingBox = this.computeBoundingBox(rects3d, labels3d);
+      const boundingBox = this.computeBoundingBox(
+        rects3dForGroupId,
+        labels3dForGroupId,
+      );
       clusterYOffset += boundingBox.height + Mapper3D.DISPLAY_CLUSTER_SPACING;
     }
 
-    const newBoundingBox =
-      boundingBox ?? this.computeBoundingBox(rects3d, labels3d);
+    const newBoundingBox = this.computeBoundingBox(rects3d, labels3d);
     if (!this.previousBoundingBox || updateBoundingBox) {
       this.previousBoundingBox = newBoundingBox;
     }
 
-    const angleX = this.getCameraXAxisAngle();
+    const {angleX, angleY} = this.getCameraRotationAngles();
+
     const scene: Scene = {
       boundingBox: this.previousBoundingBox,
       camera: {
         rotationAngleX: angleX,
-        rotationAngleY: angleX * Mapper3D.Y_AXIS_ROTATION_FACTOR,
+        rotationAngleY: angleY,
         zoomFactor: this.zoomFactor,
         panScreenDistance: this.panScreenDistance,
       },
@@ -216,8 +215,12 @@ class Mapper3D {
     return scene;
   }
 
-  private getCameraXAxisAngle(): number {
-    return (this.cameraRotationFactor * Math.PI * 45) / 360;
+  private getCameraRotationAngles(): {angleX: number; angleY: number} {
+    const angleX = (this.cameraRotationFactor * Math.PI * 45) / 360;
+    return {
+      angleX,
+      angleY: angleX * Mapper3D.Y_AXIS_ROTATION_FACTOR,
+    };
   }
 
   private compareDepth(a: UiRect, b: UiRect): number {
@@ -379,89 +382,66 @@ class Mapper3D {
   private computeLabels(rects2d: UiRect[], rects3d: UiRect3D[]): RectLabel[] {
     const labels3d: RectLabel[] = [];
 
+    // Consider coordinate system where x-y plane is computer screen, and z-axis
+    // goes into screen. To give final image, y and x axes are rotated by yRot
+    // and xRot, in that order. Axes origin is (x0, y0, z0).
+    // yRot: [Math.cos(angleY)    0                    Math.sin(angleY)]
+    //       [0                   1                    0               ]
+    //       [-Math.sin(angleY)   0                    Math.cos(angleY)]
+
+    // xRot: [1                   0                    0               ]
+    //       [0                   Math.cos(angleX)    -Math.sin(angleX)]
+    //       [0                   Math.sin(angleX)     Math.cos(angleX)]
+    const {angleX, angleY} = this.getCameraRotationAngles();
+
     const bottomRightCorners = rects3d.map((rect) =>
       rect.transform.transformPoint3D(rect.bottomRight),
     );
-    const lowestYPoint = Math.max(...bottomRightCorners.map((p) => p.y));
-    const rightmostXPoint = Math.max(...bottomRightCorners.map((p) => p.x));
+    const x0 = Math.max(...bottomRightCorners.map((p) => p.x)); // max x in image (furthest right in 2D plane)
+    const y0 = Math.max(...bottomRightCorners.map((p) => p.y)); // max y in image (furthest down in 2D plane)
+    const z0 = rects3d[0]?.bottomRight.z; // depth of first rect
 
-    const cameraTiltFactor =
-      Math.sin(this.getCameraXAxisAngle()) / Mapper3D.Y_AXIS_ROTATION_FACTOR;
-    const labelTextYSpacing = Math.max(
-      ((this.onlyRenderSelectedLabel(rects2d) ? rects2d.length : 1) *
-        Mapper3D.LABEL_SPACING_MIN) /
-        Mapper3D.LABEL_SPACING_PER_RECT_FACTOR,
-      lowestYPoint / Mapper3D.LABEL_SPACING_INIT_FACTOR,
+    const onlyHighlighted = this.onlyRenderSelectedLabel(rects2d);
+    const firstLabelScaleFactor = Math.max(
+      Math.min(this.zoomFactor, 1 + (8 - rects2d.length) * 0.05),
+      0.25,
     );
-
-    const scaleFactor = Math.max(
-      Math.min(this.zoomFactor ** 2, 1 + (8 - rects2d.length) * 0.05),
-      0.5,
-    );
-
-    let labelY = lowestYPoint + Mapper3D.LABEL_FIRST_Y_OFFSET / scaleFactor;
-    let lastDepth: number | undefined;
+    const fixedYOffset =
+      y0 + Mapper3D.LABEL_FIRST_Y_OFFSET / firstLabelScaleFactor;
+    const multiLabelYOffset = Mapper3D.LABEL_Y_OFFSET / this.zoomFactor;
+    const singleLabelYOffset = Mapper3D.SINGLE_LABEL_Y_OFFSET / this.zoomFactor;
 
     rects2d.forEach((rect2d, index) => {
       if (!rect2d.label) {
         return;
       }
-      const j = rects2d.length - 1 - index; // rects sorted in decreasing order of depth; increment labelY by depth at L - 1 - i
-      if (this.onlyRenderSelectedLabel(rects2d)) {
-        // only render the selected rect label
-        if (!this.isHighlighted(rect2d)) {
-          return;
-        }
-        labelY +=
-          ((rects2d[j].depth / rects2d[0].depth) *
-            labelTextYSpacing *
-            Mapper3D.SINGLE_LABEL_SPACING_FACTOR *
-            this.zSpacingFactor) /
-          Math.sqrt(scaleFactor);
-      } else {
-        if (lastDepth !== undefined) {
-          labelY += ((lastDepth - j) * labelTextYSpacing) / scaleFactor;
-        }
-        lastDepth = j;
+      const isHighlighted = this.isHighlighted(rect2d);
+      if (onlyHighlighted && !isHighlighted) {
+        return;
       }
+      const lineStart = this.getLabelLineStart(rects3d[index]);
 
-      const rect3d = rects3d[index];
+      // To accurately offset label in y-direction of original coordinate
+      // system seen by user, we:
+      // - define vector V from axes origin to rect's corner where label starts
+      // - project V into rotated coordinate system
+      // - apply y-coordinate of projection as offset yOffsetXYRot.
+      const xDiff = x0 - lineStart.x;
+      const yDiff = Math.max(0, lineStart.y - y0);
+      const zDiff = lineStart.z - z0;
+      const V = [xDiff, yDiff, zDiff];
+      const zOffsetYRot = V[0] * -Math.sin(angleY) + V[2] * Math.cos(angleY);
+      const yOffsetXYRot =
+        V[1] * Math.cos(angleX) + zOffsetYRot * -Math.sin(angleX);
 
-      const bottomLeft = new Point3D(
-        rect3d.topLeft.x,
-        rect3d.topLeft.y,
-        rect3d.topLeft.z,
-      );
-      const topRight = new Point3D(
-        rect3d.bottomRight.x,
-        rect3d.bottomRight.y,
-        rect3d.bottomRight.z,
-      );
-      const lineStarts = [
-        rect3d.transform.transformPoint3D(rect3d.topLeft),
-        rect3d.transform.transformPoint3D(rect3d.bottomRight),
-        rect3d.transform.transformPoint3D(bottomLeft),
-        rect3d.transform.transformPoint3D(topRight),
-      ];
-      let maxIndex = 0;
-      for (let i = 1; i < lineStarts.length; i++) {
-        if (lineStarts[i].x > lineStarts[maxIndex].x) {
-          maxIndex = i;
-        }
-      }
-      const lineStart = lineStarts[maxIndex];
-
-      const xDiff = rightmostXPoint - lineStart.x;
+      const yOffsetIndex = onlyHighlighted
+        ? singleLabelYOffset
+        : multiLabelYOffset;
+      const lineEndY = fixedYOffset + yOffsetXYRot + index * yOffsetIndex;
 
       lineStart.x += Mapper3D.LABEL_CIRCLE_RADIUS / 2;
 
-      const lineEnd = new Point3D(
-        lineStart.x,
-        labelY + xDiff * cameraTiltFactor,
-        lineStart.z,
-      );
-
-      const isHighlighted = this.isHighlighted(rect2d);
+      const lineEnd = new Point3D(lineStart.x, lineEndY, lineStart.z);
 
       const RectLabel: RectLabel = {
         circle: {
@@ -478,6 +458,32 @@ class Mapper3D {
     });
 
     return labels3d;
+  }
+
+  private getLabelLineStart(rect3d: UiRect3D): Point3D {
+    const bottomLeft = new Point3D(
+      rect3d.topLeft.x,
+      rect3d.bottomRight.y - rect3d.topLeft.y,
+      rect3d.topLeft.z,
+    );
+    const topRight = new Point3D(
+      rect3d.bottomRight.x,
+      rect3d.topLeft.y,
+      rect3d.bottomRight.z,
+    );
+    const lineStarts = [
+      rect3d.transform.transformPoint3D(rect3d.topLeft),
+      rect3d.transform.transformPoint3D(rect3d.bottomRight),
+      rect3d.transform.transformPoint3D(bottomLeft),
+      rect3d.transform.transformPoint3D(topRight),
+    ];
+    let rightmostCoordinateIndex = 0;
+    for (let i = 1; i < lineStarts.length; i++) {
+      if (lineStarts[i].x > lineStarts[rightmostCoordinateIndex].x) {
+        rightmostCoordinateIndex = i;
+      }
+    }
+    return lineStarts[rightmostCoordinateIndex];
   }
 
   private computeBoundingBox(rects: UiRect3D[], labels: RectLabel[]): Box3D {
@@ -512,16 +518,6 @@ class Mapper3D {
     };
 
     rects.forEach((rect) => {
-      /*const topLeft: Point3D = {
-        x: rect.center.x - rect.width / 2,
-        y: rect.center.y + rect.height / 2,
-        z: rect.center.z
-      };
-      const bottomRight: Point3D = {
-        x: rect.center.x + rect.width / 2,
-        y: rect.center.y - rect.height / 2,
-        z: rect.center.z
-      };*/
       updateMinMaxCoordinates(rect.topLeft, rect.transform);
       updateMinMaxCoordinates(rect.bottomRight, rect.transform);
     });

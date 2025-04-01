@@ -20,6 +20,7 @@ import {Parser} from 'trace/parser';
 import {Trace} from 'trace/trace';
 import {Traces} from 'trace/traces';
 import {TraceType} from 'trace/trace_type';
+import {runQueryAndGetResult} from 'trace_processor/test_utils';
 import {SEARCH_VIEWS, TraceSearchInitializer} from './trace_search_initializer';
 
 describe('TraceSearchInitializer', () => {
@@ -37,7 +38,7 @@ describe('TraceSearchInitializer', () => {
       'sf_layer_search',
       'sf_hierarchy_root_search',
     ]);
-    const queryResult = await UnitTestUtils.runQueryAndGetResult(`
+    const queryResult = await runQueryAndGetResult(`
       SELECT * FROM sf_layer_search
         WHERE layer_name LIKE 'Task%'
         AND property='flags'
@@ -45,7 +46,7 @@ describe('TraceSearchInitializer', () => {
     `);
     expect(queryResult.numRows()).toEqual(2);
 
-    const queryResultEntry = await UnitTestUtils.runQueryAndGetResult(`
+    const queryResultEntry = await runQueryAndGetResult(`
       SELECT * FROM sf_hierarchy_root_search
         WHERE property LIKE 'displays[1]%'
         AND (
@@ -62,14 +63,14 @@ describe('TraceSearchInitializer', () => {
       'traces/perfetto/transactions_trace.perfetto-trace',
     );
     await createViewsAndTestExamples(parser, ['transactions_search']);
-    const queryResultTransaction = await UnitTestUtils.runQueryAndGetResult(`
+    const queryResultTransaction = await runQueryAndGetResult(`
       SELECT * FROM transactions_search
         WHERE flat_property='transactions.layer_changes.x'
         AND value!='0.0'
     `);
     expect(queryResultTransaction.numRows()).toEqual(3);
 
-    const queryResultAddedLayer = await UnitTestUtils.runQueryAndGetResult(`
+    const queryResultAddedLayer = await runQueryAndGetResult(`
       SELECT * FROM transactions_search
         WHERE flat_property='added_layers.name'
         AND value='ImeContainer'
@@ -83,7 +84,7 @@ describe('TraceSearchInitializer', () => {
       'traces/perfetto/protolog.perfetto-trace',
     );
     await createViewsAndTestExamples(parser, ['protolog']);
-    const queryResult = await UnitTestUtils.runQueryAndGetResult(`
+    const queryResult = await runQueryAndGetResult(`
       SELECT * FROM protolog WHERE message LIKE '%string%'
     `);
     expect(queryResult.numRows()).toEqual(2);
@@ -95,7 +96,7 @@ describe('TraceSearchInitializer', () => {
       'traces/perfetto/shell_transitions_trace.perfetto-trace',
     );
     await createViewsAndTestExamples(parser, ['transitions_search']);
-    const queryResult = await UnitTestUtils.runQueryAndGetResult(`
+    const queryResult = await runQueryAndGetResult(`
       SELECT * FROM transitions_search
         WHERE flat_property='handler'
         AND value LIKE '%DefaultMixedHandler'
@@ -109,7 +110,7 @@ describe('TraceSearchInitializer', () => {
       'traces/perfetto/viewcapture.perfetto-trace',
     );
     await createViewsAndTestExamples(parser, ['viewcapture_search']);
-    const queryResult = await UnitTestUtils.runQueryAndGetResult(`
+    const queryResult = await runQueryAndGetResult(`
       SELECT * FROM viewcapture_search
         WHERE class_name LIKE '%SearchContainerView'
         AND flat_property='translation_y'
@@ -133,7 +134,7 @@ describe('TraceSearchInitializer', () => {
       );
       for (const example of view.examples) {
         await expectAsync(
-          UnitTestUtils.runQueryAndGetResult(example.query),
+          runQueryAndGetResult(example.query),
         ).not.toBeRejected();
       }
     }
