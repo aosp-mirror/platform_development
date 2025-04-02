@@ -28,9 +28,9 @@ import {
   FailedToCreateTracesParser,
   IncompleteFrameMapping,
   InvalidLegacyTrace,
+  InvalidPerfettoTrace,
   NoTraceTargetsSelected,
   NoValidFiles,
-  UnsupportedFileFormat,
 } from 'messaging/user_warnings';
 import {
   ActiveTraceChanged,
@@ -107,6 +107,7 @@ describe('Mediator', () => {
   let inputFiles: File[];
   let eventLogFile: File;
   let perfettoFile: File;
+  let wmDumpFile: File;
   let tracePipeline: TracePipeline;
   let timelineData: TimelineData;
   let abtChromeExtensionProtocol: WinscopeEventEmitter & WinscopeEventListener;
@@ -150,7 +151,12 @@ describe('Mediator', () => {
     perfettoFile = await getFixtureFile(
       'traces/perfetto/layers_trace.perfetto-trace',
     );
-    eventLogFile = await getFixtureFile('traces/eventlog_no_cujs.winscope');
+    eventLogFile = await getFixtureFile(
+      'traces/elapsed_and_real_timestamp/eventlog_no_cujs.winscope',
+    );
+    wmDumpFile = await getFixtureFile(
+      'traces/elapsed_timestamp/dump_WindowManager.pb',
+    );
     userNotifierChecker = new UserNotifierChecker();
   });
 
@@ -270,12 +276,14 @@ describe('Mediator', () => {
     await mediator.onWinscopeEvent(
       new AppFilesCollected({
         requested: [],
-        collected: [await getFixtureFile('traces/empty.pb')],
+        collected: [await getFixtureFile('invalid_files/empty.pb')],
       }),
     );
     expect(
       userNotifierChecker.expectNotified([
-        new UnsupportedFileFormat('empty.pb'),
+        new InvalidPerfettoTrace('empty.pb', [
+          'Perfetto trace has no Winscope trace entries',
+        ]),
       ]),
     );
     expect(appComponent.onWinscopeEvent).not.toHaveBeenCalled();
@@ -286,7 +294,9 @@ describe('Mediator', () => {
       new AppFilesCollected({
         requested: [],
         collected: [
-          await getFixtureFile('traces/no_entries_InputMethodClients.pb'),
+          await getFixtureFile(
+            'invalid_files/no_entries_InputMethodClients.pb',
+          ),
         ],
       }),
     );
@@ -374,7 +384,7 @@ describe('Mediator', () => {
       await getFixtureFile(
         'traces/elapsed_and_real_timestamp/dump_SurfaceFlinger.pb',
       ),
-      await getFixtureFile('traces/dump_WindowManager.pb'),
+      wmDumpFile,
     ];
     await loadFiles(dumpFiles);
     await mediator.onWinscopeEvent(new AppTraceViewRequest());
@@ -484,8 +494,7 @@ describe('Mediator', () => {
   });
 
   it("initializes viewers' trace position also when loaded traces have no valid timestamps", async () => {
-    const dumpFile = await getFixtureFile('traces/dump_WindowManager.pb');
-    await mediator.onWinscopeEvent(new AppFilesUploaded([dumpFile]));
+    await mediator.onWinscopeEvent(new AppFilesUploaded([wmDumpFile]));
 
     resetSpyCalls();
     await mediator.onWinscopeEvent(new AppTraceViewRequest());
@@ -507,8 +516,7 @@ describe('Mediator', () => {
   it('warns user if frame mapping fails', async () => {
     const errorMsg = 'frame mapping failed';
     spyOn(tracePipeline, 'buildTraces').and.throwError(errorMsg);
-    const dumpFile = await getFixtureFile('traces/dump_WindowManager.pb');
-    await mediator.onWinscopeEvent(new AppFilesUploaded([dumpFile]));
+    await mediator.onWinscopeEvent(new AppFilesUploaded([wmDumpFile]));
 
     resetSpyCalls();
     await mediator.onWinscopeEvent(new AppTraceViewRequest());

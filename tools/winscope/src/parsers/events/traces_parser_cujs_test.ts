@@ -36,7 +36,7 @@ describe('TracesParserCujs', () => {
   beforeAll(async () => {
     jasmine.addCustomEqualityTester(timestampEqualityTester);
     parser = (await UnitTestUtils.getTracesParser([
-      'traces/eventlog.winscope',
+      'traces/elapsed_and_real_timestamp/eventlog.winscope',
     ])) as Parser<PropertyTreeNode>;
   });
 

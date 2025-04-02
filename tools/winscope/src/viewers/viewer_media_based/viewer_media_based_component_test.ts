@@ -132,7 +132,9 @@ describe('ViewerMediaBasedComponent', () => {
 
   it('shows screenshot image', async () => {
     const initialMaxWidth = getContainerMaxWidth();
-    const screenshotFile = await getFixtureFile('traces/screenshot_2.png');
+    const screenshotFile = await getFixtureFile(
+      'traces/screenshot/screenshot_2.png',
+    );
     component.currentTraceEntries = [
       new MediaBasedTraceEntry(0, screenshotFile, true),
     ];
@@ -225,7 +227,9 @@ describe('ViewerMediaBasedComponent', () => {
   });
 
   it('updates max container size on window resize', async () => {
-    const screenshotFile = await getFixtureFile('traces/screenshot.png');
+    const screenshotFile = await getFixtureFile(
+      'traces/screenshot/screenshot.png',
+    );
     component.currentTraceEntries = [
       new MediaBasedTraceEntry(0, screenshotFile, true),
     ];

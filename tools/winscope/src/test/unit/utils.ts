@@ -83,11 +83,12 @@ class UnitTestUtils {
     metadata: TraceMetadata = {},
   ): Promise<Array<Parser<object>>> {
     const file = new TraceFile(await getFixtureFile(filename), undefined);
-    const fileAndParsers = await new LegacyParserFactory().createParsers(
+    const processedFiles = await new LegacyParserFactory().processFiles(
       [file],
       converter,
       metadata,
     );
+    const fileAndParsers = processedFiles.parsers;
 
     if (initializeRealToElapsedTimeOffsetNs) {
       const monotonicOffset = fileAndParsers
@@ -134,15 +135,20 @@ class UnitTestUtils {
   static async getPerfettoParsers(
     fixturePath: string,
     withUTCOffset = false,
+    isPerfetto?: boolean,
   ): Promise<Array<Parser<object>>> {
     const file = await getFixtureFile(fixturePath);
     const traceFile = new TraceFile(file);
     const converter = UnitTestUtils.getTimestampConverter(withUTCOffset);
-    const parsers = await new PerfettoParserFactory().createParsers(
-      traceFile,
-      converter,
-      undefined,
-    );
+    const {parsers, isPerfettoTrace} =
+      await new PerfettoParserFactory().processFiles(
+        traceFile,
+        converter,
+        undefined,
+      );
+    if (isPerfetto !== undefined) {
+      expect(isPerfettoTrace).toEqual(isPerfetto);
+    }
     parsers.forEach((parser) => {
       converter.setRealToBootTimeOffsetNs(
         assertDefined(parser.getRealToBootTimeOffsetNs()),

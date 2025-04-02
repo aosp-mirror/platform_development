@@ -54,7 +54,7 @@ describe('ViewerJankCujsComponent', () => {
 
   beforeAll(async () => {
     const parser = (await UnitTestUtils.getTracesParser([
-      'traces/eventlog.winscope',
+      'traces/elapsed_and_real_timestamp/eventlog.winscope',
     ])) as Parser<PropertyTreeNode>;
 
     trace = new TraceBuilder<PropertyTreeNode>()

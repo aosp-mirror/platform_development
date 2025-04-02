@@ -71,7 +71,7 @@ describe('FileUtils', () => {
   });
 
   it('unzips archive', async () => {
-    const validZipFile = await getFixtureFile('traces/winscope.zip');
+    const validZipFile = await getFixtureFile('archives/winscope.zip');
     const unzippedFiles = await FileUtils.unzipFile(validZipFile);
     expect(unzippedFiles.map((f) => f.name)).toEqual([
       'Surface Flinger/SurfaceFlinger.pb',
@@ -80,7 +80,9 @@ describe('FileUtils', () => {
   });
 
   it('recursively unzips archive', async () => {
-    const validZipFile = await getFixtureFile('traces/recursive_winscope.zip');
+    const validZipFile = await getFixtureFile(
+      'archives/recursive_winscope.zip',
+    );
     const unzippedFiles = await FileUtils.unzipFile(validZipFile);
     expect(unzippedFiles.map((f) => f.name)).toEqual([
       'Surface Flinger/SurfaceFlinger.pb',
@@ -89,26 +91,26 @@ describe('FileUtils', () => {
   });
 
   it('decompresses gzipped file', async () => {
-    const gzippedFile = await getFixtureFile('traces/WindowManager.pb.gz');
+    const gzippedFile = await getFixtureFile('archives/WindowManager.pb.gz');
     const unzippedFile = await FileUtils.decompressGZipFile(gzippedFile);
-    expect(unzippedFile.name).toEqual('traces/WindowManager.pb');
+    expect(unzippedFile.name).toEqual('archives/WindowManager.pb');
     expect(unzippedFile.size).toEqual(377137);
   });
 
   it('decompresses gzipped file without gz ext', async () => {
     const gzippedFile = await getFixtureFile(
-      'traces/WindowManager.pb.gz',
-      'traces/WindowManager.pb',
+      'archives/WindowManager.pb.gz',
+      'archives/WindowManager.pb',
     );
     const unzippedFile = await FileUtils.decompressGZipFile(gzippedFile);
-    expect(unzippedFile.name).toEqual('traces/WindowManager.pb');
+    expect(unzippedFile.name).toEqual('archives/WindowManager.pb');
     expect(unzippedFile.size).toEqual(377137);
   });
 
   it('decompresses gzipped archive', async () => {
-    const gzippedFile = await getFixtureFile('traces/WindowManager.zip.gz');
+    const gzippedFile = await getFixtureFile('archives/WindowManager.zip.gz');
     const unzippedFile = await FileUtils.decompressGZipFile(gzippedFile);
-    expect(unzippedFile.name).toEqual('traces/WindowManager.zip');
+    expect(unzippedFile.name).toEqual('archives/WindowManager.zip');
     expect(unzippedFile.size).toEqual(10158);
   });
 

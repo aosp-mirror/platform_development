@@ -23,7 +23,11 @@ import {
 import {UserNotifier} from 'common/user_notifier';
 import {Analytics} from 'logging/analytics';
 import {ProgressListener} from 'messaging/progress_listener';
-import {CorruptedArchive, NoValidFiles} from 'messaging/user_warnings';
+import {
+  CorruptedArchive,
+  NoValidFiles,
+  UnsupportedFileFormat,
+} from 'messaging/user_warnings';
 import {FileAndParsers} from 'parsers/file_and_parsers';
 import {ParserFactory as LegacyParserFactory} from 'parsers/legacy/parser_factory';
 import {ParserFactory as PerfettoParserFactory} from 'parsers/perfetto/parser_factory';
@@ -231,12 +235,13 @@ export class TracePipeline {
     }
 
     startTimeMs = Date.now();
-    const legacyParsers = await new LegacyParserFactory().createParsers(
-      filterResult.legacy,
-      this.timestampConverter,
-      filterResult.metadata,
-      progressListener,
-    );
+    const {parsers: legacyParsers, unsupportedFiles} =
+      await new LegacyParserFactory().processFiles(
+        filterResult.legacy,
+        this.timestampConverter,
+        filterResult.metadata,
+        progressListener,
+      );
     Analytics.Loading.logFileParsingTime(
       'legacy',
       source,
@@ -248,7 +253,7 @@ export class TracePipeline {
 
     if (filterResult.perfetto) {
       startTimeMs = Date.now();
-      const parsers = await new PerfettoParserFactory().createParsers(
+      const {parsers} = await new PerfettoParserFactory().processFiles(
         filterResult.perfetto,
         this.timestampConverter,
         progressListener,
@@ -260,6 +265,24 @@ export class TracePipeline {
       );
       Analytics.Memory.logUsage('perfetto_files_parsed');
       perfettoParsers = new FileAndParsers(filterResult.perfetto, parsers);
+    } else {
+      for (const file of unsupportedFiles) {
+        if (perfettoParsers) {
+          UserNotifier.add(new UnsupportedFileFormat(file.getDescriptor()));
+          continue;
+        }
+        const {parsers, isPerfettoTrace} =
+          await new PerfettoParserFactory().processFiles(
+            file,
+            this.timestampConverter,
+            progressListener,
+          );
+        if (parsers.length > 0) {
+          perfettoParsers = new FileAndParsers(file, parsers);
+        } else if (!isPerfettoTrace) {
+          UserNotifier.add(new UnsupportedFileFormat(file.getDescriptor()));
+        }
+      }
     }
 
     const monotonicTimeOffset =

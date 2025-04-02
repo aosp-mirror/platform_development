@@ -24,7 +24,6 @@ import {TraceHasOldData, TraceOverridden} from 'messaging/user_warnings';
 import {FileAndParser} from 'parsers/file_and_parser';
 import {FileAndParsers} from 'parsers/file_and_parsers';
 import {Parser} from 'trace/parser';
-import {TraceFile} from 'trace/trace_file';
 import {TRACE_INFO} from 'trace/trace_info';
 import {TraceEntryTypeMap, TraceType} from 'trace/trace_type';
 
@@ -153,7 +152,7 @@ export class LoadedParsers {
     };
 
     const tryPushOutPerfettoFile = (parsers: FileAndParser[]) => {
-      const file: TraceFile = parsers.values().next().value.file;
+      const file = parsers[0].file;
       let outputFilename = FileUtils.removeDirFromFileName(file.file.name);
       if (FileUtils.getFileExtension(file.file.name) === undefined) {
         outputFilename += '.perfetto-trace';
@@ -265,14 +264,7 @@ export class LoadedParsers {
       // dangling in the disk that get automatically included into bugreports. Hence, Perfetto
       // parsers must always override legacy ones so that dangling legacy files are ignored.
       this.legacyParsers = this.legacyParsers.filter((fileAndParser) => {
-        const isOverriddenByPerfettoParser =
-          fileAndParser.parser.getTraceType() === parser.getTraceType();
-        if (isOverriddenByPerfettoParser) {
-          UserNotifier.add(
-            new TraceOverridden(fileAndParser.parser.getDescriptors().join()),
-          );
-        }
-        return !isOverriddenByPerfettoParser;
+        return fileAndParser.parser.getTraceType() !== parser.getTraceType();
       });
     });
   }
@@ -281,16 +273,10 @@ export class LoadedParsers {
     // While transitioning to the Perfetto format, devices might still have old legacy trace files
     // dangling in the disk that get automatically included into bugreports. Hence, Perfetto parsers
     // must always override legacy ones so that dangling legacy files are ignored.
-    const isOverriddenByPerfettoParser = this.perfettoParsers.some(
+    return !this.perfettoParsers.some(
       (fileAndParser) =>
         fileAndParser.parser.getTraceType() === newParser.getTraceType(),
     );
-    if (isOverriddenByPerfettoParser) {
-      UserNotifier.add(new TraceOverridden(newParser.getDescriptors().join()));
-      return false;
-    }
-
-    return true;
   }
 
   private filterOutLegacyParsersWithOldData(

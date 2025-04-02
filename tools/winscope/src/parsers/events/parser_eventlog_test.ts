@@ -34,7 +34,9 @@ describe('ParserEventLog', () => {
     beforeAll(async () => {
       jasmine.addCustomEqualityTester(timestampEqualityTester);
       parser = assertDefined(
-        await UnitTestUtils.getParser('traces/eventlog.winscope'),
+        await UnitTestUtils.getParser(
+          'traces/elapsed_and_real_timestamp/eventlog.winscope',
+        ),
       ) as Parser<PropertyTreeNode>;
     });
 
@@ -90,7 +92,7 @@ describe('ParserEventLog', () => {
       jasmine.addCustomEqualityTester(timestampEqualityTester);
       parser = assertDefined(
         await UnitTestUtils.getParser(
-          'traces/eventlog_timestamps_not_monotonically_increasing.winscope',
+          'traces/elapsed_and_real_timestamp/eventlog_timestamps_not_monotonically_increasing.winscope',
         ),
       ) as Parser<PropertyTreeNode>;
     });

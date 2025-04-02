@@ -50,6 +50,7 @@ describe('TracePipeline', () => {
   let brCodenameFile: File;
   let brSfFile: File;
   let jpgFile: File;
+  let perfettoFile: File;
 
   let progressListener: ProgressListenerStub;
   let tracePipeline: TracePipeline;
@@ -69,7 +70,7 @@ describe('TracePipeline', () => {
     validWmFile = await getFixtureFile(
       'traces/elapsed_and_real_timestamp/WindowManager.pb',
     );
-    screenshotFile = await getFixtureFile('traces/screenshot.png');
+    screenshotFile = await getFixtureFile('traces/screenshot/screenshot.png');
     screenRecordingFile = await getFixtureFile(
       'traces/elapsed_and_real_timestamp/screen_recording_metadata_v2.mp4',
     );
@@ -85,7 +86,11 @@ describe('TracePipeline', () => {
       'traces/elapsed_and_real_timestamp/SurfaceFlinger.pb',
       'FS/data/misc/wmtrace/surface_flinger.bp',
     );
-    jpgFile = await getFixtureFile('winscope_homepage.jpg');
+    jpgFile = await getFixtureFile('invalid_files/winscope_homepage.jpg');
+    perfettoFile = await getFixtureFile(
+      'traces/perfetto/layers_trace.perfetto-trace',
+      'traces/perfetto/layers_trace',
+    );
   });
 
   beforeEach(async () => {
@@ -124,8 +129,10 @@ describe('TracePipeline', () => {
   it('can load valid gzipped file and archive', async () => {
     expect(tracePipeline.getTraces().getSize()).toEqual(0);
 
-    const gzippedFile = await getFixtureFile('traces/WindowManager.pb.gz');
-    const gzippedArchive = await getFixtureFile('traces/WindowManager.zip.gz');
+    const gzippedFile = await getFixtureFile('archives/WindowManager.pb.gz');
+    const gzippedArchive = await getFixtureFile(
+      'archives/WindowManager.zip.gz',
+    );
 
     await loadFiles([gzippedFile, gzippedArchive], FilesSource.TEST);
     await expectLoadResult(2, []);
@@ -158,7 +165,7 @@ describe('TracePipeline', () => {
 
   it('can convert illegal uploaded archive filename to legal name for download archive', async () => {
     const fileWithIllegalName = await getFixtureFile(
-      'traces/SFtrace(with_illegal_characters).pb',
+      'traces/elapsed_and_real_timestamp/SFtrace(with_illegal_characters).pb',
     );
     await loadFiles([fileWithIllegalName]);
     await expectLoadResult(1, []);
@@ -228,10 +235,10 @@ describe('TracePipeline', () => {
   });
 
   it('is robust to corrupted archive', async () => {
-    const corruptedArchive = await getFixtureFile('corrupted_archive.zip');
-
+    const corruptedArchive = await getFixtureFile(
+      'invalid_files/corrupted_archive.zip',
+    );
     await loadFiles([corruptedArchive]);
-
     await expectLoadResult(0, [
       new CorruptedArchive(corruptedArchive),
       new NoValidFiles(),
@@ -241,19 +248,32 @@ describe('TracePipeline', () => {
   it('is robust to invalid trace files', async () => {
     const invalidFiles = [jpgFile];
     await loadFiles(invalidFiles);
-
     await expectLoadResult(0, [
+      new UnsupportedFileFormat('winscope_homepage.jpg'),
+    ]);
+  });
+
+  it('notifies for unsupported file uploaded before valid file', async () => {
+    const invalidFiles = [jpgFile, perfettoFile];
+    await loadFiles(invalidFiles);
+    await expectLoadResult(1, [
+      new UnsupportedFileFormat('winscope_homepage.jpg'),
+    ]);
+  });
+
+  it('notifies for unsupported file uploaded after valid file', async () => {
+    const invalidFiles = [perfettoFile, jpgFile];
+    await loadFiles(invalidFiles);
+    await expectLoadResult(1, [
       new UnsupportedFileFormat('winscope_homepage.jpg'),
     ]);
   });
 
   it('is robust to invalid perfetto trace files', async () => {
     const invalidFiles = [
-      await getFixtureFile('traces/perfetto/invalid_protolog.perfetto-trace'),
+      await getFixtureFile('invalid_files/invalid_protolog.perfetto-trace'),
     ];
-
     await loadFiles(invalidFiles);
-
     await expectLoadResult(0, [
       new InvalidPerfettoTrace('invalid_protolog.perfetto-trace', [
         'Perfetto trace has no Winscope trace entries',
@@ -294,7 +314,7 @@ describe('TracePipeline', () => {
     expect(tracePipeline.getTraces().getSize()).toEqual(0);
     const files = [
       jpgFile,
-      await getFixtureFile('traces/dump_WindowManager.pb'),
+      await getFixtureFile('traces/elapsed_timestamp/dump_WindowManager.pb'),
     ];
 
     await loadFiles(files);
@@ -346,7 +366,11 @@ describe('TracePipeline', () => {
   });
 
   it('removes constituent traces of CUJs trace but keeps for download', async () => {
-    const files = [await getFixtureFile('traces/eventlog.winscope')];
+    const files = [
+      await getFixtureFile(
+        'traces/elapsed_and_real_timestamp/eventlog.winscope',
+      ),
+    ];
     await loadFiles(files);
     await expectLoadResult(1, []);
 
@@ -468,9 +492,6 @@ describe('TracePipeline', () => {
   });
 
   it('tries to create search trace', async () => {
-    const perfettoFile = await getFixtureFile(
-      'traces/perfetto/layers_trace.perfetto-trace',
-    );
     await loadFiles([perfettoFile]);
     const validQuery = 'select ts from surfaceflinger_layers_snapshot';
     expect(await tracePipeline.tryCreateSearchTrace(validQuery)).toBeDefined();

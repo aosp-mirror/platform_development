@@ -30,43 +30,29 @@ describe('Parser', () => {
     jasmine.addCustomEqualityTester(timestampEqualityTester);
   });
 
-  it('is robust to empty trace file', async () => {
-    const trace = new TraceFile(
-      await getFixtureFile('traces/empty.pb'),
-      undefined,
-    );
-    const parsers = await new ParserFactory().createParsers(
-      [trace],
-      TimestampConverterUtils.TIMESTAMP_CONVERTER,
-      {},
-    );
-    expect(parsers.length).toEqual(0);
-  });
+  describe('is robust to', () => {
+    it('empty trace file', async () => {
+      await checkRobustToFile('invalid_files/empty.pb', true);
+    });
 
-  it('is robust to trace with no entries', async () => {
-    const trace = new TraceFile(
-      await getFixtureFile('traces/no_entries_InputMethodClients.pb'),
-      undefined,
-    );
-    const parsers = await new ParserFactory().createParsers(
-      [trace],
-      TimestampConverterUtils.TIMESTAMP_CONVERTER,
-      {},
-    );
-    expect(parsers.length).toEqual(0);
-  });
+    it('trace with no entries', async () => {
+      await checkRobustToFile('invalid_files/no_entries_InputMethodClients.pb');
+    });
 
-  it('is robust to view capture trace with no entries', async () => {
-    const trace = new TraceFile(
-      await getFixtureFile('traces/no_entries_view_capture.vc'),
-      undefined,
-    );
-    const parsers = await new ParserFactory().createParsers(
-      [trace],
-      TimestampConverterUtils.TIMESTAMP_CONVERTER,
-      {},
-    );
-    expect(parsers.length).toEqual(0);
+    it('view capture trace with no entries', async () => {
+      await checkRobustToFile('invalid_files/no_entries_view_capture.vc');
+    });
+
+    async function checkRobustToFile(file: string, unsupported = false) {
+      const trace = new TraceFile(await getFixtureFile(file), undefined);
+      const processed = await new ParserFactory().processFiles(
+        [trace],
+        TimestampConverterUtils.TIMESTAMP_CONVERTER,
+        {},
+      );
+      expect(processed.parsers.length).toEqual(0);
+      expect(processed.unsupportedFiles).toEqual(unsupported ? [trace] : []);
+    }
   });
 
   describe('real timestamp', () => {

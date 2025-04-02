@@ -27,7 +27,7 @@ describe('Viewer Window Manager', () => {
 
   it('processes trace from zip and navigates correctly', async () => {
     await E2eTestUtils.loadTraceAndCheckViewer(
-      'traces/deployment_full_trace_phone.zip',
+      'archives/deployment_full_trace_phone.zip',
       'Window Manager',
       viewerSelector,
     );

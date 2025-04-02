@@ -34,7 +34,7 @@ describe('ParserWindowManagerDump', () => {
   beforeAll(async () => {
     jasmine.addCustomEqualityTester(timestampEqualityTester);
     parser = (await UnitTestUtils.getParser(
-      'traces/dump_WindowManager.pb',
+      'traces/elapsed_timestamp/dump_WindowManager.pb',
     )) as Parser<HierarchyTreeNode>;
     trace = new TraceBuilder<HierarchyTreeNode>()
       .setType(TraceType.WINDOW_MANAGER)
@@ -57,7 +57,7 @@ describe('ParserWindowManagerDump', () => {
 
   it('does not apply timezone info', async () => {
     const parserWithTimezoneInfo = (await UnitTestUtils.getParser(
-      'traces/dump_WindowManager.pb',
+      'traces/elapsed_timestamp/dump_WindowManager.pb',
       UnitTestUtils.getTimestampConverter(true),
     )) as Parser<HierarchyTreeNode>;
     expect(parserWithTimezoneInfo.getTraceType()).toEqual(

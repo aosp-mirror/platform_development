@@ -39,6 +39,11 @@ import {Row} from 'trace_processor/query_result';
 import {TraceProcessor} from 'trace_processor/trace_processor';
 import {TraceProcessorFactory} from 'trace_processor/trace_processor_factory';
 
+interface ProcessedFile {
+  parsers: Array<Parser<object>>;
+  isPerfettoTrace: boolean;
+}
+
 export class ParserFactory {
   private static readonly PARSERS = [
     ParserInputMethodClients,
@@ -57,11 +62,11 @@ export class ParserFactory {
   private static readonly NO_ENTRIES_ERROR_REGEX =
     /Perfetto trace has no \w+(\w|\s)* entries/;
 
-  async createParsers(
+  async processFiles(
     traceFile: TraceFile,
     timestampConverter: ParserTimestampConverter,
     progressListener?: ProgressListener,
-  ): Promise<Array<Parser<object>>> {
+  ): Promise<ProcessedFile> {
     const traceProcessor = await this.initializeTraceProcessor();
     for (
       let chunkStart = 0;
@@ -80,7 +85,7 @@ export class ParserFactory {
         await traceProcessor.parse(new Uint8Array(data));
       } catch (e) {
         console.error('Trace processor failed to parse data:', e);
-        return [];
+        return {parsers: [], isPerfettoTrace: false};
       }
     }
     await traceProcessor.notifyEof();
@@ -141,7 +146,7 @@ export class ParserFactory {
       }
     }
 
-    return parsers;
+    return {parsers, isPerfettoTrace: true};
   }
 
   private async initializeTraceProcessor(): Promise<TraceProcessor> {

@@ -25,7 +25,7 @@ describe('Viewer Screenshot', () => {
   });
 
   it('processes file and renders view', async () => {
-    await E2eTestUtils.uploadFixture('traces/screenshot.png');
+    await E2eTestUtils.uploadFixture('traces/screenshot/screenshot.png');
     await E2eTestUtils.closeSnackBar();
     await E2eTestUtils.clickViewTracesButton();
 
@@ -39,8 +39,8 @@ describe('Viewer Screenshot', () => {
 
   it('processes files and renders view with multiple screenshots', async () => {
     await E2eTestUtils.uploadFixture(
-      'traces/screenshot.png',
-      'traces/screenshot_2.png',
+      'traces/screenshot/screenshot.png',
+      'traces/screenshot/screenshot_2.png',
     );
     await E2eTestUtils.closeSnackBar();
     await E2eTestUtils.clickViewTracesButton();

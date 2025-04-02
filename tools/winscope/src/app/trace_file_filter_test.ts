@@ -260,7 +260,7 @@ describe('TraceFileFilter', () => {
 
   async function makeZippedTraceFile(): Promise<TraceFile> {
     const file = await getFixtureFile(
-      'traces/winscope.zip',
+      'archives/winscope.zip',
       'FS/data/misc/wmtrace/winscope.zip',
     );
     return new TraceFile(file, bugreportArchive);

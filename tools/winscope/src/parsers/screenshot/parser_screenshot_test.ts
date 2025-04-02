@@ -33,7 +33,7 @@ describe('ParserScreenshot', () => {
 
   beforeAll(async () => {
     jasmine.addCustomEqualityTester(timestampEqualityTester);
-    file = await getFixtureFile('traces/screenshot.png');
+    file = await getFixtureFile('traces/screenshot/screenshot.png');
     parser = new ParserScreenshot(
       new TraceFile(file),
       new TimestampConverter(TimestampConverterUtils.UTC_TIMEZONE_INFO, 0n),

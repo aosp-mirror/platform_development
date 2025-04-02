@@ -316,11 +316,11 @@ describe('LoadedParsers', () => {
 
     it('when a perfetto parser is already loaded', () => {
       loadParsers([parserSf0], [parserSf1]);
-      expectLoadResult([parserSf1], [new TraceOverridden(filename)]);
+      expectLoadResult([parserSf1], []);
       userNotifierChecker.reset();
 
       loadParsers([parserSf0], []);
-      expectLoadResult([parserSf1], [new TraceOverridden(filename)]);
+      expectLoadResult([parserSf1], []);
     });
 
     it('when a perfetto parser is loaded afterwards', () => {
@@ -328,7 +328,7 @@ describe('LoadedParsers', () => {
       expectLoadResult([parserSf0], []);
 
       loadParsers([], [parserSf1]);
-      expectLoadResult([parserSf1], [new TraceOverridden(filename)]);
+      expectLoadResult([parserSf1], []);
     });
   });
 
@@ -340,10 +340,7 @@ describe('LoadedParsers', () => {
 
     it('legacy + perfetto parsers', () => {
       loadParsers([parserSf0, parserSf0], [parserSf1]);
-      expectLoadResult(
-        [parserSf1],
-        [new TraceOverridden(filename), new TraceOverridden(filename)],
-      );
+      expectLoadResult([parserSf1], []);
     });
   });
 

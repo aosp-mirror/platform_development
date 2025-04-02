@@ -68,7 +68,7 @@ class PresenterJankCujsTest extends AbstractLogViewerPresenterTest<UiData> {
 
   override async setUpTestEnvironment(): Promise<void> {
     const parser = (await UnitTestUtils.getTracesParser([
-      'traces/eventlog.winscope',
+      'traces/elapsed_and_real_timestamp/eventlog.winscope',
     ])) as Parser<PropertyTreeNode>;
 
     this.trace = new TraceBuilder<PropertyTreeNode>()

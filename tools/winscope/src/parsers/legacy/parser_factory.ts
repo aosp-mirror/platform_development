@@ -17,10 +17,7 @@ import {assertTrue} from 'common/assert_utils';
 import {ParserTimestampConverter} from 'common/time/timestamp_converter';
 import {UserNotifier} from 'common/user_notifier';
 import {ProgressListener} from 'messaging/progress_listener';
-import {
-  InvalidLegacyTrace,
-  UnsupportedFileFormat,
-} from 'messaging/user_warnings';
+import {InvalidLegacyTrace} from 'messaging/user_warnings';
 import {ParserEventLog} from 'parsers/events/parser_eventlog';
 import {FileAndParser} from 'parsers/file_and_parser';
 import {ParserInputMethodClients} from 'parsers/input_method/legacy/parser_input_method_clients';
@@ -41,6 +38,11 @@ import {Parser} from 'trace/parser';
 import {TraceFile} from 'trace/trace_file';
 import {TraceMetadata} from 'trace/trace_metadata';
 
+interface ProcessedFiles {
+  parsers: FileAndParser[];
+  unsupportedFiles: TraceFile[];
+}
+
 export class ParserFactory {
   static readonly PARSERS = [
     ParserInputMethodClients,
@@ -60,13 +62,14 @@ export class ParserFactory {
     ParserScreenshot,
   ];
 
-  async createParsers(
+  async processFiles(
     traceFiles: TraceFile[],
     timestampConverter: ParserTimestampConverter,
     metadata: TraceMetadata,
     progressListener?: ProgressListener,
-  ): Promise<FileAndParser[]> {
+  ): Promise<ProcessedFiles> {
     const parsers = new Array<{file: TraceFile; parser: Parser<object>}>();
+    const unsupportedFiles: TraceFile[] = [];
 
     for (const [index, traceFile] of traceFiles.entries()) {
       progressListener?.onProgressUpdate(
@@ -110,9 +113,9 @@ export class ParserFactory {
       }
 
       if (!hasFoundParser) {
-        UserNotifier.add(new UnsupportedFileFormat(traceFile.getDescriptor()));
+        unsupportedFiles.push(traceFile);
       }
     }
-    return parsers;
+    return {parsers, unsupportedFiles};
   }
 }
