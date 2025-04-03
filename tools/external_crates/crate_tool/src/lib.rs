@@ -12,13 +12,16 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+//! A command-line tool for managing repositories of 3rd party crates
+//! such as external/rust/android-crates-io.
+
 use std::env::current_dir;
 use std::fs::{create_dir_all, remove_dir_all};
 use std::path::{Path, PathBuf};
-use std::process::{Command, ExitStatus, Output};
-use std::str::from_utf8;
+use std::process::Command;
 
 use anyhow::{anyhow, Context, Result};
+use success_or_error::RunAndExpectSuccess;
 use thiserror::Error;
 
 mod android_bp;
@@ -35,12 +38,17 @@ pub use self::android_bp::maybe_build_cargo_embargo;
 pub use self::managed_repo::ManagedRepo;
 pub use self::upgradable::SemverCompatibilityRule;
 
+/// Error types for the 'crate_tool' crate. For the most part,
+/// we use `anyhow`, but sometimes type information is useful.
 #[derive(Error, Debug)]
 pub enum CrateError {
+    /// Virtual crate, usually a workspace.
     #[error("Virtual crate: {0}")]
     VirtualCrate(PathBuf),
 }
 
+/// Returns the absolute path to the root of the current Android source
+/// repo, based on the current working directory.
 pub fn default_repo_root() -> Result<PathBuf> {
     let cwd = current_dir().context("Could not get current working directory")?;
     for cur in cwd.ancestors() {
@@ -53,7 +61,7 @@ pub fn default_repo_root() -> Result<PathBuf> {
     Err(anyhow!(".repo directory not found in any ancestor of {}", cwd.display()))
 }
 
-pub fn ensure_exists_and_empty(dir: impl AsRef<Path>) -> Result<()> {
+fn ensure_exists_and_empty(dir: impl AsRef<Path>) -> Result<()> {
     let dir = dir.as_ref();
     if dir.exists() {
         remove_dir_all(dir).context(format!("Failed to remove {}", dir.display()))?;
@@ -61,62 +69,8 @@ pub fn ensure_exists_and_empty(dir: impl AsRef<Path>) -> Result<()> {
     create_dir_all(dir).context(format!("Failed to create {}", dir.display()))
 }
 
-pub trait RunQuiet {
-    fn run_quiet_and_expect_success(&mut self) -> Result<Output>;
-}
-impl RunQuiet for Command {
-    fn run_quiet_and_expect_success(&mut self) -> Result<Output> {
-        self.output()
-            .context(format!("Failed to run {:?}", self))?
-            .success_or_error()
-            .context(format!("Failed to run {:?}", self))
-    }
-}
-
-pub trait SuccessOrError {
-    fn success_or_error(self) -> Result<Self>
-    where
-        Self: std::marker::Sized;
-}
-impl SuccessOrError for ExitStatus {
-    fn success_or_error(self) -> Result<Self> {
-        if !self.success() {
-            let exit_code =
-                self.code().map(|code| format!("{}", code)).unwrap_or("(unknown)".to_string());
-            Err(anyhow!("Process failed with exit code {}", exit_code))
-        } else {
-            Ok(self)
-        }
-    }
-}
-impl SuccessOrError for Output {
-    fn success_or_error(self) -> Result<Self> {
-        (&self).success_or_error()?;
-        Ok(self)
-    }
-}
-impl SuccessOrError for &Output {
-    fn success_or_error(self) -> Result<Self> {
-        if !self.status.success() {
-            let exit_code = self
-                .status
-                .code()
-                .map(|code| format!("{}", code))
-                .unwrap_or("(unknown)".to_string());
-            Err(anyhow!(
-                "Process failed with exit code {}\nstdout:\n{}\nstderr:\n{}",
-                exit_code,
-                from_utf8(&self.stdout)?,
-                from_utf8(&self.stderr)?
-            ))
-        } else {
-            Ok(self)
-        }
-    }
-}
-
 // The copy_dir crate doesn't handle symlinks.
-pub fn copy_dir(src: impl AsRef<Path>, dst: impl AsRef<Path>) -> Result<()> {
+fn copy_dir(src: impl AsRef<Path>, dst: impl AsRef<Path>) -> Result<()> {
     Command::new("cp")
         .arg("--archive")
         .arg(src.as_ref())

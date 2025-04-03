@@ -9,6 +9,7 @@ members = [
     "name_and_version",
     "repo_config",
     "rooted_path",
+    "success_or_error",
     "test_mapping",
 ]
 resolver = "2"

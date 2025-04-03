@@ -1,0 +1,7 @@
+[package]
+name = "success_or_error"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+thiserror = "1"

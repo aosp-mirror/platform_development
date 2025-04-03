@@ -22,8 +22,7 @@ use std::{
 
 use anyhow::{Context, Result};
 use rooted_path::RootedPath;
-
-use crate::SuccessOrError;
+use success_or_error::SuccessOrError;
 
 fn add_bpfmt_to_path(repo_root: impl AsRef<Path>) -> Result<OsString> {
     let host_bin = repo_root.as_ref().join("prebuilts/build-tools/linux-x86/bin");
@@ -71,6 +70,7 @@ pub fn cargo_embargo_autoconfig(path: &RootedPath) -> Result<Output> {
         .context(format!("Failed to execute {:?}", cmd.get_program()))
 }
 
+/// Rebuilds cargo_embargo if it hasn't been built recently, or `force_rebuild` is true.
 pub fn maybe_build_cargo_embargo(repo_root: &impl AsRef<Path>, force_rebuild: bool) -> Result<()> {
     let cargo_embargo = repo_root.as_ref().join("out/host/linux-x86/bin/cargo_embargo");
     if force_rebuild
@@ -84,7 +84,7 @@ pub fn maybe_build_cargo_embargo(repo_root: &impl AsRef<Path>, force_rebuild: bo
     Ok(())
 }
 
-pub fn build_cargo_embargo(repo_root: &impl AsRef<Path>) -> Result<()> {
+fn build_cargo_embargo(repo_root: &impl AsRef<Path>) -> Result<()> {
     Command::new("/usr/bin/bash")
         .args(["-c", "source build/envsetup.sh && lunch aosp_cf_x86_64_phone-trunk_staging-eng && m cargo_embargo"])
         .env_remove("OUT_DIR")

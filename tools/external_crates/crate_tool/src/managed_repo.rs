@@ -31,6 +31,7 @@ use repo_config::RepoConfig;
 use rooted_path::RootedPath;
 use semver::{Version, VersionReq};
 use serde::Serialize;
+use success_or_error::SuccessOrError;
 
 use crate::{
     android_bp::cargo_embargo_autoconfig,
@@ -41,7 +42,6 @@ use crate::{
     managed_crate::ManagedCrate,
     pseudo_crate::{CargoVendorDirty, PseudoCrate},
     upgradable::{IsUpgradableTo, MatchesWithCompatibilityRule, SemverCompatibilityRule},
-    SuccessOrError,
 };
 
 #[derive(Serialize, Default, Debug)]
@@ -57,6 +57,7 @@ struct UpdateSuggestion {
     version: String,
 }
 
+/// A struct for interacting with a managed repository of 3rd party crates.
 pub struct ManagedRepo {
     path: RootedPath,
     config: OnceCell<RepoConfig>,
@@ -64,14 +65,20 @@ pub struct ManagedRepo {
 }
 
 impl ManagedRepo {
+    /// Constructs a ManagedRepo at the specified path.
+    /// If `offline` is true, no requests are made to crates.io.
     pub fn new(path: RootedPath, offline: bool) -> Result<ManagedRepo> {
         Ok(ManagedRepo {
             path,
             config: OnceCell::new(),
-            crates_io: if offline { CratesIoIndex::new_offline()? } else { CratesIoIndex::new()? },
+            crates_io: if offline {
+                CratesIoIndex::new_offline()?
+            } else {
+                CratesIoIndex::new_cargo()?
+            },
         })
     }
-    pub fn config(&self) -> &RepoConfig {
+    fn config(&self) -> &RepoConfig {
         self.config.get_or_init(|| {
             RepoConfig::read(self.path.abs()).unwrap_or_else(|e| {
                 panic!(
@@ -130,6 +137,7 @@ impl ManagedRepo {
     ) -> Result<ManagedCrate<crate::managed_crate::New>> {
         Ok(ManagedCrate::new(Crate::from(self.managed_dir_for(crate_name))?))
     }
+    /// Returns the names of all crates in the managed repo.
     pub fn all_crate_names(&self) -> Result<BTreeSet<String>> {
         let mut managed_dirs = BTreeSet::new();
         if self.managed_dir().abs().exists() {
@@ -144,6 +152,7 @@ impl ManagedRepo {
         }
         Ok(managed_dirs)
     }
+    /// Analyzes a new crate we would like to import, and reports on any problems.
     pub fn analyze_import(&self, crate_name: &str) -> Result<()> {
         if self.contains(crate_name) {
             println!("Crate already imported at {}", self.managed_dir_for(crate_name));
@@ -234,6 +243,7 @@ impl ManagedRepo {
         }
         Ok(())
     }
+    /// Imports a new crate to the managed repo.
     pub fn import(&self, crate_name: &str, version: &str, autoconfig: bool) -> Result<()> {
         if self.contains(crate_name) {
             bail!("Crate already imported at {}", self.managed_dir_for(crate_name));
@@ -327,6 +337,8 @@ We apologize for the inconvenience."#,
 
         Ok(())
     }
+    /// Regenerates the data for a list of crates.
+    /// If `run_cargo_embargo` is false, the Android.bp is not updated, but all other metadata is.
     pub fn regenerate<T: AsRef<str>>(
         &self,
         crates: impl Iterator<Item = T>,
@@ -344,6 +356,7 @@ We apologize for the inconvenience."#,
 
         Ok(())
     }
+    /// Runs a preupload check on a set of changed files and reports problems.
     pub fn preupload_check(&self, files: &[String]) -> Result<()> {
         let pseudo_crate = self.pseudo_crate().vendor()?;
         let deps = pseudo_crate.deps().keys().cloned().collect::<BTreeSet<_>>();
@@ -395,6 +408,7 @@ We apologize for the inconvenience."#,
         }
         Ok(())
     }
+    /// Updates the context of the patch files for a crate to match the current contents.
     pub fn recontextualize_patches<T: AsRef<str>>(
         &self,
         crates: impl Iterator<Item = T>,
@@ -405,6 +419,7 @@ We apologize for the inconvenience."#,
         }
         Ok(())
     }
+    /// Prints a list of crates that have newer versions available on crates.io.
     pub fn updatable_crates(&self) -> Result<()> {
         let mut cc = self.new_cc();
         cc.add_from(self.managed_dir().rel())?;
@@ -429,6 +444,7 @@ We apologize for the inconvenience."#,
         }
         Ok(())
     }
+    /// Analyze a crate to see if it can be updated to a newer version.
     pub fn analyze_updates(&self, crate_name: impl AsRef<str>) -> Result<()> {
         let mut managed_crates = self.new_cc();
         managed_crates.add_from(self.managed_dir().rel())?;
@@ -528,6 +544,8 @@ We apologize for the inconvenience."#,
 
         Ok(())
     }
+    /// Checks all crates to see if newer versions are available, and reports
+    /// specific updates that seem likely to succeed.
     pub fn suggest_updates(
         &self,
         consider_patched_crates: bool,
@@ -615,6 +633,7 @@ We apologize for the inconvenience."#,
 
         Ok(())
     }
+    /// Update a crate to a newer version.
     pub fn update(&self, crate_name: impl AsRef<str>, version: impl AsRef<str>) -> Result<()> {
         let crate_name = crate_name.as_ref();
         let version = Version::parse(version.as_ref())?;
@@ -667,6 +686,8 @@ We apologize for the inconvenience."#,
         self.regenerate(crate_updates.iter().map(|nv| nv.name()), true)?;
         Ok(())
     }
+    /// Initialize a new managed repository by creating the necessary directories,
+    /// data files, etc.
     pub fn init(&self) -> Result<()> {
         if self.path.abs().exists() {
             return Err(anyhow!("{} already exists", self.path));
@@ -677,6 +698,7 @@ We apologize for the inconvenience."#,
         self.pseudo_crate().init()?;
         Ok(())
     }
+    /// Verifies the checksum file for a crate.
     pub fn verify_checksums<T: AsRef<str>>(&self, crates: impl Iterator<Item = T>) -> Result<()> {
         for krate in crates {
             println!("Verifying checksums for {}", krate.as_ref());

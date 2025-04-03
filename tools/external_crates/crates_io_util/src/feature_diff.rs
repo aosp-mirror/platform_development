@@ -16,22 +16,30 @@ use crates_index::Version;
 
 use crate::feature::{FeaturesAndOptionalDeps, TypedFeatures};
 
-// Diff features between two versions of a crate.
+/// Diff features between two versions of a crate.
+/// Holds a reference to the current (base) features of a crate,
+/// against which multiple newer versions can be compared.
+#[derive(Debug)]
 pub struct FeatureDiffer<'a> {
     base_features: TypedFeatures<'a>,
 }
 
+/// A pair of features that differ between two versions of a crate.
 #[derive(Debug)]
 pub struct FeatureDiff<'base, 'other> {
+    /// Newly added features.
     pub added: TypedFeatures<'other>,
+    /// Features that were deleted.
     pub deleted: TypedFeatures<'base>,
 }
 
 impl<'a> FeatureDiffer<'a> {
+    /// Constructs a FeatureDiffer with the specified base version.
     pub fn new(base: &'a Version) -> FeatureDiffer<'a> {
         let base_features = base.features_and_optional_deps();
         FeatureDiffer { base_features }
     }
+    /// Compares the base version with `other` and returns the differences.
     pub fn diff<'other>(&'a self, other: &'other Version) -> FeatureDiff<'a, 'other> {
         let other_features = other.features_and_optional_deps();
         let deleted = self

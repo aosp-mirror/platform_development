@@ -6,6 +6,12 @@
     "crate_config": {
       "device_supported": false
     },
+    "crate_tool": {
+      "device_supported": false
+    },
+    "crates_io_util": {
+      "device_supported": false
+    },
     "rooted_path": {
       "device_supported": false
     },
@@ -23,14 +29,13 @@
     "repo_config": {
       "device_supported": false
     },
+    "success_or_error": {
+      "device_supported": false
+    },
     "test_mapping": {
       "device_supported": false
     }
   },
   "tests": true,
-  "workspace": true,
-  "workspace_excludes": [
-    "crate_tool",
-    "crates_io_util"
-  ]
+  "workspace": true
 }

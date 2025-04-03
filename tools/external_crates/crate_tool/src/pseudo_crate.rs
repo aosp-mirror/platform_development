@@ -27,8 +27,9 @@ use itertools::Itertools;
 use name_and_version::NamedAndVersioned;
 use rooted_path::RootedPath;
 use semver::Version;
+use success_or_error::RunAndExpectSuccess;
 
-use crate::{crate_collection::CrateCollection, ensure_exists_and_empty, RunQuiet};
+use crate::{crate_collection::CrateCollection, ensure_exists_and_empty};
 
 pub struct PseudoCrate<State: PseudoCrateState> {
     path: RootedPath,
@@ -207,7 +208,7 @@ license = "Apache-2.0"
             self.remove(crate_name).with_context(|| {
                 format!("Failed to remove {} after failing to add it: {}", crate_name, e)
             })?;
-            return Err(e);
+            return Err(e.into());
         }
         Ok(())
     }

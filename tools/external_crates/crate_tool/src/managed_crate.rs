@@ -30,6 +30,7 @@ use license_checker::{find_licenses, LicenseState};
 use name_and_version::NamedAndVersioned;
 use rooted_path::RootedPath;
 use semver::Version;
+use success_or_error::SuccessOrError;
 use test_mapping::TestMapping;
 
 use crate::{
@@ -39,7 +40,6 @@ use crate::{
     ensure_exists_and_empty,
     patch::Patch,
     pseudo_crate::{CargoVendorClean, PseudoCrate},
-    SuccessOrError,
 };
 
 #[derive(Debug)]

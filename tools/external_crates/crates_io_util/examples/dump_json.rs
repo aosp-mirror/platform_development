@@ -23,7 +23,7 @@ fn main() -> Result<(), Error> {
     let krate = args[1].as_str();
     let version = args[2].as_str();
 
-    let fetcher = CratesIoIndex::new()?;
+    let fetcher = CratesIoIndex::new_cargo()?;
     let cio_crate = fetcher.get_crate(krate)?;
     let version =
         cio_crate.versions().iter().find(|v| v.version() == version).expect("Version not found");

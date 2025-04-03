@@ -21,7 +21,7 @@ use crate::{
     DepSet, Error,
 };
 
-// Resolve a list of enabled features to a set of optional dependencies that these features switch on.
+/// Resolves a list of enabled features to a set of optional dependencies that these features switch on.
 pub struct FeatureResolver<'a> {
     version: &'a Version,
     features: TypedFeatures<'a>,
@@ -29,11 +29,13 @@ pub struct FeatureResolver<'a> {
 }
 
 impl<'a> FeatureResolver<'a> {
+    /// Constructs a FeatureResolver for the specified version of a crate.
     pub fn new(version: &'a Version) -> FeatureResolver<'a> {
         let features = version.features_and_optional_deps();
         let deps = BTreeMap::from_iter(version.dependencies().iter().map(|d| (d.name(), d)));
         FeatureResolver { version, features, deps }
     }
+    /// Resolves a list of enabled features into a set of optional dependencies.
     pub fn resolve(
         &self,
         features: Option<impl Iterator<Item = impl AsRef<str>>>,

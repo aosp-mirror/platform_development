@@ -12,7 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use std::collections::BTreeMap;
+//! Crate for fetching and interacting with crates.io data. Built on top
+//! of crates_index, with Android-specific helpers for dealing with features,
+//! dependencies, etc.
+
+use std::{collections::BTreeMap, io};
 
 use crates_index::Dependency;
 use semver::VersionReq;
@@ -37,7 +41,9 @@ pub use index::CratesIoIndex;
 
 type DepSet<'a> = BTreeMap<&'a str, &'a Dependency>;
 
+/// Trait for parsing version requirement strings of dependencies.
 pub trait ParsedVersionReq {
+    /// Parses a version requirement, returning an error if unsuccessful.
     fn parsed_version_req(&self) -> Result<VersionReq, semver::Error>;
 }
 
@@ -63,6 +69,7 @@ pub enum Error {
     #[error("Failed to get HTTP headers")]
     HttpHeader,
     /// Error fetching HTTP data
+    #[cfg(feature = "ureq")]
     #[error(transparent)]
     HttpFetch(#[from] ureq::Error),
     /// Propagated crates_index::Error
@@ -71,4 +78,10 @@ pub enum Error {
     /// Propagated crates_index::http::Error
     #[error(transparent)]
     CratesIndexHttp(#[from] crates_index::http::Error),
+    /// Propagated io::Error
+    #[error(transparent)]
+    IoError(#[from] io::Error),
+    /// Error running cargo
+    #[error(transparent)]
+    CargoError(#[from] success_or_error::Error),
 }

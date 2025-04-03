@@ -16,14 +16,17 @@ use std::{borrow::Borrow, collections::BTreeSet};
 
 use crates_index::{Dependency, Version};
 
-// A reference to feature. Either an explicit feature or an optional dependency.
+/// A reference to feature. Either an explicit feature or an optional dependency.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum FeatureRef<'a> {
+    /// An explicit feature
     Feature(&'a str),
+    /// An optional dependency
     OptionalDep(&'a Dependency),
 }
 
-impl<'a> FeatureRef<'a> {
+impl FeatureRef<'_> {
+    /// The name of the feature.
     pub fn name(&self) -> &str {
         match self {
             FeatureRef::Feature(name) => name,
@@ -33,19 +36,19 @@ impl<'a> FeatureRef<'a> {
 }
 
 // Traits that let us use FeatureRef as an element of a set.
-impl<'a> PartialOrd for FeatureRef<'a> {
+impl PartialOrd for FeatureRef<'_> {
     fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
         Some(self.cmp(other))
     }
 }
-impl<'a> Ord for FeatureRef<'a> {
+impl Ord for FeatureRef<'_> {
     fn cmp(&self, other: &Self) -> std::cmp::Ordering {
         self.name().cmp(other.name())
     }
 }
 
 // Lets us retrieve a set element by name.
-impl<'a> Borrow<str> for FeatureRef<'a> {
+impl Borrow<str> for FeatureRef<'_> {
     fn borrow(&self) -> &str {
         self.name()
     }
@@ -53,7 +56,9 @@ impl<'a> Borrow<str> for FeatureRef<'a> {
 
 pub type TypedFeatures<'a> = BTreeSet<FeatureRef<'a>>;
 
+/// A trait for merging explicit features and optional dependencies into a single set.
 pub trait FeaturesAndOptionalDeps {
+    /// Returns a unified list of the features and optional dependencies of a crate version.
     fn features_and_optional_deps(&self) -> TypedFeatures;
 }
 

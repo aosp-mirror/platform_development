@@ -12,6 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+//! A command-line tool for managing repositories of 3rd party crates
+//! such as external/rust/android-crates-io.
+
 use std::{collections::BTreeSet, path::PathBuf};
 
 use anyhow::{bail, Result};

@@ -18,31 +18,44 @@ use crates_index::{Dependency, Version};
 
 use crate::DepSet;
 
-// Diff dependencies between two versions of a crate.
+/// Diff dependencies between two versions of a crate.
+/// Holds a reference to the current (base) dependencies of a crate,
+/// against which multiple newer versions can be compared.
+#[derive(Debug)]
 pub struct DependencyDiffer<'a> {
     base_deps: DepSet<'a>,
 }
 
+/// A pair of dependencies that differ between two versions of a crate.
 #[derive(Debug)]
 pub struct ChangedDep<'base, 'other> {
+    /// The dependencies of the base version of the crate.
     pub base: &'base Dependency,
+    /// The dependencies of the other version of the crate.
     pub other: &'other Dependency,
 }
 
 type ChangedDeps<'base, 'other> = BTreeMap<&'base str, ChangedDep<'base, 'other>>;
 
+/// The difference between the dependencies of two versions of a crate.
 #[derive(Debug)]
 pub struct DependencyDiff<'base, 'other> {
+    /// Newly added dependencies.
     pub added: DepSet<'other>,
+    /// Dependencies that were deleted.
     pub deleted: DepSet<'base>,
+    /// Dependencies that differ between the two versions. For example,
+    /// they could have different version requirements.
     pub changed: ChangedDeps<'base, 'other>,
 }
 
 impl<'a> DependencyDiffer<'a> {
+    /// Constructs a DependencyDiffer with the specified base version.
     pub fn new(base: &'a Version) -> DependencyDiffer<'a> {
         let base_deps = BTreeMap::from_iter(base.dependencies().iter().map(|d| (d.name(), d)));
         DependencyDiffer { base_deps }
     }
+    /// Compares the base version with `other` and returns the differences.
     pub fn diff<'other>(&'a self, other: &'other Version) -> DependencyDiff<'a, 'other> {
         let other_deps = BTreeMap::from_iter(other.dependencies().iter().map(|d| (d.name(), d)));
 
