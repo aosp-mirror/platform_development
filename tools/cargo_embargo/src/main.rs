@@ -781,6 +781,7 @@ fn choose_licenses(license: &str) -> Result<Vec<&str>> {
         // Variations on "Zlib OR MIT OR Apache-2.0"
         "Zlib OR Apache-2.0 OR MIT" => vec!["Apache-2.0"],
         "MIT OR Apache-2.0 OR Zlib" => vec!["Apache-2.0"],
+        "MIT OR Zlib OR Apache-2.0" => vec!["Apache-2.0"],
 
         // Variations on "Apache-2.0 OR *"
         "Apache-2.0 OR BSL-1.0" => vec!["Apache-2.0"],
