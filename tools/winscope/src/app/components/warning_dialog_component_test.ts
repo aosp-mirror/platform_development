@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 import {Component, Inject} from '@angular/core';
-import {ComponentFixture, TestBed} from '@angular/core/testing';
+import {TestBed} from '@angular/core/testing';
 import {MatButtonModule} from '@angular/material/button';
 import {MatCheckboxModule} from '@angular/material/checkbox';
 import {
@@ -24,7 +24,7 @@ import {
 } from '@angular/material/dialog';
 import {MatIconModule} from '@angular/material/icon';
 import {BrowserAnimationsModule} from '@angular/platform-browser/animations';
-import {assertDefined} from 'common/assert_utils';
+import {DOMTestHelper} from 'test/unit/dom_test_utils';
 import {
   WarningDialogComponent,
   WarningDialogData,
@@ -32,9 +32,8 @@ import {
 } from './warning_dialog_component';
 
 describe('WarningDialogComponent', () => {
-  let fixture: ComponentFixture<TestHostComponent>;
   let component: TestHostComponent;
-  let htmlElement: HTMLElement;
+  let dom: DOMTestHelper<TestHostComponent>;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
@@ -47,49 +46,36 @@ describe('WarningDialogComponent', () => {
       ],
       declarations: [TestHostComponent, WarningDialogComponent],
     }).compileComponents();
-    fixture = TestBed.createComponent(TestHostComponent);
+    const fixture = TestBed.createComponent(TestHostComponent);
     component = fixture.componentInstance;
-    htmlElement = fixture.nativeElement;
-    fixture.detectChanges();
+    dom = new DOMTestHelper(fixture, fixture.nativeElement);
+    dom.detectChanges();
   });
 
   it('can be created', () => {
-    expect(document.querySelector('warning-dialog')).toBeNull();
+    expect(dom.findInDocument('warning-dialog')).toBeUndefined();
     openAndReturnDialog();
   });
 
   it('renders warning message, action boxes and buttons', () => {
     const dialog = openAndReturnDialog();
 
-    const content = assertDefined(dialog.querySelector('.warning-content'));
-    expect(content.querySelector('.warning-message')?.textContent).toContain(
-      'test message',
-    );
+    const content = dialog.get('.warning-content');
+    content.get('.warning-message').checkText('test message');
 
-    const actionBoxContainer = assertDefined(
-      content.querySelector('.warning-action-boxes'),
-    );
-    expect(actionBoxContainer.textContent).toContain('option1');
-    expect(actionBoxContainer.textContent).toContain('option2');
+    const actionBoxContainer = content.get('.warning-action-boxes');
+    actionBoxContainer.checkText('option1');
+    actionBoxContainer.checkText('option2');
 
-    const actionButtonContainer = assertDefined(
-      content.querySelector('.warning-action-buttons'),
-    );
-    expect(actionButtonContainer.textContent).toContain('action1');
-    expect(actionButtonContainer.textContent).toContain('action2');
-    expect(actionButtonContainer.textContent).toContain('close message');
+    const actionButtonContainer = content.get('.warning-action-buttons');
+    actionButtonContainer.checkText('action1');
+    actionButtonContainer.checkText('action2');
+    actionButtonContainer.checkText('close message');
   });
 
   it('provides action text and selected options as dialog result on close', async () => {
     const dialog = openAndReturnDialog();
-
-    const actionButton = assertDefined(
-      dialog.querySelector('.warning-action-buttons button'),
-    ) as HTMLElement;
-    actionButton.click();
-    fixture.detectChanges();
-    await fixture.whenStable();
-
+    await dialog.clickAndWaitStable('.warning-action-buttons button');
     expect(component.dialogResult).toEqual({
       closeActionText: 'action1',
       selectedOptions: [],
@@ -98,14 +84,7 @@ describe('WarningDialogComponent', () => {
 
   it('provides close text and selected options as dialog result on close', async () => {
     const dialog = openAndReturnDialog();
-
-    const buttons = assertDefined(
-      dialog.querySelectorAll('.warning-action-buttons button'),
-    );
-    (buttons.item(buttons.length - 1) as HTMLElement).click();
-    fixture.detectChanges();
-    await fixture.whenStable();
-
+    await dialog.clickLastAndWaitStable('.warning-action-buttons button');
     expect(component.dialogResult).toEqual({
       closeActionText: 'close message',
       selectedOptions: [],
@@ -114,33 +93,19 @@ describe('WarningDialogComponent', () => {
 
   it('updates selected options and provides selected options in dialog result', async () => {
     const dialog = openAndReturnDialog();
-
-    const option = assertDefined(
-      dialog.querySelector('.warning-action-boxes mat-checkbox input'),
-    ) as HTMLInputElement;
-    option.checked = true;
+    const option = dialog.get('.warning-action-boxes mat-checkbox input');
+    option.getHTMLElement<HTMLInputElement>().checked = true;
     option.click();
-    fixture.detectChanges();
-
-    const buttons = assertDefined(
-      dialog.querySelectorAll('.warning-action-buttons button'),
-    );
-    (buttons.item(buttons.length - 1) as HTMLElement).click();
-    fixture.detectChanges();
-    await fixture.whenStable();
-
+    await dialog.clickLastAndWaitStable('.warning-action-buttons button');
     expect(component.dialogResult).toEqual({
       closeActionText: 'close message',
       selectedOptions: ['option1'],
     });
   });
 
-  function openAndReturnDialog(): HTMLElement {
-    htmlElement.querySelector('button')?.click();
-    fixture.detectChanges();
-    return assertDefined(
-      document.querySelector('warning-dialog'),
-    ) as HTMLElement;
+  function openAndReturnDialog(): DOMTestHelper<TestHostComponent> {
+    dom.findAndClick('button');
+    return dom.getInDocument('warning-dialog');
   }
 
   @Component({

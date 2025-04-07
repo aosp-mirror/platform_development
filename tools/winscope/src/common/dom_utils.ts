@@ -46,6 +46,7 @@ export enum KeyboardEventKey {
   ARROW_RIGHT = 'ArrowRight',
   ARROW_UP = 'ArrowUp',
   ENTER = 'Enter',
+  ESCAPE = 'Escape',
 }
 
 export enum KeyboardEventKeyCode {

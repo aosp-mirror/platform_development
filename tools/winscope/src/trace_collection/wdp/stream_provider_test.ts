@@ -15,8 +15,8 @@
  */
 
 import {stringToByteArray} from 'common/buffer_utils';
+import {waitToBeCalled} from 'test/unit/spy_utils';
 import {UnitTestUtils} from 'test/unit/utils';
-import {waitToBeCalled} from 'test/utils';
 import {StreamProvider} from './stream_provider';
 
 describe('StreamProvider', () => {

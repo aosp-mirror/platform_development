@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 import {CommonModule} from '@angular/common';
-import {ComponentFixture, TestBed} from '@angular/core/testing';
+import {TestBed} from '@angular/core/testing';
 import {FormsModule, ReactiveFormsModule} from '@angular/forms';
 import {MatButtonModule} from '@angular/material/button';
 import {MatCheckboxModule} from '@angular/material/checkbox';
@@ -27,16 +27,15 @@ import {BrowserAnimationsModule} from '@angular/platform-browser/animations';
 import {assertDefined} from 'common/assert_utils';
 import {InMemoryStorage} from 'common/store/in_memory_storage';
 import {Store} from 'common/store/store';
-import {UnitTestUtils} from 'test/unit/utils';
+import {checkTooltips, DOMTestHelper} from 'test/unit/dom_test_utils';
 import {TraceType} from 'trace/trace_type';
 import {ConfigurationOptions} from 'trace_collection/ui/ui_trace_configuration';
 import {TraceConfigComponent} from './trace_config_component';
 
 describe('TraceConfigComponent', () => {
   const storeKey = 'TestConfigSettings';
-  let fixture: ComponentFixture<TraceConfigComponent>;
   let component: TraceConfigComponent;
-  let htmlElement: HTMLElement;
+  let dom: DOMTestHelper<TraceConfigComponent>;
   let configChangeSpy: jasmine.Spy;
 
   beforeEach(async () => {
@@ -56,9 +55,9 @@ describe('TraceConfigComponent', () => {
       ],
       declarations: [TraceConfigComponent],
     }).compileComponents();
-    fixture = TestBed.createComponent(TraceConfigComponent);
+    const fixture = TestBed.createComponent(TraceConfigComponent);
     component = fixture.componentInstance;
-    htmlElement = fixture.nativeElement;
+    dom = new DOMTestHelper(fixture, fixture.nativeElement);
     configChangeSpy = spyOn(component.traceConfigChange, 'emit');
     await setComponentInputs(component);
   });
@@ -68,11 +67,7 @@ describe('TraceConfigComponent', () => {
   });
 
   it('displays config alphabetically by name', () => {
-    expect(
-      Array.from(
-        htmlElement.querySelectorAll<HTMLElement>('.trace-checkbox'),
-      ).map((box) => box.textContent?.trim()),
-    ).toEqual([
+    expect(dom.findAll('.trace-checkbox').map((box) => box.getText())).toEqual([
       'layers_trace',
       'multiple_selection_trace',
       'optional_multiple_selection_trace',
@@ -83,11 +78,7 @@ describe('TraceConfigComponent', () => {
   });
 
   it('displays advanced config alphabetically by name', () => {
-    expect(
-      Array.from(
-        htmlElement.querySelectorAll<HTMLElement>('.config-heading'),
-      ).map((box) => box.textContent?.trim()),
-    ).toEqual([
+    expect(dom.findAll('.config-heading').map((box) => box.getText())).toEqual([
       'layers_trace configuration',
       'multiple_selection_trace configuration',
       'optional_multiple_selection_trace configuration',
@@ -97,10 +88,7 @@ describe('TraceConfigComponent', () => {
   });
 
   it('applies stored config and emits event on init', async () => {
-    assertDefined(
-      htmlElement.querySelector<HTMLInputElement>('.enable-config-opt input'),
-    ).click();
-    fixture.detectChanges();
+    dom.findAndClick('.enable-config-opt input');
     expect(
       assertDefined(component.traceConfig)['layers_trace'].config
         .checkboxConfigs,
@@ -120,8 +108,9 @@ describe('TraceConfigComponent', () => {
 
     const newFixture = TestBed.createComponent(TraceConfigComponent);
     const newComponent = newFixture.componentInstance;
+    const newDom = new DOMTestHelper(newFixture, newFixture.nativeElement);
     const spy = spyOn(newComponent.traceConfigChange, 'emit');
-    await setComponentInputs(newComponent, newFixture, commonStorage);
+    await setComponentInputs(newComponent, newDom, commonStorage);
     expect(spy).toHaveBeenCalledTimes(1);
 
     const newConfig = assertDefined(newComponent.traceConfig);
@@ -138,15 +127,15 @@ describe('TraceConfigComponent', () => {
   it('handles proxy object for initial trace config', async () => {
     const newFixture = TestBed.createComponent(TraceConfigComponent);
     const newComponent = newFixture.componentInstance;
+    const newDom = new DOMTestHelper(newFixture, newFixture.nativeElement);
     const spy = spyOn(newComponent.traceConfigChange, 'emit');
 
     newComponent.title = 'Targets';
     newComponent.traceConfig = component.traceConfig;
     newComponent.traceConfigStoreKey = 'TestConfigSettings';
     newComponent.storage = component.storage;
-    await detectNgModelChanges(newFixture);
-    newFixture.detectChanges();
-
+    await detectNgModelChanges(newDom);
+    newDom.detectChanges();
     expect(spy).toHaveBeenCalledTimes(1);
   });
 
@@ -156,17 +145,15 @@ describe('TraceConfigComponent', () => {
     const config = assertDefined(component.traceConfig);
 
     const box = getTraceBoxForKey('layers_trace');
-    const inputElement = assertDefined(
-      box.querySelector<HTMLInputElement>('input'),
-    );
+    const input = box.get('input');
+    const inputElement = input.getHTMLElement<HTMLInputElement>();
 
-    expect(box.textContent).toContain(traceKey);
+    box.checkText(traceKey);
     expect(inputElement.checked).toBeTrue();
     expect(inputElement.ariaChecked).toEqual('true');
     expect(config[traceKey].config.enabled).toBeTrue();
 
-    inputElement.click();
-    fixture.detectChanges();
+    input.click();
     expect(inputElement.checked).toBeFalse();
     expect(inputElement.ariaChecked).toEqual('false');
     expect(config[traceKey].config.enabled).toBeFalse();
@@ -179,17 +166,15 @@ describe('TraceConfigComponent', () => {
     const config = assertDefined(component.traceConfig);
 
     const box = getTraceBoxForKey(traceKey);
-    const inputElement = assertDefined(
-      box.querySelector<HTMLInputElement>('input'),
-    );
+    const input = box.get('input');
+    const inputElement = input.getHTMLElement<HTMLInputElement>();
 
-    expect(box.textContent).toContain(traceKey);
+    box.checkText(traceKey);
     expect(inputElement.checked).toBeFalse();
     expect(inputElement.ariaChecked).toEqual('false');
     expect(config[traceKey].config.enabled).toBeFalse();
 
-    inputElement.click();
-    fixture.detectChanges();
+    input.click();
     expect(inputElement.checked).toBeTrue();
     expect(inputElement.ariaChecked).toEqual('true');
     expect(config[traceKey].config.enabled).toBeTrue();
@@ -199,31 +184,24 @@ describe('TraceConfigComponent', () => {
   it('disables checkbox for unavailable trace', () => {
     const traceKey = 'unavailable_trace';
     const box = getTraceBoxForKey(traceKey);
-    const inputElement = assertDefined(
-      box.querySelector<HTMLInputElement>('input'),
-    );
-    expect(inputElement.disabled).toBeTrue();
-    expect(box.textContent).toContain(traceKey);
+    box.get('input').checkDisabled(true);
+    box.checkText(traceKey);
   });
 
   it('checkbox and select configs show', () => {
-    const enable_config_opt = assertDefined(
-      htmlElement.querySelector('.enable-config-opt'),
-    );
-    expect(enable_config_opt.innerHTML).toContain('trace buffers');
-    expect(enable_config_opt.innerHTML).not.toContain('tracing level');
+    const enable_config_opt = dom.get('.enable-config-opt');
+    enable_config_opt.checkInnerHTML('trace buffers');
+    enable_config_opt.checkInnerHTML('tracing level', false);
 
-    const selection_config_opt = assertDefined(
-      htmlElement.querySelector('.selection-config-opt'),
-    );
-    expect(selection_config_opt.innerHTML).not.toContain('trace buffers');
-    expect(selection_config_opt.innerHTML).toContain('tracing level');
+    const selection_config_opt = dom.get('.selection-config-opt');
+    selection_config_opt.checkInnerHTML('trace buffers', false);
+    selection_config_opt.checkInnerHTML('tracing level');
   });
 
   it('changing checkbox config model value causes box to change', async () => {
-    const inputElement = assertDefined(
-      htmlElement.querySelector<HTMLInputElement>('.enable-config input'),
-    );
+    const inputElement = dom
+      .get('.enable-config input')
+      .getHTMLElement<HTMLInputElement>();
     assertDefined(
       assertDefined(component.traceConfig)['layers_trace'].config,
     ).checkboxConfigs[0].enabled = false;
@@ -241,46 +219,32 @@ describe('TraceConfigComponent', () => {
 
   it('changing checkbox config by DOM interaction emits event', async () => {
     configChangeSpy.calls.reset();
-    const inputElement = assertDefined(
-      htmlElement.querySelector<HTMLInputElement>('.enable-config input'),
-    );
-    inputElement.click();
-    fixture.detectChanges();
+    dom.findAndClick('.enable-config input');
     expect(configChangeSpy).toHaveBeenCalledTimes(1);
   });
 
   it('changing selected config causes select to change', async () => {
     configChangeSpy.calls.reset();
-    await openSelect(0);
-
-    const panel = assertDefined(
-      document.querySelector<HTMLElement>('.mat-select-panel'),
-    );
-    expect(panel.querySelector('.user-option')).toBeNull();
-
-    clickFirstOption(panel);
+    await dom.openMatSelect();
+    const panel = dom.getMatSelectPanel();
+    dom.clickMatOption();
+    expect(panel.find('.user-option')).toBeUndefined();
     expect(configChangeSpy).toHaveBeenCalledTimes(1);
   });
 
   it('clicking None button clears optional single selection config value', async () => {
     configChangeSpy.calls.reset();
-    await openSelect(getIndexForConfigKey('optional_selection_trace'));
+    await dom.openMatSelect(getIndexForConfigKey('optional_selection_trace'));
 
-    const panel = assertDefined(
-      document.querySelector<HTMLElement>('.mat-select-panel'),
-    );
-    clickFirstOption(panel);
+    dom.clickMatOption();
     expect(configChangeSpy).toHaveBeenCalledTimes(1);
     expect(
       configChangeSpy.calls.mostRecent().args[0]['optional_selection_trace']
         .config.selectionConfigs[0].value,
     ).toEqual('12345');
 
-    const noneButton = assertDefined(
-      panel.querySelectorAll<HTMLElement>('.user-option').item(0),
-    );
-    noneButton.click();
-    fixture.detectChanges();
+    const panel = dom.getMatSelectPanel();
+    panel.findAndClick('.user-option');
     expect(configChangeSpy).toHaveBeenCalledTimes(2);
     expect(
       configChangeSpy.calls.mostRecent().args[0]['optional_selection_trace']
@@ -290,16 +254,10 @@ describe('TraceConfigComponent', () => {
 
   it('clicking All button selects or clears all options for multiple selection config', async () => {
     configChangeSpy.calls.reset();
-    await openSelect(getIndexForConfigKey('multiple_selection_trace'));
+    await dom.openMatSelect(getIndexForConfigKey('multiple_selection_trace'));
 
-    const panel = assertDefined(
-      document.querySelector<HTMLElement>('.mat-select-panel'),
-    );
-    const allButton = assertDefined(
-      panel.querySelector<HTMLElement>('.user-option'),
-    );
-    allButton.click();
-    fixture.detectChanges();
+    const panel = dom.getMatSelectPanel();
+    const allButton = panel.findAndClick('.user-option');
     expect(configChangeSpy).toHaveBeenCalledTimes(1);
     expect(
       configChangeSpy.calls.mostRecent().args[0]['multiple_selection_trace']
@@ -307,7 +265,6 @@ describe('TraceConfigComponent', () => {
     ).toEqual(['12345', '67890']);
 
     allButton.click();
-    fixture.detectChanges();
     expect(configChangeSpy).toHaveBeenCalledTimes(2);
     expect(
       configChangeSpy.calls.mostRecent().args[0]['multiple_selection_trace']
@@ -316,29 +273,24 @@ describe('TraceConfigComponent', () => {
   });
 
   it('stabilizes tooltip position', async () => {
-    await openSelect(getIndexForConfigKey('optional_selection_trace'));
+    await dom.openMatSelect(getIndexForConfigKey('optional_selection_trace'));
 
-    const panel = assertDefined(
-      document.querySelector<HTMLElement>('.mat-select-panel'),
-    );
-    const options = panel.querySelectorAll<HTMLElement>('mat-option');
+    const panel = dom.getMatSelectPanel();
+    const options = panel.findAll('mat-option');
 
-    const shortOption = options.item(0);
-    UnitTestUtils.checkTooltips([shortOption], [undefined], fixture);
+    const shortOption = options[0];
+    checkTooltips([shortOption], [undefined]);
 
-    const longOption = options.item(1);
+    const longOption = options[1];
     longOption.dispatchEvent(new Event('mouseenter'));
-    fixture.detectChanges();
-    const tooltipPanel = assertDefined(
-      document.querySelector<HTMLElement>('.mat-tooltip-panel'),
-    );
+    const tooltipPanel = dom.findMatTooltipPanel()?.getHTMLElement();
     expect(tooltipPanel?.style.top.length).toBeGreaterThan(0);
     expect(tooltipPanel?.style.left.length).toBeGreaterThan(0);
   });
 
   async function setComponentInputs(
     c: TraceConfigComponent,
-    f: ComponentFixture<TraceConfigComponent> = fixture,
+    d: DOMTestHelper<TraceConfigComponent> = dom,
     storage: Store = new InMemoryStorage(),
   ) {
     c.title = 'Targets';
@@ -448,49 +400,29 @@ describe('TraceConfigComponent', () => {
     };
     c.traceConfigStoreKey = storeKey;
     c.storage = storage;
-    await detectNgModelChanges(f);
-    f.detectChanges();
+    await detectNgModelChanges(d);
+    d.detectChanges();
   }
 
   async function detectNgModelChanges(
-    f: ComponentFixture<TraceConfigComponent> = fixture,
+    d: DOMTestHelper<TraceConfigComponent> = dom,
   ) {
-    f.detectChanges();
-    await f.whenStable();
-    f.detectChanges();
+    await d.detectChangesAndWaitStable();
+    d.detectChanges();
   }
 
-  function getTraceBoxForKey(traceKey: string): HTMLElement {
+  function getTraceBoxForKey(
+    traceKey: string,
+  ): DOMTestHelper<TraceConfigComponent> {
     const index = component
       .getSortedTraceKeys()
       .findIndex((key) => key === traceKey);
-    return assertDefined(
-      htmlElement.querySelectorAll<HTMLElement>('.trace-checkbox').item(index),
-    );
+    return dom.findAll('.trace-checkbox')[index];
   }
 
   function getIndexForConfigKey(configKey: string): number {
     return component
       .getSortedConfigKeys()
       .findIndex((key) => key === configKey);
-  }
-
-  async function openSelect(index: number) {
-    const selectTrigger = assertDefined(
-      htmlElement
-        .querySelectorAll<HTMLElement>('.mat-select-trigger')
-        .item(index),
-    );
-    selectTrigger.click();
-    fixture.detectChanges();
-    await fixture.whenStable();
-  }
-
-  function clickFirstOption(panel: HTMLElement) {
-    const newOption = assertDefined(
-      panel.querySelector<HTMLElement>('mat-option'),
-    );
-    newOption.click();
-    fixture.detectChanges();
   }
 });

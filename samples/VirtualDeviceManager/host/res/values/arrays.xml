@@ -33,4 +33,11 @@
         <item>5000</item>
         <item>123000</item>
     </string-array>
+
+    <string-array translatable="false" name="camera_policy_options">
+        <item>@string/no_cameras</item>
+        <item>@string/default_cameras</item>
+        <item>@string/client_cameras</item>
+    </string-array>
+
 </resources>

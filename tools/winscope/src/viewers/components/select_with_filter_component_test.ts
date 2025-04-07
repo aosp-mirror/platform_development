@@ -16,11 +16,7 @@
 
 import {CommonModule} from '@angular/common';
 import {Component, ViewChild} from '@angular/core';
-import {
-  ComponentFixture,
-  ComponentFixtureAutoDetect,
-  TestBed,
-} from '@angular/core/testing';
+import {ComponentFixtureAutoDetect, TestBed} from '@angular/core/testing';
 import {FormsModule} from '@angular/forms';
 import {MatOptionModule, MatPseudoCheckboxModule} from '@angular/material/core';
 import {MatDividerModule} from '@angular/material/divider';
@@ -30,14 +26,15 @@ import {MatSelectModule} from '@angular/material/select';
 import {MatTooltipModule} from '@angular/material/tooltip';
 import {BrowserAnimationsModule} from '@angular/platform-browser/animations';
 import {assertDefined} from 'common/assert_utils';
-import {KeyboardEventCode, KeyboardEventKeyCode} from 'common/dom_utils';
+import {KeyboardEventCode} from 'common/dom_utils';
+import {DOMTestHelper} from 'test/unit/dom_test_utils';
 import {SelectWithFilterComponent} from './select_with_filter_component';
 
 describe('SelectWithFilterComponent', () => {
+  const filterInputField = '.select-filter';
   const shiftAndClick = new MouseEvent('click', {shiftKey: true});
-  let fixture: ComponentFixture<TestHostComponent>;
   let component: TestHostComponent;
-  let htmlElement: HTMLElement;
+  let dom: DOMTestHelper<TestHostComponent>;
   let selectChangeSpy: jasmine.Spy;
 
   beforeEach(async () => {
@@ -57,10 +54,10 @@ describe('SelectWithFilterComponent', () => {
         MatTooltipModule,
       ],
     }).compileComponents();
-    fixture = TestBed.createComponent(TestHostComponent);
+    const fixture = TestBed.createComponent(TestHostComponent);
     component = fixture.componentInstance;
-    htmlElement = fixture.nativeElement;
-    fixture.detectChanges();
+    dom = new DOMTestHelper(fixture, fixture.nativeElement);
+    dom.detectChanges();
     selectChangeSpy = spyOn(
       assertDefined(component.selectWithFilterComponent).selectChange,
       'emit',
@@ -68,7 +65,7 @@ describe('SelectWithFilterComponent', () => {
   });
 
   afterAll(() => {
-    fixture.detectChanges();
+    dom.detectChanges();
   });
 
   it('can be created', () => {
@@ -76,38 +73,36 @@ describe('SelectWithFilterComponent', () => {
   });
 
   it('applies filter correctly', () => {
-    openSelectPanel();
+    dom.openMatSelect();
 
     const options = getOptions();
     checkHiddenOptions(options, []);
 
-    const inputEl = getFilterInput();
-    dispatchInput(inputEl, '2');
+    const panel = dom.getMatSelectPanel();
+    const input = panel.findAndDispatchInput(filterInputField, '2');
     checkHiddenOptions(options, [0, 1]);
 
-    dispatchInput(inputEl, '');
+    input.dispatchInput('');
     checkHiddenOptions(options, []);
   });
 
   it('maintains selection even if filtered out', () => {
-    openSelectPanel();
+    dom.openMatSelect();
 
     const options = getOptions();
     checkHiddenOptions(options, []);
 
     options[0].click();
-    fixture.detectChanges();
     checkSelectValue(['0']);
 
-    const inputEl = getFilterInput();
-
-    dispatchInput(inputEl, '2');
+    const panel = dom.getMatSelectPanel();
+    const input = panel.findAndDispatchInput(filterInputField, '2');
     checkHiddenOptions(options, [0, 1]);
 
     options[2].click();
     checkSelectValue(['0', '2']);
 
-    dispatchInput(inputEl, '');
+    input.dispatchInput('');
     checkHiddenOptions(options, []);
 
     options[1].click();
@@ -115,7 +110,7 @@ describe('SelectWithFilterComponent', () => {
   });
 
   it('applies selection correctly', () => {
-    openSelectPanel();
+    dom.openMatSelect();
     const options = getOptions();
 
     options[0].click();
@@ -126,96 +121,78 @@ describe('SelectWithFilterComponent', () => {
   });
 
   it('applies deselection from pinned selected options', () => {
-    openSelectPanel();
+    dom.openMatSelect();
 
     const options = getOptions();
     options[0].click();
-    fixture.detectChanges();
     checkSelectValue(['0']);
 
     const pinnedOptions = getPinnedOptions();
     expect(pinnedOptions.length).toEqual(1);
     pinnedOptions[0].click();
-    fixture.detectChanges();
     checkSelectValue([]);
     expect(getPinnedOptions().length).toEqual(0);
   });
 
   it('resets filter on close', async () => {
-    openSelectPanel();
+    dom.openMatSelect();
 
     const options = getOptions();
     checkHiddenOptions(options, []);
 
-    const inputEl = getFilterInput();
-    dispatchInput(inputEl, 'A');
+    dom.getMatSelectPanel().findAndDispatchInput(filterInputField, 'A');
     checkHiddenOptions(options, [0, 1, 2]);
 
-    document.querySelector<HTMLElement>('.cdk-overlay-backdrop')?.click();
-    fixture.detectChanges();
-    await fixture.whenStable();
+    dom.getInDocument('.cdk-overlay-backdrop').click();
+    await dom.whenStable();
+    await dom.whenRenderingDone();
 
-    openSelectPanel();
+    dom.openMatSelect();
     checkHiddenOptions(getOptions(), []);
   });
 
   it('calls default select keydown handler', async () => {
-    openSelectPanel();
-    fixture.detectChanges();
-    await fixture.whenStable();
-    await fixture.whenRenderingDone();
-    const panel = assertDefined(document.querySelector('.mat-select-panel'));
-    panel.dispatchEvent(
-      new KeyboardEvent('keydown', {keyCode: KeyboardEventKeyCode.SPACE}),
-    );
-    fixture.detectChanges();
+    dom.openMatSelect();
+    await dom.detectChangesAndWaitStable();
+    await dom.whenRenderingDone();
+    dom.getMatSelectPanel().keydownSpace();
     checkSelectValue(['0']);
   });
 
   it('calls custom select keydown handler for CTRL+A', async () => {
-    openSelectPanel();
-    fixture.detectChanges();
-    await fixture.whenStable();
-    await fixture.whenRenderingDone();
+    dom.openMatSelect();
+    await dom.detectChangesAndWaitStable();
+    await dom.whenRenderingDone();
     const keydownCtrlA = new KeyboardEvent('keydown', {
       code: KeyboardEventCode.A,
       ctrlKey: true,
     });
-    const panel = assertDefined(document.querySelector('.mat-select-panel'));
+    const panel = dom.getMatSelectPanel();
 
     panel.dispatchEvent(keydownCtrlA);
-    fixture.detectChanges();
     checkSelectValue(['0', '1', '2']);
 
     panel.dispatchEvent(keydownCtrlA);
-    fixture.detectChanges();
     checkSelectValue([]);
 
     panel.dispatchEvent(keydownCtrlA);
-    fixture.detectChanges();
-
-    const inputEl = getFilterInput(); // filters out '0' and '1' while all selected
-    dispatchInput(inputEl, '2');
+    const inputEl = panel.findAndDispatchInput(filterInputField, '2'); // filters out '0' and '1' while all selected
 
     panel.dispatchEvent(keydownCtrlA);
-    fixture.detectChanges();
     checkSelectValue(['0', '1']);
 
     panel.dispatchEvent(keydownCtrlA);
-    fixture.detectChanges();
     checkSelectValue(['0', '1', '2']);
 
     panel.dispatchEvent(keydownCtrlA);
-    fixture.detectChanges();
-    dispatchInput(inputEl, ''); // removes filter while '0' and '1' selected
+    inputEl.dispatchInput(''); // removes filter while '0' and '1' selected
 
     panel.dispatchEvent(keydownCtrlA);
-    fixture.detectChanges();
     checkSelectValue(['0', '1', '2']);
   });
 
   it('does not emit second change after shift + click for adjacent options', () => {
-    openSelectPanel();
+    dom.openMatSelect();
     const options = getOptions();
 
     options[0].dispatchEvent(shiftAndClick);
@@ -232,7 +209,7 @@ describe('SelectWithFilterComponent', () => {
   });
 
   it('emits second change after shift + click to toggle options in-between', () => {
-    openSelectPanel();
+    dom.openMatSelect();
     const options = getOptions();
 
     options[0].click();
@@ -250,92 +227,59 @@ describe('SelectWithFilterComponent', () => {
 
   it('sets in-between options to value of clicked option, regardless of current state', () => {
     component.allOptions.push('3');
-    openSelectPanel();
+    dom.openMatSelect();
     const options = getOptions();
 
     options[2].click();
     options[3].click();
-    fixture.detectChanges();
     checkSelectValue(['2', '3']);
     selectChangeSpy.calls.reset();
 
     options[0].dispatchEvent(shiftAndClick);
-    fixture.detectChanges();
     expect(selectChangeSpy).toHaveBeenCalledTimes(2);
     checkSelectValue(['0', '2', '3', '1'], ['0', '1', '2', '3']);
 
     options[2].click();
     options[3].click();
-    fixture.detectChanges();
     checkSelectValue(['0', '1']);
     selectChangeSpy.calls.reset();
 
     options[0].dispatchEvent(shiftAndClick);
-    fixture.detectChanges();
     expect(selectChangeSpy).toHaveBeenCalledTimes(2);
     checkSelectValue([]);
   });
 
   it('only toggles non-hidden options between last and current clicks', () => {
     component.allOptions.push('10');
-    openSelectPanel();
+    dom.openMatSelect();
     const options = getOptions();
-
-    const inputEl = getFilterInput();
-    dispatchInput(inputEl, '1');
+    dom.getMatSelectPanel().findAndDispatchInput(filterInputField, '1');
 
     options[1].click();
-    fixture.detectChanges();
     selectChangeSpy.calls.reset();
     options[3].dispatchEvent(shiftAndClick);
-    fixture.detectChanges();
     checkSelectValue(['1', '10']);
     expect(selectChangeSpy).toHaveBeenCalledTimes(2);
   });
 
-  function openSelectPanel() {
-    assertDefined(
-      htmlElement.querySelector<HTMLElement>('.mat-select-trigger'),
-    ).click();
+  function getOptions(): Array<DOMTestHelper<TestHostComponent>> {
+    return Array.from(dom.getMatSelectPanel().findAll('.option'));
   }
 
-  function getOptions(): HTMLElement[] {
-    return Array.from(
-      document.querySelectorAll<HTMLElement>('.mat-select-panel .option'),
-    );
-  }
-
-  function checkHiddenOptions(options: HTMLElement[], hidden: number[]) {
+  function checkHiddenOptions(
+    options: Array<DOMTestHelper<TestHostComponent>>,
+    hidden: number[],
+  ) {
     expect(options.length).toEqual(3);
     options.forEach((option, index) => {
-      expect(option.textContent).toContain(`${index}`);
-      if (hidden.includes(index)) {
-        expect(option.className).toContain('hidden-option');
-      } else {
-        expect(option.className).not.toContain('hidden-option');
-      }
+      option.checkText(`${index}`);
+      option.checkClassName('hidden-option', hidden.includes(index));
     });
   }
 
-  function getFilterInput(): HTMLInputElement {
-    return assertDefined(
-      document.querySelector<HTMLInputElement>(
-        '.mat-select-panel .select-filter input',
-      ),
-    );
-  }
-
-  function dispatchInput(inputEl: HTMLInputElement, input: string) {
-    inputEl.value = input;
-    inputEl.dispatchEvent(new Event('input'));
-    fixture.detectChanges();
-  }
-
-  function getPinnedOptions(): HTMLElement[] {
+  function getPinnedOptions(): Array<DOMTestHelper<TestHostComponent>> {
     return Array.from(
-      document.querySelectorAll<HTMLElement>(
-        '.mat-select-panel .selected-options .mat-option',
-      ),
+      dom.getMatSelectPanel().findAll('.selected-options .mat-option'),
     ).slice(1);
   }
 
@@ -344,12 +288,14 @@ describe('SelectWithFilterComponent', () => {
     expect(
       assertDefined(selectChangeSpy.calls.mostRecent().args[0]).value,
     ).toEqual(expValues);
-    if (!document.querySelector('.mat-select-panel')) {
-      openSelectPanel();
+    if (!dom.isMatSelectOpen()) {
+      dom.openMatSelect();
     }
-    expect(
-      Array.from(getPinnedOptions()).map((o) => o.textContent?.trim()),
-    ).toEqual(expOpts);
+    const pinnedOptions = getPinnedOptions();
+    expect(pinnedOptions.length).toEqual(expOpts.length);
+    pinnedOptions.forEach((option, index) => {
+      option.checkTextExact(expOpts[index]);
+    });
   }
 
   @Component({

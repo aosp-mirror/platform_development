@@ -16,7 +16,7 @@
 
 import {DragDropModule} from '@angular/cdk/drag-drop';
 import {ChangeDetectionStrategy} from '@angular/core';
-import {ComponentFixture, TestBed} from '@angular/core/testing';
+import {TestBed} from '@angular/core/testing';
 import {FormsModule, ReactiveFormsModule} from '@angular/forms';
 import {MatButtonModule} from '@angular/material/button';
 import {MatFormFieldModule} from '@angular/material/form-field';
@@ -29,17 +29,17 @@ import {assertDefined} from 'common/assert_utils';
 import {Rect} from 'common/geometry/rect';
 import {TimestampConverterUtils} from 'common/time/test_utils';
 import {TimeRange, Timestamp} from 'common/time/time';
+import {DOMTestHelper} from 'test/unit/dom_test_utils';
 import {PropertyTreeBuilder} from 'test/unit/property_tree_builder';
+import {waitToBeCalled} from 'test/unit/spy_utils';
 import {TraceBuilder} from 'test/unit/trace_builder';
-import {waitToBeCalled} from 'test/utils';
 import {TraceType} from 'trace/trace_type';
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
 import {TransitionTimelineComponent} from './transition_timeline_component';
 
 describe('TransitionTimelineComponent', () => {
-  let fixture: ComponentFixture<TransitionTimelineComponent>;
   let component: TransitionTimelineComponent;
-  let htmlElement: HTMLElement;
+  let dom: DOMTestHelper<TransitionTimelineComponent>;
 
   const time0 = TimestampConverterUtils.makeRealTimestamp(0n);
   const time5 = TimestampConverterUtils.makeRealTimestamp(5n);
@@ -76,9 +76,9 @@ describe('TransitionTimelineComponent', () => {
         set: {changeDetection: ChangeDetectionStrategy.Default},
       })
       .compileComponents();
-    fixture = TestBed.createComponent(TransitionTimelineComponent);
+    const fixture = TestBed.createComponent(TransitionTimelineComponent);
     component = fixture.componentInstance;
-    htmlElement = fixture.nativeElement;
+    dom = new DOMTestHelper(fixture, fixture.nativeElement);
     component.timestampConverter = TimestampConverterUtils.TIMESTAMP_CONVERTER;
     component.fullRange = range0to160;
   });
@@ -227,14 +227,12 @@ describe('TransitionTimelineComponent', () => {
 
     const mouseoutEvent = new MouseEvent('mouseout');
     component.getCanvas().dispatchEvent(mouseoutEvent);
-    fixture.detectChanges();
-    await fixture.whenRenderingDone();
+    await dom.detectChangesAndRenderingDone();
     expect(drawRectSpy).not.toHaveBeenCalled();
 
     await dispatchMousemoveEvent();
     component.getCanvas().dispatchEvent(mouseoutEvent);
-    fixture.detectChanges();
-    await fixture.whenRenderingDone();
+    await dom.detectChangesAndRenderingDone();
 
     expect(drawRectSpy).toHaveBeenCalledOnceWith(
       getExpectedBorderedRect(),
@@ -413,18 +411,14 @@ describe('TransitionTimelineComponent', () => {
 
     const drawRectSpy = spyOn(component.canvasDrawer, 'drawRect');
 
-    fixture.detectChanges();
-    await fixture.whenRenderingDone();
-
+    await dom.detectChangesAndRenderingDone();
     expect(drawRectSpy).toHaveBeenCalledTimes(1);
   });
 
   it('emits scroll event', async () => {
     await setDefaultTraceAndSelectionRange();
-
     const spy = spyOn(component.onScrollEvent, 'emit');
-    htmlElement.dispatchEvent(new WheelEvent('wheel'));
-    fixture.detectChanges();
+    dom.dispatchEvent(new WheelEvent('wheel'));
     expect(spy).toHaveBeenCalled();
   });
 
@@ -438,13 +432,13 @@ describe('TransitionTimelineComponent', () => {
     Object.defineProperty(mouseMoveEvent, 'target', {value: canvas});
     Object.defineProperty(mouseMoveEvent, 'offsetX', {value: 100});
     canvas.dispatchEvent(mouseMoveEvent);
-    fixture.detectChanges();
+    dom.detectChanges();
 
     expect(spy).toHaveBeenCalledWith(100 / canvas.offsetWidth);
 
     const mouseLeaveEvent = new MouseEvent('mouseleave');
     canvas.dispatchEvent(mouseLeaveEvent);
-    fixture.detectChanges();
+    dom.detectChanges();
     expect(spy).toHaveBeenCalledWith(undefined);
   });
 
@@ -458,8 +452,7 @@ describe('TransitionTimelineComponent', () => {
     component.transitionEntries = transitions;
     component.selectionRange = range10to110;
     if (setSelectedEntry) component.selectedEntry = component.trace.getEntry(0);
-    fixture.detectChanges();
-    await fixture.whenRenderingDone();
+    await dom.detectChangesAndRenderingDone();
   }
 
   function makeTransition(
@@ -514,8 +507,7 @@ describe('TransitionTimelineComponent', () => {
       .build();
     component.transitionEntries = transitions;
     component.selectionRange = range;
-    fixture.detectChanges();
-    await fixture.whenRenderingDone();
+    await dom.detectChangesAndRenderingDone();
   }
 
   function getExpectedBorderedRect(): Rect {
@@ -538,7 +530,6 @@ describe('TransitionTimelineComponent', () => {
     );
     spyOnProperty(mousemoveEvent, 'offsetY').and.returnValue(25 / 2);
     component.getCanvas().dispatchEvent(mousemoveEvent);
-    fixture.detectChanges();
-    await fixture.whenRenderingDone();
+    await dom.detectChangesAndRenderingDone();
   }
 });

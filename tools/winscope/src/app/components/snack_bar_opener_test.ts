@@ -22,7 +22,7 @@ import {
   FailedToInitializeTimelineData,
   NoValidFiles,
 } from 'messaging/user_warnings';
-import {waitToBeCalled} from 'test/utils';
+import {waitToBeCalled} from 'test/unit/spy_utils';
 import {SnackBarComponent} from './snack_bar_component';
 import {SnackBarOpener} from './snack_bar_opener';
 

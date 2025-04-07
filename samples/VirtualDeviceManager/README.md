@@ -215,34 +215,10 @@ Each input screen has a "Back", "Home" and "Forward" buttons.
     adb shell aflags enable android.companion.virtual.flags.activity_control_api && adb reboot
     ```
 
-#### Client capabilities
-
 -   **Enable client Sensors**: Enables sensor injection from the client device
     into the host device. Any context that is associated with the virtual device
     will access the virtual sensors by default. \
     *Changing this will recreate the virtual device.*
-
--   **Enable client Camera**: Enables front & back camera injection from the
-    client device into the host device. (WIP: Any context that is associated
-    with the virtual device will the virtual cameras by default). \
-    *Changing this will recreate the virtual device.*
-
-    Note: External cameras already present on the client are mapped as virtual external
-    cameras on the host virtual device. Test cameras can be created on the client device
-    with Android 15 or newer (SDK level 35) with:
-
-    ```shell
-    adb shell start virtual_camera
-    adb shell cmd virtual_camera enable_test_camera
-    ```
-
-    The front and back cameras of the client can be also mapped as virtual external
-    cameras on the virtual device from the **Debug** options of VdmHost.
-
--   **Enable client Audio**: Enables audio output on the client device. Any
-    context that is associated with the virtual device will play audio on the
-    client by default. \
-    *This can be changed dynamically.*
 
 #### Displays
 
@@ -303,7 +279,45 @@ Each input screen has a "Back", "Home" and "Forward" buttons.
     adb shell aflags enable android.companion.virtual.flags.device_aware_display_power && adb reboot
     ```
 
+#### Camera
+
+-   **Camera policy**: Choose the cameras to be used on the virtual device:
+    -   *No cameras* - No cameras are exposed on the virtual device.
+    -   *Default device cameras* - The front and back cameras of the host device
+        are exposed as such on the virtual device. Any external camera from the
+        client device is exposed globally on the host device.
+    -   *Client cameras* - All the cameras from the client are exposed only in
+        the virtual device.
+
+    *Changing this will recreate the virtual device.*
+
+    Note: External cameras already present on the client are mapped as virtual
+    external cameras on the host virtual device when the policy is different
+    than *No cameras*. Test cameras can be created on the client device with
+    Android 15 or newer (SDK level 35) with:
+
+    ```shell
+    adb shell start virtual_camera
+    adb shell cmd virtual_camera enable_test_camera
+    ```
+
+    The front and back cameras of the client can be also mapped as virtual
+    external cameras on the virtual device for testing.
+
+-   **Duplicate front camera**: Creates an additional external camera
+    (if external virtual cameras are supported) that duplicates the **front** camera
+    stream of the remote device (if exists).
+
+-   **Duplicate back camera**: Creates an additional external camera
+    (if external virtual cameras are supported) that duplicates the **back** camera
+    stream of the remote device (if exists).
+
 #### Audio
+
+-   **Enable client Audio**: Enables audio output on the client device. Any
+    context that is associated with the virtual device will play audio on the
+    client by default. \
+    *This can be changed dynamically.*
 
 -   **Use AudioPolicy.updateMixingRules**: Updates the dynamic AudiPolicy mixing rules
     instead of unregistering and re-registering the AudioPolicy.
@@ -337,14 +351,6 @@ you likely need to enable this in the host Settings. On a Pixel device: System
     adb pull /sdcard/Download/vdmdemo_encoder_output_<displayId>.h264
     ffplay -f h264 vdmdemo_encoder_output_<displayId>.h264
     ```
-
--   **Duplicate front camera**: Creates an additional external camera
-    (if external virtual cameras are supported) that duplicates the **front** camera
-    stream of the remote device (if exists).
-
--   **Duplicate back camera**: Creates an additional external camera
-    (if external virtual cameras are supported) that duplicates the **back** camera
-    stream of the remote device (if exists).
 
 -   **Network channel**: Select different communication channel between the
     client and the host to avoid collisions with other demo setups nearby.
@@ -463,6 +469,8 @@ which showcases implicit intent handling.
 ### Beyond Android 16
 
 -   Added support for virtual sensor additional info.
+
+-   Added support for virtual external cameras.
 
 ### Android 16 / Baklava / SDK level 36
 

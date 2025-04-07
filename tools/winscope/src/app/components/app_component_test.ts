@@ -18,11 +18,7 @@ import {OverlayModule} from '@angular/cdk/overlay';
 import {CommonModule} from '@angular/common';
 import {HttpClientModule} from '@angular/common/http';
 import {ChangeDetectionStrategy} from '@angular/core';
-import {
-  ComponentFixture,
-  ComponentFixtureAutoDetect,
-  TestBed,
-} from '@angular/core/testing';
+import {ComponentFixtureAutoDetect, TestBed} from '@angular/core/testing';
 import {
   FormControl,
   FormsModule,
@@ -60,8 +56,9 @@ import {
   ViewersLoaded,
   ViewersUnloaded,
 } from 'messaging/winscope_event';
+import {DOMTestHelper} from 'test/unit/dom_test_utils';
+import {waitToBeCalled} from 'test/unit/spy_utils';
 import {TracesBuilder} from 'test/unit/traces_builder';
-import {waitToBeCalled} from 'test/utils';
 import {ViewerSurfaceFlingerComponent} from 'viewers/viewer_surface_flinger/viewer_surface_flinger_component';
 import {AppComponent} from './app_component';
 import {
@@ -81,10 +78,9 @@ import {WdpSetupComponent} from './wdp_setup_component';
 import {WinscopeProxySetupComponent} from './winscope_proxy_setup_component';
 
 describe('AppComponent', () => {
-  let fixture: ComponentFixture<AppComponent>;
   let component: AppComponent;
-  let htmlElement: HTMLElement;
   let downloadTracesSpy: jasmine.Spy;
+  let dom: DOMTestHelper<AppComponent>;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
@@ -135,9 +131,9 @@ describe('AppComponent', () => {
         set: {changeDetection: ChangeDetectionStrategy.Default},
       })
       .compileComponents();
-    fixture = TestBed.createComponent(AppComponent);
+    const fixture = TestBed.createComponent(AppComponent);
     component = fixture.componentInstance;
-    htmlElement = fixture.nativeElement;
+    dom = new DOMTestHelper(fixture, fixture.nativeElement);
     component.filenameFormControl = new FormControl(
       'winscope',
       Validators.compose([
@@ -146,7 +142,7 @@ describe('AppComponent', () => {
       ]),
     );
     downloadTracesSpy = spyOn(Download, 'fromUrl');
-    fixture.detectChanges();
+    dom.detectChanges();
   });
 
   it('can be created', () => {
@@ -164,7 +160,7 @@ describe('AppComponent', () => {
   it('displays correct elements when no data loaded', () => {
     component.dataLoaded = false;
     component.showDataLoadedElements = false;
-    fixture.detectChanges();
+    dom.detectChanges();
     checkHomepage();
   });
 
@@ -173,21 +169,15 @@ describe('AppComponent', () => {
     checkTraceViewPage();
 
     spyOn(component, 'dumpsUploaded').and.returnValue(true);
-    fixture.detectChanges();
-    expect(htmlElement.querySelector('.refresh-dumps')).toBeTruthy();
+    dom.detectChanges();
+    expect(dom.find('.refresh-dumps')).toBeTruthy();
   });
 
   it('returns to homepage on upload new button click', async () => {
     goToTraceView();
     checkTraceViewPage();
-
-    assertDefined(
-      htmlElement.querySelector<HTMLButtonElement>('.upload-new'),
-    ).click();
-    fixture.detectChanges();
-    await fixture.whenStable();
-    fixture.detectChanges();
-    await fixture.whenStable();
+    await dom.clickAndWaitStable('.upload-new');
+    await dom.detectChangesAndWaitStable();
     checkHomepage();
   });
 
@@ -200,50 +190,41 @@ describe('AppComponent', () => {
       component.mediator,
       'onWinscopeEvent',
     ).and.callThrough();
-    assertDefined(
-      htmlElement.querySelector<HTMLButtonElement>('.refresh-dumps'),
-    ).click();
-    fixture.detectChanges();
-    await fixture.whenStable();
-    fixture.detectChanges();
-    await fixture.whenStable();
+    await dom.clickAndWaitStable('.refresh-dumps');
+    await dom.detectChangesAndWaitStable();
     checkHomepage();
     expect(winscopeEventSpy).toHaveBeenCalledWith(new AppRefreshDumpsRequest());
   });
 
   it('shows download progress bar', () => {
     component.showDataLoadedElements = true;
-    fixture.detectChanges();
+    dom.detectChanges();
     expect(
-      htmlElement.querySelector('.download-files-section mat-progress-bar'),
-    ).toBeNull();
+      dom.find('.download-files-section mat-progress-bar'),
+    ).toBeUndefined();
 
     component.onProgressUpdate('Progress update', 10);
-    fixture.detectChanges();
-    expect(
-      htmlElement.querySelector('.download-files-section mat-progress-bar'),
-    ).toBeTruthy();
+    dom.detectChanges();
+    expect(dom.find('.download-files-section mat-progress-bar')).toBeTruthy();
 
     component.onOperationFinished(true);
-    fixture.detectChanges();
+    dom.detectChanges();
     expect(
-      htmlElement.querySelector('.download-files-section mat-progress-bar'),
-    ).toBeNull();
+      dom.find('.download-files-section mat-progress-bar'),
+    ).toBeUndefined();
   });
 
   it('downloads traces on download button click and shows download progress bar', async () => {
     component.showDataLoadedElements = true;
-    fixture.detectChanges();
+    dom.detectChanges();
     clickDownloadTracesButton();
-    expect(
-      htmlElement.querySelector('.download-files-section mat-progress-bar'),
-    ).toBeTruthy();
+    expect(dom.find('.download-files-section mat-progress-bar')).toBeTruthy();
     await waitToBeCalled(downloadTracesSpy);
   });
 
   it('downloads traces after valid file name change', async () => {
     component.showDataLoadedElements = true;
-    fixture.detectChanges();
+    dom.detectChanges();
 
     clickEditFilenameButton();
     updateFilenameInputAndDownloadTraces('Winscope2', true);
@@ -280,13 +261,13 @@ describe('AppComponent', () => {
       .createSpy()
       .and.returnValue('test_archive');
     await component.onWinscopeEvent(new ViewersLoaded([]));
-    fixture.detectChanges();
+    dom.detectChanges();
     expect(pageTitle.getTitle()).toBe('Winscope | test_archive');
   });
 
   it('does not download traces if invalid file name chosen', () => {
     component.showDataLoadedElements = true;
-    fixture.detectChanges();
+    dom.detectChanges();
 
     clickEditFilenameButton();
     updateFilenameInputAndDownloadTraces('w?n$cope', false);
@@ -295,7 +276,7 @@ describe('AppComponent', () => {
 
   it('behaves as expected when entering valid then invalid then valid file names', async () => {
     component.showDataLoadedElements = true;
-    fixture.detectChanges();
+    dom.detectChanges();
 
     clickEditFilenameButton();
     updateFilenameInputAndDownloadTraces('Winscope2', true);
@@ -322,93 +303,68 @@ describe('AppComponent', () => {
     const spy = spyOn(component, 'trySubmitFilename');
 
     component.showDataLoadedElements = true;
-    fixture.detectChanges();
+    dom.detectChanges();
     clickEditFilenameButton();
-    const inputField = assertDefined(
-      htmlElement.querySelector('.file-name-input-field'),
-    );
-    const inputEl = assertDefined(
-      htmlElement.querySelector<HTMLInputElement>(
-        '.file-name-input-field input',
-      ),
-    );
-    inputEl.value = 'valid_file_name';
+    const inputField = dom.get('.file-name-input-field');
+    inputField.get('input').updateValue('valid_file_name');
 
-    inputField.dispatchEvent(new KeyboardEvent('keydown', {key: 'Enter'}));
-    fixture.detectChanges();
+    inputField.keydownEnter();
     expect(spy).toHaveBeenCalledTimes(1);
 
-    inputField.dispatchEvent(new KeyboardEvent('keydown', {key: 'Escape'}));
-    fixture.detectChanges();
+    inputField.keydownEsc();
     expect(spy).toHaveBeenCalledTimes(2);
 
-    inputField.dispatchEvent(new FocusEvent('focusout'));
-    fixture.detectChanges();
+    inputField.focusOut();
     expect(spy).toHaveBeenCalledTimes(3);
   });
 
   it('downloads traces from upload traces section', () => {
     const traces = assertDefined(component.tracePipeline.getTraces());
     spyOn(traces, 'getSize').and.returnValue(1);
-    fixture.detectChanges();
+    dom.detectChanges();
     const downloadButtonClickSpy = spyOn(
       component,
       'onDownloadTracesButtonClick',
     );
-
-    const downloadButton = assertDefined(
-      htmlElement.querySelector<HTMLElement>('upload-traces .download-btn'),
-    );
-    downloadButton.click();
-    fixture.detectChanges();
+    dom.findAndClick('upload-traces .download-btn');
     expect(downloadButtonClickSpy).toHaveBeenCalledOnceWith(
       component.uploadTracesComponent,
     );
   });
 
   it('opens shortcuts dialog', () => {
-    expect(document.querySelector('shortcuts-panel')).toBeFalsy();
-    const shortcutsButton = assertDefined(
-      htmlElement.querySelector<HTMLElement>('.shortcuts'),
-    );
-    shortcutsButton.click();
-    fixture.detectChanges();
-    expect(document.querySelector('shortcuts-panel')).toBeTruthy();
+    expect(dom.findInDocument('shortcuts-panel')).toBeUndefined();
+    dom.findAndClick('.shortcuts');
+    expect(dom.findInDocument('shortcuts-panel')).toBeTruthy();
   });
 
   it('sets snackbar opener to global user notifier', () => {
-    expect(document.querySelector('snack-bar')).toBeFalsy();
+    expect(dom.findInDocument('snack-bar')).toBeUndefined();
     UserNotifier.add(new NoValidFiles());
     UserNotifier.notify();
-    expect(document.querySelector('snack-bar')).toBeTruthy();
+    expect(dom.findInDocument('snack-bar')).toBeTruthy();
   });
 
   it('does not open new snackbar until existing snackbar has been dismissed', async () => {
-    expect(document.querySelector('snack-bar')).toBeFalsy();
+    expect(dom.findInDocument('snack-bar')).toBeUndefined();
     const firstMessage = new NoValidFiles();
     UserNotifier.add(firstMessage);
     UserNotifier.notify();
-    fixture.detectChanges();
-    await fixture.whenRenderingDone();
-    let snackbar = assertDefined(document.querySelector('snack-bar'));
-    expect(snackbar.textContent).toContain(firstMessage.getMessage());
+    await dom.detectChangesAndRenderingDone();
+    let snackbar = dom.getSnackBar();
+    snackbar.checkText(firstMessage.getMessage());
 
     const secondMessage = new FailedToInitializeTimelineData();
     UserNotifier.add(secondMessage);
     UserNotifier.notify();
-    fixture.detectChanges();
-    await fixture.whenRenderingDone();
-    snackbar = assertDefined(document.querySelector('snack-bar'));
-    expect(snackbar.textContent).toContain(firstMessage.getMessage());
+    await dom.detectChangesAndRenderingDone();
+    snackbar = dom.getSnackBar();
+    snackbar.checkText(firstMessage.getMessage());
 
-    const closeButton = assertDefined(
-      snackbar.querySelector<HTMLElement>('.snack-bar-action'),
-    );
-    closeButton.click();
-    fixture.detectChanges();
-    await fixture.whenRenderingDone();
-    snackbar = assertDefined(document.querySelector('snack-bar'));
-    expect(snackbar.textContent).toContain(secondMessage.getMessage());
+    snackbar.findAndClick('.snack-bar-action');
+    await dom.whenRenderingDone();
+    snackbar = dom.getSnackBar();
+    snackbar.checkText(secondMessage.getMessage());
   });
 
   function goToTraceView() {
@@ -419,79 +375,58 @@ describe('AppComponent', () => {
       undefined,
       TimestampConverterUtils.TIMESTAMP_CONVERTER,
     );
-    fixture.detectChanges();
+    dom.detectChanges();
   }
 
   function updateFilenameInputAndDownloadTraces(name: string, valid: boolean) {
-    const inputEl = assertDefined(
-      htmlElement.querySelector<HTMLInputElement>(
-        '.file-name-input-field input',
-      ),
-    );
-    const checkButton = assertDefined(
-      htmlElement.querySelector('.check-button'),
-    );
-    inputEl.value = name;
-    inputEl.dispatchEvent(new Event('input'));
-    fixture.detectChanges();
-    checkButton.dispatchEvent(new Event('click'));
-    fixture.detectChanges();
+    dom.findAndDispatchInput('.file-name-input-field', name);
+    dom.findAndClick('.check-button');
 
-    const saveButton = assertDefined(
-      htmlElement.querySelector<HTMLButtonElement>('.save-button'),
-    );
+    const saveButton = dom.get('.save-button');
     if (valid) {
-      assertDefined(htmlElement.querySelector('.download-file-info'));
-      expect(saveButton.disabled).toBeFalse();
+      expect(dom.find('.download-file-info')).toBeTruthy();
+      saveButton.checkDisabled(false);
       clickDownloadTracesButton();
     } else {
-      expect(htmlElement.querySelector('.download-file-info')).toBeFalsy();
-      expect(saveButton.disabled).toBeTrue();
+      expect(dom.find('.download-file-info')).toBeUndefined();
+      saveButton.checkDisabled(true);
     }
   }
 
   function clickDownloadTracesButton() {
-    const downloadButton = assertDefined(
-      htmlElement.querySelector('.save-button'),
-    );
-    downloadButton.dispatchEvent(new Event('click'));
-    fixture.detectChanges();
+    dom.findAndClick('.save-button');
   }
 
   function clickEditFilenameButton() {
-    const pencilButton = assertDefined(
-      htmlElement.querySelector('.edit-button'),
-    );
-    pencilButton.dispatchEvent(new Event('click'));
-    fixture.detectChanges();
+    dom.findAndClick('.edit-button');
   }
 
   function checkHomepage() {
-    expect(htmlElement.querySelector('.welcome-info')).toBeTruthy();
-    expect(htmlElement.querySelector('.collect-traces-card')).toBeTruthy();
-    expect(htmlElement.querySelector('.upload-traces-card')).toBeTruthy();
-    expect(htmlElement.querySelector('.viewers')).toBeFalsy();
-    expect(htmlElement.querySelector('.upload-new')).toBeFalsy();
-    expect(htmlElement.querySelector('timeline')).toBeFalsy();
+    expect(dom.find('.welcome-info')).toBeTruthy();
+    expect(dom.find('.collect-traces-card')).toBeTruthy();
+    expect(dom.find('.upload-traces-card')).toBeTruthy();
+    expect(dom.find('.viewers')).toBeUndefined();
+    expect(dom.find('.upload-new')).toBeUndefined();
+    expect(dom.find('timeline')).toBeUndefined();
     checkPermanentHeaderItems();
   }
 
   function checkTraceViewPage() {
-    expect(htmlElement.querySelector('.welcome-info')).toBeFalsy();
-    expect(htmlElement.querySelector('.save-button')).toBeTruthy();
-    expect(htmlElement.querySelector('.collect-traces-card')).toBeFalsy();
-    expect(htmlElement.querySelector('.upload-traces-card')).toBeFalsy();
-    expect(htmlElement.querySelector('.viewers')).toBeTruthy();
-    expect(htmlElement.querySelector('.upload-new')).toBeTruthy();
-    expect(htmlElement.querySelector('timeline')).toBeTruthy();
+    expect(dom.find('.welcome-info')).toBeUndefined();
+    expect(dom.find('.save-button')).toBeTruthy();
+    expect(dom.find('.collect-traces-card')).toBeUndefined();
+    expect(dom.find('.upload-traces-card')).toBeUndefined();
+    expect(dom.find('.viewers')).toBeTruthy();
+    expect(dom.find('.upload-new')).toBeTruthy();
+    expect(dom.find('timeline')).toBeTruthy();
     checkPermanentHeaderItems();
   }
 
   function checkPermanentHeaderItems() {
-    expect(htmlElement.querySelector('.app-title')).toBeTruthy();
-    expect(htmlElement.querySelector('.shortcuts')).toBeTruthy();
-    expect(htmlElement.querySelector('.documentation')).toBeTruthy();
-    expect(htmlElement.querySelector('.report-bug')).toBeTruthy();
-    expect(htmlElement.querySelector('.dark-mode')).toBeTruthy();
+    expect(dom.find('.app-title')).toBeTruthy();
+    expect(dom.find('.shortcuts')).toBeTruthy();
+    expect(dom.find('.documentation')).toBeTruthy();
+    expect(dom.find('.report-bug')).toBeTruthy();
+    expect(dom.find('.dark-mode')).toBeTruthy();
   }
 });

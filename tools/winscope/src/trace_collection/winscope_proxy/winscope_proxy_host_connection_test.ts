@@ -20,7 +20,7 @@ import {
   HttpRequestStatus,
   HttpResponse,
 } from 'common/http_request';
-import {waitToBeCalled} from 'test/utils';
+import {waitToBeCalled} from 'test/unit/spy_utils';
 import {
   AdbDeviceConnection,
   AdbDeviceState,

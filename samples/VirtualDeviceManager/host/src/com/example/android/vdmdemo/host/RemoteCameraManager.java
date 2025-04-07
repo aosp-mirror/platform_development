@@ -22,6 +22,7 @@ import android.companion.virtual.camera.VirtualCamera;
 import android.companion.virtual.camera.VirtualCameraCallback;
 import android.companion.virtual.camera.VirtualCameraConfig;
 import android.companion.virtualdevice.flags.Flags;
+import android.content.Context;
 import android.graphics.ImageFormat;
 import android.hardware.camera2.CameraAccessException;
 import android.hardware.camera2.CameraCharacteristics;
@@ -57,7 +58,8 @@ final class RemoteCameraManager implements AutoCloseable {
     }
 
     void createCameras(List<RemoteEventProto.CameraCapabilities> cameraCapabilities,
-            boolean duplicateFrontCamera, boolean duplicateBackCamera) {
+            boolean isCustomCameraPolicy, boolean duplicateFrontCamera,
+            boolean duplicateBackCamera) {
         boolean supportExternal = VdmCompat.isAtLeastB() && Flags.externalVirtualCameras();
         for (RemoteEventProto.CameraCapabilities capabilities : cameraCapabilities) {
             // filter out external cameras if not supported
@@ -65,8 +67,6 @@ final class RemoteCameraManager implements AutoCloseable {
             if (lensFacing == CameraCharacteristics.LENS_FACING_EXTERNAL && !supportExternal) {
                 continue;
             }
-
-            createVirtualCamera(capabilities.getCameraId(), lensFacing, capabilities);
 
             if (supportExternal) {
                 if (duplicateFrontCamera && lensFacing == CameraCharacteristics.LENS_FACING_FRONT) {
@@ -79,15 +79,30 @@ final class RemoteCameraManager implements AutoCloseable {
                             CameraCharacteristics.LENS_FACING_EXTERNAL, capabilities);
                 }
             }
+
+            // don't create non external cameras on default camera policy
+            if (!isCustomCameraPolicy && lensFacing != CameraCharacteristics.LENS_FACING_EXTERNAL) {
+                continue;
+            }
+
+            createVirtualCamera(capabilities.getCameraId(), lensFacing, capabilities);
         }
 
         try {
-            final CameraManager cameraManager = mVirtualDevice.createContext().getSystemService(
-                    CameraManager.class);
+            final CameraManager cameraManager = mVirtualDevice.createContext()
+                    .getSystemService(CameraManager.class);
             if (cameraManager != null) {
                 Log.d(TAG, "CameraManager on deviceId: " + mVirtualDevice.getDeviceId()
                         + " has available camera ids: " + Arrays.toString(
                         cameraManager.getCameraIdList()));
+            }
+
+            final CameraManager cameraManagerDefault = mVirtualDevice.createContext()
+                    .createDeviceContext(Context.DEVICE_ID_DEFAULT)
+                    .getSystemService(CameraManager.class);
+            if (cameraManagerDefault != null) {
+                Log.d(TAG, "CameraManager on default device has available camera ids: "
+                        + Arrays.toString(cameraManagerDefault.getCameraIdList()));
             }
         } catch (CameraAccessException e) {
             Log.e(TAG, "Exception getting the list of camera ids: " + e);

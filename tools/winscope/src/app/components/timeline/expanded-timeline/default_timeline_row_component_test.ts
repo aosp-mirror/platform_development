@@ -15,7 +15,7 @@
  */
 
 import {DragDropModule} from '@angular/cdk/drag-drop';
-import {ComponentFixture, TestBed} from '@angular/core/testing';
+import {TestBed} from '@angular/core/testing';
 import {FormsModule, ReactiveFormsModule} from '@angular/forms';
 import {MatButtonModule} from '@angular/material/button';
 import {MatFormFieldModule} from '@angular/material/form-field';
@@ -28,15 +28,15 @@ import {assertDefined} from 'common/assert_utils';
 import {Rect} from 'common/geometry/rect';
 import {TimestampConverterUtils} from 'common/time/test_utils';
 import {TimeRange} from 'common/time/time';
+import {DOMTestHelper} from 'test/unit/dom_test_utils';
+import {waitToBeCalled} from 'test/unit/spy_utils';
 import {TraceBuilder} from 'test/unit/trace_builder';
-import {waitToBeCalled} from 'test/utils';
 import {TraceType} from 'trace/trace_type';
 import {DefaultTimelineRowComponent} from './default_timeline_row_component';
 
 describe('DefaultTimelineRowComponent', () => {
-  let fixture: ComponentFixture<DefaultTimelineRowComponent>;
   let component: DefaultTimelineRowComponent;
-  let htmlElement: HTMLElement;
+  let dom: DOMTestHelper<DefaultTimelineRowComponent>;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
@@ -54,9 +54,9 @@ describe('DefaultTimelineRowComponent', () => {
       ],
       declarations: [DefaultTimelineRowComponent],
     }).compileComponents();
-    fixture = TestBed.createComponent(DefaultTimelineRowComponent);
+    const fixture = TestBed.createComponent(DefaultTimelineRowComponent);
     component = fixture.componentInstance;
-    htmlElement = fixture.nativeElement;
+    dom = new DOMTestHelper(fixture, fixture.nativeElement);
   });
 
   it('can be created', () => {
@@ -65,14 +65,11 @@ describe('DefaultTimelineRowComponent', () => {
 
   it('can draw entries', async () => {
     setTraceAndSelectionRange(10n, 110n);
-
     const drawRectSpy = spyOn(
       component.canvasDrawer,
       'drawRect',
     ).and.callThrough();
-
-    fixture.detectChanges();
-    await fixture.whenRenderingDone();
+    await dom.detectChangesAndRenderingDone();
 
     const rectHeight = component.canvasDrawer.getScaledCanvasHeight();
     const rectWidth = rectHeight;
@@ -106,11 +103,8 @@ describe('DefaultTimelineRowComponent', () => {
 
   it('can draw entries zoomed in', async () => {
     setTraceAndSelectionRange(60n, 85n);
-
     const drawRectSpy = spyOn(component.canvasDrawer, 'drawRect');
-
-    fixture.detectChanges();
-    await fixture.whenRenderingDone();
+    await dom.detectChangesAndRenderingDone();
 
     const rectHeight = component.canvasDrawer.getScaledCanvasHeight();
     const rectWidth = rectHeight;
@@ -129,9 +123,7 @@ describe('DefaultTimelineRowComponent', () => {
 
   it('can draw hovering entry', async () => {
     setTraceAndSelectionRange(10n, 110n);
-
-    fixture.detectChanges();
-    await fixture.whenRenderingDone();
+    await dom.detectChangesAndRenderingDone();
 
     const drawRectSpy = spyOn(
       component.canvasDrawer,
@@ -154,9 +146,7 @@ describe('DefaultTimelineRowComponent', () => {
     );
     component.getCanvas().dispatchEvent(event);
 
-    fixture.detectChanges();
-    await fixture.whenRenderingDone();
-
+    await dom.detectChangesAndRenderingDone();
     await Promise.all(waitPromises);
 
     const rectHeight = component.canvasDrawer.getScaledCanvasHeight();
@@ -178,19 +168,14 @@ describe('DefaultTimelineRowComponent', () => {
 
   it('can draw correct entry on click of first entry', async () => {
     setTraceAndSelectionRange(10n, 110n);
-
-    fixture.detectChanges();
-    await fixture.whenRenderingDone();
-
+    await dom.detectChangesAndRenderingDone();
     // 9 rect draws - 4 entry rects present + 4 for redraw + 1 for selected entry
     await drawCorrectEntryOnClick(0, 10n, 9);
   });
 
   it('can draw correct entry on click of middle entry', async () => {
     setTraceAndSelectionRange(10n, 110n);
-
-    fixture.detectChanges();
-    await fixture.whenRenderingDone();
+    await dom.detectChangesAndRenderingDone();
 
     const canvasWidth = Math.floor(
       component.canvasDrawer.getScaledCanvasWidth() -
@@ -204,9 +189,7 @@ describe('DefaultTimelineRowComponent', () => {
 
   it('can draw correct entry on click when timeline zoomed in near start', async () => {
     setTraceAndSelectionRange(10n, 15n);
-
-    fixture.detectChanges();
-    await fixture.whenRenderingDone();
+    await dom.detectChangesAndRenderingDone();
 
     const canvasWidth = Math.floor(
       component.canvasDrawer.getScaledCanvasWidth() -
@@ -220,9 +203,7 @@ describe('DefaultTimelineRowComponent', () => {
 
   it('can draw correct entry on click when timeline zoomed in near end', async () => {
     setTraceAndSelectionRange(60n, 80n);
-
-    fixture.detectChanges();
-    await fixture.whenRenderingDone();
+    await dom.detectChangesAndRenderingDone();
 
     const canvasWidth = Math.floor(
       component.canvasDrawer.getScaledCanvasWidth() -
@@ -236,20 +217,15 @@ describe('DefaultTimelineRowComponent', () => {
 
   it('emits scroll event', async () => {
     setTraceAndSelectionRange(10n, 110n);
-    fixture.detectChanges();
-    await fixture.whenRenderingDone();
-
+    await dom.detectChangesAndRenderingDone();
     const spy = spyOn(component.onScrollEvent, 'emit');
-    htmlElement.dispatchEvent(new WheelEvent('wheel'));
-    fixture.detectChanges();
+    dom.dispatchEvent(new WheelEvent('wheel'));
     expect(spy).toHaveBeenCalled();
   });
 
   it('tracks mouse position', async () => {
     setTraceAndSelectionRange(10n, 110n);
-
-    fixture.detectChanges();
-    await fixture.whenRenderingDone();
+    await dom.detectChangesAndRenderingDone();
 
     const spy = spyOn(component.onMouseXRatioUpdate, 'emit');
     const canvas = assertDefined(component.canvasRef).nativeElement;
@@ -258,13 +234,13 @@ describe('DefaultTimelineRowComponent', () => {
     Object.defineProperty(mouseMoveEvent, 'target', {value: canvas});
     Object.defineProperty(mouseMoveEvent, 'offsetX', {value: 100});
     canvas.dispatchEvent(mouseMoveEvent);
-    fixture.detectChanges();
+    dom.detectChanges();
 
     expect(spy).toHaveBeenCalledWith(100 / canvas.offsetWidth);
 
     const mouseLeaveEvent = new MouseEvent('mouseleave');
     canvas.dispatchEvent(mouseLeaveEvent);
-    fixture.detectChanges();
+    dom.detectChanges();
     expect(spy).toHaveBeenCalledWith(undefined);
   });
 
@@ -305,9 +281,7 @@ describe('DefaultTimelineRowComponent', () => {
       component.canvasDrawer.getScaledCanvasHeight() / 2,
     );
     component.getCanvas().dispatchEvent(event);
-
-    fixture.detectChanges();
-    await fixture.whenRenderingDone();
+    await dom.detectChangesAndRenderingDone();
 
     await Promise.all(waitPromises);
 

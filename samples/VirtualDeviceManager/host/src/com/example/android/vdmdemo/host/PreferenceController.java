@@ -76,7 +76,7 @@ final class PreferenceController {
             new BoolRule(R.string.pref_enable_custom_activity_policy, BAKLAVA,
                     Flags::activityControlApi),
 
-            new BoolRule(R.string.pref_enable_client_camera, VANILLA_ICE_CREAM),
+            new StringRule(R.string.pref_camera_policy, VANILLA_ICE_CREAM),
 
             new BoolRule(R.string.pref_enable_client_sensors, UPSIDE_DOWN_CAKE),
 
@@ -205,6 +205,10 @@ final class PreferenceController {
 
     boolean getBoolean(@StringRes int resId) {
         return mSharedPreferences.getBoolean(mContext.getString(resId), false);
+    }
+
+    boolean setBoolean(@StringRes int resId, boolean b) {
+        return mSharedPreferences.edit().putBoolean(mContext.getString(resId), b).commit();
     }
 
     String getString(@StringRes int resId) {

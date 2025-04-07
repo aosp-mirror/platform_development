@@ -47,7 +47,7 @@
     <string name="pref_hide_from_recents" translatable="false">hide_from_recents</string>
     <string name="pref_enable_cross_device_clipboard" translatable="false">enable_cross_device_clipboard</string>
     <string name="pref_enable_custom_activity_policy" translatable="false">enable_custom_activity_policy</string>
-    <string name="pref_enable_client_camera" translatable="false">enable_client_camera</string>
+    <string name="pref_camera_policy" translatable="false">camera_policy</string>
     <string name="pref_enable_client_sensors" translatable="false">enable_client_sensors</string>
     <string name="pref_enable_client_audio" translatable="false">enable_client_audio</string>
     <string name="pref_enable_display_rotation" translatable="false">enable_display_rotation</string>
@@ -76,4 +76,8 @@
     <string name="app_streaming" translatable="false">android.app.role.COMPANION_DEVICE_APP_STREAMING</string>
     <string name="nearby_device_streaming" translatable="false">android.app.role.COMPANION_DEVICE_NEARBY_DEVICE_STREAMING</string>
     <string name="virtual_device" translatable="false">android.app.role.COMPANION_DEVICE_VIRTUAL_DEVICE</string>
+
+    <string name="no_cameras" translatable="false">No cameras</string>
+    <string name="default_cameras" translatable="false">Default device cameras</string>
+    <string name="client_cameras" translatable="false">Client cameras</string>
 </resources>

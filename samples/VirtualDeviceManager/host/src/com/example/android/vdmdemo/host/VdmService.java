@@ -622,7 +622,9 @@ public final class VdmService extends Hilt_VdmService {
             virtualDeviceBuilder.setDevicePolicy(POLICY_TYPE_SENSORS, DEVICE_POLICY_CUSTOM);
         }
 
-        if (mPreferenceController.getBoolean(R.string.pref_enable_client_camera)) {
+        final String cameraPolicy = mPreferenceController.getString(R.string.pref_camera_policy);
+        if (cameraPolicy.equals(getString(R.string.no_cameras)) || cameraPolicy.equals(
+                getString(R.string.client_cameras))) {
             virtualDeviceBuilder.setDevicePolicy(POLICY_TYPE_CAMERA, DEVICE_POLICY_CUSTOM);
         }
 
@@ -647,12 +649,13 @@ public final class VdmService extends Hilt_VdmService {
                 new RunningVdmUidsTracker(getApplicationContext(), mPreferenceController,
                         mAudioStreamer, mAudioInjector));
 
-        if (mPreferenceController.getBoolean(R.string.pref_enable_client_camera)) {
+        if (!cameraPolicy.equals(getString(R.string.no_cameras))) {
             if (mRemoteCameraManager != null) {
                 mRemoteCameraManager.close();
             }
             mRemoteCameraManager = new RemoteCameraManager(mVirtualDevice, mRemoteIo);
             mRemoteCameraManager.createCameras(mDeviceCapabilities.getCameraCapabilitiesList(),
+                    cameraPolicy.equals(getString(R.string.client_cameras)),
                     mPreferenceController.getBoolean(R.string.pref_duplicate_front_camera),
                     mPreferenceController.getBoolean(R.string.pref_duplicate_back_camera));
         }
@@ -812,7 +815,14 @@ public final class VdmService extends Hilt_VdmService {
                                 displayId -> mVirtualDevice.setDisplayImePolicy(displayId, policy));
                     }
                 });
-        observers.put(R.string.pref_enable_client_camera, v -> recreateVirtualDevice());
+        observers.put(R.string.pref_camera_policy, s -> {
+            // reset the state of the camera preferences dependencies
+            if (s.equals(getString(R.string.no_cameras))) {
+                mPreferenceController.setBoolean(R.string.pref_duplicate_front_camera, false);
+                mPreferenceController.setBoolean(R.string.pref_duplicate_back_camera, false);
+            }
+            recreateVirtualDevice();
+        });
         observers.put(R.string.pref_enable_client_sensors, v -> recreateVirtualDevice());
         observers.put(R.string.pref_device_profile, v -> recreateVirtualDevice());
         observers.put(R.string.pref_always_unlocked_device, v -> recreateVirtualDevice());

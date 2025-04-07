@@ -31,25 +31,9 @@
             android:summary="Show a custom notification when an activity could not be launched and try to send it to the default display"
             android:defaultValue="false"
             app:iconSpaceReserved="false"/>
-    </PreferenceCategory>
-
-    <PreferenceCategory
-        android:key="client_capabilities"
-        android:title="Client capabilities"
-        app:iconSpaceReserved="false">
-         <SwitchPreferenceCompat
+        <SwitchPreferenceCompat
             android:key="@string/pref_enable_client_sensors"
             android:title="Enable client sensors"
-            android:defaultValue="true"
-            app:iconSpaceReserved="false" />
-        <SwitchPreferenceCompat
-            android:key="@string/pref_enable_client_camera"
-            android:title="Enable client camera"
-            android:defaultValue="true"
-            app:iconSpaceReserved="false" />
-        <SwitchPreferenceCompat
-            android:key="@string/pref_enable_client_audio"
-            android:title="Enable client audio"
             android:defaultValue="true"
             app:iconSpaceReserved="false" />
     </PreferenceCategory>
@@ -111,11 +95,43 @@
     </PreferenceCategory>
 
     <PreferenceCategory
+        android:key="camera"
+        android:title="Camera"
+        app:iconSpaceReserved="false">
+        <ListPreference
+            android:key="@string/pref_camera_policy"
+            android:title="Camera policy"
+            android:entries="@array/camera_policy_options"
+            android:entryValues="@array/camera_policy_options"
+            android:defaultValue="@string/no_cameras"
+            app:useSimpleSummaryProvider="true"
+            app:iconSpaceReserved="false" />
+        <SwitchPreferenceCompat
+            android:key="@string/pref_duplicate_front_camera"
+            android:title="Duplicate front camera"
+            android:summary="Create an external camera duplicated from the client's front camera."
+            android:defaultValue="false"
+            app:iconSpaceReserved="false" />
+        <SwitchPreferenceCompat
+            android:key="@string/pref_duplicate_back_camera"
+            android:title="Duplicate back camera"
+            android:summary="Create an external camera duplicated from the client's back camera."
+            android:defaultValue="false"
+            app:iconSpaceReserved="false" />
+    </PreferenceCategory>
+
+    <PreferenceCategory
         android:key="audio"
         android:title="Audio"
         app:iconSpaceReserved="false">
     <SwitchPreferenceCompat
+        android:key="@string/pref_enable_client_audio"
+        android:title="Enable client audio"
+        android:defaultValue="true"
+        app:iconSpaceReserved="false" />
+    <SwitchPreferenceCompat
         android:key="@string/pref_enable_update_audio_policy_mixes"
+        android:dependency="@string/pref_enable_client_audio"
         android:title="Use AudioPolicy.updateMixingRules"
         android:summary="Updates the dynamic AudiPolicy mixing rules instead of unregistering and registering the AudioPolicy."
         android:defaultValue="true"
@@ -165,20 +181,6 @@
             android:key="@string/pref_record_encoder_output"
             android:title="Record encoder output"
             android:summary="Store the host's media encoder output to a local file"
-            android:defaultValue="false"
-            app:iconSpaceReserved="false" />
-
-        <SwitchPreferenceCompat
-            android:key="@string/pref_duplicate_front_camera"
-            android:title="Duplicate front camera"
-            android:summary="Creates an external camera duplicated from the client's front camera"
-            android:defaultValue="false"
-            app:iconSpaceReserved="false" />
-
-        <SwitchPreferenceCompat
-            android:key="@string/pref_duplicate_back_camera"
-            android:title="Duplicate back camera"
-            android:summary="Creates an external camera duplicated from the client's back camera"
             android:defaultValue="false"
             app:iconSpaceReserved="false" />
 
