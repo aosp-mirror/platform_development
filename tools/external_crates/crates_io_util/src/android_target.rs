@@ -27,7 +27,7 @@ pub trait AndroidTarget {
 
 impl AndroidTarget for Dependency {
     fn is_android_target(&self) -> bool {
-        self.target().map_or(true, is_android)
+        self.target().is_none_or(is_android)
     }
 }
 
