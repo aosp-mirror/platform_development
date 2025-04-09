@@ -14,128 +14,78 @@
  * limitations under the License.
  */
 
-import {ClipboardModule} from '@angular/cdk/clipboard';
-import {ScrollingModule} from '@angular/cdk/scrolling';
-import {
-  ComponentFixture,
-  ComponentFixtureAutoDetect,
-  TestBed,
-} from '@angular/core/testing';
-import {MatDividerModule} from '@angular/material/divider';
-import {MatIconModule} from '@angular/material/icon';
-import {assertDefined} from 'common/assert_utils';
+import {CdkVirtualScrollViewport} from '@angular/cdk/scrolling';
+import {DOMTestHelper} from 'test/unit/dom_test_utils';
 import {TraceBuilder} from 'test/unit/trace_builder';
 import {UnitTestUtils} from 'test/unit/utils';
 import {Parser} from 'trace/parser';
-import {Trace, TraceEntry} from 'trace/trace';
+import {TraceEntry} from 'trace/trace';
 import {TraceType} from 'trace/trace_type';
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
-import {LogSelectFilter} from 'viewers/common/log_filters';
+import {AbstractLogViewerComponentTest} from 'viewers/common/abstract_log_viewer_component_test';
 import {LogEntry, LogHeader} from 'viewers/common/ui_data_log';
-import {CollapsedSectionsComponent} from 'viewers/components/collapsed_sections_component';
-import {CollapsibleSectionTitleComponent} from 'viewers/components/collapsible_section_title_component';
-import {LogComponent} from 'viewers/components/log_component';
-import {PropertiesComponent} from 'viewers/components/properties_component';
-import {PropertyTreeNodeDataViewComponent} from 'viewers/components/property_tree_node_data_view_component';
-import {TreeComponent} from 'viewers/components/tree_component';
-import {TreeNodeComponent} from 'viewers/components/tree_node_component';
 import {CujEntry, UiData} from './ui_data';
 import {ViewerJankCujsComponent} from './viewer_jank_cujs_component';
 
-describe('ViewerJankCujsComponent', () => {
-  const testSpec = {name: 'Test Column', cssClass: 'test-class'};
-  const testField = {spec: testSpec, value: 'VALUE'};
-  let fixture: ComponentFixture<ViewerJankCujsComponent>;
-  let component: ViewerJankCujsComponent;
-  let htmlElement: HTMLElement;
+class ViewerJankCujsComponentTest extends AbstractLogViewerComponentTest<ViewerJankCujsComponent> {
+  protected override readonly testProperties = false;
+  protected override readonly testScroll = false;
+  protected override readonly hasCurrentTimeButton = false;
+  protected override readonly hasFilters = false;
 
-  let trace: Trace<PropertyTreeNode>;
-  let entry: TraceEntry<PropertyTreeNode>;
+  protected override checkTimestampInTable(
+    dom: DOMTestHelper<ViewerJankCujsComponent>,
+  ): void {
+    expect(dom.find('.scroll .entry .time')).toBeUndefined();
+  }
 
-  beforeAll(async () => {
+  protected async setUpTestEnvironment(): Promise<
+    [
+      DOMTestHelper<ViewerJankCujsComponent>,
+      CdkVirtualScrollViewport,
+      ViewerJankCujsComponent,
+    ]
+  > {
     const parser = (await UnitTestUtils.getTracesParser([
       'traces/elapsed_and_real_timestamp/eventlog.winscope',
     ])) as Parser<PropertyTreeNode>;
 
-    trace = new TraceBuilder<PropertyTreeNode>()
+    const trace = new TraceBuilder<PropertyTreeNode>()
       .setParser(parser)
       .setType(TraceType.CUJS)
       .build();
 
-    entry = trace.getEntry(0);
-  });
-
-  beforeEach(async () => {
-    await TestBed.configureTestingModule({
-      providers: [{provide: ComponentFixtureAutoDetect, useValue: true}],
-      imports: [
-        MatDividerModule,
-        ScrollingModule,
-        MatIconModule,
-        ClipboardModule,
-      ],
-      declarations: [
-        ViewerJankCujsComponent,
-        TreeComponent,
-        TreeNodeComponent,
-        PropertyTreeNodeDataViewComponent,
-        PropertiesComponent,
-        CollapsedSectionsComponent,
-        CollapsibleSectionTitleComponent,
-        LogComponent,
-      ],
-    }).compileComponents();
-
-    fixture = TestBed.createComponent(ViewerJankCujsComponent);
-    component = fixture.componentInstance;
-    htmlElement = fixture.nativeElement;
-
-    component.inputData = makeUiData();
-    fixture.detectChanges();
-  });
-
-  it('can be created', () => {
-    expect(component).toBeTruthy();
-  });
-
-  it('renders entries with field values and no trace timestamp', () => {
-    expect(htmlElement.querySelector('.scroll')).toBeTruthy();
-    const entry = assertDefined(
-      htmlElement.querySelector(
-        `.scroll .entry .${testSpec.cssClass.split(' ')[0]}`,
-      ),
-    );
-    expect(entry.textContent).toContain('VALUE');
-    expect(htmlElement.querySelector('.scroll .entry .time')).toBeNull();
-  });
-
-  it('hides go to current time button', () => {
-    expect(htmlElement.querySelector('.go-to-current-time')).toBeNull();
-  });
-
-  function makeUiData(): UiData {
+    const entry = trace.getEntry(0);
     const cujEntries = [
-      createMockCujEntry(entry, 1),
-      createMockCujEntry(entry, 2),
-      createMockCujEntry(entry, 3),
-      createMockCujEntry(entry, 4),
+      this.createMockCujEntry(entry),
+      this.createMockCujEntry(entry),
+      this.createMockCujEntry(entry),
+      this.createMockCujEntry(entry),
     ];
 
     const uiData = UiData.createEmpty();
-    uiData.headers = [new LogHeader(testSpec, new LogSelectFilter([]))];
+    uiData.headers = [new LogHeader(this.testSpec)];
     uiData.entries = cujEntries;
     uiData.selectedIndex = 0;
-    return uiData;
+
+    return this.initializeTestEnvironment(uiData, ViewerJankCujsComponent);
   }
 
-  function createMockCujEntry(
-    entry: TraceEntry<PropertyTreeNode>,
-    i: number,
-  ): LogEntry {
+  private createMockCujEntry(entry: TraceEntry<PropertyTreeNode>): LogEntry {
     return new CujEntry(
       entry,
-      [testField, testField, testField, testField, testField],
+      [
+        this.testField,
+        this.testField,
+        this.testField,
+        this.testField,
+        this.testField,
+      ],
       undefined,
     );
   }
+}
+
+describe('ViewerJankCujsComponent', () => {
+  new ViewerJankCujsComponentTest().execute();
 });

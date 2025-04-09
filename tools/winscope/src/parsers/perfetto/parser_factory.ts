@@ -18,10 +18,7 @@ import {ParserTimestampConverter} from 'common/time/timestamp_converter';
 import {UserNotifier} from 'common/user_notifier';
 import {Analytics} from 'logging/analytics';
 import {ProgressListener} from 'messaging/progress_listener';
-import {
-  InvalidPerfettoTrace,
-  PerfettoPacketLoss,
-} from 'messaging/user_warnings';
+import {InvalidPerfettoTrace} from 'messaging/user_warnings';
 import {ParserKeyEvent} from 'parsers/input/perfetto/parser_key_event';
 import {ParserMotionEvent} from 'parsers/input/perfetto/parser_motion_event';
 import {ParserInputMethodClients} from 'parsers/input_method/perfetto/parser_input_method_clients';
@@ -35,7 +32,6 @@ import {ParserViewCapture} from 'parsers/view_capture/perfetto/parser_view_captu
 import {ParserWindowManager} from 'parsers/window_manager/perfetto/parser_window_manager';
 import {Parser} from 'trace/parser';
 import {TraceFile} from 'trace/trace_file';
-import {Row} from 'trace_processor/query_result';
 import {TraceProcessor} from 'trace_processor/trace_processor';
 import {TraceProcessorFactory} from 'trace_processor/trace_processor_factory';
 
@@ -134,23 +130,11 @@ export class ParserFactory {
         new InvalidPerfettoTrace(traceFile.getDescriptor(), errors),
       );
     }
-    const result = await traceProcessor.queryAllRows(
-      "select name, value from stats where name = 'traced_buf_trace_writer_packet_loss'",
-    );
-    if (result.numRows() > 0) {
-      const value = result.firstRow<Row>({})['value'];
-      if (typeof value === 'bigint' && value > 0n) {
-        UserNotifier.add(
-          new PerfettoPacketLoss(traceFile.getDescriptor(), Number(value)),
-        );
-      }
-    }
-
     return {parsers, isPerfettoTrace: true};
   }
 
   private async initializeTraceProcessor(): Promise<TraceProcessor> {
-    const traceProcessor = await TraceProcessorFactory.getSingleInstance();
+    const traceProcessor = TraceProcessorFactory.getSingleInstance();
 
     await traceProcessor.resetTraceProcessor({
       cropTrackEvents: false,

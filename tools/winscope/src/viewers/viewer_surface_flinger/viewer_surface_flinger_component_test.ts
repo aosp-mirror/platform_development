@@ -13,175 +13,87 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import {CommonModule} from '@angular/common';
-import {HttpClientModule} from '@angular/common/http';
-import {Component, CUSTOM_ELEMENTS_SCHEMA} from '@angular/core';
-import {ComponentFixture, TestBed} from '@angular/core/testing';
-import {FormsModule} from '@angular/forms';
-import {MatButtonModule} from '@angular/material/button';
-import {MatCheckboxModule} from '@angular/material/checkbox';
-import {MatDividerModule} from '@angular/material/divider';
-import {MatFormFieldModule} from '@angular/material/form-field';
-import {MatIconModule} from '@angular/material/icon';
-import {MatInputModule} from '@angular/material/input';
-import {MatSelectModule} from '@angular/material/select';
-import {MatSliderModule} from '@angular/material/slider';
-import {MatTooltipModule} from '@angular/material/tooltip';
-import {BrowserAnimationsModule} from '@angular/platform-browser/animations';
-import {UnitTestUtils} from 'test/unit/utils';
-import {CollapsedSectionsComponent} from 'viewers/components/collapsed_sections_component';
-import {CollapsibleSectionTitleComponent} from 'viewers/components/collapsible_section_title_component';
-import {HierarchyComponent} from 'viewers/components/hierarchy_component';
-import {PropertiesComponent} from 'viewers/components/properties_component';
-import {RectsComponent} from 'viewers/components/rects/rects_component';
+import {Component} from '@angular/core';
+import {DOMTestHelper} from 'test/unit/dom_test_utils';
+import {AbstractHierarchyViewerComponentTest} from 'viewers/common/abstract_hierarchy_viewer_component_test';
 import {TraceRectType} from 'viewers/components/rects/rect_spec';
 import {SurfaceFlingerPropertyGroupsComponent} from 'viewers/components/surface_flinger_property_groups_component';
 import {UiData} from './ui_data';
 import {ViewerSurfaceFlingerComponent} from './viewer_surface_flinger_component';
 
-describe('ViewerSurfaceFlingerComponent', () => {
-  let fixture: ComponentFixture<TestHostComponent>;
-  let component: TestHostComponent;
-  let htmlElement: HTMLElement;
+@Component({
+  selector: 'host-component',
+  template:
+    '<viewer-surface-flinger [inputData]="inputData"></viewer-surface-flinger>',
+})
+class TestHostComponent {
+  inputData: UiData | undefined;
+}
 
-  beforeEach(async () => {
-    await TestBed.configureTestingModule({
-      declarations: [
-        TestHostComponent,
-        ViewerSurfaceFlingerComponent,
-        HierarchyComponent,
-        PropertiesComponent,
-        RectsComponent,
-        SurfaceFlingerPropertyGroupsComponent,
-        CollapsedSectionsComponent,
-        CollapsibleSectionTitleComponent,
-      ],
-      imports: [
-        CommonModule,
-        MatIconModule,
-        MatDividerModule,
-        MatCheckboxModule,
-        MatSliderModule,
-        MatFormFieldModule,
-        MatInputModule,
-        BrowserAnimationsModule,
-        FormsModule,
-        MatTooltipModule,
-        MatButtonModule,
-        MatSelectModule,
-        HttpClientModule,
-      ],
-      schemas: [CUSTOM_ELEMENTS_SCHEMA],
-    }).compileComponents();
-    fixture = TestBed.createComponent(TestHostComponent);
-    component = fixture.componentInstance;
-    htmlElement = fixture.nativeElement;
-    fixture.detectChanges();
-  });
+class ViewerSurfaceFlingerComponentTest extends AbstractHierarchyViewerComponentTest<TestHostComponent> {
+  protected override readonly testRects = true;
+  protected override readonly hierarchyTitle = 'HIERARCHY';
+  protected override readonly propertiesTitle = 'PROTO DUMP';
+  protected override readonly rectsTitle = 'LAYERS';
 
-  it('can be created', () => {
-    expect(component).toBeTruthy();
-  });
+  protected override executeSpecializedTests() {
+    describe('Specialized tests', () => {
+      let dom: DOMTestHelper<TestHostComponent>;
+      let component: TestHostComponent;
 
-  it('creates rects view', () => {
-    const rectsView = htmlElement.querySelector('.rects-view');
-    expect(rectsView).toBeTruthy();
-  });
+      beforeEach(async () => {
+        [dom, component] = await this.setUpTestEnvironment();
+      });
 
-  it('creates hierarchy view', () => {
-    const hierarchyView = htmlElement.querySelector('.hierarchy-view');
-    expect(hierarchyView).toBeTruthy();
-  });
+      it('creates property groups view', () => {
+        expect(dom.find('.property-groups')).toBeDefined();
+      });
 
-  it('creates property groups view', () => {
-    const propertyGroups = htmlElement.querySelector('.property-groups');
-    expect(propertyGroups).toBeTruthy();
-  });
+      it('handles property groups section collapse/expand', () => {
+        dom.checkSectionCollapseAndExpand('.property-groups', 'PROPERTIES');
+      });
 
-  it('creates properties view', () => {
-    const propertiesView = htmlElement.querySelector('.properties-view');
-    expect(propertiesView).toBeTruthy();
-  });
+      it('handles rect type change', () => {
+        let uiData = new UiData(undefined);
+        uiData.rectSpec = {
+          type: TraceRectType.LAYERS,
+          icon: '',
+          legend: [],
+        };
+        component.inputData = uiData;
+        dom.detectChanges();
 
-  it('creates collapsed sections with no buttons', () => {
-    UnitTestUtils.checkNoCollapsedSectionButtons(htmlElement);
-  });
+        dom.checkSectionCollapseAndExpand(
+          '.rects-view',
+          TraceRectType.LAYERS.toUpperCase(),
+        );
 
-  it('handles rects section collapse/expand', () => {
-    UnitTestUtils.checkSectionCollapseAndExpand(
-      htmlElement,
-      fixture,
-      '.rects-view',
-      'LAYERS',
-    );
-  });
-
-  it('handles hierarchy section collapse/expand', () => {
-    UnitTestUtils.checkSectionCollapseAndExpand(
-      htmlElement,
-      fixture,
-      '.hierarchy-view',
-      'HIERARCHY',
-    );
-  });
-
-  it('handles property groups section collapse/expand', () => {
-    UnitTestUtils.checkSectionCollapseAndExpand(
-      htmlElement,
-      fixture,
-      '.property-groups',
-      'PROPERTIES',
-    );
-  });
-
-  it('handles properties section collapse/expand', () => {
-    UnitTestUtils.checkSectionCollapseAndExpand(
-      htmlElement,
-      fixture,
-      '.properties-view',
-      'PROTO DUMP',
-    );
-  });
-
-  it('handles rect type change', () => {
-    let uiData = new UiData(undefined);
-    uiData.rectSpec = {
-      type: TraceRectType.LAYERS,
-      icon: '',
-      legend: [],
-    };
-    component.inputData = uiData;
-    fixture.detectChanges();
-
-    UnitTestUtils.checkSectionCollapseAndExpand(
-      htmlElement,
-      fixture,
-      '.rects-view',
-      TraceRectType.LAYERS.toUpperCase(),
-    );
-
-    uiData = new UiData(undefined);
-    uiData.rectSpec = {
-      type: TraceRectType.INPUT_WINDOWS,
-      icon: '',
-      legend: [],
-    };
-    component.inputData = uiData;
-    fixture.detectChanges();
-    UnitTestUtils.checkSectionCollapseAndExpand(
-      htmlElement,
-      fixture,
-      '.rects-view',
-      TraceRectType.INPUT_WINDOWS.toUpperCase(),
-    );
-  });
-
-  @Component({
-    selector: 'host-component',
-    template:
-      '<viewer-surface-flinger [inputData]="inputData"></viewer-surface-flinger>',
-  })
-  class TestHostComponent {
-    inputData: UiData | undefined;
+        uiData = new UiData(undefined);
+        uiData.rectSpec = {
+          type: TraceRectType.INPUT_WINDOWS,
+          icon: '',
+          legend: [],
+        };
+        component.inputData = uiData;
+        dom.detectChanges();
+        dom.checkSectionCollapseAndExpand(
+          '.rects-view',
+          TraceRectType.INPUT_WINDOWS.toUpperCase(),
+        );
+      });
+    });
   }
+
+  protected async setUpTestEnvironment(): Promise<
+    [DOMTestHelper<TestHostComponent>, TestHostComponent]
+  > {
+    return this.initializeTestEnvironment(TestHostComponent, [
+      ViewerSurfaceFlingerComponent,
+      SurfaceFlingerPropertyGroupsComponent,
+    ]);
+  }
+}
+
+describe('ViewerSurfaceFlingerComponent', () => {
+  new ViewerSurfaceFlingerComponentTest().execute();
 });

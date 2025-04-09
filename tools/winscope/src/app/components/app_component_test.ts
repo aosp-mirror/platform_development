@@ -332,6 +332,54 @@ describe('AppComponent', () => {
     );
   });
 
+  it('shows cross tool sync button', async () => {
+    component.showDataLoadedElements = true;
+    dom.detectChanges();
+    const fileDescriptor = dom.get('.file-descriptor');
+    expect(fileDescriptor.find('.cross-tool-sync-button')).toBeUndefined();
+
+    spyOn(component.crossToolProtocol, 'isConnected').and.returnValue(true);
+    dom.detectChanges();
+    const syncButton = fileDescriptor.get('.cross-tool-sync-button');
+    await syncButton.checkTooltip('Cross Tool Sync ON (Click to turn OFF)');
+    syncButton.checkClassName('mat-primary', true);
+    syncButton.checkClassName('mat-accent', false);
+
+    syncButton.click();
+    await syncButton.checkTooltip('Cross Tool Sync OFF (Click to turn ON)');
+    syncButton.checkClassName('mat-accent', true);
+    syncButton.checkClassName('mat-primary', false);
+
+    syncButton.click();
+    await syncButton.checkTooltip('Cross Tool Sync ON (Click to turn OFF)');
+    syncButton.checkClassName('mat-primary', true);
+    syncButton.checkClassName('mat-accent', false);
+  });
+
+  it('shows warning icon for packet loss', async () => {
+    component.showDataLoadedElements = true;
+    dom.detectChanges();
+    const fileDescriptor = dom.get('.file-descriptor');
+    fileDescriptor.checkClassName('file-warning', false);
+    expect(fileDescriptor.find('.warning-icon')).toBeUndefined();
+
+    const spy = spyOn(component.tracePipeline, 'lostPackets').and.returnValue(
+      1,
+    );
+    dom.detectChanges();
+    fileDescriptor.checkClassName('file-warning', true);
+    const warningIcon = fileDescriptor.get('.warning-icon');
+    await warningIcon.checkTooltip(
+      '1 Perfetto packet lost during tracing - data may be incomplete',
+    );
+
+    spy.and.returnValue(4);
+    dom.detectChanges();
+    await warningIcon.checkTooltip(
+      '4 Perfetto packets lost during tracing - data may be incomplete',
+    );
+  });
+
   it('opens shortcuts dialog', () => {
     expect(dom.findInDocument('shortcuts-panel')).toBeUndefined();
     dom.findAndClick('.shortcuts');

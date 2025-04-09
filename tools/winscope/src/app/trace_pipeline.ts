@@ -38,7 +38,8 @@ import {Trace} from 'trace/trace';
 import {Traces} from 'trace/traces';
 import {TraceFile} from 'trace/trace_file';
 import {TraceEntryTypeMap, TraceType, TraceTypeUtils} from 'trace/trace_type';
-import {QueryResult} from 'trace_processor/query_result';
+import {QueryResult, Row} from 'trace_processor/query_result';
+import {TraceProcessorFactory} from 'trace_processor/trace_processor_factory';
 import {FilesSource} from './files_source';
 import {LoadedParsers} from './loaded_parsers';
 import {TraceFileFilter} from './trace_file_filter';
@@ -48,9 +49,9 @@ type UnzippedArchive = TraceFile[];
 export class TracePipeline {
   private loadedParsers = new LoadedParsers();
   private traceFileFilter = new TraceFileFilter();
-  private tracesParserFactory = new TracesParserFactory();
   private traces = new Traces();
   private downloadArchiveFilename?: string;
+  private lostPerfettoPackets = 0;
   private timestampConverter = new TimestampConverter(UTC_TIMEZONE_INFO);
 
   async loadFiles(
@@ -87,7 +88,7 @@ export class TracePipeline {
         Analytics.Tracing.logTraceLoaded(parser);
       });
 
-      const tracesParsers = await this.tracesParserFactory.createParsers(
+      const tracesParsers = await new TracesParserFactory().createParsers(
         this.traces,
         this.timestampConverter,
       );
@@ -173,6 +174,10 @@ export class TracePipeline {
     return this.timestampConverter;
   }
 
+  lostPackets(): number {
+    return this.lostPerfettoPackets;
+  }
+
   async getScreenRecordingVideo(): Promise<undefined | Blob> {
     const traces = this.getTraces();
     const screenRecording =
@@ -203,6 +208,7 @@ export class TracePipeline {
     this.traces = new Traces();
     this.timestampConverter.clear();
     this.downloadArchiveFilename = undefined;
+    this.lostPerfettoPackets = 0;
   }
 
   private async loadUnzippedArchive(
@@ -285,6 +291,21 @@ export class TracePipeline {
       }
     }
 
+    if (perfettoParsers) {
+      const tp = TraceProcessorFactory.getSingleInstance();
+      const packetLossQuery =
+        'SELECT name, value FROM stats ' +
+        "WHERE name = 'traced_buf_trace_writer_packet_loss'";
+      const res = await tp.queryAllRows(packetLossQuery);
+      const value =
+        res.numRows() > 0 ? res.firstRow<Row>({})['value'] : undefined;
+      if (typeof value === 'bigint' && value > 0n) {
+        this.lostPerfettoPackets = Number(value);
+      } else {
+        this.lostPerfettoPackets = 0;
+      }
+    }
+
     const monotonicTimeOffset =
       this.loadedParsers.getLatestRealToMonotonicOffset(
         legacyParsers
@@ -340,7 +361,8 @@ export class TracePipeline {
       return archiveFilenameNoIllegalChars;
     } else {
       console.error(
-        "Cannot convert uploaded archive filename to acceptable format for download. Defaulting download filename to 'winscope.zip'.",
+        'Cannot convert uploaded archive filename to acceptable format for download. ' +
+          "Defaulting download filename to 'winscope.zip'.",
       );
       return 'winscope';
     }

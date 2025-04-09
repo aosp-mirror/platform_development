@@ -26,7 +26,6 @@ import {
   CorruptedArchive,
   InvalidPerfettoTrace,
   NoValidFiles,
-  PerfettoPacketLoss,
   TraceOverridden,
   UnsupportedFileFormat,
 } from 'messaging/user_warnings';
@@ -281,10 +280,13 @@ describe('TracePipeline', () => {
     ]);
   });
 
-  it('shows warning for packet loss', async () => {
+  it('surfaces information about packet loss', async () => {
     const file = [
       await getFixtureFile('traces/perfetto/layers_trace.perfetto-trace'),
     ];
+    await loadFiles(file);
+    expect(tracePipeline.lostPackets()).toEqual(0);
+
     const queryResultObj = jasmine.createSpyObj<QueryResult>('result', [
       'numRows',
       'firstRow',
@@ -300,14 +302,22 @@ describe('TracePipeline', () => {
     ).and.callThrough();
     spy
       .withArgs(
-        "select name, value from stats where name = 'traced_buf_trace_writer_packet_loss'",
+        'SELECT name, value FROM stats ' +
+          "WHERE name = 'traced_buf_trace_writer_packet_loss'",
       )
       .and.returnValue(Promise.resolve(queryResultObj));
-
     await loadFiles(file);
-    await expectLoadResult(1, [
-      new PerfettoPacketLoss('layers_trace.perfetto-trace', 2),
-    ]);
+    expect(tracePipeline.lostPackets()).toEqual(2);
+
+    queryResultObj.numRows.and.returnValue(0);
+    await loadFiles(file); // clears lost packets from previous load on overwrite
+    expect(tracePipeline.lostPackets()).toEqual(0);
+
+    queryResultObj.numRows.and.returnValue(1);
+    await loadFiles(file);
+    expect(tracePipeline.lostPackets()).toEqual(2);
+    tracePipeline.clear(); // resets lost packets on explicit clear call
+    expect(tracePipeline.lostPackets()).toEqual(0);
   });
 
   it('is robust to mixed valid and invalid trace files', async () => {

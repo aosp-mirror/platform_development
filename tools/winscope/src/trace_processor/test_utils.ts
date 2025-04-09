@@ -62,7 +62,7 @@ export function makeSearchTraceSpies(
 }
 
 export async function runQueryAndGetResult(query: string): Promise<QueryResult> {
-  const tp = await TraceProcessorFactory.getSingleInstance();
+  const tp = TraceProcessorFactory.getSingleInstance();
   return tp.queryAllRows(query);
 }
 

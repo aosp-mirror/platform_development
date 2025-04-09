@@ -13,16 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import {
-  ComponentFixture,
-  ComponentFixtureAutoDetect,
-  TestBed,
-} from '@angular/core/testing';
+import {ComponentFixtureAutoDetect, TestBed} from '@angular/core/testing';
 import {MatButtonModule} from '@angular/material/button';
 import {BrowserAnimationsModule} from '@angular/platform-browser/animations';
 import {assertDefined} from 'common/assert_utils';
 import {TimestampConverterUtils} from 'common/time/test_utils';
 import {Timestamp} from 'common/time/time';
+import {DOMTestHelper} from 'test/unit/dom_test_utils';
 import {PropertyTreeBuilder} from 'test/unit/property_tree_builder';
 import {
   HEX_FORMATTER,
@@ -33,9 +30,8 @@ import {ViewerEvents} from 'viewers/common/viewer_events';
 import {PropertyTreeNodeDataViewComponent} from './property_tree_node_data_view_component';
 
 describe('PropertyTreeNodeDataViewComponent', () => {
-  let fixture: ComponentFixture<PropertyTreeNodeDataViewComponent>;
   let component: PropertyTreeNodeDataViewComponent;
-  let htmlElement: HTMLElement;
+  let dom: DOMTestHelper<PropertyTreeNodeDataViewComponent>;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
@@ -43,9 +39,9 @@ describe('PropertyTreeNodeDataViewComponent', () => {
       declarations: [PropertyTreeNodeDataViewComponent],
       imports: [MatButtonModule, BrowserAnimationsModule],
     }).compileComponents();
-    fixture = TestBed.createComponent(PropertyTreeNodeDataViewComponent);
+    const fixture = TestBed.createComponent(PropertyTreeNodeDataViewComponent);
     component = fixture.componentInstance;
-    htmlElement = fixture.nativeElement;
+    dom = new DOMTestHelper(fixture, fixture.nativeElement);
   });
 
   it('can be created', () => {
@@ -54,7 +50,7 @@ describe('PropertyTreeNodeDataViewComponent', () => {
 
   it('can emit timestamp', () => {
     let timestamp: Timestamp | undefined;
-    htmlElement.addEventListener(ViewerEvents.TimestampClick, (event) => {
+    dom.addEventListener(ViewerEvents.TimestampClick, (event) => {
       timestamp = (event as CustomEvent).detail.timestamp;
     });
     const node = UiPropertyTreeNode.from(
@@ -68,13 +64,9 @@ describe('PropertyTreeNodeDataViewComponent', () => {
         .build(),
     );
     component.node = node;
-    fixture.detectChanges();
+    dom.detectChanges();
 
-    assertDefined(
-      htmlElement.querySelector<HTMLElement>('.time-button'),
-    ).click();
-    fixture.detectChanges();
-
+    dom.findAndClick('.time-button');
     expect(assertDefined(timestamp).format()).toEqual(
       '2022-07-29, 20:34:49.102',
     );
@@ -82,12 +74,9 @@ describe('PropertyTreeNodeDataViewComponent', () => {
 
   it('can emit propagatable node', () => {
     let clickedNode: UiPropertyTreeNode | undefined;
-    htmlElement.addEventListener(
-      ViewerEvents.PropagatePropertyClick,
-      (event) => {
-        clickedNode = (event as CustomEvent).detail;
-      },
-    );
+    dom.addEventListener(ViewerEvents.PropagatePropertyClick, (event) => {
+      clickedNode = (event as CustomEvent).detail;
+    });
     const node = UiPropertyTreeNode.from(
       new PropertyTreeBuilder()
         .setRootId('test node')
@@ -98,14 +87,11 @@ describe('PropertyTreeNodeDataViewComponent', () => {
     );
     node.setCanPropagate(true);
     component.node = node;
-    fixture.detectChanges();
+    dom.detectChanges();
 
-    const button = assertDefined(
-      htmlElement.querySelector<HTMLElement>('.inline button'),
-    );
-    expect(button.textContent?.trim()).toEqual('0x3039');
+    const button = dom.get('.inline button');
+    button.checkTextExact('0x3039');
     button.click();
-    fixture.detectChanges();
     expect(clickedNode).toEqual(node);
   });
 });

@@ -34,7 +34,7 @@ export class TraceSearchInitializer {
   ];
 
   static async createSearchViews(traces: Traces): Promise<string[]> {
-    const traceProcessor = await TraceProcessorFactory.getSingleInstance();
+    const traceProcessor = TraceProcessorFactory.getSingleInstance();
 
     const searchViews: string[] = [];
     for (const FactoryType of TraceSearchInitializer.FACTORIES) {

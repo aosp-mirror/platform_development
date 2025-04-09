@@ -25,7 +25,7 @@ import {
 export class TraceProcessorFactory {
   private static tp?: TraceProcessor;
 
-  static async getSingleInstance(): Promise<TraceProcessor> {
+  static getSingleInstance(): TraceProcessor {
     if (!TraceProcessorFactory.tp) {
       const traceProcessorRootUrl =
         globalConfig.MODE === 'KARMA_TEST'

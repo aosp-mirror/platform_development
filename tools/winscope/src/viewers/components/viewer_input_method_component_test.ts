@@ -14,108 +14,47 @@
  * limitations under the License.
  */
 
-import {CUSTOM_ELEMENTS_SCHEMA} from '@angular/core';
-import {
-  ComponentFixture,
-  ComponentFixtureAutoDetect,
-  TestBed,
-} from '@angular/core/testing';
-import {FormsModule} from '@angular/forms';
-import {MatButtonModule} from '@angular/material/button';
-import {MatDividerModule} from '@angular/material/divider';
-import {MatIconModule} from '@angular/material/icon';
-import {MatTooltipModule} from '@angular/material/tooltip';
-import {UnitTestUtils} from 'test/unit/utils';
-import {TraceType} from 'trace/trace_type';
-import {ImeUiData} from 'viewers/common/ime_ui_data';
-import {CollapsedSectionsComponent} from './collapsed_sections_component';
-import {CollapsibleSectionTitleComponent} from './collapsible_section_title_component';
-import {HierarchyComponent} from './hierarchy_component';
+import {DOMTestHelper} from 'test/unit/dom_test_utils';
+import {AbstractHierarchyViewerComponentTest} from 'viewers/common/abstract_hierarchy_viewer_component_test';
 import {ImeAdditionalPropertiesComponent} from './ime_additional_properties_component';
-import {PropertiesComponent} from './properties_component';
 import {ViewerInputMethodComponent} from './viewer_input_method_component';
 
+class ViewerInputMethodComponentTest extends AbstractHierarchyViewerComponentTest<ViewerInputMethodComponent> {
+  protected override readonly testRects = false;
+  protected override readonly hierarchyTitle = 'HIERARCHY';
+  protected override readonly propertiesTitle = 'PROPERTIES';
+
+  protected override executeSpecializedTests() {
+    describe('Specialized tests', () => {
+      let dom: DOMTestHelper<ViewerInputMethodComponent>;
+      let component: ViewerInputMethodComponent;
+
+      beforeEach(async () => {
+        [dom, component] = await this.setUpTestEnvironment();
+      });
+
+      it('creates additional properties view', () => {
+        expect(dom.find('.ime-additional-properties')).toBeDefined();
+      });
+
+      it('handles ime additional properties section collapse/expand', () => {
+        dom.checkSectionCollapseAndExpand(
+          '.ime-additional-properties',
+          'WM & SF PROPERTIES',
+        );
+      });
+    });
+  }
+
+  protected async setUpTestEnvironment(): Promise<
+    [DOMTestHelper<ViewerInputMethodComponent>, ViewerInputMethodComponent]
+  > {
+    return this.initializeTestEnvironment(ViewerInputMethodComponent, [
+      ImeAdditionalPropertiesComponent,
+    ]);
+  }
+}
+
 describe('ViewerInputMethodComponent', () => {
-  let fixture: ComponentFixture<ViewerInputMethodComponent>;
-  let component: ViewerInputMethodComponent;
-  let htmlElement: HTMLElement;
-
-  beforeEach(async () => {
-    await TestBed.configureTestingModule({
-      providers: [{provide: ComponentFixtureAutoDetect, useValue: true}],
-      imports: [
-        MatIconModule,
-        MatDividerModule,
-        MatButtonModule,
-        MatTooltipModule,
-        FormsModule,
-      ],
-      declarations: [
-        ViewerInputMethodComponent,
-        HierarchyComponent,
-        PropertiesComponent,
-        ImeAdditionalPropertiesComponent,
-        CollapsedSectionsComponent,
-        CollapsibleSectionTitleComponent,
-      ],
-      schemas: [CUSTOM_ELEMENTS_SCHEMA],
-    }).compileComponents();
-    fixture = TestBed.createComponent(ViewerInputMethodComponent);
-    component = fixture.componentInstance;
-    htmlElement = fixture.nativeElement;
-    component.inputData = new ImeUiData(TraceType.INPUT_METHOD_CLIENTS);
-    fixture.detectChanges();
-  });
-
-  it('can be created', () => {
-    expect(component).toBeTruthy();
-  });
-
-  it('creates hierarchy view', () => {
-    const hierarchyView = htmlElement.querySelector('.hierarchy-view');
-    expect(hierarchyView).toBeTruthy();
-  });
-
-  it('creates additional properties view', () => {
-    const additionalProperties = htmlElement.querySelector(
-      '.ime-additional-properties',
-    );
-    expect(additionalProperties).toBeTruthy();
-  });
-
-  it('creates properties view', () => {
-    const propertiesView = htmlElement.querySelector('.properties-view');
-    expect(propertiesView).toBeTruthy();
-  });
-
-  it('creates collapsed sections with no buttons', () => {
-    UnitTestUtils.checkNoCollapsedSectionButtons(htmlElement);
-  });
-
-  it('handles hierarchy section collapse/expand', () => {
-    UnitTestUtils.checkSectionCollapseAndExpand(
-      htmlElement,
-      fixture,
-      '.hierarchy-view',
-      'HIERARCHY',
-    );
-  });
-
-  it('handles ime additional properties section collapse/expand', () => {
-    UnitTestUtils.checkSectionCollapseAndExpand(
-      htmlElement,
-      fixture,
-      '.ime-additional-properties',
-      'WM & SF PROPERTIES',
-    );
-  });
-
-  it('handles properties section collapse/expand', () => {
-    UnitTestUtils.checkSectionCollapseAndExpand(
-      htmlElement,
-      fixture,
-      '.properties-view',
-      'PROPERTIES',
-    );
-  });
+  new ViewerInputMethodComponentTest().execute();
 });

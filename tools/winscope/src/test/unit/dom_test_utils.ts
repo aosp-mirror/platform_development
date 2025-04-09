@@ -130,7 +130,12 @@ export class DOMTestHelper<T> {
   }
 
   dispatchInput(value: string) {
-    if (!(this.root instanceof HTMLInputElement)) {
+    if (
+      !(
+        this.root instanceof HTMLInputElement ||
+        this.root instanceof HTMLTextAreaElement
+      )
+    ) {
       throw new Error('cannot dispatch input on node ' + this.root.nodeName);
     }
     this.root.value = value;
@@ -168,8 +173,11 @@ export class DOMTestHelper<T> {
     this.root.addEventListener(event, listener);
   }
 
-  keydownEnter() {
-    const event = new KeyboardEvent('keydown', {key: KeyboardEventKey.ENTER});
+  keydownEnter(shiftKey = false) {
+    const event = new KeyboardEvent('keydown', {
+      key: KeyboardEventKey.ENTER,
+      shiftKey,
+    });
     this.dispatchEvent(event);
   }
 
@@ -251,6 +259,12 @@ export class DOMTestHelper<T> {
     isPresent
       ? expect(this.root.className).toContain(value)
       : expect(this.root.className).not.toContain(value);
+  }
+
+  checkClassNameExact(value: string, isPresent = true) {
+    isPresent
+      ? expect(this.root.className).toEqual(value)
+      : expect(this.root.className).not.toEqual(value);
   }
 
   checkDisabled(value: boolean) {

@@ -16,10 +16,11 @@
 
 import {Clipboard, ClipboardModule} from '@angular/cdk/clipboard';
 import {Component, ViewChild} from '@angular/core';
-import {ComponentFixture, TestBed} from '@angular/core/testing';
+import {TestBed} from '@angular/core/testing';
 import {MatIconModule} from '@angular/material/icon';
 import {MatTooltipModule} from '@angular/material/tooltip';
 import {assertDefined} from 'common/assert_utils';
+import {DOMTestHelper} from 'test/unit/dom_test_utils';
 import {HierarchyTreeBuilder} from 'test/unit/hierarchy_tree_builder';
 import {PropertyTreeBuilder} from 'test/unit/property_tree_builder';
 import {DEFAULT_PROPERTY_FORMATTER} from 'trace/tree_node/formatters';
@@ -31,9 +32,8 @@ import {PropertyTreeNodeDataViewComponent} from './property_tree_node_data_view_
 import {TreeNodeComponent} from './tree_node_component';
 
 describe('TreeNodeComponent', () => {
-  let fixture: ComponentFixture<TestHostComponent>;
   let component: TestHostComponent;
-  let htmlElement: HTMLElement;
+  let dom: DOMTestHelper<TestHostComponent>;
   let mockCopyText: jasmine.Spy;
 
   const propertiesTree = UiPropertyTreeNode.from(
@@ -60,10 +60,10 @@ describe('TreeNodeComponent', () => {
       ],
       imports: [MatIconModule, MatTooltipModule, ClipboardModule],
     }).compileComponents();
-    fixture = TestBed.createComponent(TestHostComponent);
+    const fixture = TestBed.createComponent(TestHostComponent);
     component = fixture.componentInstance;
-    htmlElement = fixture.nativeElement;
-    fixture.detectChanges();
+    dom = new DOMTestHelper(fixture, fixture.nativeElement);
+    dom.detectChanges();
   });
 
   it('can be created', () => {
@@ -71,37 +71,24 @@ describe('TreeNodeComponent', () => {
   });
 
   it('can generate hierarchy data view component', () => {
-    const treeNodeDataView = htmlElement.querySelector(
-      'hierarchy-tree-node-data-view',
-    );
-    expect(treeNodeDataView).toBeTruthy();
-    expect(
-      htmlElement.querySelector('property-tree-node-data-view'),
-    ).toBeNull();
+    expect(dom.find('hierarchy-tree-node-data-view')).toBeDefined();
+    expect(dom.find('property-tree-node-data-view')).toBeUndefined();
   });
 
   it('can generate property data view component', () => {
     component.node = propertiesTree;
-    fixture.detectChanges();
-    const treeNodeDataView = htmlElement.querySelector(
-      'property-tree-node-data-view',
-    );
-    expect(treeNodeDataView).toBeTruthy();
-    expect(
-      htmlElement.querySelector('hierarchy-tree-node-data-view'),
-    ).toBeNull();
+    dom.detectChanges();
+    expect(dom.find('property-tree-node-data-view')).toBeDefined();
+    expect(dom.find('hierarchy-tree-node-data-view')).toBeUndefined();
   });
 
   it('can trigger tree toggle on click of chevron', () => {
     const treeNodeComponent = assertDefined(component.treeNodeComponent);
     treeNodeComponent.showChevron = jasmine.createSpy().and.returnValue(true);
-    fixture.detectChanges();
+    dom.detectChanges();
 
     const spy = spyOn(treeNodeComponent.toggleTreeChange, 'emit');
-    const toggleButton = assertDefined(
-      htmlElement.querySelector<HTMLElement>('.toggle-tree-btn'),
-    );
-    toggleButton.click();
+    dom.findAndClick('.toggle-tree-btn');
     expect(spy).toHaveBeenCalled();
   });
 
@@ -110,10 +97,7 @@ describe('TreeNodeComponent', () => {
       assertDefined(component.treeNodeComponent).expandTreeChange,
       'emit',
     );
-    const expandButton = assertDefined(
-      htmlElement.querySelector<HTMLElement>('.expand-tree-btn'),
-    );
-    expandButton.click();
+    dom.findAndClick('.expand-tree-btn');
     expect(spy).toHaveBeenCalled();
   });
 
@@ -124,22 +108,20 @@ describe('TreeNodeComponent', () => {
     );
     component.isInPinnedSection = true;
     component.isSelected = true;
-    fixture.detectChanges();
+    dom.detectChanges();
     expect(spy).not.toHaveBeenCalled();
 
     component.isSelected = false;
     component.isInPinnedSection = false;
-    fixture.detectChanges();
+    dom.detectChanges();
     component.isSelected = true;
-    fixture.detectChanges();
+    dom.detectChanges();
     expect(spy).toHaveBeenCalledTimes(1);
   });
 
   it('assigns diff css classes to expand tree button', () => {
-    const expandButton = assertDefined(
-      htmlElement.querySelector<HTMLElement>('.expand-tree-btn'),
-    );
-    expect(expandButton.className).toEqual('icon-button expand-tree-btn');
+    const expandButton = dom.get('.expand-tree-btn');
+    expandButton.checkClassNameExact('icon-button expand-tree-btn');
     component.node = UiHierarchyTreeNode.from(
       new HierarchyTreeBuilder()
         .setId('LayerTraceEntry')
@@ -150,8 +132,8 @@ describe('TreeNodeComponent', () => {
         .build(),
     );
     component.node.getChildByName('Child 1')?.setDiff(DiffType.ADDED);
-    fixture.detectChanges();
-    expect(expandButton.className).toEqual('icon-button expand-tree-btn added');
+    dom.detectChanges();
+    expandButton.checkClassNameExact('icon-button expand-tree-btn added');
 
     component.node = UiHierarchyTreeNode.from(
       new HierarchyTreeBuilder()
@@ -165,10 +147,8 @@ describe('TreeNodeComponent', () => {
     const child1 = assertDefined(component.node.getChildByName('Child 1'));
     child1.setDiff(DiffType.ADDED);
     child1.getChildByName('Child 2')?.setDiff(DiffType.DELETED);
-    fixture.detectChanges();
-    expect(expandButton.className).toEqual(
-      'icon-button expand-tree-btn modified',
-    );
+    dom.detectChanges();
+    expandButton.checkClassNameExact('icon-button expand-tree-btn modified');
   });
 
   it('pins node on click', () => {
@@ -176,59 +156,45 @@ describe('TreeNodeComponent', () => {
     treeNodeComponent.showPinNodeIcon = jasmine
       .createSpy()
       .and.returnValue(true);
-    fixture.detectChanges();
+    dom.detectChanges();
 
     const spy = spyOn(treeNodeComponent.pinNodeChange, 'emit');
-    const pinNodeButton = assertDefined(
-      htmlElement.querySelector<HTMLElement>('.pin-node-btn'),
-    );
-    pinNodeButton.click();
+    dom.findAndClick('.pin-node-btn');
     expect(spy).toHaveBeenCalledWith(component.node as UiHierarchyTreeNode);
   });
 
   it('can trigger rect show state toggle on click of icon', () => {
     const treeNodeComponent = assertDefined(component.treeNodeComponent);
     treeNodeComponent.showStateIcon = 'visibility';
-    fixture.detectChanges();
+    dom.detectChanges();
 
     const spy = spyOn(treeNodeComponent.rectShowStateChange, 'emit');
-    const showStateButton = assertDefined(
-      htmlElement.querySelector<HTMLElement>('.toggle-rect-show-state-btn'),
-    );
-    showStateButton.click();
+    dom.findAndClick('.toggle-rect-show-state-btn');
     expect(spy).toHaveBeenCalled();
   });
 
   it('does not show copy button for hierarchy tree', () => {
-    expect(htmlElement.querySelector('.icon-wrapper-copy')).toBeNull();
+    expect(dom.find('.icon-wrapper-copy')).toBeUndefined();
   });
 
   it('does not show copy button for property tree node that is not leaf or root', () => {
     component.node = assertDefined(propertiesTree.getChildByName('key2'));
-    fixture.detectChanges();
-    expect(htmlElement.querySelector('.icon-wrapper-copy')).toBeNull();
+    dom.detectChanges();
+    expect(dom.find('.icon-wrapper-copy')).toBeUndefined();
   });
 
   it('copies node name for root of property tree node', () => {
     component.node = propertiesTree;
-    fixture.detectChanges();
-    const copyButton = assertDefined(
-      htmlElement.querySelector<HTMLElement>('.icon-wrapper-copy button'),
-    );
-    copyButton.click();
-    fixture.detectChanges();
+    dom.detectChanges();
+    dom.findAndClick('.icon-wrapper-copy button');
     expect(mockCopyText).toHaveBeenCalledWith(propertiesTree.name);
   });
 
   it('copies property name and value for leaf node', () => {
     component.node = assertDefined(propertiesTree.getChildByName('key1'));
     component.isLeaf = true;
-    fixture.detectChanges();
-    const copyButton = assertDefined(
-      htmlElement.querySelector<HTMLElement>('.icon-wrapper-copy button'),
-    );
-    copyButton.click();
-    fixture.detectChanges();
+    dom.detectChanges();
+    dom.findAndClick('.icon-wrapper-copy button');
     expect(mockCopyText).toHaveBeenCalledWith('key1: value1');
   });
 

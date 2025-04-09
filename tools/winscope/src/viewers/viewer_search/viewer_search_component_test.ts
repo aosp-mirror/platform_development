@@ -18,7 +18,7 @@ import {CdkAccordionModule} from '@angular/cdk/accordion';
 import {CdkMenuModule} from '@angular/cdk/menu';
 import {ScrollingModule} from '@angular/cdk/scrolling';
 import {Component, ViewChild} from '@angular/core';
-import {ComponentFixture, TestBed} from '@angular/core/testing';
+import {TestBed} from '@angular/core/testing';
 import {FormsModule, ReactiveFormsModule} from '@angular/forms';
 import {MatButtonModule} from '@angular/material/button';
 import {MatDividerModule} from '@angular/material/divider';
@@ -30,7 +30,7 @@ import {MatTabsModule} from '@angular/material/tabs';
 import {MatTooltipModule} from '@angular/material/tooltip';
 import {BrowserAnimationsModule} from '@angular/platform-browser/animations';
 import {assertDefined} from 'common/assert_utils';
-import {UnitTestUtils} from 'test/unit/utils';
+import {DOMTestHelper} from 'test/unit/dom_test_utils';
 import {
   AddQueryClickDetail,
   ClearQueryClickDetail,
@@ -49,9 +49,11 @@ import {ViewerSearchComponent} from './viewer_search_component';
 
 describe('ViewerSearchComponent', () => {
   const testQuery = 'select * from table';
-  let fixture: ComponentFixture<TestHostComponent>;
+  const accordionItemSelector = '.accordion-item-header';
+  const searchQuerySelector = '.query-actions .search-button';
+  const listedSearchSelector = '.listed-search-option';
   let component: TestHostComponent;
-  let htmlElement: HTMLElement;
+  let dom: DOMTestHelper<TestHostComponent>;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
@@ -81,12 +83,12 @@ describe('ViewerSearchComponent', () => {
         MatDividerModule,
       ],
     }).compileComponents();
-    fixture = TestBed.createComponent(TestHostComponent);
+    const fixture = TestBed.createComponent(TestHostComponent);
     component = fixture.componentInstance;
-    htmlElement = fixture.nativeElement;
+    dom = new DOMTestHelper(fixture, fixture.nativeElement);
     component.inputData.initialized = true;
     component.inputData.currentSearches = [new CurrentSearch(1)];
-    fixture.detectChanges();
+    dom.detectChanges();
   });
 
   it('can be created', () => {
@@ -94,46 +96,28 @@ describe('ViewerSearchComponent', () => {
   });
 
   it('creates global search section with tabs', () => {
-    const globalSearch = assertDefined(
-      htmlElement.querySelector('.global-search'),
-    );
-    const searchTabs =
-      globalSearch.querySelectorAll<HTMLElement>('.mat-tab-label');
-    const [searchTab, savedTab, recentTab] = Array.from(searchTabs);
-    expect(searchTab.textContent).toEqual('Search');
-    expect(savedTab.textContent).toEqual('Saved');
-    expect(recentTab.textContent).toEqual('Recent');
+    const globalSearch = dom.get('.global-search');
+    const [searchTab, savedTab, recentTab] =
+      globalSearch.findAll('.mat-tab-label');
+    searchTab.checkTextExact('Search');
+    savedTab.checkTextExact('Saved');
+    recentTab.checkTextExact('Recent');
   });
 
   it('creates collapsed sections with no buttons', () => {
-    UnitTestUtils.checkNoCollapsedSectionButtons(htmlElement);
+    dom.checkNoCollapsedSectionButtons();
   });
 
   it('handles search box section collapse/expand', () => {
-    UnitTestUtils.checkSectionCollapseAndExpand(
-      htmlElement,
-      fixture,
-      '.global-search',
-      'GLOBAL SEARCH',
-    );
+    dom.checkSectionCollapseAndExpand('.global-search', 'GLOBAL SEARCH');
   });
 
   it('handles tabulated results section collapse/expand', () => {
-    UnitTestUtils.checkSectionCollapseAndExpand(
-      htmlElement,
-      fixture,
-      '.search-results',
-      'SEARCH RESULTS',
-    );
+    dom.checkSectionCollapseAndExpand('.search-results', 'SEARCH RESULTS');
   });
 
   it('handles documentation groups section collapse/expand', () => {
-    UnitTestUtils.checkSectionCollapseAndExpand(
-      htmlElement,
-      fixture,
-      '.how-to-search',
-      'HOW TO SEARCH',
-    );
+    dom.checkSectionCollapseAndExpand('.how-to-search', 'HOW TO SEARCH');
   });
 
   it('handles search via search query click', () => {
@@ -142,16 +126,16 @@ describe('ViewerSearchComponent', () => {
 
   it('handles search via run query from saved without creating new active search', async () => {
     component.inputData.savedSearches = [new ListedSearch(testQuery, 'saved1')];
-    fixture.detectChanges();
+    dom.detectChanges();
     await changeTab(1);
-    runSearchAndCheckHandled(runSearchFromListedSearchOption);
+    runSearchAndCheckHandled(() => dom.findAndClick(listedSearchSelector));
   });
 
   it('handles search via run query from recents without creating new active search', async () => {
     component.inputData.recentSearches = [new ListedSearch(testQuery)];
-    fixture.detectChanges();
+    dom.detectChanges();
     await changeTab(2);
-    runSearchAndCheckHandled(runSearchFromListedSearchOption);
+    runSearchAndCheckHandled(() => dom.findAndClick(listedSearchSelector));
   });
 
   it('handles search via run query from saved creating new active search', async () => {
@@ -186,63 +170,57 @@ describe('ViewerSearchComponent', () => {
 
   it('handles running query complete', () => {
     const placeholderCss = '.results-placeholder.placeholder-text';
-    expect(htmlElement.querySelector(placeholderCss)).toBeTruthy();
+    expect(dom.find(placeholderCss)).toBeDefined();
 
-    clickSearchQueryButton();
+    dom.get(searchQuerySelector).click();
     runSearchByQueryButton();
-    expect(htmlElement.querySelector(placeholderCss)).toBeNull();
+    expect(dom.find(placeholderCss)).toBeUndefined();
 
     addCurrentSearchWithResult();
-    expect(htmlElement.querySelector('.query-execution-time')).toBeTruthy();
-    expect(htmlElement.querySelector('log-view')).toBeTruthy();
-    expect(htmlElement.querySelector(placeholderCss)).toBeNull();
+    expect(dom.find('.query-execution-time')).toBeDefined();
+    expect(dom.find('log-view')).toBeDefined();
+    expect(dom.find(placeholderCss)).toBeUndefined();
   });
 
   it('adds search sections', () => {
     const spy = jasmine.createSpy();
-    htmlElement
-      .querySelector('viewer-search')
-      ?.addEventListener(ViewerEvents.AddQueryClick, (event) => {
+    dom
+      .get('viewer-search')
+      .addEventListener(ViewerEvents.AddQueryClick, (event) => {
         const detail: AddQueryClickDetail = (event as CustomEvent).detail;
         expect(detail).toBeFalsy();
         spy();
       });
 
-    let addButton = assertDefined(
-      htmlElement.querySelector<HTMLButtonElement>('.add-button'),
-    );
-    expect(htmlElement.querySelector('.clear-button')).toBeNull();
-    expect(addButton.disabled).toBeTrue();
+    const addButton = dom.get('.add-button');
+    expect(dom.find('.clear-button')).toBeUndefined();
+    addButton.checkDisabled(true);
 
     const data = structuredClone(component.inputData);
     data.currentSearches[0].query = testQuery;
     updateInputDataAndDetectChanges(data);
 
     addButton.click();
-    fixture.detectChanges();
     expect(spy).toHaveBeenCalledTimes(1);
 
     const newData = structuredClone(component.inputData);
     newData.currentSearches.push(new CurrentSearch(2));
     updateInputDataAndDetectChanges(newData);
 
-    const activeSections = htmlElement.querySelectorAll('active-search');
+    const activeSections = dom.findAll('active-search');
     expect(activeSections.length).toEqual(2);
-    expect(activeSections.item(0).querySelector('.clear-button')).toBeTruthy();
-    expect(activeSections.item(1).querySelector('.clear-button')).toBeTruthy();
+    expect(activeSections[0].find('.clear-button')).toBeDefined();
+    expect(activeSections[1].find('.clear-button')).toBeDefined();
 
-    expect(activeSections.item(0).querySelector('.add-button')).toBeNull();
-    addButton = assertDefined(
-      activeSections.item(1).querySelector<HTMLButtonElement>('.add-button'),
-    );
-    expect(addButton.disabled).toBeTrue();
+    expect(activeSections[0].find('.add-button')).toBeUndefined();
+    activeSections[1].get('.add-button').checkDisabled(true);
   });
 
   it('handles multiple results', async () => {
     let uid: number | undefined;
-    htmlElement
-      .querySelector('viewer-search')
-      ?.addEventListener(ViewerEvents.ClearQueryClick, (event) => {
+    dom
+      .get('viewer-search')
+      .addEventListener(ViewerEvents.ClearQueryClick, (event) => {
         const detail: ClearQueryClickDetail = (event as CustomEvent).detail;
         uid = detail.uid;
       });
@@ -251,35 +229,27 @@ describe('ViewerSearchComponent', () => {
     data.currentSearches[0].result = new SearchResult([], []);
     updateInputDataAndDetectChanges(data);
     addCurrentSearchWithResult(testQuery, 2);
-    let resultTabs = htmlElement.querySelectorAll(
-      '.result-tabs .mat-tab-label',
-    );
-    let activeSections =
-      htmlElement.querySelectorAll<HTMLElement>('active-search');
+    let resultTabs = dom.findAll('.result-tabs .mat-tab-label');
+    let activeSections = dom.findAll('active-search');
     expect(activeSections.length).toEqual(2);
     expect(resultTabs.length).toEqual(2);
-    expect(resultTabs.item(0).textContent).toEqual('Query 1');
-    expect(resultTabs.item(1).textContent).toEqual('Query 2');
+    resultTabs[0].checkTextExact('Query 1');
+    resultTabs[1].checkTextExact('Query 2');
 
-    const clearButton = assertDefined(
-      htmlElement.querySelector<HTMLElement>('.clear-button'),
-    );
-    clearButton.click();
-    fixture.detectChanges();
+    dom.findAndClick('.clear-button');
     expect(uid).toEqual(1);
 
-    const finalActiveSection = activeSections.item(1);
-    const spy = spyOn(finalActiveSection, 'scrollIntoView');
+    const spy = spyOn(activeSections[1].getHTMLElement(), 'scrollIntoView');
 
     const newData = structuredClone(component.inputData);
     newData.currentSearches.shift();
     updateInputDataAndDetectChanges(newData);
-    await fixture.whenStable();
+    await dom.whenStable();
 
-    resultTabs = htmlElement.querySelectorAll('.result-tabs .mat-tab-label');
-    activeSections = htmlElement.querySelectorAll('active-search');
+    resultTabs = dom.findAll('.result-tabs .mat-tab-label');
+    activeSections = dom.findAll('active-search');
     expect(resultTabs.length).toEqual(1);
-    expect(resultTabs.item(0).textContent).toEqual('Query 2');
+    resultTabs[0].checkTextExact('Query 2');
     expect(activeSections.length).toEqual(1);
     expect(spy).toHaveBeenCalled();
   });
@@ -289,162 +259,124 @@ describe('ViewerSearchComponent', () => {
     const data = structuredClone(component.inputData);
     data.lastTraceFailed = true;
     updateInputDataAndDetectChanges(data);
-    expect(htmlElement.querySelector('.query-execution-time')).toBeTruthy();
-    expect(htmlElement.querySelector('.running-query-message')).toBeNull();
-    expect(htmlElement.querySelector('log-view')).toBeNull();
-    expect(getSearchQueryButton().disabled).toBeFalse();
+    expect(dom.find('.query-execution-time')).toBeDefined();
+    expect(dom.find('.running-query-message')).toBeUndefined();
+    expect(dom.find('log-view')).toBeUndefined();
+    dom.get(searchQuerySelector).checkDisabled(false);
   });
 
   it('emits event on save query click', () => {
     let detail: SaveQueryClickDetail | undefined;
-    htmlElement
-      .querySelector('viewer-search')
-      ?.addEventListener(ViewerEvents.SaveQueryClick, (event) => {
+    dom
+      .get('viewer-search')
+      .addEventListener(ViewerEvents.SaveQueryClick, (event) => {
         detail = (event as CustomEvent).detail;
       });
     const testName = 'Query 1';
     component.inputData.savedSearches.push(
       new ListedSearch(testQuery, testName),
     );
-    fixture.detectChanges();
+    dom.detectChanges();
     addCurrentSearchWithResult();
-    const saveField = assertDefined(
-      htmlElement.querySelector('.current-search .save-field'),
-    );
-    const saveQueryButton = assertDefined(
-      saveField.querySelector<HTMLElement>('.query-button'),
-    );
-    const input = assertDefined(
-      saveField.querySelector<HTMLInputElement>('input'),
-    );
-    changeInput(input, testName);
-    pressEnter(input);
+    const saveField = dom.get('.current-search .save-field');
+    const saveQueryButton = saveField.get('.query-button');
+    const input = saveField.get('input');
+    input.dispatchInput(testName);
     saveQueryButton.click();
-    fixture.detectChanges();
     expect(detail).toBeUndefined(); // name already exists
 
     const testName2 = 'Query 2';
-    changeInput(input, testName2);
-    pressEnter(input); // save by enter key
+    input.dispatchInput(testName2);
+    input.keydownEnter(); // save by enter key
     expect(detail).toEqual(new SaveQueryClickDetail(testQuery, testName2));
 
     const testName3 = 'Query 3';
-    changeInput(input, testName3);
-    saveQueryButton.click();
-    fixture.detectChanges(); // save by click
+    input.dispatchInput(testName3);
+    saveQueryButton.click(); // save by click
     expect(detail).toEqual(new SaveQueryClickDetail(testQuery, testName3));
   });
 
   it('emits event on delete saved query click', async () => {
     let detail: DeleteSavedQueryClickDetail | undefined;
-    htmlElement
-      .querySelector('viewer-search')
-      ?.addEventListener(ViewerEvents.DeleteSavedQueryClick, (event) => {
+    dom
+      .get('viewer-search')
+      .addEventListener(ViewerEvents.DeleteSavedQueryClick, (event) => {
         detail = (event as CustomEvent).detail;
       });
     const search = new ListedSearch(testQuery);
     component.inputData.savedSearches = [search];
-    fixture.detectChanges();
+    dom.detectChanges();
 
     await changeTab(1);
-    const listedSearchButton = assertDefined(
-      htmlElement.querySelectorAll<HTMLElement>('.listed-search-option'),
-    );
-    listedSearchButton.item(2).click();
+    dom.findAndClickByIndex(listedSearchSelector, 2);
     expect(detail).toEqual(new DeleteSavedQueryClickDetail(search));
   });
 
   it('handles trace search initialization', () => {
     component.inputData.initialized = false;
-    fixture.detectChanges();
+    dom.detectChanges();
     const spy = jasmine.createSpy();
-    htmlElement
-      .querySelector('viewer-search')
-      ?.addEventListener(ViewerEvents.GlobalSearchSectionClick, (event) =>
+    dom
+      .get('viewer-search')
+      .addEventListener(ViewerEvents.GlobalSearchSectionClick, (event) =>
         spy(),
       );
-    const globalSearch = assertDefined(
-      htmlElement.querySelector<HTMLElement>('.global-search'),
-    );
-    expect(globalSearch.querySelector('.message-with-spinner')).toBeNull();
+    const globalSearch = dom.get('.global-search');
+    expect(globalSearch.find('.message-with-spinner')).toBeUndefined();
 
     clickGlobalSearchAndCheckMessage(globalSearch);
     clickGlobalSearchAndCheckMessage(globalSearch);
     expect(spy).toHaveBeenCalledTimes(1);
 
-    changeInput(getTextInput(), testQuery);
-    expect(getSearchQueryButton().disabled).toBeTrue();
+    getTextInput().dispatchInput(testQuery);
+    dom.get(searchQuerySelector).checkDisabled(true);
 
     const data = structuredClone(component.inputData);
     data.initialized = true;
     updateInputDataAndDetectChanges(data);
-    expect(globalSearch.querySelector('.message-with-spinner')).toBeNull();
-    expect(getSearchQueryButton().disabled).toBeFalse();
+    expect(globalSearch.find('.message-with-spinner')).toBeUndefined();
+    dom.get(searchQuerySelector).checkDisabled(false);
   });
 
   it('can open SQL view descriptors in how to section', () => {
-    const accordionItems = htmlElement.querySelectorAll<HTMLElement>(
-      '.how-to-search .accordion-item',
-    );
+    const accordionItems = dom.findAll('.how-to-search .accordion-item');
     expect(accordionItems.length).toEqual(6);
     accordionItems.forEach((item) => checkAccordionItemCollapsed(item));
 
-    clickAccordionItemHeader(accordionItems.item(0));
-    checkAccordionItemExpanded(accordionItems.item(0));
-    checkAccordionItemCollapsed(accordionItems.item(1));
+    accordionItems[0].get(accordionItemSelector).click();
+    checkAccordionItemExpanded(accordionItems[0]);
+    checkAccordionItemCollapsed(accordionItems[1]);
 
-    clickAccordionItemHeader(accordionItems.item(1));
-    checkAccordionItemExpanded(accordionItems.item(0));
-    checkAccordionItemExpanded(accordionItems.item(1));
+    accordionItems[1].get(accordionItemSelector).click();
+    checkAccordionItemExpanded(accordionItems[0]);
+    checkAccordionItemExpanded(accordionItems[1]);
 
-    clickAccordionItemHeader(accordionItems.item(0));
-    checkAccordionItemCollapsed(accordionItems.item(0));
-    checkAccordionItemExpanded(accordionItems.item(1));
+    accordionItems[0].get(accordionItemSelector).click();
+    checkAccordionItemCollapsed(accordionItems[0]);
+    checkAccordionItemExpanded(accordionItems[1]);
   });
 
-  function clickGlobalSearchAndCheckMessage(globalSearch: HTMLElement) {
-    globalSearch.click();
-    fixture.detectChanges();
-    expect(globalSearch.querySelector('.message-with-spinner')).toBeTruthy();
-    expect(getSearchQueryButton().disabled).toBeTrue();
-  }
-
-  function getTextInput(i = 0): HTMLTextAreaElement {
-    return htmlElement
-      .querySelectorAll<HTMLTextAreaElement>('.query-field textarea')
-      .item(i);
-  }
-
-  function changeInput(
-    input: HTMLInputElement | HTMLTextAreaElement,
-    query: string,
+  function clickGlobalSearchAndCheckMessage(
+    globalSearch: DOMTestHelper<TestHostComponent>,
   ) {
-    input.value = query;
-    input.dispatchEvent(new Event('input'));
-    fixture.detectChanges();
+    globalSearch.click();
+    expect(dom.find('.message-with-spinner')).toBeDefined();
+    dom.get(searchQuerySelector).checkDisabled(true);
   }
 
-  function getSearchQueryButton(i = 0): HTMLButtonElement {
-    return htmlElement
-      .querySelectorAll<HTMLButtonElement>('.query-actions .search-button')
-      .item(i);
-  }
-
-  function clickSearchQueryButton(i = 0) {
-    getSearchQueryButton(i).click();
-    fixture.detectChanges();
+  function getTextInput(i = 0): DOMTestHelper<TestHostComponent> {
+    return dom.findAll('.query-field textarea')[i];
   }
 
   function runSearchByQueryButton(i = 0) {
-    changeInput(getTextInput(i), testQuery);
-    clickSearchQueryButton(i);
+    getTextInput(i).dispatchInput(testQuery);
+    dom.findAndClickByIndex(searchQuerySelector, i);
   }
 
   async function changeTab(index: number) {
     const matTabGroups = assertDefined(component.searchComponent?.matTabGroups);
     matTabGroups.first.selectedIndex = index;
-    fixture.detectChanges();
-    await fixture.whenStable();
+    await dom.detectChangesAndWaitStable();
   }
 
   async function checkRunQueryFromOptionsWhenResultPresent(tabIndex: number) {
@@ -452,63 +384,46 @@ describe('ViewerSearchComponent', () => {
     data.currentSearches[0].query = testQuery;
     data.currentSearches[0].result = new SearchResult([], []);
     let query: string | undefined;
-    htmlElement
-      .querySelector('viewer-search')
-      ?.addEventListener(ViewerEvents.AddQueryClick, (event) => {
+    dom
+      .get('viewer-search')
+      .addEventListener(ViewerEvents.AddQueryClick, (event) => {
         const detail: AddQueryClickDetail = (event as CustomEvent).detail;
         query = detail.query;
       });
     updateInputDataAndDetectChanges(data);
 
     await changeTab(tabIndex);
-    runSearchFromListedSearchOption();
+    dom.findAndClick(listedSearchSelector);
     expect(query).toEqual(testQuery);
     await changeTab(0);
     runSearchAndCheckHandled(addCurrentSearchWithResult);
-    const activeSections = htmlElement.querySelectorAll('active-search');
-    expect(activeSections.length).toEqual(2);
-  }
-
-  function runSearchFromListedSearchOption() {
-    assertDefined(
-      htmlElement.querySelector<HTMLElement>('.listed-search-option'),
-    ).click();
-    fixture.detectChanges();
+    expect(dom.findAll('active-search').length).toEqual(2);
   }
 
   function runSearchAndCheckHandled(runSearch: () => void) {
     let query: string | undefined;
-    htmlElement
-      .querySelector('viewer-search')
-      ?.addEventListener(ViewerEvents.SearchQueryClick, (event) => {
+    dom
+      .get('viewer-search')
+      .addEventListener(ViewerEvents.SearchQueryClick, (event) => {
         const detail: SearchQueryClickDetail = (event as CustomEvent).detail;
         query = detail.query;
       });
     runSearch();
     expect(query).toEqual(testQuery);
-    expect(getSearchQueryButton().disabled).toBeTrue();
-    const runningQueryMessage = assertDefined(
-      htmlElement.querySelector('.running-query-message'),
-    );
-    expect(runningQueryMessage.textContent?.trim()).toEqual(
-      'timer Calculating results',
-    );
-    expect(runningQueryMessage.querySelector('mat-spinner')).toBeTruthy();
-  }
-
-  function pressEnter(input: HTMLInputElement, shiftKey = false) {
-    input.dispatchEvent(new KeyboardEvent('keydown', {key: 'Enter', shiftKey}));
-    fixture.detectChanges();
+    dom.get(searchQuerySelector).checkDisabled(true);
+    const runningQueryMessage = dom.get('.running-query-message');
+    runningQueryMessage.checkTextExact('timer Calculating results');
+    expect(runningQueryMessage.find('mat-spinner')).toBeDefined();
   }
 
   async function checkEditQueryFromOptionsWhenResultPresent(tabIndex: number) {
     component.inputData.currentSearches[0].result = new SearchResult([], []);
-    fixture.detectChanges();
+    dom.detectChanges();
 
     let query: string | undefined;
-    htmlElement
-      .querySelector('viewer-search')
-      ?.addEventListener(ViewerEvents.AddQueryClick, (event) => {
+    dom
+      .get('viewer-search')
+      .addEventListener(ViewerEvents.AddQueryClick, (event) => {
         const detail: AddQueryClickDetail = (event as CustomEvent).detail;
         query = detail.query;
       });
@@ -522,34 +437,30 @@ describe('ViewerSearchComponent', () => {
     const data = structuredClone(component.inputData);
     data.currentSearches.push(new CurrentSearch(2, testQuery));
     updateInputDataAndDetectChanges(data);
-    fixture.detectChanges();
-    await fixture.whenStable();
+    await dom.detectChangesAndWaitStable();
     expect(
       component.searchComponent?.matTabGroups?.first.selectedIndex,
     ).toEqual(0);
-    expect(getTextInput(0).value).toEqual('');
-    expect(getTextInput(1).value).toEqual(testQuery);
+    getTextInput(0).checkValue('');
+    getTextInput(1).checkValue(testQuery);
   }
 
   async function checkEditQueryFromOptions(tabIndex: number) {
-    fixture.detectChanges();
+    dom.detectChanges();
     const input = getTextInput();
-    expect(input.value).toEqual('');
+    expect(input.checkValue(''));
     await changeTabAndClickEdit(tabIndex);
     expect(
       component.searchComponent?.matTabGroups?.first.selectedIndex,
     ).toEqual(0);
-    expect(input.value).toEqual(testQuery);
+    expect(input.checkValue(testQuery));
   }
 
   async function changeTabAndClickEdit(tabIndex: number) {
     await changeTab(tabIndex);
-    const listedSearchButton = assertDefined(
-      htmlElement.querySelectorAll<HTMLElement>('.listed-search-option'),
-    );
-    listedSearchButton.item(1).click();
-    fixture.detectChanges();
-    await fixture.whenStable();
+    const listedSearchButton = dom.findAll('.listed-search-option');
+    listedSearchButton[1].click();
+    await dom.whenStable();
   }
 
   function addCurrentSearchWithResult(q = testQuery, uid = 2) {
@@ -559,33 +470,19 @@ describe('ViewerSearchComponent', () => {
     updateInputDataAndDetectChanges(data);
   }
 
-  function getAccordionItemHeader(item: HTMLElement) {
-    return assertDefined(
-      item.querySelector<HTMLElement>('.accordion-item-header'),
-    );
+  function checkAccordionItemCollapsed(item: DOMTestHelper<TestHostComponent>) {
+    item.get(accordionItemSelector).checkText('chevron_right');
+    expect(item.find('.accordion-item-body')).toBeUndefined();
   }
 
-  function clickAccordionItemHeader(item: HTMLElement) {
-    const header = getAccordionItemHeader(item);
-    header.click();
-    fixture.detectChanges();
-  }
-
-  function checkAccordionItemCollapsed(item: HTMLElement) {
-    const header = getAccordionItemHeader(item);
-    expect(header.textContent).toContain('chevron_right');
-    expect(item.querySelector('.accordion-item-body')).toBeNull();
-  }
-
-  function checkAccordionItemExpanded(item: HTMLElement) {
-    const header = getAccordionItemHeader(item);
-    expect(header.textContent).toContain('arrow_drop_down');
-    expect(item.querySelector('.accordion-item-body')).toBeTruthy();
+  function checkAccordionItemExpanded(item: DOMTestHelper<TestHostComponent>) {
+    item.get(accordionItemSelector).checkText('arrow_drop_down');
+    expect(item.find('.accordion-item-body')).toBeDefined();
   }
 
   function updateInputDataAndDetectChanges(data: UiData) {
     component.inputData = data;
-    fixture.detectChanges();
+    dom.detectChanges();
   }
 
   @Component({

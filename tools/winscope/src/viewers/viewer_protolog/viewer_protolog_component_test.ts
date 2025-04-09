@@ -14,123 +14,38 @@
  * limitations under the License.
  */
 
-import {
-  CdkVirtualScrollViewport,
-  ScrollingModule,
-} from '@angular/cdk/scrolling';
-import {
-  ComponentFixture,
-  ComponentFixtureAutoDetect,
-  TestBed,
-} from '@angular/core/testing';
-import {FormsModule} from '@angular/forms';
-import {MatButtonModule} from '@angular/material/button';
-import {MatFormFieldModule} from '@angular/material/form-field';
-import {MatIconModule} from '@angular/material/icon';
-import {MatInputModule} from '@angular/material/input';
-import {MatSelectModule} from '@angular/material/select';
-import {BrowserAnimationsModule} from '@angular/platform-browser/animations';
-import {assertDefined} from 'common/assert_utils';
+import {CdkVirtualScrollViewport} from '@angular/cdk/scrolling';
 import {TimestampConverterUtils} from 'common/time/test_utils';
+import {DOMTestHelper} from 'test/unit/dom_test_utils';
 import {PropertyTreeBuilder} from 'test/unit/property_tree_builder';
 import {TraceBuilder} from 'test/unit/trace_builder';
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
+import {AbstractLogViewerComponentTest} from 'viewers/common/abstract_log_viewer_component_test';
 import {LogSelectFilter} from 'viewers/common/log_filters';
-import {executeScrollComponentTests} from 'viewers/common/scroll_component_tests';
 import {LogHeader} from 'viewers/common/ui_data_log';
-import {LogComponent} from 'viewers/components/log_component';
-import {SearchBoxComponent} from 'viewers/components/search_box_component';
-import {SelectWithFilterComponent} from 'viewers/components/select_with_filter_component';
 import {ProtologScrollDirective} from './scroll_strategy/protolog_scroll_directive';
 import {ProtologEntry, UiData} from './ui_data';
 import {ViewerProtologComponent} from './viewer_protolog_component';
 
-describe('ViewerProtologComponent', () => {
-  const testSpec = {name: 'Test Column', cssClass: 'test-class'};
-  const testField = {spec: testSpec, value: 'VALUE'};
-  let fixture: ComponentFixture<ViewerProtologComponent>;
-  let component: ViewerProtologComponent;
-  let htmlElement: HTMLElement;
+class ViewerProtologComponentTest extends AbstractLogViewerComponentTest<ViewerProtologComponent> {
+  protected override readonly testProperties = false;
+  protected override readonly hasCurrentTimeButton = true;
+  protected override readonly testScroll = true;
 
-  describe('Main component', () => {
-    beforeEach(async () => {
-      await setUpTestEnvironment();
-    });
-
-    it('can be created', () => {
-      expect(component).toBeTruthy();
-    });
-
-    it('render headers as filters', () => {
-      expect(
-        htmlElement.querySelector(
-          `.headers .filter.${testSpec.cssClass.split(' ')[0]}`,
-        ),
-      ).toBeTruthy();
-    });
-
-    it('renders entries with field values and no trace timestamp', () => {
-      expect(htmlElement.querySelector('.scroll')).toBeTruthy();
-      const entry = assertDefined(
-        htmlElement.querySelector(
-          `.scroll .entry .${testSpec.cssClass.split(' ')[0]}`,
-        ),
-      );
-      expect(entry.textContent).toContain('VALUE');
-
-      const entryTimestamp = assertDefined(
-        htmlElement.querySelector('.scroll .entry .time'),
-      );
-      expect(entryTimestamp.textContent?.trim()).toEqual('10ns');
-    });
-
-    it('shows go to current time button', () => {
-      expect(htmlElement.querySelector('.go-to-current-time')).toBeTruthy();
-    });
-  });
-
-  describe('Scroll component', () => {
-    executeScrollComponentTests(setUpTestEnvironment);
-  });
-
-  async function setUpTestEnvironment(): Promise<
-    [
-      ComponentFixture<ViewerProtologComponent>,
-      HTMLElement,
-      CdkVirtualScrollViewport,
-    ]
-  > {
-    await TestBed.configureTestingModule({
-      providers: [{provide: ComponentFixtureAutoDetect, useValue: true}],
-      imports: [
-        ScrollingModule,
-        MatFormFieldModule,
-        FormsModule,
-        MatInputModule,
-        BrowserAnimationsModule,
-        MatSelectModule,
-        MatButtonModule,
-        MatIconModule,
-      ],
-      declarations: [
-        ViewerProtologComponent,
-        SelectWithFilterComponent,
-        LogComponent,
-        ProtologScrollDirective,
-        SearchBoxComponent,
-      ],
-    }).compileComponents();
-    fixture = TestBed.createComponent(ViewerProtologComponent);
-    component = fixture.componentInstance;
-    htmlElement = fixture.nativeElement;
-
-    component.inputData = makeUiData();
-    fixture.detectChanges();
-    const viewport = assertDefined(component.logComponent?.scrollComponent);
-    return [fixture, htmlElement, viewport];
+  protected override checkTimestampInTable(
+    dom: DOMTestHelper<ViewerProtologComponent>,
+  ): void {
+    const entryTimestamp = dom.get('.scroll .entry .time');
+    entryTimestamp.checkTextExact('10ns');
   }
 
-  function makeUiData(): UiData {
+  protected async setUpTestEnvironment(): Promise<
+    [
+      DOMTestHelper<ViewerProtologComponent>,
+      CdkVirtualScrollViewport,
+      ViewerProtologComponent,
+    ]
+  > {
     const propertiesTree = new PropertyTreeBuilder()
       .setRootId('Protolog')
       .setName('tree')
@@ -149,9 +64,9 @@ describe('ViewerProtologComponent', () => {
     for (let i = 0; i < 200; i++) {
       messages.push(
         new ProtologEntry(traceEntry, [
-          testField,
-          testField,
-          testField,
+          this.testField,
+          this.testField,
+          this.testField,
           {
             spec: {name: 'Test Column Text', cssClass: 'test-class-text'},
             value: i % 2 === 0 ? shortMessage : longMessage,
@@ -159,12 +74,21 @@ describe('ViewerProtologComponent', () => {
         ]),
       );
     }
-    return new UiData(
-      [new LogHeader(testSpec, new LogSelectFilter([]))],
+    const uiData = new UiData(
+      [new LogHeader(this.testSpec, new LogSelectFilter([]))],
       messages,
       150,
       undefined,
       undefined,
     );
+    return await this.initializeTestEnvironment(
+      uiData,
+      ViewerProtologComponent,
+      [ProtologScrollDirective],
+    );
   }
+}
+
+describe('ViewerProtologComponent', () => {
+  new ViewerProtologComponentTest().execute();
 });

@@ -89,7 +89,7 @@ export class ParserSearch implements Parser<QueryResult> {
   }
 
   async parse() {
-    const tp = await TraceProcessorFactory.getSingleInstance();
+    const tp = TraceProcessorFactory.getSingleInstance();
     try {
       this.queryResult = await tp.queryAllRows(this.query);
       if (this.hasTimestamps() && this.queryResult.numRows() > 0) {

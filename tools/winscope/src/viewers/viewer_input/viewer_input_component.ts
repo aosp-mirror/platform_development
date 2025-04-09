@@ -14,11 +14,12 @@
  * limitations under the License.
  */
 
-import {Component, Input} from '@angular/core';
+import {Component, Input, ViewChild} from '@angular/core';
 import {TraceType} from 'trace/trace_type';
 import {CollapsibleSections} from 'viewers/common/collapsible_sections';
 import {CollapsibleSectionType} from 'viewers/common/collapsible_section_type';
 import {ViewerEvents} from 'viewers/common/viewer_events';
+import {LogComponent} from 'viewers/components/log_component';
 import {ShadingMode} from 'viewers/components/rects/shading_mode';
 import {
   viewerCardInnerStyle,
@@ -116,6 +117,7 @@ import {UiData} from './ui_data';
   ],
 })
 export class ViewerInputComponent extends ViewerComponent<UiData> {
+  @ViewChild(LogComponent) logComponent?: LogComponent;
   @Input() active = false;
   TraceType = TraceType;
   CollapsibleSectionType = CollapsibleSectionType;

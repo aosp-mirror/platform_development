@@ -14,19 +14,19 @@
  * limitations under the License.
  */
 
-import {ComponentFixture, TestBed} from '@angular/core/testing';
+import {TestBed} from '@angular/core/testing';
 import {MatButtonModule} from '@angular/material/button';
 import {MatIconModule} from '@angular/material/icon';
 import {assertDefined} from 'common/assert_utils';
+import {DOMTestHelper} from 'test/unit/dom_test_utils';
 import {TraceType} from 'trace/trace_type';
 import {VISIBLE_CHIP} from 'viewers/common/chip';
 import {UserOptions} from 'viewers/common/user_options';
 import {UserOptionsComponent} from './user_options_component';
 
 describe('UserOptionsComponent', () => {
-  let fixture: ComponentFixture<UserOptionsComponent>;
   let component: UserOptionsComponent;
-  let htmlElement: HTMLElement;
+  let dom: DOMTestHelper<UserOptionsComponent>;
   const testEventType = 'TestEventType';
 
   beforeEach(async () => {
@@ -34,9 +34,9 @@ describe('UserOptionsComponent', () => {
       imports: [MatButtonModule, MatIconModule],
       declarations: [UserOptionsComponent],
     }).compileComponents();
-    fixture = TestBed.createComponent(UserOptionsComponent);
+    const fixture = TestBed.createComponent(UserOptionsComponent);
     component = fixture.componentInstance;
-    htmlElement = fixture.nativeElement;
+    dom = new DOMTestHelper(fixture, fixture.nativeElement);
     component.userOptions = {
       option1: {
         name: 'option 1',
@@ -58,7 +58,7 @@ describe('UserOptionsComponent', () => {
     };
     component.eventType = testEventType;
     component.traceType = TraceType.SURFACE_FLINGER;
-    fixture.detectChanges();
+    dom.detectChanges();
   });
 
   it('can be created', () => {
@@ -66,47 +66,37 @@ describe('UserOptionsComponent', () => {
   });
 
   it('displays options', () => {
-    const options = htmlElement.querySelectorAll('.user-option');
+    const options = dom.findAll('.user-option');
     expect(options.length).toEqual(3);
 
-    expect(options.item(0).textContent).toContain('option 1');
-    expect(options.item(0).querySelector('.user-option-chip')).toBeNull();
-    expect(options.item(0).querySelector('.mat-icon')).toBeNull();
+    options[0].checkText('option 1');
+    expect(options[0].find('.user-option-chip')).toBeUndefined();
+    expect(options[0].find('.mat-icon')).toBeUndefined();
 
-    expect(options.item(1).textContent).toContain('option with chip');
-    expect(
-      options.item(1).querySelector('.user-option-chip')?.textContent,
-    ).toContain('V');
-    expect(options.item(1).querySelector('.mat-icon')).toBeNull();
+    options[1].checkText('option with chip');
+    options[1].get('.user-option-chip').checkText('V');
+    expect(options[1].find('.mat-icon')).toBeUndefined();
 
-    expect(options.item(2).textContent).toContain('option with icon');
-    expect(options.item(2).querySelector('.user-option-chip')).toBeNull();
-    expect(options.item(2).querySelector('.mat-icon')?.textContent).toContain(
-      'visibility',
-    );
+    options[2].checkText('option with icon');
+    expect(options[2].find('.user-option-chip')).toBeUndefined();
+    options[2].get('.mat-icon').checkTextExact('visibility');
   });
 
   it('disables option if unavailable', () => {
-    let option = assertDefined(htmlElement.querySelector('.user-option'));
-    expect((option as HTMLButtonElement).disabled).toBeFalse();
-
+    const option = dom.get('.user-option');
+    option.checkDisabled(false);
     component.userOptions['option1'].isUnavailable = true;
-    fixture.detectChanges();
-    option = assertDefined(htmlElement.querySelector('.user-option'));
-    expect((option as HTMLInputElement).disabled).toBeTrue();
+    dom.detectChanges();
+    option.checkDisabled(true);
   });
 
   it('emits event on user option change', () => {
     let options: UserOptions | undefined;
-    htmlElement.addEventListener(testEventType, (event) => {
+    dom.addEventListener(testEventType, (event) => {
       options = (event as CustomEvent).detail.userOptions;
     });
     const logSpy = spyOn(component, 'logCallback');
-    const option = assertDefined(
-      htmlElement.querySelector('.user-option'),
-    ) as HTMLInputElement;
-    option.click();
-    fixture.detectChanges();
+    dom.findAndClick('.user-option');
     expect(assertDefined(options)['option1'].enabled).toBeTrue();
     expect(logSpy).toHaveBeenCalled();
   });

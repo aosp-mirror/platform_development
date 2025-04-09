@@ -13,31 +13,28 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import {ComponentFixture, TestBed} from '@angular/core/testing';
+import {TestBed} from '@angular/core/testing';
 import {MatTooltipModule} from '@angular/material/tooltip';
-import {assertDefined} from 'common/assert_utils';
+import {DOMTestHelper} from 'test/unit/dom_test_utils';
 import {TreeNodeUtils} from 'test/unit/tree_node_utils';
-import {UnitTestUtils} from 'test/unit/utils';
 import {VISIBLE_CHIP} from 'viewers/common/chip';
 import {UiHierarchyTreeNode} from 'viewers/common/ui_hierarchy_tree_node';
 import {HierarchyTreeNodeDataViewComponent} from './hierarchy_tree_node_data_view_component';
 
 describe('HierarchyTreeNodeDataViewComponent', () => {
   let testNode: UiHierarchyTreeNode;
-  let fixture: ComponentFixture<HierarchyTreeNodeDataViewComponent>;
   let component: HierarchyTreeNodeDataViewComponent;
-  let htmlElement: HTMLElement;
+  let dom: DOMTestHelper<HierarchyTreeNodeDataViewComponent>;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       declarations: [HierarchyTreeNodeDataViewComponent],
       imports: [MatTooltipModule],
     }).compileComponents();
-    fixture = TestBed.createComponent(HierarchyTreeNodeDataViewComponent);
+    const fixture = TestBed.createComponent(HierarchyTreeNodeDataViewComponent);
     component = fixture.componentInstance;
-    htmlElement = fixture.nativeElement;
-    fixture.detectChanges();
-
+    dom = new DOMTestHelper(fixture, fixture.nativeElement);
+    dom.detectChanges();
     testNode = TreeNodeUtils.makeUiHierarchyNode({
       id: 1,
       name: 'test node',
@@ -50,34 +47,26 @@ describe('HierarchyTreeNodeDataViewComponent', () => {
 
   it('shows node heading if set', () => {
     component.node = testNode;
-    fixture.detectChanges();
-    expect(htmlElement.textContent).toEqual('1 - test node');
+    dom.detectChanges();
+    dom.checkTextExact('1 - test node');
     testNode.setShowHeading(false);
-    fixture.detectChanges();
-    expect(htmlElement.textContent).toEqual('test node');
+    dom.detectChanges();
+    dom.checkTextExact('test node');
   });
 
-  it('shows display name if set, with full name on hover', () => {
+  it('shows display name if set, with full name on hover', async () => {
     testNode.setDisplayName('display name');
     component.node = testNode;
-    fixture.detectChanges();
-    expect(htmlElement.textContent).toEqual('1 - display name');
-    const displayName = assertDefined(
-      htmlElement.querySelector<HTMLElement>('.display-name'),
-    );
-    UnitTestUtils.checkTooltips([displayName], ['test node'], fixture);
+    dom.detectChanges();
+    dom.checkTextExact('1 - display name');
+    await dom.get('.display-name').checkTooltip('test node');
   });
 
-  it('shows chips with tooltip on hover', () => {
+  it('shows chips with tooltip on hover', async () => {
     testNode.addChip(VISIBLE_CHIP);
     component.node = testNode;
-    fixture.detectChanges();
-    expect(htmlElement.textContent?.trim()).toEqual(
-      `1 - test node ${VISIBLE_CHIP.short}`,
-    );
-    const chip = assertDefined(
-      htmlElement.querySelector<HTMLElement>('.tree-view-chip'),
-    );
-    UnitTestUtils.checkTooltips([chip], [VISIBLE_CHIP.long], fixture);
+    dom.detectChanges();
+    dom.checkTextExact(`1 - test node ${VISIBLE_CHIP.short}`);
+    await dom.get('.tree-view-chip').checkTooltip(VISIBLE_CHIP.long);
   });
 });

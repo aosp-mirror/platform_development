@@ -81,13 +81,15 @@ import {UploadTracesComponent} from './upload_traces_component';
   encapsulation: ViewEncapsulation.None,
   template: `
     <mat-toolbar class="toolbar">
-      <div class="horizontal-align vertical-align">
-        <img class="app-title fixed" [src]="getLogoUrl()"/>
+      <div class="horizontal-align vertical-align fixed">
+        <img class="app-title" [src]="getLogoUrl()"/>
       </div>
 
       <div class="horizontal-align vertical-align">
         <div *ngIf="showDataLoadedElements" class="download-files-section">
-          <div class="file-descriptor vertical-align">
+          <div
+            class="file-descriptor vertical-align"
+            [class.file-warning]="packetLossWarning() !== undefined">
             <button
               mat-icon-button
               *ngIf="showCrossToolSyncButton()"
@@ -97,6 +99,10 @@ import {UploadTracesComponent} from './upload_traces_component';
               [color]="getCrossToolSyncButtonColor()">
               <mat-icon class="material-symbols-outlined">cloud_sync</mat-icon>
             </button>
+            <mat-icon
+              *ngIf="packetLossWarning()"
+              [matTooltip]="packetLossWarning()"
+              class="warning-icon fixed">warning</mat-icon>
             <span *ngIf="!isEditingFilename" class="download-file-info mat-body-2">
               {{ filenameFormControl.value }}
             </span>
@@ -285,7 +291,14 @@ import {UploadTracesComponent} from './upload_traces_component';
       .file-descriptor {
         font-size: 14px;
         padding-left: 10px;
-        max-width: 700px;
+        max-width: 750px;
+      }
+      .file-warning  {
+        border: solid 2px var(--warning-color);
+        background: var(--warning-background-color);
+      }
+      .file-descriptor .warning-icon {
+        padding-inline-end: 4px;
       }
       .download-file-info {
         text-overflow: ellipsis;
@@ -628,15 +641,15 @@ export class AppComponent implements WinscopeEventListener {
     this.setDarkMode(!this.isDarkModeOn);
   }
 
-  dumpsUploaded() {
+  dumpsUploaded(): boolean {
     return !this.timelineData.hasMoreThanOneDistinctTimestamp();
   }
 
-  showCrossToolSyncButton() {
+  showCrossToolSyncButton(): boolean {
     return this.crossToolProtocol.isConnected();
   }
 
-  getCrossToolSyncTooltip() {
+  getCrossToolSyncTooltip(): string {
     const currStatus = this.crossToolProtocol.getAllowTimestampSync();
 
     return `Cross Tool Sync ${this.translateStatus(
@@ -653,10 +666,20 @@ export class AppComponent implements WinscopeEventListener {
     );
   }
 
-  getCrossToolSyncButtonColor() {
+  getCrossToolSyncButtonColor(): string {
     return this.crossToolProtocol.getAllowTimestampSync()
       ? 'primary'
       : 'accent';
+  }
+
+  packetLossWarning(): string | undefined {
+    const lostPackets = this.tracePipeline.lostPackets();
+    if (lostPackets === 0) {
+      return undefined;
+    }
+    return `${lostPackets} Perfetto packet${
+      lostPackets > 1 ? 's' : ''
+    } lost during tracing - data may be incomplete`;
   }
 
   private goToLink(url: string) {
