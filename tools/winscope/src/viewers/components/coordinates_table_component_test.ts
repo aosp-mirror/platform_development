@@ -14,11 +14,10 @@
  * limitations under the License.
  */
 
-import {ComponentFixture, TestBed} from '@angular/core/testing';
+import {TestBed} from '@angular/core/testing';
 import {CoordinatesTableComponent} from './coordinates_table_component';
 
 describe('CoordinatesTableComponent', () => {
-  let fixture: ComponentFixture<CoordinatesTableComponent>;
   let component: CoordinatesTableComponent;
 
   beforeAll(async () => {
@@ -28,7 +27,7 @@ describe('CoordinatesTableComponent', () => {
   });
 
   beforeEach(() => {
-    fixture = TestBed.createComponent(CoordinatesTableComponent);
+    const fixture = TestBed.createComponent(CoordinatesTableComponent);
     component = fixture.componentInstance;
   });
 

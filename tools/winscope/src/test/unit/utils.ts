@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-import {ComponentFixture} from '@angular/core/testing';
 import {assertDefined, assertTrue} from 'common/assert_utils';
 import {TimestampConverterUtils} from 'common/time/test_utils';
 import {TimestampConverter} from 'common/time/timestamp_converter';
@@ -309,26 +308,6 @@ class UnitTestUtils {
       .setDescriptors(descriptors)
       .setType(traceType)
       .build();
-  }
-
-  static async checkTooltips<T>(
-    elements: Element[],
-    expTooltips: Array<string | undefined>,
-    fixture: ComponentFixture<T>,
-  ) {
-    for (const [index, el] of elements.entries()) {
-      el.dispatchEvent(new Event('mouseenter'));
-      fixture.detectChanges();
-      const panel = document.querySelector<HTMLElement>('.mat-tooltip-panel');
-      if (expTooltips[index] !== undefined) {
-        expect(panel?.textContent).toEqual(expTooltips[index]);
-      } else {
-        expect(panel).toBeNull();
-      }
-      el.dispatchEvent(new Event('mouseleave'));
-      fixture.detectChanges();
-      await fixture.whenStable();
-    }
   }
 
   static makeFakeWebSocket(): jasmine.SpyObj<WebSocket> {

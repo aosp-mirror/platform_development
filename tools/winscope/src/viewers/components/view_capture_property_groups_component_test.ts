@@ -14,22 +14,17 @@
  * limitations under the License.
  */
 import {Component} from '@angular/core';
-import {
-  ComponentFixture,
-  ComponentFixtureAutoDetect,
-  TestBed,
-} from '@angular/core/testing';
+import {ComponentFixtureAutoDetect, TestBed} from '@angular/core/testing';
 import {MatDividerModule} from '@angular/material/divider';
 import {MatTooltipModule} from '@angular/material/tooltip';
-import {assertDefined} from 'common/assert_utils';
+import {DOMTestHelper} from 'test/unit/dom_test_utils';
 import {VcCuratedProperties} from 'viewers/common/curated_properties';
 import {TransformMatrixComponent} from './transform_matrix_component';
 import {ViewCapturePropertyGroupsComponent} from './view_capture_property_groups_component';
 
 describe('ViewCapturePropertyGroupsComponent', () => {
-  let fixture: ComponentFixture<TestHostComponent>;
   let component: TestHostComponent;
-  let htmlElement: HTMLElement;
+  let dom: DOMTestHelper<TestHostComponent>;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
@@ -41,10 +36,10 @@ describe('ViewCapturePropertyGroupsComponent', () => {
         TransformMatrixComponent,
       ],
     }).compileComponents();
-    fixture = TestBed.createComponent(TestHostComponent);
+    const fixture = TestBed.createComponent(TestHostComponent);
     component = fixture.componentInstance;
-    htmlElement = fixture.nativeElement;
-    fixture.detectChanges();
+    dom = new DOMTestHelper(fixture, fixture.nativeElement);
+    dom.detectChanges();
   });
 
   it('can be created', () => {
@@ -52,112 +47,52 @@ describe('ViewCapturePropertyGroupsComponent', () => {
   });
 
   it('displays view section', () => {
-    const viewSection = assertDefined(htmlElement.querySelector('.view'));
-    expect(
-      assertDefined(viewSection.querySelector('.class-name')).innerHTML,
-    ).toContain('test.package.name');
-    expect(
-      assertDefined(viewSection.querySelector('.hashcode')).innerHTML,
-    ).toContain('12345678');
+    const section = dom.get('.view');
+    section.get('.class-name').checkText('test.package.name');
+    section.get('.hashcode').checkText('12345678');
   });
 
   it('displays geometry coordinates section', () => {
-    const coordinatesSection = assertDefined(
-      htmlElement.querySelector('.geometry .coordinates'),
-    );
-    const left = assertDefined(coordinatesSection.querySelector('.left'));
-    expect(left.innerHTML).toContain('Left:');
-    expect(left.innerHTML).toContain('0');
-    const top = assertDefined(coordinatesSection.querySelector('.top'));
-    expect(top.innerHTML).toContain('Top:');
-    expect(top.innerHTML).toContain('5');
-    const elevation = assertDefined(
-      coordinatesSection.querySelector('.elevation'),
-    );
-    expect(elevation.innerHTML).toContain('Elevation:');
-    expect(elevation.innerHTML).toContain('2');
+    const section = dom.get('.geometry .coordinates');
+    section.get('.left').checkTextExact('Left:  0');
+    section.get('.top').checkTextExact('Top:  5');
+    section.get('.elevation').checkTextExact('Elevation:  2');
   });
 
   it('displays geometry size section', () => {
-    const sizeSection = assertDefined(
-      htmlElement.querySelector('.geometry .size'),
-    );
-    const height = assertDefined(sizeSection.querySelector('.height'));
-    expect(height.innerHTML).toContain('Height:');
-    expect(height.innerHTML).toContain('86');
-    const width = assertDefined(sizeSection.querySelector('.width'));
-    expect(width.innerHTML).toContain('Width:');
-    expect(width.innerHTML).toContain('826');
+    const section = dom.get('.geometry .size');
+    section.get('.height').checkTextExact('Height:  86');
+    section.get('.width').checkTextExact('Width:  826');
   });
 
   it('displays geometry translation section', () => {
-    const translationSection = assertDefined(
-      htmlElement.querySelector('.geometry .translation'),
-    );
-    const translationx = assertDefined(
-      translationSection.querySelector('.translationx'),
-    );
-    expect(translationx.innerHTML).toContain('Translation X:');
-    expect(translationx.innerHTML).toContain('0');
-    const translationy = assertDefined(
-      translationSection.querySelector('.translationy'),
-    );
-    expect(translationy.innerHTML).toContain('Translation Y:');
-    expect(translationy.innerHTML).toContain('0');
+    const section = dom.get('.geometry .translation');
+    section.get('.translationx').checkTextExact('Translation X:  0');
+    section.get('.translationy').checkTextExact('Translation Y:  0');
   });
 
   it('displays geometry scroll section', () => {
-    const scrollSection = assertDefined(
-      htmlElement.querySelector('.geometry .scroll'),
-    );
-    const scrollx = assertDefined(scrollSection.querySelector('.scrollx'));
-    expect(scrollx.innerHTML).toContain('Scroll X:');
-    expect(scrollx.innerHTML).toContain('1');
-    const scrolly = assertDefined(scrollSection.querySelector('.scrolly'));
-    expect(scrolly.innerHTML).toContain('Scroll Y:');
-    expect(scrolly.innerHTML).toContain('1');
+    const section = dom.get('.geometry .scroll');
+    section.get('.scrollx').checkTextExact('Scroll X:  1');
+    section.get('.scrolly').checkTextExact('Scroll Y:  1');
   });
 
   it('displays geometry scale section', () => {
-    const scaleSection = assertDefined(
-      htmlElement.querySelector('.geometry .scale'),
-    );
-    const scalex = assertDefined(scaleSection.querySelector('.scalex'));
-    expect(scalex.innerHTML).toContain('Scale X:');
-    expect(scalex.innerHTML).toContain('2');
-    const scaley = assertDefined(scaleSection.querySelector('.scaley'));
-    expect(scaley.innerHTML).toContain('Scale Y:');
-    expect(scaley.innerHTML).toContain('2');
+    const section = dom.get('.geometry .scale');
+    section.get('.scalex').checkTextExact('Scale X:  2');
+    section.get('.scaley').checkTextExact('Scale Y:  2');
   });
 
   it('displays effects translation section', () => {
-    const translationSection = assertDefined(
-      htmlElement.querySelector('.effects .translation'),
-    );
-    const visibility = assertDefined(
-      translationSection.querySelector('.visibility'),
-    );
-    expect(visibility.innerHTML).toContain('Visibility:');
-    expect(visibility.innerHTML).toContain('0');
-    const alpha = assertDefined(translationSection.querySelector('.alpha'));
-    expect(alpha.innerHTML).toContain('Alpha:');
-    expect(alpha.innerHTML).toContain('1');
-    const willNotDraw = assertDefined(
-      translationSection.querySelector('.will-not-draw'),
-    );
-    expect(willNotDraw.innerHTML).toContain('Will Not Draw:');
-    expect(willNotDraw.innerHTML).toContain('true');
+    const section = dom.get('.effects .translation');
+    section.get('.visibility').checkTextExact('Visibility:  0');
+    section.get('.alpha').checkTextExact('Alpha:  1');
+    section.get('.will-not-draw').checkTextExact('Will Not Draw:  true');
   });
 
   it('displays effects misc section', () => {
-    const miscSection = assertDefined(
-      htmlElement.querySelector('.effects .misc'),
-    );
-    const clipChildren = assertDefined(
-      miscSection.querySelector('.clip-children'),
-    );
-    expect(clipChildren.innerHTML).toContain('Clip Children:');
-    expect(clipChildren.innerHTML).toContain('false');
+    const section = dom.get('.effects .misc');
+    section.get('.clip-children').checkTextExact('Clip Children:  false');
   });
 
   @Component({

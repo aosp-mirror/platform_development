@@ -13,11 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import {ComponentFixture, TestBed} from '@angular/core/testing';
+import {TestBed} from '@angular/core/testing';
 import {PropertiesTableComponent} from './properties_table_component';
 
 describe('PropertiesTableComponent', () => {
-  let fixture: ComponentFixture<PropertiesTableComponent>;
   let component: PropertiesTableComponent;
 
   beforeAll(async () => {
@@ -27,7 +26,7 @@ describe('PropertiesTableComponent', () => {
   });
 
   beforeEach(() => {
-    fixture = TestBed.createComponent(PropertiesTableComponent);
+    const fixture = TestBed.createComponent(PropertiesTableComponent);
     component = fixture.componentInstance;
   });
 

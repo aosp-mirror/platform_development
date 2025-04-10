@@ -14,27 +14,26 @@
  * limitations under the License.
  */
 
-import {ComponentFixture, TestBed} from '@angular/core/testing';
+import {TestBed} from '@angular/core/testing';
 import {MatButtonModule} from '@angular/material/button';
 import {MatIconModule} from '@angular/material/icon';
-import {assertDefined} from 'common/assert_utils';
+import {DOMTestHelper} from 'test/unit/dom_test_utils';
 import {CollapsibleSectionTitleComponent} from './collapsible_section_title_component';
 
 describe('CollapsibleSectionTitleComponent', () => {
-  let fixture: ComponentFixture<CollapsibleSectionTitleComponent>;
   let component: CollapsibleSectionTitleComponent;
-  let htmlElement: HTMLElement;
+  let dom: DOMTestHelper<CollapsibleSectionTitleComponent>;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [MatButtonModule, MatIconModule],
       declarations: [CollapsibleSectionTitleComponent],
     }).compileComponents();
-    fixture = TestBed.createComponent(CollapsibleSectionTitleComponent);
+    const fixture = TestBed.createComponent(CollapsibleSectionTitleComponent);
     component = fixture.componentInstance;
-    htmlElement = fixture.nativeElement;
+    dom = new DOMTestHelper(fixture, fixture.nativeElement);
     component.title = 'collapsible section';
-    fixture.detectChanges();
+    dom.detectChanges();
   });
 
   it('can be created', () => {
@@ -42,18 +41,13 @@ describe('CollapsibleSectionTitleComponent', () => {
   });
 
   it('displays button and title', () => {
-    assertDefined(htmlElement.querySelector('button'));
-    const title = assertDefined(htmlElement.querySelector('.mat-title'));
-    expect(title.textContent).toContain('COLLAPSIBLE SECTION');
+    expect(dom.find('button')).toBeDefined();
+    dom.get('.mat-title').checkText('COLLAPSIBLE SECTION');
   });
 
   it('emits collapseButtonClicked event', () => {
     const spy = spyOn(component.collapseButtonClicked, 'emit');
-    const collapseButton = assertDefined(
-      htmlElement.querySelector('button'),
-    ) as HTMLElement;
-    collapseButton.click();
-    fixture.detectChanges();
+    dom.findAndClick('button');
     expect(spy).toHaveBeenCalledTimes(1);
   });
 });

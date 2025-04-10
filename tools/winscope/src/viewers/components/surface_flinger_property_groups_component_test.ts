@@ -14,15 +14,11 @@
  * limitations under the License.
  */
 import {Component} from '@angular/core';
-import {
-  ComponentFixture,
-  ComponentFixtureAutoDetect,
-  TestBed,
-} from '@angular/core/testing';
+import {ComponentFixtureAutoDetect, TestBed} from '@angular/core/testing';
 import {MatDividerModule} from '@angular/material/divider';
 import {MatIconModule} from '@angular/material/icon';
 import {MatTooltipModule} from '@angular/material/tooltip';
-import {assertDefined} from 'common/assert_utils';
+import {DOMTestHelper} from 'test/unit/dom_test_utils';
 import {TreeNodeUtils} from 'test/unit/tree_node_utils';
 import {EMPTY_OBJ_STRING} from 'trace/tree_node/formatters';
 import {SfCuratedProperties} from 'viewers/common/curated_properties';
@@ -32,9 +28,8 @@ import {SurfaceFlingerPropertyGroupsComponent} from './surface_flinger_property_
 import {TransformMatrixComponent} from './transform_matrix_component';
 
 describe('SurfaceFlingerPropertyGroupsComponent', () => {
-  let fixture: ComponentFixture<TestHostComponent>;
   let component: TestHostComponent;
-  let htmlElement: HTMLElement;
+  let dom: DOMTestHelper<TestHostComponent>;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
@@ -47,10 +42,10 @@ describe('SurfaceFlingerPropertyGroupsComponent', () => {
         CollapsibleSectionTitleComponent,
       ],
     }).compileComponents();
-    fixture = TestBed.createComponent(TestHostComponent);
+    const fixture = TestBed.createComponent(TestHostComponent);
     component = fixture.componentInstance;
-    htmlElement = fixture.nativeElement;
-    fixture.detectChanges();
+    dom = new DOMTestHelper(fixture, fixture.nativeElement);
+    dom.detectChanges();
   });
 
   it('can be created', () => {
@@ -58,22 +53,19 @@ describe('SurfaceFlingerPropertyGroupsComponent', () => {
   });
 
   it('renders flags', () => {
-    const flags = assertDefined(htmlElement.querySelector('.flags'));
-    expect(flags.innerHTML).toMatch('Flags:.*HIDDEN \\(0x1\\)');
+    dom.get('.flags').checkTextExact('Flags: HIDDEN (0x1)');
   });
 
   it('renders simple summary property', () => {
-    const summary = htmlElement.querySelectorAll('.summary').item(0);
-    expect(summary.textContent).toMatch(
-      'Invisible due to: reason 1, reason 2, reason 3',
-    );
+    dom
+      .get('.summary')
+      .checkTextExact('Invisible due to: reason 1, reason 2, reason 3');
   });
 
   it('renders interactive summary property', () => {
-    const summary = htmlElement.querySelectorAll('.summary').item(1);
-    expect(summary.textContent).toContain('Covered by:');
-    const button = assertDefined(summary.querySelector<HTMLElement>('button'));
-    expect(button.textContent).toMatch('1');
+    const summary = dom.findAll('.summary')[1];
+    summary.checkTextExact('Covered by:  1');
+    summary.get('button').checkTextExact('1');
   });
 
   it('emits highlighted id event from layer id in summary', () => {
@@ -84,51 +76,41 @@ describe('SurfaceFlingerPropertyGroupsComponent', () => {
   });
 
   it('displays calculated geometry', () => {
-    const calculatedDiv = assertDefined(
-      htmlElement.querySelector('.geometry .left-column'),
-    );
-    expect(calculatedDiv.querySelector('transform-matrix')).toBeTruthy();
-    expect(
-      assertDefined(calculatedDiv.querySelector('.crop')).innerHTML,
-    ).toContain(EMPTY_OBJ_STRING);
-    expect(
-      assertDefined(calculatedDiv.querySelector('.final-bounds')).innerHTML,
-    ).toContain(EMPTY_OBJ_STRING);
+    const calculatedDiv = dom.get('.geometry .left-column');
+    expect(calculatedDiv.find('transform-matrix')).toBeDefined();
+    calculatedDiv.get('.crop').checkTextExact('Crop: ' + EMPTY_OBJ_STRING);
+    calculatedDiv
+      .get('.final-bounds')
+      .checkTextExact('Final Bounds: ' + EMPTY_OBJ_STRING);
   });
 
   it('displays requested geometry', () => {
-    const requestedDiv = assertDefined(
-      htmlElement.querySelector('.geometry .right-column'),
-    );
-    expect(requestedDiv.querySelector('transform-matrix')).toBeTruthy();
+    const requestedDiv = dom.get('.geometry .right-column');
+    expect(requestedDiv.find('transform-matrix')).toBeDefined();
   });
 
   it('displays buffer info', () => {
-    const sizeDiv = htmlElement.querySelector('.buffer .size');
-    expect(assertDefined(sizeDiv).innerHTML).toContain(EMPTY_OBJ_STRING);
-    const currFrameDiv = htmlElement.querySelector('.buffer .frame-number');
-    expect(assertDefined(currFrameDiv).innerHTML).toContain('0');
-    const transformDiv = htmlElement.querySelector('.buffer .transform');
-    expect(assertDefined(transformDiv).innerHTML).toContain('IDENTITY');
-    const destFrameDiv = htmlElement.querySelector('.buffer .dest-frame');
-    expect(assertDefined(destFrameDiv).innerHTML).toContain(EMPTY_OBJ_STRING);
-    const ignoreFrameDiv = htmlElement.querySelector('.buffer .ignore-frame');
-    expect(assertDefined(ignoreFrameDiv).innerHTML).toContain(
-      'Destination Frame ignored because item has eIgnoreDestinationFrame flag set.',
-    );
+    dom.get('.buffer .size').checkTextExact('Size: ' + EMPTY_OBJ_STRING);
+    dom.get('.buffer .frame-number').checkTextExact('Frame Number: 0');
+    dom.get('.buffer .transform').checkTextExact('Transform: IDENTITY');
+    dom
+      .get('.buffer .dest-frame')
+      .checkTextExact('Destination Frame: ' + EMPTY_OBJ_STRING);
+    dom
+      .get('.buffer .ignore-frame')
+      .checkTextExact(
+        'Destination Frame ignored because item has eIgnoreDestinationFrame flag set.',
+      );
   });
 
   it('displays hierarchy info', () => {
-    const zDiv = htmlElement.querySelector('.hierarchy-info .z-order');
-    expect(assertDefined(zDiv).innerHTML).toContain('0');
-    const relParentDiv = htmlElement.querySelector(
-      '.hierarchy-info .rel-parent',
-    );
-    expect(assertDefined(relParentDiv).innerHTML).toContain('none');
-    const relChildrenDiv = assertDefined(
-      htmlElement.querySelector('.hierarchy-info .rel-children'),
-    );
-    expect(relChildrenDiv.innerHTML).toContain('none');
+    dom.get('.hierarchy-info .z-order').checkTextExact('Z-order: 0');
+    dom
+      .get('.hierarchy-info .rel-parent')
+      .checkTextExact('Relative Parent:  none');
+    dom
+      .get('.hierarchy-info .rel-children')
+      .checkTextExact('Relative Children:  none');
   });
 
   it('emits highlighted id event from layer id in rel z parent', () => {
@@ -137,7 +119,7 @@ describe('SurfaceFlingerPropertyGroupsComponent', () => {
       nodeId: '1 relZParent',
       name: 'relZParent',
     };
-    fixture.detectChanges();
+    dom.detectChanges();
     checkHighlightedIdEventEmittedFromButtonClick(
       '.hierarchy-info .rel-parent button',
       '1 relZParent',
@@ -152,7 +134,7 @@ describe('SurfaceFlingerPropertyGroupsComponent', () => {
         name: 'relZChild',
       },
     ];
-    fixture.detectChanges();
+    dom.detectChanges();
     checkHighlightedIdEventEmittedFromButtonClick(
       '.hierarchy-info .rel-children button',
       '2 relZChild',
@@ -160,75 +142,45 @@ describe('SurfaceFlingerPropertyGroupsComponent', () => {
   });
 
   it('displays simple calculated effects', () => {
-    const calculatedDiv = assertDefined(
-      htmlElement.querySelector('.effects .left-column'),
-    );
-    expect(
-      assertDefined(calculatedDiv.querySelector('.shadow')).innerHTML,
-    ).toContain('1 px');
-    expect(
-      assertDefined(calculatedDiv.querySelector('.blur')).innerHTML,
-    ).toContain('1 px');
-    expect(
-      assertDefined(calculatedDiv.querySelector('.corner-radius')).innerHTML,
-    ).toContain('1 px');
+    const calculatedDiv = dom.get('.effects .left-column');
+    calculatedDiv.get('.shadow').checkTextExact('Shadow Radius: 1 px');
+    calculatedDiv.get('.blur').checkTextExact('Blur Radius: 1 px');
+    calculatedDiv.get('.corner-radius').checkTextExact('Corner Radius: 1 px');
   });
 
   it('displays simple requested effects', () => {
-    const calculatedDiv = assertDefined(
-      htmlElement.querySelector('.effects .right-column'),
-    );
-    expect(
-      assertDefined(calculatedDiv.querySelector('.corner-radius')).innerHTML,
-    ).toContain('1 px');
+    const requestedDiv = dom.get('.effects .right-column');
+    requestedDiv.get('.corner-radius').checkTextExact('Corner Radius: 1 px');
   });
 
   it('displays color and alpha value in effects', () => {
-    const colorDiv = htmlElement.querySelector('.color');
-    expect(assertDefined(colorDiv).innerHTML).toContain(
-      `${EMPTY_OBJ_STRING}, alpha: 1`,
-    );
+    dom.get('.color').checkTextExact(`Color: ${EMPTY_OBJ_STRING}, alpha: 1`);
   });
 
   it('displays not set message if no inputs present', () => {
-    const noInputsMessage = htmlElement.querySelector('.inputs .left-column');
-    expect(assertDefined(noInputsMessage).innerHTML).toContain('not set');
+    dom.get('.inputs .left-column').checkTextExact('Input Channel: not set');
   });
 
   it('displays input window info if available', () => {
     component.properties.hasInputChannel = true;
-    fixture.detectChanges();
+    dom.detectChanges();
 
-    expect(
-      htmlElement.querySelector('.inputs .left-column transform-matrix'),
-    ).toBeTruthy();
+    expect(dom.find('.inputs .left-column transform-matrix')).toBeDefined();
 
-    const configDiv = assertDefined(
-      htmlElement.querySelector('.inputs .right-column'),
-    );
-    expect(
-      assertDefined(configDiv.querySelector('.focusable')).innerHTML,
-    ).toContain('false');
-    expect(
-      assertDefined(configDiv.querySelector('.crop-touch-region')).innerHTML,
-    ).toContain('none');
-    expect(
-      assertDefined(configDiv.querySelector('.replace-touch-region')).innerHTML,
-    ).toContain('false');
-    expect(
-      assertDefined(configDiv.querySelector('.input-config')).innerHTML,
-    ).toContain('null');
+    const configDiv = dom.get('.inputs .right-column');
+    configDiv.get('.focusable').checkTextExact('Focusable: false');
+    configDiv
+      .get('.crop-touch-region')
+      .checkTextExact('Crop touch region with item: none');
+    configDiv
+      .get('.replace-touch-region')
+      .checkTextExact('Replace touch region with crop: false');
+    configDiv.get('.input-config').checkTextExact('Input Config: null');
   });
 
   it('handles collapse button click', () => {
     expect(component.collapseButtonClicked).toBeFalse();
-    const collapseButton = assertDefined(
-      htmlElement.querySelector<HTMLElement>(
-        'collapsible-section-title button',
-      ),
-    );
-    collapseButton.click();
-    fixture.detectChanges();
+    dom.findAndClick('collapsible-section-title button');
     expect(component.collapseButtonClicked).toBeTrue();
   });
 
@@ -237,13 +189,10 @@ describe('SurfaceFlingerPropertyGroupsComponent', () => {
     expectedId: string,
   ) {
     let id = '';
-    htmlElement.addEventListener(ViewerEvents.HighlightedIdChange, (event) => {
+    dom.addEventListener(ViewerEvents.HighlightedIdChange, (event) => {
       id = (event as CustomEvent).detail.id;
     });
-    const button = assertDefined(
-      htmlElement.querySelector<HTMLElement>(selector),
-    );
-    button.click();
+    dom.findAndClick(selector);
     expect(id).toEqual(expectedId);
   }
 

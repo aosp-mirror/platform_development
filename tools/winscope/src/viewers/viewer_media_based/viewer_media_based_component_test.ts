@@ -230,13 +230,13 @@ describe('ViewerMediaBasedComponent', () => {
     });
     expect(dom.find('.info-icon')).toBeUndefined();
     const container = dom.get('.container');
-    container.dispatchEvent(new MouseEvent('dblclick'));
+    container.doubleClick();
     expect(index).toBeUndefined();
 
     assertDefined(component.screenComponent).enableDoubleClick = true;
     dom.detectChanges();
     expect(dom.find('.info-icon')).toBeDefined();
-    container.dispatchEvent(new MouseEvent('dblclick'));
+    container.doubleClick();
     expect(index).toEqual(0);
   });
 

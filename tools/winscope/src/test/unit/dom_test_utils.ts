@@ -86,6 +86,11 @@ export class DOMTestHelper<T> {
     this.fixture.detectChanges();
   }
 
+  doubleClick() {
+    this.root.dispatchEvent(new MouseEvent('dblclick'));
+    this.fixture.detectChanges();
+  }
+
   findAndClick(selector: string): DOMTestHelper<T> {
     const element = this.get(selector);
     element.click();
@@ -182,8 +187,7 @@ export class DOMTestHelper<T> {
   }
 
   keydownEsc() {
-    const event = new KeyboardEvent('keydown', {key: KeyboardEventKey.ESCAPE});
-    this.dispatchEvent(event);
+    this.keydownByKey(KeyboardEventKey.ESCAPE);
   }
 
   keydownSpace() {
@@ -194,18 +198,23 @@ export class DOMTestHelper<T> {
   }
 
   keydownArrowLeft(toDocument = false) {
-    const event = new KeyboardEvent('keydown', {
-      key: KeyboardEventKey.ARROW_LEFT,
-    });
-    toDocument
-      ? this.dispatchEventInDocument(event)
-      : this.dispatchEvent(event);
+    this.keydownByKey(KeyboardEventKey.ARROW_LEFT, toDocument);
   }
 
   keydownArrowRight(toDocument = false) {
-    const event = new KeyboardEvent('keydown', {
-      key: KeyboardEventKey.ARROW_RIGHT,
-    });
+    this.keydownByKey(KeyboardEventKey.ARROW_RIGHT, toDocument);
+  }
+
+  keydownArrowUp(toDocument = false) {
+    this.keydownByKey(KeyboardEventKey.ARROW_UP, toDocument);
+  }
+
+  keydownArrowDown(toDocument = false) {
+    this.keydownByKey(KeyboardEventKey.ARROW_DOWN, toDocument);
+  }
+
+  private keydownByKey(key: string, toDocument = false) {
+    const event = new KeyboardEvent('keydown', {key});
     toDocument
       ? this.dispatchEventInDocument(event)
       : this.dispatchEvent(event);
