@@ -45,6 +45,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.util.Objects;
 import java.util.StringTokenizer;
 
 /** Fragment that shows the content selected from the TitlesFragment.
@@ -347,7 +348,7 @@ public class ContentFragment extends Fragment {
              */
             @Override
             protected void onPostExecute(Boolean result) {
-                if (result != Boolean.TRUE) {
+                if (!Objects.equals(result, Boolean.TRUE)) {
                     return;
                 }
 
