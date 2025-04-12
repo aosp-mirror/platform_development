@@ -19,20 +19,9 @@ find $DIR -name "*.java" -o -name "*.xml" | xargs -n 1 \
         -e "s/.*END_INCLUDE(.*//" \
         -i
 
-#
-# Fix up the line endings of all text files. This also removes executable permissions.
-#
-if [ $HOST_OS = windows ] ; then
-    ENDING_TYPE=dos
-else
-    ENDING_TYPE=unix
-fi
-
 # Using -n 500 for xargs to limit the max number of arguments per call to line_endings
 # to 500. This avoids line_endings failing with "arguments too long".
 find $DIR -name "*.aidl" -o -name "*.css" -o -name "*.html" -o -name "*.java" \
                      -o -name "*.js" -o -name "*.prop" -o -name "*.template" \
                      -o -name "*.txt" -o -name "*.windows" -o -name "*.xml" \
-        | xargs -n 500 $HOST_OUT_EXECUTABLES/line_endings $ENDING_TYPE
-
-
+        | xargs -n 500 dos2unix
