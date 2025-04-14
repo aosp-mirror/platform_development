@@ -44,6 +44,7 @@ export class Presenter extends AbstractLogViewerPresenter<
     sourceFile: {
       name: 'Source files',
       cssClass: 'source-file',
+      canCopy: true,
     },
     text: {
       name: 'Search text',

@@ -17,6 +17,7 @@
 package com.example.android.vdmdemo.host;
 
 import android.Manifest;
+import android.app.ActivityOptions;
 import android.app.AlertDialog;
 import android.content.ComponentName;
 import android.content.Context;
@@ -26,6 +27,7 @@ import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.util.Log;
+import android.view.Display;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
@@ -128,28 +130,28 @@ public class MainActivity extends Hilt_MainActivity {
                         return true;
                     }
                     int[] remoteDisplayIds = mVdmService.getRemoteDisplayIds();
-                    if (remoteDisplayIds.length == 0) {
-                        mVdmService.startStreaming(intent);
-                    } else {
-                        String[] displays = new String[remoteDisplayIds.length + 1];
-                        for (int i = 0; i < remoteDisplayIds.length; ++i) {
-                            displays[i] = "Display " + remoteDisplayIds[i];
-                        }
-                        displays[remoteDisplayIds.length] = "New display";
-                        AlertDialog.Builder alertDialogBuilder =
-                                new AlertDialog.Builder(MainActivity.this);
-                        alertDialogBuilder.setTitle("Choose display");
-                        alertDialogBuilder.setItems(
-                                displays,
-                                (dialog, which) -> {
-                                    if (which == remoteDisplayIds.length) {
-                                        mVdmService.startStreaming(intent);
-                                    } else {
-                                        mVdmService.startIntentOnDisplayIndex(intent, which);
-                                    }
-                                });
-                        alertDialogBuilder.show();
+                    String[] displays = new String[remoteDisplayIds.length + 2];
+                    for (int i = 0; i < remoteDisplayIds.length; ++i) {
+                        displays[i] = "Display " + remoteDisplayIds[i];
                     }
+                    displays[remoteDisplayIds.length] = "New display";
+                    displays[remoteDisplayIds.length + 1] = "Default display";
+                    AlertDialog.Builder alertDialogBuilder =
+                            new AlertDialog.Builder(MainActivity.this);
+                    alertDialogBuilder.setTitle("Choose display");
+                    alertDialogBuilder.setItems(displays, (dialog, which) -> {
+                        if (which > remoteDisplayIds.length) {
+                            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                            startActivity(intent, ActivityOptions.makeBasic()
+                                    .setLaunchDisplayId(Display.DEFAULT_DISPLAY)
+                                    .toBundle());
+                        } else if (which == remoteDisplayIds.length) {
+                            mVdmService.startStreaming(intent);
+                        } else {
+                            mVdmService.startIntentOnDisplayIndex(intent, which);
+                        }
+                    });
+                    alertDialogBuilder.show();
                     return true;
                 });
     }

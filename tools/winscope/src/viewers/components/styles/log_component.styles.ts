@@ -34,15 +34,15 @@ export const logComponentStyles = `
     display: flex;
     flex-direction: row;
     overflow-wrap: anywhere;
-  }
-
-  .headers div,
-  .entries div {
     padding: 4px;
   }
 
   .filter {
     align-content: center;
+  }
+
+  .header, .filter, .cell {
+    padding: 4px;
   }
 
   .time {
@@ -179,10 +179,25 @@ export const logComponentStyles = `
     justify-content: end;
   }
 
-  .status .mat-icon {
+  .entry .source-file {
+    display: flex;
+    align-items: start;
+    justify-content: space-between;
+  }
+
+  .status .mat-icon, .copy-button, .copy-button .mat-icon {
     font-size: 18px;
     width: 18px;
     height: 18px;
+    line-height: 18px;
+  }
+
+  .cell:not(:hover) .copy-button {
+    visibility: hidden;
+  }
+
+  .copy-button .mat-icon {
+    min-width: 18px;
   }
 
   .input-type {

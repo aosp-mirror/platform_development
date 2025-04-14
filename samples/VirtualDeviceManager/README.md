@@ -424,6 +424,9 @@ adb shell aflags enable android.companion.virtual.flags.device_aware_display_pow
     accelerometer events, which allows for selecting which device's sensor to
     use. By default, will use the sensors of the device it's shown on.
 
+-   **Picture in Picture**: A simple activity with PiP support showing the
+    behavior of pinned windowing mode on the virtual display.
+
 -   **Display Power**: A simple activity showcasing the behavior of proximity
     locks, screen brightness override and requesting the screen to be kept on
     or turned on.

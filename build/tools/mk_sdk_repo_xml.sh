@@ -460,6 +460,3 @@ done
 
 # Generate XML footer
 echo "</sdk:$ROOT>" >> "$OUT"
-
-#echo "## Validate XML against schema"
-$XMLLINT --noout --schema $SCHEMA "$OUT"

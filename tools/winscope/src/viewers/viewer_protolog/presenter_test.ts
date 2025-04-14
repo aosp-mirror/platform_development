@@ -54,7 +54,7 @@ class PresenterProtologTest extends AbstractLogViewerPresenterTest<UiData> {
     },
     {
       header: new LogHeader(
-        {name: 'Source files', cssClass: 'source-file'},
+        {name: 'Source files', cssClass: 'source-file', canCopy: true},
         new LogSelectFilter(Array.from({length: 3}, () => '')),
       ),
       options: ['sourcefile0', 'sourcefile1', 'sourcefile2'],

@@ -2,6 +2,7 @@
     <string name="app_name" translatable="false">VDM Demos</string>
     <string name="activity_policy_demo" translatable="false">VDM Activity Policy Demo</string>
     <string name="sensor_demo" translatable="false">VDM Sensor Demo</string>
+    <string name="pip_demo" translatable="false">VDM Picture in Picture Demo</string>
     <string name="display_power_demo" translatable="false">VDM Display Power Demo</string>
     <string name="vibration_demo" translatable="false">VDM Vibration Demo</string>
     <string name="rotation_demo" translatable="false">VDM Rotation Demo</string>
@@ -28,6 +29,8 @@
     <string name="current_orientation" translatable="false">Orientation: %s</string>
     <string name="portrait" translatable="false">Portrait</string>
     <string name="landscape" translatable="false">Landscape</string>
+
+    <string name="enter_pip" translatable="false">Enter Picture in Picture</string>
 
     <string name="send_home" translatable="false">Send HOME intent</string>
     <string name="send_secondary_home" translatable="false">Send SECONDARY_HOME intent</string>

@@ -1,79 +1,92 @@
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="wrap_content"
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:layout_gravity="center"
-    android:gravity="center"
-    android:orientation="vertical"
-    android:padding="10dp">
+    android:fillViewport="true">
 
-    <Button
-        android:id="@+id/activity_policy_demo"
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:onClick="onDemoSelected"
-        android:text="@string/activity_policy_demo" />
+        android:gravity="center"
+        android:orientation="vertical"
+        android:padding="10dp">
 
-    <Button
-        android:id="@+id/sensor_demo"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:onClick="onDemoSelected"
-        android:text="@string/sensor_demo" />
+        <Button
+            android:id="@+id/activity_policy_demo"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:onClick="onDemoSelected"
+            android:text="@string/activity_policy_demo" />
 
-    <Button
-        android:id="@+id/display_power_demo"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:onClick="onDemoSelected"
-        android:text="@string/display_power_demo" />
+        <Button
+            android:id="@+id/sensor_demo"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:onClick="onDemoSelected"
+            android:text="@string/sensor_demo" />
 
-    <Button
-        android:id="@+id/vibration_demo"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:onClick="onDemoSelected"
-        android:text="@string/vibration_demo" />
+        <Button
+            android:id="@+id/pip_demo"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:onClick="onDemoSelected"
+            android:text="@string/pip_demo" />
 
-    <Button
-        android:id="@+id/rotation_demo"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:onClick="onDemoSelected"
-        android:text="@string/rotation_demo" />
+        <Button
+            android:id="@+id/display_power_demo"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:onClick="onDemoSelected"
+            android:text="@string/display_power_demo" />
 
-    <Button
-        android:id="@+id/home_demo"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:onClick="onDemoSelected"
-        android:text="@string/home_demo" />
+        <Button
+            android:id="@+id/vibration_demo"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:onClick="onDemoSelected"
+            android:text="@string/vibration_demo" />
 
-    <Button
-        android:id="@+id/permissions_demo"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:onClick="onDemoSelected"
-        android:text="@string/permissions_demo" />
+        <Button
+            android:id="@+id/rotation_demo"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:onClick="onDemoSelected"
+            android:text="@string/rotation_demo" />
 
-    <Button
-        android:id="@+id/latency_demo"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:onClick="onDemoSelected"
-        android:text="@string/latency_demo" />
+        <Button
+            android:id="@+id/home_demo"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:onClick="onDemoSelected"
+            android:text="@string/home_demo" />
 
-    <Button
-        android:id="@+id/stylus_demo"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:onClick="onDemoSelected"
-        android:text="@string/stylus_demo" />
+        <Button
+            android:id="@+id/permissions_demo"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:onClick="onDemoSelected"
+            android:text="@string/permissions_demo" />
 
-    <Button
-        android:id="@+id/recorder_demo"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:onClick="onDemoSelected"
-        android:text="@string/recorder_demo" />
+        <Button
+            android:id="@+id/latency_demo"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:onClick="onDemoSelected"
+            android:text="@string/latency_demo" />
 
-</LinearLayout>
+        <Button
+            android:id="@+id/stylus_demo"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:onClick="onDemoSelected"
+            android:text="@string/stylus_demo" />
+
+        <Button
+            android:id="@+id/recorder_demo"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:onClick="onDemoSelected"
+            android:text="@string/recorder_demo" />
+
+    </LinearLayout>
+
+</ScrollView>

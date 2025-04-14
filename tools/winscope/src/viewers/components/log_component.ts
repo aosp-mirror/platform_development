@@ -187,7 +187,7 @@ import {
             </button>
           </div>
 
-          <div [class]="field.spec.cssClass" *ngFor="let field of entry.fields; index as i">
+          <div [class]="field.spec.cssClass + ' cell'" *ngFor="let field of entry.fields; index as i">
             <span class="mat-body-1" *ngIf="!showFieldButton(entry, field)">{{ field.value }}</span>
             <button
                 *ngIf="showFieldButton(entry, field)"
@@ -201,6 +201,13 @@ import {
                 *ngIf="field.icon"
                 aria-hidden="false"
                 [style]="{color: field.iconColor}"> {{field.icon}} </mat-icon>
+            <button
+                mat-icon-button
+                *ngIf="field.spec.canCopy"
+                class="copy-button"
+                [cdkCopyToClipboard]="field.value.toString()">
+              <mat-icon>content_copy</mat-icon>
+            </button>
           </div>
         </div>
       </ng-template>

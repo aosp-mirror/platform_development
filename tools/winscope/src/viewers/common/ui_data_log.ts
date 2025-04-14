@@ -39,6 +39,7 @@ export interface UiDataLog {
 export interface ColumnSpec {
   name: string;
   cssClass: string;
+  canCopy?: boolean;
 }
 
 export class LogHeader {

@@ -20,7 +20,7 @@ ALL_SDK_FILES += $(sdk_props) $(sample_props) $(sys_img_props)
 # This needs to vary based on the CPU ABI for the system-image files.
 # Rewritten variables:
 # - ${PLATFORM_VERSION}               e.g. "1.0"
-# - ${PLATFORM_SDK_VERSION}           e.g. "3", aka the API level
+# - ${PLATFORM_SDK_VERSION}           e.g. "3.1", aka the API major.minor version
 # - ${PLATFORM_EXTENSION_SDK_VERSION} e.g. "7" -- the extension sdk level
 # - ${PLATFORM_IS_BASE_SDK}           bool. -- whether the current extension sdk is the base extension for this api level
 # - ${PLATFORM_VERSION_CODENAME}      e.g. "REL" (transformed into "") or "Cupcake"
@@ -31,7 +31,7 @@ define process_prop_template
 $(hide) mkdir -p $(dir $@)
 $(hide) sed \
 	-e 's/$${PLATFORM_VERSION}/$(PLATFORM_VERSION)/' \
-	-e 's/$${PLATFORM_SDK_VERSION}/$(PLATFORM_SDK_VERSION)/' \
+	-e 's/$${PLATFORM_SDK_VERSION}/$(subst ",,$(PLATFORM_SDK_VERSION_FULL))/' \
 	-e 's/$${PLATFORM_SDK_EXTENSION_VERSION}/$(PLATFORM_SDK_EXTENSION_VERSION)/' \
 	-e 's/$${PLATFORM_IS_BASE_SDK}/$(if $(filter $(PLATFORM_SDK_EXTENSION_VERSION),$(PLATFORM_BASE_SDK_EXTENSION_VERSION)),true,false)/' \
 	-e 's/$${PLATFORM_VERSION_CODENAME}/$(subst REL,,$(PLATFORM_VERSION_CODENAME))/' \

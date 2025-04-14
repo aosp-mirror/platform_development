@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import {Clipboard, ClipboardModule} from '@angular/cdk/clipboard';
 import {ScrollingModule} from '@angular/cdk/scrolling';
 import {ComponentFixtureAutoDetect, TestBed} from '@angular/core/testing';
 import {FormsModule} from '@angular/forms';
@@ -63,10 +64,15 @@ describe('LogComponent', () => {
 
   let component: LogComponent;
   let dom: DOMTestHelper<LogComponent>;
+  let mockCopyText: jasmine.Spy;
 
   beforeEach(async () => {
+    mockCopyText = jasmine.createSpy();
     await TestBed.configureTestingModule({
-      providers: [{provide: ComponentFixtureAutoDetect, useValue: true}],
+      providers: [
+        {provide: Clipboard, useValue: {copy: mockCopyText}},
+        {provide: ComponentFixtureAutoDetect, useValue: true},
+      ],
       imports: [
         ScrollingModule,
         MatFormFieldModule,
@@ -80,6 +86,7 @@ describe('LogComponent', () => {
         MatPseudoCheckboxModule,
         MatProgressSpinnerModule,
         MatTooltipModule,
+        ClipboardModule,
       ],
       declarations: [
         LogComponent,
@@ -295,6 +302,19 @@ describe('LogComponent', () => {
     spy.and.returnValue(false);
     dom.detectChanges();
     entry.checkTextExact('00:00:00.000 Test tag 21234 N/A');
+  });
+
+  it('shows copy button for spec that can be copied', () => {
+    const entry = dom.get('.scroll .entry .test-2');
+    expect(entry.find('.copy-button')).toBeUndefined();
+    component.entries[0].fields[1].spec = {
+      name: 'test2',
+      cssClass: 'test-2',
+      canCopy: true,
+    };
+    dom.detectChanges();
+    entry.findAndClick('.copy-button');
+    expect(mockCopyText).toHaveBeenCalledOnceWith('123');
   });
 
   function setComponentInputData(elapsed = true) {

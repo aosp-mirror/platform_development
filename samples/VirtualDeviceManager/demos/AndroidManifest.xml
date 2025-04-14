@@ -99,6 +99,12 @@
             android:label="@string/secure_window_demo" />
 
         <activity
+            android:name=".PipDemoActivity"
+            android:exported="false"
+            android:supportsPictureInPicture="true"
+            android:label="@string/pip_demo" />
+
+        <activity
             android:name=".LatencyDemoActivity"
             android:exported="true"
             android:label="@string/latency_demo" />

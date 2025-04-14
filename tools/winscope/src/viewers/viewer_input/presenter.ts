@@ -367,10 +367,10 @@ export class Presenter extends AbstractLogViewerPresenter<
   ): string {
     const keyDetails =
       'Keycode: ' +
-        eventTree
-          .getChildByName('keyCode')
-          ?.formattedValue()
-          ?.replace(/^KEYCODE_/, '') ?? '<?>';
+      (eventTree
+        .getChildByName('keyCode')
+        ?.formattedValue()
+        ?.replace(/^KEYCODE_/, '') ?? '<?>');
     return keyDetails + ' ' + Presenter.extractDispatchDetails(dispatchTree);
   }
 
