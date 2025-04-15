@@ -1083,8 +1083,15 @@ fn crate_to_bp_modules(
         }
         m.props.set("name", module_name.clone());
 
-        if let Some(defaults) = &cfg.global_defaults {
-            m.props.set("defaults", vec![defaults.clone()]);
+        let mut defaults = Vec::<String>::new();
+        if package_cfg.no_std {
+            defaults.push("rust_baremetal_defaults".to_string());
+        }
+        if let Some(global_defaults) = &cfg.global_defaults {
+            defaults.push(global_defaults.clone());
+        }
+        if !defaults.is_empty() {
+            m.props.set("defaults", defaults);
         }
 
         if package_cfg.host_supported

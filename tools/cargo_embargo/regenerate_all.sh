@@ -17,7 +17,7 @@
 # Helper script to run cargo_embargo generate on all external Rust crates and generate an HTML
 # report of the results, including any errors, warnings or changes to Android.bp files.
 #
-# Should be run from under external/rust/crates.
+# Should be run from under external/rust/android-crates-io.
 
 set -e
 
@@ -45,7 +45,7 @@ END
 success_count=0
 different_count=0
 total_count=0
-for config in */cargo_embargo.json; do
+for config in $(find . -name cargo_embargo.json | sort); do
   ((total_count+=1))
   crate=$(dirname $config)
   echo "Trying $crate..."
@@ -61,7 +61,7 @@ for config in */cargo_embargo.json; do
       echo '</details></td>' >> $report
     else
       # Compare the checked-in Android.bp to the generated one.
-      (cd $crate && git show HEAD:Android.bp > Android.bp.orig)
+      (cd $crate && git show HEAD:./Android.bp > Android.bp.orig)
       if diff $crate/Android.bp.orig $crate/Android.bp > /dev/null; then
         echo '<td class="success">Success</td>' >> $report
         ((success_count+=1))
@@ -86,7 +86,7 @@ for config in */cargo_embargo.json; do
   fi
 
   rm cargo_embargo.err
-  rm -rf "$crate/cargo.metadata" "$crate/cargo.out" "$crate/target.tmp" "$crate/Cargo.lock" "$crate/Android.bp.orig" "$crate/Android.bp.embargo" "$crate/Android.bp.embargo_nobuild"
+  rm -rf "$crate/cargo.metadata" "$crate/cargo.out" "$crate/target.tmp" "$crate/Android.bp.orig" "$crate/Android.bp.embargo" "$crate/Android.bp.embargo_nobuild"
   (cd $crate && git checkout Android.bp)
 
   echo '<td>' >> $report
