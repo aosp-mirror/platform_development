@@ -48,6 +48,21 @@
                 android:text="@string/create_mirror_display" />
         </LinearLayout>
 
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center_horizontal"
+            android:orientation="horizontal">
+
+            <Button
+                android:id="@+id/create_desktop_display"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:onClick="onCreateDesktopDisplay"
+                android:text="@string/create_desktop_display" />
+        </LinearLayout>
+
         <include layout="@layout/custom_launcher" />
 
     </LinearLayout>

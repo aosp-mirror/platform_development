@@ -3,6 +3,7 @@
     <string name="launcher_name" translatable="false">VDM Launcher</string>
     <string name="create_home_display" translatable="false">Create Home Display</string>
     <string name="create_mirror_display" translatable="false">Create Mirror Display</string>
+    <string name="create_desktop_display" translatable="false">Create Desktop Display</string>
     <string name="app_icon_description" translatable="false">Application Icon</string>
     <string name="settings" translatable="false">Settings</string>
     <string name="input" translatable="false">Input</string>
@@ -69,6 +70,7 @@
 
     <string name="internal_pref_home_displays_supported" translatable="false">home_displays_supported</string>
     <string name="internal_pref_mirror_displays_supported" translatable="false">mirror_displays_supported</string>
+    <string name="internal_pref_desktop_displays_supported" translatable="false">desktop_displays_supported</string>
     <string name="internal_pref_virtual_stylus_supported" translatable="false">virtual_stylus_supported</string>
     <string name="internal_pref_virtual_rotary_supported" translatable="false">virtual_rotary_supported</string>
     <string name="internal_pref_display_rotation_supported" translatable="false">display_rotation_supported</string>

@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Copyright (C) 2007 The Android Open Source Project
+<!-- Copyright (C) 2025 The Android Open Source Project
 
      Licensed under the Apache License, Version 2.0 (the "License");
      you may not use this file except in compliance with the License.
@@ -13,27 +13,19 @@
      See the License for the specific language governing permissions and
      limitations under the License.
 -->
-
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
     android:orientation="vertical"
-    android:padding="4dip"
-    android:gravity="center_horizontal"
-    android:layout_width="fill_parent"
-    android:layout_height="fill_parent"
+    android:gravity="center"
     android:layout_marginTop="100dip">
-    <Button
-        android:id="@+id/button1"
-        android:layout_width="wrap_content"
+
+    <TextView
+        android:id="@+id/mainTextView"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_margin="16dp"/>
-    <Button
-        android:id="@+id/button2"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_margin="16dp"/>
-    <Button
-        android:id="@+id/button3"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_margin="16dp"/>
+        android:scrollbars="vertical"
+        android:textSize="24sp"
+        android:padding="12dip"
+        android:textColor="#444444"/>
 </LinearLayout>

@@ -707,6 +707,10 @@ public final class VdmService extends Hilt_VdmService {
         startStreaming(null, RemoteDisplay.DISPLAY_TYPE_MIRROR);
     }
 
+    void startDesktop() {
+        startStreaming(null, RemoteDisplay.DISPLAY_TYPE_DESKTOP);
+    }
+
     void startStreaming(Intent intent) {
         startStreaming(intent, RemoteDisplay.DISPLAY_TYPE_APP);
     }
@@ -728,8 +732,7 @@ public final class VdmService extends Hilt_VdmService {
             return;
         }
 
-        boolean homeEnabled = mPendingDisplayType == RemoteDisplay.DISPLAY_TYPE_HOME
-                || mPendingDisplayType == RemoteDisplay.DISPLAY_TYPE_MIRROR;
+        boolean homeEnabled = mPendingDisplayType != RemoteDisplay.DISPLAY_TYPE_APP;
         mRemoteIo.sendMessage(RemoteEvent.newBuilder()
                 .setStartStreaming(StartStreaming.newBuilder()
                         .setHomeEnabled(homeEnabled)

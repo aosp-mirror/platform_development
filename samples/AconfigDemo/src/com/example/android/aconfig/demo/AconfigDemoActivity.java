@@ -17,62 +17,57 @@
 package com.example.android.aconfig.demo;
 
 import android.app.Activity;
+import android.content.Intent;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.View;
-import android.view.WindowManager;
-import android.widget.TextView;
-import android.text.method.ScrollingMovementMethod;
+import android.widget.Button;
 
-import com.example.android.aconfig.demo.flags.Flags;
-
-import javax.inject.Inject;
-
-
-/**
- * A minimal "Hello, World!" application.
- */
+/** Main landing page of Aconfig Demo app. */
 public class AconfigDemoActivity extends Activity {
-    @Inject InjectedContent injectedContent;
-    /**
-     * Called with the activity is first created.
-     */
+
     @Override
-    public void onCreate(Bundle savedInstanceState) {
-        ((AconfigDemoApplication)getApplicationContext()).appComponent.inject(this);
+    protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
         setContentView(R.layout.main);
-        TextView simpleTextView = (TextView) findViewById(R.id.simpleTextView);
-        simpleTextView.setMovementMethod(new ScrollingMovementMethod());
 
-        simpleTextView.setText("Show Java Flags: \n\n");
+        Button button1 = findViewById(R.id.button1);
+        button1.setText("Launch Java Codelab");
+        button1.setOnClickListener(
+                new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        Intent intent =
+                                new Intent(
+                                        AconfigDemoActivity.this, AconfigJavaCodelabActivity.class);
+                        startActivity(intent);
+                    }
+                });
 
-        StaticContent cp = new StaticContent();
-        simpleTextView.append(cp.getContent());
+        Button button2 = findViewById(R.id.button2);
+        button2.setText("Launch Native Codelab");
+        button2.setOnClickListener(
+                new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        Intent intent =
+                                new Intent(
+                                        AconfigDemoActivity.this,
+                                        AconfigNativeCodelabActivity.class);
+                        startActivity(intent);
+                    }
+                });
 
-        simpleTextView.append(injectedContent.getContent());
-
-        simpleTextView.append("Show C/C++ Flags: \n\n");
-        simpleTextView.append(printCFlag());
-
-        if (Flags.awesomeFlag1()) {
-            Log.v("AconfigDemoActivity", Flags.FLAG_AWESOME_FLAG_1 + " is on!");
-        }
-
-        if (Flags.awesomeFlag2()) {
-            Log.v("AconfigDemoActivity", Flags.FLAG_AWESOME_FLAG_2 + " is on!");
-        }
-
-        simpleTextView.append("\n\nShow Rust Flags: \n\n");
-        simpleTextView.append(printRustFlag());
-    }
-
-    public native String printCFlag();
-    public native String printRustFlag();
-
-    static {
-        System.loadLibrary("example_cpp_lib");
-        System.loadLibrary("example_rust_jni");
+        Button button3 = findViewById(R.id.button3);
+        button3.setText("Launch Simple Demo");
+        button3.setOnClickListener(
+                new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        Intent intent =
+                                new Intent(
+                                        AconfigDemoActivity.this, AconfigSimpleDemoActivity.class);
+                        startActivity(intent);
+                    }
+                });
     }
 }

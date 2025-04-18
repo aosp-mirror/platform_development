@@ -17,9 +17,8 @@
 package com.example.android.aconfig.demo;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.mockito.Mockito.when;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 import com.example.android.aconfig.demo.flags.FeatureFlags;
 
@@ -37,7 +36,9 @@ public final class InjectedContentTests {
         InjectedContent injectedContent = new InjectedContent(fakeFeatureFlag);
         StringBuilder expected = new StringBuilder();
         expected.append("The flag: appendInjectedContent is ON!!\n\n");
-        assertEquals("Get appendInjectedContent", expected.toString(), injectedContent.getContent());
+        expected.append("The flag: read only flag injected is OFF!!\n\n");
+        assertEquals(
+                "Get appendInjectedContent", expected.toString(), injectedContent.getContent());
     }
 }
 

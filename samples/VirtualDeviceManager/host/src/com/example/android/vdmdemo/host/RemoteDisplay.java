@@ -86,6 +86,8 @@ class RemoteDisplay implements AutoCloseable {
     private static final String TAG = "VdmHost";
 
     private static final int DISPLAY_FPS = 60;
+    // Froce lower DPI on desktop displays to simulate large screen experience.
+    private static final int MAX_DESKTOP_DPI = 180;
 
     private static final int DEFAULT_VIRTUAL_DISPLAY_FLAGS =
             DisplayManager.VIRTUAL_DISPLAY_FLAG_TRUSTED
@@ -98,7 +100,9 @@ class RemoteDisplay implements AutoCloseable {
     static final int DISPLAY_TYPE_APP = 0;
     static final int DISPLAY_TYPE_HOME = 1;
     static final int DISPLAY_TYPE_MIRROR = 2;
-    @IntDef(value = {DISPLAY_TYPE_APP, DISPLAY_TYPE_HOME, DISPLAY_TYPE_MIRROR})
+    static final int DISPLAY_TYPE_DESKTOP = 3;
+    @IntDef(value = {DISPLAY_TYPE_APP, DISPLAY_TYPE_HOME, DISPLAY_TYPE_MIRROR,
+            DISPLAY_TYPE_DESKTOP})
     @Retention(RetentionPolicy.SOURCE)
     public @interface DisplayType {}
 
@@ -183,6 +187,9 @@ class RemoteDisplay implements AutoCloseable {
         if (mContext.checkCallingOrSelfPermission(ADD_TRUSTED_DISPLAY)
                 == PackageManager.PERMISSION_DENIED) {
             flags &= ~DisplayManager.VIRTUAL_DISPLAY_FLAG_TRUSTED;
+        } else if (mDisplayType == DISPLAY_TYPE_DESKTOP) {
+            // TODO(b/261155110): Use a proper API.
+            flags |= VdmCompat.VIRTUAL_DISPLAY_FLAG_SHOULD_SHOW_SYSTEM_DECORATIONS;
         }
 
         Set<String> displayCategories;
@@ -305,6 +312,9 @@ class RemoteDisplay implements AutoCloseable {
         mWidth = width;
         mHeight = height;
         mDpi = dpi;
+        if (mDisplayType == DISPLAY_TYPE_DESKTOP) {
+            mDpi = Math.min(MAX_DESKTOP_DPI, mDpi);
+        }
 
         if (mRemoteIo != null) {
             // Video encoder needs round dimensions...

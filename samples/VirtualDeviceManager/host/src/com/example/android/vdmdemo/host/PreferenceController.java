@@ -138,6 +138,9 @@ final class PreferenceController {
             new InternalBoolRule(R.string.internal_pref_mirror_displays_supported,
                     VANILLA_ICE_CREAM),
 
+            new InternalBoolRule(R.string.internal_pref_desktop_displays_supported,  BAKLAVA)
+                    .withRequiredPermissions(ADD_TRUSTED_DISPLAY),
+
             new InternalBoolRule(R.string.internal_pref_virtual_stylus_supported,
                     VANILLA_ICE_CREAM),
 

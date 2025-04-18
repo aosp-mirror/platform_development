@@ -17,8 +17,10 @@
 package com.example.android.aconfig.demo;
 
 import android.app.Application;
+
 import com.example.android.aconfig.demo.dagger.ApplicationComponent;
 import com.example.android.aconfig.demo.dagger.DaggerApplicationComponent;
+
 /**
  * A minimal "Hello, World!" application.
  */

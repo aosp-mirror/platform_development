@@ -60,6 +60,7 @@ public class MainActivity extends Hilt_MainActivity {
     private GridView mLauncher = null;
     private Button mHomeDisplayButton = null;
     private Button mMirrorDisplayButton = null;
+    private Button mDesktopDisplayButton = null;
     private LauncherAdapter mLauncherAdapter = null;
     private final Consumer<Boolean> mVirtualDeviceListener = this::updateLauncherVisibility;
 
@@ -110,6 +111,8 @@ public class MainActivity extends Hilt_MainActivity {
         mHomeDisplayButton.setVisibility(View.GONE);
         mMirrorDisplayButton = requireViewById(R.id.create_mirror_display);
         mMirrorDisplayButton.setVisibility(View.GONE);
+        mDesktopDisplayButton = requireViewById(R.id.create_desktop_display);
+        mDesktopDisplayButton.setVisibility(View.GONE);
 
         mLauncherAdapter = new LauncherAdapter(this, mPreferenceController);
         mLauncher = requireViewById(R.id.app_grid);
@@ -224,6 +227,12 @@ public class MainActivity extends Hilt_MainActivity {
                                 VdmCompat.isMirrorDisplaySupported(this, mPreferenceController));
                         mMirrorDisplayButton.setVisibility(visibility);
                     }
+                    if (mDesktopDisplayButton != null) {
+                        mDesktopDisplayButton.setEnabled(
+                                mPreferenceController.getBoolean(
+                                        R.string.internal_pref_desktop_displays_supported));
+                        mDesktopDisplayButton.setVisibility(visibility);
+                    }
                 });
     }
 
@@ -235,6 +244,11 @@ public class MainActivity extends Hilt_MainActivity {
     /** Process a mirror display request. */
     public void onCreateMirrorDisplay(View view) {
         mVdmService.startMirroring();
+    }
+
+    /** Process a desktop display request. */
+    public void onCreateDesktopDisplay(View view) {
+        mVdmService.startDesktop();
     }
 
     @Override

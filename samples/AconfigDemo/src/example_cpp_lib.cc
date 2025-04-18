@@ -17,9 +17,9 @@ static std::string get_flag_via_injection_interface(
       ((provider->append_injected_content()) ? "true" : "false");
 }
 
-jstring Java_com_example_android_aconfig_demo_AconfigDemoActivity_printCFlag(
-    JNIEnv* env,
-    jobject thiz) {
+jstring
+Java_com_example_android_aconfig_demo_AconfigNativeCodelabActivity_printCFlag(
+    JNIEnv *env, jobject thiz) {
   auto result = std::string("flag name : append_static_content\n");
   result += "use pattern : static method\n";
   result += get_flag_via_static_interface();

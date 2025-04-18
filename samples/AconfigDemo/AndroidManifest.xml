@@ -21,10 +21,9 @@
      to come from a domain that you own or have control over. -->
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.example.android.aconfig.demo">
-    <uses-permission android:name="android.permission.READ_DEVICE_CONFIG" />
     <application
         android:name="AconfigDemoApplication"
-        android:label="Hello!">
+        android:label="Aconfig Demo App">
         <activity android:name="AconfigDemoActivity"
                 android:exported="true">
             <intent-filter>
@@ -32,5 +31,8 @@
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
         </activity>
+        <activity android:name=".AconfigJavaCodelabActivity" />
+        <activity android:name=".AconfigNativeCodelabActivity" />
+        <activity android:name=".AconfigSimpleDemoActivity" />
     </application>
 </manifest>

@@ -16,10 +16,13 @@
 
 package com.example.android.aconfig.demo.dagger;
 
-import com.example.android.aconfig.demo.AconfigDemoActivity;
+import com.example.android.aconfig.demo.AconfigJavaCodelabActivity;
+
 import dagger.Component;
 
+/** Component to show injected Java flags. */
 @Component(modules = {AconfigDemoFlagModule.class})
 public interface ApplicationComponent {
-    void inject(AconfigDemoActivity aconfigDemoActivity);
+    /** Activity for Java codelab. */
+    void inject(AconfigJavaCodelabActivity aconfigJavaCodelabActivity);
 }

@@ -22,7 +22,7 @@ pub fn get_flag_via_injection_interface(
 /// printRustFlag function
 #[no_mangle]
 #[allow(unused)]
-pub extern "system" fn Java_com_example_android_aconfig_demo_AconfigDemoActivity_printRustFlag<
+pub extern "system" fn Java_com_example_android_aconfig_demo_AconfigNativeCodelabActivity_printRustFlag<
     'local,
 >(
     mut env: JNIEnv<'local>,

@@ -162,6 +162,10 @@ show a launcher-like list of installed apps on the host device.
     a new virtual display, mirror the default host display there and start
     streaming the display contents to the client.
 
+-   [WIP] The Host app has a **CREATE DESKTOP DISPLAY** button, clicking it will
+    create a new virtual display in desktop mode and start streaming the display
+    contents to the client.
+
 ### Settings
 
 #### Input
