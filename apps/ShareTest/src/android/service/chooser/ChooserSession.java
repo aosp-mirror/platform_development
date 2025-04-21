@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2024 The Android Open Source Project
+ * Copyright 2025 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,9 +17,9 @@
 package android.service.chooser;
 
 import android.content.Intent;
+import android.graphics.Rect;
 import android.os.Handler;
 import android.os.IBinder;
-import android.os.IBinder.DeathRecipient;
 import android.os.Looper;
 import android.os.Parcel;
 import android.os.Parcelable;
@@ -30,13 +30,10 @@ import androidx.annotation.MainThread;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-import com.android.intentresolver.IChooserController;
-import com.android.intentresolver.IChooserInteractiveSessionCallback;
-
 /**
- * <p>An interactive Chooser session API candidate.</p>
  * <p>A class that represents an interactive Chooser session.</p>
- * <p>An instance of the class should be put in an argument to a chooser intent.
+ * <p>An instance of the class can be used as a value for <em>an</em> {@link Intent#ACTION_CHOOSER}
+ * extra to establish a bi-directional communication channel with Chooser.
  * <p>A {@link ChooserSessionUpdateListener} callback can be used to receive updates about the
  * session and communication from Chooser.</p>
  */
@@ -44,7 +41,7 @@ public final class ChooserSession implements Parcelable {
 
     private static final String TAG = "ChooserSession";
 
-    private final IChooserInteractiveSessionCallback mSessionCallbackBinder;
+    private final IChooserControllerCallback mSessionCallbackBinder;
 
     // mChooserSession is expected to be null only on the Chooser side
     @Nullable
@@ -64,7 +61,7 @@ public final class ChooserSession implements Parcelable {
         this(new ChooserSessionImpl(handler));
     }
 
-    private ChooserSession(IChooserInteractiveSessionCallback sessionBinder) {
+    private ChooserSession(IChooserControllerCallback sessionBinder) {
         mSessionCallbackBinder = sessionBinder;
         mChooserSession = (sessionBinder instanceof ChooserSessionImpl)
                 ? (ChooserSessionImpl) sessionBinder
@@ -89,9 +86,11 @@ public final class ChooserSession implements Parcelable {
     }
 
     /**
-     * Should be a @Hidden API for Chooser to get access to the binder.
+     * @return underlying {@link IChooserControllerCallback} binder.
+     *
+     * @hide
      */
-    IChooserInteractiveSessionCallback getSessionCallbackBinder() {
+    public IChooserControllerCallback getSessionCallbackBinder() {
         return mSessionCallbackBinder;
     }
 
@@ -137,19 +136,19 @@ public final class ChooserSession implements Parcelable {
     }
 
     public static final Parcelable.Creator<ChooserSession> CREATOR = new Creator<>() {
-                @Override
-                public ChooserSession createFromParcel(Parcel source) {
-                    IChooserInteractiveSessionCallback binder =
-                            IChooserInteractiveSessionCallback.Stub.asInterface(
-                                    source.readStrongBinder());
-                    return binder == null ? null : new ChooserSession(binder);
-                }
+        @Override
+        public ChooserSession createFromParcel(Parcel source) {
+            IChooserControllerCallback binder =
+                    IChooserControllerCallback.Stub.asInterface(
+                            source.readStrongBinder());
+            return binder == null ? null : new ChooserSession(binder);
+        }
 
-                @Override
-                public ChooserSession[] newArray(int size) {
-                    return new ChooserSession[size];
-                }
-            };
+        @Override
+        public ChooserSession[] newArray(int size) {
+            return new ChooserSession[size];
+        }
+    };
 
     /**
      * A callback interface for Chooser session state updates.
@@ -166,7 +165,7 @@ public final class ChooserSession implements Parcelable {
         /**
          * Gets invoked when a {@link ChooserController} becomes unavailable.
          */
-        void onChooserDisconnected(ChooserSession session);
+        void onChooserDisconnected(ChooserSession session, ChooserController chooserController);
 
         /**
          * Gets invoked when the session is closed by the Chooser.
@@ -174,9 +173,10 @@ public final class ChooserSession implements Parcelable {
         void onSessionClosed(ChooserSession session);
 
         /**
-         * A temporary support method; expected to be replaced by some other WindowManager API.
+         * Gets invoked when drawer size is changed. The rect parameter represents Chooser window
+         * position in pixels.
          */
-        void onDrawerVerticalOffsetChanged(ChooserSession session, int offset);
+        void onSizeChanged(ChooserSession session, Rect size);
     }
 
     /**
@@ -219,20 +219,20 @@ public final class ChooserSession implements Parcelable {
             mListener.onChooserConnected(mSession, chooserController);
         }
 
-        public void onChooserDisconnected() {
-            mListener.onChooserDisconnected(mSession);
+        public void onChooserDisconnected(ChooserController chooserController) {
+            mListener.onChooserDisconnected(mSession, chooserController);
         }
 
         public void onSessionClosed() {
             mListener.onSessionClosed(mSession);
         }
 
-        public void onDrawerVerticalOffsetChanged(int offset) {
-            mListener.onDrawerVerticalOffsetChanged(mSession, offset);
+        public void onSizeChanged(Rect size) {
+            mListener.onSizeChanged(mSession, size);
         }
     }
 
-    private static class ChooserSessionImpl extends IChooserInteractiveSessionCallback.Stub {
+    private static class ChooserSessionImpl extends IChooserControllerCallback.Stub {
         private final Handler mHandler;
         private volatile ChooserSessionUpdateListenerWrapper mListener;
         private volatile boolean mIsActive = true;
@@ -252,8 +252,8 @@ public final class ChooserSession implements Parcelable {
         }
 
         @Override
-        public void onDrawerVerticalOffsetChanged(int offset) {
-            mHandler.post(() -> notifyDrawerVerticalOffsetChanged(offset));
+        public void onSizeChanged(Rect size) {
+            mHandler.post(() -> notifySizeChanged(size));
         }
 
         public boolean isActive() {
@@ -285,9 +285,7 @@ public final class ChooserSession implements Parcelable {
             if (mHandler.getLooper().isCurrentThread()) {
                 if (!mIsActive) {
                     notifySessionClosed();
-                } else if (mChooserController == null) {
-                    notifyChooserDisconnected();
-                } else {
+                } else if (mChooserController != null) {
                     notifyChooserConnected(mChooserController);
                 }
             } else {
@@ -354,30 +352,30 @@ public final class ChooserSession implements Parcelable {
                 }
                 mChooserController = null;
                 mChooserControllerLinkToDeath = null;
-                notifyChooserDisconnected();
+                notifyChooserDisconnected(controllerWrapper);
             }
         }
 
-        private DeathRecipient createDeathRecipient(IChooserController chooserController) {
+        private IBinder.DeathRecipient createDeathRecipient(IChooserController chooserController) {
             return () -> {
                 Log.d(TAG, "chooser died");
                 mHandler.post(() -> {
-                    ChooserControllerWrapper controllerWrapper = this.mChooserController;
+                    ChooserControllerWrapper controllerWrapper = mChooserController;
                     if (areEqual(
                             controllerWrapper == null ? null : controllerWrapper.controller,
                             chooserController)) {
-                        this.mChooserController = null;
+                        mChooserController = null;
                         mChooserControllerLinkToDeath = null;
-                        mListener.onChooserDisconnected();
+                        mListener.onChooserDisconnected(controllerWrapper);
                     }
                 });
             };
         }
 
-        private void notifyDrawerVerticalOffsetChanged(int offset) {
+        private void notifySizeChanged(Rect size) {
             ChooserSessionUpdateListenerWrapper listener = mListener;
             if (listener != null) {
-                listener.onDrawerVerticalOffsetChanged(offset);
+                listener.onSizeChanged(size);
             }
         }
 
@@ -395,10 +393,10 @@ public final class ChooserSession implements Parcelable {
             }
         }
 
-        private void notifyChooserDisconnected() {
+        private void notifyChooserDisconnected(ChooserControllerWrapper chooserController) {
             ChooserSessionUpdateListenerWrapper listener = mListener;
             if (listener != null) {
-                listener.onChooserDisconnected();
+                listener.onChooserDisconnected(chooserController);
             }
         }
 

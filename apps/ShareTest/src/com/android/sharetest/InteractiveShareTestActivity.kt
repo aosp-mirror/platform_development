@@ -25,6 +25,7 @@ import android.content.Intent
 import android.content.Intent.EXTRA_CHOOSER_RESULT_INTENT_SENDER
 import android.content.IntentFilter
 import android.content.res.Configuration
+import android.graphics.Rect
 import android.os.Bundle
 import android.provider.MediaStore
 import android.service.chooser.ChooserSession
@@ -106,7 +107,10 @@ class InteractiveShareTestActivity : Hilt_InteractiveShareTestActivity() {
                 Log.d(TAG, "onChooserConnected")
             }
 
-            override fun onChooserDisconnected(session: ChooserSession?) {
+            override fun onChooserDisconnected(
+                session: ChooserSession?,
+                chooserController: ChooserController,
+            ) {
                 Log.d(TAG, "onChooserDisconnected")
             }
 
@@ -115,8 +119,8 @@ class InteractiveShareTestActivity : Hilt_InteractiveShareTestActivity() {
                 chooserSession.update { oldValue -> if (oldValue === session) null else oldValue }
             }
 
-            override fun onDrawerVerticalOffsetChanged(session: ChooserSession, offset: Int) {
-                chooserWindowTopOffset.value = offset
+            override fun onSizeChanged(session: ChooserSession, size: Rect) {
+                chooserWindowTopOffset.value = size.top
             }
         }
 

@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 The Android Open Source Project
+ * Copyright 2025 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,11 +14,11 @@
  * limitations under the License.
  */
 
-package com.android.intentresolver;
+package android.service.chooser;
 
-import com.android.intentresolver.IChooserController;
+import android.content.Intent;
 
-interface IChooserInteractiveSessionCallback {
-    oneway void registerChooserController(in IChooserController updater);
-    oneway void onDrawerVerticalOffsetChanged(in int offset);
+/** {@hide} */
+interface IChooserController {
+    oneway void updateIntent(in Intent intent);
 }
