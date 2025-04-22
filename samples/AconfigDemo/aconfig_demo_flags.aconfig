@@ -30,6 +30,13 @@ flag {
 }
 
 flag {
+  name: "awesome_demo_flag"
+  namespace: "test"
+  description: "Yet ANOTHER awesome flag for testing purposes."
+  bug: "411155129"
+}
+
+flag {
     name: "fifth_flag"
     namespace: "configuration"
     description: "The fifth flag, added right after the first three flags."

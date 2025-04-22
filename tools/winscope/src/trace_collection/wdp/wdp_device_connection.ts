@@ -14,11 +14,8 @@
  * limitations under the License.
  */
 
-import {
-  byteArrayToString,
-  ResizableBuffer,
-  stringToByteArray,
-} from 'common/buffer_utils';
+import {ResizableBuffer} from 'common/buffer_utils';
+import {binaryEncode, utf8Decode} from 'common/string_utils';
 import {UserNotifier} from 'common/user_notifier';
 import {WindowUtils} from 'common/window_utils';
 import {
@@ -78,7 +75,7 @@ export class WdpDeviceConnection extends AdbDeviceConnection {
     const stream = this.createShellStream(dataListener, errorListener);
     await stream.connect(cmd);
     await stream.complete;
-    const output = byteArrayToString(cmdOut.get()).trimEnd();
+    const output = utf8Decode(cmdOut.get()).trimEnd();
     this.streamProvider.removeStream(stream);
     return output;
   }
@@ -166,7 +163,7 @@ export class WdpDeviceConnection extends AdbDeviceConnection {
     const stream = this.createShellStream(dataListener);
     this.screenRecordingStreams.set(target.traceName, stream);
     stream.complete.then(() => {
-      const stdout = byteArrayToString(cmdOut.get());
+      const stdout = utf8Decode(cmdOut.get());
       const index = stdout.indexOf('ERROR');
       if (index === -1) {
         return;
@@ -180,7 +177,7 @@ export class WdpDeviceConnection extends AdbDeviceConnection {
       UserNotifier.add(new ProxyTracingErrors([output])).notify();
     });
     await stream.connect();
-    await stream.write(stringToByteArray(target.startCmd));
+    await stream.write(binaryEncode(target.startCmd));
   }
 
   private createShellStream(

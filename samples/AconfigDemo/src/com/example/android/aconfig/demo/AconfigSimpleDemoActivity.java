@@ -17,9 +17,11 @@
 package com.example.android.aconfig.demo;
 
 import android.app.Activity;
+import android.graphics.Color;
 import android.os.Bundle;
-import android.text.method.ScrollingMovementMethod;
 import android.widget.TextView;
+
+import com.example.android.aconfig.demo.flags.Flags;
 
 /** Display for the simple demo. */
 public class AconfigSimpleDemoActivity extends Activity {
@@ -29,8 +31,19 @@ public class AconfigSimpleDemoActivity extends Activity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.simple_demo);
 
-        TextView mainTextView = (TextView) findViewById(R.id.mainTextView);
-        mainTextView.setMovementMethod(new ScrollingMovementMethod());
-        mainTextView.setText("This is the simple demo page.");
+        TextView flaggedTextView = (TextView) findViewById(R.id.flaggedTextView);
+        // flaggedTextView.setText("The flag doesn't exist yet.");
+        // flaggedTextView.setBackgroundColor(Color.parseColor("#FFFFFF"));
+        // flaggedTextView.setTextColor(Color.parseColor("#000000"));
+
+        if (Flags.awesomeDemoFlag()) {
+            flaggedTextView.setText("Flag is ON.");
+            flaggedTextView.setBackgroundColor(Color.parseColor("#1e8e3e"));
+            flaggedTextView.setTextColor(Color.parseColor("#ffffff"));
+        } else {
+            flaggedTextView.setText("Flag is OFF.");
+            flaggedTextView.setBackgroundColor(Color.parseColor("#d93025"));
+            flaggedTextView.setTextColor(Color.parseColor("#ffffff"));
+        }
     }
 }

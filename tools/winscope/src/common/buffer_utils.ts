@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 
+import {binaryEncode} from './string_utils';
+
 export class ResizableBuffer {
   private buffer: Uint8Array;
   private capacityUsed = 0;
@@ -99,19 +101,7 @@ export class ArrayBufferBuilder {
   }
 
   private setAscii(buffer: Uint8Array, byteOffset: number, token: string) {
-    const byteArray = stringToByteArray(token);
+    const byteArray = binaryEncode(token);
     buffer.set(byteArray, byteOffset);
   }
-}
-
-export function stringToByteArray(str: string): Uint8Array {
-  const data = new Uint8Array(str.length);
-  for (let i = 0; i < str.length; ++i) {
-    data[i] = str.charCodeAt(i);
-  }
-  return data;
-}
-
-export function byteArrayToString(data: Uint8Array): string {
-  return new TextDecoder('utf-8').decode(data);
 }

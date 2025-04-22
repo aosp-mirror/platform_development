@@ -284,7 +284,6 @@ the default for its data type.`,
           TreeNodeUtils.makeUiPropertyNode('', 'hashCode', 32720206),
         );
         await presenter.onAppEvent(this.getPositionUpdate());
-        console.log(uiData.hierarchyTrees?.at(0)?.getAllChildren()[0].id);
         await presenter.onPropagatePropertyClick(validHashcode);
         expect(uiData.highlightedItem).toEqual(
           'DisplayContent 1f3454e Built-in Screen',

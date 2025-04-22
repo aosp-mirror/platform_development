@@ -23,6 +23,14 @@ describe('FileUtils', () => {
     expect(FileUtils.getFileExtension('winscopezip')).toEqual(undefined);
   });
 
+  it('extracts file directories', () => {
+    expect(FileUtils.getFileDirectory('test/winscope.zip')).toEqual('test');
+    expect(FileUtils.getFileDirectory('test/test/winscope.zip')).toEqual(
+      'test/test',
+    );
+    expect(FileUtils.getFileDirectory('winscope.zip')).toEqual(undefined);
+  });
+
   it('removes directory from filename', () => {
     expect(FileUtils.removeDirFromFileName('test/winscope.zip')).toEqual(
       'winscope.zip',

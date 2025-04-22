@@ -17,16 +17,15 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:gravity="center"
-    android:layout_marginTop="100dip">
+    android:gravity="center">
 
     <TextView
-        android:id="@+id/mainTextView"
+        android:id="@+id/flaggedTextView"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="match_parent"
         android:scrollbars="vertical"
-        android:textSize="24sp"
+        android:textSize="44sp"
         android:padding="12dip"
-        android:textColor="#444444"/>
+        android:gravity="center"/>
 
 </LinearLayout>

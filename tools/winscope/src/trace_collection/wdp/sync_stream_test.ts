@@ -14,11 +14,8 @@
  * limitations under the License.
  */
 
-import {
-  ArrayBufferBuilder,
-  byteArrayToString,
-  stringToByteArray,
-} from 'common/buffer_utils';
+import {ArrayBufferBuilder} from 'common/buffer_utils';
+import {base64Encode, binaryEncode, utf8Decode} from 'common/string_utils';
 import {UnitTestUtils} from 'test/unit/utils';
 import {SyncStream} from './sync_stream';
 
@@ -26,7 +23,7 @@ describe('SyncStream', () => {
   const serialNumber = '123';
   const errorListener = jasmine.createSpy();
   const testFileDataString = 'test file data';
-  const testFileData = stringToByteArray(testFileDataString);
+  const testFileData = binaryEncode(testFileDataString);
   const testFilepath = 'test_filepath';
   const expectedSendBuffer = new Uint8Array(
     new ArrayBufferBuilder()
@@ -59,14 +56,14 @@ describe('SyncStream', () => {
     );
   });
 
-  it('calls error listener if unexpected message type received - AdbResponse json', async () => {
+  it('calls error listener if unexpected message type received - AdbResponse json without response', async () => {
     setMessageResponses([
       JSON.stringify({error: {type: '', message: 'failed'}}),
     ]);
     const receivedData = await stream.pullFile(testFilepath);
     expect(errorListener).toHaveBeenCalledOnceWith(
       `Could not parse data:\nReceived: {"error":{"type":"","message":"failed"}}` +
-        `\nError: Expected message data to be ArrayBuffer or Blob.` +
+        `\nError: Received empty ADB response.` +
         `\nADB Error: failed`,
     );
     expect(receivedData).toEqual(Uint8Array.from([]));
@@ -78,7 +75,7 @@ describe('SyncStream', () => {
     const receivedData = await stream.pullFile(testFilepath);
     expect(errorListener).toHaveBeenCalledOnceWith(
       `Could not parse data:\nReceived: unknown error` +
-        `\nError: Expected message data to be ArrayBuffer or Blob.`,
+        `\nError: Failed to decode ADB JSON response.`,
     );
     expect(receivedData).toEqual(Uint8Array.from([]));
     errorListener.calls.reset();
@@ -101,7 +98,7 @@ describe('SyncStream', () => {
       .build();
     setMessageResponses([messageData]);
     const receivedData = await stream.pullFile(testFilepath);
-    expect(byteArrayToString(receivedData)).toEqual(testFileDataString);
+    expect(utf8Decode(receivedData)).toEqual(testFileDataString);
   });
 
   it('pulls file data from one chunk across two messages', async () => {
@@ -115,7 +112,7 @@ describe('SyncStream', () => {
       .build();
     setMessageResponses([messageData1, messageData2]);
     const receivedData = await stream.pullFile(testFilepath);
-    expect(byteArrayToString(receivedData)).toEqual(testFileDataString);
+    expect(utf8Decode(receivedData)).toEqual(testFileDataString);
   });
 
   it('pulls file data from one chunk across three messages', async () => {
@@ -131,7 +128,7 @@ describe('SyncStream', () => {
       .build();
     setMessageResponses([messageData1, messageData2, messageData3]);
     const receivedData = await stream.pullFile(testFilepath);
-    expect(byteArrayToString(receivedData)).toEqual(testFileDataString);
+    expect(utf8Decode(receivedData)).toEqual(testFileDataString);
   });
 
   it('pulls file data from multiple chunks in one message', async () => {
@@ -143,7 +140,7 @@ describe('SyncStream', () => {
       .build();
     setMessageResponses([messageData]);
     const receivedData = await stream.pullFile(testFilepath);
-    expect(byteArrayToString(receivedData)).toEqual(testFileDataString);
+    expect(utf8Decode(receivedData)).toEqual(testFileDataString);
   });
 
   it('pulls file data from multiple chunks, one chunk per message', async () => {
@@ -157,7 +154,7 @@ describe('SyncStream', () => {
       .build();
     setMessageResponses([messageData1, messageData2]);
     const receivedData = await stream.pullFile(testFilepath);
-    expect(byteArrayToString(receivedData)).toEqual(testFileDataString);
+    expect(utf8Decode(receivedData)).toEqual(testFileDataString);
   });
 
   it('pulls file data from multiple chunks across multiple messages', async () => {
@@ -173,7 +170,7 @@ describe('SyncStream', () => {
       .build();
     setMessageResponses([messageData1, messageData2]);
     const receivedData = await stream.pullFile(testFilepath);
-    expect(byteArrayToString(receivedData)).toEqual(testFileDataString);
+    expect(utf8Decode(receivedData)).toEqual(testFileDataString);
   });
 
   it('pulls file data where DATA id is in separate message', async () => {
@@ -185,7 +182,7 @@ describe('SyncStream', () => {
       .build();
     setMessageResponses([messageData1, messageData2]);
     const receivedData = await stream.pullFile(testFilepath);
-    expect(byteArrayToString(receivedData)).toEqual(testFileDataString);
+    expect(utf8Decode(receivedData)).toEqual(testFileDataString);
   });
 
   it('pulls file data where DONE id is in separate message', async () => {
@@ -197,7 +194,7 @@ describe('SyncStream', () => {
       .build();
     setMessageResponses([messageData1, messageData2]);
     const receivedData = await stream.pullFile(testFilepath);
-    expect(byteArrayToString(receivedData)).toEqual(testFileDataString);
+    expect(utf8Decode(receivedData)).toEqual(testFileDataString);
   });
 
   it('pulls file data where DATA and DONE ids in separate messages', async () => {
@@ -212,7 +209,7 @@ describe('SyncStream', () => {
       .build();
     setMessageResponses([messageData1, messageData2, messageData3]);
     const receivedData = await stream.pullFile(testFilepath);
-    expect(byteArrayToString(receivedData)).toEqual(testFileDataString);
+    expect(utf8Decode(receivedData)).toEqual(testFileDataString);
   });
 
   it('robust to file data where length is too small', async () => {
@@ -227,7 +224,7 @@ describe('SyncStream', () => {
       webSocket.onmessage!(message);
     });
     const receivedData = await stream.pullFile(testFilepath);
-    expect(byteArrayToString(receivedData)).toEqual(testFileDataString);
+    expect(utf8Decode(receivedData)).toEqual(testFileDataString);
   });
 
   it('robust to unexpected id at start of chunk', async () => {
@@ -242,7 +239,7 @@ describe('SyncStream', () => {
       .build();
     setMessageResponses([messageData1, messageData2]);
     const receivedData = await stream.pullFile(testFilepath);
-    expect(byteArrayToString(receivedData)).toEqual('tes');
+    expect(utf8Decode(receivedData)).toEqual('tes');
   });
 
   it('pulls file data from blob', async () => {
@@ -251,7 +248,19 @@ describe('SyncStream', () => {
       .build();
     setMessageResponses([new Blob([messageData])]);
     const receivedData = await stream.pullFile(testFilepath);
-    expect(byteArrayToString(receivedData)).toEqual(testFileDataString);
+    expect(utf8Decode(receivedData)).toEqual(testFileDataString);
+  });
+
+  it('pulls file data from AdbResponse json message with response', async () => {
+    const data = new ArrayBufferBuilder()
+      .append(['DATA', testFileData.length, testFileData, 'DONE', emptyByte])
+      .build();
+    const messageData = JSON.stringify({
+      response: base64Encode(new Uint8Array(data)),
+    });
+    setMessageResponses([messageData]);
+    const receivedData = await stream.pullFile(testFilepath);
+    expect(utf8Decode(receivedData)).toEqual(testFileDataString);
   });
 
   function setMessageResponses(

@@ -14,8 +14,9 @@
  * limitations under the License.
  */
 
-import {ArrayBufferBuilder, stringToByteArray} from 'common/buffer_utils';
+import {ArrayBufferBuilder} from 'common/buffer_utils';
 import {FunctionUtils} from 'common/function_utils';
+import {binaryEncode} from 'common/string_utils';
 import {WindowUtils} from 'common/window_utils';
 import {
   ProxyTracingErrors,
@@ -43,7 +44,7 @@ describe('WdpDeviceConnection', () => {
   const testId = 'test id';
   const testApproveUrl = 'test_approve_url';
   let connection: WdpDeviceConnection;
-  const emptyResp = stringToByteArray('').buffer;
+  const emptyResp = binaryEncode('').buffer;
   let popupSpy: jasmine.Spy;
   let openStream: ShellStream | undefined;
 
@@ -299,7 +300,7 @@ describe('WdpDeviceConnection', () => {
           resps: [''],
         },
         {
-          command: stringToByteArray(startCmd),
+          command: binaryEncode(startCmd),
           resps: [''],
         },
       ];
@@ -330,7 +331,7 @@ describe('WdpDeviceConnection', () => {
           resps: [''],
         },
         {
-          command: stringToByteArray(startCmd),
+          command: binaryEncode(startCmd),
           resps: [''],
         },
         {
@@ -352,7 +353,7 @@ describe('WdpDeviceConnection', () => {
           resps: [''],
         },
         {
-          command: stringToByteArray(startCmd),
+          command: binaryEncode(startCmd),
           resps: ['ERROR: please check your display state'],
         },
         {
@@ -376,7 +377,7 @@ describe('WdpDeviceConnection', () => {
   });
 
   describe('fetching file:', () => {
-    const fileData = stringToByteArray('4');
+    const fileData = binaryEncode('4');
     const encodedData = new ArrayBufferBuilder()
       .append([
         'DATA',
@@ -455,7 +456,7 @@ Error: Expected message data to be ArrayBuffer or Blob.`,
           .withArgs(makeServiceCommandJson(command))
           .and.callFake(async () => {
             resps.forEach((resp) => {
-              const data = stringToByteArray(resp).buffer;
+              const data = binaryEncode(resp).buffer;
               const message = UnitTestUtils.makeFakeWebSocketMessage(data);
               fakeAdbSocket.onmessage!(message);
             });
@@ -472,7 +473,7 @@ Error: Expected message data to be ArrayBuffer or Blob.`,
         fakeAdbSocket.send.withArgs(data).and.callFake(async () => {
           resps.forEach((resp) => {
             openStream = shellStream;
-            const data = stringToByteArray(resp).buffer;
+            const data = binaryEncode(resp).buffer;
             const message = UnitTestUtils.makeFakeWebSocketMessage(data);
             fakeAdbSocket.onmessage!(message);
           });

@@ -48,6 +48,20 @@ export class FileUtils {
   }
 
   /**
+   * Extracts the file directory from a filename.
+   *
+   * @param filename The filename to extract the directory from.
+   * @return The file directory, or undefined if there is no directory.
+   */
+  static getFileDirectory(filename: string): string | undefined {
+    const lastIndex = filename.lastIndexOf('/');
+    if (lastIndex === -1) {
+      return undefined;
+    }
+    return filename.slice(0, lastIndex);
+  }
+
+  /**
    * Removes the directory from a filename.
    *
    * @param name The filename to remove the directory from.

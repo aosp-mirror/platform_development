@@ -14,8 +14,7 @@
  * limitations under the License.
  */
 
-import {byteArrayToString} from 'common/buffer_utils';
-import {StringUtils} from 'common/string_utils';
+import {isBlank, utf8Decode, utf8Encode} from 'common/string_utils';
 import {Timestamp} from 'common/time/time';
 import {AbstractParser} from 'parsers/legacy/abstract_parser';
 import {TraceType} from 'trace/trace_type';
@@ -25,7 +24,7 @@ import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
 class ParserEventLog extends AbstractParser<PropertyTreeNode, Event> {
   private static readonly MAGIC_NUMBER_STRING = 'EventLog';
   private static readonly MAGIC_NUMBER: number[] = Array.from(
-    new TextEncoder().encode(ParserEventLog.MAGIC_NUMBER_STRING),
+    utf8Encode(ParserEventLog.MAGIC_NUMBER_STRING),
   );
 
   override getTraceType(): TraceType {
@@ -67,21 +66,19 @@ class ParserEventLog extends AbstractParser<PropertyTreeNode, Event> {
   }
 
   private decodeByteArray(bytes: Uint8Array): string[] {
-    const allLogsString = byteArrayToString(bytes);
+    const allLogsString = utf8Decode(bytes);
     const splitLogs = allLogsString.split('\n');
 
     const firstIndexOfEventLogTrace = splitLogs.findIndex((substring) => {
       return (
         !substring.includes(ParserEventLog.MAGIC_NUMBER_STRING) &&
         !substring.includes('beginning of events') &&
-        !StringUtils.isBlank(substring)
+        !isBlank(substring)
       );
     });
 
     const lastIndexOfEventLogTrace = splitLogs.findIndex((substring, index) => {
-      return (
-        index > firstIndexOfEventLogTrace && StringUtils.isBlank(substring)
-      );
+      return index > firstIndexOfEventLogTrace && isBlank(substring);
     });
 
     if (lastIndexOfEventLogTrace === -1) {

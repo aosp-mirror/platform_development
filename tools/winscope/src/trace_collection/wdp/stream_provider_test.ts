@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import {stringToByteArray} from 'common/buffer_utils';
+import {binaryEncode} from 'common/string_utils';
 import {waitToBeCalled} from 'test/unit/spy_utils';
 import {UnitTestUtils} from 'test/unit/utils';
 import {StreamProvider} from './stream_provider';
@@ -73,7 +73,7 @@ describe('StreamProvider', () => {
     );
 
     sock.onmessage!(
-      UnitTestUtils.makeFakeWebSocketMessage(stringToByteArray('').buffer),
+      UnitTestUtils.makeFakeWebSocketMessage(binaryEncode('').buffer),
     );
     expect(dataListener).toHaveBeenCalledTimes(1);
 

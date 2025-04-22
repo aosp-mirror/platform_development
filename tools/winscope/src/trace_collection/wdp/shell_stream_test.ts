@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import {base64Encode} from 'common/string_utils';
 import {TimeUtils} from 'common/time/time_utils';
 import {UnitTestUtils} from 'test/unit/utils';
 import {ShellStream} from './shell_stream';
@@ -80,6 +81,14 @@ describe('ShellStream', () => {
     );
   });
 
+  it('calls data listener on AdbResponse json message with response', async () => {
+    const data = Uint8Array.from([]);
+    const messageData = JSON.stringify({response: base64Encode(data)});
+    const message = UnitTestUtils.makeFakeWebSocketMessage(messageData);
+    webSocket.onmessage!(message);
+    expect(dataListener).toHaveBeenCalledWith(data);
+  });
+
   it('resolves complete promise on close', async () => {
     let completed = false;
     stream.complete.then(() => {
@@ -91,13 +100,13 @@ describe('ShellStream', () => {
     await TimeUtils.wait(() => completed);
   });
 
-  it('calls error listener if unexpected message type received - AdbResponse json', async () => {
+  it('calls error listener if unexpected message type received - AdbResponse json without response', async () => {
     const data = JSON.stringify({error: {type: '', message: 'failed'}});
     const message = UnitTestUtils.makeFakeWebSocketMessage(data);
     webSocket.onmessage!(message);
     expect(errorListener).toHaveBeenCalledOnceWith(
       `Could not parse data:\nReceived: {"error":{"type":"","message":"failed"}}` +
-        `\nError: Expected message data to be ArrayBuffer or Blob.` +
+        `\nError: Received empty ADB response.` +
         `\nADB Error: failed`,
     );
     errorListener.calls.reset();
@@ -108,7 +117,7 @@ describe('ShellStream', () => {
     webSocket.onmessage!(message);
     expect(errorListener).toHaveBeenCalledOnceWith(
       `Could not parse data:\nReceived: unknown error` +
-        `\nError: Expected message data to be ArrayBuffer or Blob.`,
+        `\nError: Failed to decode ADB JSON response.`,
     );
     errorListener.calls.reset();
   });

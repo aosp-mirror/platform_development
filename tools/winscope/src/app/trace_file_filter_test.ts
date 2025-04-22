@@ -84,7 +84,7 @@ describe('TraceFileFilter', () => {
       userNotifierChecker.expectNone();
     });
 
-    it('picks perfetto systrace.pftrace', async () => {
+    it('picks perfetto systrace.pftrace (userdebug builds)', async () => {
       const perfettoSystemTrace = makeTraceFile(
         'FS/data/misc/perfetto-traces/bugreport/systrace.pftrace',
         bugreportArchive,
@@ -108,7 +108,23 @@ describe('TraceFileFilter', () => {
       userNotifierChecker.expectNone();
     });
 
-    it('ignores perfetto traces other than systrace.pftrace', async () => {
+    it('picks perfetto sysui.pftrace (eng builds)', async () => {
+      const perfettoSystemTrace = makeTraceFile(
+        'FS/data/misc/perfetto-traces/bugreport/sysui.pftrace',
+        bugreportArchive,
+      );
+      const bugreportFiles = [
+        await makeBugreportMainEntryTraceFile(),
+        await makeBugreportCodenameTraceFile(),
+        perfettoSystemTrace,
+      ];
+      const result = await filter.filter(bugreportFiles);
+      expect(result.perfetto).toEqual(perfettoSystemTrace);
+      expect(result.legacy).toEqual([]);
+      userNotifierChecker.expectNone();
+    });
+
+    it('ignores perfetto traces not in bugreport directory', async () => {
       const bugreportFiles = [
         await makeBugreportMainEntryTraceFile(),
         await makeBugreportCodenameTraceFile(),
