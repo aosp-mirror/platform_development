@@ -112,7 +112,7 @@ export class TraceTypeUtils {
     return TraceTypeUtils.TRACES_WITH_VIEWERS_DISPLAY_ORDER.includes(t);
   }
 
-  static compareByUiPipelineOrder(t: TraceType, u: TraceType) {
+  static compareByUiPipelineOrder(t: TraceType, u: TraceType): boolean {
     const tIndex = TraceTypeUtils.findIndexInOrder(
       t,
       TraceTypeUtils.UI_PIPELINE_ORDER,
@@ -124,7 +124,7 @@ export class TraceTypeUtils {
     return tIndex >= 0 && uIndex >= 0 && tIndex < uIndex;
   }
 
-  static compareByDisplayOrder(t: TraceType, u: TraceType) {
+  static compareByDisplayOrder(t: TraceType, u: TraceType): number {
     const tIndex = TraceTypeUtils.findIndexInOrder(
       t,
       TraceTypeUtils.TRACES_WITH_VIEWERS_DISPLAY_ORDER,

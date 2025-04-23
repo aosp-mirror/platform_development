@@ -31,8 +31,12 @@ export interface FilterResult {
 }
 
 export class TraceFileFilter {
-  private static readonly BUGREPORT_SYSTRACE_DIR =
+  private static readonly BUGREPORT_PERFETTO_TRACE_DIR =
     'FS/data/misc/perfetto-traces/bugreport';
+  private static readonly BUGREPORT_PERFETTO_TRACE_ORDER = [
+    TraceFileFilter.BUGREPORT_PERFETTO_TRACE_DIR + '/systrace.pftrace',
+    TraceFileFilter.BUGREPORT_PERFETTO_TRACE_DIR + '/sysui.pftrace',
+  ];
   private static readonly BUGREPORT_LEGACY_FILES_ALLOWLIST = [
     'FS/data/misc/wmtrace/',
     'FS/data/misc/perfetto-traces/',
@@ -176,12 +180,24 @@ export class TraceFileFilter {
         unzippedLegacyFiles.push(file);
       }
     }
-    const perfettoFile = perfettoFiles.find((file) => {
-      return (
+    const brPerfettoFiles = perfettoFiles.filter(
+      (file) =>
         FileUtils.getFileDirectory(file.file.name) ===
-        TraceFileFilter.BUGREPORT_SYSTRACE_DIR
+        TraceFileFilter.BUGREPORT_PERFETTO_TRACE_DIR,
+    );
+
+    const getIndex = (fileName: string) => {
+      return TraceFileFilter.BUGREPORT_PERFETTO_TRACE_ORDER.findIndex(
+        (name) => name === fileName,
       );
-    });
+    };
+    const perfettoFile = brPerfettoFiles
+      .filter((file) =>
+        TraceFileFilter.BUGREPORT_PERFETTO_TRACE_ORDER.includes(file.file.name),
+      )
+      .sort((f1, f2) => getIndex(f1.file.name) - getIndex(f2.file.name))
+      .at(0);
+
     return {
       perfetto: perfettoFile,
       legacy: unzippedLegacyFiles,
