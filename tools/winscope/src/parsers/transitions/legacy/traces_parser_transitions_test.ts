@@ -19,7 +19,7 @@ import {
   TimestampConverterUtils,
   timestampEqualityTester,
 } from 'common/time/test_utils';
-import {UnitTestUtils} from 'test/unit/utils';
+import {getTracesParser} from 'test/unit/fixture_utils';
 import {CoarseVersion} from 'trace/coarse_version';
 import {Parser} from 'trace/parser';
 import {TraceType} from 'trace/trace_type';
@@ -30,7 +30,7 @@ describe('TracesParserTransitions', () => {
 
   beforeAll(async () => {
     jasmine.addCustomEqualityTester(timestampEqualityTester);
-    parser = (await UnitTestUtils.getTracesParser([
+    parser = (await getTracesParser([
       'traces/elapsed_and_real_timestamp/wm_transition_trace.pb',
       'traces/elapsed_and_real_timestamp/shell_transition_trace.pb',
     ])) as Parser<PropertyTreeNode>;
@@ -73,7 +73,7 @@ describe('TracesParserTransitions', () => {
   });
 
   it('sets zero timestamp if both dispatch and send time unavailable', async () => {
-    const parser = (await UnitTestUtils.getTracesParser([
+    const parser = (await getTracesParser([
       'traces/elapsed_and_real_timestamp/wm_transition_trace.pb',
       'traces/elapsed_and_real_timestamp/shell_transition_trace.pb',
     ])) as Parser<PropertyTreeNode>;
@@ -93,12 +93,12 @@ describe('TracesParserTransitions', () => {
 
   it('fails to parse without both wm and shell transition traces', async () => {
     await expectAsync(
-      UnitTestUtils.getTracesParser([
+      getTracesParser([
         'traces/elapsed_and_real_timestamp/wm_transition_trace.pb',
       ]),
     ).toBeRejected();
     await expectAsync(
-      UnitTestUtils.getTracesParser([
+      getTracesParser([
         'traces/elapsed_and_real_timestamp/shell_transition_trace.pb',
       ]),
     ).toBeRejected();

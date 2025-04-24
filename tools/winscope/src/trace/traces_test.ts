@@ -18,10 +18,16 @@ import {assertDefined} from 'common/assert_utils';
 import {FunctionUtils} from 'common/function_utils';
 import {TimestampConverterUtils} from 'common/time/test_utils';
 import {TracesBuilder} from 'test/unit/traces_builder';
-import {TracesUtils} from 'test/unit/traces_utils';
+import {
+  extractEntries,
+  extractFrames,
+  extractTraces,
+} from 'test/unit/traces_utils';
 import {TraceBuilder} from 'test/unit/trace_builder';
-import {TraceUtils} from 'test/unit/trace_utils';
-import {UnitTestUtils} from 'test/unit/utils';
+import {
+  extractEntries as extractTraceEntries,
+  makeEmptyTrace,
+} from 'test/unit/trace_utils';
 import {FrameMapBuilder} from './frame_map_builder';
 import {AbsoluteFrameIndex} from './index_types';
 import {Traces} from './traces';
@@ -142,14 +148,14 @@ describe('Traces', () => {
 
   it('getTrace()', async () => {
     expect(
-      await TraceUtils.extractEntries(
+      await extractTraceEntries(
         assertDefined(traces.getTrace(TraceType.TEST_TRACE_STRING)),
       ),
     ).toEqual(
       extractedEntriesFull.get(TraceType.TEST_TRACE_STRING) as string[],
     );
     expect(
-      await TraceUtils.extractEntries(
+      await extractTraceEntries(
         assertDefined(traces.getTrace(TraceType.TEST_TRACE_NUMBER)),
       ),
     ).toEqual(
@@ -165,28 +171,28 @@ describe('Traces', () => {
   });
 
   it('deleteTrace()', () => {
-    const trace0 = UnitTestUtils.makeEmptyTrace(TraceType.TEST_TRACE_STRING);
-    const trace1 = UnitTestUtils.makeEmptyTrace(TraceType.TEST_TRACE_NUMBER);
+    const trace0 = makeEmptyTrace(TraceType.TEST_TRACE_STRING);
+    const trace1 = makeEmptyTrace(TraceType.TEST_TRACE_NUMBER);
 
     const traces = new Traces();
     traces.addTrace(trace0);
     traces.addTrace(trace1);
 
-    expect(TracesUtils.extractTraces(traces)).toEqual([trace0, trace1]);
+    expect(extractTraces(traces)).toEqual([trace0, trace1]);
 
     traces.deleteTrace(trace0);
-    expect(TracesUtils.extractTraces(traces)).toEqual([trace1]);
+    expect(extractTraces(traces)).toEqual([trace1]);
 
     traces.deleteTrace(trace1);
-    expect(TracesUtils.extractTraces(traces)).toEqual([]);
+    expect(extractTraces(traces)).toEqual([]);
 
     traces.deleteTrace(trace1);
-    expect(TracesUtils.extractTraces(traces)).toEqual([]);
+    expect(extractTraces(traces)).toEqual([]);
   });
 
   it('hasTrace()', () => {
-    const trace0 = UnitTestUtils.makeEmptyTrace(TraceType.TEST_TRACE_STRING);
-    const trace1 = UnitTestUtils.makeEmptyTrace(TraceType.TEST_TRACE_NUMBER);
+    const trace0 = makeEmptyTrace(TraceType.TEST_TRACE_STRING);
+    const trace1 = makeEmptyTrace(TraceType.TEST_TRACE_NUMBER);
 
     const traces = new Traces();
     traces.addTrace(trace0);
@@ -199,21 +205,17 @@ describe('Traces', () => {
     // empty
     {
       const slice = traces.sliceTime(time3, time3);
-      expect(await TracesUtils.extractEntries(slice)).toEqual(
-        extractedEntriesEmpty,
-      );
+      expect(await extractEntries(slice)).toEqual(extractedEntriesEmpty);
     }
     // full
     {
       const slice = traces.sliceTime();
-      expect(await TracesUtils.extractEntries(slice)).toEqual(
-        extractedEntriesFull,
-      );
+      expect(await extractEntries(slice)).toEqual(extractedEntriesFull);
     }
     // middle
     {
       const slice = traces.sliceTime(time4, time8);
-      expect(await TracesUtils.extractEntries(slice)).toEqual(
+      expect(await extractEntries(slice)).toEqual(
         new Map<TraceType, Array<{}>>([
           [TraceType.TEST_TRACE_STRING, ['2', '3']],
           [TraceType.TEST_TRACE_NUMBER, [1, 2]],
@@ -223,7 +225,7 @@ describe('Traces', () => {
     // slice away front
     {
       const slice = traces.sliceTime(time8);
-      expect(await TracesUtils.extractEntries(slice)).toEqual(
+      expect(await extractEntries(slice)).toEqual(
         new Map<TraceType, Array<{}>>([
           [TraceType.TEST_TRACE_STRING, ['4']],
           [TraceType.TEST_TRACE_NUMBER, [3, 4]],
@@ -233,7 +235,7 @@ describe('Traces', () => {
     // slice away back
     {
       const slice = traces.sliceTime(undefined, time8);
-      expect(await TracesUtils.extractEntries(slice)).toEqual(
+      expect(await extractEntries(slice)).toEqual(
         new Map<TraceType, Array<{}>>([
           [TraceType.TEST_TRACE_STRING, ['0', '1', '2', '3']],
           [TraceType.TEST_TRACE_NUMBER, [0, 1, 2]],
@@ -246,16 +248,12 @@ describe('Traces', () => {
     // empty
     {
       const slice = traces.sliceFrames(1, 1);
-      expect(await TracesUtils.extractFrames(slice)).toEqual(
-        extractedFramesEmpty,
-      );
+      expect(await extractFrames(slice)).toEqual(extractedFramesEmpty);
     }
     // full
     {
       const slice = traces.sliceFrames();
-      expect(await TracesUtils.extractFrames(slice)).toEqual(
-        extractedFramesFull,
-      );
+      expect(await extractFrames(slice)).toEqual(extractedFramesFull);
     }
     // middle
     {
@@ -263,7 +261,7 @@ describe('Traces', () => {
       const expectedFrames = structuredClone(extractedFramesFull);
       expectedFrames.delete(0);
       expectedFrames.delete(4);
-      expect(await TracesUtils.extractFrames(slice)).toEqual(expectedFrames);
+      expect(await extractFrames(slice)).toEqual(expectedFrames);
     }
     // slice away front
     {
@@ -271,7 +269,7 @@ describe('Traces', () => {
       const expectedFrames = structuredClone(extractedFramesFull);
       expectedFrames.delete(0);
       expectedFrames.delete(1);
-      expect(await TracesUtils.extractFrames(slice)).toEqual(expectedFrames);
+      expect(await extractFrames(slice)).toEqual(expectedFrames);
     }
     // slice away back
     {
@@ -280,23 +278,21 @@ describe('Traces', () => {
       expectedFrames.delete(2);
       expectedFrames.delete(3);
       expectedFrames.delete(4);
-      expect(await TracesUtils.extractFrames(slice)).toEqual(expectedFrames);
+      expect(await extractFrames(slice)).toEqual(expectedFrames);
     }
   });
 
   it('mapTrace()', async () => {
     const promises = traces.mapTrace(async (trace) => {
       const expectedEntries = extractedEntriesFull.get(trace.type) as Array<{}>;
-      const actualEntries = await TraceUtils.extractEntries(trace);
+      const actualEntries = await extractTraceEntries(trace);
       expect(actualEntries).toEqual(expectedEntries);
     });
     await Promise.all(promises);
   });
 
   it('mapFrame()', async () => {
-    expect(await TracesUtils.extractFrames(traces)).toEqual(
-      extractedFramesFull,
-    );
+    expect(await extractFrames(traces)).toEqual(extractedFramesFull);
   });
 
   it('supports empty traces', async () => {
@@ -314,24 +310,20 @@ describe('Traces', () => {
       )
       .build();
 
-    expect(await TracesUtils.extractEntries(traces)).toEqual(
+    expect(await extractEntries(traces)).toEqual(extractedEntriesEmpty);
+    expect(await extractFrames(traces)).toEqual(extractedFramesEmpty);
+
+    expect(await extractEntries(traces.sliceTime(time1, time10))).toEqual(
       extractedEntriesEmpty,
     );
-    expect(await TracesUtils.extractFrames(traces)).toEqual(
+    expect(await extractFrames(traces.sliceTime(time1, time10))).toEqual(
       extractedFramesEmpty,
     );
 
-    expect(
-      await TracesUtils.extractEntries(traces.sliceTime(time1, time10)),
-    ).toEqual(extractedEntriesEmpty);
-    expect(
-      await TracesUtils.extractFrames(traces.sliceTime(time1, time10)),
-    ).toEqual(extractedFramesEmpty);
-
-    expect(await TracesUtils.extractEntries(traces.sliceFrames(0, 10))).toEqual(
+    expect(await extractEntries(traces.sliceFrames(0, 10))).toEqual(
       extractedEntriesEmpty,
     );
-    expect(await TracesUtils.extractFrames(traces.sliceFrames(0, 10))).toEqual(
+    expect(await extractFrames(traces.sliceFrames(0, 10))).toEqual(
       extractedFramesEmpty,
     );
   });
@@ -352,10 +344,8 @@ describe('Traces', () => {
       [TraceType.TEST_TRACE_NUMBER, [0]],
     ]);
 
-    expect(await TracesUtils.extractEntries(traces)).toEqual(expectedEntries);
-    expect(await TracesUtils.extractEntries(traces.sliceTime())).toEqual(
-      expectedEntries,
-    );
+    expect(await extractEntries(traces)).toEqual(expectedEntries);
+    expect(await extractEntries(traces.sliceTime())).toEqual(expectedEntries);
 
     expect(() => {
       traces.sliceFrames();

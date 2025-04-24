@@ -20,7 +20,7 @@ import {
   timestampEqualityTester,
 } from 'common/time/test_utils';
 import {Timestamp} from 'common/time/time';
-import {UnitTestUtils} from 'test/unit/utils';
+import {getParser} from 'test/unit/fixture_utils';
 import {CoarseVersion} from 'trace/coarse_version';
 import {Parser} from 'trace/parser';
 import {TraceType} from 'trace/trace_type';
@@ -46,9 +46,7 @@ const genProtoLogTest =
 
     beforeAll(async () => {
       jasmine.addCustomEqualityTester(timestampEqualityTester);
-      parser = (await UnitTestUtils.getParser(
-        traceFile,
-      )) as Parser<PropertyTreeNode>;
+      parser = (await getParser(traceFile)) as Parser<PropertyTreeNode>;
     });
 
     it('has expected trace type', () => {
@@ -71,26 +69,6 @@ const genProtoLogTest =
     });
 
     it('reconstructs human-readable log message', async () => {
-      const message = await parser.getEntry(0);
-
-      expect(
-        assertDefined(message.getChildByName('text')).formattedValue(),
-      ).toEqual(expectedFirstMessage['message']);
-      expect(
-        assertDefined(message.getChildByName('timestamp')).formattedValue(),
-      ).toEqual(expectedFirstMessage['ts']);
-      expect(
-        assertDefined(message.getChildByName('tag')).formattedValue(),
-      ).toEqual(expectedFirstMessage['tag']);
-      expect(
-        assertDefined(message.getChildByName('level')).formattedValue(),
-      ).toEqual(expectedFirstMessage['level']);
-      expect(
-        assertDefined(message.getChildByName('at')).formattedValue(),
-      ).toEqual(expectedFirstMessage['at']);
-    });
-
-    it('reconstructs human-readable log message (REAL time)', async () => {
       const message = await parser.getEntry(0);
 
       expect(

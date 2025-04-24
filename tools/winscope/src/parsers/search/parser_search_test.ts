@@ -16,13 +16,14 @@
 
 import {assertDefined} from 'common/assert_utils';
 import {
+  getTimestampConverter,
   TimestampConverterUtils,
   timestampEqualityTester,
 } from 'common/time/test_utils';
 import {TraceSearchQueryFailed} from 'messaging/user_warnings';
 import {ParserSurfaceFlinger} from 'parsers/surface_flinger/perfetto/parser_surface_flinger';
+import {getPerfettoParser} from 'test/unit/fixture_utils';
 import {UserNotifierChecker} from 'test/unit/user_notifier_checker';
-import {UnitTestUtils} from 'test/unit/utils';
 import {CoarseVersion} from 'trace/coarse_version';
 import {TraceType} from 'trace/trace_type';
 import {ParserSearch} from './parser_search';
@@ -166,12 +167,12 @@ describe('ParserSearch', () => {
 
   async function createParser(query: string): Promise<ParserSearch> {
     await (
-      (await UnitTestUtils.getPerfettoParser(
+      (await getPerfettoParser(
         TraceType.SURFACE_FLINGER,
         'traces/perfetto/layers_trace.perfetto-trace',
       )) as ParserSurfaceFlinger
     ).parse();
-    parser = new ParserSearch(query, UnitTestUtils.getTimestampConverter());
+    parser = new ParserSearch(query, getTimestampConverter());
     await parser.parse();
     return parser;
   }

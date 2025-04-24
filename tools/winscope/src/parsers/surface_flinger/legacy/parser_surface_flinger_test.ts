@@ -19,9 +19,9 @@ import {
   timestampEqualityTester,
 } from 'common/time/test_utils';
 import {DuplicateLayerIds} from 'messaging/user_warnings';
+import {getParser} from 'test/unit/fixture_utils';
 import {TraceBuilder} from 'test/unit/trace_builder';
 import {UserNotifierChecker} from 'test/unit/user_notifier_checker';
-import {UnitTestUtils} from 'test/unit/utils';
 import {CoarseVersion} from 'trace/coarse_version';
 import {CustomQueryType} from 'trace/custom_query';
 import {Parser} from 'trace/parser';
@@ -48,7 +48,7 @@ describe('ParserSurfaceFlinger', () => {
 
     beforeAll(async () => {
       jasmine.addCustomEqualityTester(timestampEqualityTester);
-      parser = (await UnitTestUtils.getParser(
+      parser = (await getParser(
         'traces/elapsed_and_real_timestamp/SurfaceFlinger.pb',
       )) as Parser<HierarchyTreeNode>;
       trace = new TraceBuilder<HierarchyTreeNode>()
@@ -153,7 +153,7 @@ describe('ParserSurfaceFlinger', () => {
     });
 
     it('is robust to duplicated layer ids', async () => {
-      const parser = (await UnitTestUtils.getParser(
+      const parser = (await getParser(
         'traces/elapsed_and_real_timestamp/SurfaceFlinger_with_duplicated_ids.pb',
       )) as Parser<HierarchyTreeNode>;
       const entry = await parser.getEntry(0);
@@ -192,7 +192,7 @@ describe('ParserSurfaceFlinger', () => {
     let parser: Parser<HierarchyTreeNode>;
 
     beforeAll(async () => {
-      parser = (await UnitTestUtils.getParser(
+      parser = (await getParser(
         'traces/elapsed_timestamp/SurfaceFlinger.pb',
       )) as Parser<HierarchyTreeNode>;
     });

@@ -30,6 +30,8 @@ export enum WinscopeEventType {
   APP_TRACE_VIEW_REQUEST,
   APP_TRACE_VIEW_REQUEST_HANDLED,
   APP_REFRESH_DUMPS_REQUEST,
+  BUGREPORT_FILE_SELECTED,
+  BUGREPORT_FILE_SELECTION_REQUEST,
   REMOTE_TOOL_DOWNLOAD_START,
   REMOTE_TOOL_FILES_RECEIVED,
   REMOTE_TOOL_TIMESTAMP_RECEIVED,
@@ -61,6 +63,8 @@ interface TypeMap {
   [WinscopeEventType.APP_TRACE_VIEW_REQUEST]: AppTraceViewRequest;
   [WinscopeEventType.APP_TRACE_VIEW_REQUEST_HANDLED]: AppTraceViewRequestHandled;
   [WinscopeEventType.APP_REFRESH_DUMPS_REQUEST]: AppRefreshDumpsRequest;
+  [WinscopeEventType.BUGREPORT_FILE_SELECTED]: BugreportFileSelected;
+  [WinscopeEventType.BUGREPORT_FILE_SELECTION_REQUEST]: BugreportFileSelectionRequest;
   [WinscopeEventType.REMOTE_TOOL_DOWNLOAD_START]: RemoteToolDownloadStart;
   [WinscopeEventType.REMOTE_TOOL_FILES_RECEIVED]: RemoteToolFilesReceived;
   [WinscopeEventType.REMOTE_TOOL_TIMESTAMP_RECEIVED]: RemoteToolTimestampReceived;
@@ -299,4 +303,20 @@ export class TraceSearchInitialized extends WinscopeEvent {
 
 export class TraceSearchCompleted extends WinscopeEvent {
   override readonly type = WinscopeEventType.TRACE_SEARCH_COMPLETED;
+}
+
+export class BugreportFileSelected extends WinscopeEvent {
+  override readonly type = WinscopeEventType.BUGREPORT_FILE_SELECTED;
+
+  constructor(readonly filename: string | undefined) {
+    super();
+  }
+}
+
+export class BugreportFileSelectionRequest extends WinscopeEvent {
+  override readonly type = WinscopeEventType.BUGREPORT_FILE_SELECTION_REQUEST;
+
+  constructor(readonly filenames: string[]) {
+    super();
+  }
 }

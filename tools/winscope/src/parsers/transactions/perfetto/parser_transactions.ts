@@ -21,10 +21,9 @@ import {SetFormatters} from 'parsers/operations/set_formatters';
 import {AbstractParser} from 'parsers/perfetto/abstract_parser';
 import {FakeProtoTransformer} from 'parsers/perfetto/fake_proto_transformer';
 import {Utils} from 'parsers/perfetto/utils';
-import {TamperedMessageType} from 'parsers/tampered_message_type';
+import {TAMPERED_TRACE_PACKET} from 'parsers/tampered_message_type';
 import {TranslateChanges} from 'parsers/transactions/operations/translate_changes';
-import root from 'protos/transactions/latest/json';
-import {perfetto} from 'protos/transactions/latest/static';
+import {perfetto} from 'protos/perfetto/trace/static';
 import {
   CustomQueryParserResultTypeMap,
   CustomQueryType,
@@ -38,12 +37,8 @@ import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
 import {TraceProcessor} from 'trace_processor/trace_processor';
 
 export class ParserTransactions extends AbstractParser<PropertyTreeNode> {
-  private static readonly TransactionsTraceFileProto =
-    TamperedMessageType.tamper(
-      root.lookupType('perfetto.protos.TransactionTraceFile'),
-    );
   private static readonly TransactionsTraceEntryField =
-    ParserTransactions.TransactionsTraceFileProto.fields['entry'];
+    TAMPERED_TRACE_PACKET.fields['surfaceflingerTransactions'];
 
   private static readonly OPERATIONS = [
     new AddDefaults(ParserTransactions.TransactionsTraceEntryField),

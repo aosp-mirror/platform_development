@@ -16,8 +16,8 @@
 
 import {CdkVirtualScrollViewport} from '@angular/cdk/scrolling';
 import {DOMTestHelper} from 'test/unit/dom_test_utils';
+import {getTracesParser} from 'test/unit/fixture_utils';
 import {TraceBuilder} from 'test/unit/trace_builder';
-import {UnitTestUtils} from 'test/unit/utils';
 import {Parser} from 'trace/parser';
 import {TraceEntry} from 'trace/trace';
 import {TraceType} from 'trace/trace_type';
@@ -46,7 +46,7 @@ class ViewerJankCujsComponentTest extends AbstractLogViewerComponentTest<ViewerJ
       ViewerJankCujsComponent,
     ]
   > {
-    const parser = (await UnitTestUtils.getTracesParser([
+    const parser = (await getTracesParser([
       'traces/elapsed_and_real_timestamp/eventlog.winscope',
     ])) as Parser<PropertyTreeNode>;
 

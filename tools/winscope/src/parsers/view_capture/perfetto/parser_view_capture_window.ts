@@ -22,11 +22,10 @@ import {AbstractParser} from 'parsers/perfetto/abstract_parser';
 import {FakeProto, FakeProtoBuilder} from 'parsers/perfetto/fake_proto_builder';
 import {FakeProtoTransformer} from 'parsers/perfetto/fake_proto_transformer';
 import {Utils} from 'parsers/perfetto/utils';
-import {TamperedMessageType} from 'parsers/tampered_message_type';
+import {TAMPERED_WINSCOPE_EXTENSIONS} from 'parsers/tampered_message_type';
 import {RectsComputation} from 'parsers/view_capture/computations/rects_computation';
 import {VisibilityComputation} from 'parsers/view_capture/computations/visibility_computation';
-import root from 'protos/viewcapture/latest/json';
-import {perfetto} from 'protos/viewcapture/latest/static';
+import {perfetto} from 'protos/perfetto/trace/static';
 import {
   CustomQueryParserResultTypeMap,
   CustomQueryType,
@@ -44,11 +43,11 @@ import {TraceProcessor} from 'trace_processor/trace_processor';
 import {HierarchyTreeBuilderVc} from './hierarchy_tree_builder_vc';
 
 export class ParserViewCaptureWindow extends AbstractParser<HierarchyTreeNode> {
-  private static readonly PROTO_WRAPPER_MESSAGE = TamperedMessageType.tamper(
-    root.lookupType('perfetto.protos.Wrapper'),
+  private static readonly PROTO_VIEWCAPTURE_FIELD = assertDefined(
+    TAMPERED_WINSCOPE_EXTENSIONS.fields[
+      '.perfetto.protos.WinscopeExtensionsImpl.viewcapture'
+    ],
   );
-  private static readonly PROTO_VIEWCAPTURE_FIELD =
-    ParserViewCaptureWindow.PROTO_WRAPPER_MESSAGE.fields['viewcapture'];
   private static readonly PROTO_VIEW_FIELD = assertDefined(
     ParserViewCaptureWindow.PROTO_VIEWCAPTURE_FIELD.tamperedMessageType?.fields[
       'views'

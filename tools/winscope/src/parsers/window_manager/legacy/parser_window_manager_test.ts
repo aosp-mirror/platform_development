@@ -18,8 +18,8 @@ import {
   TimestampConverterUtils,
   timestampEqualityTester,
 } from 'common/time/test_utils';
+import {getParser} from 'test/unit/fixture_utils';
 import {TraceBuilder} from 'test/unit/trace_builder';
-import {UnitTestUtils} from 'test/unit/utils';
 import {CoarseVersion} from 'trace/coarse_version';
 import {CustomQueryType} from 'trace/custom_query';
 import {Parser} from 'trace/parser';
@@ -34,7 +34,7 @@ describe('ParserWindowManager', () => {
 
     beforeAll(async () => {
       jasmine.addCustomEqualityTester(timestampEqualityTester);
-      parser = (await UnitTestUtils.getParser(
+      parser = (await getParser(
         'traces/elapsed_and_real_timestamp/WindowManager.pb',
       )) as Parser<HierarchyTreeNode>;
       trace = new TraceBuilder<HierarchyTreeNode>()
@@ -81,7 +81,7 @@ describe('ParserWindowManager', () => {
     let parser: Parser<HierarchyTreeNode>;
 
     beforeAll(async () => {
-      parser = (await UnitTestUtils.getParser(
+      parser = (await getParser(
         'traces/elapsed_timestamp/WindowManager.pb',
       )) as Parser<HierarchyTreeNode>;
     });
@@ -110,7 +110,7 @@ describe('ParserWindowManager', () => {
     let parser: Parser<HierarchyTreeNode>;
 
     beforeAll(async () => {
-      parser = (await UnitTestUtils.getParser(
+      parser = (await getParser(
         'traces/elapsed_and_real_timestamp/window_trace_critical.winscope',
       )) as Parser<HierarchyTreeNode>;
     });

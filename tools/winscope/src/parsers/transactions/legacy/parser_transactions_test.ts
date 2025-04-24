@@ -18,8 +18,8 @@ import {
   TimestampConverterUtils,
   timestampEqualityTester,
 } from 'common/time/test_utils';
+import {getParser} from 'test/unit/fixture_utils';
 import {TraceBuilder} from 'test/unit/trace_builder';
-import {UnitTestUtils} from 'test/unit/utils';
 import {CoarseVersion} from 'trace/coarse_version';
 import {CustomQueryType} from 'trace/custom_query';
 import {Parser} from 'trace/parser';
@@ -32,7 +32,7 @@ describe('ParserTransactions', () => {
 
     beforeAll(async () => {
       jasmine.addCustomEqualityTester(timestampEqualityTester);
-      parser = (await UnitTestUtils.getParser(
+      parser = (await getParser(
         'traces/elapsed_and_real_timestamp/Transactions.pb',
       )) as Parser<PropertyTreeNode>;
     });
@@ -124,7 +124,7 @@ describe('ParserTransactions', () => {
     let parser: Parser<PropertyTreeNode>;
 
     beforeAll(async () => {
-      parser = (await UnitTestUtils.getParser(
+      parser = (await getParser(
         'traces/elapsed_timestamp/Transactions.pb',
       )) as Parser<PropertyTreeNode>;
     });

@@ -18,17 +18,17 @@ import {
   TimestampConverterUtils,
   timestampEqualityTester,
 } from 'common/time/test_utils';
-import {UnitTestUtils} from 'test/unit/utils';
+import {getPerfettoParser} from 'test/unit/fixture_utils';
 import {Parser} from 'trace/parser';
 import {TraceType} from 'trace/trace_type';
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
 
-describe('Perfetto ParserProtolog', () => {
+describe('PerfettoParserProtolog', () => {
   let parser: Parser<PropertyTreeNode>;
 
   beforeAll(async () => {
     jasmine.addCustomEqualityTester(timestampEqualityTester);
-    parser = await UnitTestUtils.getPerfettoParser(
+    parser = await getPerfettoParser(
       TraceType.PROTO_LOG,
       'traces/perfetto/protolog.perfetto-trace',
     );

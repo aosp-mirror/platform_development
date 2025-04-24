@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import {perfetto} from 'protos/windowmanager/latest/static';
+import {perfetto} from 'protos/perfetto/trace/static';
 import {com} from 'protos/windowmanager/udc/static';
 import {
   CustomQueryParserResultTypeMap,

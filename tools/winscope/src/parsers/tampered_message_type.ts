@@ -16,19 +16,35 @@
 
 import {assertDefined} from 'common/assert_utils';
 import * as protobuf from 'protobufjs';
+import root from 'protos/perfetto/trace/json';
 
 export class TamperedMessageType extends protobuf.Type {
+  override fields: {[k: string]: TamperedProtoField} = {};
+
+  static tamperTracePacket(): TamperedMessageType {
+    const tracePacket = root.lookupType('perfetto.protos.TracePacket');
+    const allowList: string[] = [
+      'surfaceflingerLayersSnapshot',
+      'surfaceflingerTransactions',
+      'shellTransition',
+      'protologMessage',
+      'winscopeExtensions',
+    ];
+    TamperedMessageType.tamperTypeDfs(tracePacket, allowList);
+    return tracePacket as TamperedMessageType;
+  }
+
   static tamper(protoType: protobuf.Type): TamperedMessageType {
     TamperedMessageType.tamperTypeDfs(protoType);
     return protoType as TamperedMessageType;
   }
 
-  override fields: {[k: string]: TamperedProtoField} = {};
-
-  private static tamperTypeDfs(protoType: protobuf.Type) {
+  private static tamperTypeDfs(protoType: protobuf.Type, allowList?: string[]) {
     for (const fieldName of Object.keys(protoType.fields)) {
-      const field = protoType.fields[fieldName];
-      TamperedMessageType.tamperFieldDfs(field);
+      if (!allowList || allowList.includes(fieldName)) {
+        const field = protoType.fields[fieldName];
+        TamperedMessageType.tamperFieldDfs(field);
+      }
     }
   }
 
@@ -70,3 +86,9 @@ export class TamperedProtoField extends protobuf.Field {
   tamperedMessageType: TamperedMessageType | undefined;
   tamperedEnumType: protobuf.Enum | undefined;
 }
+
+export const TAMPERED_TRACE_PACKET = TamperedMessageType.tamperTracePacket();
+
+export const TAMPERED_WINSCOPE_EXTENSIONS = assertDefined(
+  TAMPERED_TRACE_PACKET.fields['winscopeExtensions'].tamperedMessageType,
+);

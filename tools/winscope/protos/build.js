@@ -26,68 +26,41 @@ async function build() {
     await runCommand(`rm -rf ${OUT_TOP}`);
 
     const promises = [
-        // IME
+        // IME udc
         buildProtos([
             '../../../../frameworks/base/core/proto/android/view/inputmethod/inputmethodeditortrace.proto'
         ], 'ime/udc'),
-        buildProtos([
-            'ime/latest/wrapper.proto',
-        ], 'ime/latest'),
 
-        // ProtoLog
+        // ProtoLog udc
         buildProtos([
             'protolog/udc/protolog.proto'
         ], 'protolog/udc'),
-        buildProtos([
-            '../../../../external/perfetto/protos/perfetto/trace/android/protolog.proto'
-        ], 'protolog/latest'),
 
-        // SurfaceFlinger
+        // SurfaceFlinger udc
         buildProtos([
             'surfaceflinger/udc/layerstrace.proto',
         ], 'surfaceflinger/udc'),
-        buildProtos([
-            '../../../../external/perfetto/protos/perfetto/trace/android/surfaceflinger_layers.proto',
-        ], 'surfaceflinger/latest'),
 
-        // Transactions
+        // Transactions udc
         buildProtos([
             'surfaceflinger/udc/transactions.proto',
         ], 'transactions/udc'),
-        buildProtos([
-            '../../../../external/perfetto/protos/perfetto/trace/android/surfaceflinger_transactions.proto',
-        ], 'transactions/latest'),
 
-        // Transitions
+        // Transitions udc
         buildProtos([
             'transitions/udc/windowmanagertransitiontrace.proto',
             'transitions/udc/wm_shell_transition_trace.proto'
         ], 'transitions/udc'),
-        buildProtos([
-            '../../../../external/perfetto/protos/perfetto/trace/android/shell_transition.proto',
-        ], 'transitions/latest'),
 
-        // ViewCapture
+        // ViewCapture udc
         buildProtos([
             '../../../../frameworks/libs/systemui/viewcapturelib/src/com/android/app/viewcapture/proto/view_capture.proto'
         ], 'viewcapture/udc'),
-        buildProtos([
-            'viewcapture/latest/wrapper.proto',
-        ], 'viewcapture/latest'),
 
-        // WindowManager
+        // WindowManager udc
         buildProtos([
             '../../../../frameworks/base/core/proto/android/server/windowmanagertrace.proto',
         ], 'windowmanager/udc'),
-        buildProtos([
-            'windowmanager/latest/wrapper.proto',
-        ], 'windowmanager/latest'),
-
-        // Input
-        buildProtos([
-            '../../../../external/perfetto/protos/perfetto/trace/android/android_input_event.proto',
-            'input/latest/input_event_wrapper.proto',
-        ], 'input/latest'),
 
         // Test proto fields
         buildProtos([
@@ -98,6 +71,12 @@ async function build() {
         buildProtos([
             'test/intdef_translation_test.proto',
         ], 'test/intdef_translation'),
+
+        // Perfetto trace
+        buildProtos([
+            '../../../../external/perfetto/protos/perfetto/trace/trace.proto',
+            '../../../../external/perfetto/protos/perfetto/trace/android/winscope_extensions_impl.proto'
+        ], 'perfetto/trace'),
     ];
 
     await Promise.all(promises);

@@ -17,7 +17,7 @@ import {assertDefined} from 'common/assert_utils';
 import {AbstractParser} from 'parsers/perfetto/abstract_parser';
 import {FakeProtoBuilder} from 'parsers/perfetto/fake_proto_builder';
 import {EntryPropertiesTreeFactory} from 'parsers/transitions/entry_properties_tree_factory';
-import {perfetto} from 'protos/transitions/latest/static';
+import {perfetto} from 'protos/perfetto/trace/static';
 import {TraceType} from 'trace/trace_type';
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
 

@@ -20,11 +20,9 @@ import {SetFormatters} from 'parsers/operations/set_formatters';
 import {TranslateIntDef} from 'parsers/operations/translate_intdef';
 import {AbstractParser} from 'parsers/perfetto/abstract_parser';
 import {FakeProtoBuilder} from 'parsers/perfetto/fake_proto_builder';
-import {FakeProtoTransformer} from 'parsers/perfetto/fake_proto_transformer';
 import {Utils} from 'parsers/perfetto/utils';
-import {TamperedMessageType} from 'parsers/tampered_message_type';
-import root from 'protos/input/latest/json';
-import {perfetto} from 'protos/input/latest/static';
+import {TAMPERED_WINSCOPE_EXTENSIONS} from 'parsers/tampered_message_type';
+import {perfetto} from 'protos/perfetto/trace/static';
 import {
   CustomQueryParserResultTypeMap,
   CustomQueryType,
@@ -36,12 +34,16 @@ import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
 import {TraceProcessor} from 'trace_processor/trace_processor';
 
 export abstract class AbstractInputEventParser extends AbstractParser<PropertyTreeNode> {
-  protected static readonly WrapperProto = TamperedMessageType.tamper(
-    root.lookupType('perfetto.protos.InputEventWrapper'),
+  protected static readonly WrapperProto = assertDefined(
+    TAMPERED_WINSCOPE_EXTENSIONS.fields[
+      '.perfetto.protos.WinscopeExtensionsImpl.androidInputEvent'
+    ].tamperedMessageType,
   );
 
   private static readonly DispatchEventsField =
-    AbstractInputEventParser.WrapperProto.fields['windowDispatchEvents'];
+    AbstractInputEventParser.WrapperProto.fields[
+      'dispatcherWindowDispatchEvent'
+    ];
 
   private static readonly DISPATCH_EVENT_OPS = [
     new SetFormatters(AbstractInputEventParser.DispatchEventsField),
@@ -50,20 +52,12 @@ export abstract class AbstractInputEventParser extends AbstractParser<PropertyTr
 
   private static readonly DispatchTableName = 'android_input_event_dispatch';
 
-  private dispatchEventTransformer: FakeProtoTransformer;
-
   protected constructor(
     traceFile: TraceFile,
     traceProcessor: TraceProcessor,
     timestampConverter: ParserTimestampConverter,
   ) {
     super(traceFile, traceProcessor, timestampConverter);
-
-    this.dispatchEventTransformer = new FakeProtoTransformer(
-      assertDefined(
-        AbstractInputEventParser.DispatchEventsField.tamperedMessageType,
-      ),
-    );
   }
 
   protected async getDispatchEvents(

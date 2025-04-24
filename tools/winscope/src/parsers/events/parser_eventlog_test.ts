@@ -19,8 +19,8 @@ import {
   TimestampConverterUtils,
   timestampEqualityTester,
 } from 'common/time/test_utils';
+import {getParser} from 'test/unit/fixture_utils';
 import {PropertyTreeBuilder} from 'test/unit/property_tree_builder';
-import {UnitTestUtils} from 'test/unit/utils';
 import {CoarseVersion} from 'trace/coarse_version';
 import {Parser} from 'trace/parser';
 import {TraceType} from 'trace/trace_type';
@@ -34,9 +34,7 @@ describe('ParserEventLog', () => {
     beforeAll(async () => {
       jasmine.addCustomEqualityTester(timestampEqualityTester);
       parser = assertDefined(
-        await UnitTestUtils.getParser(
-          'traces/elapsed_and_real_timestamp/eventlog.winscope',
-        ),
+        await getParser('traces/elapsed_and_real_timestamp/eventlog.winscope'),
       ) as Parser<PropertyTreeNode>;
     });
 
@@ -91,7 +89,7 @@ describe('ParserEventLog', () => {
     beforeAll(async () => {
       jasmine.addCustomEqualityTester(timestampEqualityTester);
       parser = assertDefined(
-        await UnitTestUtils.getParser(
+        await getParser(
           'traces/elapsed_and_real_timestamp/eventlog_timestamps_not_monotonically_increasing.winscope',
         ),
       ) as Parser<PropertyTreeNode>;

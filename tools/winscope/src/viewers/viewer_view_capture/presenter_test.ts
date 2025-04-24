@@ -21,8 +21,9 @@ import {
   TabbedViewSwitchRequest,
   TracePositionUpdate,
 } from 'messaging/winscope_event';
+import {getLayerTraceEntry, getParsers} from 'test/unit/fixture_utils';
 import {TraceBuilder} from 'test/unit/trace_builder';
-import {UnitTestUtils} from 'test/unit/utils';
+import {makeEmptyTrace} from 'test/unit/trace_utils';
 import {CustomQueryType} from 'trace/custom_query';
 import {Parser} from 'trace/parser';
 import {Trace} from 'trace/trace';
@@ -125,7 +126,7 @@ the default for its data type.`,
   override readonly treeNodeShortName = 'TaskbarView@80213537';
 
   override async setUpTestEnvironment(): Promise<void> {
-    const parsers = (await UnitTestUtils.getParsers(
+    const parsers = (await getParsers(
       'traces/elapsed_and_real_timestamp/com.google.android.apps.nexuslauncher_0.vc',
     )) as Array<Parser<HierarchyTreeNode>>;
 
@@ -269,8 +270,8 @@ the default for its data type.`,
       it('exposes all VC traces', () => {
         const traces = new Traces();
         const vcTraces = [
-          UnitTestUtils.makeEmptyTrace(TraceType.VIEW_CAPTURE),
-          UnitTestUtils.makeEmptyTrace(TraceType.VIEW_CAPTURE),
+          makeEmptyTrace(TraceType.VIEW_CAPTURE),
+          makeEmptyTrace(TraceType.VIEW_CAPTURE),
         ];
         vcTraces.forEach((trace) => traces.addTrace(trace));
         const notifyViewCallback = (newData: UiData) => {
@@ -287,7 +288,7 @@ the default for its data type.`,
       it('extracts rects from SF trace', async () => {
         const sfTrace = new TraceBuilder<HierarchyTreeNode>()
           .setType(TraceType.SURFACE_FLINGER)
-          .setEntries([await UnitTestUtils.getLayerTraceEntry(0)])
+          .setEntries([await getLayerTraceEntry(0)])
           .build();
         const presenter = createPresenterWithSfTrace(
           assertDefined(this.traces),
@@ -298,7 +299,7 @@ the default for its data type.`,
       });
 
       it('handles double click if SF trace present', async () => {
-        const sfTrace = UnitTestUtils.makeEmptyTrace(TraceType.SURFACE_FLINGER);
+        const sfTrace = makeEmptyTrace(TraceType.SURFACE_FLINGER);
         const presenter = createPresenterWithSfTrace(
           assertDefined(this.traces),
           sfTrace,

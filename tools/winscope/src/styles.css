@@ -235,3 +235,11 @@ log-view .headers .mat-form-field-infix {
 .mat-active.no-focus {
     background-color: unset;
 }
+
+.warning-action-boxes label.mat-checkbox-layout {
+    white-space: normal;
+    overflow-wrap: anywhere;
+}
+.warning-action-boxes .mat-checkbox {
+    padding-bottom: 10px;
+}

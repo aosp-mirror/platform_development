@@ -19,9 +19,9 @@ import {
   timestampEqualityTester,
 } from 'common/time/test_utils';
 import {DuplicateLayerIds} from 'messaging/user_warnings';
+import {getPerfettoParser} from 'test/unit/fixture_utils';
 import {TraceBuilder} from 'test/unit/trace_builder';
 import {UserNotifierChecker} from 'test/unit/user_notifier_checker';
-import {UnitTestUtils} from 'test/unit/utils';
 import {CoarseVersion} from 'trace/coarse_version';
 import {CustomQueryType} from 'trace/custom_query';
 import {Parser} from 'trace/parser';
@@ -48,7 +48,7 @@ describe('Perfetto ParserSurfaceFlinger', () => {
 
     beforeAll(async () => {
       jasmine.addCustomEqualityTester(timestampEqualityTester);
-      parser = (await UnitTestUtils.getPerfettoParser(
+      parser = (await getPerfettoParser(
         TraceType.SURFACE_FLINGER,
         'traces/perfetto/layers_trace.perfetto-trace',
       )) as Parser<HierarchyTreeNode>;
@@ -155,7 +155,7 @@ describe('Perfetto ParserSurfaceFlinger', () => {
 
   describe('invalid traces', () => {
     it('is robust to duplicated layer ids', async () => {
-      const parser = await UnitTestUtils.getPerfettoParser(
+      const parser = await getPerfettoParser(
         TraceType.SURFACE_FLINGER,
         'traces/perfetto/layers_trace_with_duplicated_ids.perfetto-trace',
       );

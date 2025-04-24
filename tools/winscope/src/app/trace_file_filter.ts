@@ -16,10 +16,21 @@
 
 import {assertDefined} from 'common/assert_utils';
 import {FileUtils} from 'common/file_utils';
+import {FunctionUtils} from 'common/function_utils';
 import {utf8Decode} from 'common/string_utils';
 import {TimezoneInfo} from 'common/time/time';
 import {UserNotifier} from 'common/user_notifier';
 import {TraceOverridden} from 'messaging/user_warnings';
+import {
+  BugreportFileSelectionRequest,
+  WinscopeEvent,
+  WinscopeEventType,
+} from 'messaging/winscope_event';
+import {
+  EmitEvent,
+  WinscopeEventEmitter,
+} from 'messaging/winscope_event_emitter';
+import {WinscopeEventListener} from 'messaging/winscope_event_listener';
 import {TraceFile} from 'trace/trace_file';
 import {TraceMetadata} from 'trace/trace_metadata';
 
@@ -30,7 +41,9 @@ export interface FilterResult {
   timezoneInfo?: TimezoneInfo;
 }
 
-export class TraceFileFilter {
+export class TraceFileFilter
+  implements WinscopeEventListener, WinscopeEventEmitter
+{
   private static readonly BUGREPORT_PERFETTO_TRACE_DIR =
     'FS/data/misc/perfetto-traces/bugreport';
   private static readonly BUGREPORT_PERFETTO_TRACE_ORDER = [
@@ -49,6 +62,22 @@ export class TraceFileFilter {
     '.perfetto-trace',
     '.perfetto',
   ];
+
+  private emitEvent: EmitEvent = FunctionUtils.DO_NOTHING_ASYNC;
+  private selectedFile: string | undefined;
+
+  setEmitEvent(callback: EmitEvent) {
+    this.emitEvent = callback;
+  }
+
+  async onWinscopeEvent(event: WinscopeEvent) {
+    await event.visit(
+      WinscopeEventType.BUGREPORT_FILE_SELECTED,
+      async (event) => {
+        this.selectedFile = event.filename;
+      },
+    );
+  }
 
   async filter(files: TraceFile[]): Promise<FilterResult> {
     const bugreportMainEntry = files.find((file) =>
@@ -130,14 +159,12 @@ export class TraceFileFilter {
       return false;
     }
     const bugreportName = (await bugreportMainEntry.file.text()).trim();
-    return (
-      files.find((file) => {
-        return (
-          file.parentArchive === bugreportMainEntry.parentArchive &&
-          file.file.name === bugreportName
-        );
-      }) !== undefined
-    );
+    return files.some((file) => {
+      return (
+        file.parentArchive === bugreportMainEntry.parentArchive &&
+        file.file.name === bugreportName
+      );
+    });
   }
 
   private async filterBugreport(
@@ -191,12 +218,36 @@ export class TraceFileFilter {
         (name) => name === fileName,
       );
     };
-    const perfettoFile = brPerfettoFiles
+    let perfettoFile = brPerfettoFiles
       .filter((file) =>
         TraceFileFilter.BUGREPORT_PERFETTO_TRACE_ORDER.includes(file.file.name),
       )
       .sort((f1, f2) => getIndex(f1.file.name) - getIndex(f2.file.name))
       .at(0);
+
+    if (!perfettoFile && brPerfettoFiles.length === 1) {
+      perfettoFile = brPerfettoFiles[0];
+    }
+
+    if (!perfettoFile && brPerfettoFiles.length > 1) {
+      // emitEvent must be set to propagate event to mediator, which routes file selection
+      // request to AppComponent. User is prompted by dialog to select which file to
+      // process. Once dialog is closed, selected file is sent back to TraceFileFilter
+      // via BugreportFileSelected event and handled above in onWinscopeEvent, where
+      // it is stored in selectedFile. Promise below only resolves after BugreportFileSelected
+      // event has been handled.
+      await this.emitEvent(
+        new BugreportFileSelectionRequest(
+          brPerfettoFiles.map((file) => file.file.name),
+        ),
+      );
+      if (this.selectedFile) {
+        perfettoFile = brPerfettoFiles.find(
+          (file) => file.file.name === this.selectedFile,
+        );
+        this.selectedFile = undefined;
+      }
+    }
 
     return {
       perfetto: perfettoFile,

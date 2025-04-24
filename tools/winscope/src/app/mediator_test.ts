@@ -41,6 +41,8 @@ import {
   AppResetRequest,
   AppTraceViewRequest,
   AppTraceViewRequestHandled,
+  BugreportFileSelected,
+  BugreportFileSelectionRequest,
   DarkModeToggled,
   ExpandedTimelineToggled,
   FilterPresetApplyRequest,
@@ -225,6 +227,7 @@ describe('Mediator', () => {
       spyOn(crossToolProtocol, 'onWinscopeEvent'),
       spyOn(timelineComponent, 'onWinscopeEvent'),
       spyOn(timelineData, 'initialize').and.callThrough(),
+      spyOn(tracePipeline, 'onWinscopeEvent'),
       spyOn(traceViewComponent, 'onWinscopeEvent'),
       spyOn(uploadTracesComponent, 'onWinscopeEvent'),
       spyOn(uploadTracesComponent, 'onProgressUpdate'),
@@ -812,6 +815,16 @@ describe('Mediator', () => {
     removeSearchTraceAndCheckPropagation(true);
     await requestSearch('select id from surfaceflinger_layers_snapshot');
     removeSearchTraceAndCheckPropagation(false);
+  });
+
+  it('handles BR file selection requests', async () => {
+    const request = new BugreportFileSelectionRequest(['f1']);
+    await mediator.onWinscopeEvent(request);
+    expect(appComponent.onWinscopeEvent).toHaveBeenCalledOnceWith(request);
+
+    const selection = new BugreportFileSelected('f1');
+    await mediator.onWinscopeEvent(selection);
+    expect(tracePipeline.onWinscopeEvent).toHaveBeenCalledOnceWith(selection);
   });
 
   async function loadFiles(

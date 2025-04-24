@@ -16,7 +16,10 @@
 
 import {ArrayBufferBuilder} from 'common/buffer_utils';
 import {base64Encode, binaryEncode, utf8Decode} from 'common/string_utils';
-import {UnitTestUtils} from 'test/unit/utils';
+import {
+  makeFakeWebSocket,
+  makeFakeWebSocketMessage,
+} from 'test/unit/web_socket_utils';
 import {SyncStream} from './sync_stream';
 
 describe('SyncStream', () => {
@@ -35,7 +38,7 @@ describe('SyncStream', () => {
   let webSocket: jasmine.SpyObj<WebSocket>;
 
   beforeEach(async () => {
-    webSocket = UnitTestUtils.makeFakeWebSocket();
+    webSocket = makeFakeWebSocket();
     errorListener.calls.reset();
     stream = new SyncStream(webSocket, serialNumber, errorListener);
     await stream.connect();
@@ -268,7 +271,7 @@ describe('SyncStream', () => {
   ) {
     webSocket.send.withArgs(expectedSendBuffer).and.callFake(() => {
       messageData.forEach((data) => {
-        const message = UnitTestUtils.makeFakeWebSocketMessage(data);
+        const message = makeFakeWebSocketMessage(data);
         webSocket.onmessage!(message);
       });
     });

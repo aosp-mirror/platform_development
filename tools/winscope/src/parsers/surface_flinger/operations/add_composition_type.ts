@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import {perfetto} from 'protos/surfaceflinger/latest/static';
+import {perfetto} from 'protos/perfetto/trace/static';
 import {LayerCompositionType} from 'trace/layer_composition_type';
 import {AddOperation} from 'trace/tree_node/operations/add_operation';
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';

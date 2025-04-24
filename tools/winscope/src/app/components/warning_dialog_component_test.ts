@@ -91,21 +91,39 @@ describe('WarningDialogComponent', () => {
     });
   });
 
-  it('updates selected options and provides selected options in dialog result', async () => {
-    const dialog = openAndReturnDialog();
-    const option = dialog.get('.warning-action-boxes mat-checkbox input');
-    option.getHTMLElement<HTMLInputElement>().checked = true;
-    option.click();
-    await dialog.clickLastAndWaitStable('.warning-action-buttons button');
-    expect(component.dialogResult).toEqual({
-      closeActionText: 'close message',
-      selectedOptions: ['option1'],
-    });
+  it('deselects options', async () => {
+    await checkSelection([], [0, 0]);
+  });
+
+  it('updates selected options with multiple selection', async () => {
+    await checkSelection(['option1', 'option2']);
+  });
+
+  it('updates selected options with only single selection', async () => {
+    component.singleSelection = true;
+    await checkSelection(['option2']);
   });
 
   function openAndReturnDialog(): DOMTestHelper<TestHostComponent> {
     dom.findAndClick('button');
     return dom.getInDocument('warning-dialog');
+  }
+
+  async function checkSelection(
+    expectedOptions: string[],
+    optionsToSelect = [0, 1],
+  ) {
+    const dialog = openAndReturnDialog();
+    const options = dialog.findAll('.warning-action-boxes mat-checkbox');
+    for (const i of optionsToSelect) {
+      options[i].dispatchEvent(new Event('change'));
+      await dom.whenStable();
+    }
+    await dialog.clickLastAndWaitStable('.warning-action-buttons button');
+    expect(component.dialogResult).toEqual({
+      closeActionText: 'close message',
+      selectedOptions: expectedOptions,
+    });
   }
 
   @Component({
@@ -117,6 +135,7 @@ describe('WarningDialogComponent', () => {
   class TestHostComponent {
     dialogRef: MatDialogRef<WarningDialogComponent> | undefined;
     dialogResult: WarningDialogResult | undefined;
+    singleSelection: boolean | undefined;
 
     constructor(@Inject(MatDialog) public dialog: MatDialog) {}
 
@@ -126,6 +145,7 @@ describe('WarningDialogComponent', () => {
         actions: ['action1', 'action2'],
         options: ['option1', 'option2'],
         closeText: 'close message',
+        singleSelection: this.singleSelection,
       };
       this.dialogRef = this.dialog.open(WarningDialogComponent, {data});
       this.dialogRef

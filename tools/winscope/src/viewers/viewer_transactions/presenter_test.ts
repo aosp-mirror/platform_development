@@ -18,8 +18,9 @@ import {assertDefined} from 'common/assert_utils';
 import {InMemoryStorage} from 'common/store/in_memory_storage';
 import {TimeUtils} from 'common/time/time_utils';
 import {TracePositionUpdate} from 'messaging/winscope_event';
+import {getParser} from 'test/unit/fixture_utils';
 import {TraceBuilder} from 'test/unit/trace_builder';
-import {UnitTestUtils} from 'test/unit/utils';
+import {makeEmptyTrace} from 'test/unit/trace_utils';
 import {Parser} from 'trace/parser';
 import {Trace} from 'trace/trace';
 import {TraceType} from 'trace/trace_type';
@@ -159,7 +160,7 @@ class PresenterTransactionsTest extends AbstractLogViewerPresenterTest<UiData> {
   }
 
   override async setUpTestEnvironment(): Promise<void> {
-    const parser = (await UnitTestUtils.getParser(
+    const parser = (await getParser(
       'traces/elapsed_and_real_timestamp/Transactions.pb',
     )) as Parser<PropertyTreeNode>;
     this.trace = new TraceBuilder<PropertyTreeNode>()
@@ -174,7 +175,7 @@ class PresenterTransactionsTest extends AbstractLogViewerPresenterTest<UiData> {
   override async createPresenterWithEmptyTrace(
     callback: NotifyLogViewCallbackType<UiData>,
   ): Promise<Presenter> {
-    const trace = UnitTestUtils.makeEmptyTrace(TraceType.TRANSACTIONS);
+    const trace = makeEmptyTrace(TraceType.TRANSACTIONS);
     return new Presenter(trace, new InMemoryStorage(), callback);
   }
 

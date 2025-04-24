@@ -18,10 +18,11 @@ import {assertDefined} from 'common/assert_utils';
 import {InMemoryStorage} from 'common/store/in_memory_storage';
 import {Store} from 'common/store/store';
 import {TracePositionUpdate} from 'messaging/winscope_event';
+import {getImeTraceEntries} from 'test/unit/fixture_utils';
 import {TraceBuilder} from 'test/unit/trace_builder';
+import {makeEmptyTrace} from 'test/unit/trace_utils';
 import {TreeNodeUtils} from 'test/unit/tree_node_utils';
 import {UserNotifierChecker} from 'test/unit/user_notifier_checker';
-import {UnitTestUtils} from 'test/unit/utils';
 import {Traces} from 'trace/traces';
 import {ImeTraceType, TraceType} from 'trace/trace_type';
 import {HierarchyTreeNode} from 'trace/tree_node/hierarchy_tree_node';
@@ -77,7 +78,7 @@ the default for its data type.`,
 
   override async setUpTestEnvironment(): Promise<void> {
     let secondEntries: Map<TraceType, HierarchyTreeNode>;
-    [this.entries, secondEntries] = await UnitTestUtils.getImeTraceEntries();
+    [this.entries, secondEntries] = await getImeTraceEntries();
     this.traces = new Traces();
     const traceEntries = [assertDefined(this.entries.get(this.imeTraceType))];
     const secondEntry = secondEntries.get(this.imeTraceType);
@@ -126,7 +127,7 @@ the default for its data type.`,
   override createPresenterWithEmptyTrace(
     callback: NotifyHierarchyViewCallbackType<ImeUiData>,
   ): AbstractPresenterInputMethod {
-    const trace = UnitTestUtils.makeEmptyTrace(this.imeTraceType);
+    const trace = makeEmptyTrace(this.imeTraceType);
     const traces = new Traces();
     traces.addTrace(trace);
     return new this.PresenterInputMethod(
@@ -193,8 +194,8 @@ the default for its data type.`,
         Presenter = this.PresenterInputMethod;
         imeTraceType = this.imeTraceType;
         await this.setUpTestEnvironment();
+        traces = new Traces();
         entries = assertDefined(this.entries);
-        await loadTraces();
       });
 
       afterEach(() => {
@@ -332,11 +333,6 @@ the default for its data type.`,
           new InMemoryStorage(),
           callback as NotifyHierarchyViewCallbackType<ImeUiData>,
         );
-      }
-
-      async function loadTraces() {
-        traces = new Traces();
-        entries = (await UnitTestUtils.getImeTraceEntries())[0];
       }
     });
   }

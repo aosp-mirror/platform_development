@@ -15,11 +15,12 @@
  */
 
 import {
+  getTimestampConverter,
   TimestampConverterUtils,
   timestampEqualityTester,
 } from 'common/time/test_utils';
+import {getParser} from 'test/unit/fixture_utils';
 import {UserNotifierChecker} from 'test/unit/user_notifier_checker';
-import {UnitTestUtils} from 'test/unit/utils';
 import {CoarseVersion} from 'trace/coarse_version';
 import {Parser} from 'trace/parser';
 import {TraceType} from 'trace/trace_type';
@@ -37,7 +38,7 @@ describe('ParserSurfaceFlingerDump', () => {
     let parser: Parser<HierarchyTreeNode>;
 
     beforeAll(async () => {
-      parser = (await UnitTestUtils.getParser(
+      parser = (await getParser(
         'traces/elapsed_and_real_timestamp/dump_SurfaceFlinger.pb',
       )) as Parser<HierarchyTreeNode>;
     });
@@ -61,9 +62,9 @@ describe('ParserSurfaceFlingerDump', () => {
     });
 
     it('does not apply timezone info', async () => {
-      const parserWithTimezoneInfo = (await UnitTestUtils.getParser(
+      const parserWithTimezoneInfo = (await getParser(
         'traces/elapsed_and_real_timestamp/dump_SurfaceFlinger.pb',
-        UnitTestUtils.getTimestampConverter(true),
+        getTimestampConverter(true),
       )) as Parser<HierarchyTreeNode>;
 
       const expected = [TimestampConverterUtils.makeElapsedTimestamp(0n)];
@@ -80,7 +81,7 @@ describe('ParserSurfaceFlingerDump', () => {
     let parser: Parser<HierarchyTreeNode>;
 
     beforeAll(async () => {
-      parser = (await UnitTestUtils.getParser(
+      parser = (await getParser(
         'traces/elapsed_timestamp/dump_SurfaceFlinger.pb',
       )) as Parser<HierarchyTreeNode>;
     });

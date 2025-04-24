@@ -19,7 +19,7 @@ import {
   TimestampConverterUtils,
   timestampEqualityTester,
 } from 'common/time/test_utils';
-import {UnitTestUtils} from 'test/unit/utils';
+import {getParser} from 'test/unit/fixture_utils';
 import {CoarseVersion} from 'trace/coarse_version';
 import {Parser} from 'trace/parser';
 import {TraceType} from 'trace/trace_type';
@@ -31,7 +31,7 @@ describe('ParserInputMethodClients', () => {
 
     beforeAll(async () => {
       jasmine.addCustomEqualityTester(timestampEqualityTester);
-      parser = (await UnitTestUtils.getParser(
+      parser = (await getParser(
         'traces/elapsed_and_real_timestamp/InputMethodClients.pb',
       )) as Parser<HierarchyTreeNode>;
     });
@@ -67,7 +67,7 @@ describe('ParserInputMethodClients', () => {
 
     beforeAll(async () => {
       jasmine.addCustomEqualityTester(timestampEqualityTester);
-      parser = (await UnitTestUtils.getParser(
+      parser = (await getParser(
         'traces/elapsed_timestamp/InputMethodClients.pb',
       )) as Parser<HierarchyTreeNode>;
     });

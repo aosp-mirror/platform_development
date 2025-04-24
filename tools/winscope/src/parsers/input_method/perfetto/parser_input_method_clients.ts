@@ -20,19 +20,18 @@ import {HierarchyTreeClientsFactory} from 'parsers/input_method/hierarchy_tree_c
 import {AbstractParser} from 'parsers/perfetto/abstract_parser';
 import {FakeProtoTransformer} from 'parsers/perfetto/fake_proto_transformer';
 import {Utils} from 'parsers/perfetto/utils';
-import {TamperedMessageType} from 'parsers/tampered_message_type';
-import root from 'protos/ime/latest/json';
+import {TAMPERED_WINSCOPE_EXTENSIONS} from 'parsers/tampered_message_type';
 import {TraceFile} from 'trace/trace_file';
 import {TraceType} from 'trace/trace_type';
 import {HierarchyTreeNode} from 'trace/tree_node/hierarchy_tree_node';
 import {TraceProcessor} from 'trace_processor/trace_processor';
 
 export class ParserInputMethodClients extends AbstractParser<HierarchyTreeNode> {
-  private static readonly Wrapper = TamperedMessageType.tamper(
-    root.lookupType('perfetto.protos.Wrapper'),
+  private static readonly ENTRY_FIELD = assertDefined(
+    TAMPERED_WINSCOPE_EXTENSIONS.fields[
+      '.perfetto.protos.WinscopeExtensionsImpl.inputmethodClients'
+    ],
   );
-  private static readonly ENTRY_FIELD =
-    ParserInputMethodClients.Wrapper.fields['inputmethodClients'];
   private static readonly CLIENT_FIELD = assertDefined(
     ParserInputMethodClients.ENTRY_FIELD.tamperedMessageType,
   ).fields['client'];

@@ -50,6 +50,7 @@ import {
   AppRefreshDumpsRequest,
   AppResetRequest,
   AppTraceViewRequest,
+  BugreportFileSelected,
   DarkModeToggled,
   WinscopeEvent,
   WinscopeEventType,
@@ -75,6 +76,11 @@ import {SnackBarOpener} from './snack_bar_opener';
 import {TimelineComponent} from './timeline/timeline_component';
 import {TraceViewComponent} from './trace_view_component';
 import {UploadTracesComponent} from './upload_traces_component';
+import {
+  WarningDialogComponent,
+  WarningDialogData,
+  WarningDialogResult,
+} from './warning_dialog_component';
 
 @Component({
   selector: 'app-root',
@@ -613,6 +619,13 @@ export class AppComponent implements WinscopeEventListener {
       this.pageTitle.setTitle('Winscope');
       this.changeDetectorRef.detectChanges();
     });
+
+    await event.visit(
+      WinscopeEventType.BUGREPORT_FILE_SELECTION_REQUEST,
+      async (event) => {
+        await this.showFileSelectionDialog(event.filenames);
+      },
+    );
   }
 
   openShortcutsPanel() {
@@ -680,6 +693,32 @@ export class AppComponent implements WinscopeEventListener {
     return `${lostPackets} Perfetto packet${
       lostPackets > 1 ? 's' : ''
     } lost during tracing - data may be incomplete`;
+  }
+
+  async showFileSelectionDialog(filenames: string[]) {
+    await new Promise<void>((resolve) => {
+      this.ngZone.run(() => {
+        const data: WarningDialogData = {
+          message: `Multiple Perfetto traces found. Select one to process:`,
+          actions: [],
+          options: filenames,
+          closeText: 'Process selected trace',
+          singleSelection: true,
+        };
+        const dialogRef = this.dialog.open(WarningDialogComponent, {
+          data,
+          disableClose: true,
+        });
+        dialogRef
+          .beforeClosed()
+          .subscribe(async (result: WarningDialogResult | undefined) => {
+            await this.mediator.onWinscopeEvent(
+              new BugreportFileSelected(result?.selectedOptions[0]),
+            );
+            resolve();
+          });
+      });
+    });
   }
 
   private goToLink(url: string) {

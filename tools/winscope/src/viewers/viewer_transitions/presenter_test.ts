@@ -19,11 +19,11 @@ import {InMemoryStorage} from 'common/store/in_memory_storage';
 import {TimestampConverterUtils} from 'common/time/test_utils';
 import {TimeUtils} from 'common/time/time_utils';
 import {TracePositionUpdate} from 'messaging/winscope_event';
+import {getPerfettoParser} from 'test/unit/fixture_utils';
 import {ParserBuilder} from 'test/unit/parser_builder';
 import {PropertyTreeBuilder} from 'test/unit/property_tree_builder';
 import {TracesBuilder} from 'test/unit/traces_builder';
 import {TraceBuilder} from 'test/unit/trace_builder';
-import {UnitTestUtils} from 'test/unit/utils';
 import {Trace} from 'trace/trace';
 import {Traces} from 'trace/traces';
 import {TraceType} from 'trace/trace_type';
@@ -123,7 +123,7 @@ class PresenterTransitionsTest extends AbstractLogViewerPresenterTest<UiData> {
   private positionUpdate: TracePositionUpdate | undefined;
 
   override async setUpTestEnvironment(): Promise<void> {
-    const parser = await UnitTestUtils.getPerfettoParser(
+    const parser = await getPerfettoParser(
       TraceType.TRANSITION,
       'traces/perfetto/shell_transitions_trace.perfetto-trace',
     );

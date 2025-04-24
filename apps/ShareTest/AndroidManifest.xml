@@ -35,7 +35,8 @@
             android:name="com.android.sharetest.InteractiveShareTestActivity"
             android:exported="true"
             android:label="Interactive Share Test"
-            android:taskAffinity="com.android.sharetest.InteractiveShareTask">
+            android:taskAffinity="com.android.sharetest.InteractiveShareTask"
+            android:theme="@style/ShareTest">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>
                 <category android:name="android.intent.category.DEFAULT"/>

@@ -40,22 +40,22 @@ import {
 } from 'messaging/winscope_event';
 import {checkTooltips, DOMTestHelper} from 'test/unit/dom_test_utils';
 import {TraceBuilder} from 'test/unit/trace_builder';
-import {UnitTestUtils} from 'test/unit/utils';
+import {makeEmptyTrace} from 'test/unit/trace_utils';
 import {TraceType} from 'trace/trace_type';
 import {Viewer, ViewType} from 'viewers/viewer';
 import {ViewerStub} from 'viewers/viewer_stub';
 import {TraceViewComponent} from './trace_view_component';
 
 describe('TraceViewComponent', () => {
-  const traceSf = UnitTestUtils.makeEmptyTrace(TraceType.SURFACE_FLINGER);
+  const traceSf = makeEmptyTrace(TraceType.SURFACE_FLINGER);
   const traceWm = new TraceBuilder<object>()
     .setType(TraceType.WINDOW_MANAGER)
     .setEntries([{}])
     .setTimestamps([TimestampConverterUtils.makeZeroTimestamp()])
     .setDescriptors(['file_1', 'file_1'])
     .build();
-  const traceSr = UnitTestUtils.makeEmptyTrace(TraceType.SCREEN_RECORDING);
-  const traceProtolog = UnitTestUtils.makeEmptyTrace(TraceType.PROTO_LOG);
+  const traceSr = makeEmptyTrace(TraceType.SCREEN_RECORDING);
+  const traceProtolog = makeEmptyTrace(TraceType.PROTO_LOG);
 
   let component: TestHostComponent;
   let dom: DOMTestHelper<TestHostComponent>;

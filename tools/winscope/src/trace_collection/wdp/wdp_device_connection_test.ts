@@ -23,7 +23,10 @@ import {
   ProxyTracingWarnings,
 } from 'messaging/user_warnings';
 import {UserNotifierChecker} from 'test/unit/user_notifier_checker';
-import {UnitTestUtils} from 'test/unit/utils';
+import {
+  makeFakeWebSocket,
+  makeFakeWebSocketMessage,
+} from 'test/unit/web_socket_utils';
 import {
   AdbDeviceConnectionListener,
   AdbDeviceState,
@@ -429,7 +432,7 @@ Error: Expected message data to be ArrayBuffer or Blob.`,
   ) {
     const shellStreamSpy = spyOn(StreamProvider.prototype, 'createShellStream');
     shellStreamSpy.and.callFake((device, sock, datalistener, errorlistener) => {
-      const fakeAdbSocket = UnitTestUtils.makeFakeWebSocket();
+      const fakeAdbSocket = makeFakeWebSocket();
       const shellStream = new ShellStream(
         fakeAdbSocket,
         device,
@@ -438,7 +441,7 @@ Error: Expected message data to be ArrayBuffer or Blob.`,
       );
 
       fakeAdbSocket.close.and.callFake(() => {
-        fakeAdbSocket.onclose!(new CloseEvent(''));
+        fakeAdbSocket.onclose!(new CloseEvent('close'));
         spyOn(shellStream, 'isOpen').and.returnValue(false);
       });
 
@@ -446,9 +449,9 @@ Error: Expected message data to be ArrayBuffer or Blob.`,
         fakeAdbSocket.send
           .withArgs(makeServiceCommandJson(command))
           .and.callFake(async () => {
-            const message = UnitTestUtils.makeFakeWebSocketMessage(emptyResp);
+            const message = makeFakeWebSocketMessage(emptyResp);
             fakeAdbSocket.onmessage!(message);
-            fakeAdbSocket.onclose!(new CloseEvent(''));
+            fakeAdbSocket.onclose!(new CloseEvent('close'));
           });
       });
       commandsWithResponse.forEach(({command, resps}) => {
@@ -457,10 +460,10 @@ Error: Expected message data to be ArrayBuffer or Blob.`,
           .and.callFake(async () => {
             resps.forEach((resp) => {
               const data = binaryEncode(resp).buffer;
-              const message = UnitTestUtils.makeFakeWebSocketMessage(data);
+              const message = makeFakeWebSocketMessage(data);
               fakeAdbSocket.onmessage!(message);
             });
-            fakeAdbSocket.onclose!(new CloseEvent(''));
+            fakeAdbSocket.onclose!(new CloseEvent('close'));
           });
       });
       commandsWithOpenStream.forEach(({command, resps}) => {
@@ -474,7 +477,7 @@ Error: Expected message data to be ArrayBuffer or Blob.`,
           resps.forEach((resp) => {
             openStream = shellStream;
             const data = binaryEncode(resp).buffer;
-            const message = UnitTestUtils.makeFakeWebSocketMessage(data);
+            const message = makeFakeWebSocketMessage(data);
             fakeAdbSocket.onmessage!(message);
           });
         });
@@ -484,10 +487,10 @@ Error: Expected message data to be ArrayBuffer or Blob.`,
           .withArgs(makeServiceCommandJson(command))
           .and.callFake(async () => {
             resps.forEach((resp) => {
-              const message = UnitTestUtils.makeFakeWebSocketMessage(resp);
+              const message = makeFakeWebSocketMessage(resp);
               fakeAdbSocket.onmessage!(message);
             });
-            fakeAdbSocket.onclose!(new CloseEvent(''));
+            fakeAdbSocket.onclose!(new CloseEvent('close'));
           });
       });
       return shellStream;
@@ -499,18 +502,18 @@ Error: Expected message data to be ArrayBuffer or Blob.`,
   ) {
     const syncStreamSpy = spyOn(StreamProvider.prototype, 'createSyncStream');
     syncStreamSpy.and.callFake((device, sock, errorlistener) => {
-      const fakeAdbSocket = UnitTestUtils.makeFakeWebSocket();
+      const fakeAdbSocket = makeFakeWebSocket();
       const syncStream = new SyncStream(fakeAdbSocket, device, errorlistener);
 
       fakeAdbSocket.close.and.callFake(() => {
-        fakeAdbSocket.onclose!(new CloseEvent(''));
+        fakeAdbSocket.onclose!(new CloseEvent('close'));
         spyOn(syncStream, 'isOpen').and.returnValue(false);
       });
 
       fakeAdbSocket.send
         .withArgs(makeServiceCommandJson('', 'sync'))
         .and.callFake(async () => {
-          const message = UnitTestUtils.makeFakeWebSocketMessage(emptyResp);
+          const message = makeFakeWebSocketMessage(emptyResp);
           fakeAdbSocket.onmessage!(message);
         });
 
@@ -521,10 +524,10 @@ Error: Expected message data to be ArrayBuffer or Blob.`,
         fakeAdbSocket.send
           .withArgs(new Uint8Array(tokens))
           .and.callFake(async () => {
-            const message = UnitTestUtils.makeFakeWebSocketMessage(data);
+            const message = makeFakeWebSocketMessage(data);
             setTimeout(() => {
               fakeAdbSocket.onmessage!(message);
-              fakeAdbSocket.onclose!(new CloseEvent(''));
+              fakeAdbSocket.onclose!(new CloseEvent('close'));
             }, 50);
           });
       });

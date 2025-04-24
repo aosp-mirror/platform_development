@@ -15,7 +15,10 @@
  */
 
 import {WindowUtils} from 'common/window_utils';
-import {UnitTestUtils} from 'test/unit/utils';
+import {
+  makeFakeWebSocket,
+  makeFakeWebSocketMessage,
+} from 'test/unit/web_socket_utils';
 import {ConnectionState} from 'trace_collection/connection_state';
 import {ConnectionStateListener} from 'trace_collection/connection_state_listener';
 import {DevicesStream} from './devices_stream';
@@ -71,7 +74,7 @@ describe('WdpHostConnection', () => {
     let fakeSocket: WebSocket;
 
     beforeEach(() => {
-      fakeSocket = UnitTestUtils.makeFakeWebSocket();
+      fakeSocket = makeFakeWebSocket();
     });
 
     it('not found', async () => {
@@ -161,7 +164,7 @@ describe('WdpHostConnection', () => {
     };
 
     beforeEach(() => {
-      fakeDevicesSocket = UnitTestUtils.makeFakeWebSocket();
+      fakeDevicesSocket = makeFakeWebSocket();
       spyOn(WdpDeviceConnection.prototype, 'updateProperties');
     });
 
@@ -220,7 +223,7 @@ describe('WdpHostConnection', () => {
       });
       const data = JSON.stringify(response);
       connection.requestDevices().then(() => {
-        const message = UnitTestUtils.makeFakeWebSocketMessage(data);
+        const message = makeFakeWebSocketMessage(data);
         fakeSocket.onmessage!(message);
       });
     });

@@ -95,6 +95,10 @@ export class Mediator {
     this.appComponent = appComponent;
     this.storage = storage;
 
+    this.tracePipeline.setEmitEvent(async (event) => {
+      await this.onWinscopeEvent(event);
+    });
+
     this.crossToolProtocol.setEmitEvent(async (event) => {
       await this.onWinscopeEvent(event);
     });
@@ -358,6 +362,20 @@ export class Mediator {
         const initializedEvent = new TraceSearchInitialized(views);
         await searchViewer?.onWinscopeEvent(initializedEvent);
         await this.timelineComponent?.onWinscopeEvent(initializedEvent);
+      },
+    );
+
+    await event.visit(
+      WinscopeEventType.BUGREPORT_FILE_SELECTED,
+      async (event) => {
+        await this.tracePipeline.onWinscopeEvent(event);
+      },
+    );
+
+    await event.visit(
+      WinscopeEventType.BUGREPORT_FILE_SELECTION_REQUEST,
+      async (event) => {
+        await this.appComponent.onWinscopeEvent(event);
       },
     );
   }

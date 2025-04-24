@@ -30,13 +30,20 @@ import {MAT_DIALOG_DATA} from '@angular/material/dialog';
           <mat-checkbox
             *ngFor="let option of data.options; let i = index"
             color="primary"
-            (change)="updateSelectedOptions(option)"
-            [class.not-last]="i < data.options.length - 1"
-            >{{ option }}</mat-checkbox>
+            [checked]="selectedOptions.includes(option)"
+            (change)="updateSelectedOptions(option)">{{ option }}</mat-checkbox>
         </div>
         <div class="warning-action-buttons">
-          <button *ngFor="let action of data.actions" [mat-dialog-close]="getDialogResult(action)" class="not-last" color="primary" mat-stroked-button> {{ action }} </button>
-          <button [mat-dialog-close]="getDialogResult(data.closeText)" color="primary" mat-raised-button> {{ data.closeText }} </button>
+          <button
+            *ngFor="let action of data.actions"
+            [mat-dialog-close]="getDialogResult(action)"
+            class="not-last"
+            color="primary"
+            mat-stroked-button> {{ action }} </button>
+          <button
+            [mat-dialog-close]="getDialogResult(data.closeText)"
+            color="primary"
+            mat-raised-button> {{ data.closeText }} </button>
         </div>
       </div>
     </mat-dialog-content>
@@ -61,9 +68,14 @@ import {MAT_DIALOG_DATA} from '@angular/material/dialog';
       }
       .warning-actions {
         display: flex;
+        flex-direction: column;
         justify-content: space-between;
-        align-items: center;
+        align-items: end;
         margin-top: 8px;
+      }
+      .warning-action-boxes {
+        display: flex;
+        flex-direction: column;
       }
       .warning-actions .not-last {
         margin-right: 8px;
@@ -78,9 +90,15 @@ export class WarningDialogComponent {
 
   updateSelectedOptions(clickedOption: string) {
     if (!this.selectedOptions.includes(clickedOption)) {
-      this.selectedOptions.push(clickedOption);
+      if (this.data.singleSelection) {
+        this.selectedOptions = [clickedOption];
+      } else {
+        this.selectedOptions.push(clickedOption);
+      }
     } else {
-      this.selectedOptions.filter((opt) => opt !== clickedOption);
+      this.selectedOptions = this.selectedOptions.filter(
+        (opt) => opt !== clickedOption,
+      );
     }
   }
 
@@ -94,6 +112,7 @@ export interface WarningDialogData {
   actions: string[] | undefined;
   options: string[] | undefined;
   closeText: string;
+  singleSelection?: boolean;
 }
 
 export interface WarningDialogResult {

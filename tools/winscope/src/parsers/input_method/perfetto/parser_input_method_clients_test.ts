@@ -18,18 +18,18 @@ import {
   TimestampConverterUtils,
   timestampEqualityTester,
 } from 'common/time/test_utils';
-import {UnitTestUtils} from 'test/unit/utils';
+import {getPerfettoParser} from 'test/unit/fixture_utils';
 import {CoarseVersion} from 'trace/coarse_version';
 import {Parser} from 'trace/parser';
 import {TraceType} from 'trace/trace_type';
 import {HierarchyTreeNode} from 'trace/tree_node/hierarchy_tree_node';
 
-describe('Perfetto ParserInputMethodClients', () => {
+describe('PerfettoParserInputMethodClients', () => {
   let parser: Parser<HierarchyTreeNode>;
 
   beforeAll(async () => {
     jasmine.addCustomEqualityTester(timestampEqualityTester);
-    parser = (await UnitTestUtils.getPerfettoParser(
+    parser = (await getPerfettoParser(
       TraceType.INPUT_METHOD_CLIENTS,
       'traces/perfetto/ime.perfetto-trace',
     )) as Parser<HierarchyTreeNode>;

@@ -15,7 +15,7 @@
  */
 
 import {TimestampConverterUtils} from 'common/time/test_utils';
-import {TracesUtils} from 'test/unit/traces_utils';
+import {extractFrames} from 'test/unit/traces_utils';
 import {TraceBuilder} from 'test/unit/trace_builder';
 import {CustomQueryType} from './custom_query';
 import {FrameMapper} from './frame_mapper';
@@ -100,7 +100,7 @@ describe('FrameMapper', () => {
         ]),
       );
 
-      expect(await TracesUtils.extractFrames(traces)).toEqual(expectedFrames);
+      expect(await extractFrames(traces)).toEqual(expectedFrames);
     });
   });
 
@@ -168,7 +168,7 @@ describe('FrameMapper', () => {
         ]),
       );
 
-      expect(await TracesUtils.extractFrames(traces)).toEqual(expectedFrames);
+      expect(await extractFrames(traces)).toEqual(expectedFrames);
     });
   });
 
@@ -278,7 +278,7 @@ describe('FrameMapper', () => {
         ]),
       );
 
-      expect(await TracesUtils.extractFrames(traces)).toEqual(expectedFrames);
+      expect(await extractFrames(traces)).toEqual(expectedFrames);
     });
   });
 
@@ -371,7 +371,7 @@ describe('FrameMapper', () => {
         ]),
       );
 
-      expect(await TracesUtils.extractFrames(traces)).toEqual(expectedFrames);
+      expect(await extractFrames(traces)).toEqual(expectedFrames);
     });
   });
 
@@ -425,7 +425,7 @@ describe('FrameMapper', () => {
           [[1, 2], 1],
           [[3], 2],
         ]);
-        expect(await TracesUtils.extractFrames(traces)).toEqual(expectedFrames);
+        expect(await extractFrames(traces)).toEqual(expectedFrames);
       });
 
       it('does not propagate mapping if all vsync ids invalid', async () => {
@@ -472,7 +472,7 @@ describe('FrameMapper', () => {
           [[2], 1],
           [[4], 2],
         ]);
-        expect(await TracesUtils.extractFrames(traces)).toEqual(expectedFrames);
+        expect(await extractFrames(traces)).toEqual(expectedFrames);
       });
 
       async function computeMapping(surfaceFlingerTrace = sfTrace) {
@@ -599,7 +599,7 @@ describe('FrameMapper', () => {
         ]),
       );
 
-      expect(await TracesUtils.extractFrames(traces)).toEqual(expectedFrames);
+      expect(await extractFrames(traces)).toEqual(expectedFrames);
     });
   });
 

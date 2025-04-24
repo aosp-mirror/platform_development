@@ -16,7 +16,10 @@
 
 import {binaryEncode} from 'common/string_utils';
 import {waitToBeCalled} from 'test/unit/spy_utils';
-import {UnitTestUtils} from 'test/unit/utils';
+import {
+  makeFakeWebSocket,
+  makeFakeWebSocketMessage,
+} from 'test/unit/web_socket_utils';
 import {StreamProvider} from './stream_provider';
 
 describe('StreamProvider', () => {
@@ -27,7 +30,7 @@ describe('StreamProvider', () => {
   let streamProvider: StreamProvider;
 
   beforeEach(() => {
-    sock = UnitTestUtils.makeFakeWebSocket();
+    sock = makeFakeWebSocket();
     dataListener = jasmine.createSpy();
     errorListener = jasmine.createSpy();
     streamProvider = new StreamProvider();
@@ -46,7 +49,7 @@ describe('StreamProvider', () => {
       }),
     );
 
-    sock.onmessage!(UnitTestUtils.makeFakeWebSocketMessage(''));
+    sock.onmessage!(makeFakeWebSocketMessage(''));
     expect(errorListener).toHaveBeenCalledTimes(1);
 
     const spy = spyOn(stream, 'close');
@@ -72,12 +75,10 @@ describe('StreamProvider', () => {
       }),
     );
 
-    sock.onmessage!(
-      UnitTestUtils.makeFakeWebSocketMessage(binaryEncode('').buffer),
-    );
+    sock.onmessage!(makeFakeWebSocketMessage(binaryEncode('').buffer));
     expect(dataListener).toHaveBeenCalledTimes(1);
 
-    sock.onmessage!(UnitTestUtils.makeFakeWebSocketMessage(''));
+    sock.onmessage!(makeFakeWebSocketMessage(''));
     expect(errorListener).toHaveBeenCalledTimes(1);
 
     const spy = spyOn(stream, 'close');
@@ -93,7 +94,7 @@ describe('StreamProvider', () => {
     const stream = createDevicesStream();
     await stream.connect();
 
-    sock.onmessage!(UnitTestUtils.makeFakeWebSocketMessage(''));
+    sock.onmessage!(makeFakeWebSocketMessage(''));
     await waitToBeCalled(dataListener, 1);
 
     sock.onerror!(new Event(''));

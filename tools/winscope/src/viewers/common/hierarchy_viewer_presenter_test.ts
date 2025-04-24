@@ -27,8 +27,8 @@ import {
 import {HierarchyTreeBuilder} from 'test/unit/hierarchy_tree_builder';
 import {MockPresenter} from 'test/unit/mock_hierarchy_viewer_presenter';
 import {TraceBuilder} from 'test/unit/trace_builder';
+import {makeEmptyTrace} from 'test/unit/trace_utils';
 import {TreeNodeUtils} from 'test/unit/tree_node_utils';
-import {UnitTestUtils} from 'test/unit/utils';
 import {Trace} from 'trace/trace';
 import {Traces} from 'trace/traces';
 import {TraceType} from 'trace/trace_type';
@@ -275,7 +275,7 @@ describe('AbstractHierarchyViewerPresenter', () => {
     const callback = (newData: UiDataHierarchy) => {
       uiData = newData;
     };
-    const trace = UnitTestUtils.makeEmptyTrace(TraceType.WINDOW_MANAGER);
+    const trace = makeEmptyTrace(TraceType.WINDOW_MANAGER);
     const traces = new Traces();
     traces.addTrace(trace);
     const presenter = new MockPresenter(

@@ -52,7 +52,7 @@ import {
 import {checkTooltips, DOMTestHelper} from 'test/unit/dom_test_utils';
 import {TracesBuilder} from 'test/unit/traces_builder';
 import {TraceBuilder} from 'test/unit/trace_builder';
-import {UnitTestUtils} from 'test/unit/utils';
+import {makeEmptyTrace} from 'test/unit/trace_utils';
 import {Trace} from 'trace/trace';
 import {Traces} from 'trace/traces';
 import {TRACE_INFO} from 'trace/trace_info';
@@ -1029,7 +1029,7 @@ describe('TimelineComponent', () => {
       assertDefined(timelineComponent.miniTimeline?.drawer),
       'draw',
     );
-    const trace = UnitTestUtils.makeEmptyTrace(TraceType.SEARCH);
+    const trace = makeEmptyTrace(TraceType.SEARCH);
 
     await timelineComponent.onWinscopeEvent(new TraceAddRequest(trace));
     expect(spy).toHaveBeenCalledTimes(1);

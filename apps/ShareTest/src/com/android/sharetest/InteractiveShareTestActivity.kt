@@ -66,6 +66,7 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
+import com.android.sharetest.ui.ColorSchemeSelector
 import com.android.sharetest.ui.theme.ActivityTheme
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -155,25 +156,28 @@ class InteractiveShareTestActivity : Hilt_InteractiveShareTestActivity() {
         }
 
         setContent {
+            val spacing = 5.dp
+            val padding = 15.dp
             var sharedText by remember { mutableStateOf("A text to share") }
             val previewWindowBottom by chooserWindowTopOffset.collectAsStateWithLifecycle(-1)
             val showLaunchInSplitScreen by
                 isInMultiWindowMode.map { !it }.collectAsStateWithLifecycle(true)
-            val spacing = 5.dp
             val brush = SolidColor(Color.Red)
-            // val isChooserRunning by chooserSessionManager.activeSession.map { it != null }
-            //     .collectAsStateWithLifecycle(false)
             val isChooserRunning by
                 chooserSession.map { it?.isActive == true }.collectAsStateWithLifecycle(false)
             val userRefinement by useRefinementFlow.collectAsStateWithLifecycle(false)
+            val colorSchemes = mapOf(0 to "System Default", 1 to "Light", 2 to "Dark")
+            var selectedColorSchemeIdx by remember { mutableStateOf(0) }
             ActivityTheme {
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
                     Column(
-                        modifier = Modifier.padding(innerPadding),
+                        modifier = Modifier.padding(innerPadding).padding(horizontal = padding),
                         verticalArrangement = Arrangement.spacedBy(spacing),
                     ) {
                         Row(horizontalArrangement = Arrangement.spacedBy(spacing)) {
-                            Button(onClick = { startCameraApp() }) { Text("Pick Camera App") }
+                            Button(onClick = { startCameraApp(selectedColorSchemeIdx) }) {
+                                Text("Pick Camera App")
+                            }
                             Button(onClick = { launchActivity() }) { Text("Launch Activity") }
                         }
                         Row(horizontalArrangement = Arrangement.spacedBy(spacing)) {
@@ -193,15 +197,23 @@ class InteractiveShareTestActivity : Hilt_InteractiveShareTestActivity() {
                                 modifier = Modifier.weight(1f),
                                 onValueChange = { sharedText = it },
                             )
-                            Button(onClick = { shareText(sharedText) }) { Text("Share Text") }
+                            Button(onClick = { shareText(sharedText, selectedColorSchemeIdx) }) {
+                                Text("Share Text")
+                            }
                         }
                         Row(horizontalArrangement = Arrangement.spacedBy(spacing)) {
                             if (previews.isNotEmpty()) {
-                                Button(onClick = { shareImages(previews, 1) }) {
+                                Button(
+                                    onClick = { shareImages(previews, 1, selectedColorSchemeIdx) }
+                                ) {
                                     Text("Share One Image")
                                 }
                                 if (previews.size > 1) {
-                                    Button(onClick = { shareImages(previews, 2) }) {
+                                    Button(
+                                        onClick = {
+                                            shareImages(previews, 2, selectedColorSchemeIdx)
+                                        }
+                                    ) {
                                         Text("Share Two Images")
                                     }
                                 }
@@ -221,6 +233,13 @@ class InteractiveShareTestActivity : Hilt_InteractiveShareTestActivity() {
                                 modifier = Modifier.align(Alignment.CenterVertically),
                             )
                         }
+                        Text(text = "Chooser Color Scheme")
+                        ColorSchemeSelector(
+                            values = colorSchemes,
+                            selected = selectedColorSchemeIdx,
+                            spacing = spacing,
+                            onValueSelected = { selectedColorSchemeIdx = it },
+                        )
                         if (isChooserRunning) {
                             Button(onClick = { closeChooser() }) { Text("Close Chooser") }
                         }
@@ -304,9 +323,11 @@ class InteractiveShareTestActivity : Hilt_InteractiveShareTestActivity() {
         }
     }
 
-    private fun startCameraApp() {
+    private fun startCameraApp(colorScheme: Int) {
         val targetIntent = Intent(MediaStore.ACTION_IMAGE_CAPTURE)
-        startOrUpdate(Intent.createChooser(targetIntent, null))
+        startOrUpdate(
+            Intent.createChooser(targetIntent, null).apply { setColorScheme(colorScheme) }
+        )
     }
 
     private fun launchActivity() {
@@ -326,17 +347,18 @@ class InteractiveShareTestActivity : Hilt_InteractiveShareTestActivity() {
         )
     }
 
-    private fun shareText(text: String) {
+    private fun shareText(text: String, colorScheme: Int) {
         val targetIntent =
             Intent(Intent.ACTION_SEND).apply {
                 putExtra(Intent.EXTRA_TEXT, text)
                 setType("text/plain")
             }
-        val chooserIntent = Intent.createChooser(targetIntent, null)
+        val chooserIntent =
+            Intent.createChooser(targetIntent, null).apply { setColorScheme(colorScheme) }
         startOrUpdate(chooserIntent)
     }
 
-    private fun shareImages(previews: List<Preview>, count: Int) {
+    private fun shareImages(previews: List<Preview>, count: Int, colorScheme: Int) {
         require(count > 0) { "Unexpected count argument value: $count" }
         val targetIntent =
             Intent(if (count == 1) Intent.ACTION_SEND else Intent.ACTION_SEND_MULTIPLE).apply {
@@ -359,7 +381,8 @@ class InteractiveShareTestActivity : Hilt_InteractiveShareTestActivity() {
                 addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
                 setType("image/*")
             }
-        val chooserIntent = Intent.createChooser(targetIntent, null)
+        val chooserIntent =
+            Intent.createChooser(targetIntent, null).apply { setColorScheme(colorScheme) }
         startOrUpdate(chooserIntent)
     }
 
@@ -390,6 +413,10 @@ class InteractiveShareTestActivity : Hilt_InteractiveShareTestActivity() {
             chooserController.updateIntent(chooserIntent)
         }
     }
+}
+
+private fun Intent.setColorScheme(colorScheme: Int) {
+    putExtra("com.android.extra.CHOOSER_COLOR_SCHEME", colorScheme)
 }
 
 class TestDialog : DialogFragment() {

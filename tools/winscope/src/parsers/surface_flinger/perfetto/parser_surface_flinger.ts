@@ -26,9 +26,8 @@ import {Utils} from 'parsers/perfetto/utils';
 import {DENYLIST_PROPERTIES} from 'parsers/surface_flinger/denylist_properties';
 import {EAGER_PROPERTIES} from 'parsers/surface_flinger/eager_properties';
 import {EntryHierarchyTreeFactory} from 'parsers/surface_flinger/entry_hierarchy_tree_factory';
-import {TamperedMessageType} from 'parsers/tampered_message_type';
-import root from 'protos/surfaceflinger/latest/json';
-import {perfetto} from 'protos/surfaceflinger/latest/static';
+import {TAMPERED_TRACE_PACKET} from 'parsers/tampered_message_type';
+import {perfetto} from 'protos/perfetto/trace/static';
 import {
   CustomQueryParserResultTypeMap,
   CustomQueryType,
@@ -50,12 +49,8 @@ export class ParserSurfaceFlinger extends AbstractParser<HierarchyTreeNode> {
       new EnumFormatter(perfetto.protos.HwcCompositionType),
     ],
   ]);
-
-  private static readonly LayersTraceFileProto = TamperedMessageType.tamper(
-    root.lookupType('perfetto.protos.LayersTraceFileProto'),
-  );
   private static readonly entryField =
-    ParserSurfaceFlinger.LayersTraceFileProto.fields['entry'];
+    TAMPERED_TRACE_PACKET.fields['surfaceflingerLayersSnapshot'];
   private static readonly layerField = assertDefined(
     ParserSurfaceFlinger.entryField.tamperedMessageType?.fields['layers']
       .tamperedMessageType,

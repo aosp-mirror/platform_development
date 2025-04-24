@@ -22,8 +22,8 @@ import {ParserBuilder} from 'test/unit/parser_builder';
 import {PropertyTreeBuilder} from 'test/unit/property_tree_builder';
 import {TracesBuilder} from 'test/unit/traces_builder';
 import {TraceBuilder} from 'test/unit/trace_builder';
+import {makeEmptyTrace} from 'test/unit/trace_utils';
 import {UserNotifierChecker} from 'test/unit/user_notifier_checker';
-import {UnitTestUtils} from 'test/unit/utils';
 import {Traces} from 'trace/traces';
 import {TracePosition} from 'trace/trace_position';
 import {TraceType} from 'trace/trace_type';
@@ -225,7 +225,7 @@ describe('TimelineData', () => {
     expect(success).toBeFalse();
 
     success = timelineData.trySetActiveTrace(
-      UnitTestUtils.makeEmptyTrace(TraceType.SURFACE_FLINGER),
+      makeEmptyTrace(TraceType.SURFACE_FLINGER),
     );
     expect(timelineData.getActiveTrace()).toEqual(traceWm);
     expect(success).toBeFalse();

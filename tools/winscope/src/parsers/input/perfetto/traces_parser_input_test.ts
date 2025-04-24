@@ -19,9 +19,9 @@ import {
   TimestampConverterUtils,
   timestampEqualityTester,
 } from 'common/time/test_utils';
+import {getTracesParser} from 'test/unit/fixture_utils';
 import {TraceBuilder} from 'test/unit/trace_builder';
 import {UserNotifierChecker} from 'test/unit/user_notifier_checker';
-import {UnitTestUtils} from 'test/unit/utils';
 import {CoarseVersion} from 'trace/coarse_version';
 import {CustomQueryType} from 'trace/custom_query';
 import {Parser} from 'trace/parser';
@@ -38,7 +38,7 @@ describe('TracesParserInput', () => {
 
   beforeEach(async () => {
     jasmine.addCustomEqualityTester(timestampEqualityTester);
-    parser = (await UnitTestUtils.getTracesParser([
+    parser = (await getTracesParser([
       'traces/perfetto/input-events.perfetto-trace',
     ])) as Parser<PropertyTreeNode>;
     userNotifierChecker.reset();
@@ -99,7 +99,7 @@ describe('TracesParserInput', () => {
   });
 
   it('supports VSYNCID custom query with missing vsync_ids', async () => {
-    const missingVsyncIdsParser = (await UnitTestUtils.getTracesParser([
+    const missingVsyncIdsParser = (await getTracesParser([
       'traces/perfetto/input-missing-vsync-ids.perfetto-trace',
     ])) as Parser<PropertyTreeNode>;
     const trace = new TraceBuilder()

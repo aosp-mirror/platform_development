@@ -22,7 +22,7 @@ import {SetFormatters} from 'parsers/operations/set_formatters';
 import {TransformToTimestamp} from 'parsers/operations/transform_to_timestamp';
 import {TranslateIntDef} from 'parsers/operations/translate_intdef';
 import {TamperedMessageType} from 'parsers/tampered_message_type';
-import {perfetto} from 'protos/transitions/latest/static';
+import {perfetto} from 'protos/perfetto/trace/static';
 import root from 'protos/transitions/udc/json';
 import {com} from 'protos/transitions/udc/static';
 import {

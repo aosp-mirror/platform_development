@@ -15,15 +15,14 @@
  */
 
 import {assertDefined} from 'common/assert_utils';
-import {TamperedMessageType} from 'parsers/tampered_message_type';
+import {TAMPERED_WINSCOPE_EXTENSIONS} from 'parsers/tampered_message_type';
 import {TamperedProtos} from 'parsers/window_manager/tampered_protos';
-import root from 'protos/windowmanager/latest/json';
 
-const Wrapper = TamperedMessageType.tamper(
-  root.lookupType('perfetto.protos.Wrapper'),
+const entryField = assertDefined(
+  TAMPERED_WINSCOPE_EXTENSIONS.fields[
+    '.perfetto.protos.WinscopeExtensionsImpl.windowmanager'
+  ],
 );
-
-const entryField = assertDefined(Wrapper.fields['windowmanagerTraceEntry']);
 
 const windowManagerServiceField = assertDefined(entryField.tamperedMessageType)
   .fields['windowManagerService'];

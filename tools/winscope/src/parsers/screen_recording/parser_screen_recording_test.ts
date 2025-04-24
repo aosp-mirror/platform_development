@@ -18,7 +18,7 @@ import {
   TimestampConverterUtils,
   timestampEqualityTester,
 } from 'common/time/test_utils';
-import {UnitTestUtils} from 'test/unit/utils';
+import {getParser, getParsers} from 'test/unit/fixture_utils';
 import {CoarseVersion} from 'trace/coarse_version';
 import {MediaBasedTraceEntry} from 'trace/media_based_trace_entry';
 import {Parser} from 'trace/parser';
@@ -30,7 +30,7 @@ describe('ParserScreenRecording', () => {
   describe('metadata v2', () => {
     beforeAll(async () => {
       jasmine.addCustomEqualityTester(timestampEqualityTester);
-      parser = (await UnitTestUtils.getParser(
+      parser = (await getParser(
         'traces/elapsed_and_real_timestamp/screen_recording_metadata_v2.mp4',
       )) as Parser<MediaBasedTraceEntry>;
     });
@@ -73,7 +73,7 @@ describe('ParserScreenRecording', () => {
   describe('separate metadata file', () => {
     beforeAll(async () => {
       jasmine.addCustomEqualityTester(timestampEqualityTester);
-      parser = (await UnitTestUtils.getParser(
+      parser = (await getParser(
         'traces/elapsed_and_real_timestamp/screen_recording_no_metadata.mp4',
         undefined,
         undefined,
@@ -87,7 +87,7 @@ describe('ParserScreenRecording', () => {
     });
 
     it('throws error if metadata not provided', async () => {
-      const parsers = await UnitTestUtils.getParsers(
+      const parsers = await getParsers(
         'traces/elapsed_and_real_timestamp/screen_recording_no_metadata.mp4',
       );
       expect(parsers.length).toEqual(0);

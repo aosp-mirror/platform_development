@@ -16,7 +16,7 @@
 
 import {assertDefined} from 'common/assert_utils';
 import {DuplicateLayerIds, MissingLayerIds} from 'messaging/user_warnings';
-import {perfetto} from 'protos/surfaceflinger/latest/static';
+import {perfetto} from 'protos/perfetto/trace/static';
 import {android} from 'protos/surfaceflinger/udc/static';
 import {HierarchyTreeNode} from 'trace/tree_node/hierarchy_tree_node';
 import {

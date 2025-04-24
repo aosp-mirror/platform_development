@@ -27,6 +27,7 @@ import {
 } from '@angular/forms';
 import {MatButtonModule} from '@angular/material/button';
 import {MatCardModule} from '@angular/material/card';
+import {MatCheckboxModule} from '@angular/material/checkbox';
 import {MatDialogModule} from '@angular/material/dialog';
 import {MatDividerModule} from '@angular/material/divider';
 import {MatFormFieldModule} from '@angular/material/form-field';
@@ -53,6 +54,8 @@ import {
 } from 'messaging/user_warnings';
 import {
   AppRefreshDumpsRequest,
+  BugreportFileSelected,
+  BugreportFileSelectionRequest,
   ViewersLoaded,
   ViewersUnloaded,
 } from 'messaging/winscope_event';
@@ -74,6 +77,7 @@ import {TimelineComponent} from './timeline/timeline_component';
 import {TraceConfigComponent} from './trace_config_component';
 import {TraceViewComponent} from './trace_view_component';
 import {UploadTracesComponent} from './upload_traces_component';
+import {WarningDialogComponent} from './warning_dialog_component';
 import {WdpSetupComponent} from './wdp_setup_component';
 import {WinscopeProxySetupComponent} from './winscope_proxy_setup_component';
 
@@ -108,6 +112,7 @@ describe('AppComponent', () => {
         MatProgressBarModule,
         OverlayModule,
         MatTabsModule,
+        MatCheckboxModule,
       ],
       declarations: [
         WinscopeProxySetupComponent,
@@ -125,6 +130,7 @@ describe('AppComponent', () => {
         ViewerSurfaceFlingerComponent,
         ShortcutsComponent,
         SnackBarComponent,
+        WarningDialogComponent,
       ],
     })
       .overrideComponent(AppComponent, {
@@ -413,6 +419,42 @@ describe('AppComponent', () => {
     await dom.whenRenderingDone();
     snackbar = dom.getSnackBar();
     snackbar.checkText(secondMessage.getMessage());
+  });
+
+  it('shows bugreport selection dialog', async () => {
+    expect(dom.findInDocument('warning-dialog')).toBeUndefined();
+    let eventHandled = false;
+    component
+      .onWinscopeEvent(new BugreportFileSelectionRequest(['f1', 'f2']))
+      .then(() => {
+        eventHandled = true;
+      });
+    await dom.whenStable();
+    const dialog = dom.getInDocument('warning-dialog');
+    expect(eventHandled).toBeFalse();
+
+    dialog
+      .get('.warning-message')
+      .checkTextExact('Multiple Perfetto traces found. Select one to process:');
+    const [option1, option2] = dialog.findAll(
+      '.warning-action-boxes .mat-checkbox',
+    );
+    option1.checkTextExact('f1');
+    option2.checkTextExact('f2');
+    option2.dispatchEvent(new Event('change'));
+    await dom.whenStable();
+    expect(eventHandled).toBeFalse();
+
+    const mediatorSpy = spyOn(component.mediator, 'onWinscopeEvent');
+    const actions = dialog.findAll('.warning-action-buttons button');
+    expect(actions.length).toEqual(1);
+    actions[0].click();
+    await dom.whenStable();
+    expect(eventHandled).toBeTrue();
+    expect(mediatorSpy).toHaveBeenCalledOnceWith(
+      new BugreportFileSelected('f2'),
+    );
+    expect(dom.findInDocument('warning-dialog')).toBeUndefined();
   });
 
   function goToTraceView() {

@@ -15,7 +15,7 @@
  */
 
 import {assertDefined} from 'common/assert_utils';
-import {UnitTestUtils} from 'test/unit/utils';
+import {getPerfettoParser} from 'test/unit/fixture_utils';
 import {Parser} from 'trace/parser';
 import {Trace} from 'trace/trace';
 import {Traces} from 'trace/traces';
@@ -30,7 +30,7 @@ describe('TraceSearchInitializer', () => {
   });
 
   it('initializes surface flinger', async () => {
-    const parser = await UnitTestUtils.getPerfettoParser(
+    const parser = await getPerfettoParser(
       TraceType.SURFACE_FLINGER,
       'traces/perfetto/layers_trace.perfetto-trace',
     );
@@ -58,7 +58,7 @@ describe('TraceSearchInitializer', () => {
   });
 
   it('initializes transactions', async () => {
-    const parser = await UnitTestUtils.getPerfettoParser(
+    const parser = await getPerfettoParser(
       TraceType.TRANSACTIONS,
       'traces/perfetto/transactions_trace.perfetto-trace',
     );
@@ -79,7 +79,7 @@ describe('TraceSearchInitializer', () => {
   });
 
   it('initializes protolog', async () => {
-    const parser = await UnitTestUtils.getPerfettoParser(
+    const parser = await getPerfettoParser(
       TraceType.PROTO_LOG,
       'traces/perfetto/protolog.perfetto-trace',
     );
@@ -91,7 +91,7 @@ describe('TraceSearchInitializer', () => {
   });
 
   it('initializes transitions', async () => {
-    const parser = await UnitTestUtils.getPerfettoParser(
+    const parser = await getPerfettoParser(
       TraceType.TRANSITION,
       'traces/perfetto/shell_transitions_trace.perfetto-trace',
     );
@@ -105,7 +105,7 @@ describe('TraceSearchInitializer', () => {
   });
 
   it('initializes view capture', async () => {
-    const parser = await UnitTestUtils.getPerfettoParser(
+    const parser = await getPerfettoParser(
       TraceType.VIEW_CAPTURE,
       'traces/perfetto/viewcapture.perfetto-trace',
     );

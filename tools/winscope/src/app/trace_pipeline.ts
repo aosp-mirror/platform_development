@@ -28,6 +28,12 @@ import {
   NoValidFiles,
   UnsupportedFileFormat,
 } from 'messaging/user_warnings';
+import {WinscopeEvent} from 'messaging/winscope_event';
+import {
+  EmitEvent,
+  WinscopeEventEmitter,
+} from 'messaging/winscope_event_emitter';
+import {WinscopeEventListener} from 'messaging/winscope_event_listener';
 import {FileAndParsers} from 'parsers/file_and_parsers';
 import {ParserFactory as LegacyParserFactory} from 'parsers/legacy/parser_factory';
 import {ParserFactory as PerfettoParserFactory} from 'parsers/perfetto/parser_factory';
@@ -46,13 +52,23 @@ import {TraceFileFilter} from './trace_file_filter';
 
 type UnzippedArchive = TraceFile[];
 
-export class TracePipeline {
+export class TracePipeline
+  implements WinscopeEventListener, WinscopeEventEmitter
+{
   private loadedParsers = new LoadedParsers();
   private traceFileFilter = new TraceFileFilter();
   private traces = new Traces();
   private downloadArchiveFilename?: string;
   private lostPerfettoPackets = 0;
   private timestampConverter = new TimestampConverter(UTC_TIMEZONE_INFO);
+
+  setEmitEvent(callback: EmitEvent) {
+    this.traceFileFilter.setEmitEvent(callback);
+  }
+
+  async onWinscopeEvent(event: WinscopeEvent) {
+    await this.traceFileFilter.onWinscopeEvent(event);
+  }
 
   async loadFiles(
     files: File[],

@@ -15,6 +15,10 @@
  */
 
 import {TraceOverridden} from 'messaging/user_warnings';
+import {
+  BugreportFileSelected,
+  WinscopeEventType,
+} from 'messaging/winscope_event';
 import {getFixtureFile} from 'test/unit/fixture_utils';
 import {UserNotifierChecker} from 'test/unit/user_notifier_checker';
 import {TraceFile} from 'trace/trace_file';
@@ -119,6 +123,39 @@ describe('TraceFileFilter', () => {
           10,
         ),
       ]);
+    });
+
+    it('picks single file in perfetto directory', async () => {
+      const perfettoTest = makeTraceFile(
+        'FS/data/misc/perfetto-traces/bugreport/test.pftrace',
+        bugreportArchive,
+      );
+      await checkPerfettoPicked(perfettoTest, []);
+    });
+
+    it('sends request for file selection if multiple files in perfetto directory', async () => {
+      let requested: string[] | undefined;
+      filter.setEmitEvent(async (event) => {
+        await event.visit(
+          WinscopeEventType.BUGREPORT_FILE_SELECTION_REQUEST,
+          async (event) => {
+            requested = event.filenames;
+            await filter.onWinscopeEvent(
+              new BugreportFileSelected(event.filenames[1]),
+            );
+          },
+        );
+      });
+
+      const perfettoTest = makeTraceFile(
+        'FS/data/misc/perfetto-traces/bugreport/test.pftrace',
+        bugreportArchive,
+      );
+      const perfettoOther = makeTraceFile(
+        'FS/data/misc/perfetto-traces/bugreport/other.pftrace',
+        bugreportArchive,
+      );
+      await checkPerfettoPicked(perfettoOther, [perfettoTest]);
     });
 
     it('ignores perfetto traces not in bugreport directory', async () => {

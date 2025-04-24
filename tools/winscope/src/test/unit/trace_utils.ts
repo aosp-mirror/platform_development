@@ -16,31 +16,43 @@
 
 import {Timestamp} from 'common/time/time';
 import {AbsoluteFrameIndex, Trace} from 'trace/trace';
+import {TraceEntryTypeMap, TraceType} from 'trace/trace_type';
+import {TraceBuilder} from './trace_builder';
 
-export class TraceUtils {
-  static async extractEntries<T>(trace: Trace<T>): Promise<T[]> {
-    const promises = trace.mapEntry(async (entry, index) => {
-      return await entry.getValue();
-    });
-    return await Promise.all(promises);
-  }
+export async function extractEntries<T>(trace: Trace<T>): Promise<T[]> {
+  const promises = trace.mapEntry(async (entry, index) => {
+    return await entry.getValue();
+  });
+  return await Promise.all(promises);
+}
 
-  static extractTimestamps<T>(trace: Trace<T>): Timestamp[] {
-    const timestamps = new Array<Timestamp>();
-    trace.forEachTimestamp((timestamp) => {
-      timestamps.push(timestamp);
-    });
-    return timestamps;
-  }
+export function extractTimestamps<T>(trace: Trace<T>): Timestamp[] {
+  const timestamps = new Array<Timestamp>();
+  trace.forEachTimestamp((timestamp) => {
+    timestamps.push(timestamp);
+  });
+  return timestamps;
+}
 
-  static async extractFrames<T>(
-    trace: Trace<T>,
-  ): Promise<Map<AbsoluteFrameIndex, T[]>> {
-    const frames = new Map<AbsoluteFrameIndex, T[]>();
-    const promises = trace.mapFrame(async (frame, index) => {
-      frames.set(index, await TraceUtils.extractEntries(frame));
-    });
-    await Promise.all(promises);
-    return frames;
-  }
+export async function extractFrames<T>(
+  trace: Trace<T>,
+): Promise<Map<AbsoluteFrameIndex, T[]>> {
+  const frames = new Map<AbsoluteFrameIndex, T[]>();
+  const promises = trace.mapFrame(async (frame, index) => {
+    frames.set(index, await extractEntries(frame));
+  });
+  await Promise.all(promises);
+  return frames;
+}
+
+export function makeEmptyTrace<T extends TraceType>(
+  traceType: T,
+  descriptors: string[] = [],
+): Trace<TraceEntryTypeMap[T]> {
+  return new TraceBuilder<TraceEntryTypeMap[T]>()
+    .setEntries([])
+    .setTimestamps([])
+    .setDescriptors(descriptors)
+    .setType(traceType)
+    .build();
 }

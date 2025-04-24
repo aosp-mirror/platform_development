@@ -18,7 +18,7 @@ import {assertDefined} from 'common/assert_utils';
 import {TimestampConverterUtils} from 'common/time/test_utils';
 import {TracePositionUpdate} from 'messaging/winscope_event';
 import {TraceBuilder} from 'test/unit/trace_builder';
-import {UnitTestUtils} from 'test/unit/utils';
+import {makeEmptyTrace} from 'test/unit/trace_utils';
 import {Trace} from 'trace/trace';
 import {TraceType} from 'trace/trace_type';
 import {QueryResult, Row, RowIterator} from 'trace_processor/query_result';
@@ -78,7 +78,7 @@ class SearchResultPresenterTest extends AbstractLogViewerPresenterTest<SearchRes
     const time100 = TimestampConverterUtils.makeRealTimestamp(100n);
     const [spyQueryResult, spyIter] = makeSearchTraceSpies(time100, 123);
     this.spyIter = spyIter;
-    const trace = UnitTestUtils.makeEmptyTrace(TraceType.SEARCH);
+    const trace = makeEmptyTrace(TraceType.SEARCH);
     return new SearchResultPresenter(
       trace,
       callback,

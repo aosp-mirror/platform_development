@@ -93,3 +93,11 @@ export function timestampEqualityTester(
 }
 
 export const TimestampConverterUtils = new TimestampConverterTestUtils();
+
+export function getTimestampConverter(
+  withUTCOffset = false,
+): TimestampConverter {
+  return withUTCOffset
+    ? new TimestampConverter(TimestampConverterUtils.ASIA_TIMEZONE_INFO)
+    : new TimestampConverter(TimestampConverterUtils.UTC_TIMEZONE_INFO);
+}

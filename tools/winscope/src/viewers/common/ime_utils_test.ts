@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 import {assertDefined} from 'common/assert_utils';
+import {getImeTraceEntries} from 'test/unit/fixture_utils';
 import {UserNotifierChecker} from 'test/unit/user_notifier_checker';
-import {UnitTestUtils} from 'test/unit/utils';
 import {TraceType} from 'trace/trace_type';
 import {ImeUtils} from './ime_utils';
 
@@ -32,7 +32,7 @@ describe('ImeUtils', () => {
   });
 
   it('processes WindowManager trace entry', async () => {
-    const entries = (await UnitTestUtils.getImeTraceEntries())[0];
+    const entries = (await getImeTraceEntries())[0];
     const processed = ImeUtils.processWindowManagerTraceEntry(
       assertDefined(entries.get(TraceType.WINDOW_MANAGER)),
       undefined,
@@ -98,7 +98,7 @@ describe('ImeUtils', () => {
   });
 
   it('processes SurfaceFlinger trace entry', async () => {
-    const entries = (await UnitTestUtils.getImeTraceEntries())[0];
+    const entries = (await getImeTraceEntries())[0];
     const processedWindowManagerState = ImeUtils.processWindowManagerTraceEntry(
       assertDefined(entries.get(TraceType.WINDOW_MANAGER)),
       undefined,

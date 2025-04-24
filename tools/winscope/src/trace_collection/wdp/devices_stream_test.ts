@@ -15,7 +15,10 @@
  */
 
 import {TimeUtils} from 'common/time/time_utils';
-import {UnitTestUtils} from 'test/unit/utils';
+import {
+  makeFakeWebSocket,
+  makeFakeWebSocketMessage,
+} from 'test/unit/web_socket_utils';
 import {DevicesStream} from './devices_stream';
 
 describe('DevicesStream', () => {
@@ -26,7 +29,7 @@ describe('DevicesStream', () => {
   let webSocket: jasmine.SpyObj<WebSocket>;
 
   beforeEach(() => {
-    webSocket = UnitTestUtils.makeFakeWebSocket();
+    webSocket = makeFakeWebSocket();
     errorListener.calls.reset();
     stream = new DevicesStream(webSocket, dataListener, errorListener);
   });
@@ -55,6 +58,6 @@ describe('DevicesStream', () => {
   });
 
   function receiveMessage() {
-    webSocket.onmessage!(UnitTestUtils.makeFakeWebSocketMessage('test'));
+    webSocket.onmessage!(makeFakeWebSocketMessage('test'));
   }
 });

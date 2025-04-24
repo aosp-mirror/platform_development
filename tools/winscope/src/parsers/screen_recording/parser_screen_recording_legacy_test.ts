@@ -16,7 +16,7 @@
 
 import {assertDefined} from 'common/assert_utils';
 import {TimestampConverterUtils} from 'common/time/test_utils';
-import {UnitTestUtils} from 'test/unit/utils';
+import {getParser} from 'test/unit/fixture_utils';
 import {CoarseVersion} from 'trace/coarse_version';
 import {MediaBasedTraceEntry} from 'trace/media_based_trace_entry';
 import {Parser} from 'trace/parser';
@@ -26,7 +26,7 @@ describe('ParserScreenRecordingLegacy', () => {
   let parser: Parser<MediaBasedTraceEntry>;
 
   beforeAll(async () => {
-    parser = (await UnitTestUtils.getParser(
+    parser = (await getParser(
       'traces/elapsed_timestamp/screen_recording.mp4',
     )) as Parser<MediaBasedTraceEntry>;
   });

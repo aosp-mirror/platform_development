@@ -23,10 +23,10 @@ import {
   TracePositionUpdate,
 } from 'messaging/winscope_event';
 import {Transform} from 'parsers/surface_flinger/transform_utils';
+import {getTracesParser} from 'test/unit/fixture_utils';
 import {HierarchyTreeBuilder} from 'test/unit/hierarchy_tree_builder';
 import {TracesBuilder} from 'test/unit/traces_builder';
 import {TraceBuilder} from 'test/unit/trace_builder';
-import {UnitTestUtils} from 'test/unit/utils';
 import {CustomQueryType} from 'trace/custom_query';
 import {Parser} from 'trace/parser';
 import {Trace} from 'trace/trace';
@@ -142,7 +142,7 @@ class PresenterInputTest extends AbstractLogViewerPresenterTest<UiData> {
   ];
 
   override async setUpTestEnvironment(): Promise<void> {
-    const parser = (await UnitTestUtils.getTracesParser([
+    const parser = (await getTracesParser([
       'traces/perfetto/input-events.perfetto-trace',
     ])) as Parser<PropertyTreeNode>;
 

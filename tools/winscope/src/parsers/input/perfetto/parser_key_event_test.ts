@@ -18,20 +18,20 @@ import {
   TimestampConverterUtils,
   timestampEqualityTester,
 } from 'common/time/test_utils';
+import {getPerfettoParser} from 'test/unit/fixture_utils';
 import {TraceBuilder} from 'test/unit/trace_builder';
-import {UnitTestUtils} from 'test/unit/utils';
 import {CoarseVersion} from 'trace/coarse_version';
 import {CustomQueryType} from 'trace/custom_query';
 import {Parser} from 'trace/parser';
 import {TraceType} from 'trace/trace_type';
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
 
-describe('Perfetto ParserKeyEvent', () => {
+describe('PerfettoParserKeyEvent', () => {
   let parser: Parser<PropertyTreeNode>;
 
   beforeAll(async () => {
     jasmine.addCustomEqualityTester(timestampEqualityTester);
-    parser = await UnitTestUtils.getPerfettoParser(
+    parser = await getPerfettoParser(
       TraceType.INPUT_KEY_EVENT,
       'traces/perfetto/input-events.perfetto-trace',
     );

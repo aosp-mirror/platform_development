@@ -16,13 +16,13 @@
 
 import {TimestampConverterUtils} from 'common/time/test_utils';
 import {TraceBuilder} from 'test/unit/trace_builder';
-import {UnitTestUtils} from 'test/unit/utils';
+import {makeEmptyTrace} from 'test/unit/trace_utils';
 import {TraceEntryFinder} from './trace_entry_finder';
 import {TracePosition} from './trace_position';
 import {TraceType} from './trace_type';
 
 describe('TraceEntryFinder', () => {
-  const emptyTrace = UnitTestUtils.makeEmptyTrace(TraceType.TEST_TRACE_STRING);
+  const emptyTrace = makeEmptyTrace(TraceType.TEST_TRACE_STRING);
   const ts10 = TimestampConverterUtils.makeRealTimestamp(10n);
   const ts14 = TimestampConverterUtils.makeRealTimestamp(14n);
   const ts16 = TimestampConverterUtils.makeRealTimestamp(16n);

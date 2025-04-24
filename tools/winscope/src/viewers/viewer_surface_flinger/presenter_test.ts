@@ -21,10 +21,17 @@ import {
   TabbedViewSwitchRequest,
   TracePositionUpdate,
 } from 'messaging/winscope_event';
+import {
+  getLayerTraceEntry,
+  getMultiDisplayLayerTraceEntry,
+  getPerfettoParser,
+  getTraceEntry,
+  getViewCaptureEntry,
+} from 'test/unit/fixture_utils';
 import {HierarchyTreeBuilder} from 'test/unit/hierarchy_tree_builder';
 import {TraceBuilder} from 'test/unit/trace_builder';
+import {makeEmptyTrace} from 'test/unit/trace_utils';
 import {UserNotifierChecker} from 'test/unit/user_notifier_checker';
-import {UnitTestUtils} from 'test/unit/utils';
 import {CustomQueryType} from 'trace/custom_query';
 import {Trace} from 'trace/trace';
 import {Traces} from 'trace/traces';
@@ -173,25 +180,25 @@ the default for its data type.`,
     'ActivityRecord{64953af u0 com.google.(...).NexusLauncherActivity#96';
 
   override async setUpTestEnvironment(): Promise<void> {
-    const perfettoTrace = await UnitTestUtils.getPerfettoParser(
+    const perfettoTrace = await getPerfettoParser(
       TraceType.SURFACE_FLINGER,
       'traces/perfetto/layers_trace.perfetto-trace',
     );
     this.traceSf = new TraceBuilder<HierarchyTreeNode>()
       .setType(TraceType.SURFACE_FLINGER)
       .setEntries([
-        await UnitTestUtils.getLayerTraceEntry(0),
-        await UnitTestUtils.getMultiDisplayLayerTraceEntry(),
-        await UnitTestUtils.getLayerTraceEntry(1),
-        await UnitTestUtils.getTraceEntry<HierarchyTreeNode>(
+        await getLayerTraceEntry(0),
+        await getMultiDisplayLayerTraceEntry(),
+        await getLayerTraceEntry(1),
+        await getTraceEntry<HierarchyTreeNode>(
           'traces/elapsed_and_real_timestamp/SurfaceFlinger.pb',
           5,
         ),
-        await UnitTestUtils.getTraceEntry<HierarchyTreeNode>(
+        await getTraceEntry<HierarchyTreeNode>(
           'traces/elapsed_and_real_timestamp/SurfaceFlinger.pb',
           6,
         ),
-        await UnitTestUtils.getTraceEntry<HierarchyTreeNode>(
+        await getTraceEntry<HierarchyTreeNode>(
           'traces/elapsed_and_real_timestamp/SurfaceFlinger_with_duplicated_ids.pb',
         ),
         await perfettoTrace.getEntry(0),
@@ -242,7 +249,7 @@ the default for its data type.`,
   override createPresenterWithEmptyTrace(
     callback: NotifyHierarchyViewCallbackType<UiData>,
   ): Presenter {
-    const trace = UnitTestUtils.makeEmptyTrace(TraceType.SURFACE_FLINGER);
+    const trace = makeEmptyTrace(TraceType.SURFACE_FLINGER);
     const traces = new Traces();
     traces.addTrace(trace);
     return new Presenter(trace, traces, new InMemoryStorage(), callback);
@@ -712,7 +719,7 @@ the default for its data type.`,
       ): Promise<[Presenter, Trace<HierarchyTreeNode>]> {
         const traceVc = new TraceBuilder<HierarchyTreeNode>()
           .setType(TraceType.VIEW_CAPTURE)
-          .setEntries([await UnitTestUtils.getViewCaptureEntry()])
+          .setEntries([await getViewCaptureEntry()])
           .setParserCustomQueryResult(CustomQueryType.VIEW_CAPTURE_METADATA, {
             packageName: 'com.google.android.apps.nexuslauncher',
             windowName: 'not_used',
