@@ -209,7 +209,7 @@ fn try_update(
         .args([
             "-c",
             format!(
-                "source {}/build/envsetup.sh && lunch aosp_husky-trunk_staging-eng && mm && m rust",
+                "source {}/build/envsetup.sh && lunch aosp_cf_x86_64_phone-trunk_staging-eng && mm && m rust",
                 android_root.display()
             )
             .as_str(),
@@ -283,7 +283,7 @@ fn main() -> Result<()> {
     Command::new("/usr/bin/bash")
         .args([
             "-c",
-            "source build/envsetup.sh && lunch aosp_husky-trunk_staging-eng && m cargo_embargo",
+            "source build/envsetup.sh && lunch aosp_cf_x86_64_phone-trunk_staging-eng && m cargo_embargo",
         ])
         .env_remove("OUT_DIR")
         .current_dir(&args.android_root)
