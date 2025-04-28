@@ -45,31 +45,20 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
 import com.android.mechanics.debug.DebugMotionValueVisualization
 import com.android.mechanics.debug.debugMotionValueGraph
-import com.android.mechanics.demo.staging.defaultSpatialSpring
 import com.android.mechanics.demo.staging.rememberDistanceGestureContext
 import com.android.mechanics.demo.staging.rememberMotionValue
 import com.android.mechanics.demo.tuneable.Demo
-import com.android.mechanics.spec.Breakpoint
-import com.android.mechanics.spec.BreakpointKey
 import com.android.mechanics.spec.Guarantee
-import com.android.mechanics.spec.Mapping
 import com.android.mechanics.spec.MotionSpec
-import com.android.mechanics.spec.builder
-import com.android.mechanics.spring.SpringParameters
+import com.android.mechanics.spec.builder.effectsDirectionalMotionSpec
+import com.android.mechanics.spec.builder.rememberMotionBuilderContext
 
-object GuaranteeFadeDemo : Demo<GuaranteeFadeDemo.Config> {
-    object Keys {
-        val Start = BreakpointKey("Start")
-        val Detach = BreakpointKey("Detach")
-        val End = Breakpoint.maxLimit.key
-    }
-
-    data class Config(val defaultSpring: SpringParameters)
+object GuaranteeFadeDemo : Demo<Unit> {
 
     var inputRange by mutableStateOf(0f..200f)
 
     @Composable
-    override fun DemoUi(config: Config, modifier: Modifier) {
+    override fun DemoUi(config: Unit, modifier: Modifier) {
         val colors = MaterialTheme.colorScheme
 
         val density = LocalDensity.current
@@ -78,9 +67,9 @@ object GuaranteeFadeDemo : Demo<GuaranteeFadeDemo.Config> {
 
         // Also using GestureContext.dragOffset as input.
         val gestureContext = rememberDistanceGestureContext()
-        val spec = rememberSpec(inputOutputRange = inputRange, config, { 0f })
+        val spec = rememberSpec(inputOutputRange = inputRange, { 0f })
         val guaranteeSpec =
-            rememberSpec(inputOutputRange = inputRange, config, guaranteeDistance::floatValue)
+            rememberSpec(inputOutputRange = inputRange, guaranteeDistance::floatValue)
 
         val withoutGuarantee =
             rememberMotionValue(gestureContext::dragOffset, { spec }, gestureContext)
@@ -150,30 +139,34 @@ object GuaranteeFadeDemo : Demo<GuaranteeFadeDemo.Config> {
     @Composable
     fun rememberSpec(
         inputOutputRange: ClosedFloatingPointRange<Float>,
-        config: Config,
         guaranteeDistance: () -> Float,
     ): MotionSpec {
         val distance = guaranteeDistance()
         val guarantee = if (distance > 0) Guarantee.InputDelta(distance) else Guarantee.None
+        val builderContext = rememberMotionBuilderContext()
 
-        return remember(guarantee, config, inputOutputRange) {
-            MotionSpec.builder(config.defaultSpring, initialMapping = Mapping.Zero)
-                .toBreakpoint((inputOutputRange.start + inputOutputRange.endInclusive) / 2f)
-                .completeWith(Mapping.One, guarantee = guarantee)
+        return remember(guarantee, inputOutputRange, builderContext) {
+            with(builderContext) {
+                MotionSpec(
+                    effectsDirectionalMotionSpec {
+                        constantValue(
+                            breakpoint =
+                                (inputOutputRange.start + inputOutputRange.endInclusive) / 2f,
+                            value = 1f,
+                            guarantee = guarantee,
+                        )
+                    }
+                )
+            }
         }
     }
 
-    @Composable
-    override fun rememberDefaultConfig(): Config {
-        val defaultSpring = defaultSpatialSpring()
-        return remember(defaultSpring) { Config(defaultSpring) }
-    }
+    @Composable override fun rememberDefaultConfig() {}
 
     override val visualizationInputRange: ClosedFloatingPointRange<Float>
         get() = inputRange
 
-    @Composable
-    override fun ColumnScope.ConfigUi(config: Config, onConfigChanged: (Config) -> Unit) {}
+    @Composable override fun ColumnScope.ConfigUi(config: Unit, onConfigChanged: (Unit) -> Unit) {}
 
     override val identifier: String = "GuaranteeFadeDemo"
 }

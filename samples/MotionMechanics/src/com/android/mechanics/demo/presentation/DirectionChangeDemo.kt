@@ -35,7 +35,6 @@ import androidx.compose.material3.Slider
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -47,36 +46,30 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.layout.onPlaced
 import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.platform.LocalViewConfiguration
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import com.android.mechanics.debug.DebugMotionValueVisualization
 import com.android.mechanics.debug.debugMotionValue
-import com.android.mechanics.demo.staging.defaultSpatialSpring
 import com.android.mechanics.demo.staging.rememberDistanceGestureContext
 import com.android.mechanics.demo.staging.rememberMotionValue
 import com.android.mechanics.demo.tuneable.Demo
+import com.android.mechanics.effects.FixedValue
 import com.android.mechanics.spec.Mapping
 import com.android.mechanics.spec.MotionSpec
-import com.android.mechanics.spec.builder
-import com.android.mechanics.spring.SpringParameters
+import com.android.mechanics.spec.builder.rememberMotionBuilderContext
+import com.android.mechanics.spec.builder.spatialMotionSpec
 
-object DirectionChangeDemo : Demo<DirectionChangeDemo.Config> {
-
-    data class Config(val defaultSpring: SpringParameters)
+object DirectionChangeDemo : Demo<Unit> {
 
     var inputRange by mutableStateOf(0f..0f)
 
     @Composable
-    override fun DemoUi(config: Config, modifier: Modifier) {
+    override fun DemoUi(config: Unit, modifier: Modifier) {
         val colors = MaterialTheme.colorScheme
-
-        val initialTouchSlop = LocalViewConfiguration.current.touchSlop
-        val touchSlop by remember { mutableFloatStateOf(initialTouchSlop) }
 
         // Also using GestureContext.dragOffset as input.
         val gestureContext = rememberDistanceGestureContext()
-        val spec = rememberSpec(inputOutputRange = inputRange, config)
+        val spec = rememberSpec(inputOutputRange = inputRange)
         val motionValue = rememberMotionValue(gestureContext::dragOffset, { spec }, gestureContext)
 
         Column(
@@ -144,32 +137,27 @@ object DirectionChangeDemo : Demo<DirectionChangeDemo.Config> {
     }
 
     @Composable
-    fun rememberSpec(
-        inputOutputRange: ClosedFloatingPointRange<Float>,
-        config: Config,
-    ): MotionSpec {
+    fun rememberSpec(inputOutputRange: ClosedFloatingPointRange<Float>): MotionSpec {
 
-        return remember(inputOutputRange, config) {
-            MotionSpec.builder(
-                    config.defaultSpring,
-                    initialMapping = Mapping.Fixed(inputOutputRange.start),
-                )
-                .toBreakpoint((inputOutputRange.start + inputOutputRange.endInclusive) / 2f)
-                .completeWith(Mapping.Fixed(inputOutputRange.endInclusive))
+        val builderContext = rememberMotionBuilderContext()
+        return remember(inputOutputRange, builderContext) {
+            with(builderContext) {
+                spatialMotionSpec(baseMapping = Mapping.Fixed(inputOutputRange.start)) {
+                    after(
+                        (inputOutputRange.start + inputOutputRange.endInclusive) / 2f,
+                        FixedValue(inputOutputRange.endInclusive),
+                    )
+                }
+            }
         }
     }
 
-    @Composable
-    override fun rememberDefaultConfig(): Config {
-        val defaultSpring = defaultSpatialSpring()
-        return remember(defaultSpring) { Config(defaultSpring) }
-    }
+    @Composable override fun rememberDefaultConfig() {}
 
     override val visualizationInputRange: ClosedFloatingPointRange<Float>
         get() = inputRange
 
-    @Composable
-    override fun ColumnScope.ConfigUi(config: Config, onConfigChanged: (Config) -> Unit) {}
+    @Composable override fun ColumnScope.ConfigUi(config: Unit, onConfigChanged: (Unit) -> Unit) {}
 
     override val identifier: String = "DirectionChangeDemo"
 }

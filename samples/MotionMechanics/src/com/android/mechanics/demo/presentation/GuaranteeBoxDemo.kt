@@ -55,7 +55,6 @@ import androidx.compose.ui.unit.dp
 import com.android.compose.modifiers.height
 import com.android.compose.modifiers.width
 import com.android.mechanics.debug.DebugMotionValueVisualization
-import com.android.mechanics.demo.staging.defaultSpatialSpring
 import com.android.mechanics.demo.staging.rememberDistanceGestureContext
 import com.android.mechanics.demo.staging.rememberMotionValue
 import com.android.mechanics.demo.tuneable.Demo
@@ -65,7 +64,8 @@ import com.android.mechanics.demo.tuneable.SpringParameterSection
 import com.android.mechanics.spec.Guarantee
 import com.android.mechanics.spec.Mapping
 import com.android.mechanics.spec.MotionSpec
-import com.android.mechanics.spec.builder
+import com.android.mechanics.spec.builder.rememberMotionBuilderContext
+import com.android.mechanics.spec.builder.spatialDirectionalMotionSpec
 import com.android.mechanics.spring.SpringParameters
 import kotlin.math.min
 
@@ -213,39 +213,52 @@ object GuaranteeBoxDemo : Demo<GuaranteeBoxDemo.Config> {
         config: Config,
     ): MotionSpec {
 
-        val density = LocalDensity.current
+        val builderContext = rememberMotionBuilderContext()
         val left = x()
         val widthVal = width()
         val right = left + widthVal
 
-        return remember(scenario, inputOutputRange, config, left, widthVal, density) {
-            with(density) {
+        return remember(scenario, inputOutputRange, config, left, widthVal, builderContext) {
+            with(builderContext) {
                 val guarantee = Guarantee.InputDelta(config.guaranteeDistance.toPx())
                 val minSize = config.minVisibleWidth.toPx()
                 when (scenario) {
                     Scenario.Mapped ->
-                        MotionSpec.builder(config.defaultSpring, initialMapping = Mapping.Zero)
-                            .toBreakpoint(left)
-                            .jumpTo(0f)
-                            .continueWithTargetValue(widthVal)
-                            .toBreakpoint(right)
-                            .completeWith(Mapping.Fixed(widthVal))
+                        MotionSpec(
+                            spatialDirectionalMotionSpec(initialMapping = Mapping.Zero) {
+                                target(breakpoint = left, from = 0f, to = widthVal)
+                                constantValue(breakpoint = right, value = widthVal)
+                            }
+                        )
 
                     Scenario.Triggered ->
-                        MotionSpec.builder(config.defaultSpring, initialMapping = Mapping.Zero)
-                            .toBreakpoint(min(left + minSize, right))
-                            .jumpTo(minSize)
-                            .continueWithTargetValue(widthVal - minSize)
-                            .toBreakpoint(right)
-                            .completeWith(Mapping.Fixed(widthVal))
+                        MotionSpec(
+                            spatialDirectionalMotionSpec(initialMapping = Mapping.Zero) {
+                                target(
+                                    breakpoint = min(left + minSize, right),
+                                    from = minSize,
+                                    to = widthVal - minSize,
+                                )
+                                constantValue(breakpoint = right, value = widthVal)
+                            }
+                        )
 
                     Scenario.Guaranteed ->
-                        MotionSpec.builder(config.defaultSpring, initialMapping = Mapping.Zero)
-                            .toBreakpoint(min(left + minSize, right))
-                            .jumpTo(minSize, guarantee = guarantee)
-                            .continueWithTargetValue(widthVal - minSize)
-                            .toBreakpoint(right)
-                            .completeWith(Mapping.Fixed(widthVal), guarantee = guarantee)
+                        MotionSpec(
+                            spatialDirectionalMotionSpec(initialMapping = Mapping.Zero) {
+                                target(
+                                    breakpoint = min(left + minSize, right),
+                                    from = minSize,
+                                    to = widthVal - minSize,
+                                    guarantee = guarantee,
+                                )
+                                constantValue(
+                                    breakpoint = right,
+                                    value = widthVal,
+                                    guarantee = guarantee,
+                                )
+                            }
+                        )
                 }
             }
         }
@@ -253,7 +266,7 @@ object GuaranteeBoxDemo : Demo<GuaranteeBoxDemo.Config> {
 
     @Composable
     override fun rememberDefaultConfig(): Config {
-        val defaultSpring = defaultSpatialSpring()
+        val defaultSpring = rememberMotionBuilderContext().spatial.default
         return remember(defaultSpring) {
             Config(
                 defaultSpring,

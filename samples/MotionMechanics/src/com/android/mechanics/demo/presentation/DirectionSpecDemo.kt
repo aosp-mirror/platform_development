@@ -32,7 +32,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.MotionScheme
 import androidx.compose.material3.Slider
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -52,25 +51,22 @@ import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import com.android.mechanics.debug.DebugMotionValueVisualization
 import com.android.mechanics.debug.debugMotionValue
-import com.android.mechanics.demo.staging.asMechanics
-import com.android.mechanics.demo.staging.defaultSpatialSpring
 import com.android.mechanics.demo.staging.rememberDistanceGestureContext
 import com.android.mechanics.demo.staging.rememberMotionValue
 import com.android.mechanics.demo.tuneable.Demo
 import com.android.mechanics.spec.Breakpoint
 import com.android.mechanics.spec.BreakpointKey
-import com.android.mechanics.spec.DirectionalMotionSpec
 import com.android.mechanics.spec.InputDirection
 import com.android.mechanics.spec.Mapping
 import com.android.mechanics.spec.MotionSpec
 import com.android.mechanics.spec.OnChangeSegmentHandler
 import com.android.mechanics.spec.SegmentData
 import com.android.mechanics.spec.SegmentKey
-import com.android.mechanics.spec.builder
-import com.android.mechanics.spec.reverseBuilder
+import com.android.mechanics.spec.builder.rememberMotionBuilderContext
+import com.android.mechanics.spec.builder.spatialDirectionalMotionSpec
 import com.android.mechanics.spring.SpringParameters
 
-object DirectionSpecDemo : Demo<DirectionSpecDemo.Config> {
+object DirectionSpecDemo : Demo<Unit> {
     object Keys {
         val Start = BreakpointKey("Start")
         val Detach = BreakpointKey("Detach")
@@ -82,12 +78,12 @@ object DirectionSpecDemo : Demo<DirectionSpecDemo.Config> {
     var inputRange by mutableStateOf(0f..0f)
 
     @Composable
-    override fun DemoUi(config: Config, modifier: Modifier) {
+    override fun DemoUi(config: Unit, modifier: Modifier) {
         val colors = MaterialTheme.colorScheme
 
         // Also using GestureContext.dragOffset as input.
         val gestureContext = rememberDistanceGestureContext()
-        val spec = rememberSpec(inputOutputRange = inputRange, config)
+        val spec = rememberSpec(inputOutputRange = inputRange)
         val motionValue = rememberMotionValue(gestureContext::dragOffset, { spec }, gestureContext)
 
         Column(
@@ -155,67 +151,62 @@ object DirectionSpecDemo : Demo<DirectionSpecDemo.Config> {
     }
 
     @Composable
-    fun rememberSpec(
-        inputOutputRange: ClosedFloatingPointRange<Float>,
-        config: Config,
-    ): MotionSpec {
+    fun rememberSpec(inputOutputRange: ClosedFloatingPointRange<Float>): MotionSpec {
         val delta = inputOutputRange.endInclusive - inputOutputRange.start
 
         val startPosPx = inputOutputRange.start
         val detachPosPx = delta * .4f
         val attachPosPx = delta * .1f
 
-        val fastSpring = MotionScheme.expressive().fastSpatialSpec<Float>().asMechanics()
-        val slowSpring = MotionScheme.expressive().slowSpatialSpec<Float>().asMechanics()
+        val builderContext = rememberMotionBuilderContext()
 
-        return remember(inputOutputRange, config) {
-            val detachSpec =
-                DirectionalMotionSpec.builder(config.defaultSpring, initialMapping = Mapping.Zero)
-                    .toBreakpoint(startPosPx, Keys.Start)
-                    .continueWith(Mapping.Linear(.3f))
-                    .toBreakpoint(detachPosPx, Keys.Detach)
-                    .completeWith(Mapping.Identity, slowSpring)
+        return remember(inputOutputRange, builderContext) {
+            with(builderContext) {
+                val detachSpec =
+                    spatialDirectionalMotionSpec(initialMapping = Mapping.Zero) {
+                        fractionalInputFromCurrent(startPosPx, fraction = .3f, key = Keys.Start)
+                        identity(detachPosPx, key = Keys.Detach, spring = spatial.slow)
+                    }
 
-            val attachSpec =
-                DirectionalMotionSpec.reverseBuilder(config.defaultSpring)
-                    .toBreakpoint(attachPosPx, Keys.Detach)
-                    .completeWith(mapping = Mapping.Zero, fastSpring)
+                val attachSpec =
+                    spatialDirectionalMotionSpec(initialMapping = Mapping.Zero) {
+                        identity(attachPosPx, key = Keys.Detach, spring = spatial.fast)
+                    }
 
-            val segmentHandlers =
-                mapOf<SegmentKey, OnChangeSegmentHandler>(
-                    SegmentKey(Keys.Detach, Keys.End, InputDirection.Min) to
-                        { currentSegment, _, newDirection ->
-                            if (newDirection != currentSegment.direction) currentSegment else null
-                        },
-                    SegmentKey(Keys.Start, Keys.Detach, InputDirection.Max) to
-                        { currentSegment: SegmentData, newInput: Float, newDirection: InputDirection
-                            ->
-                            if (newDirection != currentSegment.direction && newInput >= 0)
-                                currentSegment
-                            else null
-                        },
+                val segmentHandlers =
+                    mapOf<SegmentKey, OnChangeSegmentHandler>(
+                        SegmentKey(Keys.Detach, Keys.End, InputDirection.Min) to
+                            { currentSegment, _, newDirection ->
+                                if (newDirection != currentSegment.direction) currentSegment
+                                else null
+                            },
+                        SegmentKey(Keys.Start, Keys.Detach, InputDirection.Max) to
+                            {
+                                currentSegment: SegmentData,
+                                newInput: Float,
+                                newDirection: InputDirection ->
+                                if (newDirection != currentSegment.direction && newInput >= 0)
+                                    currentSegment
+                                else null
+                            },
+                    )
+
+                MotionSpec(
+                    maxDirection = detachSpec,
+                    minDirection = attachSpec,
+                    resetSpring = spatial.default,
+                    segmentHandlers = segmentHandlers,
                 )
-
-            MotionSpec(
-                maxDirection = detachSpec,
-                minDirection = attachSpec,
-                resetSpring = config.defaultSpring,
-                segmentHandlers = segmentHandlers,
-            )
+            }
         }
     }
 
-    @Composable
-    override fun rememberDefaultConfig(): Config {
-        val defaultSpring = defaultSpatialSpring()
-        return remember(defaultSpring) { Config(defaultSpring) }
-    }
+    @Composable override fun rememberDefaultConfig() {}
 
     override val visualizationInputRange: ClosedFloatingPointRange<Float>
         get() = inputRange
 
-    @Composable
-    override fun ColumnScope.ConfigUi(config: Config, onConfigChanged: (Config) -> Unit) {}
+    @Composable override fun ColumnScope.ConfigUi(config: Unit, onConfigChanged: (Unit) -> Unit) {}
 
     override val identifier: String = "DirectionSpecDemo"
 }

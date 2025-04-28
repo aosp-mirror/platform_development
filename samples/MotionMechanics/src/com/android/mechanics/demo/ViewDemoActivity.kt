@@ -26,7 +26,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.constraintlayout.widget.ConstraintLayout
 import com.android.mechanics.spec.Mapping
 import com.android.mechanics.spec.MotionSpec
-import com.android.mechanics.spec.buildDirectionalMotionSpec
+import com.android.mechanics.spec.builder.directionalMotionSpec
 import com.android.mechanics.spring.SpringParameters
 import com.android.mechanics.view.DistanceGestureContext
 import com.android.mechanics.view.ViewMotionValue
@@ -119,12 +119,11 @@ class ViewDemoActivity : AppCompatActivity() {
     }
 
     fun createMotionSpecs(maxRange: Float): Map<String, MotionSpec> {
-
         return mapOf(
             "empty" to MotionSpec.Empty,
             "toggle" to
                 MotionSpec(
-                    buildDirectionalMotionSpec(DefaultSpring, Mapping.Zero) {
+                    directionalMotionSpec(DefaultSpring, Mapping.Zero) {
                         constantValue(breakpoint = maxRange / 2f, value = maxRange)
                     }
                 ),
