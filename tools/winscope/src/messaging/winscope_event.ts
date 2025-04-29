@@ -53,6 +53,7 @@ export enum WinscopeEventType {
   TRACE_REMOVE_REQUEST,
   INITIALIZE_TRACE_SEARCH_REQUEST,
   TRACE_SEARCH_INITIALIZED,
+  SHOW_TRACE_UPLOAD_WARNING,
 }
 
 interface TypeMap {
@@ -86,6 +87,7 @@ interface TypeMap {
   [WinscopeEventType.INITIALIZE_TRACE_SEARCH_REQUEST]: InitializeTraceSearchRequest;
   [WinscopeEventType.TRACE_SEARCH_INITIALIZED]: TraceSearchInitialized;
   [WinscopeEventType.TRACE_SEARCH_COMPLETED]: TraceSearchCompleted;
+  [WinscopeEventType.SHOW_TRACE_UPLOAD_WARNING]: ShowTraceUploadWarning;
 }
 
 export abstract class WinscopeEvent {
@@ -317,6 +319,14 @@ export class BugreportFileSelectionRequest extends WinscopeEvent {
   override readonly type = WinscopeEventType.BUGREPORT_FILE_SELECTION_REQUEST;
 
   constructor(readonly filenames: string[]) {
+    super();
+  }
+}
+
+export class ShowTraceUploadWarning extends WinscopeEvent {
+  override readonly type = WinscopeEventType.SHOW_TRACE_UPLOAD_WARNING;
+
+  constructor(readonly message: string) {
     super();
   }
 }

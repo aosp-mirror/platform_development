@@ -50,6 +50,20 @@ export class NoValidFiles extends UserWarning {
   }
 }
 
+export class MissingPersistentTrace extends UserWarning {
+  constructor(private reason: string) {
+    super();
+  }
+
+  override getDescriptor(): string {
+    return 'missing persistent trace';
+  }
+
+  override getMessage(): string {
+    return 'No Winscope Perfetto trace found in bug report. ' + this.reason;
+  }
+}
+
 export class TraceHasOldData extends UserWarning {
   constructor(
     private readonly descriptor: string,

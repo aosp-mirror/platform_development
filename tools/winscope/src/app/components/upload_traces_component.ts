@@ -24,7 +24,11 @@ import {
 } from '@angular/core';
 import {TracePipeline} from 'app/trace_pipeline';
 import {ProgressListener} from 'messaging/progress_listener';
-import {WinscopeEvent, WinscopeEventType} from 'messaging/winscope_event';
+import {
+  ShowTraceUploadWarning,
+  WinscopeEvent,
+  WinscopeEventType,
+} from 'messaging/winscope_event';
 import {WinscopeEventListener} from 'messaging/winscope_event_listener';
 import {Trace} from 'trace/trace';
 import {TRACE_INFO} from 'trace/trace_info';
@@ -76,6 +80,16 @@ import {LoadProgressComponent} from './load_progress_component';
             Clear all
           </button>
         </div>
+      </div>
+
+      <div *ngFor="let message of warningMessages; let i = index" class="warning-banner mat-elevation-z2">
+        <div class="warning-content">
+          <mat-icon class="warning-icon">warning</mat-icon>
+          <span class="warn-message">{{ message }}</span>
+        </div>
+         <button mat-icon-button (click)="clearWarning(i)" [attr.aria-label]="'Dismiss warning: ' + message">
+            <mat-icon>close</mat-icon>
+        </button>
       </div>
 
       <mat-card-content
@@ -226,8 +240,30 @@ import {LoadProgressComponent} from './load_progress_component';
       .trace-error {
         background-color: var(--error-background-color);
       }
-      .warning-icon, .error-icon {
-        flex-shrink: 0;
+      .warning-banner {
+        background-color: var(--warning-background-color);
+        padding: 8px 8px 8px 16px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+        margin: 10px 0;
+        border-radius: 4px;
+      }
+      .warning-banner .warning-content {
+         display: flex;
+         align-items: center;
+         gap: 8px;
+         flex-grow: 1;
+         text-align: left;
+      }
+      .warning-banner .warning-icon {
+         flex-shrink: 0;
+      }
+      .warning-banner .warn-message {
+        /* Removed list styles as it's now a single span per banner */
+        padding: 0;
+        margin: 0;
       }
     `,
   ],
@@ -241,6 +277,7 @@ export class UploadTracesComponent
   progressPercentage?: number;
   lastUiProgressUpdateTimeMs?: number;
   viewersLoading = false;
+  warningMessages: string[] = [];
 
   @Input() tracePipeline: TracePipeline | undefined;
   @Output() filesUploaded = new EventEmitter<File[]>();
@@ -254,6 +291,11 @@ export class UploadTracesComponent
 
   ngOnInit() {
     this.tracePipeline?.clear();
+    this.clearAllWarnings();
+  }
+
+  clearAllWarnings() {
+    this.warningMessages = [];
   }
 
   async onWinscopeEvent(event: WinscopeEvent) {
@@ -264,6 +306,15 @@ export class UploadTracesComponent
       WinscopeEventType.APP_TRACE_VIEW_REQUEST_HANDLED,
       async () => {
         this.viewersLoading = false;
+      },
+    );
+    await event.visit(
+      WinscopeEventType.SHOW_TRACE_UPLOAD_WARNING,
+      async (e: ShowTraceUploadWarning) => {
+        if (e.message && !this.warningMessages.includes(e.message)) {
+          this.warningMessages.push(e.message);
+        }
+        this.changeDetectorRef.detectChanges();
       },
     );
   }
@@ -305,6 +356,7 @@ export class UploadTracesComponent
 
   onClearButtonClick() {
     this.tracePipeline?.clear();
+    this.clearAllWarnings();
     this.onOperationFinished();
   }
 
@@ -367,6 +419,11 @@ export class UploadTracesComponent
   traceErrorTooltip(trace: Trace<object>): string {
     const reason = trace.getCorruptedReason() ?? 'Trace is corrupted.';
     return 'Cannot visualize trace. ' + reason;
+  }
+
+  clearWarning(index: number) {
+    this.warningMessages.splice(index, 1);
+    this.changeDetectorRef.detectChanges(); // Trigger UI update
   }
 
   private getInputFiles(event: Event): File[] {

@@ -827,6 +827,20 @@ describe('Mediator', () => {
     expect(tracePipeline.onWinscopeEvent).toHaveBeenCalledOnceWith(selection);
   });
 
+  it('sends warning banner event on file upload warning', async () => {
+    const bugreport = await getFixtureFile('bugreports/bugreport_no_trace.zip');
+    await mediator.onWinscopeEvent(new AppFilesUploaded([bugreport]));
+
+    expect(uploadTracesComponent.onWinscopeEvent).toHaveBeenCalledWith(
+      jasmine.objectContaining({
+        type: WinscopeEventType.SHOW_TRACE_UPLOAD_WARNING,
+        message: jasmine.stringMatching(
+          /^No Winscope Perfetto trace found in bug report/,
+        ),
+      }),
+    );
+  });
+
   async function loadFiles(
     files = inputFiles,
     viewersToReassignTraces = [viewerStub0, viewerStub1],

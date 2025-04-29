@@ -20,7 +20,8 @@ import {FunctionUtils} from 'common/function_utils';
 import {utf8Decode} from 'common/string_utils';
 import {TimezoneInfo} from 'common/time/time';
 import {UserNotifier} from 'common/user_notifier';
-import {TraceOverridden} from 'messaging/user_warnings';
+import {UserWarning} from 'messaging/user_warning';
+import {MissingPersistentTrace, TraceOverridden} from 'messaging/user_warnings';
 import {
   BugreportFileSelectionRequest,
   WinscopeEvent,
@@ -39,6 +40,7 @@ export interface FilterResult {
   metadata: TraceMetadata;
   perfetto?: TraceFile;
   timezoneInfo?: TimezoneInfo;
+  criticalWarnings?: UserWarning[];
 }
 
 export class TraceFileFilter
@@ -249,11 +251,23 @@ export class TraceFileFilter
       }
     }
 
+    const criticalWarnings: UserWarning[] = [];
+    if (!perfettoFile) {
+      // TODO: We might want to update the reason provided with more specific
+      //       instructions based on what we can detect.
+      criticalWarnings.push(
+        new MissingPersistentTrace(
+          'Ensure the bugreport comes from a dogfood device, or a device with the `persist.debug.perfetto.persistent` flag set to `1`.',
+        ),
+      );
+    }
+
     return {
       perfetto: perfettoFile,
       legacy: unzippedLegacyFiles,
       metadata,
       timezoneInfo,
+      criticalWarnings,
     };
   }
 

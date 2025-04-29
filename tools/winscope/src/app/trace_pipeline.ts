@@ -23,6 +23,7 @@ import {
 import {UserNotifier} from 'common/user_notifier';
 import {Analytics} from 'logging/analytics';
 import {ProgressListener} from 'messaging/progress_listener';
+import {UserWarning} from 'messaging/user_warning';
 import {
   CorruptedArchive,
   NoValidFiles,
@@ -74,26 +75,29 @@ export class TracePipeline
     files: File[],
     source: FilesSource,
     progressListener: ProgressListener | undefined,
-  ) {
+  ): Promise<UserWarning[]> {
     this.downloadArchiveFilename = this.makeDownloadArchiveFilename(
       files,
       source,
     );
+
+    const warnings: UserWarning[] = [];
 
     try {
       const unzippedArchives = await this.unzipFiles(files, progressListener);
 
       if (unzippedArchives.length === 0) {
         UserNotifier.add(new NoValidFiles());
-        return;
+        return warnings;
       }
 
       for (const unzippedArchive of unzippedArchives) {
-        await this.loadUnzippedArchive(
+        const newWarnings = await this.loadUnzippedArchive(
           unzippedArchive,
           source,
           progressListener,
         );
+        warnings.push(...newWarnings);
       }
 
       this.traces = new Traces();
@@ -132,6 +136,8 @@ export class TracePipeline
         this.removeTracesAndParsersByType(TraceType.INPUT_KEY_EVENT);
         this.removeTracesAndParsersByType(TraceType.INPUT_MOTION_EVENT);
       }
+
+      return warnings;
     } finally {
       progressListener?.onOperationFinished(true);
     }
@@ -231,9 +237,12 @@ export class TracePipeline
     unzippedArchive: UnzippedArchive,
     source: FilesSource,
     progressListener: ProgressListener | undefined,
-  ) {
+  ): Promise<UserWarning[]> {
+    const warnings: UserWarning[] = [];
+
     let startTimeMs = Date.now();
     const filterResult = await this.traceFileFilter.filter(unzippedArchive);
+    warnings.push(...(filterResult.criticalWarnings ?? []));
     const size =
       filterResult.legacy.reduce(
         (totalSize, f) => (totalSize += f.file.size),
@@ -253,7 +262,7 @@ export class TracePipeline
 
     if (!filterResult.perfetto && filterResult.legacy.length === 0) {
       UserNotifier.add(new NoValidFiles());
-      return;
+      return warnings;
     }
 
     startTimeMs = Date.now();
@@ -351,6 +360,8 @@ export class TracePipeline
     );
 
     this.loadedParsers.addParsers(legacyParsers, perfettoParsers);
+
+    return warnings;
   }
 
   private makeDownloadArchiveFilename(

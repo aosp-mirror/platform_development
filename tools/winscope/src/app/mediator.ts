@@ -35,6 +35,7 @@ import {
   AppTraceViewRequest,
   AppTraceViewRequestHandled,
   ExpandedTimelineToggled,
+  ShowTraceUploadWarning,
   TraceAddRequest,
   TracePositionUpdate,
   TraceSearchCompleted,
@@ -151,6 +152,7 @@ export class Mediator {
     await event.visit(WinscopeEventType.APP_FILES_UPLOADED, async (event) => {
       this.currentProgressListener = this.uploadTracesComponent;
       await this.loadFiles(event.files, FilesSource.UPLOADED);
+
       UserNotifier.notify();
     });
 
@@ -382,12 +384,18 @@ export class Mediator {
 
   private async loadFiles(files: File[], source: FilesSource) {
     const startTimeMs = Date.now();
-    await this.tracePipeline.loadFiles(
+    const warnings = await this.tracePipeline.loadFiles(
       files,
       source,
       this.currentProgressListener,
     );
     Analytics.Loading.logLoadFilesTime(Date.now() - startTimeMs, source);
+
+    for (const warning of warnings) {
+      await this.uploadTracesComponent?.onWinscopeEvent(
+        new ShowTraceUploadWarning(warning.getMessage()),
+      );
+    }
   }
 
   private async propagateTracePosition(

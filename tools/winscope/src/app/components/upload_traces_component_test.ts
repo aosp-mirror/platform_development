@@ -27,6 +27,7 @@ import {TimestampConverterUtils} from 'common/time/test_utils';
 import {
   AppTraceViewRequest,
   AppTraceViewRequestHandled,
+  ShowTraceUploadWarning,
 } from 'messaging/winscope_event';
 import {DOMTestHelper} from 'test/unit/dom_test_utils';
 import {getFixtureFile} from 'test/unit/fixture_utils';
@@ -40,6 +41,10 @@ describe('UploadTracesComponent', () => {
   const clearAllSelector = '.clear-all-btn';
   const viewTracesSelector = '.load-btn';
   const removeTraceSelector = '.uploaded-files button';
+  const warningBannerSelector = '.warning-banner';
+  const warningMessageSelector = '.warn-message';
+  const warningCloseButtonSelector = '.warning-banner button';
+
   let component: UploadTracesComponent;
   let dom: DOMTestHelper<UploadTracesComponent>;
   let validSfFile: File;
@@ -153,13 +158,13 @@ describe('UploadTracesComponent', () => {
 
   it('can remove one of two uploaded traces', async () => {
     await loadFiles([validSfFile, validWmFile]);
-    expect(component.tracePipeline?.getTraces().getSize()).toBe(2);
+    expect(component.tracePipeline?.getTraces().getSize()).toEqual(2);
 
     const spy = spyOn(component, 'onOperationFinished');
     dom.findAndClick(removeTraceSelector);
     expect(dom.find('.uploaded-files')).toBeDefined();
     expect(spy).toHaveBeenCalled();
-    expect(component.tracePipeline?.getTraces().getSize()).toBe(1);
+    expect(component.tracePipeline?.getTraces().getSize()).toEqual(1);
   });
 
   it('handles removal of the only uploaded trace', async () => {
@@ -169,18 +174,18 @@ describe('UploadTracesComponent', () => {
     dom.findAndClick(removeTraceSelector);
     expect(dom.find('.drop-info')).toBeDefined();
     expect(spy).toHaveBeenCalled();
-    expect(component.tracePipeline?.getTraces().getSize()).toBe(0);
+    expect(component.tracePipeline?.getTraces().getSize()).toEqual(0);
   });
 
   it('can remove all uploaded traces', async () => {
     await loadFiles([validSfFile, validWmFile]);
-    expect(component.tracePipeline?.getTraces().getSize()).toBe(2);
+    expect(component.tracePipeline?.getTraces().getSize()).toEqual(2);
 
     const spy = spyOn(component, 'onOperationFinished');
     dom.findAndClick(clearAllSelector);
     expect(dom.find('.drop-info')).toBeDefined();
     expect(spy).toHaveBeenCalled();
-    expect(component.tracePipeline?.getTraces().getSize()).toBe(0);
+    expect(component.tracePipeline?.getTraces().getSize()).toEqual(0);
   });
 
   it('can emit view traces event', async () => {
@@ -253,6 +258,133 @@ describe('UploadTracesComponent', () => {
     spy.calls.reset();
     addFileByClickAndGetTransferredFiles(true, dropBox);
     expect(spy).toHaveBeenCalledOnceWith(files);
+  });
+
+  it('displays warning banners when ShowTraceUploadWarning events received', async () => {
+    const warningMessage1 = 'This is the first warning!';
+    const warningMessage2 = 'This is the second warning!';
+    const warningEvent1 = new ShowTraceUploadWarning(warningMessage1);
+    const warningEvent2 = new ShowTraceUploadWarning(warningMessage2);
+
+    // Initially, no banners should be visible
+    expect(component.warningMessages.length).toEqual(0);
+    expect(dom.findAll(warningBannerSelector).length).toEqual(0);
+
+    // Simulate receiving the first event
+    await component.onWinscopeEvent(warningEvent1);
+    dom.detectChanges();
+
+    // Assert first banner visibility and message content
+    expect(component.warningMessages).toEqual([warningMessage1]);
+    let bannerElements = dom.findAll(warningBannerSelector);
+    expect(bannerElements.length).toEqual(1);
+    bannerElements[0]
+      .get(warningMessageSelector)
+      .checkTextExact(warningMessage1);
+
+    // Simulate receiving the second event
+    await component.onWinscopeEvent(warningEvent2);
+    dom.detectChanges();
+
+    // Assert both banners are visible with correct messages
+    expect(component.warningMessages).toEqual([
+      warningMessage1,
+      warningMessage2,
+    ]);
+    bannerElements = dom.findAll(warningBannerSelector);
+    expect(bannerElements.length).toEqual(2);
+    bannerElements[0]
+      .get(warningMessageSelector)
+      .checkTextExact(warningMessage1);
+    bannerElements[1]
+      .get(warningMessageSelector)
+      .checkTextExact(warningMessage2);
+
+    // Simulate receiving the first event again (should not add duplicate)
+    await component.onWinscopeEvent(warningEvent1);
+    dom.detectChanges();
+    expect(component.warningMessages).toEqual([
+      warningMessage1,
+      warningMessage2,
+    ]);
+    expect(dom.findAll(warningBannerSelector).length).toEqual(2);
+  });
+
+  it('clears specific warning banner when its close button is clicked', async () => {
+    const warningMessage1 = 'Warning 1 to dismiss';
+    const warningMessage2 = 'Warning 2 to keep';
+    const warningEvent1 = new ShowTraceUploadWarning(warningMessage1);
+    const warningEvent2 = new ShowTraceUploadWarning(warningMessage2);
+
+    // Show the banners first
+    await component.onWinscopeEvent(warningEvent1);
+    await component.onWinscopeEvent(warningEvent2);
+    dom.detectChanges();
+    let warningBanners = dom.findAll(warningBannerSelector);
+    expect(warningBanners.length).toEqual(2);
+    warningBanners[0]
+      .get(warningMessageSelector)
+      .checkTextExact(warningMessage1);
+    warningBanners[1]
+      .get(warningMessageSelector)
+      .checkTextExact(warningMessage2);
+
+    const firstBannerCloseButton = warningBanners[0].find(
+      warningCloseButtonSelector,
+    );
+    firstBannerCloseButton!!.click();
+    dom.detectChanges();
+
+    // Assert only the first banner is removed
+    warningBanners = dom.findAll(warningBannerSelector);
+    expect(warningBanners.length).toEqual(1);
+    warningBanners[0]
+      .get(warningMessageSelector)
+      .checkTextExact(warningMessage2);
+  });
+
+  it('clears all warning banners when clear all button is clicked', async () => {
+    const warningMessage1 = 'Warning before clear all 1!';
+    const warningMessage2 = 'Warning before clear all 2!';
+    const warningEvent1 = new ShowTraceUploadWarning(warningMessage1);
+    const warningEvent2 = new ShowTraceUploadWarning(warningMessage2);
+    await loadFiles([validSfFile]); // Need a file to enable clear all
+
+    // Show the banners first
+    await component.onWinscopeEvent(warningEvent1);
+    await component.onWinscopeEvent(warningEvent2);
+    dom.detectChanges();
+    expect(component.warningMessages.length).toEqual(2);
+    expect(dom.findAll(warningBannerSelector).length).toEqual(2);
+
+    // Click clear all
+    dom.findAndClick(clearAllSelector);
+
+    // Assert banners are hidden
+    expect(component.warningMessages.length).toEqual(0);
+    expect(dom.findAll(warningBannerSelector).length).toEqual(0);
+  });
+
+  it('warning banners are not cleared when new files are uploaded', async () => {
+    const warningMessage1 = 'Warning before new load 1!';
+    const warningMessage2 = 'Warning before new load 2!';
+    const warningEvent1 = new ShowTraceUploadWarning(warningMessage1);
+    const warningEvent2 = new ShowTraceUploadWarning(warningMessage2);
+
+    // Show the banners first
+    await component.onWinscopeEvent(warningEvent1);
+    await component.onWinscopeEvent(warningEvent2);
+    dom.detectChanges();
+    expect(component.warningMessages.length).toEqual(2);
+    expect(dom.findAll(warningBannerSelector).length).toEqual(2);
+
+    // Start a new progress update
+    component.onProgressUpdate('Loading new files...', 0);
+    dom.detectChanges();
+
+    // Assert banners are hidden
+    expect(component.warningMessages.length).toEqual(2);
+    expect(dom.findAll(warningBannerSelector).length).toEqual(2);
   });
 
   async function loadFiles(files: File[]) {
