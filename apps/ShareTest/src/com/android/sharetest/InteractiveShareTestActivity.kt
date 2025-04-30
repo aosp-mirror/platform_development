@@ -16,6 +16,7 @@
 
 package com.android.sharetest
 
+import android.app.ActivityOptions
 import android.app.AlertDialog
 import android.app.Dialog
 import android.content.BroadcastReceiver
@@ -404,10 +405,13 @@ class InteractiveShareTestActivity : Hilt_InteractiveShareTestActivity() {
         if (chooserController == null) {
             val session = ChooserSession()
             chooserSession.value = session
+            val options =
+                ActivityOptions.makeBasic().apply { isAllowPassThroughOnTouchOutside = true }
             startActivity(
                 Intent(chooserIntent).apply {
                     putExtras(bundleOf(EXTRA_CHOOSER_INTERACTIVE_CALLBACK to session))
-                }
+                },
+                options.toBundle(),
             )
         } else {
             chooserController.updateIntent(chooserIntent)
