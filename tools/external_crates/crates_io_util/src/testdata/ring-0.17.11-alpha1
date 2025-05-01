@@ -1,0 +1,112 @@
+{
+  "name": "ring",
+  "vers": "0.17.11-alpha1",
+  "deps": [
+    {
+      "name": "cc",
+      "req": "^1.2.8",
+      "features": [],
+      "kind": "build",
+      "optional": false,
+      "default_features": false
+    },
+    {
+      "name": "cfg-if",
+      "req": "^1.0.0",
+      "features": [],
+      "kind": "normal",
+      "optional": false,
+      "default_features": false
+    },
+    {
+      "name": "getrandom",
+      "req": "^0.2.10",
+      "features": [],
+      "kind": "normal",
+      "optional": false,
+      "default_features": true
+    },
+    {
+      "name": "libc",
+      "req": "^0.2.148",
+      "features": [],
+      "kind": "normal",
+      "target": "cfg(all(any(all(target_arch = \"aarch64\", target_endian = \"little\"), all(target_arch = \"arm\", target_endian = \"little\")), any(target_os = \"android\", target_os = \"linux\")))",
+      "optional": false,
+      "default_features": false
+    },
+    {
+      "name": "libc",
+      "req": "^0.2.155",
+      "features": [],
+      "kind": "normal",
+      "target": "cfg(all(all(target_arch = \"aarch64\", target_endian = \"little\"), target_vendor = \"apple\", any(target_os = \"ios\", target_os = \"macos\", target_os = \"tvos\", target_os = \"visionos\", target_os = \"watchos\")))",
+      "optional": false,
+      "default_features": false
+    },
+    {
+      "name": "libc",
+      "req": "^0.2.148",
+      "features": [],
+      "kind": "dev",
+      "target": "cfg(any(unix, windows, target_os = \"wasi\"))",
+      "optional": false,
+      "default_features": false
+    },
+    {
+      "name": "untrusted",
+      "req": "^0.9",
+      "features": [],
+      "kind": "normal",
+      "optional": false,
+      "default_features": true
+    },
+    {
+      "name": "wasm-bindgen-test",
+      "req": "^0.3.37",
+      "features": [
+        "std"
+      ],
+      "kind": "dev",
+      "target": "cfg(all(target_arch = \"wasm32\", target_os = \"unknown\"))",
+      "optional": false,
+      "default_features": false
+    },
+    {
+      "name": "windows-sys",
+      "req": "^0.52",
+      "features": [
+        "Win32_Foundation",
+        "Win32_System_Threading"
+      ],
+      "kind": "normal",
+      "target": "cfg(all(all(target_arch = \"aarch64\", target_endian = \"little\"), target_os = \"windows\"))",
+      "optional": false,
+      "default_features": true
+    }
+  ],
+  "features": {
+    "std": [
+      "alloc"
+    ],
+    "unstable-testing-arm-no-hw": [],
+    "less-safe-getrandom-espidf": [],
+    "unstable-testing-arm-no-neon": [],
+    "less-safe-getrandom-custom-or-rdrand": [],
+    "dev_urandom_fallback": [],
+    "test_logging": [],
+    "wasm32_unknown_unknown_js": [
+      "getrandom/js"
+    ],
+    "alloc": [],
+    "default": [
+      "alloc",
+      "dev_urandom_fallback"
+    ],
+    "slow_tests": []
+  },
+  "links": "ring_core_0_17_11_alpha1",
+  "rust_version": "1.63.0",
+  "cksum": "2725377aaa505d81dae6e10aa08820945eb66e190bc913c843f104589bc7ea0e",
+  "yanked": false
+}

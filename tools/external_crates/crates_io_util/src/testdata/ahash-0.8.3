@@ -1,0 +1,161 @@
+{
+  "name": "ahash",
+  "vers": "0.8.3",
+  "deps": [
+    {
+      "name": "atomic-polyfill",
+      "req": "^1.0.1",
+      "features": [],
+      "kind": "normal",
+      "optional": true,
+      "default_features": true
+    },
+    {
+      "name": "cfg-if",
+      "req": "^1.0",
+      "features": [],
+      "kind": "normal",
+      "optional": false,
+      "default_features": true
+    },
+    {
+      "name": "const-random",
+      "req": "^0.1.12",
+      "features": [],
+      "kind": "normal",
+      "optional": true,
+      "default_features": true
+    },
+    {
+      "name": "criterion",
+      "req": "^0.3.2",
+      "features": [
+        "html_reports"
+      ],
+      "kind": "dev",
+      "optional": false,
+      "default_features": true
+    },
+    {
+      "name": "fnv",
+      "req": "^1.0.5",
+      "features": [],
+      "kind": "dev",
+      "optional": false,
+      "default_features": true
+    },
+    {
+      "name": "fxhash",
+      "req": "^0.2.1",
+      "features": [],
+      "kind": "dev",
+      "optional": false,
+      "default_features": true
+    },
+    {
+      "name": "getrandom",
+      "req": "^0.2.7",
+      "features": [],
+      "kind": "normal",
+      "optional": true,
+      "default_features": true
+    },
+    {
+      "name": "hashbrown",
+      "req": "^0.12.3",
+      "features": [],
+      "kind": "dev",
+      "optional": false,
+      "default_features": true
+    },
+    {
+      "name": "hex",
+      "req": "^0.4.2",
+      "features": [],
+      "kind": "dev",
+      "optional": false,
+      "default_features": true
+    },
+    {
+      "name": "no-panic",
+      "req": "^0.1.10",
+      "features": [],
+      "kind": "dev",
+      "optional": false,
+      "default_features": true
+    },
+    {
+      "name": "once_cell",
+      "req": "^1.13.1",
+      "features": [
+        "unstable",
+        "alloc"
+      ],
+      "kind": "normal",
+      "target": "cfg(not(all(target_arch = \"arm\", target_os = \"none\")))",
+      "optional": false,
+      "default_features": false
+    },
+    {
+      "name": "rand",
+      "req": "^0.8.5",
+      "features": [],
+      "kind": "dev",
+      "optional": false,
+      "default_features": true
+    },
+    {
+      "name": "seahash",
+      "req": "^4.0",
+      "features": [],
+      "kind": "dev",
+      "optional": false,
+      "default_features": true
+    },
+    {
+      "name": "serde",
+      "req": "^1.0.117",
+      "features": [],
+      "kind": "normal",
+      "optional": true,
+      "default_features": true
+    },
+    {
+      "name": "serde_json",
+      "req": "^1.0.59",
+      "features": [],
+      "kind": "dev",
+      "optional": false,
+      "default_features": true
+    },
+    {
+      "name": "version_check",
+      "req": "^0.9.4",
+      "features": [],
+      "kind": "build",
+      "optional": false,
+      "default_features": true
+    }
+  ],
+  "features": {
+    "default": [
+      "std",
+      "runtime-rng"
+    ],
+    "no-rng": [],
+    "runtime-rng": [
+      "getrandom"
+    ],
+    "atomic-polyfill": [
+      "dep:atomic-polyfill",
+      "once_cell/atomic-polyfill"
+    ],
+    "std": [],
+    "compile-time-rng": [
+      "const-random"
+    ]
+  },
+  "rust_version": null,
+  "cksum": "2c99f64d1e06488f620f932677e24bc6e2897582980441ae90a671415bd7ec2f",
+  "yanked": true
+}

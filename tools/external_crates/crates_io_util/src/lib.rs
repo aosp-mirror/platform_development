@@ -39,6 +39,9 @@ pub use feature_resolver::FeatureResolver;
 mod index;
 pub use index::CratesIoIndex;
 
+mod versions;
+pub use versions::{GetVersion, IsSafe, ParsedVersion, SafeVersions};
+
 type DepSet<'a> = BTreeMap<&'a str, &'a Dependency>;
 
 /// Trait for parsing version requirement strings of dependencies.

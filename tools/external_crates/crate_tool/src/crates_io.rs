@@ -12,34 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use crates_index::{Crate, Dependency, DependencyKind, Version};
+use crates_index::{Dependency, DependencyKind, Version};
 use crates_io_util::AndroidTarget;
 use semver::VersionReq;
 use std::collections::HashMap;
-
-/// Filter versions by those that are "safe", meaning not yanked or pre-release.
-pub trait SafeVersions {
-    // Versions of the crate that aren't yanked or pre-release.
-    fn safe_versions(&self) -> impl DoubleEndedIterator<Item = &Version>;
-    // Versions of the crate greater than 'version'.
-    fn versions_gt(&self, version: &semver::Version) -> impl DoubleEndedIterator<Item = &Version> {
-        self.safe_versions()
-            .filter(|v| semver::Version::parse(v.version()).is_ok_and(|parsed| parsed.gt(version)))
-    }
-    // Get a specific version of a crate.
-    fn get_version(&self, version: &semver::Version) -> Option<&Version> {
-        self.safe_versions()
-            .find(|v| semver::Version::parse(v.version()).is_ok_and(|parsed| parsed.eq(version)))
-    }
-}
-impl SafeVersions for Crate {
-    fn safe_versions(&self) -> impl DoubleEndedIterator<Item = &Version> {
-        self.versions().iter().filter(|v| {
-            !v.is_yanked()
-                && semver::Version::parse(v.version()).is_ok_and(|parsed| parsed.pre.is_empty())
-        })
-    }
-}
 
 /// Filter dependencies for those likely to be relevant to Android.
 pub trait AndroidDependencies {

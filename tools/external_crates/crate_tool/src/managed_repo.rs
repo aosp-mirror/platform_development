@@ -22,7 +22,7 @@ use std::{
 
 use anyhow::{anyhow, bail, Context, Result};
 use crates_index::DependencyKind;
-use crates_io_util::CratesIoIndex;
+use crates_io_util::{CratesIoIndex, GetVersion, SafeVersions};
 use google_metadata::GoogleMetadata;
 use itertools::Itertools;
 use license_checker::find_licenses;
@@ -38,7 +38,7 @@ use crate::{
     copy_dir,
     crate_collection::CrateCollection,
     crate_type::Crate,
-    crates_io::{AndroidDependencies, DependencyChanges, SafeVersions},
+    crates_io::{AndroidDependencies, DependencyChanges},
     managed_crate::ManagedCrate,
     pseudo_crate::{CargoVendorDirty, PseudoCrate},
     upgradable::{IsUpgradableTo, MatchesWithCompatibilityRule, SemverCompatibilityRule},
@@ -426,8 +426,10 @@ We apologize for the inconvenience."#,
 
         for krate in cc.values() {
             let cio_crate = self.crates_io.get_crate(krate.name())?;
-            let upgrades =
-                cio_crate.versions_gt(krate.version()).map(|v| v.version()).collect::<Vec<_>>();
+            let upgrades = cio_crate
+                .safe_versions_gt(krate.version())
+                .map(|v| v.version())
+                .collect::<Vec<_>>();
             if !upgrades.is_empty() {
                 println!(
                     "{} v{}:\n  {}",
@@ -472,7 +474,7 @@ We apologize for the inconvenience."#,
         ))?;
         let base_deps = base_version.android_version_reqs_by_name();
 
-        let mut newer_versions = cio_crate.versions_gt(krate.android_version()).peekable();
+        let mut newer_versions = cio_crate.safe_versions_gt(krate.android_version()).peekable();
         if newer_versions.peek().is_none() {
             println!("There are no newer versions of this crate.");
         }
@@ -586,7 +588,7 @@ We apologize for the inconvenience."#,
                 continue;
             }
 
-            for version in cio_crate.versions_gt(krate.version()).rev() {
+            for version in cio_crate.safe_versions_gt(krate.version()).rev() {
                 let parsed_version = semver::Version::parse(version.version())?;
                 if !krate.version().is_upgradable_to(&parsed_version, semver_compatibility) {
                     continue;

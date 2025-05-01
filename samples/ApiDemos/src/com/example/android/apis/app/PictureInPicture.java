@@ -61,7 +61,7 @@ public class PictureInPicture extends Activity {
     private static final String EXTRA_ENABLE_SEAMLESS_RESIZE = "seamless_resize";
     private static final String EXTRA_ENTER_PIP_ON_BACK = "enter_pip_on_back";
     private static final String EXTRA_CURRENT_POSITION = "current_position";
-    private static final String EXTRA_ASPECT_RATIO = "aspect_ratio";
+    private static final String EXTRA_SHOW_WHEN_LOCKED = "show_when_locked";
 
     private static final int TABLET_BREAK_POINT_DP = 700;
 
@@ -110,6 +110,7 @@ public class PictureInPicture extends Activity {
     private Switch mSourceRectHintToggle;
     private Switch mSeamlessResizeToggle;
     private Switch mEnterPipOnBackToggle;
+    private Switch mShowWhenLockedToggle;
     private RadioGroup mCurrentPositionGroup;
     private Spinner mAspectRatioSpinner;
     private List<RemoteAction> mPipActions;
@@ -129,6 +130,7 @@ public class PictureInPicture extends Activity {
         mSourceRectHintToggle = findViewById(R.id.source_rect_hint_toggle);
         mSeamlessResizeToggle = findViewById(R.id.seamless_resize_toggle);
         mEnterPipOnBackToggle = findViewById(R.id.enter_pip_on_back);
+        mShowWhenLockedToggle = findViewById(R.id.show_when_locked);
         mCurrentPositionGroup = findViewById(R.id.current_position);
         mAspectRatioSpinner = findViewById(R.id.aspect_ratio);
 
@@ -144,6 +146,8 @@ public class PictureInPicture extends Activity {
         mSourceRectHintToggle.setOnCheckedChangeListener(mOnToggleChangedListener);
         mSeamlessResizeToggle.setOnCheckedChangeListener(mOnToggleChangedListener);
         mEnterPipOnBackToggle.setOnCheckedChangeListener(mOnToggleChangedListener);
+        mShowWhenLockedToggle.setOnCheckedChangeListener(
+                (v, isChecked) -> setShowWhenLocked(isChecked));
         getOnBackInvokedDispatcher().registerOnBackInvokedCallback(
                 OnBackInvokedDispatcher.PRIORITY_DEFAULT, () -> {
                     if (mEnterPipOnBackToggle.isChecked()) {
@@ -181,6 +185,8 @@ public class PictureInPicture extends Activity {
                 intent.getBooleanExtra(EXTRA_ENABLE_SEAMLESS_RESIZE, false));
         mEnterPipOnBackToggle.setChecked(
                 intent.getBooleanExtra(EXTRA_ENTER_PIP_ON_BACK, false));
+        mShowWhenLockedToggle.setChecked(
+                intent.getBooleanExtra(EXTRA_SHOW_WHEN_LOCKED, false));
         final int positionId = "end".equalsIgnoreCase(
                 intent.getStringExtra(EXTRA_CURRENT_POSITION))
                 ? R.id.radio_current_end

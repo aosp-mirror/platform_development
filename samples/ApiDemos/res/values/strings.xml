@@ -67,6 +67,7 @@
     <string name="activity_picture_in_picture_source_rect_hint_toggle">Enable source rect hint</string>
     <string name="activity_picture_in_picture_seamless_resize_toggle">Enable seamless resize</string>
     <string name="activity_picture_in_picture_enter_pip_on_back_toggle">Enter PiP on back</string>
+    <string name="activity_picture_in_picture_show_when_locked_toggle">Show when locked</string>
     <string name="activity_picture_in_picture_placeholder_text">
             This string should be invisible during the enter-pip animation
     </string>
