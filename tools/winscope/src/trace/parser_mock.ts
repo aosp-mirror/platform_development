@@ -15,6 +15,7 @@
  */
 
 import {Timestamp} from 'common/time/time';
+import {perfetto} from 'protos/perfetto/trace/static';
 import {CoarseVersion} from './coarse_version';
 import {CustomQueryParserResultTypeMap, CustomQueryType} from './custom_query';
 import {AbsoluteEntryIndex, EntriesRange} from './index_types';
@@ -93,4 +94,8 @@ export class ParserMock<T> implements Parser<T> {
   getDescriptors(): string[] {
     return this.descriptors;
   }
+
+  convertToPerfettoPackets:
+    | ((sequenceId: number) => perfetto.protos.TracePacket[])
+    | undefined = undefined;
 }

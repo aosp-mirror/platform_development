@@ -133,7 +133,9 @@ export abstract class AbstractHierarchyViewerPresenterTest<
           await presenter.onAppEvent(this.getPositionUpdate());
           expect(uiData.rectSpec).toEqual(this.expectedInitialRectSpec);
 
-          const rect = assertDefined(uiData.rectsToDraw?.at(2));
+          const rect = assertDefined(uiData.rectsToDraw)[
+            assertDefined(this.rectIndex)
+          ];
           await presenter.onHighlightedIdChange(rect.id);
           expect(uiData.highlightedItem).toEqual(rect.id);
           const propertiesTree = assertDefined(uiData.propertiesTree);
@@ -208,6 +210,7 @@ export abstract class AbstractHierarchyViewerPresenterTest<
   abstract readonly expectedHierarchyOpts: UserOptions;
   abstract readonly expectedPropertiesOpts: UserOptions;
 
+  readonly rectIndex?: number;
   readonly expectedInitialRectSpec?: RectSpec;
   readonly expectedRectsOpts?: UserOptions;
   readonly treeNodeLongName?: string;

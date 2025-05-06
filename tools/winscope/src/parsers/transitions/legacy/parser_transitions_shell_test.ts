@@ -19,7 +19,7 @@ import {
   TimestampConverterUtils,
   timestampEqualityTester,
 } from 'common/time/test_utils';
-import {getParser} from 'test/unit/fixture_utils';
+import {LegacyParserProvider} from 'test/unit/fixture_utils';
 import {CoarseVersion} from 'trace/coarse_version';
 import {Parser} from 'trace/parser';
 import {TraceType} from 'trace/trace_type';
@@ -30,9 +30,11 @@ describe('ParserTransitionsShell', () => {
 
   beforeAll(async () => {
     jasmine.addCustomEqualityTester(timestampEqualityTester);
-    parser = (await getParser(
-      'traces/elapsed_and_real_timestamp/shell_transition_trace.pb',
-    )) as Parser<PropertyTreeNode>;
+    parser = await new LegacyParserProvider()
+      .addFilename(
+        'traces/elapsed_and_real_timestamp/shell_transition_trace.pb',
+      )
+      .getParser<PropertyTreeNode>();
   });
 
   it('has expected trace type', () => {

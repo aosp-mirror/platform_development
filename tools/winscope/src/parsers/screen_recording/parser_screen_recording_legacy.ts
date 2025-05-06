@@ -40,7 +40,6 @@ class ParserScreenRecordingLegacy extends AbstractParser<
   override getRealToBootTimeOffsetNs(): bigint | undefined {
     return undefined;
   }
-
   override decodeTrace(videoData: Uint8Array): Array<bigint> {
     const posCount = this.searchMagicString(videoData);
     const [posTimestamps, count] = this.parseFramesCount(videoData, posCount);

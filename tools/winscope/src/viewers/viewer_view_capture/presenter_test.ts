@@ -21,7 +21,10 @@ import {
   TabbedViewSwitchRequest,
   TracePositionUpdate,
 } from 'messaging/winscope_event';
-import {getLayerTraceEntry, getParsers} from 'test/unit/fixture_utils';
+import {
+  getLayerTraceEntry,
+  LegacyParserProvider,
+} from 'test/unit/fixture_utils';
 import {TraceBuilder} from 'test/unit/trace_builder';
 import {makeEmptyTrace} from 'test/unit/trace_utils';
 import {CustomQueryType} from 'trace/custom_query';
@@ -95,6 +98,7 @@ the default for its data type.`,
     },
   };
 
+  override readonly rectIndex = 2;
   override readonly expectedInitialRectSpec = {
     type: TraceRectType.VIEWS,
     icon: TRACE_INFO[TraceType.VIEW_CAPTURE].icon,
@@ -126,9 +130,11 @@ the default for its data type.`,
   override readonly treeNodeShortName = 'TaskbarView@80213537';
 
   override async setUpTestEnvironment(): Promise<void> {
-    const parsers = (await getParsers(
-      'traces/elapsed_and_real_timestamp/com.google.android.apps.nexuslauncher_0.vc',
-    )) as Array<Parser<HierarchyTreeNode>>;
+    const parsers = (await new LegacyParserProvider()
+      .addFilename(
+        'traces/elapsed_and_real_timestamp/com.google.android.apps.nexuslauncher_0.vc',
+      )
+      .getParsers()) as Array<Parser<HierarchyTreeNode>>;
 
     this.traces = new Traces();
     for (const parser of parsers) {

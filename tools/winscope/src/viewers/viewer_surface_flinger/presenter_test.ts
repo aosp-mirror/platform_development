@@ -22,11 +22,8 @@ import {
   TracePositionUpdate,
 } from 'messaging/winscope_event';
 import {
-  getLayerTraceEntry,
-  getMultiDisplayLayerTraceEntry,
-  getPerfettoParser,
-  getTraceEntry,
   getViewCaptureEntry,
+  LegacyParserProvider,
 } from 'test/unit/fixture_utils';
 import {HierarchyTreeBuilder} from 'test/unit/hierarchy_tree_builder';
 import {TraceBuilder} from 'test/unit/trace_builder';
@@ -55,7 +52,6 @@ class PresenterSurfaceFlingerTest extends AbstractHierarchyViewerPresenterTest<U
   private traceSf: Trace<HierarchyTreeNode> | undefined;
   private positionUpdate: TracePositionUpdate | undefined;
   private secondPositionUpdate: TracePositionUpdate | undefined;
-  private positionUpdateMultiDisplayEntry: TracePositionUpdate | undefined;
   private selectedTree: UiHierarchyTreeNode | undefined;
   private selectedTreeAfterPositionUpdate: UiHierarchyTreeNode | undefined;
 
@@ -110,6 +106,7 @@ the default for its data type.`,
     },
   };
 
+  override readonly rectIndex = 15;
   override readonly expectedInitialRectSpec = {
     type: TraceRectType.LAYERS,
     icon: TRACE_INFO[TraceType.SURFACE_FLINGER].icon,
@@ -175,50 +172,39 @@ the default for its data type.`,
     ],
   };
   override readonly treeNodeLongName =
-    'ActivityRecord{64953af u0 com.google.android.apps.nexuslauncher/.NexusLauncherActivity#96';
+    'com.google.android.apps.maps/com.google.android.maps.LimitedMapsActivity#630';
   override readonly treeNodeShortName =
-    'ActivityRecord{64953af u0 com.google.(...).NexusLauncherActivity#96';
+    'com.google.(...).LimitedMapsActivity#630';
 
   override async setUpTestEnvironment(): Promise<void> {
-    const perfettoTrace = await getPerfettoParser(
-      TraceType.SURFACE_FLINGER,
-      'traces/perfetto/layers_trace.perfetto-trace',
-    );
+    const parser = await new LegacyParserProvider()
+      .addFilename(
+        'traces/elapsed_and_real_timestamp/SurfaceFlinger_multidisplay.pb',
+      )
+      .setConvertToPerfetto(true)
+      .getParser<HierarchyTreeNode>();
+
     this.traceSf = new TraceBuilder<HierarchyTreeNode>()
       .setType(TraceType.SURFACE_FLINGER)
       .setEntries([
-        await getLayerTraceEntry(0),
-        await getMultiDisplayLayerTraceEntry(),
-        await getLayerTraceEntry(1),
-        await getTraceEntry<HierarchyTreeNode>(
-          'traces/elapsed_and_real_timestamp/SurfaceFlinger.pb',
-          5,
-        ),
-        await getTraceEntry<HierarchyTreeNode>(
-          'traces/elapsed_and_real_timestamp/SurfaceFlinger.pb',
-          6,
-        ),
-        await getTraceEntry<HierarchyTreeNode>(
-          'traces/elapsed_and_real_timestamp/SurfaceFlinger_with_duplicated_ids.pb',
-        ),
-        await perfettoTrace.getEntry(0),
+        await parser.getEntry(0),
+        await parser.getEntry(1),
+        await parser.getEntry(2),
       ])
       .build();
 
     const firstEntry = this.traceSf.getEntry(0);
     this.positionUpdate = TracePositionUpdate.fromTraceEntry(firstEntry);
-    this.positionUpdateMultiDisplayEntry = TracePositionUpdate.fromTraceEntry(
-      this.traceSf.getEntry(1),
-    );
     this.secondPositionUpdate = TracePositionUpdate.fromTraceEntry(
-      this.traceSf.getEntry(2),
+      this.traceSf.getEntry(1),
     );
 
     const firstEntryDataTree = await firstEntry.getValue();
+
     const layer = assertDefined(
       firstEntryDataTree.findDfs(
         UiTreeUtils.makeIdMatchFilter(
-          '163 Surface(name=b48baf1 InputMethod)/@0x3a7bd57 - animation-leash of insets_animation#163',
+          '576 com.android.car.carlauncher/com.android.car.carlauncher.CarLauncher#576',
         ),
       ),
     );
@@ -227,18 +213,25 @@ the default for its data type.`,
     );
     this.selectedTree = assertDefined(
       selectedTreeParent.getChildByName(
-        'Surface(name=b48baf1 InputMethod)/@0x3a7bd57 - animation-leash of insets_animation#163',
+        'com.android.car.carlauncher/com.android.car.carlauncher.CarLauncher#576',
       ),
     );
-    const treeAfterPosiionUpdateParent = UiHierarchyTreeNode.from(
+
+    const treeAfterPositionUpdateParent = UiHierarchyTreeNode.from(
       assertDefined(
         firstEntryDataTree
-          .findDfs(UiTreeUtils.makeIdMatchFilter('79 Wallpaper BBQ wrapper#79'))
+          .findDfs(
+            UiTreeUtils.makeIdMatchFilter(
+              '630 com.google.android.apps.maps/com.google.android.maps.LimitedMapsActivity#630',
+            ),
+          )
           ?.getZParent(),
       ),
     );
     this.selectedTreeAfterPositionUpdate = assertDefined(
-      treeAfterPosiionUpdateParent.getChildByName('Wallpaper BBQ wrapper#79'),
+      treeAfterPositionUpdateParent.getChildByName(
+        'com.google.android.apps.maps/com.google.android.maps.LimitedMapsActivity#630',
+      ),
     );
     const rect = assertDefined(
       this.selectedTreeAfterPositionUpdate.getRects()?.at(0),
@@ -278,26 +271,24 @@ the default for its data type.`,
   }
 
   override getSelectedTreeAfterPositionUpdate(): UiHierarchyTreeNode {
-    return assertDefined(this.selectedTreeAfterPositionUpdate);
+    return assertDefined(this.selectedTree);
   }
 
   override executePropertiesChecksAfterPositionUpdate(uiData: UiDataHierarchy) {
     expect(
+      uiData.propertiesTree?.getChildByName('screenBounds')?.formattedValue(),
+    ).toEqual('(0, 0) - (1080, 600)');
+    expect(
       assertDefined(
-        uiData.propertiesTree
-          ?.getChildByName('metadata')
-          ?.getChildByName('2')
-          ?.getChildByName('byteOffset'),
+        uiData.propertiesTree?.getChildByName('damageRegion'),
       ).formattedValue(),
-    ).toEqual('2919');
-    expect(uiData.displays).toEqual([
-      {
-        displayId: '4619827677550801152',
-        groupId: 0,
-        name: 'Common Panel',
-        isActive: true,
-      },
-    ]);
+    ).toEqual('SkRegion((0, 0, 1080, 600))');
+    expect(uiData.displays?.at(0)).toEqual({
+      displayId: '4619827259835644672',
+      groupId: 0,
+      name: 'EMU_display_0',
+      isActive: true,
+    });
     expect(assertDefined((uiData as UiData).curatedProperties).flags).toEqual(
       'ENABLE_BACKPRESSURE (0x100)',
     );
@@ -312,13 +303,8 @@ the default for its data type.`,
     uiData: UiDataHierarchy,
   ) {
     expect(
-      assertDefined(
-        uiData.propertiesTree
-          ?.getChildByName('metadata')
-          ?.getChildByName('2')
-          ?.getChildByName('byteOffset'),
-      ).formattedValue(),
-    ).toEqual('44517');
+      uiData.propertiesTree?.getChildByName('damageRegion'),
+    ).toBeUndefined();
   }
 
   override executeSpecializedChecksForPropertiesFromRect(
@@ -327,31 +313,29 @@ the default for its data type.`,
     const curatedProperties = assertDefined(
       (uiData as UiData).curatedProperties,
     );
-    expect(curatedProperties.flags).toEqual('ENABLE_BACKPRESSURE (0x100)');
+    expect(curatedProperties.flags).toEqual(
+      'OPAQUE | ENABLE_BACKPRESSURE (0x102)',
+    );
     expect(curatedProperties.summary).toEqual([
       {
         key: 'Covered by',
         desc: 'Partially or fully covered by these likely translucent layers',
         layerValues: [
           {
-            layerId: '65',
-            nodeId: '65 ScreenDecorOverlayBottom#65',
-            name: 'ScreenDecorOverlayBottom#65',
+            layerId: '174',
+            nodeId: '174 BottomCarSystemBar#174',
+            name: 'BottomCarSystemBar#174',
           },
           {
-            layerId: '62',
-            nodeId: '62 ScreenDecorOverlay#62',
-            name: 'ScreenDecorOverlay#62',
+            layerId: '164',
+            nodeId: '164 TopCarSystemBar#164',
+            name: 'TopCarSystemBar#164',
           },
           {
-            layerId: '85',
-            nodeId: '85 NavigationBar0#85',
-            name: 'NavigationBar0#85',
-          },
-          {
-            layerId: '89',
-            nodeId: '89 StatusBar#89',
-            name: 'StatusBar#89',
+            layerId: '576',
+            nodeId:
+              '576 com.android.car.carlauncher/com.android.car.carlauncher.CarLauncher#576',
+            name: 'com.android.car.carlauncher/com.android.car.carlauncher.CarLauncher#576',
           },
         ],
       },
@@ -407,9 +391,7 @@ the default for its data type.`,
       });
 
       it('handles displays with no visible layers', async () => {
-        await presenter?.onAppEvent(
-          assertDefined(this.positionUpdateMultiDisplayEntry),
-        );
+        await presenter?.onAppEvent(assertDefined(this.positionUpdate));
         expect(uiData?.displays?.length).toEqual(5);
         // we want the displays to be sorted by name
         expect(uiData?.displays).toEqual([
@@ -438,7 +420,7 @@ the default for its data type.`,
             isActive: true,
           },
           {
-            displayId: '11529215046312967684',
+            displayId: '-6917529027396583932',
             groupId: 5,
             name: 'ClusterOsDouble-VD',
             isActive: false,
@@ -474,21 +456,19 @@ the default for its data type.`,
           traceSf.getEntry(0),
         );
         await presenter.onAppEvent(positionUpdate);
-        expect(uiData?.displays).toEqual([
-          {
-            displayId: '4619827677550801152',
-            groupId: 0,
-            name: 'Common Panel',
-            isActive: false,
-          },
-        ]);
+        expect(uiData?.displays[0]).toEqual({
+          displayId: '4619827259835644672',
+          groupId: 0,
+          name: 'EMU_display_0',
+          isActive: false,
+        });
       });
 
       it('updates view capture package names', async () => {
         await createPresenterWithViewCapture(assertDefined(this.traceSf));
         expect(
           uiData.rectsToDraw.filter((rect) => rect.hasContent).length,
-        ).toEqual(2);
+        ).toEqual(1);
       });
 
       it('handles rect double click if view capture trace present', async () => {
@@ -500,9 +480,7 @@ the default for its data type.`,
 
         await presenter.onRectDoubleClick('not in package');
         expect(spy).not.toHaveBeenCalled();
-        await presenter.onRectDoubleClick(
-          'com.google.android.apps.nexuslauncher',
-        );
+        await presenter.onRectDoubleClick('com.android.car.carlauncher');
         expect(spy).toHaveBeenCalledOnceWith(
           new TabbedViewSwitchRequest(traceVc),
         );
@@ -529,19 +507,16 @@ the default for its data type.`,
       it('clears curated properties on position update if no properties tree found', async () => {
         const trace = assertDefined(this.traceSf);
         await presenter.onAppEvent(
-          TracePositionUpdate.fromTraceEntry(trace.getEntry(3)),
+          TracePositionUpdate.fromTraceEntry(trace.getEntry(2)),
         );
 
-        const nodeName =
-          '101 Surface(name=Task=1)/@0x47f46c9 - animation-leash of app_transition#101';
-
-        await presenter.onHighlightedIdChange(nodeName);
+        await presenter.onHighlightedIdChange(
+          '744 1d30e3b VolumeDialogImpl#744',
+        );
         expect(uiData.propertiesTree).toBeDefined();
         expect(uiData.curatedProperties).toBeDefined();
 
-        await presenter.onAppEvent(
-          TracePositionUpdate.fromTraceEntry(trace.getEntry(4)),
-        );
+        await presenter.onAppEvent(assertDefined(this.positionUpdate));
         expect(uiData.propertiesTree).toBeUndefined();
         expect(uiData.curatedProperties).toBeUndefined();
       });
@@ -549,48 +524,41 @@ the default for its data type.`,
       it('updates zOrderRelativeOf formatter and rel-z curated properties correctly', async () => {
         await presenter.onAppEvent(this.getPositionUpdate());
 
-        const nodeWithRelZChild = assertDefined(
-          assertDefined(uiData.hierarchyTrees)[0].findDfs(
-            UiTreeUtils.makeNodeFilter(
-              new TextFilter(
-                '98 2c99222 com.google.android.apps.nexuslauncher/com.google.android.apps.nexuslauncher.NexusLauncherActivity#98',
-              ).getFilterPredicate(),
-            ),
-          ),
-        );
+        const nodeWithRelZChild = this.getSelectedTree();
         const nodeWithRelZParent = assertDefined(
           assertDefined(uiData.hierarchyTrees)[0].findDfs(
             UiTreeUtils.makeNodeFilter(
-              new TextFilter('13 ImeContainer#13').getFilterPredicate(),
+              new TextFilter(
+                '626 SurfaceView[com.android.car.carlauncher/com.android.car.carlauncher.CarLauncher]#626',
+              ).getFilterPredicate(),
             ),
           ),
         );
 
         await presenter.onHighlightedNodeChange(nodeWithRelZChild);
+        const secondRelZChildName =
+          'Background for SurfaceView[com.android.car.carlauncher/com.android.car.carlauncher.CarLauncher]#628';
         expect(uiData.curatedProperties?.relativeParent).toEqual('none');
         expect(uiData.curatedProperties?.relativeChildren).toEqual([
           {
-            layerId: '13',
+            layerId: '626',
             nodeId: nodeWithRelZParent.id,
             name: nodeWithRelZParent.name,
+          },
+          {
+            layerId: '628',
+            nodeId: '628 ' + secondRelZChildName,
+            name: secondRelZChildName,
           },
         ]);
 
         await presenter.onHighlightedNodeChange(nodeWithRelZParent);
         expect(uiData.curatedProperties?.relativeParent).toEqual({
-          layerId: '98',
+          layerId: '576',
           nodeId: nodeWithRelZChild.id,
           name: nodeWithRelZChild.name,
         });
         expect(uiData.curatedProperties?.relativeChildren).toEqual([]);
-      });
-
-      it('adds warnings to ui hierarchy tree node', async () => {
-        await presenter.onAppEvent(this.getPositionUpdate());
-        expect(uiData.hierarchyTrees?.at(0)?.getWarnings().length).toEqual(0);
-        const entry = assertDefined(this.traceSf?.getEntry(5));
-        await presenter.onAppEvent(TracePositionUpdate.fromTraceEntry(entry));
-        expect(uiData.hierarchyTrees?.at(0)?.getWarnings().length).toEqual(1);
       });
 
       it('sets properties tree but no curated properties for root node', async () => {
@@ -615,6 +583,7 @@ the default for its data type.`,
               properties: {
                 occludedBy: ['0 layer0'],
                 partiallyOccludedBy: ['2 layer2'],
+                coveredBy: ['3 layer3'],
                 flags: null,
                 zOrderRelativeOf: null,
                 bounds: null,
@@ -667,6 +636,11 @@ the default for its data type.`,
             desc: 'Partially occluded by these opaque layers',
             layerValues: [{layerId: '2', nodeId: '2 layer2', name: 'layer2'}],
           },
+          {
+            key: 'Covered by',
+            desc: 'Partially or fully covered by these likely translucent layers',
+            layerValues: [{layerId: '3', nodeId: '3 layer3', name: 'layer3'}],
+          },
         ]);
         expect(uiData.curatedProperties?.calcColor).toEqual(
           '(0, 0, 0), alpha: 1',
@@ -681,15 +655,15 @@ the default for its data type.`,
       });
 
       it('draws input windows', async () => {
-        await goToEntryWithInputWindows(assertDefined(this.traceSf));
-        expect(uiData.rectsToDraw.length).toEqual(72);
-        expect(uiData.rectsToDraw[1].id).toEqual(
-          '3 Display 0 name="Built-in Screen"#3',
+        await presenter.onAppEvent(this.getPositionUpdate());
+        expect(uiData.rectsToDraw.length).toEqual(27);
+        expect(uiData.rectsToDraw[6].label).toEqual(
+          'Bounds for - com.android.car.carlauncher/com.android.car.carlauncher.CarLauncher#577',
         );
         presenter.onRectTypeButtonClicked(TraceRectType.INPUT_WINDOWS);
-        expect(uiData.rectsToDraw.length).toEqual(9);
-        expect(uiData.rectsToDraw[1].id).toEqual(
-          '76 com.android.systemui.ImageWallpaper#76',
+        expect(uiData.rectsToDraw.length).toEqual(15);
+        expect(uiData.rectsToDraw[6].label).toEqual(
+          'com.google.android.apps.maps/com.google.android.maps.LimitedMapsActivity#630',
         );
         expect(uiData.rectSpec).toEqual(this.expectedInputWindowsSpec);
         expect(uiData.allRectSpecs).toEqual([
@@ -704,7 +678,7 @@ the default for its data type.`,
         await presenter.onHighlightedNodeChange(treeForAlphaCheck);
         expect(
           uiData.propertiesTree?.getChildByName('color')?.formattedValue(),
-        ).toEqual(`${EMPTY_OBJ_STRING}, alpha: 0`);
+        ).toEqual(`${EMPTY_OBJ_STRING}, alpha: 1`);
 
         await presenter.onHighlightedNodeChange(treeForTransformCheck);
         expect(
@@ -721,7 +695,7 @@ the default for its data type.`,
           .setType(TraceType.VIEW_CAPTURE)
           .setEntries([await getViewCaptureEntry()])
           .setParserCustomQueryResult(CustomQueryType.VIEW_CAPTURE_METADATA, {
-            packageName: 'com.google.android.apps.nexuslauncher',
+            packageName: 'com.android.car.carlauncher',
             windowName: 'not_used',
           })
           .build();
@@ -744,16 +718,6 @@ the default for its data type.`,
 
         await presenter.onAppEvent(positionUpdate);
         return [presenter, traceVc];
-      }
-
-      async function goToEntryWithInputWindows(
-        traceSf: Trace<HierarchyTreeNode>,
-      ) {
-        const entryWithInputWindows = assertDefined(traceSf?.getEntry(6));
-        const positionUpdate = TracePositionUpdate.fromTraceEntry(
-          entryWithInputWindows,
-        );
-        await presenter.onAppEvent(positionUpdate);
       }
     });
   }

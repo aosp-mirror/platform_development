@@ -18,10 +18,9 @@ import {assertDefined} from 'common/assert_utils';
 import {InMemoryStorage} from 'common/store/in_memory_storage';
 import {TimeUtils} from 'common/time/time_utils';
 import {TracePositionUpdate} from 'messaging/winscope_event';
-import {getParser} from 'test/unit/fixture_utils';
+import {LegacyParserProvider} from 'test/unit/fixture_utils';
 import {TraceBuilder} from 'test/unit/trace_builder';
 import {makeEmptyTrace} from 'test/unit/trace_utils';
-import {Parser} from 'trace/parser';
 import {Trace} from 'trace/trace';
 import {TraceType} from 'trace/trace_type';
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
@@ -160,9 +159,9 @@ class PresenterTransactionsTest extends AbstractLogViewerPresenterTest<UiData> {
   }
 
   override async setUpTestEnvironment(): Promise<void> {
-    const parser = (await getParser(
-      'traces/elapsed_and_real_timestamp/Transactions.pb',
-    )) as Parser<PropertyTreeNode>;
+    const parser = await new LegacyParserProvider()
+      .addFilename('traces/elapsed_and_real_timestamp/Transactions.pb')
+      .getParser<PropertyTreeNode>();
     this.trace = new TraceBuilder<PropertyTreeNode>()
       .setType(TraceType.TRANSACTIONS)
       .setParser(parser)

@@ -19,7 +19,7 @@ import {
   TimestampConverterUtils,
   timestampEqualityTester,
 } from 'common/time/test_utils';
-import {getParser} from 'test/unit/fixture_utils';
+import {LegacyParserProvider} from 'test/unit/fixture_utils';
 import {TraceBuilder} from 'test/unit/trace_builder';
 import {CoarseVersion} from 'trace/coarse_version';
 import {CustomQueryType} from 'trace/custom_query';
@@ -34,9 +34,9 @@ describe('ParserWindowManagerDump', () => {
 
   beforeAll(async () => {
     jasmine.addCustomEqualityTester(timestampEqualityTester);
-    parser = (await getParser(
-      'traces/elapsed_timestamp/dump_WindowManager.pb',
-    )) as Parser<HierarchyTreeNode>;
+    parser = await new LegacyParserProvider()
+      .addFilename('traces/elapsed_timestamp/dump_WindowManager.pb')
+      .getParser<HierarchyTreeNode>();
     trace = new TraceBuilder<HierarchyTreeNode>()
       .setType(TraceType.WINDOW_MANAGER)
       .setParser(parser)
@@ -57,10 +57,10 @@ describe('ParserWindowManagerDump', () => {
   });
 
   it('does not apply timezone info', async () => {
-    const parserWithTimezoneInfo = (await getParser(
-      'traces/elapsed_timestamp/dump_WindowManager.pb',
-      getTimestampConverter(true),
-    )) as Parser<HierarchyTreeNode>;
+    const parserWithTimezoneInfo = await new LegacyParserProvider()
+      .addFilename('traces/elapsed_timestamp/dump_WindowManager.pb')
+      .setConverter(getTimestampConverter(true))
+      .getParser<HierarchyTreeNode>();
     expect(parserWithTimezoneInfo.getTraceType()).toEqual(
       TraceType.WINDOW_MANAGER,
     );

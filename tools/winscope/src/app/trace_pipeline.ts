@@ -284,7 +284,7 @@ export class TracePipeline
 
     if (filterResult.perfetto) {
       startTimeMs = Date.now();
-      const {parsers} = await new PerfettoParserFactory().processFiles(
+      const {parsers} = await new PerfettoParserFactory().processFile(
         filterResult.perfetto,
         this.timestampConverter,
         progressListener,
@@ -303,7 +303,7 @@ export class TracePipeline
           continue;
         }
         const {parsers, isPerfettoTrace} =
-          await new PerfettoParserFactory().processFiles(
+          await new PerfettoParserFactory().processFile(
             file,
             this.timestampConverter,
             progressListener,

@@ -19,7 +19,7 @@ import {
   TimestampConverterUtils,
   timestampEqualityTester,
 } from 'common/time/test_utils';
-import {getParser} from 'test/unit/fixture_utils';
+import {LegacyParserProvider} from 'test/unit/fixture_utils';
 import {CoarseVersion} from 'trace/coarse_version';
 import {Parser} from 'trace/parser';
 import {TraceType} from 'trace/trace_type';
@@ -31,9 +31,9 @@ describe('ParserInputMethodClients', () => {
 
     beforeAll(async () => {
       jasmine.addCustomEqualityTester(timestampEqualityTester);
-      parser = (await getParser(
-        'traces/elapsed_and_real_timestamp/InputMethodClients.pb',
-      )) as Parser<HierarchyTreeNode>;
+      parser = await new LegacyParserProvider()
+        .addFilename('traces/elapsed_and_real_timestamp/InputMethodClients.pb')
+        .getParser<HierarchyTreeNode>();
     });
 
     it('has expected trace type', () => {
@@ -67,9 +67,9 @@ describe('ParserInputMethodClients', () => {
 
     beforeAll(async () => {
       jasmine.addCustomEqualityTester(timestampEqualityTester);
-      parser = (await getParser(
-        'traces/elapsed_timestamp/InputMethodClients.pb',
-      )) as Parser<HierarchyTreeNode>;
+      parser = await new LegacyParserProvider()
+        .addFilename('traces/elapsed_timestamp/InputMethodClients.pb')
+        .getParser<HierarchyTreeNode>();
     });
 
     it('has expected trace type', () => {

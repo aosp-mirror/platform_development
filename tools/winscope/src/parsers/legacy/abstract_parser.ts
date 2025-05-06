@@ -16,6 +16,7 @@
 
 import {Timestamp} from 'common/time/time';
 import {ParserTimestampConverter} from 'common/time/timestamp_converter';
+import {perfetto} from 'protos/perfetto/trace/static';
 import {CoarseVersion} from 'trace/coarse_version';
 import {
   CustomQueryParamTypeMap,
@@ -95,6 +96,10 @@ export abstract class AbstractParser<
     param?: CustomQueryParamTypeMap[Q],
   ): Promise<CustomQueryParserResultTypeMap[Q]> {
     throw new Error('Not implemented');
+  }
+
+  convertToPerfettoPackets(sequenceId: number): perfetto.protos.TracePacket[] {
+    throw new Error('not implemented');
   }
 
   private decodeTimestamps(): Timestamp[] {

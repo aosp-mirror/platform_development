@@ -97,6 +97,7 @@ the default for its data type.`,
     },
   };
 
+  override readonly rectIndex = 2;
   override readonly expectedInitialRectSpec = {
     type: TraceRectType.WINDOW_STATES,
     icon: TRACE_INFO[TraceType.WINDOW_MANAGER].icon,

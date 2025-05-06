@@ -15,6 +15,7 @@
  */
 
 import {Timestamp} from 'common/time/time';
+import {perfetto} from 'protos/perfetto/trace/static';
 import {CoarseVersion} from './coarse_version';
 import {
   CustomQueryParamTypeMap,
@@ -39,4 +40,5 @@ export interface Parser<T> {
   getRealToMonotonicTimeOffsetNs(): bigint | undefined;
   getRealToBootTimeOffsetNs(): bigint | undefined;
   createTimestamps(): void;
+  convertToPerfettoPackets?(sequenceId: number): perfetto.protos.TracePacket[];
 }

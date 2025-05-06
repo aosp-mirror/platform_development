@@ -18,7 +18,7 @@ import {
   TimestampConverterUtils,
   timestampEqualityTester,
 } from 'common/time/test_utils';
-import {getParser} from 'test/unit/fixture_utils';
+import {LegacyParserProvider} from 'test/unit/fixture_utils';
 import {CoarseVersion} from 'trace/coarse_version';
 import {CustomQueryType} from 'trace/custom_query';
 import {Parser} from 'trace/parser';
@@ -33,9 +33,11 @@ describe('ParserViewCapture', () => {
 
   beforeAll(async () => {
     jasmine.addCustomEqualityTester(timestampEqualityTester);
-    parser = (await getParser(
-      'traces/elapsed_and_real_timestamp/com.google.android.apps.nexuslauncher_0.vc',
-    )) as Parser<HierarchyTreeNode>;
+    parser = await new LegacyParserProvider()
+      .addFilename(
+        'traces/elapsed_and_real_timestamp/com.google.android.apps.nexuslauncher_0.vc',
+      )
+      .getParser<HierarchyTreeNode>();
     trace = Trace.fromParser(parser);
   });
 

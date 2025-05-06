@@ -18,7 +18,7 @@ import {
   TimestampConverterUtils,
   timestampEqualityTester,
 } from 'common/time/test_utils';
-import {getParser, getParsers} from 'test/unit/fixture_utils';
+import {LegacyParserProvider} from 'test/unit/fixture_utils';
 import {CoarseVersion} from 'trace/coarse_version';
 import {MediaBasedTraceEntry} from 'trace/media_based_trace_entry';
 import {Parser} from 'trace/parser';
@@ -30,9 +30,11 @@ describe('ParserScreenRecording', () => {
   describe('metadata v2', () => {
     beforeAll(async () => {
       jasmine.addCustomEqualityTester(timestampEqualityTester);
-      parser = (await getParser(
-        'traces/elapsed_and_real_timestamp/screen_recording_metadata_v2.mp4',
-      )) as Parser<MediaBasedTraceEntry>;
+      parser = await new LegacyParserProvider()
+        .addFilename(
+          'traces/elapsed_and_real_timestamp/screen_recording_metadata_v2.mp4',
+        )
+        .getParser<MediaBasedTraceEntry>();
     });
 
     it('has expected trace type', () => {
@@ -73,23 +75,25 @@ describe('ParserScreenRecording', () => {
   describe('separate metadata file', () => {
     beforeAll(async () => {
       jasmine.addCustomEqualityTester(timestampEqualityTester);
-      parser = (await getParser(
-        'traces/elapsed_and_real_timestamp/screen_recording_no_metadata.mp4',
-        undefined,
-        undefined,
-        {
+      parser = await new LegacyParserProvider()
+        .addFilename(
+          'traces/elapsed_and_real_timestamp/screen_recording_no_metadata.mp4',
+        )
+        .setMetadata({
           screenRecordingOffsets: {
             elapsedRealTimeNanos: 5n,
             realToElapsedTimeOffsetNanos: 10n,
           },
-        },
-      )) as Parser<MediaBasedTraceEntry>;
+        })
+        .getParser<MediaBasedTraceEntry>();
     });
 
     it('throws error if metadata not provided', async () => {
-      const parsers = await getParsers(
-        'traces/elapsed_and_real_timestamp/screen_recording_no_metadata.mp4',
-      );
+      const parsers = await new LegacyParserProvider()
+        .addFilename(
+          'traces/elapsed_and_real_timestamp/screen_recording_no_metadata.mp4',
+        )
+        .getParsers();
       expect(parsers.length).toEqual(0);
     });
 

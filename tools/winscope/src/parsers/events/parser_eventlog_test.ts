@@ -19,7 +19,7 @@ import {
   TimestampConverterUtils,
   timestampEqualityTester,
 } from 'common/time/test_utils';
-import {getParser} from 'test/unit/fixture_utils';
+import {LegacyParserProvider} from 'test/unit/fixture_utils';
 import {PropertyTreeBuilder} from 'test/unit/property_tree_builder';
 import {CoarseVersion} from 'trace/coarse_version';
 import {Parser} from 'trace/parser';
@@ -33,9 +33,9 @@ describe('ParserEventLog', () => {
 
     beforeAll(async () => {
       jasmine.addCustomEqualityTester(timestampEqualityTester);
-      parser = assertDefined(
-        await getParser('traces/elapsed_and_real_timestamp/eventlog.winscope'),
-      ) as Parser<PropertyTreeNode>;
+      parser = await new LegacyParserProvider()
+        .addFilename('traces/elapsed_and_real_timestamp/eventlog.winscope')
+        .getParser<PropertyTreeNode>();
     });
 
     it('has expected trace type', () => {
@@ -88,11 +88,11 @@ describe('ParserEventLog', () => {
 
     beforeAll(async () => {
       jasmine.addCustomEqualityTester(timestampEqualityTester);
-      parser = assertDefined(
-        await getParser(
+      parser = await new LegacyParserProvider()
+        .addFilename(
           'traces/elapsed_and_real_timestamp/eventlog_timestamps_not_monotonically_increasing.winscope',
-        ),
-      ) as Parser<PropertyTreeNode>;
+        )
+        .getParser<PropertyTreeNode>();
     });
 
     it('sorts entries to make timestamps monotonically increasing', () => {

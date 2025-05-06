@@ -58,7 +58,7 @@ export class ParserFactory {
   private static readonly NO_ENTRIES_ERROR_REGEX =
     /Perfetto trace has no \w+(\w|\s)* entries/;
 
-  async processFiles(
+  async processFile(
     traceFile: TraceFile,
     timestampConverter: ParserTimestampConverter,
     progressListener?: ProgressListener,

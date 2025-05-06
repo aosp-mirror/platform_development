@@ -16,6 +16,7 @@
 
 import {assertDefined} from 'common/assert_utils';
 import {Timestamp} from 'common/time/time';
+import Long from 'long';
 import {AbstractParser} from 'parsers/legacy/abstract_parser';
 import {AddDefaults} from 'parsers/operations/add_defaults';
 import {SetFormatters} from 'parsers/operations/set_formatters';
@@ -24,6 +25,7 @@ import {DENYLIST_PROPERTIES} from 'parsers/surface_flinger/denylist_properties';
 import {EAGER_PROPERTIES} from 'parsers/surface_flinger/eager_properties';
 import {EntryHierarchyTreeFactory} from 'parsers/surface_flinger/entry_hierarchy_tree_factory';
 import {TamperedMessageType} from 'parsers/tampered_message_type';
+import {perfetto} from 'protos/perfetto/trace/static';
 import root from 'protos/surfaceflinger/udc/json';
 import {android} from 'protos/surfaceflinger/udc/static';
 import {
@@ -132,15 +134,6 @@ class ParserSurfaceFlinger extends AbstractParser<
     return decoded.entry ?? [];
   }
 
-  protected override getTimestamp(entry: LayerTraceProto): Timestamp {
-    if (this.isDump) {
-      return this.timestampConverter.makeZeroTimestamp();
-    }
-    return this.timestampConverter.makeTimestampFromMonotonicNs(
-      BigInt(assertDefined(entry.elapsedRealtimeNanos).toString()),
-    );
-  }
-
   override processDecodedEntry(
     index: number,
     entry: LayerTraceProto,
@@ -182,6 +175,41 @@ class ParserSurfaceFlinger extends AbstractParser<
         return Promise.resolve(result);
       })
       .getResult();
+  }
+
+  override convertToPerfettoPackets(
+    sequenceId: number,
+  ): perfetto.protos.TracePacket[] {
+    const packets = [];
+
+    for (const entry of this.decodedEntries) {
+      const packet = perfetto.protos.TracePacket.create();
+      packet.timestamp = this.isDump
+        ? Long.fromInt(0)
+        : assertDefined(entry.elapsedRealtimeNanos);
+      packet.timestampClockId =
+        perfetto.protos.ClockSnapshot.Clock.BuiltinClocks.MONOTONIC;
+      packet.trustedPacketSequenceId = sequenceId;
+      packet.surfaceflingerLayersSnapshot = this.convertSnapshot(entry);
+      packets.push(packet);
+    }
+    return packets;
+  }
+
+  protected override getTimestamp(entry: LayerTraceProto): Timestamp {
+    if (this.isDump) {
+      return this.timestampConverter.makeZeroTimestamp();
+    }
+    return this.timestampConverter.makeTimestampFromMonotonicNs(
+      BigInt(assertDefined(entry.elapsedRealtimeNanos).toString()),
+    );
+  }
+
+  private convertSnapshot(
+    legacy: android.surfaceflinger.ILayersTraceProto,
+  ): perfetto.protos.LayersSnapshotProto {
+    const snapshot = perfetto.protos.LayersSnapshotProto.fromObject(legacy);
+    return snapshot;
   }
 }
 

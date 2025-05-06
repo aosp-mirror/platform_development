@@ -20,7 +20,7 @@ import {
   timestampEqualityTester,
 } from 'common/time/test_utils';
 import {Timestamp} from 'common/time/time';
-import {getParser} from 'test/unit/fixture_utils';
+import {LegacyParserProvider} from 'test/unit/fixture_utils';
 import {CoarseVersion} from 'trace/coarse_version';
 import {Parser} from 'trace/parser';
 import {TraceType} from 'trace/trace_type';
@@ -46,7 +46,9 @@ const genProtoLogTest =
 
     beforeAll(async () => {
       jasmine.addCustomEqualityTester(timestampEqualityTester);
-      parser = (await getParser(traceFile)) as Parser<PropertyTreeNode>;
+      parser = await new LegacyParserProvider()
+        .addFilename(traceFile)
+        .getParser<PropertyTreeNode>();
     });
 
     it('has expected trace type', () => {

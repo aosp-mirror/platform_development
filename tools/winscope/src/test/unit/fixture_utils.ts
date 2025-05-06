@@ -20,6 +20,7 @@ import {TimestampConverter} from 'common/time/timestamp_converter';
 import {getRootUrl} from 'common/url_utils';
 import {FileAndParser} from 'parsers/file_and_parser';
 import {ParserFactory as LegacyParserFactory} from 'parsers/legacy/parser_factory';
+import {LegacyToPerfettoConverter} from 'parsers/legacy_to_perfetto_converter';
 import {ParserFactory as PerfettoParserFactory} from 'parsers/perfetto/parser_factory';
 import {TracesParserFactory} from 'parsers/traces/traces_parser_factory';
 import {Parser} from 'trace/parser';
@@ -43,12 +44,117 @@ export async function getFixtureFile(
   return file;
 }
 
+export class LegacyParserProvider {
+  private filenames: string[] = [];
+  private converter = getTimestampConverter();
+  private initializeRealToElapsedTimeOffsetNs = true;
+  private metadata: TraceMetadata = {};
+  private convertToPerfetto = false;
+  private latestRealToElapsedTimeOffsetNs = 0n;
+
+  addFilename(value: string) {
+    this.filenames.push(value);
+    return this;
+  }
+
+  setConverter(value: TimestampConverter) {
+    this.converter = value;
+    return this;
+  }
+
+  setInitializeRealToElapsedTimeOffsetNs(value: boolean) {
+    this.initializeRealToElapsedTimeOffsetNs = value;
+    return this;
+  }
+
+  setMetadata(value: TraceMetadata) {
+    this.metadata = value;
+    return this;
+  }
+
+  setConvertToPerfetto(value: boolean) {
+    this.convertToPerfetto = value;
+    return this;
+  }
+
+  setLatestRealToElapsedTimeOffsetNs(value: bigint) {
+    this.latestRealToElapsedTimeOffsetNs = value;
+    return this;
+  }
+
+  async getParser<T>(): Promise<Parser<T>> {
+    const parsers = await this.getParsers();
+
+    expect(parsers.length)
+      .withContext(
+        `Should have been able to create a parser for ${this.filenames.join(
+          ', ',
+        )}`,
+      )
+      .toBeGreaterThanOrEqual(1);
+
+    return parsers[0] as Parser<T>;
+  }
+
+  async getParsers(): Promise<Array<Parser<object>>> {
+    const files = [];
+    for (const filename of this.filenames) {
+      const file = new TraceFile(
+        await getFixtureFile(assertDefined(filename)),
+        undefined,
+      );
+      files.push(file);
+    }
+    const processedFiles = await new LegacyParserFactory().processFiles(
+      files,
+      this.converter,
+      this.metadata,
+    );
+    const fileAndParsers = this.convertToPerfetto
+      ? await this.convertToPerfettoTrace(processedFiles.parsers)
+      : processedFiles.parsers;
+
+    createTimestamps(
+      fileAndParsers,
+      this.initializeRealToElapsedTimeOffsetNs,
+      this.converter,
+    );
+
+    return fileAndParsers.map((fileAndParser) => {
+      return fileAndParser.parser;
+    });
+  }
+
+  private async convertToPerfettoTrace(
+    fileAndParsers: FileAndParser[],
+  ): Promise<FileAndParser[]> {
+    const perfettoTrace =
+      await LegacyToPerfettoConverter.convertToSinglePerfettoFile(
+        fileAndParsers,
+        this.latestRealToElapsedTimeOffsetNs,
+      );
+    if (perfettoTrace) {
+      const processed = await new PerfettoParserFactory().processFile(
+        perfettoTrace,
+        this.converter,
+      );
+      fileAndParsers = processed.parsers.map((parser) => {
+        return new FileAndParser(perfettoTrace, parser);
+      });
+    }
+    return fileAndParsers;
+  }
+}
+
 export async function getTrace<T extends TraceType>(
   type: T,
   filename: string,
 ): Promise<Trace<T>> {
   const converter = getTimestampConverter(false);
-  const legacyParsers = await getParsers(filename, converter);
+  const legacyParsers = await new LegacyParserProvider()
+    .addFilename(filename)
+    .setConverter(converter)
+    .getParsers();
   expect(legacyParsers.length).toBeLessThanOrEqual(1);
   if (legacyParsers.length === 1) {
     expect(legacyParsers[0].getTraceType()).toEqual(type);
@@ -65,26 +171,6 @@ export async function getTrace<T extends TraceType>(
     .setType(type)
     .setParser(perfettoParsers[0] as unknown as Parser<T>)
     .build();
-}
-
-export async function getParser(
-  filename: string,
-  converter = getTimestampConverter(),
-  initializeRealToElapsedTimeOffsetNs = true,
-  metadata: TraceMetadata = {},
-): Promise<Parser<object>> {
-  const parsers = await getParsers(
-    filename,
-    converter,
-    initializeRealToElapsedTimeOffsetNs,
-    metadata,
-  );
-
-  expect(parsers.length)
-    .withContext(`Should have been able to create a parser for ${filename}`)
-    .toBeGreaterThanOrEqual(1);
-
-  return parsers[0];
 }
 
 function createTimestamps(
@@ -117,31 +203,6 @@ function createTimestamps(
   });
 }
 
-export async function getParsers(
-  filename: string,
-  converter = getTimestampConverter(),
-  initializeRealToElapsedTimeOffsetNs = true,
-  metadata: TraceMetadata = {},
-): Promise<Array<Parser<object>>> {
-  const file = new TraceFile(await getFixtureFile(filename), undefined);
-  const processedFiles = await new LegacyParserFactory().processFiles(
-    [file],
-    converter,
-    metadata,
-  );
-  const fileAndParsers = processedFiles.parsers;
-
-  createTimestamps(
-    fileAndParsers,
-    initializeRealToElapsedTimeOffsetNs,
-    converter,
-  );
-
-  return fileAndParsers.map((fileAndParser) => {
-    return fileAndParser.parser;
-  });
-}
-
 export async function getPerfettoParser<T extends TraceType>(
   traceType: T,
   fixturePath: string,
@@ -163,7 +224,7 @@ export async function getPerfettoParsers(
   const traceFile = new TraceFile(file);
   const converter = getTimestampConverter(withUTCOffset);
   const {parsers, isPerfettoTrace} =
-    await new PerfettoParserFactory().processFiles(
+    await new PerfettoParserFactory().processFile(
       traceFile,
       converter,
       undefined,
@@ -188,7 +249,13 @@ export async function getTracesParser(
   const converter = getTimestampConverter(withUTCOffset);
   const legacyParsers = (
     await Promise.all(
-      filenames.map(async (filename) => getParsers(filename, converter, true)),
+      filenames.map(async (filename) => {
+        return new LegacyParserProvider()
+          .addFilename(filename)
+          .setConverter(converter)
+          .setInitializeRealToElapsedTimeOffsetNs(true)
+          .getParsers();
+      }),
     )
   ).reduce((acc, cur) => acc.concat(cur), []);
 
@@ -266,21 +333,14 @@ export async function getMultiDisplayLayerTraceEntry(): Promise<HierarchyTreeNod
 export async function getImeTraceEntries(): Promise<
   [Map<TraceType, HierarchyTreeNode>, Map<TraceType, HierarchyTreeNode>]
 > {
-  let surfaceFlingerEntry: HierarchyTreeNode | undefined;
-  {
-    const parser = (await getParser(
-      'traces/ime/SurfaceFlinger_with_IME.pb',
-    )) as Parser<HierarchyTreeNode>;
-    surfaceFlingerEntry = await parser.getEntry(5);
-  }
-
-  let windowManagerEntry: HierarchyTreeNode | undefined;
-  {
-    const parser = (await getParser(
-      'traces/ime/WindowManager_with_IME.pb',
-    )) as Parser<HierarchyTreeNode>;
-    windowManagerEntry = await parser.getEntry(2);
-  }
+  const surfaceFlingerEntry = await getTraceEntry<HierarchyTreeNode>(
+    'traces/ime/SurfaceFlinger_with_IME.pb',
+    5,
+  );
+  const windowManagerEntry = await getTraceEntry<HierarchyTreeNode>(
+    'traces/ime/WindowManager_with_IME.pb',
+    2,
+  );
 
   const entries = new Map<TraceType, HierarchyTreeNode>();
   entries.set(
@@ -310,6 +370,9 @@ export async function getImeTraceEntries(): Promise<
 }
 
 export async function getTraceEntry<T>(filename: string, index = 0) {
-  const parser = (await getParser(filename)) as Parser<T>;
+  const parser = await new LegacyParserProvider()
+    .addFilename(filename)
+    .setConvertToPerfetto(true)
+    .getParser<T>();
   return parser.getEntry(index);
 }

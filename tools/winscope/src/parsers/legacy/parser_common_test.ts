@@ -18,7 +18,7 @@ import {
   TimestampConverterUtils,
   timestampEqualityTester,
 } from 'common/time/test_utils';
-import {getFixtureFile, getParser} from 'test/unit/fixture_utils';
+import {getFixtureFile, LegacyParserProvider} from 'test/unit/fixture_utils';
 import {Parser} from 'trace/parser';
 import {TraceFile} from 'trace/trace_file';
 import {HierarchyTreeNode} from 'trace/tree_node/hierarchy_tree_node';
@@ -58,9 +58,9 @@ describe('Parser', () => {
     let parser: Parser<HierarchyTreeNode>;
 
     beforeAll(async () => {
-      parser = (await getParser(
-        'traces/elapsed_and_real_timestamp/WindowManager.pb',
-      )) as Parser<HierarchyTreeNode>;
+      parser = await new LegacyParserProvider()
+        .addFilename('traces/elapsed_and_real_timestamp/WindowManager.pb')
+        .getParser<HierarchyTreeNode>();
     });
 
     it('has expected descriptors', () => {
@@ -95,9 +95,9 @@ describe('Parser', () => {
     let parser: Parser<HierarchyTreeNode>;
 
     beforeAll(async () => {
-      parser = (await getParser(
-        'traces/elapsed_timestamp/WindowManager.pb',
-      )) as Parser<HierarchyTreeNode>;
+      parser = await new LegacyParserProvider()
+        .addFilename('traces/elapsed_timestamp/WindowManager.pb')
+        .getParser<HierarchyTreeNode>();
     });
 
     it('provides timestamps', () => {

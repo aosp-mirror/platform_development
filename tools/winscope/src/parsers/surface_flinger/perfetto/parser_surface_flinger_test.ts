@@ -30,7 +30,7 @@ import {TraceType} from 'trace/trace_type';
 import {HierarchyTreeNode} from 'trace/tree_node/hierarchy_tree_node';
 import {UiTreeUtils} from 'viewers/common/ui_tree_utils';
 
-describe('Perfetto ParserSurfaceFlinger', () => {
+describe('PerfettoParserSurfaceFlinger', () => {
   let userNotifierChecker: UserNotifierChecker;
 
   beforeAll(() => {
