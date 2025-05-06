@@ -261,9 +261,9 @@ import {LoadProgressComponent} from './load_progress_component';
          flex-shrink: 0;
       }
       .warning-banner .warn-message {
-        /* Removed list styles as it's now a single span per banner */
         padding: 0;
         margin: 0;
+        white-space: pre-line;
       }
     `,
   ],

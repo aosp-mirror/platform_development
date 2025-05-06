@@ -14,7 +14,8 @@
  * limitations under the License.
  */
 
-import {TraceOverridden} from 'messaging/user_warnings';
+import {assertDefined} from 'common/assert_utils';
+import {MissingPersistentTrace, TraceOverridden} from 'messaging/user_warnings';
 import {
   BugreportFileSelected,
   WinscopeEventType,
@@ -22,7 +23,7 @@ import {
 import {getFixtureFile} from 'test/unit/fixture_utils';
 import {UserNotifierChecker} from 'test/unit/user_notifier_checker';
 import {TraceFile} from 'trace/trace_file';
-import {TraceFileFilter} from './trace_file_filter';
+import {BuildType, TraceFileFilter} from './trace_file_filter';
 
 describe('TraceFileFilter', () => {
   const filter = new TraceFileFilter();
@@ -215,6 +216,66 @@ describe('TraceFileFilter', () => {
       userNotifierChecker.expectNone();
     });
 
+    it('warns about missing trace on user build', async () => {
+      await checkMissingPerfettoTraceWarning(BuildType.USER, undefined, [
+        "'user' builds",
+        'expected',
+      ]);
+    });
+
+    it('warns about missing trace on userdebug build with persistent flag disabled', async () => {
+      await checkMissingPerfettoTraceWarning(BuildType.USERDEBUG, '0', [
+        'seems to be disabled',
+        'adb shell setprop',
+      ]);
+    });
+
+    it('warns about missing trace on userdebug build with persistent flag enabled', async () => {
+      await checkMissingPerfettoTraceWarning(BuildType.USERDEBUG, '1', [
+        'No Winscope Perfetto trace found in bug report. Ensure the bugreport comes from a device where persistent tracing is enabled',
+      ]);
+    });
+
+    it('warns about missing trace on userdebug build with persistent flag unknown', async () => {
+      await checkMissingPerfettoTraceWarning(BuildType.USERDEBUG, undefined, [
+        'No Winscope Perfetto trace found in bug report.',
+        "The persistent tracing property ('persist.debug.perfetto.persistent') seems to be disabled",
+      ]);
+    });
+
+    it('warns about missing trace on eng build with persistent flag disabled', async () => {
+      await checkMissingPerfettoTraceWarning(BuildType.ENG, '0', [
+        'No Winscope Perfetto trace found in bug report.',
+        "The persistent tracing property ('persist.debug.perfetto.persistent') seems to be disabled",
+      ]);
+    });
+
+    it('warns about missing trace on eng build with persistent flag enabled', async () => {
+      await checkMissingPerfettoTraceWarning(BuildType.ENG, '1', [
+        'No Winscope Perfetto trace found in bug report. Ensure the bugreport comes from a device where persistent tracing is enabled',
+      ]);
+    });
+
+    it('does not warn if a valid perfetto trace is found', async () => {
+      const perfettoSysTrace = makeTraceFile(
+        'FS/data/misc/perfetto-traces/bugreport/systrace.pftrace',
+        bugreportArchive,
+      );
+      const mainBugreportFilename = 'bugreport-user-build.txt';
+      const bugreportFiles = [
+        await makeCustomBugreportMainEntryTraceFile(mainBugreportFilename),
+        makeMainBugreportFile(mainBugreportFilename, {
+          'persist.sys.timezone': 'America/Los_Angeles',
+        }),
+        perfettoSysTrace, // Include the trace file
+      ];
+
+      const result = await filter.filter(bugreportFiles);
+      expect(result.perfetto).toEqual(perfettoSysTrace);
+      expect(result.criticalWarnings?.length).toEqual(0); // No warnings expected
+      userNotifierChecker.expectNone();
+    });
+
     async function checkPerfettoPicked(
       perfetto: TraceFile,
       other: TraceFile[],
@@ -298,6 +359,47 @@ describe('TraceFileFilter', () => {
     }
   });
 
+  async function checkMissingPerfettoTraceWarning(
+    buildType: BuildType,
+    persistentFlag: string | undefined,
+    expectedMessageSubstrings: string[],
+  ) {
+    const mainBugreportFilename = `bugreport-${buildType}-build${
+      persistentFlag ? '-flag' + persistentFlag : ''
+    }.txt`;
+    const properties: {[key: string]: string} = {
+      'ro.build.type': buildType,
+      'persist.sys.timezone': 'America/Los_Angeles', // Example timezone
+    };
+    if (persistentFlag !== undefined) {
+      properties[
+        'persist.debug.perfetto.persistent_sysui_tracing_for_bugreport'
+      ] = persistentFlag;
+    }
+
+    const bugreportFiles = [
+      await makeCustomBugreportMainEntryTraceFile(mainBugreportFilename),
+      makeMainBugreportFile(mainBugreportFilename, properties),
+    ];
+
+    const result = await filter.filter(bugreportFiles);
+
+    expect(result.perfetto).toBeUndefined();
+    expect(result.criticalWarnings).toBeDefined();
+    expect(result.criticalWarnings?.length).toEqual(1);
+    const warning = assertDefined(
+      result.criticalWarnings,
+    )[0] as MissingPersistentTrace;
+    expect(warning).toBeInstanceOf(MissingPersistentTrace);
+
+    const actualMessage = warning.getMessage();
+    expectedMessageSubstrings.forEach((substring) => {
+      expect(actualMessage).toContain(substring);
+    });
+
+    userNotifierChecker.expectNone();
+  }
+
   function makeTraceFile(
     filename: string,
     parentArchive?: File,
@@ -306,6 +408,30 @@ describe('TraceFileFilter', () => {
     size = size ?? 0;
     const file = new File([new ArrayBuffer(size)], filename);
     return new TraceFile(file as unknown as File, parentArchive);
+  }
+
+  function makeMainBugreportFile(
+    filename: string, // Should match the content of main_entry.txt
+    properties: {[key: string]: string},
+    parentArchive?: File,
+  ): TraceFile {
+    let content = 'some initial bugreport content...\n';
+    for (const [key, value] of Object.entries(properties)) {
+      // Add other properties if needed for testing timezone etc.
+      content += `[${key}]: [${value}]\n`;
+    }
+    content += '...some trailing bugreport content\n';
+
+    const file = new File([content], filename);
+    return new TraceFile(file, parentArchive ?? bugreportArchive);
+  }
+
+  async function makeCustomBugreportMainEntryTraceFile(
+    mainBugreportFilename = 'bugreport-codename_beta-UPB2.230407.019-2023-05-30-14-33-48.txt',
+  ): Promise<TraceFile> {
+    // Ensure the content matches the filename used in makeMainBugreportFile
+    const file = new File([mainBugreportFilename], 'main_entry.txt');
+    return new TraceFile(file, bugreportArchive);
   }
 
   async function makeBugreportMainEntryTraceFile(): Promise<TraceFile> {

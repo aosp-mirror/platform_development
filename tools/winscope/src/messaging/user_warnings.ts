@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import {BugreportData, BuildType} from 'app/trace_file_filter';
 import {TimeRange} from 'common/time/time';
 import {TimeDuration} from 'common/time/time_duration';
 import {TRACE_INFO} from 'trace/trace_info';
@@ -51,7 +52,7 @@ export class NoValidFiles extends UserWarning {
 }
 
 export class MissingPersistentTrace extends UserWarning {
-  constructor(private reason: string) {
+  constructor(private bugreportData: BugreportData) {
     super();
   }
 
@@ -60,7 +61,18 @@ export class MissingPersistentTrace extends UserWarning {
   }
 
   override getMessage(): string {
-    return 'No Winscope Perfetto trace found in bug report. ' + this.reason;
+    const baseMessage = 'No Winscope Perfetto trace found in bug report.';
+
+    if (this.bugreportData.buildType === BuildType.USER) {
+      return `${baseMessage} This is expected on 'user' builds. Persistent tracing usually requires a 'userdebug' or 'eng' build, or root access.`;
+    }
+
+    if (!this.bugreportData.isPersistentTracingEnabled) {
+      return `${baseMessage} The persistent tracing property ('persist.debug.perfetto.persistent') seems to be disabled. You can try enabling it via:\n'adb shell setprop persist.debug.perfetto.persistent 1 && adb reboot'\nThen, reproduce the issue and capture a new bug report.`;
+    }
+
+    // Unknown issue
+    return `${baseMessage} Ensure the bugreport comes from a device where persistent tracing is enabled (e.g., dogfood devices or using 'adb shell setprop persist.debug.perfetto.persistent 1').`;
   }
 }
 
