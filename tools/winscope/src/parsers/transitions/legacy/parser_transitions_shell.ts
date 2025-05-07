@@ -14,18 +14,18 @@
  * limitations under the License.
  */
 
+import {assertDefined} from 'common/assert_utils';
 import {Timestamp} from 'common/time/time';
 import {AbstractParser} from 'parsers/legacy/abstract_parser';
-import {EntryPropertiesTreeFactory} from 'parsers/transitions/entry_properties_tree_factory';
 import root from 'protos/transitions/udc/json';
 import {com} from 'protos/transitions/udc/static';
 import {TraceType} from 'trace/trace_type';
-import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
 
 type TransitionProto = com.android.wm.shell.ITransition;
+type HandlerProto = com.android.wm.shell.IHandlerMapping;
 
 export class ParserTransitionsShell extends AbstractParser<
-  PropertyTreeNode,
+  TransitionProto,
   TransitionProto
 > {
   private static readonly WmShellTransitionsTraceProto = root.lookupType(
@@ -33,7 +33,7 @@ export class ParserTransitionsShell extends AbstractParser<
   );
 
   private realToBootTimeOffsetNs: bigint | undefined;
-  private handlerMapping: undefined | {[key: number]: string};
+  private handlerMapping: undefined | HandlerProto[];
 
   override getTraceType(): TraceType {
     return TraceType.SHELL_TRANSITION;
@@ -52,25 +52,23 @@ export class ParserTransitionsShell extends AbstractParser<
       ParserTransitionsShell.WmShellTransitionsTraceProto.decode(
         traceBuffer,
       ) as unknown as com.android.wm.shell.IWmShellTransitionTraceProto;
-
     const timeOffset = BigInt(
       decodedProto.realToElapsedTimeOffsetNanos?.toString() ?? '0',
     );
     this.realToBootTimeOffsetNs = timeOffset !== 0n ? timeOffset : undefined;
-
-    this.handlerMapping = {};
-    for (const mapping of decodedProto.handlerMappings ?? []) {
-      this.handlerMapping[mapping.id] = mapping.name;
-    }
-
+    this.handlerMapping = decodedProto.handlerMappings ?? [];
     return decodedProto.transitions ?? [];
+  }
+
+  getShellHandlerMapping(): HandlerProto[] {
+    return assertDefined(this.handlerMapping);
   }
 
   override processDecodedEntry(
     index: number,
     entryProto: TransitionProto,
-  ): PropertyTreeNode {
-    return this.makePropertiesTree(entryProto);
+  ): TransitionProto {
+    return entryProto;
   }
 
   protected override getTimestamp(entry: TransitionProto): Timestamp {
@@ -83,44 +81,5 @@ export class ParserTransitionsShell extends AbstractParser<
 
   protected getMagicNumber(): number[] | undefined {
     return [0x09, 0x57, 0x4d, 0x53, 0x54, 0x52, 0x41, 0x43, 0x45]; // .WMSTRACE
-  }
-
-  private validateShellTransitionEntry(entry: TransitionProto) {
-    if (entry.id === 0) {
-      throw new Error('Shell Transitions entry needs non-null id');
-    }
-    if (
-      !entry.dispatchTimeNs &&
-      !entry.mergeRequestTimeNs &&
-      !entry.mergeTimeNs &&
-      !entry.abortTimeNs
-    ) {
-      throw new Error(
-        'Shell Transitions entry requires at least one non-null timestamp',
-      );
-    }
-    if (this.realToBootTimeOffsetNs === undefined) {
-      throw new Error('Shell Transitions trace missing realToBootTimeOffsetNs');
-    }
-    if (this.handlerMapping === undefined) {
-      throw new Error('Shell Transitions trace missing handler mapping');
-    }
-  }
-
-  private makePropertiesTree(entryProto: TransitionProto): PropertyTreeNode {
-    this.validateShellTransitionEntry(entryProto);
-
-    const shellEntryTree = EntryPropertiesTreeFactory.makeShellPropertiesTree({
-      entry: entryProto,
-      realToBootTimeOffsetNs: this.realToBootTimeOffsetNs,
-      handlerMapping: this.handlerMapping,
-      timestampConverter: this.timestampConverter,
-    });
-    const wmEntryTree = EntryPropertiesTreeFactory.makeWmPropertiesTree();
-
-    return EntryPropertiesTreeFactory.makeTransitionPropertiesTree(
-      shellEntryTree,
-      wmEntryTree,
-    );
   }
 }

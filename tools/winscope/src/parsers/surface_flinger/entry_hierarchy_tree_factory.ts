@@ -17,7 +17,6 @@
 import {assertDefined} from 'common/assert_utils';
 import {DuplicateLayerIds, MissingLayerIds} from 'messaging/user_warnings';
 import {perfetto} from 'protos/perfetto/trace/static';
-import {android} from 'protos/surfaceflinger/udc/static';
 import {HierarchyTreeNode} from 'trace/tree_node/hierarchy_tree_node';
 import {
   LazyPropertiesStrategyType,
@@ -33,14 +32,12 @@ import {ZOrderPathsComputation} from './computations/z_order_paths_computation';
 import {DENYLIST_PROPERTIES} from './denylist_properties';
 import {EAGER_PROPERTIES} from './eager_properties';
 import {HierarchyTreeBuilderSf} from './hierarchy_tree_builder_sf';
-import {ParserSurfaceFlinger as LegacyParserSurfaceFlinger} from './legacy/parser_surface_flinger';
-import {ParserSurfaceFlinger as PerfettoParserSurfaceFlinger} from './perfetto/parser_surface_flinger';
+import {ParserSurfaceFlinger} from './perfetto/parser_surface_flinger';
 
 export class EntryHierarchyTreeFactory {
   makeEntryHierarchyTree(
-    entryProto: EntryType,
-    layerProtos: LayerType[],
-    ParserSurfaceFlinger: ParserSurfaceFlinger,
+    entryProto: perfetto.protos.ILayersSnapshotProto,
+    layerProtos: perfetto.protos.ILayerProto[],
   ): HierarchyTreeNode {
     const excludesCompositionState =
       entryProto?.excludesCompositionState ?? true;
@@ -52,7 +49,10 @@ export class EntryHierarchyTreeFactory {
     let missingLayerIds = false;
 
     const layers = layerProtos.reduce(
-      (allLayerProps: PropertiesProvider[], layer: LayerType) => {
+      (
+        allLayerProps: PropertiesProvider[],
+        layer: perfetto.protos.ILayerProto,
+      ) => {
         if (layer.id === null || layer.id === undefined) {
           missingLayerIds = true;
           return allLayerProps;
@@ -132,7 +132,7 @@ export class EntryHierarchyTreeFactory {
   }
 
   private makeEagerPropertiesTree(
-    layer: LayerType,
+    layer: perfetto.protos.ILayerProto,
     duplicateCount: number,
   ): PropertyTreeNode {
     const denyList: string[] = [];
@@ -153,7 +153,9 @@ export class EntryHierarchyTreeFactory {
       .build();
   }
 
-  private makeEntryEagerPropertiesTree(entry: EntryType): PropertyTreeNode {
+  private makeEntryEagerPropertiesTree(
+    entry: perfetto.protos.ILayersSnapshotProto,
+  ): PropertyTreeNode {
     const denyList: string[] = [];
     let obj = entry;
     do {
@@ -172,7 +174,7 @@ export class EntryHierarchyTreeFactory {
   }
 
   private makeLayerLazyPropertiesStrategy(
-    layer: LayerType,
+    layer: perfetto.protos.ILayerProto,
     duplicateCount: number,
   ): LazyPropertiesStrategyType {
     return async () => {
@@ -187,7 +189,7 @@ export class EntryHierarchyTreeFactory {
   }
 
   private makeEntryLazyPropertiesStrategy(
-    entry: EntryType,
+    entry: perfetto.protos.ILayersSnapshotProto,
   ): LazyPropertiesStrategyType {
     return async () => {
       return new PropertyTreeBuilderFromProto()
@@ -199,15 +201,3 @@ export class EntryHierarchyTreeFactory {
     };
   }
 }
-
-type EntryType =
-  | android.surfaceflinger.ILayersTraceProto
-  | perfetto.protos.ILayersSnapshotProto;
-
-type LayerType =
-  | android.surfaceflinger.ILayerProto
-  | perfetto.protos.ILayerProto;
-
-type ParserSurfaceFlinger =
-  | typeof PerfettoParserSurfaceFlinger
-  | typeof LegacyParserSurfaceFlinger;

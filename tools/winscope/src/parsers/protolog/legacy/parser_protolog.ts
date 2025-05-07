@@ -15,20 +15,25 @@
  */
 
 import {assertDefined} from 'common/assert_utils';
+import {utf8Encode} from 'common/string_utils';
 import {Timestamp} from 'common/time/time';
+import Long from 'long';
 import {AbstractParser} from 'parsers/legacy/abstract_parser';
-import {LogMessage} from 'parsers/protolog/log_message';
-import {ParserProtologUtils} from 'parsers/protolog/parser_protolog_utils';
+import {perfetto} from 'protos/perfetto/trace/static';
 import root from 'protos/protolog/udc/json';
 import {com} from 'protos/protolog/udc/static';
 import {TraceType} from 'trace/trace_type';
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
 import configJson32 from '../../../../configs/services.core.protolog32.json'; // eslint-disable-line no-restricted-imports
 import configJson64 from '../../../../configs/services.core.protolog64.json'; // eslint-disable-line no-restricted-imports
+import {CONFIG_32, CONFIG_64} from './legacy_to_perfetto_configs';
 
 type ProtoLogMessage = com.android.internal.protolog.IProtoLogMessage;
 
-class ParserProtoLog extends AbstractParser<PropertyTreeNode, ProtoLogMessage> {
+export class ParserProtoLog extends AbstractParser<
+  PropertyTreeNode,
+  ProtoLogMessage
+> {
   private static readonly ProtoLogFileProto = root.lookupType(
     'com.android.internal.protolog.ProtoLogFileProto',
   );
@@ -61,15 +66,15 @@ class ParserProtoLog extends AbstractParser<PropertyTreeNode, ProtoLogMessage> {
       buffer,
     ) as com.android.internal.protolog.IProtoLogFileProto;
 
-    if (fileProto.version === ParserProtoLog.PROTOLOG_32_BIT_VERSION) {
+    if (this.is32BitVersion(fileProto.log?.at(0))) {
       if (configJson32.version !== ParserProtoLog.PROTOLOG_32_BIT_VERSION) {
-        const message = `Unsupported ProtoLog JSON config version ${configJson32.version} expected ${ParserProtoLog.PROTOLOG_32_BIT_VERSION}`;
+        const message = `Unsupported ProtoLog JSON config version ${configJson32.version}. Expected ${ParserProtoLog.PROTOLOG_32_BIT_VERSION}`;
         console.log(message);
         throw new TypeError(message);
       }
-    } else if (fileProto.version === ParserProtoLog.PROTOLOG_64_BIT_VERSION) {
+    } else if (this.is64BitVersion(fileProto.log?.at(0))) {
       if (configJson64.version !== ParserProtoLog.PROTOLOG_64_BIT_VERSION) {
-        const message = `Unsupported ProtoLog JSON config version ${configJson64.version} expected ${ParserProtoLog.PROTOLOG_64_BIT_VERSION}`;
+        const message = `Unsupported ProtoLog JSON config version ${configJson64.version}. Expected ${ParserProtoLog.PROTOLOG_64_BIT_VERSION}`;
         console.log(message);
         throw new TypeError(message);
       }
@@ -95,185 +100,126 @@ class ParserProtoLog extends AbstractParser<PropertyTreeNode, ProtoLogMessage> {
     return fileProto.log;
   }
 
+  private is32BitVersion(entry: ProtoLogMessage | undefined): boolean {
+    return (entry?.messageHashLegacy ?? 0) > 0;
+  }
+
+  private is64BitVersion(entry: ProtoLogMessage | undefined): boolean {
+    return (
+      entry?.messageHash instanceof Long &&
+      (entry.messageHash.toString() ?? '0') !== '0'
+    );
+  }
+
+  override convertToPerfettoPackets(
+    sequenceId: number,
+    trustedUid = 1,
+    trustedPid = 1,
+  ): perfetto.protos.TracePacket[] {
+    const packets = [];
+    const firstPacket = this.createPacket(sequenceId, trustedUid, trustedPid);
+    firstPacket.sequenceFlags =
+      perfetto.protos.TracePacket.SequenceFlags.SEQ_INCREMENTAL_STATE_CLEARED;
+    packets.push(firstPacket);
+    packets.push(this.makeViewerConfigPacket(sequenceId, trustedUid));
+
+    const stringToIid = new Map<string, number>();
+    let stringIid = 1;
+
+    for (const entry of this.decodedEntries) {
+      const packet = this.createPacket(sequenceId, trustedUid, trustedPid);
+      packet.timestamp = assertDefined(entry.elapsedRealtimeNanos);
+      packet.timestampClockId =
+        perfetto.protos.ClockSnapshot.Clock.BuiltinClocks.BOOTTIME;
+
+      let messageId: Long;
+      if (this.is64BitVersion(entry)) {
+        messageId = assertDefined(entry.messageHash);
+      } else {
+        messageId = Long.fromNumber(assertDefined(entry.messageHashLegacy));
+      }
+
+      const strParamIids: number[] = [];
+
+      entry.strParams?.forEach((param) => {
+        const iid = stringToIid.get(param);
+        if (iid !== undefined) {
+          strParamIids.push(iid);
+        } else {
+          stringToIid.set(param, stringIid);
+          const packet = this.createPacket(sequenceId, trustedUid, trustedPid);
+          this.updateInternedDataPacket(packet, param, stringIid);
+          packets.push(packet);
+          strParamIids.push(stringIid);
+          stringIid++;
+        }
+      });
+
+      if (strParamIids.length > 0) {
+        packet.sequenceFlags =
+          perfetto.protos.TracePacket.SequenceFlags.SEQ_NEEDS_INCREMENTAL_STATE;
+      }
+
+      packet.protologMessage = perfetto.protos.ProtoLogMessage.create({
+        messageId,
+        strParamIids,
+        sint64Params: entry.sint64Params,
+        doubleParams: entry.doubleParams,
+        booleanParams: entry.booleanParams?.map((param) => {
+          return param ? 1 : 0;
+        }),
+      });
+      packets.push(packet);
+    }
+
+    return packets;
+  }
+
   protected override getTimestamp(entry: ProtoLogMessage): Timestamp {
     return this.timestampConverter.makeTimestampFromBootTimeNs(
       BigInt(assertDefined(entry.elapsedRealtimeNanos).toString()),
     );
   }
 
-  override processDecodedEntry(
-    index: number,
-    entry: ProtoLogMessage,
-  ): PropertyTreeNode {
-    let messageHash = assertDefined(entry.messageHash).toString();
-    let config: ProtologConfig | undefined = undefined;
-    if (messageHash !== null && messageHash !== '0') {
-      config = assertDefined(configJson64) as ProtologConfig;
+  private makeViewerConfigPacket(
+    sequenceId: number,
+    trustedUid: number,
+  ): perfetto.protos.TracePacket {
+    const packet = this.createPacket(sequenceId, trustedUid, undefined);
+    if (this.is64BitVersion(this.decodedEntries[0])) {
+      packet.protologViewerConfig = CONFIG_64;
     } else {
-      messageHash = assertDefined(entry.messageHashLegacy).toString();
-      config = assertDefined(configJson32) as ProtologConfig;
+      packet.protologViewerConfig = CONFIG_32;
     }
-
-    const message: ConfigMessage | undefined = config.messages[messageHash];
-    const tag: string | undefined = message
-      ? config.groups[message.group].tag
-      : undefined;
-
-    const logMessage = this.makeLogMessage(entry, message, tag);
-    return ParserProtologUtils.makeMessagePropertiesTree(
-      logMessage,
-      this.timestampConverter,
-      this.getRealToMonotonicTimeOffsetNs() !== undefined,
-    );
+    return packet;
   }
 
-  private makeLogMessage(
-    entry: ProtoLogMessage,
-    message: ConfigMessage | undefined,
-    tag: string | undefined,
-  ): LogMessage {
-    if (!message || !tag) {
-      return this.makeLogMessageWithoutFormat(entry);
-    }
-    try {
-      return this.makeLogMessageWithFormat(entry, message, tag);
-    } catch (error) {
-      if (error instanceof FormatStringMismatchError) {
-        return this.makeLogMessageWithoutFormat(entry);
-      }
-      throw this.createParsingError((error as Error).message);
-    }
+  private updateInternedDataPacket(
+    packet: perfetto.protos.TracePacket,
+    str: string,
+    iid: number,
+  ): perfetto.protos.TracePacket {
+    const internedString = perfetto.protos.InternedString.fromObject({
+      iid: Long.fromNumber(iid),
+      str: utf8Encode(str),
+    });
+    packet.internedData = perfetto.protos.InternedData.fromObject({
+      protologStringArgs: [internedString],
+    });
+    return packet;
   }
 
-  private makeLogMessageWithFormat(
-    entry: ProtoLogMessage,
-    message: ConfigMessage,
-    tag: string,
-  ): LogMessage {
-    let text = '';
-
-    const strParams: string[] = assertDefined(entry.strParams);
-    let strParamsIdx = 0;
-    const sint64Params: Array<bigint> = assertDefined(entry.sint64Params).map(
-      (param) => BigInt(param.toString()),
-    );
-    let sint64ParamsIdx = 0;
-    const doubleParams: number[] = assertDefined(entry.doubleParams);
-    let doubleParamsIdx = 0;
-    const booleanParams: boolean[] = assertDefined(entry.booleanParams);
-    let booleanParamsIdx = 0;
-
-    const messageFormat = message.message;
-    for (let i = 0; i < messageFormat.length; ) {
-      if (messageFormat[i] === '%') {
-        if (i + 1 >= messageFormat.length) {
-          // Should never happen - protologtool checks for that
-          throw this.createParsingError('invalid format string');
-        }
-        switch (messageFormat[i + 1]) {
-          case '%':
-            text += '%';
-            break;
-          case 'd':
-            text += this.getParam(sint64Params, sint64ParamsIdx++).toString(10);
-            break;
-          case 'o':
-            text += this.getParam(sint64Params, sint64ParamsIdx++).toString(8);
-            break;
-          case 'x':
-            text += this.getParam(sint64Params, sint64ParamsIdx++).toString(16);
-            break;
-          case 'f':
-            text += this.getParam(doubleParams, doubleParamsIdx++).toFixed(6);
-            break;
-          case 'e':
-            text += this.getParam(
-              doubleParams,
-              doubleParamsIdx++,
-            ).toExponential();
-            break;
-          case 'g':
-            text += this.getParam(doubleParams, doubleParamsIdx++).toString();
-            break;
-          case 's':
-            text += this.getParam(strParams, strParamsIdx++);
-            break;
-          case 'b':
-            text += this.getParam(booleanParams, booleanParamsIdx++).toString();
-            break;
-          default:
-            // Should never happen - protologtool checks for that
-            throw this.createParsingError(
-              'invalid format string conversion: ' + messageFormat[i + 1],
-            );
-        }
-        i += 2;
-      } else {
-        text += messageFormat[i];
-        i += 1;
-      }
+  private createPacket(
+    sequenceId: number,
+    trustedUid: number,
+    trustedPid: number | undefined,
+  ): perfetto.protos.TracePacket {
+    const packet = perfetto.protos.TracePacket.create();
+    packet.trustedPacketSequenceId = sequenceId;
+    packet.trustedUid = trustedUid;
+    if (trustedPid) {
+      packet.trustedPid = trustedPid;
     }
-
-    return {
-      text,
-      tag,
-      level: message.level,
-      at: message.at,
-      timestamp: BigInt(assertDefined(entry.elapsedRealtimeNanos).toString()),
-    };
-  }
-
-  private getParam<T>(arr: T[], idx: number): T {
-    if (arr.length <= idx) {
-      throw this.createParsingError('no param for format string conversion');
-    }
-    return arr[idx];
-  }
-
-  private makeLogMessageWithoutFormat(entry: ProtoLogMessage): LogMessage {
-    const text =
-      assertDefined(entry.messageHash).toString() +
-      ' - [' +
-      assertDefined(entry.strParams).toString() +
-      '] [' +
-      assertDefined(entry.sint64Params).toString() +
-      '] [' +
-      assertDefined(entry.doubleParams).toString() +
-      '] [' +
-      assertDefined(entry.booleanParams).toString() +
-      ']';
-
-    return {
-      text,
-      tag: 'INVALID',
-      level: 'invalid',
-      at: '',
-      timestamp: BigInt(assertDefined(entry.elapsedRealtimeNanos).toString()),
-    };
-  }
-
-  private createParsingError(msg: string) {
-    return new Error(`Protolog parsing error: ${msg}`);
+    return packet;
   }
 }
-
-class FormatStringMismatchError extends Error {
-  constructor(message: string) {
-    super(message);
-  }
-}
-
-interface ProtologConfig {
-  version: string;
-  messages: {[key: string]: ConfigMessage};
-  groups: {[key: string]: {tag: string}};
-}
-
-interface ConfigMessage {
-  message: string;
-  level: string;
-  group: string;
-  at: string;
-}
-
-export {ParserProtoLog};

@@ -46,9 +46,11 @@ class ViewerJankCujsComponentTest extends AbstractLogViewerComponentTest<ViewerJ
       ViewerJankCujsComponent,
     ]
   > {
-    const parser = (await getTracesParser([
-      'traces/elapsed_and_real_timestamp/eventlog.winscope',
-    ])) as Parser<PropertyTreeNode>;
+    const parser = (
+      await getTracesParser([
+        'traces/elapsed_and_real_timestamp/eventlog.winscope',
+      ])
+    ).tracesParser as Parser<PropertyTreeNode>;
 
     const trace = new TraceBuilder<PropertyTreeNode>()
       .setParser(parser)

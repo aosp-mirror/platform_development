@@ -19,7 +19,6 @@ import {AddDefaults} from 'parsers/operations/add_defaults';
 import {SetFormatters} from 'parsers/operations/set_formatters';
 import {TranslateIntDef} from 'parsers/operations/translate_intdef';
 import {TamperedProtoField} from 'parsers/tampered_message_type';
-import {android} from 'protos/ime/udc/static';
 import {perfetto} from 'protos/perfetto/trace/static';
 import {HierarchyTreeNode} from 'trace/tree_node/hierarchy_tree_node';
 import {LazyPropertiesStrategyType} from 'trace/tree_node/properties_provider';
@@ -71,9 +70,7 @@ export class HierarchyTreeClientsFactory {
   }
 
   makeHierarchyTree(
-    entryProto:
-      | android.view.inputmethod.IInputMethodClientsTraceProto
-      | perfetto.protos.IInputMethodClientsTraceProto,
+    entryProto: perfetto.protos.IInputMethodClientsTraceProto,
   ): HierarchyTreeNode {
     const entry = new PropertiesProviderBuilder()
       .setEagerProperties(this.makeEntryEagerPropertiesTree(entryProto))
@@ -107,9 +104,7 @@ export class HierarchyTreeClientsFactory {
   }
 
   private makeEntryEagerPropertiesTree(
-    entryProto:
-      | android.view.inputmethod.IInputMethodClientsTraceProto
-      | perfetto.protos.IInputMethodClientsTraceProto,
+    entryProto: perfetto.protos.IInputMethodClientsTraceProto,
   ): PropertyTreeNode {
     const denyList: string[] = [];
     Object.getOwnPropertyNames(entryProto).forEach((it) => {
@@ -127,9 +122,7 @@ export class HierarchyTreeClientsFactory {
   }
 
   private makeEntryLazyPropertiesStrategy(
-    entryProto:
-      | android.view.inputmethod.IInputMethodClientsTraceProto
-      | perfetto.protos.IInputMethodClientsTraceProto,
+    entryProto: perfetto.protos.IInputMethodClientsTraceProto,
   ): LazyPropertiesStrategyType {
     return async () => {
       return new PropertyTreeBuilderFromProto()
@@ -147,7 +140,6 @@ export class HierarchyTreeClientsFactory {
 
   private makeClientEagerPropertiesTree(
     clientProto:
-      | android.view.inputmethod.InputMethodClientsTraceProto.IClientSideProto
       | perfetto.protos.InputMethodClientsTraceProto.IClientSideProto
       | null
       | undefined,
@@ -175,7 +167,6 @@ export class HierarchyTreeClientsFactory {
 
   private makeClientLazyPropertiesStrategy(
     clientProto:
-      | android.view.inputmethod.InputMethodClientsTraceProto.IClientSideProto
       | perfetto.protos.InputMethodClientsTraceProto.IClientSideProto
       | null
       | undefined,

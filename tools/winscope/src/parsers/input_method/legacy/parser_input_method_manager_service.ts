@@ -16,17 +16,16 @@
 
 import {assertDefined} from 'common/assert_utils';
 import {Timestamp} from 'common/time/time';
-import {HierarchyTreeManagerServiceFactory} from 'parsers/input_method/hierarchy_tree_manager_service_factory';
 import {AbstractParser} from 'parsers/legacy/abstract_parser';
-import {TamperedMessageType} from 'parsers/tampered_message_type';
 import root from 'protos/ime/udc/json';
 import {android} from 'protos/ime/udc/static';
+import {perfetto} from 'protos/perfetto/trace/static';
 import {TraceType} from 'trace/trace_type';
 import {HierarchyTreeNode} from 'trace/tree_node/hierarchy_tree_node';
 
 type ImeProto = android.view.inputmethod.IInputMethodManagerServiceTraceProto;
 
-class ParserInputMethodManagerService extends AbstractParser<
+export class ParserInputMethodManagerService extends AbstractParser<
   HierarchyTreeNode,
   ImeProto
 > {
@@ -35,21 +34,8 @@ class ParserInputMethodManagerService extends AbstractParser<
   ]; // .IMMTRACE
 
   private static readonly InputMethodManagerServiceTraceFileProto =
-    TamperedMessageType.tamper(
-      root.lookupType(
-        'android.view.inputmethod.InputMethodManagerServiceTraceFileProto',
-      ),
-    );
-  private static readonly ENTRY_FIELD =
-    ParserInputMethodManagerService.InputMethodManagerServiceTraceFileProto
-      .fields['entry'];
-  private static readonly MANAGER_SERVICE_FIELD = assertDefined(
-    ParserInputMethodManagerService.ENTRY_FIELD.tamperedMessageType,
-  ).fields['inputMethodManagerService'];
-  private static readonly HIERARCHY_TREE_FACTORY =
-    new HierarchyTreeManagerServiceFactory(
-      ParserInputMethodManagerService.ENTRY_FIELD,
-      ParserInputMethodManagerService.MANAGER_SERVICE_FIELD,
+    root.lookupType(
+      'android.view.inputmethod.InputMethodManagerServiceTraceFileProto',
     );
 
   private realToBootTimeOffsetNs: bigint | undefined;
@@ -82,28 +68,29 @@ class ParserInputMethodManagerService extends AbstractParser<
     return decoded.entry ?? [];
   }
 
+  override convertToPerfettoPackets(
+    sequenceId: number,
+  ): perfetto.protos.TracePacket[] {
+    const packets = [];
+
+    for (const entry of this.decodedEntries) {
+      const packet = perfetto.protos.TracePacket.create();
+      packet.timestamp = assertDefined(entry.elapsedRealtimeNanos);
+      packet.timestampClockId =
+        perfetto.protos.ClockSnapshot.Clock.BuiltinClocks.BOOTTIME;
+      packet.trustedPacketSequenceId = sequenceId;
+      packet.winscopeExtensions = {
+        '.perfetto.protos.WinscopeExtensionsImpl.inputmethodManagerService':
+          perfetto.protos.InputMethodManagerServiceTraceProto.fromObject(entry),
+      };
+      packets.push(packet);
+    }
+    return packets;
+  }
+
   protected override getTimestamp(entry: ImeProto): Timestamp {
     return this.timestampConverter.makeTimestampFromBootTimeNs(
       BigInt(assertDefined(entry.elapsedRealtimeNanos).toString()),
     );
   }
-
-  protected override processDecodedEntry(
-    index: number,
-    entry: ImeProto,
-  ): HierarchyTreeNode {
-    if (
-      entry.elapsedRealtimeNanos === undefined ||
-      entry.elapsedRealtimeNanos === null
-    ) {
-      throw new Error(
-        'Missing elapsedRealtimeNanos on IME Manager Service entry',
-      );
-    }
-    return ParserInputMethodManagerService.HIERARCHY_TREE_FACTORY.makeHierarchyTree(
-      entry,
-    );
-  }
 }
-
-export {ParserInputMethodManagerService};

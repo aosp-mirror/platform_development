@@ -40,5 +40,9 @@ export interface Parser<T> {
   getRealToMonotonicTimeOffsetNs(): bigint | undefined;
   getRealToBootTimeOffsetNs(): bigint | undefined;
   createTimestamps(): void;
-  convertToPerfettoPackets?(sequenceId: number): perfetto.protos.TracePacket[];
+  convertToPerfettoPackets?(
+    sequenceId: number,
+    trustedUid?: number,
+    trustedPid?: number,
+  ): perfetto.protos.TracePacket[];
 }

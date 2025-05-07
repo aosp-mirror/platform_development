@@ -19,14 +19,15 @@ import {
   TimestampConverterUtils,
   timestampEqualityTester,
 } from 'common/time/test_utils';
+import {com} from 'protos/transitions/udc/static';
 import {LegacyParserProvider} from 'test/unit/fixture_utils';
 import {CoarseVersion} from 'trace/coarse_version';
 import {Parser} from 'trace/parser';
 import {TraceType} from 'trace/trace_type';
-import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
+import {ParserTransitionsShell} from './parser_transitions_shell';
 
 describe('ParserTransitionsShell', () => {
-  let parser: Parser<PropertyTreeNode>;
+  let parser: Parser<com.android.wm.shell.Transition>;
 
   beforeAll(async () => {
     jasmine.addCustomEqualityTester(timestampEqualityTester);
@@ -34,7 +35,7 @@ describe('ParserTransitionsShell', () => {
       .addFilename(
         'traces/elapsed_and_real_timestamp/shell_transition_trace.pb',
       )
-      .getParser<PropertyTreeNode>();
+      .getParser<com.android.wm.shell.Transition>();
   });
 
   it('has expected trace type', () => {
@@ -56,5 +57,28 @@ describe('ParserTransitionsShell', () => {
       TimestampConverterUtils.makeRealTimestamp(1683130827957362976n),
     ];
     expect(timestamps).toEqual(expected);
+  });
+
+  it('provides decoded proto', async () => {
+    const entry = await parser.getEntry(0);
+    expect(entry.id).toEqual(6);
+    expect(entry.dispatchTimeNs.toString()).toEqual('57649649922341');
+    expect(entry.handler).toEqual(2);
+  });
+
+  it('provides shell mapping', async () => {
+    expect(parser).toBeInstanceOf(ParserTransitionsShell);
+    const mapping = (
+      parser as unknown as ParserTransitionsShell
+    ).getShellHandlerMapping();
+    expect(mapping.length).toEqual(2);
+    expect(mapping[0].id).toEqual(2);
+    expect(mapping[0].name).toEqual(
+      'com.android.wm.shell.transition.DefaultMixedHandler',
+    );
+    expect(mapping[1].id).toEqual(3);
+    expect(mapping[1].name).toEqual(
+      'com.android.wm.shell.recents.RecentsTransitionHandler',
+    );
   });
 });

@@ -27,7 +27,6 @@ export class ParserProtologUtils {
   static makeMessagePropertiesTree(
     logMessage: LogMessage,
     timestampConverter: ParserTimestampConverter,
-    isMonotonic: boolean,
   ): PropertyTreeNode {
     const tree = new PropertyTreeBuilderFromProto()
       .setData(logMessage)
@@ -39,9 +38,6 @@ export class ParserProtologUtils {
     const customFormatters = new Map([['timestamp', TIMESTAMP_NODE_FORMATTER]]);
 
     const strategy: MakeTimestampStrategyType = (valueNs: bigint) => {
-      if (isMonotonic) {
-        return timestampConverter.makeTimestampFromMonotonicNs(valueNs);
-      }
       return timestampConverter.makeTimestampFromBootTimeNs(valueNs);
     };
 

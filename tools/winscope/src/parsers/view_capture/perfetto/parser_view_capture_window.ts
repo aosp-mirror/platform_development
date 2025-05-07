@@ -112,7 +112,7 @@ export class ParserViewCaptureWindow extends AbstractParser<HierarchyTreeNode> {
       views.find((view) => {
         const parentId = assertDefined(
           view.getEagerProperties().getChildByName('parentId'),
-        ).getValue() as number;
+        ).getValue();
         return parentId === -1;
       }),
     );
@@ -232,13 +232,11 @@ export class ParserViewCaptureWindow extends AbstractParser<HierarchyTreeNode> {
     view: perfetto.protos.ViewCapture.IView,
   ): PropertyTreeNode {
     const rootName = `${(view as FakeProto).className}@${view.hashcode}`;
-
     const nodeProperties = new PropertyTreeBuilderFromProto()
       .setData(view)
-      .setRootId('root-view')
+      .setRootId('ViewNode' + (view.id ?? 0))
       .setRootName(rootName)
       .build();
-
     return nodeProperties;
   }
 }

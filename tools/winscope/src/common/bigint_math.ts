@@ -14,22 +14,20 @@
  * limitations under the License.
  */
 
-/**
- * BigintMath provides mathematical operations for bigints.
- */
-export class BigintMath {
-  /**
-   * Divides two bigints and rounds the result to the nearest integer.
-   *
-   * @param ns The dividend.
-   * @param div The divisor.
-   * @return The rounded quotient.
-   */
-  static divideAndRound(ns: bigint, div: bigint): bigint {
-    let quot = ns / div;
-    if (ns % div >= div / 2n) {
-      quot += 1n;
-    }
-    return quot;
+export function divideAndRound(ns: bigint, div: bigint): bigint {
+  let quot = ns / div;
+  if (ns % div >= div / 2n) {
+    quot += 1n;
   }
+  return quot;
+}
+
+export function getMax(values: Array<bigint>): bigint | undefined {
+  let max: bigint | undefined;
+  for (const value of values) {
+    if (max === undefined || value > max) {
+      max = value;
+    }
+  }
+  return max;
 }

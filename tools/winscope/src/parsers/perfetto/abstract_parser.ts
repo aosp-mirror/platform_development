@@ -15,6 +15,7 @@
  */
 
 import {assertDefined, assertTrue} from 'common/assert_utils';
+import {NOT_IMPLEMENTED_ERROR} from 'common/errors';
 import {INVALID_TIME_NS, Timestamp} from 'common/time/time';
 import {ParserTimestampConverter} from 'common/time/timestamp_converter';
 import {CoarseVersion} from 'trace/coarse_version';
@@ -82,7 +83,7 @@ export abstract class AbstractParser<T> implements Parser<T> {
       }
     }
     this.realToBootTimeOffsetNs = await this.queryRealToBootTimeOffset(
-      assertDefined(lastNonZeroTimestamp),
+      assertDefined(lastNonZeroTimestamp ?? INVALID_TIME_NS),
     );
   }
 
@@ -112,7 +113,7 @@ export abstract class AbstractParser<T> implements Parser<T> {
     entriesRange: EntriesRange,
     param?: CustomQueryParamTypeMap[Q],
   ): Promise<CustomQueryParserResultTypeMap[Q]> {
-    throw new Error('Not implemented');
+    throw NOT_IMPLEMENTED_ERROR;
   }
 
   getDescriptors(): string[] {

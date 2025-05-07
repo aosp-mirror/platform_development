@@ -14,22 +14,30 @@
  * limitations under the License.
  */
 
-import {assertDefined} from 'common/assert_utils';
-import {Timestamp} from 'common/time/time';
+import {assertDefined, assertTrue} from 'common/assert_utils';
+import {getMax} from 'common/bigint_math';
+import {NOT_IMPLEMENTED_ERROR} from 'common/errors';
 import {ParserTimestampConverter} from 'common/time/timestamp_converter';
+import Long from 'long';
 import {AbstractTracesParser} from 'parsers/traces/abstract_traces_parser';
-import {EntryPropertiesTreeFactory} from 'parsers/transitions/entry_properties_tree_factory';
+import {perfetto} from 'protos/perfetto/trace/static';
+import {com} from 'protos/transitions/udc/static';
 import {CoarseVersion} from 'trace/coarse_version';
 import {Trace} from 'trace/trace';
 import {Traces} from 'trace/traces';
 import {TraceType} from 'trace/trace_type';
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
+import {ParserTransitionsShell} from './parser_transitions_shell';
 
 export class TracesParserTransitions extends AbstractTracesParser<PropertyTreeNode> {
-  private readonly wmTransitionTrace: Trace<PropertyTreeNode> | undefined;
-  private readonly shellTransitionTrace: Trace<PropertyTreeNode> | undefined;
+  private readonly wmTransitionTrace: Trace<WmTransition> | undefined;
+  private readonly shellTransitionTrace: Trace<ShellTransition> | undefined;
   private readonly descriptors: string[];
-  private decodedEntries: PropertyTreeNode[] | undefined;
+  private decodedEntries: PerfettoTransition[] | undefined;
+  private shellHandlerMapping:
+    | com.android.wm.shell.IHandlerMapping[]
+    | undefined;
+  private realToBootTimeOffsetNs: bigint | undefined;
 
   constructor(traces: Traces, timestampConverter: ParserTimestampConverter) {
     super(timestampConverter);
@@ -59,17 +67,37 @@ export class TracesParserTransitions extends AbstractTracesParser<PropertyTreeNo
       throw new Error('Missing Shell Transition trace');
     }
 
-    const wmTransitionEntries: PropertyTreeNode[] = await Promise.all(
-      this.wmTransitionTrace.mapEntry((entry) => entry.getValue()),
+    const shellParser = this.shellTransitionTrace.getParser();
+    assertTrue(shellParser instanceof ParserTransitionsShell);
+    this.shellHandlerMapping = (
+      shellParser as ParserTransitionsShell
+    ).getShellHandlerMapping();
+
+    const wmOffset = this.wmTransitionTrace
+      .getParser()
+      .getRealToBootTimeOffsetNs();
+    const shellOffset = shellParser.getRealToBootTimeOffsetNs();
+
+    this.realToBootTimeOffsetNs = getMax([wmOffset ?? 0n, shellOffset ?? 0n]);
+    if (this.realToBootTimeOffsetNs === 0n) {
+      this.realToBootTimeOffsetNs = undefined;
+    }
+
+    const wmTransitionEntries = (
+      await Promise.all(
+        this.wmTransitionTrace.mapEntry((entry) => entry.getValue()),
+      )
+    ).map((entry) => this.convertWmToPerfettoTransition(entry));
+
+    const shellTransitionEntries = (
+      await Promise.all(
+        this.shellTransitionTrace.mapEntry((entry) => entry.getValue()),
+      )
+    ).map((entry) => this.convertShellToPerfettoTransition(entry));
+
+    this.decodedEntries = this.compressEntries(
+      wmTransitionEntries.concat(shellTransitionEntries),
     );
-
-    const shellTransitionEntries: PropertyTreeNode[] = await Promise.all(
-      this.shellTransitionTrace.mapEntry((entry) => entry.getValue()),
-    );
-
-    const allEntries = wmTransitionEntries.concat(shellTransitionEntries);
-
-    this.decodedEntries = this.compressEntries(allEntries);
 
     await this.createTimestamps();
   }
@@ -78,9 +106,13 @@ export class TracesParserTransitions extends AbstractTracesParser<PropertyTreeNo
     this.timestamps = [];
     const zeroTs = this.timestampConverter.makeZeroTimestamp();
     for (let index = 0; index < this.getLengthEntries(); index++) {
-      const entry = await this.getEntry(index);
-      const ts = this.getTimestampFromTransitionProperties(entry);
-      this.timestamps.push(ts ?? zeroTs);
+      const entry = assertDefined(this.decodedEntries)[index];
+      const ns = this.getTimestampNsFromTransitionProperties(entry);
+      const ts =
+        ns && ns !== 0n
+          ? this.timestampConverter.makeTimestampFromBootTimeNs(ns)
+          : zeroTs;
+      this.timestamps.push(ts);
     }
   }
 
@@ -89,8 +121,10 @@ export class TracesParserTransitions extends AbstractTracesParser<PropertyTreeNo
   }
 
   override getEntry(index: number): Promise<PropertyTreeNode> {
-    const entry = assertDefined(this.decodedEntries)[index];
-    return Promise.resolve(entry);
+    // Legacy parsers that implement convertToPerfettoPackets should not
+    // parser and provide individual trace entries, as they should be
+    // converted to perfetto using LegacyToPerfettoConverter
+    throw NOT_IMPLEMENTED_ERROR;
   }
 
   override getDescriptors(): string[] {
@@ -106,17 +140,33 @@ export class TracesParserTransitions extends AbstractTracesParser<PropertyTreeNo
   }
 
   override getRealToBootTimeOffsetNs(): bigint | undefined {
-    return undefined;
+    return this.realToBootTimeOffsetNs;
+  }
+
+  convertToPerfettoPackets?(sequenceId: number): perfetto.protos.TracePacket[] {
+    const packets = [];
+    packets.push(this.createHandlerMappingPacket(sequenceId));
+
+    for (const entry of assertDefined(this.decodedEntries)) {
+      const packet = perfetto.protos.TracePacket.create();
+      packet.trustedPacketSequenceId = sequenceId;
+      const ns = this.getTimestampNsFromTransitionProperties(entry) ?? 0n;
+      packet.timestamp = Long.fromString(ns.toString());
+      packet.timestampClockId =
+        perfetto.protos.ClockSnapshot.Clock.BuiltinClocks.BOOTTIME;
+      packet.shellTransition = entry;
+      packets.push(packet);
+    }
+
+    return packets;
   }
 
   private compressEntries(
-    allTransitions: PropertyTreeNode[],
-  ): PropertyTreeNode[] {
-    const idToTransition = new Map<number, PropertyTreeNode>();
-
-    for (const transition of allTransitions) {
-      const id = assertDefined(transition.getChildByName('id')).getValue();
-
+    transitions: PerfettoTransition[],
+  ): PerfettoTransition[] {
+    const idToTransition = new Map<number, PerfettoTransition>();
+    for (const transition of transitions) {
+      const id = assertDefined(transition.id);
       const accumulatedTransition = idToTransition.get(id);
       if (!accumulatedTransition) {
         idToTransition.set(id, transition);
@@ -128,110 +178,129 @@ export class TracesParserTransitions extends AbstractTracesParser<PropertyTreeNo
         idToTransition.set(id, mergedTransition);
       }
     }
-
     const compressedTransitions = Array.from(idToTransition.values());
-    compressedTransitions.forEach((transition) => {
-      EntryPropertiesTreeFactory.TRANSITION_OPERATIONS.forEach((operation) =>
-        operation.apply(transition),
-      );
-    });
     return compressedTransitions.sort((a, b) => this.compareByTimestamp(a, b));
   }
 
-  private compareByTimestamp(a: PropertyTreeNode, b: PropertyTreeNode): number {
-    const aNs = this.getTimestampFromTransitionProperties(a) ?? 0n;
-    const bNs = this.getTimestampFromTransitionProperties(b) ?? 0n;
+  private convertWmToPerfettoTransition(
+    wmTransition: WmTransition,
+  ): PerfettoTransition {
+    const perfettoTransition: PerfettoTransition = {
+      id: wmTransition.id,
+      createTimeNs: this.nullifyIfDefaultValue(wmTransition.createTimeNs),
+      sendTimeNs: this.nullifyIfDefaultValue(wmTransition.sendTimeNs),
+      wmAbortTimeNs: this.nullifyIfDefaultValue(wmTransition.abortTimeNs),
+      finishTimeNs: this.nullifyIfDefaultValue(wmTransition.finishTimeNs),
+      startTransactionId: this.nullifyIfDefaultValue(
+        wmTransition.startTransactionId,
+      ),
+      finishTransactionId: this.nullifyIfDefaultValue(
+        wmTransition.finishTransactionId,
+      ),
+      type: this.nullifyIfDefaultValue(wmTransition.type),
+      targets: this.nullifyIfDefaultValue(wmTransition.targets),
+      flags: this.nullifyIfDefaultValue(wmTransition.flags),
+      startingWindowRemoveTimeNs: this.nullifyIfDefaultValue(
+        wmTransition.startingWindowRemoveTimeNs,
+      ),
+    };
+    return perfettoTransition;
+  }
+
+  private convertShellToPerfettoTransition(
+    shellTransition: ShellTransition,
+  ): PerfettoTransition {
+    const perfettoTransition: PerfettoTransition = {
+      id: shellTransition.id,
+      dispatchTimeNs: this.nullifyIfDefaultValue(
+        shellTransition.dispatchTimeNs,
+      ),
+      mergeTimeNs: this.nullifyIfDefaultValue(shellTransition.mergeTimeNs),
+      mergeRequestTimeNs: this.nullifyIfDefaultValue(
+        shellTransition.mergeRequestTimeNs,
+      ),
+      shellAbortTimeNs: this.nullifyIfDefaultValue(shellTransition.abortTimeNs),
+      handler: this.nullifyIfDefaultValue(shellTransition.handler),
+      mergeTarget: this.nullifyIfDefaultValue(shellTransition.mergeTarget),
+    };
+    return perfettoTransition;
+  }
+
+  private nullifyIfDefaultValue<T extends TransitionProperty>(
+    value: T,
+  ): T | undefined {
+    if (this.isDefaultValue(value)) {
+      return undefined;
+    }
+    return value;
+  }
+
+  private isDefaultValue(value: TransitionProperty): boolean {
+    if (value instanceof Long && value.isZero()) {
+      return true;
+    } else if (typeof value === 'number' && value === 0) {
+      return true;
+    } else if (Array.isArray(value) && value.length === 0) {
+      return true;
+    }
+    return false;
+  }
+
+  private compareByTimestamp(
+    a: PerfettoTransition,
+    b: PerfettoTransition,
+  ): number {
+    const aNs = this.getTimestampNsFromTransitionProperties(a) ?? 0n;
+    const bNs = this.getTimestampNsFromTransitionProperties(b) ?? 0n;
     if (aNs !== bNs) {
       return aNs < bNs ? -1 : 1;
     }
     // fallback to id
-    return assertDefined(a.getChildByName('id')).getValue() <
-      assertDefined(b.getChildByName('id')).getValue()
-      ? -1
-      : 1;
+    assertTrue(a.id !== b.id);
+    return assertDefined(a.id) < assertDefined(b.id) ? -1 : 1;
   }
 
-  private getTimestampFromTransitionProperties(
-    transition: PropertyTreeNode,
-  ): Timestamp | undefined {
+  private getTimestampNsFromTransitionProperties(
+    transition: PerfettoTransition,
+  ): bigint | undefined {
     // Entry timestamps are defined as shell dispatch time - if this is
     // null and send time is not null we fall back on send time
-    return (
-      assertDefined(transition.getChildByName('shellData'))
-        .getChildByName('dispatchTimeNs')
-        ?.getValue() ??
-      assertDefined(transition.getChildByName('wmData'))
-        .getChildByName('sendTimeNs')
-        ?.getValue()
-    );
+    const ns = transition.dispatchTimeNs ?? transition.sendTimeNs;
+    if (!ns) {
+      return undefined;
+    }
+    return BigInt(ns.toString());
   }
 
   private mergePartialTransitions(
-    transition1: PropertyTreeNode,
-    transition2: PropertyTreeNode,
-  ): PropertyTreeNode {
-    const mergedTransition = this.mergeProperties(
-      transition1,
-      transition2,
-      false,
-    );
-
-    const wmData1 = assertDefined(transition1.getChildByName('wmData'));
-    const wmData2 = assertDefined(transition2.getChildByName('wmData'));
-    const mergedWmData = this.mergeProperties(wmData1, wmData2);
-    mergedTransition.addOrReplaceChild(mergedWmData);
-
-    const shellData1 = assertDefined(transition1.getChildByName('shellData'));
-    const shellData2 = assertDefined(transition2.getChildByName('shellData'));
-    const mergedShellData = this.mergeProperties(shellData1, shellData2);
-    mergedTransition.addOrReplaceChild(mergedShellData);
-
+    transition1: PerfettoTransition,
+    transition2: PerfettoTransition,
+  ): PerfettoTransition {
+    assertTrue(transition1.id === transition2.id);
+    const mergedTransition = Object.assign({}, transition1);
+    Object.entries(transition2).forEach(([key, value]) => {
+      if (value && !this.isDefaultValue(value)) {
+        Object.assign(mergedTransition, {[key]: value});
+      }
+    });
     return mergedTransition;
   }
 
-  private mergeProperties(
-    node1: PropertyTreeNode,
-    node2: PropertyTreeNode,
-    visitNestedChildren = true,
-  ): PropertyTreeNode {
-    const mergedNode = new PropertyTreeNode(
-      node1.id,
-      node1.name,
-      node1.source,
-      undefined,
-    );
-
-    node1.getAllChildren().forEach((property1) => {
-      if (!visitNestedChildren && property1.getAllChildren().length > 0) {
-        return;
-      }
-
-      const property2 = node2.getChildByName(property1.name);
-      if (
-        !property2 ||
-        property2.getValue()?.toString() < property1.getValue()?.toString()
-      ) {
-        mergedNode.addOrReplaceChild(property1);
-        return;
-      }
-
-      if (visitNestedChildren && property1.getAllChildren().length > 0) {
-        const mergedProperty = this.mergeProperties(property1, property2);
-        mergedNode.addOrReplaceChild(mergedProperty);
-        return;
-      }
-
-      mergedNode.addOrReplaceChild(property2);
-    });
-
-    node2.getAllChildren().forEach((property2) => {
-      const existingProperty = mergedNode.getChildByName(property2.name);
-      if (!existingProperty) {
-        mergedNode.addOrReplaceChild(property2);
-        return;
-      }
-    });
-
-    return mergedNode;
+  private createHandlerMappingPacket(
+    sequenceId: number,
+  ): perfetto.protos.TracePacket {
+    const packet = perfetto.protos.TracePacket.create();
+    packet.trustedPacketSequenceId = sequenceId;
+    packet.shellHandlerMappings =
+      perfetto.protos.ShellHandlerMappings.fromObject({
+        mapping: this.shellHandlerMapping,
+      });
+    return packet;
   }
 }
+
+type WmTransition = com.android.server.wm.shell.ITransition;
+type ShellTransition = com.android.wm.shell.ITransition;
+type PerfettoTransition = perfetto.protos.IShellTransition;
+type TransitionTarget = perfetto.protos.ShellTransition.ITarget;
+type TransitionProperty = number | Long | TransitionTarget[] | null | undefined;

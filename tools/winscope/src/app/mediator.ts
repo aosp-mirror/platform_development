@@ -518,14 +518,21 @@ export class Mediator {
 
   private async loadViewers(source: FilesSource) {
     const e2eStartTimeMs = Date.now();
+
+    this.currentProgressListener?.onProgressUpdate(
+      'Converting legacy traces to perfetto...',
+      undefined,
+    );
+    await TimeUtils.sleepMs(10); // allow the UI to update before making the main thread very busy
+    await this.tracePipeline.convertLegacyTracesToPerfetto();
+    this.currentProgressListener?.onOperationFinished(true);
+
     this.currentProgressListener?.onProgressUpdate(
       'Computing frame mapping...',
       undefined,
     );
 
-    // TODO: move this into the ProgressListener
-    // allow the UI to update before making the main thread very busy
-    await TimeUtils.sleepMs(10);
+    await TimeUtils.sleepMs(10); // allow the UI to update before making the main thread very busy
 
     this.tracePipeline.filterTracesWithoutVisualization();
     if (this.tracePipeline.getTraces().getSize() === 0) {

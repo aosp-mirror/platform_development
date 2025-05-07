@@ -16,7 +16,6 @@
 
 import {DuplicateLayerIds, MissingLayerIds} from 'messaging/user_warnings';
 import {EntryHierarchyTreeFactory} from './entry_hierarchy_tree_factory';
-import {ParserSurfaceFlinger} from './legacy/parser_surface_flinger';
 
 describe('EntryHierarchyTreeFactory', () => {
   const factory = new EntryHierarchyTreeFactory();
@@ -34,11 +33,7 @@ describe('EntryHierarchyTreeFactory', () => {
         name: 'Second test layer',
       },
     ];
-    const tree = factory.makeEntryHierarchyTree(
-      entryProto,
-      layerProtos,
-      ParserSurfaceFlinger,
-    );
+    const tree = factory.makeEntryHierarchyTree(entryProto, layerProtos);
     expect(tree.getAllChildren().length).toEqual(1);
     expect(tree.getChildByName(testLayer.name)).toBeDefined();
     expect(tree.getWarnings()).toEqual([new MissingLayerIds()]);
@@ -47,11 +42,7 @@ describe('EntryHierarchyTreeFactory', () => {
   it('handles duplicate layer ids', () => {
     const entryProto = {};
     const layerProtos = [testLayer, testLayer];
-    const tree = factory.makeEntryHierarchyTree(
-      entryProto,
-      layerProtos,
-      ParserSurfaceFlinger,
-    );
+    const tree = factory.makeEntryHierarchyTree(entryProto, layerProtos);
     expect(tree.getAllChildren().length).toEqual(2);
     expect(tree.getChildByName(testLayer.name)).toBeDefined();
     expect(tree.getChildByName(testLayer.name + ' duplicate(1)')).toBeDefined();
@@ -65,11 +56,7 @@ describe('EntryHierarchyTreeFactory', () => {
   });
 
   function checkExcludesCompositionState(entry: object, expected: boolean) {
-    const tree = factory.makeEntryHierarchyTree(
-      entry,
-      [testLayer],
-      ParserSurfaceFlinger,
-    );
+    const tree = factory.makeEntryHierarchyTree(entry, [testLayer]);
     const excludesCompositionState = tree
       .getChildByName(testLayer.name)
       ?.getEagerPropertyByName('excludesCompositionState')

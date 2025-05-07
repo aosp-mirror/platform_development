@@ -59,7 +59,7 @@ describe('ParserWindowManagerDump', () => {
   it('does not apply timezone info', async () => {
     const parserWithTimezoneInfo = await new LegacyParserProvider()
       .addFilename('traces/elapsed_timestamp/dump_WindowManager.pb')
-      .setConverter(getTimestampConverter(true))
+      .setTimestampConverter(getTimestampConverter(true))
       .getParser<HierarchyTreeNode>();
     expect(parserWithTimezoneInfo.getTraceType()).toEqual(
       TraceType.WINDOW_MANAGER,

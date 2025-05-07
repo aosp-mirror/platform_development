@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2024 The Android Open Source Project
+ * Copyright (C) 2025 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,15 +14,4 @@
  * limitations under the License.
  */
 
-import {assertDefined} from 'common/assert_utils';
-import {TamperedMessageType} from 'parsers/tampered_message_type';
-import root from 'protos/viewcapture/udc/json';
-
-export const ExportedData = TamperedMessageType.tamper(
-  root.lookupType('com.android.app.viewcapture.data.ExportedData'),
-);
-
-export const NodeField = assertDefined(
-  ExportedData.fields['windowData'].tamperedMessageType?.fields['frameData']
-    .tamperedMessageType,
-).fields['node'];
+export const NOT_IMPLEMENTED_ERROR = new Error('Not implemented');

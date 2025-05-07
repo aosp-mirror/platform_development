@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import {NOT_IMPLEMENTED_ERROR} from 'common/errors';
 import {FunctionUtils} from 'common/function_utils';
 import {HttpRequestHeaderType, HttpResponse} from 'common/http_request';
 import {utf8Decode} from 'common/string_utils';
@@ -50,7 +51,7 @@ export class WinscopeProxyDeviceConnection extends AdbDeviceConnection {
   }
 
   override async tryAuthorize() {
-    throw new Error('not implemented');
+    throw NOT_IMPLEMENTED_ERROR;
   }
 
   override async runShellCommand(cmd: string): Promise<string> {

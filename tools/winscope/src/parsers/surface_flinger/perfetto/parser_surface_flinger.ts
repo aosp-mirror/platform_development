@@ -122,11 +122,7 @@ export class ParserSurfaceFlinger extends AbstractParser<HierarchyTreeNode> {
       (layerProto) => this.layerProtoTransformer.transform(layerProto),
     );
 
-    return this.factory.makeEntryHierarchyTree(
-      snapshotProto,
-      layerProtos,
-      ParserSurfaceFlinger,
-    );
+    return this.factory.makeEntryHierarchyTree(snapshotProto, layerProtos);
   }
 
   override async customQuery<Q extends CustomQueryType>(

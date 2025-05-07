@@ -17,13 +17,16 @@ import {assertDefined} from 'common/assert_utils';
 import {getImeTraceEntries} from 'test/unit/fixture_utils';
 import {UserNotifierChecker} from 'test/unit/user_notifier_checker';
 import {TraceType} from 'trace/trace_type';
+import {HierarchyTreeNode} from 'trace/tree_node/hierarchy_tree_node';
 import {ImeUtils} from './ime_utils';
 
 describe('ImeUtils', () => {
   let userNotifierChecker: UserNotifierChecker;
+  let entries: Map<TraceType, HierarchyTreeNode>;
 
-  beforeAll(() => {
+  beforeAll(async () => {
     userNotifierChecker = new UserNotifierChecker();
+    entries = (await getImeTraceEntries())[0];
   });
 
   afterEach(() => {
@@ -32,7 +35,6 @@ describe('ImeUtils', () => {
   });
 
   it('processes WindowManager trace entry', async () => {
-    const entries = (await getImeTraceEntries())[0];
     const processed = ImeUtils.processWindowManagerTraceEntry(
       assertDefined(entries.get(TraceType.WINDOW_MANAGER)),
       undefined,

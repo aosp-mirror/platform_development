@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import {NOT_IMPLEMENTED_ERROR} from 'common/errors';
 import {Timestamp} from 'common/time/time';
 import {perfetto} from 'protos/perfetto/trace/static';
 import {CoarseVersion} from './coarse_version';
@@ -50,7 +51,7 @@ export class ParserMock<T> implements Parser<T> {
   }
 
   createTimestamps() {
-    throw new Error('Not implemented');
+    throw NOT_IMPLEMENTED_ERROR;
   }
 
   getRealToMonotonicTimeOffsetNs(): bigint | undefined {

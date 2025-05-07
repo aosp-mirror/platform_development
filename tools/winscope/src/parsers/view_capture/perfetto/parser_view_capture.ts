@@ -65,7 +65,6 @@ export class ParserViewCapture {
           windowAndPackage.window,
         ),
     );
-
     const parsePromises = this.windowParsers.map((parser) => parser.parse());
     await Promise.all(parsePromises);
   }

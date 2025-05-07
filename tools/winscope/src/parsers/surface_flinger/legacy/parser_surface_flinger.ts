@@ -18,85 +18,26 @@ import {assertDefined} from 'common/assert_utils';
 import {Timestamp} from 'common/time/time';
 import Long from 'long';
 import {AbstractParser} from 'parsers/legacy/abstract_parser';
-import {AddDefaults} from 'parsers/operations/add_defaults';
-import {SetFormatters} from 'parsers/operations/set_formatters';
-import {TranslateIntDef} from 'parsers/operations/translate_intdef';
-import {DENYLIST_PROPERTIES} from 'parsers/surface_flinger/denylist_properties';
-import {EAGER_PROPERTIES} from 'parsers/surface_flinger/eager_properties';
-import {EntryHierarchyTreeFactory} from 'parsers/surface_flinger/entry_hierarchy_tree_factory';
-import {TamperedMessageType} from 'parsers/tampered_message_type';
 import {perfetto} from 'protos/perfetto/trace/static';
 import root from 'protos/surfaceflinger/udc/json';
 import {android} from 'protos/surfaceflinger/udc/static';
-import {
-  CustomQueryParserResultTypeMap,
-  CustomQueryType,
-  VisitableParserCustomQuery,
-} from 'trace/custom_query';
-import {EntriesRange} from 'trace/trace';
 import {TraceType} from 'trace/trace_type';
-import {EnumFormatter, LAYER_ID_FORMATTER} from 'trace/tree_node/formatters';
 import {HierarchyTreeNode} from 'trace/tree_node/hierarchy_tree_node';
 
 type LayerTraceProto = android.surfaceflinger.ILayersTraceProto;
 
-class ParserSurfaceFlinger extends AbstractParser<
+export class ParserSurfaceFlinger extends AbstractParser<
   HierarchyTreeNode,
   LayerTraceProto
 > {
   private static readonly MAGIC_NUMBER = [
     0x09, 0x4c, 0x59, 0x52, 0x54, 0x52, 0x41, 0x43, 0x45,
   ]; // .LYRTRACE
-  private static readonly CUSTOM_FORMATTERS = new Map([
-    ['cropLayerId', LAYER_ID_FORMATTER],
-    ['zOrderRelativeOf', LAYER_ID_FORMATTER],
-    [
-      'hwcCompositionType',
-      new EnumFormatter(android.surfaceflinger.HwcCompositionType),
-    ],
-  ]);
 
-  private static readonly LayersTraceFileProto = TamperedMessageType.tamper(
-    root.lookupType('android.surfaceflinger.LayersTraceFileProto'),
+  private static readonly LayersTraceFileProto = root.lookupType(
+    'android.surfaceflinger.LayersTraceFileProto',
   );
-  private static readonly entryField =
-    ParserSurfaceFlinger.LayersTraceFileProto.fields['entry'];
-  private static readonly layerField = assertDefined(
-    ParserSurfaceFlinger.entryField.tamperedMessageType?.fields['layers']
-      .tamperedMessageType,
-  ).fields['layers'];
 
-  static readonly Operations = {
-    SetFormattersLayer: new SetFormatters(
-      ParserSurfaceFlinger.layerField,
-      ParserSurfaceFlinger.CUSTOM_FORMATTERS,
-    ),
-    TranslateIntDefLayer: new TranslateIntDef(ParserSurfaceFlinger.layerField),
-    AddDefaultsLayerEager: new AddDefaults(
-      ParserSurfaceFlinger.layerField,
-      EAGER_PROPERTIES,
-    ),
-    AddDefaultsLayerLazy: new AddDefaults(
-      ParserSurfaceFlinger.layerField,
-      undefined,
-      EAGER_PROPERTIES.concat(DENYLIST_PROPERTIES),
-    ),
-    SetFormattersEntry: new SetFormatters(
-      ParserSurfaceFlinger.entryField,
-      ParserSurfaceFlinger.CUSTOM_FORMATTERS,
-    ),
-    TranslateIntDefEntry: new TranslateIntDef(ParserSurfaceFlinger.entryField),
-    AddDefaultsEntryEager: new AddDefaults(ParserSurfaceFlinger.entryField, [
-      'displays',
-    ]),
-    AddDefaultsEntryLazy: new AddDefaults(
-      ParserSurfaceFlinger.entryField,
-      undefined,
-      DENYLIST_PROPERTIES,
-    ),
-  };
-
-  private readonly factory = new EntryHierarchyTreeFactory();
   private realToMonotonicTimeOffsetNs: bigint | undefined;
   private isDump = false;
 
@@ -120,6 +61,7 @@ class ParserSurfaceFlinger extends AbstractParser<
     const decoded = ParserSurfaceFlinger.LayersTraceFileProto.decode(
       buffer,
     ) as android.surfaceflinger.ILayersTraceFileProto;
+
     const timeOffset = BigInt(
       decoded.realToElapsedTimeOffsetNanos?.toString() ?? '0',
     );
@@ -134,54 +76,10 @@ class ParserSurfaceFlinger extends AbstractParser<
     return decoded.entry ?? [];
   }
 
-  override processDecodedEntry(
-    index: number,
-    entry: LayerTraceProto,
-  ): HierarchyTreeNode {
-    return this.factory.makeEntryHierarchyTree(
-      entry,
-      assertDefined(entry.layers?.layers),
-      ParserSurfaceFlinger,
-    );
-  }
-
-  override customQuery<Q extends CustomQueryType>(
-    type: Q,
-    entriesRange: EntriesRange,
-  ): Promise<CustomQueryParserResultTypeMap[Q]> {
-    return new VisitableParserCustomQuery(type)
-      .visit(CustomQueryType.VSYNCID, () => {
-        const result = this.decodedEntries
-          .slice(entriesRange.start, entriesRange.end)
-          .map((entry) => {
-            return BigInt(assertDefined(entry.vsyncId?.toString())); // convert Long to bigint
-          });
-        return Promise.resolve(result);
-      })
-      .visit(CustomQueryType.SF_LAYERS_ID_AND_NAME, () => {
-        const result: Array<{id: number; name: string}> = [];
-        this.decodedEntries
-          .slice(entriesRange.start, entriesRange.end)
-          .forEach((entry: LayerTraceProto) => {
-            entry.layers?.layers?.forEach(
-              (layer: android.surfaceflinger.ILayerProto) => {
-                result.push({
-                  id: assertDefined(layer.id),
-                  name: assertDefined(layer.name),
-                });
-              },
-            );
-          });
-        return Promise.resolve(result);
-      })
-      .getResult();
-  }
-
   override convertToPerfettoPackets(
     sequenceId: number,
   ): perfetto.protos.TracePacket[] {
     const packets = [];
-
     for (const entry of this.decodedEntries) {
       const packet = perfetto.protos.TracePacket.create();
       packet.timestamp = this.isDump
@@ -190,7 +88,8 @@ class ParserSurfaceFlinger extends AbstractParser<
       packet.timestampClockId =
         perfetto.protos.ClockSnapshot.Clock.BuiltinClocks.MONOTONIC;
       packet.trustedPacketSequenceId = sequenceId;
-      packet.surfaceflingerLayersSnapshot = this.convertSnapshot(entry);
+      packet.surfaceflingerLayersSnapshot =
+        perfetto.protos.LayersSnapshotProto.fromObject(entry);
       packets.push(packet);
     }
     return packets;
@@ -204,13 +103,4 @@ class ParserSurfaceFlinger extends AbstractParser<
       BigInt(assertDefined(entry.elapsedRealtimeNanos).toString()),
     );
   }
-
-  private convertSnapshot(
-    legacy: android.surfaceflinger.ILayersTraceProto,
-  ): perfetto.protos.LayersSnapshotProto {
-    const snapshot = perfetto.protos.LayersSnapshotProto.fromObject(legacy);
-    return snapshot;
-  }
 }
-
-export {ParserSurfaceFlinger};

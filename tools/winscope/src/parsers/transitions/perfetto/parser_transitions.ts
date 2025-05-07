@@ -16,7 +16,7 @@
 import {assertDefined} from 'common/assert_utils';
 import {AbstractParser} from 'parsers/perfetto/abstract_parser';
 import {FakeProtoBuilder} from 'parsers/perfetto/fake_proto_builder';
-import {EntryPropertiesTreeFactory} from 'parsers/transitions/entry_properties_tree_factory';
+import {EntryPropertiesTreeFactory} from 'parsers/transitions/perfetto/entry_properties_tree_factory';
 import {perfetto} from 'protos/perfetto/trace/static';
 import {TraceType} from 'trace/trace_type';
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
@@ -107,36 +107,15 @@ export class ParserTransitions extends AbstractParser<PropertyTreeNode> {
 
     const perfettoTransitionInfo = {
       entry: transitionProto,
-      realToBootTimeOffsetNs: undefined,
       handlerMapping: this.handlerIdToName,
       timestampConverter: this.timestampConverter,
     };
 
     const shellEntryTree = EntryPropertiesTreeFactory.makeShellPropertiesTree(
       perfettoTransitionInfo,
-      [
-        'createTimeNs',
-        'sendTimeNs',
-        'wmAbortTimeNs',
-        'finishTimeNs',
-        'startTransactionId',
-        'finishTransactionId',
-        'type',
-        'targets',
-        'flags',
-        'startingWindowRemoveTimeNs',
-      ],
     );
     const wmEntryTree = EntryPropertiesTreeFactory.makeWmPropertiesTree(
       perfettoTransitionInfo,
-      [
-        'dispatchTimeNs',
-        'mergeTimeNs',
-        'mergeRequestTimeNs',
-        'shellAbortTimeNs',
-        'handler',
-        'mergeTarget',
-      ],
     );
 
     return EntryPropertiesTreeFactory.makeTransitionPropertiesTree(

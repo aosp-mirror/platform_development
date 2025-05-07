@@ -16,16 +16,14 @@
 
 import {Timestamp} from 'common/time/time';
 import {AbstractParser} from 'parsers/legacy/abstract_parser';
-import {EntryPropertiesTreeFactory} from 'parsers/transitions/entry_properties_tree_factory';
 import root from 'protos/transitions/udc/json';
 import {com} from 'protos/transitions/udc/static';
 import {TraceType} from 'trace/trace_type';
-import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
 
 type TransitionProto = com.android.server.wm.shell.ITransition;
 
 export class ParserTransitionsWm extends AbstractParser<
-  PropertyTreeNode,
+  TransitionProto,
   TransitionProto
 > {
   private static readonly TransitionTraceProto = root.lookupType(
@@ -49,8 +47,8 @@ export class ParserTransitionsWm extends AbstractParser<
   override processDecodedEntry(
     index: number,
     entryProto: TransitionProto,
-  ): PropertyTreeNode {
-    return this.makePropertiesTree(entryProto);
+  ): TransitionProto {
+    return entryProto;
   }
 
   override decodeTrace(buffer: Uint8Array): TransitionProto[] {
@@ -74,40 +72,5 @@ export class ParserTransitionsWm extends AbstractParser<
     // for consistency with all transitions, elapsed nanos are defined as
     // shell dispatch time else INVALID_TIME_NS
     return this.timestampConverter.makeZeroTimestamp();
-  }
-
-  private validateWmTransitionEntry(entry: TransitionProto) {
-    if (entry.id === 0) {
-      throw new Error('WM Transition entry needs non-null id');
-    }
-    if (
-      !entry.createTimeNs &&
-      !entry.sendTimeNs &&
-      !entry.abortTimeNs &&
-      !entry.finishTimeNs
-    ) {
-      throw new Error(
-        'WM Transition entry requires at least one non-null timestamp',
-      );
-    }
-    if (this.realToBootTimeOffsetNs === undefined) {
-      throw new Error('WM Transition trace missing realToBootTimeOffsetNs');
-    }
-  }
-
-  private makePropertiesTree(entryProto: TransitionProto): PropertyTreeNode {
-    this.validateWmTransitionEntry(entryProto);
-
-    const shellEntryTree = EntryPropertiesTreeFactory.makeShellPropertiesTree();
-    const wmEntryTree = EntryPropertiesTreeFactory.makeWmPropertiesTree({
-      entry: entryProto,
-      realToBootTimeOffsetNs: this.realToBootTimeOffsetNs,
-      timestampConverter: this.timestampConverter,
-    });
-
-    return EntryPropertiesTreeFactory.makeTransitionPropertiesTree(
-      shellEntryTree,
-      wmEntryTree,
-    );
   }
 }

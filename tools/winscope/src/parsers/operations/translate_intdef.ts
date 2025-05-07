@@ -66,7 +66,7 @@ export class TranslateIntDef implements Operation<PropertyTreeNode> {
       if (this.intDefColumn[propertyPath]) {
         return this.getIntFlagsAsStrings(
           value,
-          this.intDefColumn[propertyPath] as string,
+          this.intDefColumn[propertyPath],
         );
       }
     }
@@ -177,6 +177,6 @@ export class TranslateIntDef implements Operation<PropertyTreeNode> {
     'WindowStateProto.requestedVisibleTypes':
       'android.view.WindowInsets.Type.InsetsType',
     'Target.flags': 'android.window.TransitionInfo.ChangeFlags',
-    'Transition.flags': 'android.view.WindowManager.TransitionFlags',
+    'ShellTransition.flags': 'android.view.WindowManager.TransitionFlags',
   };
 }

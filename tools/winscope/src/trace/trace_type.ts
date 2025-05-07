@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import {com} from 'protos/transitions/udc/static';
 import {QueryResult} from 'trace_processor/query_result';
 import {MediaBasedTraceEntry} from './media_based_trace_entry';
 import {HierarchyTreeNode} from './tree_node/hierarchy_tree_node';
@@ -65,8 +66,8 @@ export interface TraceEntryTypeMap {
   [TraceType.INPUT_METHOD_MANAGER_SERVICE]: HierarchyTreeNode;
   [TraceType.INPUT_METHOD_SERVICE]: HierarchyTreeNode;
   [TraceType.EVENT_LOG]: PropertyTreeNode;
-  [TraceType.WM_TRANSITION]: PropertyTreeNode;
-  [TraceType.SHELL_TRANSITION]: PropertyTreeNode;
+  [TraceType.WM_TRANSITION]: com.android.server.wm.shell.ITransition;
+  [TraceType.SHELL_TRANSITION]: com.android.wm.shell.ITransition;
   [TraceType.TRANSITION]: PropertyTreeNode;
   [TraceType.CUJS]: PropertyTreeNode;
   [TraceType.TEST_TRACE_STRING]: string;

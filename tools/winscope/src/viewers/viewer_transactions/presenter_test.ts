@@ -115,7 +115,7 @@ class PresenterTransactionsTest extends AbstractLogViewerPresenterTest<UiData> {
         await presenter.onLogEntryClick(10);
         expect(
           assertDefined(uiData.propertiesTree).getAllChildren().length,
-        ).toEqual(8);
+        ).toEqual(10);
         expect(
           uiData.propertiesTree?.getChildByName('transformToDisplayInverse'),
         ).toBeDefined();
@@ -161,6 +161,7 @@ class PresenterTransactionsTest extends AbstractLogViewerPresenterTest<UiData> {
   override async setUpTestEnvironment(): Promise<void> {
     const parser = await new LegacyParserProvider()
       .addFilename('traces/elapsed_and_real_timestamp/Transactions.pb')
+      .setConvertToPerfetto(true)
       .getParser<PropertyTreeNode>();
     this.trace = new TraceBuilder<PropertyTreeNode>()
       .setType(TraceType.TRANSACTIONS)

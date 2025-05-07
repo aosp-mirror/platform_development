@@ -23,7 +23,12 @@ import {UserNotifier} from 'common/user_notifier';
 import {TraceHasOldData, TraceOverridden} from 'messaging/user_warnings';
 import {FileAndParser} from 'parsers/file_and_parser';
 import {FileAndParsers} from 'parsers/file_and_parsers';
+import {
+  getParserWithLatestRealToBootTimeOffset,
+  getParserWithLatestRealToMonotonicTimeOffset,
+} from 'parsers/parser_time_utils';
 import {Parser} from 'trace/parser';
+import {TraceFile} from 'trace/trace_file';
 import {TRACE_INFO} from 'trace/trace_info';
 import {TraceEntryTypeMap, TraceType} from 'trace/trace_type';
 
@@ -70,6 +75,10 @@ export class LoadedParsers {
       ...this.perfettoParsers.values(),
     ];
     return fileAndParsers.map((fileAndParser) => fileAndParser.parser);
+  }
+
+  getPerfettoFile(): TraceFile | undefined {
+    return this.perfettoParsers.at(0)?.file;
   }
 
   remove<T extends TraceType>(
@@ -210,36 +219,6 @@ export class LoadedParsers {
     );
   }
 
-  getLatestRealToMonotonicOffset(
-    parsers: Array<Parser<object>>,
-  ): bigint | undefined {
-    const p = parsers
-      .filter((offset) => offset.getRealToMonotonicTimeOffsetNs() !== undefined)
-      .sort((a, b) => {
-        return Number(
-          (a.getRealToMonotonicTimeOffsetNs() ?? 0n) -
-            (b.getRealToMonotonicTimeOffsetNs() ?? 0n),
-        );
-      })
-      .at(-1);
-    return p?.getRealToMonotonicTimeOffsetNs();
-  }
-
-  getLatestRealToBootTimeOffset(
-    parsers: Array<Parser<object>>,
-  ): bigint | undefined {
-    const p = parsers
-      .filter((offset) => offset.getRealToBootTimeOffsetNs() !== undefined)
-      .sort((a, b) => {
-        return Number(
-          (a.getRealToBootTimeOffsetNs() ?? 0n) -
-            (b.getRealToBootTimeOffsetNs() ?? 0n),
-        );
-      })
-      .at(-1);
-    return p?.getRealToBootTimeOffsetNs();
-  }
-
   private addLegacyParsers(parsers: FileAndParser[]) {
     const legacyParsersBeingLoaded = new Map<TraceType, Parser<object>>();
 
@@ -288,12 +267,12 @@ export class LoadedParsers {
       ...this.perfettoParsers.values(),
     ];
 
-    const latestMonotonicOffset = this.getLatestRealToMonotonicOffset(
+    const latestMonotonicOffset = getParserWithLatestRealToMonotonicTimeOffset(
       allParsers.map(({parser, file}) => parser),
-    );
-    const latestBootTimeOffset = this.getLatestRealToBootTimeOffset(
+    )?.getRealToMonotonicTimeOffsetNs();
+    const latestBootTimeOffset = getParserWithLatestRealToBootTimeOffset(
       allParsers.map(({parser, file}) => parser),
-    );
+    )?.getRealToBootTimeOffsetNs();
 
     newLegacyParsers = newLegacyParsers.filter(({parser, file}) => {
       const monotonicOffset = parser.getRealToMonotonicTimeOffsetNs();

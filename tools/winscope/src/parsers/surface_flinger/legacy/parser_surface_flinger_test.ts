@@ -73,6 +73,10 @@ describe('ParserSurfaceFlinger', () => {
       );
     });
 
+    it('does not provide entry', () => {
+      expect(realParser.getEntry).toThrow();
+    });
+
     it('converts to valid perfetto packets', async () => {
       const packets = realParser.convertToPerfettoPackets!(10);
       expect(packets.length).toEqual(21);
@@ -81,7 +85,7 @@ describe('ParserSurfaceFlinger', () => {
         packets[0].surfaceflingerLayersSnapshot?.layers?.layers?.length,
       ).toEqual(83);
       expect(packets[0].timestamp).toEqual(
-        Long.fromString(BigInt(14500282843n).toString()),
+        Long.fromString(BigInt(14500282843).toString()),
       );
       expect(packets[0].timestampClockId).toEqual(
         perfetto.protos.ClockSnapshot.Clock.BuiltinClocks.MONOTONIC,
@@ -96,9 +100,6 @@ describe('ParserSurfaceFlinger', () => {
         perfettoParser = await new LegacyParserProvider()
           .addFilename('traces/elapsed_and_real_timestamp/SurfaceFlinger.pb')
           .setConvertToPerfetto(true)
-          .setLatestRealToElapsedTimeOffsetNs(
-            assertDefined(realParser.getRealToMonotonicTimeOffsetNs()),
-          )
           .getParser<HierarchyTreeNode>();
         perfettoTrace = new TraceBuilder<HierarchyTreeNode>()
           .setType(TraceType.SURFACE_FLINGER)
@@ -115,12 +116,6 @@ describe('ParserSurfaceFlinger', () => {
         expect(
           assertDefined(perfettoParser.getTimestamps()).slice(0, 3),
         ).toEqual(expected);
-      });
-
-      it('provides correct root entry node', async () => {
-        const entry = await perfettoParser.getEntry(1);
-        expect(entry.id).toEqual('LayerTraceEntry root');
-        expect(entry.name).toEqual('root');
       });
 
       it('decodes layer state flags', async () => {
@@ -272,7 +267,7 @@ describe('ParserSurfaceFlinger', () => {
         packets[0].surfaceflingerLayersSnapshot?.layers?.layers?.length,
       ).toEqual(94);
       expect(packets[0].timestamp).toEqual(
-        Long.fromString(BigInt(850335483446n).toString()),
+        Long.fromString(BigInt(850335483446).toString()),
       );
       expect(packets[0].timestampClockId).toEqual(
         perfetto.protos.ClockSnapshot.Clock.BuiltinClocks.MONOTONIC,

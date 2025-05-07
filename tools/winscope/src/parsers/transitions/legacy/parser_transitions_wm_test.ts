@@ -19,20 +19,20 @@ import {
   TimestampConverterUtils,
   timestampEqualityTester,
 } from 'common/time/test_utils';
+import {com} from 'protos/transitions/udc/static';
 import {LegacyParserProvider} from 'test/unit/fixture_utils';
 import {CoarseVersion} from 'trace/coarse_version';
 import {Parser} from 'trace/parser';
 import {TraceType} from 'trace/trace_type';
-import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
 
 describe('ParserTransitionsWm', () => {
-  let parser: Parser<PropertyTreeNode>;
+  let parser: Parser<com.android.server.wm.shell.ITransition>;
 
   beforeAll(async () => {
     jasmine.addCustomEqualityTester(timestampEqualityTester);
     parser = await new LegacyParserProvider()
       .addFilename('traces/elapsed_and_real_timestamp/wm_transition_trace.pb')
-      .getParser<PropertyTreeNode>();
+      .getParser<com.android.server.wm.shell.ITransition>();
   });
 
   it('has expected trace type', () => {
@@ -50,18 +50,10 @@ describe('ParserTransitionsWm', () => {
     timestamps.forEach((timestamp) => expect(timestamp).toEqual(expected));
   });
 
-  it('translates flags', async () => {
-    const entry = await parser.getEntry(4);
-    expect(
-      entry.getChildByName('wmData')?.getChildByName('flags')?.formattedValue(),
-    ).toEqual('TRANSIT_FLAG_IS_RECENTS');
-
-    const targets = entry.getChildByName('wmData')?.getChildByName('targets');
-    expect(
-      targets?.getChildByName('0')?.getChildByName('flags')?.formattedValue(),
-    ).toEqual('FLAG_MOVED_TO_TOP | FLAG_SHOW_WALLPAPER');
-    expect(
-      targets?.getChildByName('1')?.getChildByName('flags')?.formattedValue(),
-    ).toEqual('FLAG_NONE');
+  it('provides decoded proto', async () => {
+    const entry = await parser.getEntry(0);
+    expect(entry.id).toEqual(6);
+    expect(entry.startTransactionId?.toString()).toEqual('13086765351818');
+    expect(entry.sendTimeNs?.toString()).toEqual('57649646973488');
   });
 });

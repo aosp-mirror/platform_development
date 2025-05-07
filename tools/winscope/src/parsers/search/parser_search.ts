@@ -15,6 +15,7 @@
  */
 
 import {assertDefined} from 'common/assert_utils';
+import {NOT_IMPLEMENTED_ERROR} from 'common/errors';
 import {INVALID_TIME_NS, Timestamp} from 'common/time/time';
 import {TimestampConverter} from 'common/time/timestamp_converter';
 import {UserNotifier} from 'common/user_notifier';
@@ -69,7 +70,7 @@ export class ParserSearch implements Parser<QueryResult> {
     type: Q,
     entriesRange: EntriesRange,
   ): Promise<CustomQueryParserResultTypeMap[Q]> {
-    throw new Error('not implemented');
+    throw NOT_IMPLEMENTED_ERROR;
   }
 
   getDescriptors(): string[] {
@@ -85,7 +86,7 @@ export class ParserSearch implements Parser<QueryResult> {
   }
 
   createTimestamps(): void {
-    throw new Error('not implemented');
+    throw NOT_IMPLEMENTED_ERROR;
   }
 
   async parse() {

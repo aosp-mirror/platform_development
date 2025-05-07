@@ -16,24 +16,33 @@
 
 import {assertDefined} from 'common/assert_utils';
 import {
+  getTimestampConverter,
   TimestampConverterUtils,
   timestampEqualityTester,
 } from 'common/time/test_utils';
-import {getTracesParser} from 'test/unit/fixture_utils';
+import Long from 'long';
+import {FileAndParser} from 'parsers/file_and_parser';
+import {perfetto} from 'protos/perfetto/trace/static';
+import {com} from 'protos/transitions/udc/static';
+import {convertToPerfettoTrace, getTracesParser} from 'test/unit/fixture_utils';
 import {CoarseVersion} from 'trace/coarse_version';
 import {Parser} from 'trace/parser';
+import {TraceFile} from 'trace/trace_file';
 import {TraceType} from 'trace/trace_type';
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
+import {TracesParserTransitions} from './traces_parser_transitions';
 
 describe('TracesParserTransitions', () => {
   let parser: Parser<PropertyTreeNode>;
 
   beforeAll(async () => {
     jasmine.addCustomEqualityTester(timestampEqualityTester);
-    parser = (await getTracesParser([
-      'traces/elapsed_and_real_timestamp/wm_transition_trace.pb',
-      'traces/elapsed_and_real_timestamp/shell_transition_trace.pb',
-    ])) as Parser<PropertyTreeNode>;
+    parser = (
+      await getTracesParser([
+        'traces/elapsed_and_real_timestamp/wm_transition_trace.pb',
+        'traces/elapsed_and_real_timestamp/shell_transition_trace.pb',
+      ])
+    ).tracesParser as Parser<PropertyTreeNode>;
   });
 
   it('has expected trace type', () => {
@@ -54,39 +63,41 @@ describe('TracesParserTransitions', () => {
   it('provides timestamps', () => {
     const timestamps = assertDefined(parser.getTimestamps());
     const expected = [
-      TimestampConverterUtils.makeRealTimestamp(1683188477606574664n),
-      TimestampConverterUtils.makeRealTimestamp(1683188477784695636n),
-      TimestampConverterUtils.makeRealTimestamp(1683188479255739215n),
-      TimestampConverterUtils.makeRealTimestamp(1683188481345218790n),
+      TimestampConverterUtils.makeRealTimestamp(1683188477607285317n),
+      TimestampConverterUtils.makeRealTimestamp(1683188477785406289n),
+      TimestampConverterUtils.makeRealTimestamp(1683188479256449868n),
+      TimestampConverterUtils.makeRealTimestamp(1683188481345929443n),
     ];
     expect(timestamps).toEqual(expected);
   });
 
-  it('provides entries', async () => {
-    const entryIds = [
-      (await parser.getEntry(0)).getChildByName('id')?.getValue(),
-      (await parser.getEntry(1)).getChildByName('id')?.getValue(),
-      (await parser.getEntry(2)).getChildByName('id')?.getValue(),
-      (await parser.getEntry(3)).getChildByName('id')?.getValue(),
-    ];
-    expect(entryIds).toEqual([6, 7, 8, 9]);
+  it('does not provide entry', () => {
+    expect(parser.getEntry).toThrow();
   });
 
   it('sets zero timestamp if both dispatch and send time unavailable', async () => {
-    const parser = (await getTracesParser([
+    const result = await getTracesParser([
       'traces/elapsed_and_real_timestamp/wm_transition_trace.pb',
       'traces/elapsed_and_real_timestamp/shell_transition_trace.pb',
-    ])) as Parser<PropertyTreeNode>;
-    const entry = await parser.getEntry(1);
-    entry
-      .getChildByName('shellData')
-      ?.removeChild(entry.id + '.shellData.dispatchTimeNs');
-    entry
-      .getChildByName('wmData')
-      ?.removeChild(entry.id + '.wmData.sendTimeNs');
+    ]);
+    const transitionsParser = result.tracesParser as Parser<PropertyTreeNode>;
+    const wmParser = result
+      .constituentParsers[0] as Parser<com.android.server.wm.shell.ITransition>;
+    const shellParser = result
+      .constituentParsers[1] as Parser<com.android.wm.shell.ITransition>;
 
-    await parser.createTimestamps();
-    expect(parser.getTimestamps()?.at(1)).toEqual(
+    const shellEntry = await shellParser.getEntry(1);
+    shellEntry.dispatchTimeNs = null;
+    const shellSpy = spyOn(shellParser, 'getEntry').and.callThrough();
+    shellSpy.withArgs(1).and.returnValue(Promise.resolve(shellEntry));
+
+    const wmEntry = await wmParser.getEntry(1);
+    wmEntry.sendTimeNs = null;
+    const wmSpy = spyOn(wmParser, 'getEntry').and.callThrough();
+    wmSpy.withArgs(1).and.returnValue(Promise.resolve(wmEntry));
+
+    await (transitionsParser as TracesParserTransitions).parse();
+    expect(transitionsParser.getTimestamps()?.at(0)).toEqual(
       TimestampConverterUtils.makeRealTimestamp(0n),
     );
   });
@@ -103,4 +114,145 @@ describe('TracesParserTransitions', () => {
       ]),
     ).toBeRejected();
   });
+
+  it('converts to valid perfetto packets', () => {
+    const packets = parser.convertToPerfettoPackets!(10);
+    expect(packets.length).toEqual(5);
+    packets.forEach((packet) => {
+      expect(packet.trustedPacketSequenceId).toEqual(10);
+    });
+
+    const handlerMappingPacket = packets[0];
+
+    const shellHandlerMappings =
+      perfetto.protos.ShellHandlerMappings.fromObject({
+        mapping: [
+          {id: 2, name: 'com.android.wm.shell.transition.DefaultMixedHandler'},
+          {
+            id: 3,
+            name: 'com.android.wm.shell.recents.RecentsTransitionHandler',
+          },
+        ],
+      });
+    expect(handlerMappingPacket.shellHandlerMappings).toEqual(
+      shellHandlerMappings,
+    );
+
+    const transition6Packet = packets[1];
+    const transition6 = assertDefined(transition6Packet.shellTransition);
+    expect(transition6.id).toEqual(6);
+    const dispatchTime6 = Long.fromString('57649649922341');
+    expect(transition6Packet.timestamp).toEqual(dispatchTime6);
+    expect(transition6Packet.timestampClockId).toEqual(
+      perfetto.protos.ClockSnapshot.Clock.BuiltinClocks.BOOTTIME,
+    );
+    expect(transition6.createTimeNs).toEqual(Long.fromString('57649586217344'));
+    expect(transition6.sendTimeNs).toEqual(Long.fromString('57649646973488'));
+    expect(transition6.wmAbortTimeNs).toBeUndefined();
+    expect(transition6.finishTimeNs).toEqual(Long.fromString('57650183020323'));
+    expect(transition6.type).toEqual(1);
+    expect(transition6.targets?.length).toEqual(2);
+    expect(transition6.flags).toBeUndefined();
+    expect(transition6.startingWindowRemoveTimeNs).toBeUndefined();
+    expect(transition6.dispatchTimeNs).toEqual(dispatchTime6);
+    expect(transition6.mergeTimeNs).toBeUndefined();
+    expect(transition6.mergeRequestTimeNs).toBeUndefined();
+    expect(transition6.shellAbortTimeNs).toBeUndefined();
+    expect(transition6.handler).toEqual(2);
+    expect(transition6.mergeTarget).toBeUndefined();
+
+    const transition7Packet = packets[2];
+    const transition7 = assertDefined(transition7Packet.shellTransition);
+    expect(transition7.id).toEqual(7);
+    const sendTime7 = Long.fromString('57649828043313');
+    expect(transition7Packet.timestamp).toEqual(sendTime7);
+    expect(transition7Packet.timestampClockId).toEqual(
+      perfetto.protos.ClockSnapshot.Clock.BuiltinClocks.BOOTTIME,
+    );
+    expect(transition7.sendTimeNs).toEqual(sendTime7);
+    expect(transition7.dispatchTimeNs).toBeUndefined();
+    expect(transition7.mergeTimeNs).toEqual(Long.fromString('57649829526223'));
+    expect(transition7.shellAbortTimeNs).toEqual(
+      Long.fromString('57649829445249'),
+    );
+    expect(transition7.handler).toBeUndefined();
+
+    const transition8 = assertDefined(packets[3].shellTransition);
+    expect(transition8.id).toEqual(8);
+    expect(transition8.flags).toEqual(128);
+
+    const transition9 = assertDefined(packets[4].shellTransition);
+    expect(transition9.id).toEqual(9);
+    expect(transition9.mergeRequestTimeNs).toEqual(
+      Long.fromString('57653389780131'),
+    );
+    expect(transition9.mergeTarget).toEqual(8);
+  });
+
+  it('converts to valid perfetto trace', async () => {
+    const converter = getTimestampConverter();
+    const perfettoParser = (
+      await convertToPerfettoTrace(
+        [new FileAndParser(new TraceFile(new File([], '')), parser)],
+        converter,
+      )
+    )[0].parser as Parser<PropertyTreeNode>;
+
+    converter.setRealToBootTimeOffsetNs(
+      assertDefined(perfettoParser.getRealToBootTimeOffsetNs()),
+    );
+    perfettoParser.createTimestamps();
+    expect(perfettoParser.getTimestamps()).toEqual([
+      TimestampConverterUtils.makeRealTimestamp(1683188477607285317n),
+      TimestampConverterUtils.makeRealTimestamp(1683188477785406289n),
+      TimestampConverterUtils.makeRealTimestamp(1683188479256449868n),
+      TimestampConverterUtils.makeRealTimestamp(1683188481345929443n),
+    ]);
+    const entries = [
+      await perfettoParser.getEntry(0),
+      await perfettoParser.getEntry(1),
+      await perfettoParser.getEntry(2),
+      await perfettoParser.getEntry(3),
+    ];
+    const entryIds = entries.map((e) => e.getChildByName('id')?.getValue());
+    expect(entryIds).toEqual([6n, 7n, 8n, 9n]);
+
+    const entry = entries[2];
+    expect(entry.getChildByName('merged')?.getValue()).toBeFalse();
+    expect(entry.getChildByName('played')?.getValue()).toBeTrue();
+    expect(entry.getChildByName('aborted')?.getValue()).toBeFalse();
+
+    const wmData = assertDefined(entry.getChildByName('wmData'));
+    checkPropertyValue(wmData, 'sendTimeNs', '2023-05-04, 08:21:19.252');
+    checkPropertyValue(wmData, 'startTransactionId', '13086765351920');
+    checkPropertyValue(wmData, 'flags', 'TRANSIT_FLAG_IS_RECENTS');
+
+    const targets = assertDefined(
+      wmData.getChildByName('targets'),
+    ).getAllChildren();
+    expect(targets.length).toEqual(2);
+    checkPropertyValue(targets[0], 'layerId', '113');
+    checkPropertyValue(targets[0], 'mode', 'TO_FRONT');
+    checkPropertyValue(
+      targets[0],
+      'flags',
+      'FLAG_MOVED_TO_TOP | FLAG_SHOW_WALLPAPER',
+    );
+    checkPropertyValue(targets[0], 'windowId', '179781688');
+
+    const shellData = assertDefined(entry.getChildByName('shellData'));
+    checkPropertyValue(
+      shellData,
+      'handler',
+      'com.android.wm.shell.recents.RecentsTransitionHandler',
+    );
+  });
+
+  function checkPropertyValue(
+    node: PropertyTreeNode,
+    property: string,
+    value: string,
+  ) {
+    expect(node.getChildByName(property)?.formattedValue()).toEqual(value);
+  }
 });

@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import {NOT_IMPLEMENTED_ERROR} from 'common/errors';
 import {Timestamp} from 'common/time/time';
 import {ParserTimestampConverter} from 'common/time/timestamp_converter';
 import {perfetto} from 'protos/perfetto/trace/static';
@@ -44,7 +45,6 @@ export abstract class AbstractParser<
   protected abstract getMagicNumber(): undefined | number[];
   protected abstract decodeTrace(trace: Uint8Array): U[] | Promise<U[]>;
   protected abstract getTimestamp(decodedEntry: U): Timestamp;
-  protected abstract processDecodedEntry(index: number, decodedEntry: U): T;
 
   constructor(
     trace: TraceFile,
@@ -95,11 +95,22 @@ export abstract class AbstractParser<
     entriesRange: EntriesRange,
     param?: CustomQueryParamTypeMap[Q],
   ): Promise<CustomQueryParserResultTypeMap[Q]> {
-    throw new Error('Not implemented');
+    throw NOT_IMPLEMENTED_ERROR;
   }
 
-  convertToPerfettoPackets(sequenceId: number): perfetto.protos.TracePacket[] {
-    throw new Error('not implemented');
+  convertToPerfettoPackets(
+    sequenceId: number,
+    trustedPid: number,
+    trustedUid: number,
+  ): perfetto.protos.TracePacket[] {
+    throw NOT_IMPLEMENTED_ERROR;
+  }
+
+  protected processDecodedEntry(index: number, decodedEntry: U): T {
+    // Legacy parsers that implement convertToPerfettoPackets should not
+    // parser and provide individual trace entries, as they should be
+    // converted to perfetto using LegacyToPerfettoConverter
+    throw NOT_IMPLEMENTED_ERROR;
   }
 
   private decodeTimestamps(): Timestamp[] {

@@ -142,9 +142,9 @@ class PresenterInputTest extends AbstractLogViewerPresenterTest<UiData> {
   ];
 
   override async setUpTestEnvironment(): Promise<void> {
-    const parser = (await getTracesParser([
-      'traces/perfetto/input-events.perfetto-trace',
-    ])) as Parser<PropertyTreeNode>;
+    const parser = (
+      await getTracesParser(['traces/perfetto/input-events.perfetto-trace'])
+    ).tracesParser as Parser<PropertyTreeNode>;
 
     this.trace = new TraceBuilder<PropertyTreeNode>()
       .setType(TraceType.INPUT_EVENT_MERGED)

@@ -19,4 +19,5 @@ export enum FilesSource {
   COLLECTED = 'collected_traces',
   UPLOADED = 'uploaded_traces',
   REMOTE_TOOL = 'remote',
+  APP = 'app',
 }

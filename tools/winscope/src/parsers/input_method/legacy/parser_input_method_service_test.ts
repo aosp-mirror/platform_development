@@ -18,6 +18,7 @@ import {
   TimestampConverterUtils,
   timestampEqualityTester,
 } from 'common/time/test_utils';
+import Long from 'long';
 import {LegacyParserProvider} from 'test/unit/fixture_utils';
 import {CoarseVersion} from 'trace/coarse_version';
 import {Parser} from 'trace/parser';
@@ -50,10 +51,40 @@ describe('ParserInputMethodService', () => {
       expect(parser.getTimestamps()).toEqual(expected);
     });
 
-    it('retrieves trace entry', async () => {
-      const entry = await parser.getEntry(0);
+    it('does not provide entry', () => {
+      expect(parser.getEntry).toThrow();
+    });
+
+    it('converts to valid perfetto packets', async () => {
+      const packets = parser.convertToPerfettoPackets!(10);
+      expect(packets.length).toEqual(1);
+      expect(packets[0].trustedPacketSequenceId).toEqual(10);
+      const data =
+        packets[0].winscopeExtensions?.[
+          '.perfetto.protos.WinscopeExtensionsImpl.inputmethodService'
+        ];
+      expect(data?.inputMethodService).toBeDefined();
+      expect(data?.where).toEqual('InputMethodService#doStartInput');
+      const ts = Long.fromString(BigInt(16578752896).toString());
+      ts.unsigned = true;
+      expect(packets[0].timestamp).toEqual(ts);
+    });
+
+    it('converts to valid perfetto trace', async () => {
+      const perfettoParser = await new LegacyParserProvider()
+        .addFilename('traces/elapsed_and_real_timestamp/InputMethodService.pb')
+        .setConvertToPerfetto(true)
+        .getParser<HierarchyTreeNode>();
+
+      expect(perfettoParser.getTimestamps()).toEqual([
+        TimestampConverterUtils.makeRealTimestamp(1659107091180519857n),
+      ]);
+
+      const entry = await perfettoParser.getEntry(0);
       expect(entry).toBeInstanceOf(HierarchyTreeNode);
-      expect(entry.id).toEqual('InputMethodService entry');
+      expect(entry.getEagerPropertyByName('where')?.getValue()).toEqual(
+        'InputMethodService#doStartInput',
+      );
     });
   });
 
@@ -76,10 +107,25 @@ describe('ParserInputMethodService', () => {
       );
     });
 
-    it('retrieves trace entry', async () => {
-      const entry = await parser.getEntry(0);
-      expect(entry).toBeInstanceOf(HierarchyTreeNode);
-      expect(entry.id).toEqual('InputMethodService entry');
+    it('does not provide entry', () => {
+      expect(parser.getEntry).toThrow();
+    });
+
+    it('converts to valid perfetto packets', async () => {
+      const packets = parser.convertToPerfettoPackets!(10);
+      expect(packets.length).toEqual(7);
+      expect(packets[0].trustedPacketSequenceId).toEqual(10);
+
+      const data = assertDefined(
+        packets[0].winscopeExtensions?.[
+          '.perfetto.protos.WinscopeExtensionsImpl.inputmethodService'
+        ],
+      );
+      expect(data.where).toEqual('InputMethodService#doFinishInput');
+      expect(data?.inputMethodService).toBeDefined();
+      const ts = Long.fromString(BigInt(1149230019887).toString());
+      ts.unsigned = true;
+      expect(packets[0].timestamp).toEqual(ts);
     });
   });
 });

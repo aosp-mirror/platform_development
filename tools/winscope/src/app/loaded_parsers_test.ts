@@ -54,53 +54,51 @@ describe('LoadedParsers', () => {
     TimestampConverterUtils.makeRealTimestamp(5n * 60n * 1000000000n + 12n), // 5m12ns
   ];
 
-  const filename = 'filename';
-
   const parserSf0 = new ParserBuilder<object>()
     .setType(TraceType.SURFACE_FLINGER)
     .setTimestamps(timestamps)
-    .setDescriptors([filename])
+    .setDescriptors(['sf0'])
     .build();
   const parserSf1 = new ParserBuilder<object>()
     .setType(TraceType.SURFACE_FLINGER)
     .setTimestamps(timestamps)
-    .setDescriptors([filename])
+    .setDescriptors(['sf1'])
     .build();
   const parserSf_longButOldData = new ParserBuilder<object>()
     .setType(TraceType.SURFACE_FLINGER)
     .setTimestamps(oldTimestamps)
-    .setDescriptors([filename])
+    .setDescriptors(['sf old'])
     .build();
   const parserSf_empty = new ParserBuilder<object>()
     .setType(TraceType.SURFACE_FLINGER)
     .setTimestamps([])
-    .setDescriptors([filename])
+    .setDescriptors(['sf empty'])
     .build();
   const parserSf_elapsed = new ParserBuilder<object>()
     .setType(TraceType.SURFACE_FLINGER)
     .setTimestamps(elapsedTimestamps)
-    .setDescriptors([filename])
+    .setDescriptors(['sf elapsed'])
     .setNoOffsets(true)
     .build();
   const parserWm0 = new ParserBuilder<object>()
     .setType(TraceType.WINDOW_MANAGER)
     .setTimestamps(timestamps)
-    .setDescriptors([filename])
+    .setDescriptors(['wm0'])
     .build();
   const parserWm1 = new ParserBuilder<object>()
     .setType(TraceType.WINDOW_MANAGER)
     .setTimestamps(timestamps)
-    .setDescriptors([filename])
+    .setDescriptors(['wm1'])
     .build();
   const parserWm_dump = new ParserBuilder<object>()
     .setType(TraceType.WINDOW_MANAGER)
     .setTimestamps([realZeroTimestamp])
-    .setDescriptors([filename])
+    .setDescriptors(['wm dump'])
     .build();
   const parserWm_elapsed = new ParserBuilder<object>()
     .setType(TraceType.WINDOW_MANAGER)
     .setTimestamps(elapsedTimestamps)
-    .setDescriptors([filename])
+    .setDescriptors(['wm elapsed'])
     .setNoOffsets(true)
     .build();
   const parserWmTransitions = new ParserBuilder<object>()
@@ -110,29 +108,30 @@ describe('LoadedParsers', () => {
       elapsedZeroTimestamp,
       elapsedZeroTimestamp,
     ])
-    .setDescriptors([filename])
+    .setDescriptors(['wm transitions'])
     .build();
   const parserEventlog = new ParserBuilder<object>()
     .setType(TraceType.EVENT_LOG)
     .setTimestamps(timestamps)
-    .setDescriptors([filename])
+    .setDescriptors(['eventlog'])
     .setNoOffsets(true)
     .build();
   const parserScreenRecording = new ParserBuilder<object>()
     .setType(TraceType.SCREEN_RECORDING)
     .setTimestamps(timestamps)
-    .setDescriptors([filename])
+    .setDescriptors(['screen recording'])
     .build();
   const parserViewCapture0 = new ParserBuilder<object>()
     .setType(TraceType.VIEW_CAPTURE)
     .setEntries([])
-    .setDescriptors([filename])
+    .setDescriptors(['vc0'])
     .build();
   const parserViewCapture1 = new ParserBuilder<object>()
     .setType(TraceType.VIEW_CAPTURE)
     .setEntries([])
-    .setDescriptors([filename])
+    .setDescriptors(['vc1'])
     .build();
+  const perfettoFilename = 'perfetto trace';
 
   let loadedParsers: LoadedParsers;
   let userNotifierChecker: UserNotifierChecker;
@@ -180,7 +179,7 @@ describe('LoadedParsers', () => {
 
   it('drops elapsed-only parsers if parsers with real timestamps present', () => {
     loadParsers([parserSf_elapsed, parserSf0], []);
-    expectLoadResult([parserSf0], [new TraceHasOldData(filename)]);
+    expectLoadResult([parserSf0], [new TraceHasOldData('sf elapsed')]);
   });
 
   it('doesnt drop elapsed-only parsers if no parsers with real timestamps present', () => {
@@ -202,12 +201,12 @@ describe('LoadedParsers', () => {
 
     it('taking into account other legacy parsers', () => {
       loadParsers([parserSf_longButOldData, parserWm0], []);
-      expectLoadResult([parserWm0], [new TraceHasOldData(filename, timeGap)]);
+      expectLoadResult([parserWm0], [new TraceHasOldData('sf old', timeGap)]);
     });
 
     it('taking into account perfetto parsers', () => {
       loadParsers([parserSf_longButOldData], [parserWm0]);
-      expectLoadResult([parserWm0], [new TraceHasOldData(filename, timeGap)]);
+      expectLoadResult([parserWm0], [new TraceHasOldData('sf old', timeGap)]);
     });
 
     it('taking into account already-loaded parsers', () => {
@@ -216,7 +215,7 @@ describe('LoadedParsers', () => {
       // Drop parser with old data, even if it provides
       // a longer trace than the already-loaded parser
       loadParsers([parserSf_longButOldData], []);
-      expectLoadResult([parserWm0], [new TraceHasOldData(filename, timeGap)]);
+      expectLoadResult([parserWm0], [new TraceHasOldData('sf old', timeGap)]);
     });
 
     it('doesnt drop legacy parser with dump (zero timestamp)', () => {
@@ -234,6 +233,7 @@ describe('LoadedParsers', () => {
     it('is robust to traces with time range overlap', () => {
       const parser = parserSf0;
       const timestamps = assertDefined(parserSf0.getTimestamps());
+      const filename = 'overlapping';
 
       const timestampsOverlappingFront = [
         timestamps[0].add(-1n),
@@ -435,10 +435,7 @@ describe('LoadedParsers', () => {
     loadedParsers.remove(parserWm0, true);
     expectLoadResult([parserSf0], []);
 
-    await expectDownloadResult([
-      'sf/filename.winscope',
-      'wm/filename.winscope',
-    ]);
+    await expectDownloadResult(['sf/sf0.winscope', 'wm/wm0.winscope']);
   });
 
   it('can be cleared', async () => {
@@ -451,13 +448,11 @@ describe('LoadedParsers', () => {
 
     loadParsers([parserSf0, parserWm0], []);
     expectLoadResult([parserSf0, parserWm0], []);
-    await expectDownloadResult([
-      'sf/filename.winscope',
-      'wm/filename.winscope',
-    ]);
+    await expectDownloadResult(['sf/sf0.winscope', 'wm/wm0.winscope']);
   });
 
   it('can make zip archive of traces with appropriate directories and extensions', async () => {
+    const filename = 'filename';
     const fileDuplicated = new File([], filename);
 
     const legacyFiles = [
@@ -505,7 +500,7 @@ describe('LoadedParsers', () => {
 
     await expectDownloadResult([
       'filename.mp4',
-      'filename.perfetto-trace',
+      'perfetto trace.perfetto-trace',
       'vc/filename.winscope',
       'wm/filename (1).pb',
       'wm/filename.pb',
@@ -533,11 +528,13 @@ describe('LoadedParsers', () => {
     legacyFiles?: File[],
   ) {
     const legacyFileAndParsers = legacy.map((parser, i) => {
-      const legacyFile = legacyFiles ? legacyFiles[i] : new File([], filename);
+      const legacyFile = legacyFiles
+        ? legacyFiles[i]
+        : new File([], parser.getDescriptors()[0]);
       return new FileAndParser(new TraceFile(legacyFile), parser);
     });
 
-    const perfettoTraceFile = new TraceFile(new File([], filename));
+    const perfettoTraceFile = new TraceFile(new File([], perfettoFilename));
     const perfettoFileAndParsers =
       perfetto.length > 0
         ? new FileAndParsers(perfettoTraceFile, perfetto)

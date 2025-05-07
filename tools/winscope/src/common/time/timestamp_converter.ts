@@ -15,7 +15,7 @@
  */
 
 import {assertDefined, assertTrue} from 'common/assert_utils';
-import {BigintMath} from 'common/bigint_math';
+import {divideAndRound} from 'common/bigint_math';
 import {
   INVALID_TIME_NS,
   Timestamp,
@@ -45,10 +45,7 @@ class RealTimestampFormatter implements TimestampFormatter {
   format(timestamp: Timestamp, type: TimestampFormatType): string {
     const timestampNanos =
       timestamp.getValueNs() + (this.utcOffset.getValueNs() ?? 0n);
-    const ms = BigintMath.divideAndRound(
-      timestampNanos,
-      BigInt(TIME_UNIT_TO_NANO.ms),
-    );
+    const ms = divideAndRound(timestampNanos, BigInt(TIME_UNIT_TO_NANO.ms));
     const formattedTimestamp = new Date(Number(ms))
       .toISOString()
       .replace('Z', '')

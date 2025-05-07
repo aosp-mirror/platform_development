@@ -403,9 +403,6 @@ export class HierarchyPresenter {
   ): Promise<UiHierarchyTreeNode> {
     const uiTree = UiHierarchyTreeNode.from(hierarchyTree);
 
-    if (!this.showHeadings) {
-      uiTree.forEachNodeDfs((node) => node.setShowHeading(false));
-    }
     if (hierarchyTreeIndex !== undefined) {
       const displayName =
         this.getCurrentHierarchyTreeNames(trace)?.at(hierarchyTreeIndex);
@@ -440,6 +437,10 @@ export class HierarchyPresenter {
         TRACE_INFO[trace.type].name,
         Date.now() - startTimeMs,
       );
+    }
+
+    if (!this.showHeadings) {
+      uiTree.forEachNodeDfs((node) => node.setShowHeading(false));
     }
 
     if (this.userOptions['flat']?.enabled) {

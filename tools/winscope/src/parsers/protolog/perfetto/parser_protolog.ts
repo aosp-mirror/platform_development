@@ -60,7 +60,6 @@ export class ParserProtolog extends AbstractParser<PropertyTreeNode> {
     return ParserProtologUtils.makeMessagePropertiesTree(
       logMessage,
       this.timestampConverter,
-      false,
     );
   }
 

@@ -15,78 +15,32 @@
  */
 
 import {assertDefined} from 'common/assert_utils';
+import {NOT_IMPLEMENTED_ERROR} from 'common/errors';
+import {utf8Encode} from 'common/string_utils';
 import {Timestamp} from 'common/time/time';
 import {ParserTimestampConverter} from 'common/time/timestamp_converter';
-import {AddDefaults} from 'parsers/operations/add_defaults';
-import {SetFormatters} from 'parsers/operations/set_formatters';
-import {TranslateIntDef} from 'parsers/operations/translate_intdef';
-import {RectsComputation} from 'parsers/view_capture/computations/rects_computation';
-import {VisibilityComputation} from 'parsers/view_capture/computations/visibility_computation';
-import {SetRootTransformProperties} from 'parsers/view_capture/operations/set_root_transform_properties';
+import Long from 'long';
+import {perfetto} from 'protos/perfetto/trace/static';
 import {com} from 'protos/viewcapture/udc/static';
 import {CoarseVersion} from 'trace/coarse_version';
 import {
   CustomQueryParserResultTypeMap,
   CustomQueryType,
-  VisitableParserCustomQuery,
 } from 'trace/custom_query';
 import {EntriesRange} from 'trace/index_types';
 import {Parser} from 'trace/parser';
 import {TraceType} from 'trace/trace_type';
 import {HierarchyTreeNode} from 'trace/tree_node/hierarchy_tree_node';
-import {Operation} from 'trace/tree_node/operations/operation';
-import {
-  LazyPropertiesStrategyType,
-  PropertiesProvider,
-} from 'trace/tree_node/properties_provider';
-import {PropertiesProviderBuilder} from 'trace/tree_node/properties_provider_builder';
-import {PropertyTreeBuilderFromProto} from 'trace/tree_node/property_tree_builder_from_proto';
-import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
-import {DEFAULT_PROPERTY_TREE_NODE_FACTORY} from 'trace/tree_node/property_tree_node_factory';
-import {HierarchyTreeBuilderVc} from './hierarchy_tree_builder_vc';
-import {NodeField} from './tampered_protos';
 
 export class ParserViewCaptureWindow implements Parser<HierarchyTreeNode> {
-  private static readonly EAGER_PROPERTIES = [
-    'classnameIndex',
-    'hashcode',
-    'id',
-    'left',
-    'top',
-    'width',
-    'height',
-    'scaleX',
-    'scaleY',
-    'scrollX',
-    'scrollY',
-    'translationX',
-    'translationY',
-    'visibility',
-    'alpha',
-  ];
-  private static readonly DENYLIST_PROPERTIES =
-    ParserViewCaptureWindow.EAGER_PROPERTIES.concat(['children']); // some eager properties are overridden by calculated properties - avoid reloading them on lazy fetch
-
-  private static readonly Operations = {
-    SetFormattersNode: new SetFormatters(NodeField),
-    TranslateIntDefNode: new TranslateIntDef(NodeField),
-    AddDefaultsNodeEager: new AddDefaults(
-      NodeField,
-      ParserViewCaptureWindow.EAGER_PROPERTIES,
-    ),
-    AddDefaultsNodeLazy: new AddDefaults(
-      NodeField,
-      undefined,
-      ParserViewCaptureWindow.DENYLIST_PROPERTIES,
-    ),
-    SetRootTransformProperties: new SetRootTransformProperties(),
-  };
+  private static readonly PACKAGE_OR_WINDOW_IID = 1;
 
   private timestamps: Timestamp[] | undefined;
+  private viewIdToIid = new Map<string, number>();
 
   constructor(
     private readonly descriptors: string[],
-    private readonly frameData: com.android.app.viewcapture.data.IFrameData[],
+    private readonly frameData: FrameData[],
     private readonly realToBootTimeOffsetNs: bigint,
     private readonly packageName: string,
     private readonly windowName: string,
@@ -95,7 +49,7 @@ export class ParserViewCaptureWindow implements Parser<HierarchyTreeNode> {
   ) {}
 
   parse() {
-    throw new Error('Not implemented');
+    throw NOT_IMPLEMENTED_ERROR;
   }
 
   getTraceType(): TraceType {
@@ -127,23 +81,45 @@ export class ParserViewCaptureWindow implements Parser<HierarchyTreeNode> {
   }
 
   getEntry(index: number): Promise<HierarchyTreeNode> {
-    const tree = this.makeHierarchyTree(this.frameData[index]);
-    return Promise.resolve(tree);
+    throw NOT_IMPLEMENTED_ERROR;
+  }
+
+  convertToPerfettoPackets(
+    sequenceId: number,
+    trustedUid = 1,
+    trustedPid = 1,
+  ): perfetto.protos.TracePacket[] {
+    if (this.frameData.length === 0) {
+      return [];
+    }
+    const packets = this.frameData.map((frame, index) => {
+      const packet = perfetto.protos.TracePacket.create();
+      packet.trustedPacketSequenceId = sequenceId;
+      packet.timestamp = assertDefined(frame.timestamp);
+      packet.timestampClockId =
+        perfetto.protos.ClockSnapshot.Clock.BuiltinClocks.BOOTTIME;
+      packet.trustedUid = trustedUid;
+      packet.trustedPid = trustedPid;
+      packet.sequenceFlags =
+        index === 0
+          ? 3
+          : perfetto.protos.TracePacket.SequenceFlags
+              .SEQ_NEEDS_INCREMENTAL_STATE;
+      packet.winscopeExtensions = {
+        '.perfetto.protos.WinscopeExtensionsImpl.viewcapture':
+          this.convertToPerfettoViewCapture(frame),
+      };
+      return packet;
+    });
+    packets[0].internedData = this.makeInternedData();
+    return packets;
   }
 
   customQuery<Q extends CustomQueryType>(
     type: Q,
     entriesRange: EntriesRange,
   ): Promise<CustomQueryParserResultTypeMap[Q]> {
-    return new VisitableParserCustomQuery(type)
-      .visit(CustomQueryType.VIEW_CAPTURE_METADATA, async () => {
-        const metadata = {
-          packageName: this.packageName,
-          windowName: this.windowName,
-        };
-        return Promise.resolve(metadata);
-      })
-      .getResult();
+    throw NOT_IMPLEMENTED_ERROR;
   }
 
   getDescriptors(): string[] {
@@ -158,118 +134,98 @@ export class ParserViewCaptureWindow implements Parser<HierarchyTreeNode> {
     );
   }
 
-  private makeHierarchyTree(
-    frameDataProto: com.android.app.viewcapture.data.IFrameData,
-  ): HierarchyTreeNode {
-    const nodes = this.makeNodePropertiesProviders(
-      assertDefined(frameDataProto.node),
-      true,
-    );
-    return new HierarchyTreeBuilderVc()
-      .setRoot(nodes[0])
-      .setChildren(nodes.slice(1))
-      .setComputations([new VisibilityComputation(), new RectsComputation()])
-      .build();
-  }
-
-  private makeNodePropertiesProviders(
-    node: com.android.app.viewcapture.data.IViewNode,
-    isRoot = false,
-  ): PropertiesProvider[] {
-    const eagerOperations: Array<Operation<PropertyTreeNode>> = [
-      ParserViewCaptureWindow.Operations.AddDefaultsNodeEager,
-    ];
-    if (isRoot) {
-      eagerOperations.push(
-        ParserViewCaptureWindow.Operations.SetRootTransformProperties,
-      );
+  private convertToPerfettoView(
+    node: ViewNode,
+    parentId: number,
+    perfettoViews: PerfettoView[],
+  ) {
+    if (node.id && !this.viewIdToIid.has(node.id)) {
+      this.viewIdToIid.set(node.id, this.viewIdToIid.size + 1);
     }
-
-    const eagerProperties = this.makeEagerPropertiesTree(node);
-    const lazyPropertiesStrategy = this.makeLazyPropertiesStrategy(node);
-
-    const nodeProperties = new PropertiesProviderBuilder()
-      .setEagerProperties(eagerProperties)
-      .setLazyPropertiesStrategy(lazyPropertiesStrategy)
-      .setCommonOperations([
-        ParserViewCaptureWindow.Operations.SetFormattersNode,
-        ParserViewCaptureWindow.Operations.TranslateIntDefNode,
-      ])
-      .setEagerOperations(eagerOperations)
-      .setLazyOperations([
-        ParserViewCaptureWindow.Operations.AddDefaultsNodeLazy,
-      ])
-      .build();
-
-    const propertiesProviders: PropertiesProvider[] = [nodeProperties];
-
-    node.children?.forEach(
-      (childNode: com.android.app.viewcapture.data.IViewNode) => {
-        propertiesProviders.push(
-          ...this.makeNodePropertiesProviders(childNode),
-        );
-      },
-    );
-
-    return propertiesProviders;
-  }
-
-  private makeEagerPropertiesTree(
-    node: com.android.app.viewcapture.data.IViewNode,
-  ): PropertyTreeNode {
-    const denyList: string[] = [];
-
-    let obj = node;
-    do {
-      Object.getOwnPropertyNames(obj).forEach((it) => {
-        if (!ParserViewCaptureWindow.EAGER_PROPERTIES.includes(it)) {
-          denyList.push(it);
-        }
-      });
-      obj = Object.getPrototypeOf(obj);
-    } while (obj);
-
-    const id = `${this.classNames[assertDefined(node.classnameIndex)]}@${
-      node.hashcode
-    }`;
-
-    const nodeProperties = new PropertyTreeBuilderFromProto()
-      .setData(node)
-      .setRootId('ViewNode')
-      .setRootName(id)
-      .setDenyList(denyList)
-      .build();
-
-    nodeProperties.addOrReplaceChild(
-      DEFAULT_PROPERTY_TREE_NODE_FACTORY.makeCalculatedProperty(
-        nodeProperties.id,
-        'children',
-        this.mapChildrenToHashcodes(node.children ?? []),
-      ),
-    );
-
-    return nodeProperties;
-  }
-
-  private mapChildrenToHashcodes(
-    children: com.android.app.viewcapture.data.IViewNode[],
-  ): number[] {
-    return children.map((child) => assertDefined(child.hashcode));
-  }
-
-  private makeLazyPropertiesStrategy(
-    node: com.android.app.viewcapture.data.IViewNode,
-  ): LazyPropertiesStrategyType {
-    return async () => {
-      const id = `${this.classNames[assertDefined(node.classnameIndex)]}@${
-        node.hashcode
-      }`;
-      return new PropertyTreeBuilderFromProto()
-        .setData(node)
-        .setRootId('ViewNode')
-        .setRootName(id)
-        .setDenyList(ParserViewCaptureWindow.DENYLIST_PROPERTIES)
-        .build();
+    const nodeId = perfettoViews.length;
+    const perfettoView: perfetto.protos.ViewCapture.IView = {
+      id: nodeId,
+      parentId,
+      hashcode: node.hashcode,
+      viewIdIid: node.id ? this.viewIdToIid.get(node.id) : undefined,
+      classNameIid: node.classnameIndex,
+      left: node.left,
+      top: node.top,
+      width: node.width,
+      height: node.height,
+      scrollX: node.scrollX,
+      scrollY: node.scrollY,
+      translationX: node.translationX,
+      translationY: node.translationY,
+      scaleX: node.scaleX,
+      scaleY: node.scaleY,
+      alpha: node.alpha,
+      willNotDraw: node.willNotDraw,
+      clipChildren: node.clipChildren,
+      visibility: node.visibility,
+      elevation: node.elevation,
     };
+    perfettoViews.push(perfettoView);
+
+    node.children?.forEach((child) => {
+      this.convertToPerfettoView(child, nodeId, perfettoViews);
+    });
+  }
+
+  private convertToPerfettoViewCapture(
+    frame: FrameData,
+  ): perfetto.protos.ViewCapture {
+    const perfettoViews: PerfettoView[] = [];
+    this.convertToPerfettoView(assertDefined(frame.node), -1, perfettoViews);
+    return perfetto.protos.ViewCapture.fromObject({
+      packageNameIid: ParserViewCaptureWindow.PACKAGE_OR_WINDOW_IID,
+      windowNameIid: ParserViewCaptureWindow.PACKAGE_OR_WINDOW_IID,
+      views: perfettoViews,
+    });
+  }
+
+  private makeInternedData() {
+    const internedWindowNames: perfetto.protos.InternedString[] = [
+      perfetto.protos.InternedString.fromObject({
+        iid: Long.fromNumber(ParserViewCaptureWindow.PACKAGE_OR_WINDOW_IID),
+        str: utf8Encode(this.windowName),
+      }),
+    ];
+
+    const internedClassNames: perfetto.protos.InternedString[] =
+      this.classNames.map((className, index) => {
+        return perfetto.protos.InternedString.fromObject({
+          iid: Long.fromNumber(index),
+          str: utf8Encode(className),
+        });
+      });
+
+    const internedPackageNames: perfetto.protos.InternedString[] = [
+      perfetto.protos.InternedString.fromObject({
+        iid: Long.fromNumber(ParserViewCaptureWindow.PACKAGE_OR_WINDOW_IID),
+        str: utf8Encode(this.packageName),
+      }),
+    ];
+
+    const internedViewIds: perfetto.protos.InternedString[] = [];
+    assertDefined(this.viewIdToIid).forEach((iid, viewId) => {
+      internedViewIds.push(
+        perfetto.protos.InternedString.fromObject({
+          iid: Long.fromNumber(iid),
+          str: utf8Encode(viewId),
+        }),
+      );
+    });
+
+    return perfetto.protos.InternedData.fromObject({
+      viewcaptureWindowName: internedWindowNames,
+      viewcaptureClassName: internedClassNames,
+      viewcapturePackageName: internedPackageNames,
+      viewcaptureViewId: internedViewIds,
+    });
   }
 }
+
+type FrameData = com.android.app.viewcapture.data.IFrameData;
+type ViewNode = com.android.app.viewcapture.data.IViewNode;
+type PerfettoView = perfetto.protos.ViewCapture.IView;

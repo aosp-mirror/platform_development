@@ -18,6 +18,7 @@ import {
   TimestampConverterUtils,
   timestampEqualityTester,
 } from 'common/time/test_utils';
+import Long from 'long';
 import {LegacyParserProvider} from 'test/unit/fixture_utils';
 import {CoarseVersion} from 'trace/coarse_version';
 import {Parser} from 'trace/parser';
@@ -52,10 +53,44 @@ describe('ParserInputMethodManagerService', () => {
       ]);
     });
 
-    it('retrieves trace entry', async () => {
-      const entry = await parser.getEntry(0);
+    it('does not provide entry', () => {
+      expect(parser.getEntry).toThrow();
+    });
+
+    it('converts to valid perfetto packets', async () => {
+      const packets = parser.convertToPerfettoPackets!(10);
+      expect(packets.length).toEqual(1);
+      expect(packets[0].trustedPacketSequenceId).toEqual(10);
+      const data =
+        packets[0].winscopeExtensions?.[
+          '.perfetto.protos.WinscopeExtensionsImpl.inputmethodManagerService'
+        ];
+      expect(data?.inputMethodManagerService).toBeDefined();
+      expect(data?.where).toEqual(
+        'InputMethodManagerService#startInputOrWindowGainedFocus',
+      );
+      const ts = Long.fromString(BigInt(15963782518).toString());
+      ts.unsigned = true;
+      expect(packets[0].timestamp).toEqual(ts);
+    });
+
+    it('converts to valid perfetto trace', async () => {
+      const perfettoParser = await new LegacyParserProvider()
+        .addFilename(
+          'traces/elapsed_and_real_timestamp/InputMethodManagerService.pb',
+        )
+        .setConvertToPerfetto(true)
+        .getParser<HierarchyTreeNode>();
+
+      expect(perfettoParser.getTimestamps()).toEqual([
+        TimestampConverterUtils.makeRealTimestamp(1659107090565549479n),
+      ]);
+
+      const entry = await perfettoParser.getEntry(0);
       expect(entry).toBeInstanceOf(HierarchyTreeNode);
-      expect(entry.id).toEqual('InputMethodManagerService entry');
+      expect(entry.getEagerPropertyByName('where')?.getValue()).toEqual(
+        'InputMethodManagerService#startInputOrWindowGainedFocus',
+      );
     });
   });
 
@@ -80,10 +115,25 @@ describe('ParserInputMethodManagerService', () => {
       );
     });
 
-    it('retrieves trace entry from timestamp', async () => {
-      const entry = await parser.getEntry(0);
-      expect(entry).toBeInstanceOf(HierarchyTreeNode);
-      expect(entry.id).toEqual('InputMethodManagerService entry');
+    it('does not provide entry', () => {
+      expect(parser.getEntry).toThrow();
+    });
+
+    it('converts to valid perfetto packets', async () => {
+      const packets = parser.convertToPerfettoPackets!(10);
+      expect(packets.length).toEqual(3);
+      expect(packets[0].trustedPacketSequenceId).toEqual(10);
+      const data =
+        packets[0].winscopeExtensions?.[
+          '.perfetto.protos.WinscopeExtensionsImpl.inputmethodManagerService'
+        ];
+      expect(data?.inputMethodManagerService).toBeDefined();
+      expect(data?.where).toEqual(
+        'InputMethodManagerService#startInputOrWindowGainedFocus',
+      );
+      const ts = Long.fromString(BigInt(1149226290110).toString());
+      ts.unsigned = true;
+      expect(packets[0].timestamp).toEqual(ts);
     });
   });
 });

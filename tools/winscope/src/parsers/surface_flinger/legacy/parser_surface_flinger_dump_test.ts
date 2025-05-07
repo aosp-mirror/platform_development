@@ -66,16 +66,15 @@ describe('ParserSurfaceFlingerDump', () => {
     it('does not apply timezone info', async () => {
       const parserWithTimezoneInfo = await new LegacyParserProvider()
         .addFilename('traces/elapsed_and_real_timestamp/dump_SurfaceFlinger.pb')
-        .setConverter(getTimestampConverter(true))
+        .setTimestampConverter(getTimestampConverter(true))
         .getParser<HierarchyTreeNode>();
 
       const expected = [TimestampConverterUtils.makeElapsedTimestamp(0n)];
       expect(parserWithTimezoneInfo.getTimestamps()).toEqual(expected);
     });
 
-    it('retrieves trace entry', async () => {
-      const entry = await parser.getEntry(0);
-      expect(entry).toBeTruthy();
+    it('does not provide entry', () => {
+      expect(parser.getEntry).toThrow();
     });
 
     it('converts to valid perfetto trace', async () => {
@@ -125,6 +124,10 @@ describe('ParserSurfaceFlingerDump', () => {
       expect(
         packets[0].surfaceflingerLayersSnapshot?.layers?.layers?.length,
       ).toEqual(91);
+    });
+
+    it('does not provide entry', () => {
+      expect(parser.getEntry).toThrow();
     });
   });
 });

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import {BigintMath} from 'common/bigint_math';
+import {divideAndRound} from 'common/bigint_math';
 import {TIME_UNIT_TO_NANO} from 'common/time/time_units';
 
 export class TimeDuration {
@@ -24,7 +24,7 @@ export class TimeDuration {
   }
 
   format(): string {
-    const msString = BigintMath.divideAndRound(
+    const msString = divideAndRound(
       this.timeDiffNs,
       BigInt(TIME_UNIT_TO_NANO.ms),
     );

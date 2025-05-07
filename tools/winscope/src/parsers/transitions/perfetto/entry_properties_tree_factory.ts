@@ -15,16 +15,19 @@
  */
 
 import {assertDefined} from 'common/assert_utils';
-import {MakeTimestampStrategyType, Timestamp} from 'common/time/time';
+import {MakeTimestampStrategyType} from 'common/time/time';
 import {ParserTimestampConverter} from 'common/time/timestamp_converter';
 import {AddDefaults} from 'parsers/operations/add_defaults';
 import {SetFormatters} from 'parsers/operations/set_formatters';
 import {TransformToTimestamp} from 'parsers/operations/transform_to_timestamp';
 import {TranslateIntDef} from 'parsers/operations/translate_intdef';
-import {TamperedMessageType} from 'parsers/tampered_message_type';
+import {TAMPERED_TRACE_PACKET} from 'parsers/tampered_message_type';
+import {AddDuration} from 'parsers/transitions/operations/add_duration';
+import {AddRootProperties} from 'parsers/transitions/operations/add_root_properties';
+import {AddStatus} from 'parsers/transitions/operations/add_status';
+import {UpdateAbortTimeNodes} from 'parsers/transitions/operations/update_abort_time_nodes';
+import {TransitionType} from 'parsers/transitions/transition_type';
 import {perfetto} from 'protos/perfetto/trace/static';
-import root from 'protos/transitions/udc/json';
-import {com} from 'protos/transitions/udc/static';
 import {
   EnumFormatter,
   PropertyFormatter,
@@ -32,46 +35,52 @@ import {
 } from 'trace/tree_node/formatters';
 import {PropertyTreeBuilderFromProto} from 'trace/tree_node/property_tree_builder_from_proto';
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
-import {AddDuration} from './operations/add_duration';
-import {AddRealToBootTimeOffsetTimestamp} from './operations/add_real_to_elapsed_time_offset_timestamp';
-import {AddRootProperties} from './operations/add_root_properties';
-import {AddStatus} from './operations/add_status';
-import {UpdateAbortTimeNodes} from './operations/update_abort_time_nodes';
-import {TransitionType} from './transition_type';
 
 interface TransitionInfo {
-  entry:
-    | com.android.server.wm.shell.ITransition
-    | com.android.wm.shell.ITransition
-    | perfetto.protos.IShellTransition;
-  realToBootTimeOffsetNs: bigint | undefined;
+  entry: perfetto.protos.IShellTransition;
   timestampConverter: ParserTimestampConverter;
   handlerMapping?: {[key: number]: string};
 }
 
 export class EntryPropertiesTreeFactory {
-  static readonly TRANSITION_OPERATIONS = [
+  private static readonly SHELL_PROPERTIES = [
+    'dispatchTimeNs',
+    'mergeTimeNs',
+    'mergeRequestTimeNs',
+    'shellAbortTimeNs',
+    'handler',
+    'mergeTarget',
+  ];
+  private static readonly WM_PROPERTIES = [
+    'createTimeNs',
+    'sendTimeNs',
+    'wmAbortTimeNs',
+    'finishTimeNs',
+    'startTransactionId',
+    'finishTransactionId',
+    'type',
+    'targets',
+    'flags',
+    'startingWindowRemoveTimeNs',
+  ];
+
+  private static readonly TRANSITION_OPERATIONS = [
     new AddDuration(),
     new AddStatus(),
     new AddRootProperties(),
   ];
-
-  private static readonly TransitionTraceProto = TamperedMessageType.tamper(
-    root.lookupType('com.android.server.wm.shell.TransitionTraceProto'),
-  );
   private static readonly TransitionField =
-    EntryPropertiesTreeFactory.TransitionTraceProto.fields['transitions'];
+    TAMPERED_TRACE_PACKET.fields['shellTransition'];
   private static readonly WM_ADD_DEFAULTS_OPERATION = new AddDefaults(
     EntryPropertiesTreeFactory.TransitionField,
     ['type', 'targets'],
   );
-  private static WM_INTDEF_OPERATION = new TranslateIntDef(
+  private static readonly WM_INTDEF_OPERATION = new TranslateIntDef(
     EntryPropertiesTreeFactory.TransitionField,
   );
   private static readonly SET_FORMATTERS_OPERATION = new SetFormatters();
-  private static readonly PERFETTO_TRANSITION_OPERATIONS = [
-    new UpdateAbortTimeNodes(),
-  ];
+  private static readonly UPDATE_ABORT_TIME_OPERATION =
+    new UpdateAbortTimeNodes();
   private static readonly TRANSITION_TYPE_FORMATTER = new EnumFormatter(
     TransitionType,
   );
@@ -99,15 +108,12 @@ export class EntryPropertiesTreeFactory {
     return transitionTree;
   }
 
-  static makeWmPropertiesTree(
-    info?: TransitionInfo,
-    denylistProperties: string[] = [],
-  ): PropertyTreeNode {
+  static makeWmPropertiesTree(info?: TransitionInfo): PropertyTreeNode {
     const tree = new PropertyTreeBuilderFromProto()
       .setData({wmData: info?.entry ?? null})
       .setRootId('TransitionTraceEntry')
       .setRootName('Selected Transition')
-      .setDenyList(denylistProperties)
+      .setDenyList(EntryPropertiesTreeFactory.SHELL_PROPERTIES)
       .setVisitPrototype(false)
       .build();
 
@@ -116,25 +122,9 @@ export class EntryPropertiesTreeFactory {
       return tree;
     }
 
-    if (denylistProperties.length > 0) {
-      EntryPropertiesTreeFactory.PERFETTO_TRANSITION_OPERATIONS.forEach(
-        (operation) => operation.apply(tree),
-      );
-    }
-
-    let realToBootTimeOffsetTimestamp: Timestamp | undefined;
-
-    if (info.realToBootTimeOffsetNs !== undefined) {
-      realToBootTimeOffsetTimestamp =
-        info.timestampConverter.makeTimestampFromRealNs(
-          info.realToBootTimeOffsetNs,
-        );
-    }
+    EntryPropertiesTreeFactory.UPDATE_ABORT_TIME_OPERATION.apply(tree);
 
     const wmDataNode = assertDefined(tree.getChildByName('wmData'));
-    new AddRealToBootTimeOffsetTimestamp(realToBootTimeOffsetTimestamp).apply(
-      wmDataNode,
-    );
     EntryPropertiesTreeFactory.WM_ADD_DEFAULTS_OPERATION.apply(wmDataNode);
     new TransformToTimestamp(
       [
@@ -163,15 +153,12 @@ export class EntryPropertiesTreeFactory {
     return tree;
   }
 
-  static makeShellPropertiesTree(
-    info?: TransitionInfo,
-    denylistProperties: string[] = [],
-  ): PropertyTreeNode {
+  static makeShellPropertiesTree(info?: TransitionInfo): PropertyTreeNode {
     const tree = new PropertyTreeBuilderFromProto()
       .setData({shellData: info?.entry ?? null})
       .setRootId('TransitionTraceEntry')
       .setRootName('Selected Transition')
-      .setDenyList(denylistProperties)
+      .setDenyList(EntryPropertiesTreeFactory.WM_PROPERTIES)
       .setVisitPrototype(false)
       .build();
 
@@ -180,24 +167,9 @@ export class EntryPropertiesTreeFactory {
       return tree;
     }
 
-    if (denylistProperties.length > 0) {
-      EntryPropertiesTreeFactory.PERFETTO_TRANSITION_OPERATIONS.forEach(
-        (operation) => operation.apply(tree),
-      );
-    }
-
-    let realToBootTimeOffsetTimestamp: Timestamp | undefined;
-    if (info.realToBootTimeOffsetNs !== undefined) {
-      realToBootTimeOffsetTimestamp =
-        info.timestampConverter.makeTimestampFromRealNs(
-          info.realToBootTimeOffsetNs,
-        );
-    }
+    EntryPropertiesTreeFactory.UPDATE_ABORT_TIME_OPERATION.apply(tree);
 
     const shellDataNode = assertDefined(tree.getChildByName('shellData'));
-    new AddRealToBootTimeOffsetTimestamp(realToBootTimeOffsetTimestamp).apply(
-      shellDataNode,
-    );
     new TransformToTimestamp(
       ['dispatchTimeNs', 'mergeRequestTimeNs', 'mergeTimeNs', 'abortTimeNs'],
       EntryPropertiesTreeFactory.makeTimestampStrategy(info.timestampConverter),

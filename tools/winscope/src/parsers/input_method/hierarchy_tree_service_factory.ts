@@ -19,7 +19,6 @@ import {AddDefaults} from 'parsers/operations/add_defaults';
 import {SetFormatters} from 'parsers/operations/set_formatters';
 import {TranslateIntDef} from 'parsers/operations/translate_intdef';
 import {TamperedProtoField} from 'parsers/tampered_message_type';
-import {android} from 'protos/ime/udc/static';
 import {perfetto} from 'protos/perfetto/trace/static';
 import {HierarchyTreeNode} from 'trace/tree_node/hierarchy_tree_node';
 import {LazyPropertiesStrategyType} from 'trace/tree_node/properties_provider';
@@ -74,9 +73,7 @@ export class HierarchyTreeServiceFactory {
   }
 
   makeHierarchyTree(
-    entryProto:
-      | android.view.inputmethod.IInputMethodServiceTraceProto
-      | perfetto.protos.IInputMethodServiceTraceProto,
+    entryProto: perfetto.protos.IInputMethodServiceTraceProto,
   ): HierarchyTreeNode {
     const entry = new PropertiesProviderBuilder()
       .setEagerProperties(this.makeEntryEagerPropertiesTree(entryProto))
@@ -114,9 +111,7 @@ export class HierarchyTreeServiceFactory {
   }
 
   private makeEntryEagerPropertiesTree(
-    entryProto:
-      | android.view.inputmethod.IInputMethodServiceTraceProto
-      | perfetto.protos.IInputMethodServiceTraceProto,
+    entryProto: perfetto.protos.IInputMethodServiceTraceProto,
   ): PropertyTreeNode {
     const denyList: string[] = [];
     Object.getOwnPropertyNames(entryProto).forEach((it) => {
@@ -134,9 +129,7 @@ export class HierarchyTreeServiceFactory {
   }
 
   private makeEntryLazyPropertiesStrategy(
-    entryProto:
-      | android.view.inputmethod.IInputMethodServiceTraceProto
-      | perfetto.protos.IInputMethodServiceTraceProto,
+    entryProto: perfetto.protos.IInputMethodServiceTraceProto,
   ): LazyPropertiesStrategyType {
     return async () => {
       return new PropertyTreeBuilderFromProto()
@@ -153,9 +146,7 @@ export class HierarchyTreeServiceFactory {
   }
 
   private makeServiceEagerPropertiesTree(
-    serviceProto:
-      | android.inputmethodservice.IInputMethodServiceProto
-      | perfetto.protos.IInputMethodServiceProto,
+    serviceProto: perfetto.protos.IInputMethodServiceProto,
   ): PropertyTreeNode {
     const denyList: string[] = [];
     let data: object = serviceProto;
@@ -180,9 +171,7 @@ export class HierarchyTreeServiceFactory {
   }
 
   private makeServiceLazyPropertiesStrategy(
-    serviceProto:
-      | android.inputmethodservice.IInputMethodServiceProto
-      | perfetto.protos.IInputMethodServiceProto,
+    serviceProto: perfetto.protos.IInputMethodServiceProto,
   ): LazyPropertiesStrategyType {
     return async () => {
       return new PropertyTreeBuilderFromProto()

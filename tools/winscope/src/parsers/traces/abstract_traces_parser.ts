@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import {NOT_IMPLEMENTED_ERROR} from 'common/errors';
 import {Timestamp} from 'common/time/time';
 import {ParserTimestampConverter} from 'common/time/timestamp_converter';
 import {CoarseVersion} from 'trace/coarse_version';
@@ -37,7 +38,7 @@ export abstract class AbstractTracesParser<T> implements Parser<T> {
     type: Q,
     entriesRange: EntriesRange,
   ): Promise<CustomQueryParserResultTypeMap[Q]> {
-    throw new Error('Not implemented');
+    throw NOT_IMPLEMENTED_ERROR;
   }
 
   getTimestamps(): Timestamp[] | undefined {

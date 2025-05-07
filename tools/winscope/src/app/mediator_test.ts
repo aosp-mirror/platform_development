@@ -228,6 +228,7 @@ describe('Mediator', () => {
       spyOn(timelineComponent, 'onWinscopeEvent'),
       spyOn(timelineData, 'initialize').and.callThrough(),
       spyOn(tracePipeline, 'onWinscopeEvent'),
+      spyOn(tracePipeline, 'convertLegacyTracesToPerfetto'),
       spyOn(traceViewComponent, 'onWinscopeEvent'),
       spyOn(uploadTracesComponent, 'onWinscopeEvent'),
       spyOn(uploadTracesComponent, 'onProgressUpdate'),
@@ -841,17 +842,11 @@ describe('Mediator', () => {
     );
   });
 
-  async function loadFiles(
-    files = inputFiles,
-    viewersToReassignTraces = [viewerStub0, viewerStub1],
-  ) {
+  async function loadFiles(files = inputFiles) {
     for (const file of files) {
       await mediator.onWinscopeEvent(new AppFilesUploaded([file]));
     }
     userNotifierChecker.expectNone();
-    viewersToReassignTraces.forEach((viewer) =>
-      reassignViewerStubTrace(viewer),
-    );
   }
 
   function reassignViewerStubTrace(viewerStub: ViewerStub) {
@@ -861,12 +856,18 @@ describe('Mediator', () => {
       .getTrace(viewerStubTraces[0].type) as Trace<object>;
   }
 
-  async function loadTraceView(expectedViewers = viewers) {
+  async function loadTraceView(
+    expectedViewers = viewers,
+    viewersToReassignTraces = [viewerStub0, viewerStub1],
+  ) {
     // Simulate "View traces" button click
     resetSpyCalls();
     await mediator.onWinscopeEvent(new AppTraceViewRequest());
 
     checkLoadTraceViewEvents(uploadTracesComponent, expectedViewers);
+    viewersToReassignTraces.forEach((viewer) =>
+      reassignViewerStubTrace(viewer),
+    );
 
     // Simulate notification of TraceViewComponent about initially selected/focused tab
     resetSpyCalls();
@@ -888,6 +889,9 @@ describe('Mediator', () => {
   ) {
     expect(progressListener.onProgressUpdate).toHaveBeenCalled();
     expect(progressListener.onOperationFinished).toHaveBeenCalled();
+    expect(tracePipeline.convertLegacyTracesToPerfetto).toHaveBeenCalledTimes(
+      1,
+    );
     expect(timelineData.initialize).toHaveBeenCalledTimes(1);
     expect(appComponent.onWinscopeEvent).toHaveBeenCalledOnceWith(
       new ViewersLoaded(expectedViewers),
@@ -942,7 +946,7 @@ describe('Mediator', () => {
   }
 
   async function loadPerfettoFilesAndReturnSearchViewer(): Promise<ViewerStub> {
-    await loadFiles([perfettoFile], [viewerStub0]);
+    await loadFiles([perfettoFile]);
     const searchViewer = new ViewerStub(
       'search',
       undefined,
@@ -952,7 +956,7 @@ describe('Mediator', () => {
     spyOn(searchViewer, 'onWinscopeEvent');
     const expectedViewers = [viewerStub0, searchViewer];
     createViewersSpy.and.returnValue(expectedViewers);
-    await loadTraceView(expectedViewers);
+    await loadTraceView(expectedViewers, [viewerStub0]);
     resetSpyCalls();
     return searchViewer;
   }
