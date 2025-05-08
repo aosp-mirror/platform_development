@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import {assertDefined} from 'common/assert_utils';
 import {
   getTimestampConverter,
   TimestampConverterUtils,
@@ -77,7 +78,7 @@ describe('ParserSurfaceFlingerDump', () => {
       expect(parser.getEntry).toThrow();
     });
 
-    it('converts to valid perfetto trace', async () => {
+    it('converts to valid perfetto packets', async () => {
       const packets = parser.convertToPerfettoPackets!(10);
       expect(packets.length).toEqual(1);
       expect(packets[0].timestamp).toEqual(Long.fromInt(0));
@@ -88,6 +89,13 @@ describe('ParserSurfaceFlingerDump', () => {
       expect(
         packets[0].surfaceflingerLayersSnapshot?.layers?.layers?.length,
       ).toEqual(94);
+    });
+
+    it('converts to valid perfetto trace', async () => {
+      await checkValidPerfettoTraceConversion(
+        'traces/elapsed_and_real_timestamp/dump_SurfaceFlinger.pb',
+        95,
+      );
     });
   });
 
@@ -113,7 +121,7 @@ describe('ParserSurfaceFlingerDump', () => {
       expect(parser.getTimestamps()).toEqual(expected);
     });
 
-    it('converts to valid perfetto trace', async () => {
+    it('converts to valid perfetto packets', async () => {
       const packets = parser.convertToPerfettoPackets!(10);
       expect(packets.length).toEqual(1);
       expect(packets[0].timestamp).toEqual(Long.fromInt(0));
@@ -129,5 +137,28 @@ describe('ParserSurfaceFlingerDump', () => {
     it('does not provide entry', () => {
       expect(parser.getEntry).toThrow();
     });
+
+    it('converts to valid perfetto trace', async () => {
+      await checkValidPerfettoTraceConversion(
+        'traces/elapsed_timestamp/dump_SurfaceFlinger.pb',
+        92,
+      );
+    });
   });
+
+  async function checkValidPerfettoTraceConversion(
+    filename: string,
+    nodeCount: number,
+  ) {
+    const perfettoParser = await new LegacyParserProvider()
+      .addFilename(filename)
+      .setConvertToPerfetto(true)
+      .getParser<HierarchyTreeNode>();
+    const expected = [TimestampConverterUtils.makeZeroTimestamp()];
+    expect(assertDefined(perfettoParser.getTimestamps())).toEqual(expected);
+    const entry = await perfettoParser.getEntry(0);
+    let count = 0;
+    entry.forEachNodeDfs(() => count++);
+    expect(count).toEqual(nodeCount);
+  }
 });

@@ -141,6 +141,21 @@ describe('LegacyToPerfettoConverter', () => {
     ]);
   });
 
+  it('converts legacy trace with zero timestamp', async () => {
+    const packet = makePacketWithBoottimeTs(0);
+    const parser = makeParser([packet]);
+    spyOn(parser, 'getRealToBootTimeOffsetNs').and.returnValue(undefined);
+    spyOn(parser, 'getRealToMonotonicTimeOffsetNs').and.returnValue(undefined);
+    const perfettoFile = await convertToPerfetto([parser]);
+    const trace = await checkAndDecodePerfettoFile(assertDefined(perfettoFile));
+    const clockSnapshot = makeExpectedClockSnapshot({
+      realtime: 0n,
+      boottime: 0n,
+      monotonic: 0n,
+    });
+    expect(trace.packet).toEqual([clockSnapshot, packet]);
+  });
+
   it('robust to errors in packet conversion', async () => {
     const parser = makeParser([], true);
     expect(await convertToPerfetto([parser])).toBeUndefined();
@@ -315,14 +330,14 @@ describe('LegacyToPerfettoConverter', () => {
       },
     ];
 
-    if (clockSnapshot.boottime) {
+    if (clockSnapshot.boottime !== undefined) {
       clocks.push({
         clockId: perfetto.protos.ClockSnapshot.Clock.BuiltinClocks.BOOTTIME,
         timestamp: Long.fromString(clockSnapshot.boottime.toString()),
       });
     }
 
-    if (clockSnapshot.monotonic) {
+    if (clockSnapshot.monotonic !== undefined) {
       const monotonic = Long.fromString(clockSnapshot.monotonic.toString());
       clocks.push(
         ...[

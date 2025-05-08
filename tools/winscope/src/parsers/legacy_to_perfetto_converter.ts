@@ -184,7 +184,7 @@ export class LegacyToPerfettoConverter {
     clockRealtime.timestamp = realtime;
     snapshot.clocks.push(clockRealtime);
 
-    if (legacySnapshot.boottime) {
+    if (legacySnapshot.boottime !== undefined) {
       const boottime = Long.fromString(legacySnapshot.boottime.toString());
       const clockBoottime = perfetto.protos.ClockSnapshot.Clock.create();
       clockBoottime.clockId =
@@ -193,7 +193,7 @@ export class LegacyToPerfettoConverter {
       snapshot.clocks.push(clockBoottime);
     }
 
-    if (legacySnapshot.monotonic) {
+    if (legacySnapshot.monotonic !== undefined) {
       const monotonic = Long.fromString(legacySnapshot.monotonic.toString());
       const clockMonotonic = perfetto.protos.ClockSnapshot.Clock.create();
       clockMonotonic.clockId =
