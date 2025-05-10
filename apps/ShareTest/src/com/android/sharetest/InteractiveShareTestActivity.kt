@@ -16,7 +16,6 @@
 
 package com.android.sharetest
 
-import android.app.ActivityOptions
 import android.app.AlertDialog
 import android.app.Dialog
 import android.content.BroadcastReceiver
@@ -33,6 +32,7 @@ import android.service.chooser.ChooserSession
 import android.service.chooser.ChooserSession.ChooserController
 import android.util.Log
 import androidx.activity.compose.setContent
+import androidx.activity.viewModels
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -60,7 +60,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.unit.dp
-import androidx.core.os.bundleOf
 import androidx.fragment.app.DialogFragment
 import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.Lifecycle
@@ -77,16 +76,15 @@ import kotlinx.coroutines.flow.scan
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
-private const val KEY_SESSION = "chooser-session"
-private const val EXTRA_CHOOSER_INTERACTIVE_CALLBACK =
-    "com.android.extra.EXTRA_CHOOSER_INTERACTIVE_CALLBACK"
-
 @AndroidEntryPoint(value = FragmentActivity::class)
 class InteractiveShareTestActivity : Hilt_InteractiveShareTestActivity() {
     private val TAG = "ShareTest/$hashId"
     private var chooserWindowTopOffset = MutableStateFlow(-1)
     private val isInMultiWindowMode = MutableStateFlow<Boolean>(false)
-    private val chooserSession = MutableStateFlow<ChooserSession?>(null)
+    private val viewModel: InteractiveShareTestViewModel by viewModels()
+    private val chooserSession: MutableStateFlow<ChooserSession?>
+        get() = viewModel.chooserSession
+
     private val useRefinementFlow = MutableStateFlow<Boolean>(false)
     private val refinementReceiver =
         object : BroadcastReceiver() {
@@ -102,26 +100,17 @@ class InteractiveShareTestActivity : Hilt_InteractiveShareTestActivity() {
 
     private val sessionStateListener =
         object : ChooserSession.ChooserSessionUpdateListener {
-            override fun onChooserConnected(
-                session: ChooserSession?,
-                chooserController: ChooserController?,
-            ) {
+            override fun onChooserConnected(chooserController: ChooserController) {
                 Log.d(TAG, "onChooserConnected")
             }
 
-            override fun onChooserDisconnected(
-                session: ChooserSession?,
-                chooserController: ChooserController,
-            ) {
-                Log.d(TAG, "onChooserDisconnected")
-            }
-
-            override fun onSessionClosed(session: ChooserSession?) {
+            override fun onSessionClosed() {
                 Log.d(TAG, "onSessionClosed")
-                chooserSession.update { oldValue -> if (oldValue === session) null else oldValue }
+                chooserSession.value = null
             }
 
-            override fun onSizeChanged(session: ChooserSession, size: Rect) {
+            override fun onSizeChanged(size: Rect) {
+                Log.d(TAG, "onSizeChanged")
                 chooserWindowTopOffset.value = size.top
             }
         }
@@ -131,10 +120,6 @@ class InteractiveShareTestActivity : Hilt_InteractiveShareTestActivity() {
         super.onCreate(savedInstanceState)
 
         isInMultiWindowMode.value = isInMultiWindowMode()
-        chooserSession.value =
-            savedInstanceState?.getParcelable(KEY_SESSION, ChooserSession::class.java)?.apply {
-                setChooserStateListener(sessionStateListener)
-            }
 
         lifecycleScope.launch {
             lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) {
@@ -295,13 +280,8 @@ class InteractiveShareTestActivity : Hilt_InteractiveShareTestActivity() {
         if (useRefinementFlow.value) {
             unregisterReceiver(refinementReceiver)
         }
+        chooserSession.value?.setChooserStateListener(null)
         super.onDestroy()
-    }
-
-    override fun onSaveInstanceState(outState: Bundle) {
-        Log.d(TAG, "onSaveInstanceState")
-        super.onSaveInstanceState(outState)
-        chooserSession.value?.let { outState.putParcelable(KEY_SESSION, it) }
     }
 
     override fun onConfigurationChanged(newConfig: Configuration) {
@@ -403,16 +383,10 @@ class InteractiveShareTestActivity : Hilt_InteractiveShareTestActivity() {
         }
         chooserIntent.putExtra(EXTRA_CHOOSER_RESULT_INTENT_SENDER, createResultIntentSender(this))
         if (chooserController == null) {
-            val session = ChooserSession()
-            chooserSession.value = session
-            val options =
-                ActivityOptions.makeBasic().apply { isAllowPassThroughOnTouchOutside = true }
-            startActivity(
-                Intent(chooserIntent).apply {
-                    putExtras(bundleOf(EXTRA_CHOOSER_INTERACTIVE_CALLBACK to session))
-                },
-                options.toBundle(),
-            )
+            ChooserSession.Builder()
+                .build()
+                .also { chooserSession.value = it }
+                .start(this, chooserIntent)
         } else {
             chooserController.updateIntent(chooserIntent)
         }

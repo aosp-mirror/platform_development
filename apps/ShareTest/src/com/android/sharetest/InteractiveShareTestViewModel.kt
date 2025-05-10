@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,14 +14,12 @@
  * limitations under the License.
  */
 
-package android.service.chooser;
+package com.android.sharetest
 
-import android.graphics.Rect;
-import android.service.chooser.IChooserController;
+import android.service.chooser.ChooserSession
+import androidx.lifecycle.ViewModel
+import kotlinx.coroutines.flow.MutableStateFlow
 
-/** {@hide} */
-interface IChooserControllerCallback {
-    oneway void registerChooserController(in IChooserController updater);
-    oneway void onSizeChanged(in Rect size);
-    oneway void onClosed();
+class InteractiveShareTestViewModel : ViewModel() {
+    val chooserSession = MutableStateFlow<ChooserSession?>(null)
 }
