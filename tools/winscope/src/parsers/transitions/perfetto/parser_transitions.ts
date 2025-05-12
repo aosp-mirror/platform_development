@@ -143,7 +143,7 @@ export class ParserTransitions extends AbstractParser<PropertyTreeNode> {
   private validatePerfettoTransition(
     transition: perfetto.protos.IShellTransition,
   ) {
-    if (transition.id === 0) {
+    if (!transition.id) {
       throw new Error('Transitions entry need a non null id');
     }
     if (
@@ -157,7 +157,7 @@ export class ParserTransitions extends AbstractParser<PropertyTreeNode> {
       !transition.shellAbortTimeNs
     ) {
       throw new Error(
-        'Transitions entry requires at least one non-null timestamp',
+        `Transition#${transition.id} requires at least one non-null timestamp`,
       );
     }
   }

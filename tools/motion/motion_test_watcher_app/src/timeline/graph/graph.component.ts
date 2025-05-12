@@ -123,31 +123,31 @@ export class GraphComponent implements AfterViewInit, OnChanges {
     const name = actualFeature?.name;
     const type = actualFeature?.type;
 
-    if (
-      actualFeature &&
-      ['float', 'int', 'dp', 'dpOffset', 'dpSize', 'offset'].includes(
-        type || ''
-      )
-    ) {
-      const numericValues =
-        actualFeature.data_points?.filter(
-          (it): it is number => typeof it === 'number'
-        ) || [];
-      const minValue = Math.min(...numericValues) ?? 0;
-      let maxValue = Math.max(...numericValues) ?? 1;
+    let numericValues: number[] = [];
+    if (actualFeature?.data_points) {
+      numericValues = numericValues.concat(actualFeature.data_points.filter(
+        (it): it is number => typeof it === 'number'
+      ))
+    };
+    if (expectedFeature?.data_points) {
+      numericValues = numericValues.concat(expectedFeature.data_points.filter(
+        (it): it is number => typeof it === 'number'
+      ))
+    };
 
-      if (minValue === maxValue) {
-        maxValue += 1;
-      }
+    const minValue = Math.min(...numericValues) ?? 0;
+    let maxValue = Math.max(...numericValues) ?? 1;
 
-      return new LineGraphVisualization(
-        minValue,
-        maxValue,
-        this.graphId,
-        this.previewService
-      );
+    if (minValue === maxValue) {
+      maxValue += 1;
     }
-    return new LineGraphVisualization(0, 1, this.graphId, this.previewService);
+
+    return new LineGraphVisualization(
+      minValue,
+      maxValue,
+      this.graphId,
+      this.previewService
+    );
   }
 
   private createChart(): void {
