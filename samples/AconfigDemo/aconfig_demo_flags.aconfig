@@ -209,3 +209,17 @@ flag {
     bug: "303703498"
     is_fixed_read_only: false
 }
+flag {
+    name: "test_new_trunk_stable_flag_event_rpc_server_side"
+    namespace: "core_experiments_team_internal"
+    description: "A test flag to verify new halyard to gantry rpc"
+    bug: "413977839"
+    is_fixed_read_only: false
+}
+flag {
+    name: "test_new_trunk_stable_flag_event_rpc_fixed_read_only"
+    namespace: "core_experiments_team_internal"
+    description: "A test flag to verify new halyard to gantry rpc"
+    bug: "413977839"
+    is_fixed_read_only: true
+}

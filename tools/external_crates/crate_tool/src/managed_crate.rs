@@ -340,7 +340,7 @@ impl ManagedCrate<Vendored> {
         let licenses = find_licenses(
             self.temporary_build_directory(),
             self.name(),
-            self.android_crate.license(),
+            Crate::from(self.temporary_build_directory())?.license(),
         )?;
         let regenerated = self.into_copied_and_patched(licenses)?;
         regenerated.regenerate(run_cargo_embargo)?;
