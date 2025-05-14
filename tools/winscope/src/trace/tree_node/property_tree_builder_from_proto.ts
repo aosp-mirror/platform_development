@@ -15,69 +15,19 @@
  */
 
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
+import {AbstractPropertyTreeBuilder} from './abstract_property_tree_builder';
 import {PropertyTreeNodeFactory} from './property_tree_node_factory';
 
-export class PropertyTreeBuilderFromProto {
+export class PropertyTreeBuilderFromProto extends AbstractPropertyTreeBuilder<object> {
   private denylistProperties: string[] = [];
-  private duplicateCount = 0;
-  private proto: object | undefined;
-  private rootId: string | number = 'UnknownRootId';
-  private rootName: string | undefined = 'UnknownRootName';
-  private visitProtoType = true;
-
-  setData(value: object | undefined): this {
-    this.proto = value;
-    return this;
-  }
-
-  setRootId(value: string | number): this {
-    this.rootId = value;
-    return this;
-  }
-
-  setRootName(value: string): this {
-    this.rootName = value;
-    return this;
-  }
 
   setDenyList(value: string[]): this {
     this.denylistProperties = value;
     return this;
   }
 
-  setDuplicateCount(value: number): this {
-    this.duplicateCount = value;
-    return this;
-  }
-
-  setVisitPrototype(value: boolean): this {
-    this.visitProtoType = value;
-    return this;
-  }
-
-  build(): PropertyTreeNode {
-    if (this.proto === undefined) {
-      throw new Error('proto not set');
-    }
-    if (this.rootId === undefined) {
-      throw new Error('rootId not set');
-    }
-    if (this.rootName === undefined) {
-      throw new Error('rootName not set');
-    }
-    const factory = new PropertyTreeNodeFactory(
-      this.denylistProperties,
-      this.visitProtoType,
-    );
-
-    return factory.makeProtoProperty(this.makeNodeId(), '', this.proto);
-  }
-
-  private makeNodeId(): string {
-    let nodeId = `${this.rootId} ${this.rootName}`;
-    if (this.duplicateCount > 0) {
-      nodeId += ` duplicate(${this.duplicateCount})`;
-    }
-    return nodeId;
+  protected override buildPropertiesTree(rootNodeId: string): PropertyTreeNode {
+    const factory = new PropertyTreeNodeFactory(this.denylistProperties);
+    return factory.makeProtoProperty(rootNodeId, '', this.data);
   }
 }

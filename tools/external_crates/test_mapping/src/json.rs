@@ -56,23 +56,23 @@ impl TestMappingJson {
             && self.presubmit_rust.is_empty()
             && self.postsubmit.is_empty()
     }
-    pub fn remove_unknown_tests(&mut self, tests: &BTreeSet<String>) -> bool {
+    pub fn remove_unknown_tests(&mut self, tests: &BTreeSet<&str>) -> bool {
         let mut changed = false;
-        if self.presubmit.iter().any(|t| !tests.contains(&t.name)) {
-            self.presubmit.retain(|t| tests.contains(&t.name));
+        if self.presubmit.iter().any(|t| !tests.contains(t.name.as_str())) {
+            self.presubmit.retain(|t| tests.contains(t.name.as_str()));
             changed = true;
         }
-        if self.presubmit_rust.iter().any(|t| !tests.contains(&t.name)) {
-            self.presubmit_rust.retain(|t| tests.contains(&t.name));
+        if self.presubmit_rust.iter().any(|t| !tests.contains(t.name.as_str())) {
+            self.presubmit_rust.retain(|t| tests.contains(t.name.as_str()));
             changed = true;
         }
-        if self.postsubmit.iter().any(|t| !tests.contains(&t.name)) {
-            self.postsubmit.retain(|t| tests.contains(&t.name));
+        if self.postsubmit.iter().any(|t| !tests.contains(t.name.as_str())) {
+            self.postsubmit.retain(|t| tests.contains(t.name.as_str()));
             changed = true;
         }
         changed
     }
-    pub fn set_presubmits(&mut self, tests: &BTreeSet<String>) {
+    pub fn set_presubmits(&mut self, tests: &BTreeSet<&str>) {
         self.presubmit = tests.iter().map(|t| TestMappingName { name: t.to_string() }).collect();
         self.presubmit_rust = self.presubmit.clone();
     }
@@ -86,12 +86,15 @@ impl TestMappingJson {
         self.presubmit_rust.dedup();
         changed
     }
-    pub fn add_new_tests_to_postsubmit(&mut self, tests: &BTreeSet<String>) -> bool {
+    pub fn add_new_tests_to_postsubmit(&mut self, tests: &BTreeSet<&str>) -> bool {
         let mut changed = false;
-        self.postsubmit.extend(tests.difference(&self.all_test_names()).map(|test_name| {
-            changed = true;
-            TestMappingName { name: test_name.to_string() }
-        }));
+        let all_test_names = self.all_test_names();
+        for test in tests {
+            if !all_test_names.contains(*test) {
+                changed = true;
+                self.postsubmit.push(TestMappingName { name: test.to_string() });
+            }
+        }
         self.postsubmit.sort();
         self.postsubmit.dedup();
         changed
@@ -155,7 +158,7 @@ mod tests {
     #[test]
     fn set_presubmits() -> Result<(), Error> {
         let mut json = TestMappingJson::parse(TEST_JSON.to_string())?;
-        json.set_presubmits(&BTreeSet::from(["asdf".to_string()]));
+        json.set_presubmits(&BTreeSet::from(["asdf"]));
         assert_eq!(json.presubmit, vec![TestMappingName { name: "asdf".to_string() }]);
         assert_eq!(json.presubmit, json.presubmit_rust);
         Ok(())
@@ -164,9 +167,8 @@ mod tests {
     #[test]
     fn add_new_tests_to_postsubmit() -> Result<(), Error> {
         let mut json = TestMappingJson::parse(TEST_JSON.to_string())?;
-        assert!(!json.add_new_tests_to_postsubmit(&BTreeSet::from(["bar".to_string()])));
-        assert!(json
-            .add_new_tests_to_postsubmit(&BTreeSet::from(["bar".to_string(), "asdf".to_string()])));
+        assert!(!json.add_new_tests_to_postsubmit(&BTreeSet::from(["bar"])));
+        assert!(json.add_new_tests_to_postsubmit(&BTreeSet::from(["bar", "asdf"])));
         assert_eq!(
             json.postsubmit,
             vec![

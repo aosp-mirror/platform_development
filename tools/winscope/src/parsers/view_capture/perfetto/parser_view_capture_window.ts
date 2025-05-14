@@ -21,7 +21,7 @@ import {SetFormatters} from 'parsers/operations/set_formatters';
 import {AbstractParser} from 'parsers/perfetto/abstract_parser';
 import {FakeProto, FakeProtoBuilder} from 'parsers/perfetto/fake_proto_builder';
 import {FakeProtoTransformer} from 'parsers/perfetto/fake_proto_transformer';
-import {Utils} from 'parsers/perfetto/utils';
+import {queryEntry} from 'parsers/perfetto/utils';
 import {TAMPERED_WINSCOPE_EXTENSIONS} from 'parsers/tampered_message_type';
 import {RectsComputation} from 'parsers/view_capture/computations/rects_computation';
 import {VisibilityComputation} from 'parsers/view_capture/computations/visibility_computation';
@@ -95,7 +95,7 @@ export class ParserViewCaptureWindow extends AbstractParser<HierarchyTreeNode> {
   }
 
   override async getEntry(index: number): Promise<HierarchyTreeNode> {
-    let snapshotProto = (await Utils.queryEntry(
+    let snapshotProto = (await queryEntry(
       this.traceProcessor,
       this.getTableName(),
       this.entryIndexToRowIdMap,

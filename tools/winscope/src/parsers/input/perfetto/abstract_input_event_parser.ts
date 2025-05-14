@@ -20,7 +20,7 @@ import {SetFormatters} from 'parsers/operations/set_formatters';
 import {TranslateIntDef} from 'parsers/operations/translate_intdef';
 import {AbstractParser} from 'parsers/perfetto/abstract_parser';
 import {FakeProtoBuilder} from 'parsers/perfetto/fake_proto_builder';
-import {Utils} from 'parsers/perfetto/utils';
+import {queryVsyncId} from 'parsers/perfetto/utils';
 import {TAMPERED_WINSCOPE_EXTENSIONS} from 'parsers/tampered_message_type';
 import {perfetto} from 'protos/perfetto/trace/static';
 import {
@@ -113,7 +113,7 @@ export abstract class AbstractInputEventParser extends AbstractParser<PropertyTr
   ): Promise<CustomQueryParserResultTypeMap[Q]> {
     return new VisitableParserCustomQuery(type)
       .visit(CustomQueryType.VSYNCID, async () => {
-        return Utils.queryVsyncId(
+        return queryVsyncId(
           this.traceProcessor,
           this.getTableName(),
           this.entryIndexToRowIdMap,

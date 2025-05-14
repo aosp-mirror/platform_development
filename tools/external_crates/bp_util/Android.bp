@@ -8,27 +8,9 @@ package {
     default_applicable_licenses: ["Android-Apache-2.0"],
 }
 
-rust_library_host {
-    name: "libtest_mapping",
-    crate_name: "test_mapping",
-    cargo_env_compat: true,
-    cargo_pkg_version: "0.1.0",
-    crate_root: "src/lib.rs",
-    edition: "2021",
-    rustlibs: [
-        "libandroid_bp",
-        "libbp_util",
-        "libjson_strip_comments",
-        "librooted_path",
-        "libserde",
-        "libserde_json",
-        "libthiserror",
-    ],
-}
-
 rust_test_host {
-    name: "test_mapping_test_src_lib",
-    crate_name: "test_mapping",
+    name: "bp_util_test_src_lib",
+    crate_name: "bp_util",
     cargo_env_compat: true,
     cargo_pkg_version: "0.1.0",
     crate_root: "src/lib.rs",
@@ -40,11 +22,19 @@ rust_test_host {
     edition: "2021",
     rustlibs: [
         "libandroid_bp",
-        "libbp_util",
-        "libjson_strip_comments",
-        "librooted_path",
-        "libserde",
-        "libserde_json",
+        "libthiserror",
+    ],
+}
+
+rust_library_host {
+    name: "libbp_util",
+    crate_name: "bp_util",
+    cargo_env_compat: true,
+    cargo_pkg_version: "0.1.0",
+    crate_root: "src/lib.rs",
+    edition: "2021",
+    rustlibs: [
+        "libandroid_bp",
         "libthiserror",
     ],
 }

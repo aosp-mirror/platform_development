@@ -1,5 +1,8 @@
 {
   "package": {
+    "bp_util": {
+      "device_supported": false
+    },
     "checksum": {
       "device_supported": false
     },

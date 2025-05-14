@@ -176,7 +176,6 @@ export class HierarchyTreeManagerServiceFactory {
       .setRootId('InputMethodManagerService')
       .setRootName('inputMethodManagerService')
       .setDenyList(denyList)
-      .setVisitPrototype(false)
       .build();
   }
 
@@ -191,7 +190,6 @@ export class HierarchyTreeManagerServiceFactory {
         .setDenyList(
           HierarchyTreeManagerServiceFactory.SERVICE_EAGER_PROPERTIES,
         )
-        .setVisitPrototype(false)
         .build();
     };
   }

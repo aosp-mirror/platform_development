@@ -60,4 +60,5 @@ export enum PropertySource {
   PROTO,
   DEFAULT,
   CALCULATED,
+  TP,
 }

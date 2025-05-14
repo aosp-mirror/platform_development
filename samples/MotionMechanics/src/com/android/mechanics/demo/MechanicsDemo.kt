@@ -27,23 +27,25 @@ import com.android.mechanics.demo.presentation.DirectionChangeDemo
 import com.android.mechanics.demo.presentation.DirectionSpecDemo
 import com.android.mechanics.demo.presentation.GuaranteeBoxDemo
 import com.android.mechanics.demo.presentation.GuaranteeFadeDemo
+import com.android.mechanics.demo.presentation.MagneticDetachDemo
+import com.android.mechanics.demo.presentation.MagneticDetachWithOverdragDemo
 import com.android.mechanics.demo.presentation.SpecDemo
 
 object DemoScreens {
 
-    private val MotionMechanicsPresentation =
+    val Home =
         ParentScreen(
-            "mm_preso_jan_21",
+            "home",
             mapOf(
-                "S17 - Motion Spec" to DemoScreen(SpecDemo),
-                "S22 - Directionality Hysteresis" to DemoScreen(DirectionChangeDemo),
-                "S23 - Directionality Effects" to DemoScreen(DirectionSpecDemo),
-                "S24 - Guaranteed Fade" to DemoScreen(GuaranteeFadeDemo),
-                "S25 - Guaranteed Size" to DemoScreen(GuaranteeBoxDemo),
+                "Simple Motion Spec examples" to DemoScreen(SpecDemo),
+                "Directionality Hysteresis" to DemoScreen(DirectionChangeDemo),
+                "Directionality Effects" to DemoScreen(DirectionSpecDemo),
+                "Guaranteed Fade" to DemoScreen(GuaranteeFadeDemo),
+                "Guaranteed Size" to DemoScreen(GuaranteeBoxDemo),
+                "Magnetic detach" to DemoScreen(MagneticDetachDemo),
+                "Magnetic detach with Overdrag" to DemoScreen(MagneticDetachWithOverdragDemo),
             ),
         )
-
-    val Home = ParentScreen("home", mapOf("MM Presentation" to MotionMechanicsPresentation))
 }
 
 @Composable

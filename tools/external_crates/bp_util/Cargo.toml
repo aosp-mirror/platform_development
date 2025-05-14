@@ -1,0 +1,8 @@
+[package]
+name = "bp_util"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+android_bp = "0.3"
+thiserror = "1.0"

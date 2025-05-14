@@ -22,7 +22,7 @@ import {TranslateIntDef} from 'parsers/operations/translate_intdef';
 import {AbstractParser} from 'parsers/perfetto/abstract_parser';
 import {FakeProtoBuilder} from 'parsers/perfetto/fake_proto_builder';
 import {FakeProtoTransformer} from 'parsers/perfetto/fake_proto_transformer';
-import {Utils} from 'parsers/perfetto/utils';
+import {queryEntry, queryVsyncId} from 'parsers/perfetto/utils';
 import {DENYLIST_PROPERTIES} from 'parsers/surface_flinger/denylist_properties';
 import {EAGER_PROPERTIES} from 'parsers/surface_flinger/eager_properties';
 import {EntryHierarchyTreeFactory} from 'parsers/surface_flinger/entry_hierarchy_tree_factory';
@@ -109,7 +109,7 @@ export class ParserSurfaceFlinger extends AbstractParser<HierarchyTreeNode> {
   }
 
   override async getEntry(index: number): Promise<HierarchyTreeNode> {
-    let snapshotProto = await Utils.queryEntry(
+    let snapshotProto = await queryEntry(
       this.traceProcessor,
       this.getTableName(),
       this.entryIndexToRowIdMap,
@@ -131,7 +131,7 @@ export class ParserSurfaceFlinger extends AbstractParser<HierarchyTreeNode> {
   ): Promise<CustomQueryParserResultTypeMap[Q]> {
     return new VisitableParserCustomQuery(type)
       .visit(CustomQueryType.VSYNCID, async () => {
-        return Utils.queryVsyncId(
+        return queryVsyncId(
           this.traceProcessor,
           this.getTableName(),
           this.entryIndexToRowIdMap,

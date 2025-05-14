@@ -114,7 +114,6 @@ export class EntryPropertiesTreeFactory {
       .setRootId('TransitionTraceEntry')
       .setRootName('Selected Transition')
       .setDenyList(EntryPropertiesTreeFactory.SHELL_PROPERTIES)
-      .setVisitPrototype(false)
       .build();
 
     if (!info) {
@@ -159,7 +158,6 @@ export class EntryPropertiesTreeFactory {
       .setRootId('TransitionTraceEntry')
       .setRootName('Selected Transition')
       .setDenyList(EntryPropertiesTreeFactory.WM_PROPERTIES)
-      .setVisitPrototype(false)
       .build();
 
     if (!info) {

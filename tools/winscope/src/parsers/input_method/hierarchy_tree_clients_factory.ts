@@ -161,7 +161,6 @@ export class HierarchyTreeClientsFactory {
       .setRootId('InputMethodClients')
       .setRootName('client')
       .setDenyList(denyList)
-      .setVisitPrototype(false)
       .build();
   }
 
@@ -177,7 +176,6 @@ export class HierarchyTreeClientsFactory {
         .setRootId('InputMethodClients')
         .setRootName('client')
         .setDenyList(HierarchyTreeClientsFactory.CLIENT_EAGER_PROPERTIES)
-        .setVisitPrototype(false)
         .build();
     };
   }

@@ -19,6 +19,7 @@ import {
   TimestampConverterUtils,
 } from 'common/time/test_utils';
 import Long from 'long';
+import {TransitionType} from 'parsers/transitions/transition_type';
 import {perfetto} from 'protos/perfetto/trace/static';
 import {PropertyTreeBuilder} from 'test/unit/property_tree_builder';
 import {
@@ -28,7 +29,6 @@ import {
   TIMESTAMP_NODE_FORMATTER,
 } from 'trace/tree_node/formatters';
 import {PropertySource} from 'trace/tree_node/property_tree_node';
-import {TransitionType} from '../transition_type';
 import {EntryPropertiesTreeFactory} from './entry_properties_tree_factory';
 
 describe('EntryPropertiesTreeFactory', () => {

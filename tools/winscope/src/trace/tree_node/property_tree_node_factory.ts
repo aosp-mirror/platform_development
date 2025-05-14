@@ -22,10 +22,7 @@ import {
 } from 'trace/tree_node/property_tree_node';
 
 export class PropertyTreeNodeFactory {
-  constructor(
-    private denylistProperties: string[] = [],
-    private visitPrototype = true,
-  ) {}
+  constructor(private denylistProperties: string[] = []) {}
 
   makePropertyRoot(
     rootId: string,
@@ -68,6 +65,10 @@ export class PropertyTreeNodeFactory {
       PropertySource.CALCULATED,
       value,
     );
+  }
+
+  makeTpProperty(rootId: string, name: string, value: any): PropertyTreeNode {
+    return this.makeProperty(rootId, name, PropertySource.TP, value);
   }
 
   private makeProperty(
@@ -190,7 +191,7 @@ export class PropertyTreeNodeFactory {
           props.push(prop);
         }
       });
-      obj = this.visitPrototype ? Object.getPrototypeOf(obj) : undefined;
+      obj = Object.getPrototypeOf(obj);
     } while (obj);
     return props;
   }

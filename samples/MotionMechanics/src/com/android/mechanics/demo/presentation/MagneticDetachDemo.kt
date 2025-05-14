@@ -14,12 +14,15 @@
  * limitations under the License.
  */
 
-@file:OptIn(ExperimentalAnimatableApi::class, ExperimentalMaterial3ExpressiveApi::class)
+@file:OptIn(ExperimentalAnimatableApi::class)
 
 package com.android.mechanics.demo.presentation
 
 import androidx.compose.animation.core.ExperimentalAnimatableApi
 import androidx.compose.foundation.background
+import androidx.compose.foundation.gestures.DraggableState
+import androidx.compose.foundation.gestures.Orientation
+import androidx.compose.foundation.gestures.draggable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -30,10 +33,8 @@ import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Slider
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -46,7 +47,6 @@ import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.layout.onPlaced
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import com.android.mechanics.debug.DebugMotionValueVisualization
@@ -54,48 +54,29 @@ import com.android.mechanics.debug.debugMotionValue
 import com.android.mechanics.demo.staging.rememberDistanceGestureContext
 import com.android.mechanics.demo.staging.rememberMotionValue
 import com.android.mechanics.demo.tuneable.Demo
-import com.android.mechanics.spec.Breakpoint
-import com.android.mechanics.spec.BreakpointKey
-import com.android.mechanics.spec.InputDirection
-import com.android.mechanics.spec.Mapping
-import com.android.mechanics.spec.MotionSpec
-import com.android.mechanics.spec.OnChangeSegmentHandler
-import com.android.mechanics.spec.SegmentData
-import com.android.mechanics.spec.SegmentKey
+import com.android.mechanics.effects.MagneticDetach
 import com.android.mechanics.spec.builder.rememberMotionBuilderContext
-import com.android.mechanics.spec.builder.spatialDirectionalMotionSpec
+import com.android.mechanics.spec.builder.spatialMotionSpec
 
-object DirectionSpecDemo : Demo<Unit> {
-    object Keys {
-        val Start = BreakpointKey("Start")
-        val Detach = BreakpointKey("Detach")
-        val End = Breakpoint.maxLimit.key
-    }
-
+object MagneticDetachDemo : Demo<Unit> {
     var inputRange by mutableStateOf(0f..0f)
 
     @Composable
     override fun DemoUi(config: Unit, modifier: Modifier) {
         val colors = MaterialTheme.colorScheme
 
-        // Also using GestureContext.dragOffset as input.
         val gestureContext = rememberDistanceGestureContext()
-        val spec = rememberSpec(inputOutputRange = inputRange)
+        val motionBuilderContext = rememberMotionBuilderContext()
+        val spec =
+            remember(motionBuilderContext) {
+                motionBuilderContext.spatialMotionSpec { after(50.dp.toPx(), MagneticDetach()) }
+            }
         val motionValue = rememberMotionValue(gestureContext::dragOffset, { spec }, gestureContext)
 
         Column(
             verticalArrangement = Arrangement.spacedBy(24.dp),
-            modifier = modifier.fillMaxWidth().padding(vertical = 24.dp, horizontal = 48.dp),
+            modifier = modifier.fillMaxWidth().padding(vertical = 24.dp, horizontal = 96.dp),
         ) {
-            Text("Change Direction Slop")
-
-            val density = LocalDensity.current
-            Slider(
-                value = gestureContext.directionChangeSlop,
-                valueRange = 0.001f..with(density) { 48.dp.toPx() },
-                onValueChange = { gestureContext.directionChangeSlop = it },
-                modifier = Modifier.fillMaxWidth(),
-            )
 
             // Output visualization
             val lineColor = colors.primary
@@ -118,14 +99,18 @@ object DirectionSpecDemo : Demo<Unit> {
             ) {
                 Box(
                     modifier =
-                        Modifier.size(24.dp)
+                        Modifier.size(48.dp)
                             .offset {
-                                val halfSize = 24.dp.toPx() / 2f
+                                val halfSize = 48.dp.toPx() / 2f
                                 val xOffset = (-halfSize + motionValue.output).toInt()
                                 IntOffset(x = xOffset, y = 0)
                             }
+                            .draggable(
+                                remember { DraggableState { gestureContext.dragOffset += it } },
+                                Orientation.Horizontal,
+                            )
                             .debugMotionValue(motionValue)
-                            .clip(remember { RoundedCornerShape(24.dp) })
+                            .clip(remember { RoundedCornerShape(16.dp) })
                             .background(colors.primary)
                 )
             }
@@ -147,57 +132,6 @@ object DirectionSpecDemo : Demo<Unit> {
         }
     }
 
-    @Composable
-    fun rememberSpec(inputOutputRange: ClosedFloatingPointRange<Float>): MotionSpec {
-        val delta = inputOutputRange.endInclusive - inputOutputRange.start
-
-        val startPosPx = inputOutputRange.start
-        val detachPosPx = delta * .4f
-        val attachPosPx = delta * .1f
-
-        val builderContext = rememberMotionBuilderContext()
-
-        return remember(inputOutputRange, builderContext) {
-            with(builderContext) {
-                val detachSpec =
-                    spatialDirectionalMotionSpec(initialMapping = Mapping.Zero) {
-                        fractionalInputFromCurrent(startPosPx, fraction = .3f, key = Keys.Start)
-                        identity(detachPosPx, key = Keys.Detach, spring = spatial.slow)
-                    }
-
-                val attachSpec =
-                    spatialDirectionalMotionSpec(initialMapping = Mapping.Zero) {
-                        identity(attachPosPx, key = Keys.Detach, spring = spatial.fast)
-                    }
-
-                val segmentHandlers =
-                    mapOf<SegmentKey, OnChangeSegmentHandler>(
-                        SegmentKey(Keys.Detach, Keys.End, InputDirection.Min) to
-                            { currentSegment, _, newDirection ->
-                                if (newDirection != currentSegment.direction) currentSegment
-                                else null
-                            },
-                        SegmentKey(Keys.Start, Keys.Detach, InputDirection.Max) to
-                            {
-                                currentSegment: SegmentData,
-                                newInput: Float,
-                                newDirection: InputDirection ->
-                                if (newDirection != currentSegment.direction && newInput >= 0)
-                                    currentSegment
-                                else null
-                            },
-                    )
-
-                MotionSpec(
-                    maxDirection = detachSpec,
-                    minDirection = attachSpec,
-                    resetSpring = spatial.default,
-                    segmentHandlers = segmentHandlers,
-                )
-            }
-        }
-    }
-
     @Composable override fun rememberDefaultConfig() {}
 
     override val visualizationInputRange: ClosedFloatingPointRange<Float>
@@ -205,5 +139,5 @@ object DirectionSpecDemo : Demo<Unit> {
 
     @Composable override fun ColumnScope.ConfigUi(config: Unit, onConfigChanged: (Unit) -> Unit) {}
 
-    override val identifier: String = "DirectionSpecDemo"
+    override val identifier: String = "MagneticDetach"
 }

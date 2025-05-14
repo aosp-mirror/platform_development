@@ -21,24 +21,30 @@ use std::{
 
 use android_bp::{BluePrint, Value};
 
-use crate::Error;
+/// Error types for the 'bp_util' crate.
+#[derive(thiserror::Error, Debug)]
+pub enum Error {
+    /// Blueprint rule has no name
+    #[error("Blueprint rule has no name")]
+    RuleWithoutName(String),
+}
 
 /// Extract rust test rules from a blueprint file.
-pub(crate) trait RustTests {
+pub trait RustTests {
     /// Returns the names of all rust_test and rust_test_host rules.
-    fn rust_tests(&self) -> Result<BTreeSet<String>, Error>;
+    fn rust_tests(&self) -> Result<BTreeSet<&str>, Error>;
 }
 
 impl RustTests for BluePrint {
-    fn rust_tests(&self) -> Result<BTreeSet<String>, Error> {
+    fn rust_tests(&self) -> Result<BTreeSet<&str>, Error> {
         let mut tests = BTreeSet::new();
         for module in &self.modules {
             if matches!(module.typ.as_str(), "rust_test" | "rust_test_host") {
                 let name = module
                     .get_string("name")
                     .ok_or(Error::RuleWithoutName(module.typ.clone()))?
-                    .clone();
-                if !EXCLUDED_TESTS.contains(name.as_str()) {
+                    .as_str();
+                if !EXCLUDED_TESTS.contains(name) {
                     tests.insert(name);
                 }
             }
@@ -48,21 +54,21 @@ impl RustTests for BluePrint {
 }
 
 /// Finds all the rustlib dependencies mentioned in a blueprint file.
-pub(crate) trait RustDeps {
-    // Finds all the rustlibs mentioned in a blueprint file.
-    // This does a limited amount of evaluation, by doing concatenation and resolving
-    // identifiers. So you can have `common_rustlibs = ["foo", "bar"] and do
-    // rust_library { rustlibs = common_rustlibs + ["baz"] }`
-    fn rust_deps(&self) -> BTreeSet<String>;
+pub trait RustDeps {
+    /// Finds all the rustlibs mentioned in a blueprint file.
+    /// This does a limited amount of evaluation, by doing concatenation and resolving
+    /// identifiers. So you can have `common_rustlibs = ["foo", "bar"] and do
+    /// rust_library { rustlibs = common_rustlibs + ["baz"] }`
+    fn rust_deps(&self) -> BTreeSet<&str>;
 }
 
 impl RustDeps for BluePrint {
-    fn rust_deps(&self) -> BTreeSet<String> {
+    fn rust_deps(&self) -> BTreeSet<&str> {
         let mut rustlibs = BTreeSet::new();
         for module in &self.modules {
             if let Some(v) = module.get("rustlibs") {
                 match v {
-                    Value::Array(_) => rustlibs.extend(v.as_string_vec()),
+                    Value::Array(_) => rustlibs.extend(v.as_strs()),
                     Value::ConcatExpr(_) => rustlibs.extend(v.eval(self)),
                     _ => {
                         println!("Only know how to handle Array and ConcatExpr");
@@ -78,15 +84,15 @@ impl RustDeps for BluePrint {
 trait AsStringVec {
     // Interpret a android_bp::Value as an array of strings, and convert it to
     // an array of owned strings. Any element that isn't a string is skipped.
-    fn as_string_vec(&self) -> Vec<String>;
+    fn as_strs(&self) -> Vec<&str>;
 }
 
 impl AsStringVec for Value {
-    fn as_string_vec(&self) -> Vec<String> {
+    fn as_strs(&self) -> Vec<&str> {
         if let Value::Array(vec) = self {
             vec.iter()
                 .filter_map(|v| match v {
-                    Value::String(s) => Some(s.to_string()),
+                    Value::String(s) => Some(s.as_str()),
                     _ => {
                         println!("Array element is not a string");
                         None
@@ -105,19 +111,19 @@ trait EvalConcat {
     // Evaluate a concatenation expression, resolving it into a single vector of strings.
     // The elements being concatenated are assumed to be either identifiers or
     // arrays of strings. Otherwise, they are skipped.
-    fn eval(&self, bp: &BluePrint) -> Vec<String>;
+    fn eval<'a>(&'a self, bp: &'a BluePrint) -> Vec<&'a str>;
 }
 
 impl EvalConcat for Value {
-    fn eval(&self, bp: &BluePrint) -> Vec<String> {
+    fn eval<'a>(&'a self, bp: &'a BluePrint) -> Vec<&'a str> {
         let mut strings = Vec::new();
         if let Value::ConcatExpr(expr) = self {
             for term in expr {
                 match term {
-                    Value::Array(_) => strings.extend(term.as_string_vec()),
+                    Value::Array(_) => strings.extend(term.as_strs()),
                     Value::Ident(ident) => {
                         if let Some(ident_val) = bp.variables.get(ident) {
-                            strings.extend(ident_val.as_string_vec());
+                            strings.extend(ident_val.as_strs());
                         }
                     }
                     _ => {
@@ -129,6 +135,32 @@ impl EvalConcat for Value {
             println!("Value is not a ConcatExpr");
         }
         strings
+    }
+}
+
+/// Find the names of Rust library targets
+pub trait RustLibs {
+    /// Returns the name of all Rust library targets in the blueprint.
+    fn rust_libs(&self) -> Result<Vec<&str>, Error>;
+}
+
+impl RustLibs for BluePrint {
+    fn rust_libs(&self) -> Result<Vec<&str>, Error> {
+        let mut libs = Vec::new();
+        for module in &self.modules {
+            if matches!(
+                module.typ.as_str(),
+                "rust_library" | "rust_library_rlib" | "rust_library_host" | "rust_proc_macro"
+            ) {
+                libs.push(
+                    module
+                        .get_string("name")
+                        .ok_or(Error::RuleWithoutName(module.typ.clone()))?
+                        .as_str(),
+                );
+            }
+        }
+        Ok(libs)
     }
 }
 
@@ -169,7 +201,7 @@ rust_test_host { name: "bar" }
 "###,
         )
         .expect("Blueprint parse error");
-        assert_eq!(bp.rust_tests()?, BTreeSet::from(["foo".to_string(), "bar".to_string()]));
+        assert_eq!(bp.rust_tests()?, BTreeSet::from(["foo", "bar"]));
         Ok(())
     }
 
@@ -182,10 +214,7 @@ rust_library { rustlibs: ["bar", "baz"] }
 "###,
         )
         .expect("Blueprint parse error");
-        assert_eq!(
-            bp.rust_deps(),
-            BTreeSet::from(["foo".to_string(), "bar".to_string(), "baz".to_string()])
-        );
+        assert_eq!(bp.rust_deps(), BTreeSet::from(["foo", "bar", "baz"]));
     }
 
     #[test]
@@ -197,6 +226,18 @@ rust_library { rustlibs: foo + ["bar"] }
 "###,
         )
         .expect("Blueprint parse error");
-        assert_eq!(bp.rust_deps(), BTreeSet::from(["foo".to_string(), "bar".to_string()]));
+        assert_eq!(bp.rust_deps(), BTreeSet::from(["foo", "bar"]));
+    }
+
+    #[test]
+    fn rust_libs() -> Result<(), Error> {
+        let bp = BluePrint::parse(
+            r###"
+rust_library { name: "foo" }
+"###,
+        )
+        .expect("Blueprint parse error");
+        assert_eq!(bp.rust_libs()?, vec!["foo"]);
+        Ok(())
     }
 }

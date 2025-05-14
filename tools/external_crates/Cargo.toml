@@ -1,5 +1,6 @@
 [workspace]
 members = [
+    "bp_util",
     "checksum",
     "crate_config",
     "crate_tool",

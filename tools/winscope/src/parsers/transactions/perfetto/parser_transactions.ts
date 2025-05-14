@@ -20,7 +20,7 @@ import {AddDefaults} from 'parsers/operations/add_defaults';
 import {SetFormatters} from 'parsers/operations/set_formatters';
 import {AbstractParser} from 'parsers/perfetto/abstract_parser';
 import {FakeProtoTransformer} from 'parsers/perfetto/fake_proto_transformer';
-import {Utils} from 'parsers/perfetto/utils';
+import {queryEntry, queryVsyncId} from 'parsers/perfetto/utils';
 import {TAMPERED_TRACE_PACKET} from 'parsers/tampered_message_type';
 import {TranslateChanges} from 'parsers/transactions/operations/translate_changes';
 import {perfetto} from 'protos/perfetto/trace/static';
@@ -67,7 +67,7 @@ export class ParserTransactions extends AbstractParser<PropertyTreeNode> {
   }
 
   override async getEntry(index: number): Promise<PropertyTreeNode> {
-    let entryProto = await Utils.queryEntry(
+    let entryProto = await queryEntry(
       this.traceProcessor,
       this.getTableName(),
       this.entryIndexToRowIdMap,
@@ -87,7 +87,7 @@ export class ParserTransactions extends AbstractParser<PropertyTreeNode> {
   ): Promise<CustomQueryParserResultTypeMap[Q]> {
     return new VisitableParserCustomQuery(type)
       .visit(CustomQueryType.VSYNCID, async () => {
-        return Utils.queryVsyncId(
+        return queryVsyncId(
           this.traceProcessor,
           this.getTableName(),
           this.entryIndexToRowIdMap,

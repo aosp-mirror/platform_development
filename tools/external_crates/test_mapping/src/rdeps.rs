@@ -24,8 +24,9 @@ use std::{
 };
 
 use android_bp::BluePrint;
+use bp_util::RustDeps;
 
-use crate::{blueprint::RustDeps, Error};
+use crate::Error;
 
 #[derive(Clone)]
 pub(crate) struct ReverseDeps {
@@ -78,7 +79,10 @@ impl ReverseDeps {
             let (dir, _) = line.rsplit_once('/').ok_or(Error::GrepParseError(line.to_string()))?;
             if let Ok(bp) = BluePrint::from_file(repo_root.join(line)) {
                 for rustlib in bp.rust_deps() {
-                    rdeps.entry(rustlib).or_insert(BTreeSet::new()).insert(dir.to_string());
+                    rdeps
+                        .entry(rustlib.to_string())
+                        .or_insert(BTreeSet::new())
+                        .insert(dir.to_string());
                 }
             }
         }

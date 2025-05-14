@@ -54,13 +54,15 @@ import com.android.mechanics.demo.staging.rememberDistanceGestureContext
 import com.android.mechanics.demo.staging.rememberMotionValue
 import com.android.mechanics.demo.tuneable.Demo
 import com.android.mechanics.demo.tuneable.Dropdown
+import com.android.mechanics.demo.tuneable.LabelledCheckbox
 import com.android.mechanics.spec.DirectionalMotionSpec
+import com.android.mechanics.spec.Guarantee
 import com.android.mechanics.spec.Mapping
 import com.android.mechanics.spec.MotionSpec
 import com.android.mechanics.spec.builder.rememberMotionBuilderContext
 import com.android.mechanics.spec.builder.spatialDirectionalMotionSpec
 
-object SpecDemo : Demo<Unit> {
+object SpecDemo : Demo<SpecDemo.Config> {
     enum class Scenario(val label: String) {
         Empty("Simple"),
         Toggle("Toggle"),
@@ -68,16 +70,18 @@ object SpecDemo : Demo<Unit> {
         TrackNSnap("Track and Snap"),
     }
 
+    data class Config(val stepGuarantee: Boolean)
+
     var inputRange by mutableStateOf(0f..0f)
 
     @Composable
-    override fun DemoUi(config: Unit, modifier: Modifier) {
+    override fun DemoUi(config: Config, modifier: Modifier) {
         val colors = MaterialTheme.colorScheme
         var activeScenario by remember { mutableStateOf(Scenario.Empty) }
 
         // Also using GestureContext.dragOffset as input.
         val gestureContext = rememberDistanceGestureContext()
-        val spec = rememberSpec(activeScenario, inputOutputRange = inputRange)
+        val spec = rememberSpec(activeScenario, config, inputOutputRange = inputRange)
         val motionValue = rememberMotionValue(gestureContext::dragOffset, { spec }, gestureContext)
 
         Column(
@@ -151,12 +155,13 @@ object SpecDemo : Demo<Unit> {
     @Composable
     fun rememberSpec(
         scenario: Scenario,
+        config: Config,
         inputOutputRange: ClosedFloatingPointRange<Float>,
     ): MotionSpec {
 
         val builderContext = rememberMotionBuilderContext()
 
-        return remember(scenario, inputOutputRange, builderContext) {
+        return remember(scenario, inputOutputRange, config, builderContext) {
             MotionSpec(
                 when (scenario) {
                     Scenario.Empty -> DirectionalMotionSpec.Empty
@@ -179,16 +184,25 @@ object SpecDemo : Demo<Unit> {
                             val stepSize =
                                 (inputOutputRange.start + inputOutputRange.endInclusive) / steps
 
+                            val guarantee =
+                                if (config.stepGuarantee) Guarantee.InputDelta(stepSize)
+                                else Guarantee.None
+
+                            val outDiff =
+                                (inputOutputRange.start + inputOutputRange.endInclusive) /
+                                    (steps - 1)
                             repeat(steps - 2) { step ->
                                 constantValue(
                                     breakpoint = (step + 1) * stepSize,
-                                    value = (step + 1) * stepSize,
+                                    value = (step + 1) * outDiff,
+                                    guarantee = guarantee,
                                 )
                             }
 
                             constantValue(
-                                breakpoint = inputOutputRange.endInclusive,
+                                breakpoint = inputOutputRange.endInclusive - stepSize,
                                 value = inputOutputRange.endInclusive,
+                                guarantee = guarantee,
                             )
                         }
 
@@ -209,12 +223,23 @@ object SpecDemo : Demo<Unit> {
         }
     }
 
-    @Composable override fun rememberDefaultConfig() {}
+    @Composable
+    override fun rememberDefaultConfig(): Config {
+        return remember { Config(stepGuarantee = false) }
+    }
 
     override val visualizationInputRange: ClosedFloatingPointRange<Float>
         get() = inputRange
 
-    @Composable override fun ColumnScope.ConfigUi(config: Unit, onConfigChanged: (Unit) -> Unit) {}
+    @Composable
+    override fun ColumnScope.ConfigUi(config: Config, onConfigChanged: (Config) -> Unit) {
+        Text("Steps")
+        LabelledCheckbox(
+            "Use Guarantee",
+            config.stepGuarantee,
+            { onConfigChanged(config.copy(stepGuarantee = it)) },
+        )
+    }
 
     override val identifier: String = "SpecDemo"
 }

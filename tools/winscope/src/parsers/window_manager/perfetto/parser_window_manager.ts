@@ -18,7 +18,7 @@ import {assertDefined} from 'common/assert_utils';
 import {ParserTimestampConverter} from 'common/time/timestamp_converter';
 import {AbstractParser} from 'parsers/perfetto/abstract_parser';
 import {FakeProtoTransformer} from 'parsers/perfetto/fake_proto_transformer';
-import {Utils} from 'parsers/perfetto/utils';
+import {queryEntry} from 'parsers/perfetto/utils';
 import {RectsComputation} from 'parsers/window_manager/computations/rects_computation';
 import {WmCustomQueryUtils} from 'parsers/window_manager/custom_query_utils';
 import {HierarchyTreeBuilderWm} from 'parsers/window_manager/hierarchy_tree_builder_wm';
@@ -58,7 +58,7 @@ export class ParserWindowManager extends AbstractParser<HierarchyTreeNode> {
   }
 
   override async getEntry(index: number): Promise<HierarchyTreeNode> {
-    let entryProto = await Utils.queryEntry(
+    let entryProto = await queryEntry(
       this.traceProcessor,
       this.getTableName(),
       this.entryIndexToRowIdMap,
@@ -86,7 +86,7 @@ export class ParserWindowManager extends AbstractParser<HierarchyTreeNode> {
           [];
 
         const fetchAndParseEntry = async (index: AbsoluteEntryIndex) => {
-          const entryProto = await Utils.queryEntry(
+          const entryProto = await queryEntry(
             this.traceProcessor,
             this.getTableName(),
             this.entryIndexToRowIdMap,

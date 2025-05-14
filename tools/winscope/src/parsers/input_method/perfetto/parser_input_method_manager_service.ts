@@ -19,7 +19,7 @@ import {ParserTimestampConverter} from 'common/time/timestamp_converter';
 import {HierarchyTreeManagerServiceFactory} from 'parsers/input_method/hierarchy_tree_manager_service_factory';
 import {AbstractParser} from 'parsers/perfetto/abstract_parser';
 import {FakeProtoTransformer} from 'parsers/perfetto/fake_proto_transformer';
-import {Utils} from 'parsers/perfetto/utils';
+import {queryEntry} from 'parsers/perfetto/utils';
 import {TAMPERED_WINSCOPE_EXTENSIONS} from 'parsers/tampered_message_type';
 import {TraceFile} from 'trace/trace_file';
 import {TraceType} from 'trace/trace_type';
@@ -62,7 +62,7 @@ export class ParserInputMethodManagerService extends AbstractParser<HierarchyTre
   }
 
   override async getEntry(index: number): Promise<HierarchyTreeNode> {
-    let entryProto = await Utils.queryEntry(
+    let entryProto = await queryEntry(
       this.traceProcessor,
       this.getTableName(),
       this.entryIndexToRowIdMap,

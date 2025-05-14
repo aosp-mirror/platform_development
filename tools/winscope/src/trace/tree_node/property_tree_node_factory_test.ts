@@ -234,4 +234,15 @@ describe('PropertyTreeNodeFactory', () => {
 
     expect(node).toEqual(expectedNode);
   });
+
+  it('makes simple TP property', () => {
+    const node = factory.makeTpProperty('1 root', 'prop', 2);
+    const expectedNode = new PropertyTreeBuilder()
+      .setRootId('1 root')
+      .setName('prop')
+      .setSource(PropertySource.TP)
+      .setValue(2)
+      .build();
+    expect(node).toEqual(expectedNode);
+  });
 });

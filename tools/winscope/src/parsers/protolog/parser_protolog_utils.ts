@@ -32,7 +32,6 @@ export class ParserProtologUtils {
       .setData(logMessage)
       .setRootId('ProtoLogTrace')
       .setRootName('entry')
-      .setVisitPrototype(false)
       .build();
 
     const customFormatters = new Map([['timestamp', TIMESTAMP_NODE_FORMATTER]]);
