@@ -15,6 +15,7 @@
  */
 
 import {TraceEntry} from 'trace/trace';
+import {LazyPropertiesStrategyType} from 'trace/tree_node/properties_provider';
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
 import {TextFilter} from 'viewers/common/text_filter';
 import {
@@ -47,7 +48,7 @@ export class CujEntry implements LogEntry {
   constructor(
     public traceEntry: TraceEntry<PropertyTreeNode>,
     public fields: LogField[],
-    public propertiesTree: PropertyTreeNode | undefined,
+    public getPropertiesTree: LazyPropertiesStrategyType | undefined,
   ) {}
 }
 

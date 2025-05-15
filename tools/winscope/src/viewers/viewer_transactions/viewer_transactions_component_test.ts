@@ -17,10 +17,11 @@
 import {CdkVirtualScrollViewport} from '@angular/cdk/scrolling';
 import {TimestampConverterUtils} from 'common/time/test_utils';
 import {DOMTestHelper} from 'test/unit/dom_test_utils';
+import {HierarchyTreeBuilder} from 'test/unit/hierarchy_tree_builder';
 import {PropertyTreeBuilder} from 'test/unit/property_tree_builder';
 import {TraceBuilder} from 'test/unit/trace_builder';
 import {TraceType} from 'trace/trace_type';
-import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
+import {HierarchyTreeNode} from 'trace/tree_node/hierarchy_tree_node';
 import {AbstractLogViewerComponentTest} from 'viewers/common/abstract_log_viewer_component_test';
 import {LogSelectFilter} from 'viewers/common/log_filters';
 import {LogHeader} from 'viewers/common/ui_data_log';
@@ -36,7 +37,7 @@ class ViewerTransactionsComponentTest extends AbstractLogViewerComponentTest<Vie
   protected override readonly propertiesSectionTitle =
     'PROPERTIES - PROTO DUMP';
   protected override readonly propertiesPlaceholder =
-    'No current or selected transaction.';
+    'No current or selected transaction with additional properties.';
 
   protected override checkTimestampInTable(
     dom: DOMTestHelper<ViewerTransactionsComponent>,
@@ -52,6 +53,11 @@ class ViewerTransactionsComponentTest extends AbstractLogViewerComponentTest<Vie
       ViewerTransactionsComponent,
     ]
   > {
+    const hierarchyTree = new HierarchyTreeBuilder()
+      .setId('Transactions')
+      .setName('tree')
+      .build();
+
     const propertiesTree = new PropertyTreeBuilder()
       .setRootId('Transactions')
       .setName('tree')
@@ -60,15 +66,15 @@ class ViewerTransactionsComponentTest extends AbstractLogViewerComponentTest<Vie
 
     const ts = TimestampConverterUtils.makeElapsedTimestamp(1n);
 
-    const trace = new TraceBuilder<PropertyTreeNode>()
-      .setEntries([propertiesTree, propertiesTree])
+    const trace = new TraceBuilder<HierarchyTreeNode>()
+      .setEntries([hierarchyTree, hierarchyTree])
       .setTimestamps([ts, ts])
       .build();
 
     const entry1 = new TransactionsEntry(
       trace.getEntry(0),
       Array.from({length: 7}, () => this.testField),
-      propertiesTree,
+      async () => propertiesTree,
     );
 
     const uiData = new UiData(
@@ -88,6 +94,11 @@ class ViewerTransactionsComponentTest extends AbstractLogViewerComponentTest<Vie
   protected override async setUpTestEnvironmentForScroll(): Promise<
     [DOMTestHelper<ViewerTransactionsComponent>, CdkVirtualScrollViewport]
   > {
+    const hierarchyTree = new HierarchyTreeBuilder()
+      .setId('Transactions')
+      .setName('tree')
+      .build();
+
     const propertiesTree = new PropertyTreeBuilder()
       .setRootId('Transactions')
       .setName('tree')
@@ -96,9 +107,9 @@ class ViewerTransactionsComponentTest extends AbstractLogViewerComponentTest<Vie
 
     const ts = TimestampConverterUtils.makeElapsedTimestamp(1n);
 
-    const trace = new TraceBuilder<PropertyTreeNode>()
+    const trace = new TraceBuilder<HierarchyTreeNode>()
       .setType(TraceType.TRANSACTIONS)
-      .setEntries([propertiesTree, propertiesTree])
+      .setEntries([hierarchyTree, hierarchyTree])
       .setTimestamps([ts, ts])
       .build();
 
@@ -124,7 +135,7 @@ class ViewerTransactionsComponentTest extends AbstractLogViewerComponentTest<Vie
             value: i % 2 === 0 ? shortMessage : longMessage,
           },
         ]),
-        propertiesTree,
+        async () => propertiesTree,
       );
       uiData.entries.push(entry);
     }

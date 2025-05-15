@@ -75,7 +75,7 @@ export abstract class AbstractInputEventParser extends AbstractParser<PropertyTr
         WHERE d.event_id = ${eventId}
         ORDER BY d.id;
     `;
-    const result = await this.traceProcessor.queryAllRows(sql);
+    const result = await this.traceProcessor.query(sql);
 
     const dispatchEvents: perfetto.protos.AndroidWindowInputDispatchEvent[] =
       [];

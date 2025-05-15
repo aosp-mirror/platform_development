@@ -18,6 +18,8 @@ import {assertDefined} from 'common/assert_utils';
 import {TimestampConverterUtils} from 'common/time/test_utils';
 import {TimeUtils} from 'common/time/time_utils';
 import {TracePositionUpdate} from 'messaging/winscope_event';
+import {setNumRowsSpyQueryResult} from 'trace_processor/test_utils';
+import {TraceProcessor} from 'trace_processor/trace_processor';
 import {
   AbstractLogViewerPresenter,
   NotifyLogViewCallbackType,
@@ -49,6 +51,9 @@ export abstract class AbstractLogViewerPresenterTest<UiData extends UiDataLog> {
       it('is robust to empty trace', async () => {
         const presenter = await this.createPresenterWithEmptyTrace(
           (newData: UiData) => (uiData = newData),
+        );
+        spyOn(TraceProcessor.prototype, 'query').and.returnValue(
+          Promise.resolve(setNumRowsSpyQueryResult(0)),
         );
         await presenter.onAppEvent(
           TracePositionUpdate.fromTimestamp(

@@ -348,16 +348,15 @@ export class MiniTimelineComponent {
 
   @HostListener('wheel', ['$event'])
   onScroll(event: WheelEvent) {
-    const moveDirection = this.getMoveDirection(event);
+    if ((event.target as HTMLElement)?.id !== 'mini-timeline-canvas') {
+      return;
+    }
+    event.preventDefault();
 
-    if (
-      (event.target as HTMLElement)?.id === 'mini-timeline-canvas' &&
-      event.deltaY !== 0 &&
-      moveDirection === 'y'
-    ) {
+    const moveDirection = this.getMoveDirection(event);
+    if (event.deltaY !== 0 && moveDirection === 'y') {
       this.updateZoomByScrollEvent(event);
     }
-
     if (event.deltaX !== 0 && moveDirection === 'x') {
       this.updateHorizontalScroll(event);
     }

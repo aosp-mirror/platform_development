@@ -140,6 +140,7 @@ export class ParserFactory {
       cropTrackEvents: false,
       ingestFtraceInRawTable: false,
       analyzeTraceProtoContent: false,
+      ftraceDropUntilAllCpusValid: false,
     });
     Analytics.Memory.logUsage('tp_initialized');
 

@@ -238,7 +238,7 @@ export class Presenter extends AbstractLogViewerPresenter<
     return uniqueFieldValues;
   }
 
-  protected override updateFiltersInHeaders(
+  protected override async updateFiltersInHeaders(
     headers: LogHeader[],
     entries: LogEntry[],
   ) {
@@ -347,8 +347,8 @@ export class Presenter extends AbstractLogViewerPresenter<
             .join(', '),
         },
       ],
-      eventTree,
-      dispatchTree,
+      async () => assertDefined(eventTree),
+      async () => dispatchTree,
       sfEntry,
     );
   }
@@ -400,7 +400,9 @@ export class Presenter extends AbstractLogViewerPresenter<
 
   private async updateDispatchPropertiesTree() {
     const inputEntry = this.getCurrentEntry();
-    const tree = inputEntry?.dispatchPropertiesTree;
+    const tree = inputEntry?.getDispatchPropertiesTree
+      ? await inputEntry.getDispatchPropertiesTree()
+      : undefined;
     this.dispatchPropertiesPresenter.setPropertiesTree(tree);
     await this.dispatchPropertiesPresenter.formatPropertiesTree(
       undefined,
@@ -419,14 +421,16 @@ export class Presenter extends AbstractLogViewerPresenter<
     const inputEntry = this.getCurrentEntry();
 
     this.currentTargetWindowIds.clear();
-    inputEntry?.dispatchPropertiesTree
-      ?.getAllChildren()
-      ?.forEach((dispatchEntry) => {
-        const windowId = dispatchEntry.getChildByName('windowId');
-        if (windowId !== undefined) {
-          this.currentTargetWindowIds.add(`${Number(windowId.getValue())}`);
-        }
-      });
+    if (inputEntry?.getDispatchPropertiesTree) {
+      (await inputEntry.getDispatchPropertiesTree())
+        .getAllChildren()
+        ?.forEach((dispatchEntry) => {
+          const windowId = dispatchEntry.getChildByName('windowId');
+          if (windowId !== undefined) {
+            this.currentTargetWindowIds.add(`${Number(windowId.getValue())}`);
+          }
+        });
+    }
 
     if (inputEntry?.surfaceFlingerEntry !== undefined) {
       const startTimeMs = Date.now();

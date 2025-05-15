@@ -15,9 +15,9 @@
  */
 
 import {PropertyTreeBuilder} from 'test/unit/property_tree_builder';
+import {PropertySource} from 'trace/tree_node/property_tree_node';
 import {RowIteratorBase} from 'trace_processor/query_result';
 import {PropertyTreeBuilderFromQueryRow} from './property_tree_builder_from_query_row';
-import {PropertySource} from './property_tree_node';
 
 describe('PropertyTreeBuilderFromQueryRow', () => {
   const columns = ['test_prop', 'other_prop'];

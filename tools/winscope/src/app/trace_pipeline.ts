@@ -353,7 +353,7 @@ export class TracePipeline
     const packetLossQuery =
       'SELECT name, value FROM stats ' +
       "WHERE name = 'traced_buf_trace_writer_packet_loss'";
-    const res = await tp.queryAllRows(packetLossQuery);
+    const res = await tp.query(packetLossQuery);
     const value =
       res.numRows() > 0 ? res.firstRow<Row>({})['value'] : undefined;
     if (typeof value === 'bigint' && value > 0n) {

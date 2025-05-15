@@ -76,7 +76,7 @@ fun ContentScope.NotificationList(
     Column(
         modifier
             .thenIf(scrollState != null) {
-                Modifier.disableSwipesWhenScrolling(NestedScrollableBound.BottomRight)
+                Modifier.disableSwipesWhenScrolling(NestedScrollableBound.BottomOrRight)
                     .verticalScroll(scrollState!!, overscrollEffect?.withoutVisualEffect())
             }
             .fillMaxWidth()

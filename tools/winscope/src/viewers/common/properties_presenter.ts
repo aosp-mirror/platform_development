@@ -135,7 +135,7 @@ export class PropertiesPresenter {
     }
 
     const predicatesKeepingChildren = [this.propertiesFilter];
-    const predicatesDiscardingChildren = [];
+    const predicatesDiscardingChildren = [UiTreeUtils.isNotFromTP];
 
     if (this.propertiesDenylist) {
       predicatesDiscardingChildren.push(

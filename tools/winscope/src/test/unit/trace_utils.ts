@@ -15,6 +15,10 @@
  */
 
 import {Timestamp} from 'common/time/time';
+import {
+  CustomQueryParserResultTypeMap,
+  CustomQueryType,
+} from 'trace/custom_query';
 import {AbsoluteFrameIndex, Trace} from 'trace/trace';
 import {TraceEntryTypeMap, TraceType} from 'trace/trace_type';
 import {TraceBuilder} from './trace_builder';
@@ -48,11 +52,20 @@ export async function extractFrames<T>(
 export function makeEmptyTrace<T extends TraceType>(
   traceType: T,
   descriptors: string[] = [],
+  parserCustomQueryResult: Array<{
+    queryType: CustomQueryType;
+    result: CustomQueryParserResultTypeMap[CustomQueryType];
+  }> = [],
 ): Trace<TraceEntryTypeMap[T]> {
-  return new TraceBuilder<TraceEntryTypeMap[T]>()
+  const builder = new TraceBuilder<TraceEntryTypeMap[T]>()
     .setEntries([])
     .setTimestamps([])
     .setDescriptors(descriptors)
-    .setType(traceType)
-    .build();
+    .setType(traceType);
+
+  for (const {queryType, result} of parserCustomQueryResult) {
+    builder.setParserCustomQueryResult(queryType, result);
+  }
+
+  return builder.build();
 }

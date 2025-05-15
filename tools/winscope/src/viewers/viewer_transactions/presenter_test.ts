@@ -21,9 +21,11 @@ import {TracePositionUpdate} from 'messaging/winscope_event';
 import {LegacyParserProvider} from 'test/unit/fixture_utils';
 import {TraceBuilder} from 'test/unit/trace_builder';
 import {makeEmptyTrace} from 'test/unit/trace_utils';
+import {CustomQueryType} from 'trace/custom_query';
 import {Trace} from 'trace/trace';
 import {TraceType} from 'trace/trace_type';
-import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
+import {TransactionColumnType} from 'trace/transaction_column_type';
+import {HierarchyTreeNode} from 'trace/tree_node/hierarchy_tree_node';
 import {NotifyLogViewCallbackType} from 'viewers/common/abstract_log_viewer_presenter';
 import {AbstractLogViewerPresenterTest} from 'viewers/common/abstract_log_viewer_presenter_test';
 import {LogSelectFilter} from 'viewers/common/log_filters';
@@ -35,33 +37,64 @@ class PresenterTransactionsTest extends AbstractLogViewerPresenterTest<UiData> {
   override readonly expectedHeaders = [
     {
       header: new LogHeader(
-        {name: 'TX ID', cssClass: 'transaction-id right-align'},
+        {
+          name: 'TX ID',
+          cssClass: 'transaction-id right-align',
+          columnType: TransactionColumnType.TRANSACTION_ID,
+        },
         new LogSelectFilter(Array.from({length: 1295}, () => '')),
       ),
     },
     {
       header: new LogHeader(
-        {name: 'VSYNC ID', cssClass: 'vsyncid right-align'},
-        new LogSelectFilter(Array.from({length: 710}, () => '')),
+        {
+          name: 'VSYNC ID',
+          cssClass: 'vsyncid right-align',
+          columnType: TransactionColumnType.VSYNC_ID,
+        },
+        new LogSelectFilter(Array.from({length: 712}, () => '')),
       ),
     },
     {
       header: new LogHeader(
-        {name: 'PID', cssClass: 'pid right-align'},
+        {
+          name: 'PID',
+          cssClass: 'pid right-align',
+          columnType: TransactionColumnType.PID,
+        },
         new LogSelectFilter(Array.from({length: 8}, () => '')),
       ),
       options: ['N/A', '0', '515', '1593', '2022', '2322', '2463', '3300'],
     },
     {
       header: new LogHeader(
-        {name: 'UID', cssClass: 'uid right-align'},
+        {
+          name: 'UID',
+          cssClass: 'uid right-align',
+          columnType: TransactionColumnType.UID,
+        },
         new LogSelectFilter(Array.from({length: 6}, () => '')),
       ),
       options: ['N/A', '1000', '1003', '10169', '10235', '10239'],
     },
     {
       header: new LogHeader(
-        {name: 'TYPE', cssClass: 'transaction-type'},
+        {
+          name: 'PROCESS',
+          cssClass: 'process',
+          columnType: TransactionColumnType.PROCESS,
+        },
+        new LogSelectFilter(['']),
+      ),
+      options: ['N/A'],
+    },
+    {
+      header: new LogHeader(
+        {
+          name: 'TYPE',
+          cssClass: 'transaction-type',
+          columnType: TransactionColumnType.TRANSACTION_TYPE,
+        },
         new LogSelectFilter(Array.from({length: 6}, () => '')),
       ),
       options: [
@@ -70,28 +103,72 @@ class PresenterTransactionsTest extends AbstractLogViewerPresenterTest<UiData> {
         'LAYER_CHANGED',
         'LAYER_DESTROYED',
         'LAYER_HANDLE_DESTROYED',
-        'NO_OP',
+        'NOOP',
       ],
     },
     {
       header: new LogHeader(
-        {name: 'LAYER/DISP ID', cssClass: 'layer-or-display-id right-align'},
-        new LogSelectFilter(Array.from({length: 117}, () => '')),
+        {
+          name: 'LAYER/DISP ID',
+          cssClass: 'layer-or-display-id right-align',
+          columnType: TransactionColumnType.LAYER_OR_DISPLAY_ID,
+        },
+        new LogSelectFilter(Array.from({length: 116}, () => '')),
       ),
+      options: [
+        'N/A',
+        ...Array.from({length: 114}, (_, i) => `${i + 1}`),
+        '4294967295',
+      ],
     },
     {
       header: new LogHeader(
-        {name: 'Flags', cssClass: 'flags'},
+        {
+          name: 'Flags',
+          cssClass: 'flags',
+          columnType: TransactionColumnType.FLAGS,
+        },
         new LogSelectFilter(
-          Array.from({length: 30}, () => ''),
+          Array.from({length: 29}, () => ''),
           true,
           '250',
           '100%',
         ),
       ),
+      options: [
+        'eAcquireFenceChanged',
+        'eAlphaChanged',
+        'eAutoRefreshChanged',
+        'eBackgroundBlurRadiusChanged',
+        'eBufferChanged',
+        'eBufferCropChanged',
+        'eBufferTransformChanged',
+        'eColorChanged',
+        'eColorSpaceAgnosticChanged',
+        'eCornerRadiusChanged',
+        'eCropChanged',
+        'eDataspaceChanged',
+        'eDestinationFrameChanged',
+        'eDisplayProjectionChanged',
+        'eFlagsChanged',
+        'eFrameRateSelectionPriority',
+        'eHasListenerCallbacksChanged',
+        'eHdrMetadataChanged',
+        'eInputInfoChanged',
+        'eLayerChanged',
+        'eLayerStackChanged',
+        'eMatrixChanged',
+        'eMetadataChanged',
+        'ePositionChanged',
+        'eProducerDisconnect',
+        'eRelativeLayerChanged',
+        'eReparent',
+        'eSurfaceDamageRegionChanged',
+        'eTransformToDisplayInverseChanged',
+      ],
     },
   ];
-  private trace: Trace<PropertyTreeNode> | undefined;
+  private trace: Trace<HierarchyTreeNode> | undefined;
   private positionUpdate: TracePositionUpdate | undefined;
 
   override executeSpecializedTests() {
@@ -162,8 +239,8 @@ class PresenterTransactionsTest extends AbstractLogViewerPresenterTest<UiData> {
     const parser = await new LegacyParserProvider()
       .addFilename('traces/elapsed_and_real_timestamp/Transactions.pb')
       .setConvertToPerfetto(true)
-      .getParser<PropertyTreeNode>();
-    this.trace = new TraceBuilder<PropertyTreeNode>()
+      .getParser<HierarchyTreeNode>();
+    this.trace = new TraceBuilder<HierarchyTreeNode>()
       .setType(TraceType.TRANSACTIONS)
       .setParser(parser)
       .build();
@@ -175,7 +252,16 @@ class PresenterTransactionsTest extends AbstractLogViewerPresenterTest<UiData> {
   override async createPresenterWithEmptyTrace(
     callback: NotifyLogViewCallbackType<UiData>,
   ): Promise<Presenter> {
-    const trace = makeEmptyTrace(TraceType.TRANSACTIONS);
+    const trace = makeEmptyTrace(
+      TraceType.TRANSACTIONS,
+      [],
+      [
+        {
+          queryType: CustomQueryType.LOG_TABLE_FILTER_VALUES,
+          result: [],
+        },
+      ],
+    );
     return new Presenter(trace, new InMemoryStorage(), callback);
   }
 

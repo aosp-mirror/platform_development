@@ -96,7 +96,7 @@ class ViewerTransitionsComponentTest extends AbstractLogViewerComponentTest<View
           value: i % 2 === 0 ? 'VALUE' : 'VALUE'.repeat(40),
         },
       ],
-      this.transitionTree,
+      async () => this.transitionTree,
     );
   }
 }

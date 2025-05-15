@@ -20,12 +20,6 @@ import {AbstractParser} from 'parsers/legacy/abstract_parser';
 import {perfetto} from 'protos/perfetto/trace/static';
 import root from 'protos/transactions/udc/json';
 import {android} from 'protos/transactions/udc/static';
-import {
-  CustomQueryParserResultTypeMap,
-  CustomQueryType,
-  VisitableParserCustomQuery,
-} from 'trace/custom_query';
-import {EntriesRange} from 'trace/trace';
 import {TraceType} from 'trace/trace_type';
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
 
@@ -90,21 +84,6 @@ export class ParserTransactions extends AbstractParser<
       packets.push(packet);
     }
     return packets;
-  }
-
-  override customQuery<Q extends CustomQueryType>(
-    type: Q,
-    entriesRange: EntriesRange,
-  ): Promise<CustomQueryParserResultTypeMap[Q]> {
-    return new VisitableParserCustomQuery(type)
-      .visit(CustomQueryType.VSYNCID, async () => {
-        return this.decodedEntries
-          .slice(entriesRange.start, entriesRange.end)
-          .map((entry) => {
-            return BigInt(assertDefined(entry.vsyncId?.toString())); // convert Long to bigint
-          });
-      })
-      .getResult();
   }
 
   protected override getTimestamp(entryProto: TraceEntryProto): Timestamp {

@@ -134,7 +134,7 @@ export abstract class AbstractParser<T> implements Parser<T> {
      FROM ${this.getTableName()} AS tbl
      ORDER BY tbl.ts;
    `;
-    const result = await this.traceProcessor.queryAllRows(sqlRowIdAndTimestamp);
+    const result = await this.traceProcessor.query(sqlRowIdAndTimestamp);
     const entryIndexToRowId: AbsoluteEntryIndex[] = [];
     for (const it = result.iter({}); it.valid(); it.next()) {
       const rowId = Number(it.get('id') as bigint);
@@ -145,7 +145,7 @@ export abstract class AbstractParser<T> implements Parser<T> {
 
   private async queryRowBootTimeTimestamps(): Promise<Array<bigint>> {
     const sql = `SELECT ts FROM ${this.getTableName()} ORDER BY id;`;
-    const result = await this.traceProcessor.queryAllRows(sql);
+    const result = await this.traceProcessor.query(sql);
     const timestamps: Array<bigint> = [];
     for (const it = result.iter({}); it.valid(); it.next()) {
       timestamps.push(it.get('ts') as bigint);
@@ -162,7 +162,7 @@ export abstract class AbstractParser<T> implements Parser<T> {
       SELECT TO_REALTIME(${bootTimeNs}) as realtime;
     `;
 
-    const result = await this.traceProcessor.queryAllRows(sql);
+    const result = await this.traceProcessor.query(sql);
     assertTrue(
       result.numRows() === 1,
       () => 'Failed to query realtime timestamp',

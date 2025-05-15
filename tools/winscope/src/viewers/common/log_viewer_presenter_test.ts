@@ -228,7 +228,7 @@ describe('AbstractLogViewerPresenter', () => {
     expect(uiData.selectedIndex).toBeUndefined();
     expect(uiData.entries.length).toEqual(4);
     expect(assertDefined(uiData.propertiesTree).id).toEqual(
-      assertDefined(uiData.entries[0].propertiesTree).id,
+      (await getPropertiesTree(0)).id,
     );
     expect(uiData.headers.length).toEqual(3);
     expect((uiData.headers[0].filter as LogSelectFilter).options).toEqual([
@@ -241,7 +241,7 @@ describe('AbstractLogViewerPresenter', () => {
     await sendPositionUpdate(secondPositionUpdate, true);
     expect(uiData.currentIndex).toEqual(1);
     expect(assertDefined(uiData.propertiesTree).id).toEqual(
-      assertDefined(uiData.entries[1].propertiesTree).id,
+      (await getPropertiesTree(1)).id,
     );
   });
 
@@ -435,16 +435,14 @@ describe('AbstractLogViewerPresenter', () => {
   it('updates properties tree when entry clicked', async () => {
     await sendPositionUpdate(positionUpdate, true);
 
+    const expectedId = (await getPropertiesTree(2)).id;
+
     await presenter.onLogEntryClick(2);
-    expect(assertDefined(uiData.propertiesTree).id).toEqual(
-      assertDefined(uiData.entries[2].propertiesTree).id,
-    );
+    expect(assertDefined(uiData.propertiesTree).id).toEqual(expectedId);
 
     // does not remove selection when entry clicked again
     await presenter.onLogEntryClick(2);
-    expect(assertDefined(uiData.propertiesTree).id).toEqual(
-      assertDefined(uiData.entries[2].propertiesTree).id,
-    );
+    expect(assertDefined(uiData.propertiesTree).id).toEqual(expectedId);
   });
 
   it('updates properties tree when changed by key press', async () => {
@@ -454,28 +452,26 @@ describe('AbstractLogViewerPresenter', () => {
     await presenter.onArrowDownPress();
     expect(uiData.selectedIndex).toEqual(1);
     expect(assertDefined(uiData.propertiesTree).id).toEqual(
-      assertDefined(uiData.entries[1].propertiesTree).id,
+      (await getPropertiesTree(1)).id,
     );
+
+    const expectedId0 = (await getPropertiesTree(0)).id;
 
     await presenter.onArrowUpPress();
     expect(uiData.selectedIndex).toEqual(0);
-    expect(assertDefined(uiData.propertiesTree).id).toEqual(
-      assertDefined(uiData.entries[0].propertiesTree).id,
-    );
+    expect(assertDefined(uiData.propertiesTree).id).toEqual(expectedId0);
 
     // does not remove selection if index out of range
     await presenter.onArrowUpPress();
     expect(uiData.selectedIndex).toEqual(0);
-    expect(assertDefined(uiData.propertiesTree).id).toEqual(
-      assertDefined(uiData.entries[0].propertiesTree).id,
-    );
+    expect(assertDefined(uiData.propertiesTree).id).toEqual(expectedId0);
 
     // does not remove selection if index out of range
     await presenter.onLogEntryClick(3);
     await presenter.onArrowDownPress();
     expect(uiData.selectedIndex).toEqual(3);
     expect(assertDefined(uiData.propertiesTree).id).toEqual(
-      assertDefined(uiData.entries[3].propertiesTree).id,
+      (await getPropertiesTree(3)).id,
     );
   });
 
@@ -538,7 +534,7 @@ describe('AbstractLogViewerPresenter', () => {
   });
 
   it('is robust to empty trace', async () => {
-    const trace = makeEmptyTrace(TraceType.TRANSACTIONS);
+    const trace = makeEmptyTrace(TraceType.TRANSITION);
     const presenter = new MockPresenter(
       trace,
       new InMemoryStorage(),
@@ -585,5 +581,9 @@ describe('AbstractLogViewerPresenter', () => {
       await TimeUtils.wait(() => !uiData.isFetchingData);
     }
     expect(uiData.isFetchingData).toBeFalse();
+  }
+
+  async function getPropertiesTree(index: number) {
+    return await assertDefined(uiData.entries[index].getPropertiesTree)();
   }
 });

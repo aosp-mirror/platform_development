@@ -149,7 +149,7 @@ export class ParserSurfaceFlinger extends AbstractParser<HierarchyTreeNode> {
         )
         GROUP BY id;
       `;
-        const queryResult = await this.traceProcessor.queryAllRows(sql);
+        const queryResult = await this.traceProcessor.query(sql);
         const result: CustomQueryParserResultTypeMap[CustomQueryType.SF_LAYERS_ID_AND_NAME] =
           [];
         for (const it = queryResult.iter({}); it.valid(); it.next()) {
@@ -197,7 +197,7 @@ export class ParserSurfaceFlinger extends AbstractParser<HierarchyTreeNode> {
           INNER JOIN args ON sfl.arg_set_id = args.arg_set_id
       WHERE snapshot_id = ${this.entryIndexToRowIdMap[index]};
     `;
-    const result = await this.traceProcessor.queryAllRows(sql);
+    const result = await this.traceProcessor.query(sql);
 
     for (const it = result.iter({}); it.valid(); it.next()) {
       const builder = getBuilder(it.get('layer_id') as number);

@@ -22,8 +22,8 @@ import {WasmEngineProxy} from './wasm_engine_proxy';
 export class TraceProcessor {
   private wasmEngine: WasmEngineProxy;
 
-  constructor(engineId: string, enginePort: MessagePort) {
-    this.wasmEngine = new WasmEngineProxy(engineId, enginePort);
+  constructor(engineId: string) {
+    this.wasmEngine = new WasmEngineProxy(engineId);
   }
 
   async query(sqlQuery: string): Promise<QueryResult> {
@@ -31,17 +31,6 @@ export class TraceProcessor {
     const result = await this.wasmEngine.query(sqlQuery);
     Analytics.TraceProcessor.logQueryExecutionTime(
       Date.now() - startTimeMs,
-      false
-    );
-    return result;
-  }
-
-  async queryAllRows(sqlQuery: string): Promise<QueryResult> {
-    const startTimeMs = Date.now();
-    const result = await this.wasmEngine.query(sqlQuery).waitAllRows();
-    Analytics.TraceProcessor.logQueryExecutionTime(
-      Date.now() - startTimeMs,
-      true
     );
     return result;
   }

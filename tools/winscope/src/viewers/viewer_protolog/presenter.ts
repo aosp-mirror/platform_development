@@ -121,7 +121,7 @@ export class Presenter extends AbstractLogViewerPresenter<
     return messages;
   }
 
-  protected override updateFiltersInHeaders(
+  protected override async updateFiltersInHeaders(
     headers: LogHeader[],
     allEntries: ProtologEntry[],
   ) {

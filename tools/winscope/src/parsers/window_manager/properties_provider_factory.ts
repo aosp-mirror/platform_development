@@ -15,6 +15,7 @@
  */
 
 import {assertDefined} from 'common/assert_utils';
+import {PropertyTreeBuilderFromProto} from 'parsers/property_tree_builder_from_proto';
 import {perfetto} from 'protos/perfetto/trace/static';
 import {com} from 'protos/windowmanager/udc/static';
 import {
@@ -22,7 +23,6 @@ import {
   PropertiesProvider,
 } from 'trace/tree_node/properties_provider';
 import {PropertiesProviderBuilder} from 'trace/tree_node/properties_provider_builder';
-import {PropertyTreeBuilderFromProto} from 'trace/tree_node/property_tree_builder_from_proto';
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
 import {DEFAULT_PROPERTY_TREE_NODE_FACTORY} from 'trace/tree_node/property_tree_node_factory';
 import {WindowTypePrefix} from 'trace/window_type';

@@ -26,17 +26,17 @@ import {CoarseVersion} from 'trace/coarse_version';
 import {CustomQueryType} from 'trace/custom_query';
 import {Parser} from 'trace/parser';
 import {TraceType} from 'trace/trace_type';
-import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
+import {HierarchyTreeNode} from 'trace/tree_node/hierarchy_tree_node';
 
 describe('ParserTransactions', () => {
   describe('trace with real timestamps', () => {
-    let parser: Parser<PropertyTreeNode>;
+    let parser: Parser<HierarchyTreeNode>;
 
     beforeAll(async () => {
       jasmine.addCustomEqualityTester(timestampEqualityTester);
       parser = await new LegacyParserProvider()
         .addFilename('traces/elapsed_and_real_timestamp/Transactions.pb')
-        .getParser<PropertyTreeNode>();
+        .getParser<HierarchyTreeNode>();
     });
 
     it('has expected trace type', () => {
@@ -80,13 +80,13 @@ describe('ParserTransactions', () => {
     });
 
     describe('converts to valid perfetto trace', () => {
-      let perfettoParser: Parser<PropertyTreeNode>;
+      let perfettoParser: Parser<HierarchyTreeNode>;
 
       beforeAll(async () => {
         perfettoParser = await new LegacyParserProvider()
           .addFilename('traces/elapsed_and_real_timestamp/Transactions.pb')
           .setConvertToPerfetto(true)
-          .getParser<PropertyTreeNode>();
+          .getParser<HierarchyTreeNode>();
       });
 
       it('provides timestamps', () => {
@@ -105,42 +105,27 @@ describe('ParserTransactions', () => {
       it("decodes 'what' field in proto", async () => {
         {
           const entry = await perfettoParser.getEntry(0);
-          const transactions = assertDefined(
-            entry.getChildByName('transactions'),
+          const [transaction0, transaction1] = await Promise.all(
+            entry
+              .getAllChildren()
+              .slice(0, 2)
+              .map((child) => child.getAllProperties()),
+          );
+          expect(transaction0.getChildByName('what')?.formattedValue()).toEqual(
+            'eLayerChanged',
           );
 
           expect(
-            transactions
-              .getChildByName('0')
-              ?.getChildByName('layerChanges')
-              ?.getChildByName('0')
-              ?.getChildByName('what')
-              ?.formattedValue(),
-          ).toEqual('eLayerChanged');
-
-          expect(
-            transactions
-              .getChildByName('1')
-              ?.getChildByName('layerChanges')
-              ?.getChildByName('0')
-              ?.getChildByName('what')
-              ?.formattedValue(),
+            transaction1?.getChildByName('what')?.formattedValue(),
           ).toEqual('eFlagsChanged | eDestinationFrameChanged');
         }
         {
+          // translates upper and lower bits
           const entry = await perfettoParser.getEntry(222);
-          const transactions = assertDefined(
-            entry.getChildByName('transactions'),
-          );
-
-          expect(
-            transactions
-              .getChildByName('1')
-              ?.getChildByName('displayChanges')
-              ?.getChildByName('0')
-              ?.getChildByName('what')
-              ?.formattedValue(),
-          ).toEqual(
+          const transaction = await entry
+            .getAllChildren()[42]
+            .getAllProperties();
+          expect(transaction.getChildByName('what')?.formattedValue()).toEqual(
             'eLayerStackChanged | eDisplayProjectionChanged | eFlagsChanged',
           );
         }
@@ -161,12 +146,12 @@ describe('ParserTransactions', () => {
   });
 
   describe('trace with only elapsed timestamps', () => {
-    let parser: Parser<PropertyTreeNode>;
+    let parser: Parser<HierarchyTreeNode>;
 
     beforeAll(async () => {
       parser = await new LegacyParserProvider()
         .addFilename('traces/elapsed_timestamp/Transactions.pb')
-        .getParser<PropertyTreeNode>();
+        .getParser<HierarchyTreeNode>();
     });
 
     it('has expected trace type', () => {

@@ -673,9 +673,11 @@ describe('RectsComponent', () => {
       value: dom.get(largeRectsCanvasSelector).getHTMLElement(),
     });
     Object.defineProperty(zoomInEvent, 'deltaY', {value: 0});
+    spyOn(zoomInEvent, 'preventDefault').and.callThrough();
     rectsElement.dispatchEvent(zoomInEvent);
-
+    expect(zoomInEvent.preventDefault).toHaveBeenCalledTimes(1);
     checkZoomedIn(zoomFactor);
+
     const zoomedInFactor =
       updateViewPositionSpy.calls.mostRecent().args[0].zoomFactor;
     resetSpies();
@@ -685,7 +687,9 @@ describe('RectsComponent', () => {
       value: dom.get(largeRectsCanvasSelector).getHTMLElement(),
     });
     Object.defineProperty(zoomOutEvent, 'deltaY', {value: 1});
+    spyOn(zoomOutEvent, 'preventDefault').and.callThrough();
     rectsElement.dispatchEvent(zoomOutEvent);
+    expect(zoomOutEvent.preventDefault).toHaveBeenCalledTimes(1);
     checkZoomedOut(zoomedInFactor);
   });
 

@@ -15,7 +15,8 @@
  */
 
 import {TraceEntry} from 'trace/trace';
-import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
+import {HierarchyTreeNode} from 'trace/tree_node/hierarchy_tree_node';
+import {LazyPropertiesStrategyType} from 'trace/tree_node/properties_provider';
 import {
   LogEntry,
   LogField,
@@ -45,19 +46,8 @@ export class UiData implements UiDataLog {
 
 export class TransactionsEntry implements LogEntry {
   constructor(
-    public traceEntry: TraceEntry<PropertyTreeNode>,
+    public traceEntry: TraceEntry<HierarchyTreeNode>,
     public fields: LogField[],
-    public propertiesTree: PropertyTreeNode | undefined,
+    public getPropertiesTree: LazyPropertiesStrategyType | undefined,
   ) {}
-}
-
-export enum TransactionsEntryType {
-  DISPLAY_ADDED = 'DISPLAY_ADDED',
-  DISPLAY_REMOVED = 'DISPLAY_REMOVED',
-  DISPLAY_CHANGED = 'DISPLAY_CHANGED',
-  LAYER_ADDED = 'LAYER_ADDED',
-  LAYER_DESTROYED = 'LAYER_DESTROYED',
-  LAYER_CHANGED = 'LAYER_CHANGED',
-  LAYER_HANDLE_DESTROYED = 'LAYER_HANDLE_DESTROYED',
-  NO_OP = 'NO_OP',
 }

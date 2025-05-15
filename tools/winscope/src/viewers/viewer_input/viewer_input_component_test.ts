@@ -142,8 +142,8 @@ class ViewerInputComponentTest extends AbstractLogViewerComponentTest<ViewerInpu
         this.testField,
         this.testField,
       ],
-      this.tree,
-      this.tree,
+      async () => this.tree,
+      async () => this.tree,
       undefined,
     );
   }

@@ -78,7 +78,9 @@ export class PropertiesProvider {
       children.push(...this.lazyPropertiesRoot.getAllChildren());
     }
 
-    children.forEach((child) => root.addOrReplaceChild(child));
+    children.forEach((child) => {
+      root.addOrReplaceChild(child);
+    });
 
     root.setIsRoot(true);
 

@@ -21,6 +21,7 @@ import {AddDefaults} from 'parsers/operations/add_defaults';
 import {SetFormatters} from 'parsers/operations/set_formatters';
 import {TransformToTimestamp} from 'parsers/operations/transform_to_timestamp';
 import {TranslateIntDef} from 'parsers/operations/translate_intdef';
+import {PropertyTreeBuilderFromProto} from 'parsers/property_tree_builder_from_proto';
 import {TAMPERED_TRACE_PACKET} from 'parsers/tampered_message_type';
 import {AddDuration} from 'parsers/transitions/operations/add_duration';
 import {AddRootProperties} from 'parsers/transitions/operations/add_root_properties';
@@ -33,7 +34,6 @@ import {
   PropertyFormatter,
   TIMESTAMP_NODE_FORMATTER,
 } from 'trace/tree_node/formatters';
-import {PropertyTreeBuilderFromProto} from 'trace/tree_node/property_tree_builder_from_proto';
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
 
 interface TransitionInfo {

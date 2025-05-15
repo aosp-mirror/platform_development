@@ -161,9 +161,11 @@ describe('MiniTimelineComponent', () => {
 
   it('show zoom controls when zoomed out', () => {
     const zoomControlDiv = dom.get(zoomControlSelector).getHTMLElement();
-    expect(window.getComputedStyle(zoomControlDiv).visibility).toBe('visible');
+    expect(window.getComputedStyle(zoomControlDiv).visibility).toEqual(
+      'visible',
+    );
     const zoomButton = dom.get(resetButtonSelector).getHTMLElement();
-    expect(window.getComputedStyle(zoomButton).visibility).toBe('visible');
+    expect(window.getComputedStyle(zoomButton).visibility).toEqual('visible');
   });
 
   it('shows zoom controls when zoomed in', () => {
@@ -172,9 +174,11 @@ describe('MiniTimelineComponent', () => {
     dom.detectChanges();
 
     const zoomControlDiv = dom.get(zoomControlSelector).getHTMLElement();
-    expect(window.getComputedStyle(zoomControlDiv).visibility).toBe('visible');
+    expect(window.getComputedStyle(zoomControlDiv).visibility).toEqual(
+      'visible',
+    );
     const zoomButton = dom.get(resetButtonSelector).getHTMLElement();
-    expect(window.getComputedStyle(zoomButton).visibility).toBe('visible');
+    expect(window.getComputedStyle(zoomButton).visibility).toEqual('visible');
   });
 
   it('loads with initial zoom', () => {
@@ -274,24 +278,25 @@ describe('MiniTimelineComponent', () => {
 
     dom.findAndClick(zoomOutSelector);
     let finalZoom = timelineData.getZoomRange();
-    expect(finalZoom.from.getValueNs()).toBe(initialZoom.from.getValueNs());
-    expect(finalZoom.to.getValueNs()).toBe(initialZoom.to.getValueNs());
+    expect(finalZoom.from.getValueNs()).toEqual(initialZoom.from.getValueNs());
+    expect(finalZoom.to.getValueNs()).toEqual(initialZoom.to.getValueNs());
 
+    setCanvasZeroXOffset();
     zoomOutByScrollWheel();
     finalZoom = timelineData.getZoomRange();
-    expect(finalZoom.from.getValueNs()).toBe(initialZoom.from.getValueNs());
-    expect(finalZoom.to.getValueNs()).toBe(initialZoom.to.getValueNs());
+    expect(finalZoom.from.getValueNs()).toEqual(initialZoom.from.getValueNs());
+    expect(finalZoom.to.getValueNs()).toEqual(initialZoom.to.getValueNs());
   });
 
   it('zooms in/out with scroll wheel', () => {
     initializeTraces();
-
     let initialZoom = new TimeRange(timestamp10, timestamp1000);
     const miniTimelineComponent = assertDefined(
       component.miniTimelineComponent,
     );
     miniTimelineComponent.onZoomChanged(initialZoom);
     dom.detectChanges();
+    setCanvasZeroXOffset();
 
     for (let i = 0; i < 10; i++) {
       zoomInByScrollWheel();
@@ -482,6 +487,8 @@ describe('MiniTimelineComponent', () => {
       zoomInByKeyW,
       zoomOutByKeyS,
     );
+
+    setCanvasZeroXOffset();
     checkZoomOnTimestamp(
       fullRangeQuarterTimestamp,
       1n,
@@ -505,13 +512,6 @@ describe('MiniTimelineComponent', () => {
       4n,
       zoomInByKeyW,
       zoomOutByKeyS,
-    );
-    checkZoomOnTimestamp(
-      fullRangeQuarterTimestamp,
-      1n,
-      4n,
-      zoomInByScrollWheel,
-      zoomOutByScrollWheel,
     );
 
     const zoomInButton = dom.get(zoomInSelector);
@@ -561,13 +561,6 @@ describe('MiniTimelineComponent', () => {
       zoomInByKeyW,
       zoomOutByKeyS,
     );
-    checkZoomOnTimestamp(
-      fullRangeQuarterTimestamp,
-      1n,
-      4n,
-      zoomInByScrollWheel,
-      zoomOutByScrollWheel,
-    );
 
     const zoomInButton = dom.get(zoomInSelector);
     const zoomOutButton = dom.get(zoomOutSelector);
@@ -599,6 +592,8 @@ describe('MiniTimelineComponent', () => {
       zoomInByKeyW,
       zoomOutByKeyS,
     );
+
+    setCanvasZeroXOffset();
     checkZoomOnTimestamp(
       fullRangeMiddleTimestamp,
       1n,
@@ -639,6 +634,8 @@ describe('MiniTimelineComponent', () => {
       zoomInByKeyW,
       zoomOutByKeyS,
     );
+
+    setCanvasZeroXOffset();
     checkZoomOnTimestamp(
       fullRangeQuarterTimestamp,
       1n,
@@ -705,23 +702,29 @@ describe('MiniTimelineComponent', () => {
   }
 
   function zoomInByScrollWheel() {
-    assertDefined(component.miniTimelineComponent).onScroll({
-      deltaY: -200,
-      deltaX: 0,
-      x: 10, // scrolling on pos
-      target: {id: 'mini-timeline-canvas', offsetLeft: 0},
-    } as unknown as WheelEvent);
-    dom.detectChanges();
+    const wheelEvent = new WheelEvent('wheel');
+    spyOnProperty(wheelEvent, 'x').and.returnValue(10);
+    spyOnProperty(wheelEvent, 'deltaY').and.returnValue(-200);
+    zoomByScroll(wheelEvent);
   }
 
   function zoomOutByScrollWheel() {
-    assertDefined(component.miniTimelineComponent).onScroll({
-      deltaY: 200,
-      deltaX: 0,
-      x: 10, // scrolling on pos
-      target: {id: 'mini-timeline-canvas', offsetLeft: 0},
-    } as unknown as WheelEvent);
+    const wheelEvent = new WheelEvent('wheel');
+    spyOnProperty(wheelEvent, 'y').and.returnValue(10);
+    spyOnProperty(wheelEvent, 'deltaY').and.returnValue(200);
+    zoomByScroll(wheelEvent);
+  }
+
+  function zoomByScroll(wheelEvent: WheelEvent) {
+    const spy = spyOn(wheelEvent, 'preventDefault').and.callThrough();
+    spyOnProperty(wheelEvent, 'deltaX').and.returnValue(0);
+
+    const canvas = assertDefined(component.miniTimelineComponent?.getCanvas());
+    spyOnProperty(wheelEvent, 'target').and.returnValue(canvas);
+
+    dom.get('mini-timeline').dispatchEvent(wheelEvent);
     dom.detectChanges();
+    expect(spy).toHaveBeenCalledTimes(1);
   }
 
   function getContextMenuItems(): Array<DOMTestHelper<TestHostComponent>> {
@@ -777,6 +780,11 @@ describe('MiniTimelineComponent', () => {
       .getCanvas()
       .dispatchEvent(new MouseEvent('contextmenu'));
     dom.detectChanges();
+  }
+
+  function setCanvasZeroXOffset() {
+    const canvas = assertDefined(component.miniTimelineComponent).getCanvas();
+    spyOnProperty(canvas, 'offsetLeft').and.returnValue(0);
   }
 
   @Component({

@@ -51,7 +51,7 @@ import {UiData} from './ui_data';
         [traceType]="${TraceType.TRANSACTIONS}"
         [isProtoDump]="false"
         [textFilter]="inputData?.propertiesFilter"
-        placeholderText="No current or selected transaction."
+        placeholderText="No current or selected transaction with additional properties."
         (collapseButtonClicked)="sections.onCollapseStateChange(CollapsibleSectionType.PROPERTIES, true)"
         [class.collapsed]="sections.isSectionCollapsed(CollapsibleSectionType.PROPERTIES)"></properties-view>
     </div>

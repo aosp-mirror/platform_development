@@ -17,6 +17,7 @@
 import {TraceEntry} from 'trace/trace';
 import {TraceType} from 'trace/trace_type';
 import {HierarchyTreeNode} from 'trace/tree_node/hierarchy_tree_node';
+import {LazyPropertiesStrategyType} from 'trace/tree_node/properties_provider';
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
 import {DisplayIdentifier} from 'viewers/common/display_identifier';
 import {RectShowState} from 'viewers/common/rect_show_state';
@@ -68,8 +69,8 @@ export class InputEntry implements LogEntry {
   constructor(
     public traceEntry: TraceEntry<PropertyTreeNode>,
     public fields: LogField[],
-    public propertiesTree: PropertyTreeNode | undefined,
-    public dispatchPropertiesTree: PropertyTreeNode | undefined,
+    public getPropertiesTree: LazyPropertiesStrategyType | undefined,
+    public getDispatchPropertiesTree: LazyPropertiesStrategyType | undefined,
     public surfaceFlingerEntry: TraceEntry<HierarchyTreeNode> | undefined,
   ) {}
 }

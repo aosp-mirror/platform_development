@@ -346,10 +346,12 @@ describe('LogComponent', () => {
     const entry1: LogEntry = {
       traceEntry: trace.getEntry(0),
       fields: fields1,
+      getPropertiesTree: undefined,
     };
     const entry2: LogEntry = {
       traceEntry: trace.getEntry(1),
       fields: fields2,
+      getPropertiesTree: undefined,
     };
 
     const entries = [entry1, entry2];

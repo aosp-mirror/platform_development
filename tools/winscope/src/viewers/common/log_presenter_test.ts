@@ -285,7 +285,7 @@ describe('LogPresenter', () => {
             value: timestamp1,
           },
         ],
-        propertiesTree: await trace.getEntry(0).getValue(),
+        getPropertiesTree: async () => await trace.getEntry(0).getValue(),
       },
       {
         traceEntry: trace.getEntry(1),
@@ -303,7 +303,7 @@ describe('LogPresenter', () => {
             value: timestamp2,
           },
         ],
-        propertiesTree: await trace.getEntry(1).getValue(),
+        getPropertiesTree: async () => await trace.getEntry(1).getValue(),
       },
       {
         traceEntry: trace.getEntry(2),
@@ -321,7 +321,7 @@ describe('LogPresenter', () => {
             value: timestamp3,
           },
         ],
-        propertiesTree: await trace.getEntry(2).getValue(),
+        getPropertiesTree: async () => await trace.getEntry(2).getValue(),
       },
       {
         traceEntry: trace.getEntry(3),
@@ -339,7 +339,7 @@ describe('LogPresenter', () => {
             value: timestamp4,
           },
         ],
-        propertiesTree: await trace.getEntry(3).getValue(),
+        getPropertiesTree: async () => await trace.getEntry(3).getValue(),
       },
     ];
   }

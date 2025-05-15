@@ -295,10 +295,8 @@ export class Analytics {
   };
 
   static TraceProcessor = class {
-    static logQueryExecutionTime(ms: number, waitAllRows: boolean) {
-      Analytics.logTimeMs(Analytics.TP_GENERAL_QUERY_TIME, ms, {
-        waitAllRows,
-      });
+    static logQueryExecutionTime(ms: number) {
+      Analytics.logTimeMs(Analytics.TP_GENERAL_QUERY_TIME, ms);
     }
   };
 

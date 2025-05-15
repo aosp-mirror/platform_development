@@ -14,7 +14,7 @@
 
 // Promise wrapper with exposed resolve and reject callbacks.
 export interface Deferred<T> extends Promise<T> {
-  readonly resolve: (value?: T|PromiseLike<T>) => void;
+  readonly resolve: (value?: T | PromiseLike<T>) => void;
   readonly reject: (reason?: any) => void;
 }
 
@@ -22,6 +22,6 @@ export interface Deferred<T> extends Promise<T> {
 export function defer<T>(): Deferred<T> {
   let resolve = null as any;
   let reject = null as any;
-  const p = new Promise((res, rej) => [resolve, reject] = [res, rej]);
+  const p = new Promise((res, rej) => ([resolve, reject] = [res, rej]));
   return Object.assign(p, {resolve, reject}) as any;
 }

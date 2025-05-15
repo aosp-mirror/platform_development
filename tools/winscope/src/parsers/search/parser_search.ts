@@ -92,7 +92,7 @@ export class ParserSearch implements Parser<QueryResult> {
   async parse() {
     const tp = TraceProcessorFactory.getSingleInstance();
     try {
-      this.queryResult = await tp.queryAllRows(this.query);
+      this.queryResult = await tp.query(this.query);
       if (this.hasTimestamps() && this.queryResult.numRows() > 0) {
         for (const it = this.queryResult.iter({}); it.valid(); it.next()) {
           const ns = it.get('ts') as bigint;

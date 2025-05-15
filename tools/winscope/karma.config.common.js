@@ -40,6 +40,12 @@ module.exports = (config) => {
         included: false,
         served: true,
       },
+      {
+        pattern:
+          'deps_build/trace_processor/to_be_served/trace_processor_memory64.wasm',
+        included: false,
+        served: true,
+      },
     ],
     reporters: ['progress'],
     preprocessors: {

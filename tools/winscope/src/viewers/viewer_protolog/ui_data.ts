@@ -40,6 +40,7 @@ export class UiData implements UiDataLog {
 }
 
 export class ProtologEntry implements LogEntry {
+  readonly getPropertiesTree = undefined;
   constructor(
     public traceEntry: TraceEntry<PropertyTreeNode>,
     public fields: LogField[],

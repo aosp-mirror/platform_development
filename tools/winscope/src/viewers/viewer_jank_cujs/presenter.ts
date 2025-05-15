@@ -146,7 +146,7 @@ export class Presenter extends AbstractLogViewerPresenter<
           iconColor: statusIconColor,
         },
       ];
-      cujs.push(new CujEntry(entry, fields, cujNode));
+      cujs.push(new CujEntry(entry, fields, async () => cujNode));
     }
 
     return cujs;

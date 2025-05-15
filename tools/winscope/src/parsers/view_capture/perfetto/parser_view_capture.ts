@@ -85,7 +85,7 @@ export class ParserViewCapture {
         ORDER BY package_and_window;
     `;
 
-    const result = await this.traceProcessor.queryAllRows(sql);
+    const result = await this.traceProcessor.query(sql);
 
     const names: WindowAndPackage[] = [];
     for (const it = result.iter({}); it.valid(); it.next()) {

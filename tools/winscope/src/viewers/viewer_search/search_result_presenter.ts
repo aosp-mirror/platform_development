@@ -111,7 +111,7 @@ export class SearchResultPresenter extends AbstractLogViewerPresenter<
     return {
       traceEntry,
       fields,
-      propertiesTree: undefined,
+      getPropertiesTree: undefined,
     };
   }
 

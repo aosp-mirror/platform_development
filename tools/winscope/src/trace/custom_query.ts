@@ -21,6 +21,7 @@ export enum CustomQueryType {
   VIEW_CAPTURE_METADATA,
   VSYNCID,
   WM_WINDOWS_TOKEN_AND_TITLE,
+  LOG_TABLE_FILTER_VALUES,
 }
 
 export class ProcessParserResult {
@@ -53,6 +54,12 @@ export class ProcessParserResult {
   ): CustomQueryResultTypeMap<T>[CustomQueryType.WM_WINDOWS_TOKEN_AND_TITLE] {
     return parserResult;
   }
+
+  static [CustomQueryType.LOG_TABLE_FILTER_VALUES]<T>(
+    parserResult: CustomQueryParserResultTypeMap[CustomQueryType.LOG_TABLE_FILTER_VALUES],
+  ): CustomQueryResultTypeMap<T>[CustomQueryType.LOG_TABLE_FILTER_VALUES] {
+    return parserResult;
+  }
 }
 
 export interface CustomQueryParamTypeMap {
@@ -60,6 +67,7 @@ export interface CustomQueryParamTypeMap {
   [CustomQueryType.VIEW_CAPTURE_METADATA]: never;
   [CustomQueryType.VSYNCID]: never;
   [CustomQueryType.WM_WINDOWS_TOKEN_AND_TITLE]: never;
+  [CustomQueryType.LOG_TABLE_FILTER_VALUES]: number;
 }
 
 export interface CustomQueryParserResultTypeMap {
@@ -73,6 +81,7 @@ export interface CustomQueryParserResultTypeMap {
     token: string;
     title: string;
   }>;
+  [CustomQueryType.LOG_TABLE_FILTER_VALUES]: string[];
 }
 
 export interface CustomQueryResultTypeMap<T> {
@@ -86,6 +95,7 @@ export interface CustomQueryResultTypeMap<T> {
     token: string;
     title: string;
   }>;
+  [CustomQueryType.LOG_TABLE_FILTER_VALUES]: string[];
 }
 
 export class VisitableParserCustomQuery<Q extends CustomQueryType> {

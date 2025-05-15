@@ -44,7 +44,7 @@ export class ParserTransitions extends AbstractParser<PropertyTreeNode> {
         ON TRANS.arg_set_id = STATE.arg_set_id AND TRANS.key = 'send_time_ns'
       ORDER BY id;
    `;
-    await this.traceProcessor.queryAllRows(sql);
+    await this.traceProcessor.query(sql);
   }
 
   override getTraceType(): TraceType {
@@ -85,7 +85,7 @@ export class ParserTransitions extends AbstractParser<PropertyTreeNode> {
         INNER JOIN args ON transitions.arg_set_id = args.arg_set_id
       WHERE transitions.id = ${this.entryIndexToRowIdMap[index]};
     `;
-    const result = await this.traceProcessor.queryAllRows(sql);
+    const result = await this.traceProcessor.query(sql);
 
     for (const it = result.iter({}); it.valid(); it.next()) {
       protoBuilder.addArg(
@@ -127,7 +127,7 @@ export class ParserTransitions extends AbstractParser<PropertyTreeNode> {
   private async queryHandlers(): Promise<TransitionHandler[]> {
     const sql =
       'SELECT handler_id, handler_name FROM window_manager_shell_transition_handlers;';
-    const result = await this.traceProcessor.queryAllRows(sql);
+    const result = await this.traceProcessor.query(sql);
 
     const handlers: TransitionHandler[] = [];
     for (const it = result.iter({}); it.valid(); it.next()) {

@@ -121,7 +121,7 @@ class SearchResultPresenterTest extends AbstractLogViewerPresenterTest<SearchRes
           {spec: this.expectedHeaders[1].header.spec, value: 'test_property'},
           {spec: this.expectedHeaders[2].header.spec, value: 123},
         ],
-        propertiesTree: undefined,
+        getPropertiesTree: undefined,
       },
     ]);
   }

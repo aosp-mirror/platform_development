@@ -17,7 +17,11 @@
 import {assertDefined} from 'common/assert_utils';
 import {PersistentStoreProxy} from 'common/store/persistent_store_proxy';
 import {Store} from 'common/store/store';
+import {TransactionType} from 'parsers/transactions/transaction_type';
 import {Trace} from 'trace/trace';
+import {TransactionColumnType} from 'trace/transaction_column_type';
+import {HierarchyTreeNode} from 'trace/tree_node/hierarchy_tree_node';
+import {LazyPropertiesStrategyType} from 'trace/tree_node/properties_provider';
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
 import {
   AbstractLogViewerPresenter,
@@ -29,24 +33,53 @@ import {PropertiesPresenter} from 'viewers/common/properties_presenter';
 import {TextFilter} from 'viewers/common/text_filter';
 import {LogField, LogHeader} from 'viewers/common/ui_data_log';
 import {UserOptions} from 'viewers/common/user_options';
-import {SetRootDisplayNames} from './operations/set_root_display_name';
-import {TransactionsEntry, TransactionsEntryType, UiData} from './ui_data';
+import {TransactionsEntry, UiData} from './ui_data';
 
 export class Presenter extends AbstractLogViewerPresenter<
   UiData,
-  PropertyTreeNode
+  HierarchyTreeNode
 > {
   private static readonly COLUMNS = {
-    id: {name: 'TX ID', cssClass: 'transaction-id right-align'},
-    vsyncId: {name: 'VSYNC ID', cssClass: 'vsyncid right-align'},
-    pid: {name: 'PID', cssClass: 'pid right-align'},
-    uid: {name: 'UID', cssClass: 'uid right-align'},
-    type: {name: 'TYPE', cssClass: 'transaction-type'},
+    id: {
+      name: 'TX ID',
+      cssClass: 'transaction-id right-align',
+      columnType: TransactionColumnType.TRANSACTION_ID,
+    },
+    vsyncId: {
+      name: 'VSYNC ID',
+      cssClass: 'vsyncid right-align',
+      columnType: TransactionColumnType.VSYNC_ID,
+    },
+    pid: {
+      name: 'PID',
+      cssClass: 'pid right-align',
+      columnType: TransactionColumnType.PID,
+    },
+    uid: {
+      name: 'UID',
+      cssClass: 'uid right-align',
+      columnType: TransactionColumnType.UID,
+    },
+    process: {
+      name: 'PROCESS',
+      cssClass: 'process',
+      columnType: TransactionColumnType.PROCESS,
+    },
+    type: {
+      name: 'TYPE',
+      cssClass: 'transaction-type',
+      columnType: TransactionColumnType.TRANSACTION_TYPE,
+    },
     layerOrDisplayId: {
       name: 'LAYER/DISP ID',
       cssClass: 'layer-or-display-id right-align',
+      columnType: TransactionColumnType.LAYER_OR_DISPLAY_ID,
     },
-    flags: {name: 'Flags', cssClass: 'flags'},
+    flags: {
+      name: 'Flags',
+      cssClass: 'flags',
+      columnType: TransactionColumnType.FLAGS,
+    },
   };
 
   protected override keepCalculated = true;
@@ -69,11 +102,10 @@ export class Presenter extends AbstractLogViewerPresenter<
     ),
     new TextFilter(),
     [],
-    [new SetRootDisplayNames()],
   );
 
   constructor(
-    trace: Trace<PropertyTreeNode>,
+    trace: Trace<HierarchyTreeNode>,
     readonly storage: Store,
     notifyViewCallback: NotifyLogViewCallbackType<UiData>,
   ) {
@@ -92,6 +124,7 @@ export class Presenter extends AbstractLogViewerPresenter<
       ),
       new LogHeader(Presenter.COLUMNS.pid, new LogSelectFilter([])),
       new LogHeader(Presenter.COLUMNS.uid, new LogSelectFilter([])),
+      new LogHeader(Presenter.COLUMNS.process, new LogSelectFilter([])),
       new LogHeader(
         Presenter.COLUMNS.type,
         new LogSelectFilter([], false, '175'),
@@ -148,287 +181,90 @@ export class Presenter extends AbstractLogViewerPresenter<
     ) {
       const entry = this.trace.getEntry(traceIndex);
       const entryNode = entryProtos[traceIndex];
-      const vsyncId = Number(
-        assertDefined(entryNode.getChildByName('vsyncId')).getValue(),
-      );
+      const vsyncId = entryNode.getEagerPropertyByName('vsyncId')?.getValue();
 
-      for (const transactionState of assertDefined(
-        entryNode.getChildByName('transactions'),
-      ).getAllChildren()) {
-        const transactionId = assertDefined(
-          transactionState.getChildByName('transactionId'),
+      for (const transactionNode of entryNode.getAllChildren()) {
+        const transactionType = assertDefined(
+          transactionNode.getEagerPropertyByName('transactionType'),
         ).formattedValue();
-        const pid = assertDefined(
-          transactionState.getChildByName('pid'),
-        ).formattedValue();
-        const uid = assertDefined(
-          transactionState.getChildByName('uid'),
-        ).formattedValue();
-        const layerChanges = assertDefined(
-          transactionState.getChildByName('layerChanges'),
-        ).getAllChildren();
+        const transactionId = transactionNode
+          .getEagerPropertyByName('transactionId')
+          ?.formattedValue();
+        const pid = transactionNode
+          .getEagerPropertyByName('pid')
+          ?.formattedValue();
+        const uid = transactionNode
+          .getEagerPropertyByName('uid')
+          ?.formattedValue();
+        const process = transactionNode
+          .getEagerPropertyByName('processName')
+          ?.formattedValue();
+        const layerId = transactionNode
+          .getEagerPropertyByName('layerId')
+          ?.formattedValue();
+        const displayId = transactionNode
+          .getEagerPropertyByName('displayId')
+          ?.formattedValue();
+        const flags = transactionNode
+          .getEagerPropertyByName('flagsId')
+          ?.formattedValue();
 
-        for (const layerState of layerChanges) {
-          const fields: LogField[] = [
-            {spec: Presenter.COLUMNS.id, value: transactionId},
-            {spec: Presenter.COLUMNS.vsyncId, value: vsyncId},
-            {spec: Presenter.COLUMNS.pid, value: pid},
-            {spec: Presenter.COLUMNS.uid, value: uid},
-            {
-              spec: Presenter.COLUMNS.type,
-              value: TransactionsEntryType.LAYER_CHANGED,
-            },
-            {
-              spec: Presenter.COLUMNS.layerOrDisplayId,
-              value: assertDefined(
-                layerState.getChildByName('layerId'),
-              ).formattedValue(),
-            },
-            {
-              spec: Presenter.COLUMNS.flags,
-              value: assertDefined(
-                layerState.getChildByName('what'),
-              ).formattedValue(),
-            },
-          ];
-          entries.push(new TransactionsEntry(entry, fields, layerState));
+        let getPropertiesTree: LazyPropertiesStrategyType | undefined;
+        switch (transactionType) {
+          case TransactionType.LAYER_CHANGED:
+          case TransactionType.DISPLAY_CHANGED:
+          case TransactionType.LAYER_ADDED:
+          case TransactionType.DISPLAY_ADDED:
+            getPropertiesTree = async () => {
+              return await transactionNode.getAllProperties();
+            };
+            break;
+
+          default:
+            // do nothing
+            break;
         }
 
-        const displayChanges = assertDefined(
-          transactionState.getChildByName('displayChanges'),
-        ).getAllChildren();
-        for (const displayState of displayChanges) {
-          const fields: LogField[] = [
-            {spec: Presenter.COLUMNS.id, value: transactionId},
-            {spec: Presenter.COLUMNS.vsyncId, value: vsyncId},
-            {spec: Presenter.COLUMNS.pid, value: pid},
-            {spec: Presenter.COLUMNS.uid, value: uid},
-            {
-              spec: Presenter.COLUMNS.type,
-              value: TransactionsEntryType.DISPLAY_CHANGED,
-            },
-            {
-              spec: Presenter.COLUMNS.layerOrDisplayId,
-              value: assertDefined(
-                displayState.getChildByName('id'),
-              ).formattedValue(),
-            },
-            {
-              spec: Presenter.COLUMNS.flags,
-              value: assertDefined(
-                displayState.getChildByName('what'),
-              ).formattedValue(),
-            },
-          ];
-          entries.push(new TransactionsEntry(entry, fields, displayState));
-        }
+        const layerOrDisplayId =
+          (layerId?.length ?? 0) > 0
+            ? assertDefined(layerId)
+            : displayId ?? Presenter.VALUE_NA;
 
-        if (layerChanges.length === 0 && displayChanges.length === 0) {
-          const fields: LogField[] = [
-            {spec: Presenter.COLUMNS.id, value: transactionId},
-            {spec: Presenter.COLUMNS.vsyncId, value: vsyncId},
-            {spec: Presenter.COLUMNS.pid, value: pid},
-            {spec: Presenter.COLUMNS.uid, value: uid},
-            {
-              spec: Presenter.COLUMNS.type,
-              value: TransactionsEntryType.NO_OP,
-            },
-            {spec: Presenter.COLUMNS.layerOrDisplayId, value: ''},
-            {spec: Presenter.COLUMNS.flags, value: ''},
-          ];
-          entries.push(new TransactionsEntry(entry, fields, undefined));
-        }
-      }
-
-      for (const layerCreationArgs of assertDefined(
-        entryNode.getChildByName('addedLayers'),
-      ).getAllChildren()) {
         const fields: LogField[] = [
-          {spec: Presenter.COLUMNS.id, value: ''},
-          {spec: Presenter.COLUMNS.vsyncId, value: vsyncId},
-          {spec: Presenter.COLUMNS.pid, value: Presenter.VALUE_NA},
-          {spec: Presenter.COLUMNS.uid, value: Presenter.VALUE_NA},
+          {
+            spec: Presenter.COLUMNS.id,
+            value: transactionId ?? Presenter.VALUE_NA,
+          },
+          {spec: Presenter.COLUMNS.vsyncId, value: assertDefined(vsyncId)},
+          {spec: Presenter.COLUMNS.pid, value: pid ?? Presenter.VALUE_NA},
+          {spec: Presenter.COLUMNS.uid, value: uid ?? Presenter.VALUE_NA},
+          {
+            spec: Presenter.COLUMNS.process,
+            value: process ?? Presenter.VALUE_NA,
+          },
           {
             spec: Presenter.COLUMNS.type,
-            value: TransactionsEntryType.LAYER_ADDED,
+            value: transactionType,
           },
           {
             spec: Presenter.COLUMNS.layerOrDisplayId,
-            value: assertDefined(
-              layerCreationArgs.getChildByName('layerId'),
-            ).formattedValue(),
-          },
-          {spec: Presenter.COLUMNS.flags, value: ''},
-        ];
-        entries.push(new TransactionsEntry(entry, fields, layerCreationArgs));
-      }
-
-      for (const destroyedLayerId of assertDefined(
-        entryNode.getChildByName('destroyedLayers'),
-      ).getAllChildren()) {
-        const fields: LogField[] = [
-          {spec: Presenter.COLUMNS.id, value: ''},
-          {spec: Presenter.COLUMNS.vsyncId, value: vsyncId},
-          {spec: Presenter.COLUMNS.pid, value: Presenter.VALUE_NA},
-          {spec: Presenter.COLUMNS.uid, value: Presenter.VALUE_NA},
-          {
-            spec: Presenter.COLUMNS.type,
-            value: TransactionsEntryType.LAYER_DESTROYED,
-          },
-          {
-            spec: Presenter.COLUMNS.layerOrDisplayId,
-            value: destroyedLayerId.formattedValue(),
-          },
-          {spec: Presenter.COLUMNS.flags, value: ''},
-        ];
-        entries.push(new TransactionsEntry(entry, fields, destroyedLayerId));
-      }
-
-      for (const displayState of assertDefined(
-        entryNode.getChildByName('addedDisplays'),
-      ).getAllChildren()) {
-        const fields: LogField[] = [
-          {spec: Presenter.COLUMNS.id, value: ''},
-          {spec: Presenter.COLUMNS.vsyncId, value: vsyncId},
-          {spec: Presenter.COLUMNS.pid, value: Presenter.VALUE_NA},
-          {spec: Presenter.COLUMNS.uid, value: Presenter.VALUE_NA},
-          {
-            spec: Presenter.COLUMNS.type,
-            value: TransactionsEntryType.DISPLAY_ADDED,
-          },
-          {
-            spec: Presenter.COLUMNS.layerOrDisplayId,
-            value: assertDefined(
-              displayState.getChildByName('id'),
-            ).formattedValue(),
+            value: layerOrDisplayId,
           },
           {
             spec: Presenter.COLUMNS.flags,
-            value: assertDefined(
-              displayState.getChildByName('what'),
-            ).formattedValue(),
+            value: flags ?? Presenter.VALUE_NA,
           },
         ];
-        entries.push(new TransactionsEntry(entry, fields, displayState));
-      }
-
-      for (const removedDisplayId of assertDefined(
-        entryNode.getChildByName('removedDisplays'),
-      ).getAllChildren()) {
-        const fields: LogField[] = [
-          {spec: Presenter.COLUMNS.id, value: ''},
-          {spec: Presenter.COLUMNS.vsyncId, value: vsyncId},
-          {spec: Presenter.COLUMNS.pid, value: Presenter.VALUE_NA},
-          {spec: Presenter.COLUMNS.uid, value: Presenter.VALUE_NA},
-          {
-            spec: Presenter.COLUMNS.type,
-            value: TransactionsEntryType.DISPLAY_REMOVED,
-          },
-          {
-            spec: Presenter.COLUMNS.layerOrDisplayId,
-            value: removedDisplayId.formattedValue(),
-          },
-          {spec: Presenter.COLUMNS.flags, value: ''},
-        ];
-        entries.push(new TransactionsEntry(entry, fields, removedDisplayId));
-      }
-
-      for (const destroyedLayerHandleId of assertDefined(
-        entryNode.getChildByName('destroyedLayerHandles'),
-      ).getAllChildren()) {
-        const fields: LogField[] = [
-          {spec: Presenter.COLUMNS.id, value: ''},
-          {spec: Presenter.COLUMNS.vsyncId, value: vsyncId},
-          {spec: Presenter.COLUMNS.pid, value: Presenter.VALUE_NA},
-          {spec: Presenter.COLUMNS.uid, value: Presenter.VALUE_NA},
-          {
-            spec: Presenter.COLUMNS.type,
-            value: TransactionsEntryType.LAYER_HANDLE_DESTROYED,
-          },
-          {
-            spec: Presenter.COLUMNS.layerOrDisplayId,
-            value: destroyedLayerHandleId.formattedValue(),
-          },
-          {spec: Presenter.COLUMNS.flags, value: ''},
-        ];
-        entries.push(
-          new TransactionsEntry(entry, fields, destroyedLayerHandleId),
-        );
+        entries.push(new TransactionsEntry(entry, fields, getPropertiesTree));
       }
     }
-
     return entries;
   }
 
-  protected override updateFiltersInHeaders(
-    headers: LogHeader[],
-    allEntries: TransactionsEntry[],
-  ) {
+  protected override async updateFiltersInHeaders(headers: LogHeader[]) {
     for (const header of headers) {
-      if (header.spec === Presenter.COLUMNS.flags) {
-        (assertDefined(header.filter) as LogSelectFilter).options =
-          this.getUniqueUiDataEntryValues(
-            allEntries,
-            (entry: TransactionsEntry) =>
-              assertDefined(
-                entry.fields.find((f) => f.spec === header.spec)
-                  ?.value as string,
-              )
-                .split('|')
-                .map((flag) => flag.trim()),
-          );
-      } else {
-        (assertDefined(header.filter) as LogSelectFilter).options =
-          this.getUniqueUiDataEntryValues(
-            allEntries,
-            (entry: TransactionsEntry) =>
-              assertDefined(
-                entry.fields.find((f) => f.spec === header.spec),
-              ).value.toString(),
-          );
-      }
+      this.updateFilterByCustomQuery(header);
     }
-  }
-
-  private getUniqueUiDataEntryValues<T>(
-    entries: TransactionsEntry[],
-    getValue: (entry: TransactionsEntry) => T | T[],
-  ): T[] {
-    const uniqueValues = new Set<T>();
-    entries.forEach((entry: TransactionsEntry) => {
-      const value = getValue(entry);
-      if (Array.isArray(value)) {
-        value.forEach((val) => uniqueValues.add(val));
-      } else {
-        uniqueValues.add(value);
-      }
-    });
-
-    const result = [...uniqueValues];
-
-    result.sort((a, b) => {
-      const aIsNumber = !isNaN(Number(a));
-      const bIsNumber = !isNaN(Number(b));
-
-      if (aIsNumber && bIsNumber) {
-        return Number(a) - Number(b);
-      } else if (aIsNumber) {
-        return 1; // place number after strings in the result
-      } else if (bIsNumber) {
-        return -1; // place number after strings in the result
-      }
-
-      // a and b are both strings
-      if (a < b) {
-        return -1;
-      } else if (a > b) {
-        return 1;
-      } else {
-        return 0;
-      }
-    });
-
-    return result;
   }
 }
 

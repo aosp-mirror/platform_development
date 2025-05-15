@@ -55,6 +55,12 @@ export class UiTreeUtils {
     );
   };
 
+  static isNotFromTP: TreeNodeFilter = (node: TreeNode) => {
+    return (
+      node instanceof UiPropertyTreeNode && node.source !== PropertySource.TP
+    );
+  };
+
   static makeNodeFilter(predicate: StringFilterPredicate): TreeNodeFilter {
     return (node: TreeNode) => {
       return (

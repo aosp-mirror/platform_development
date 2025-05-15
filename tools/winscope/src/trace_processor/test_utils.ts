@@ -63,7 +63,7 @@ export function makeSearchTraceSpies(
 
 export async function runQueryAndGetResult(query: string): Promise<QueryResult> {
   const tp = TraceProcessorFactory.getSingleInstance();
-  return tp.queryAllRows(query);
+  return tp.query(query);
 }
 
 function makeSpyQueryResult(): jasmine.SpyObj<QueryResult> {

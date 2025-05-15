@@ -310,16 +310,11 @@ describe('TracePipeline', () => {
     const queryResultObj = jasmine.createSpyObj<QueryResult>('result', [
       'numRows',
       'firstRow',
-      'waitAllRows',
     ]);
     queryResultObj.numRows.and.returnValue(1);
     queryResultObj.firstRow.and.returnValue({value: 2n});
-    queryResultObj.waitAllRows.and.returnValue(Promise.resolve(queryResultObj));
 
-    const spy = spyOn(
-      TraceProcessor.prototype,
-      'queryAllRows',
-    ).and.callThrough();
+    const spy = spyOn(TraceProcessor.prototype, 'query').and.callThrough();
     spy
       .withArgs(
         'SELECT name, value FROM stats ' +

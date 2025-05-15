@@ -89,6 +89,11 @@ export const logComponentStyles = `
     width: 75px;
   }
 
+  .process {
+    flex: 1;
+    width: 85px;
+  }
+
   .transaction-type {
     flex: 1;
     min-width: 85px;

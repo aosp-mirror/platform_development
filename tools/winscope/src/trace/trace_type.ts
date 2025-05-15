@@ -58,7 +58,7 @@ export interface TraceEntryTypeMap {
   [TraceType.SCREEN_RECORDING]: MediaBasedTraceEntry;
   [TraceType.SCREENSHOT]: MediaBasedTraceEntry;
   [TraceType.SYSTEM_UI]: object;
-  [TraceType.TRANSACTIONS]: PropertyTreeNode;
+  [TraceType.TRANSACTIONS]: HierarchyTreeNode;
   [TraceType.WAYLAND]: object;
   [TraceType.WAYLAND_DUMP]: object;
   [TraceType.WINDOW_MANAGER]: HierarchyTreeNode;

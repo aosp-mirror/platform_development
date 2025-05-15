@@ -147,6 +147,7 @@ describe('ParserSearch', () => {
         'ts',
         'arg_set_id',
         'base64_proto_id',
+        'vsync_id',
       ]);
       expect(entry.numRows()).toEqual(0);
     });

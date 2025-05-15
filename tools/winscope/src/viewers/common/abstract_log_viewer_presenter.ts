@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import {assertDefined} from 'common/assert_utils';
 import {isElementVisible, KeyboardEventKey} from 'common/dom_utils';
 import {FunctionUtils} from 'common/function_utils';
 import {Timestamp} from 'common/time/time';
@@ -24,6 +25,7 @@ import {
   WinscopeEventType,
 } from 'messaging/winscope_event';
 import {EmitEvent} from 'messaging/winscope_event_emitter';
+import {CustomQueryType} from 'trace/custom_query';
 import {Trace, TraceEntry} from 'trace/trace';
 import {TraceEntryFinder} from 'trace/trace_entry_finder';
 import {TRACE_INFO} from 'trace/trace_info';
@@ -32,6 +34,7 @@ import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
 import {PropertiesPresenter} from 'viewers/common/properties_presenter';
 import {TextFilter} from 'viewers/common/text_filter';
 import {UserOptions} from 'viewers/common/user_options';
+import {LogSelectFilter} from './log_filters';
 import {LogPresenter} from './log_presenter';
 import {LogEntry, LogHeader, UiDataLog} from './ui_data_log';
 import {
@@ -324,7 +327,7 @@ export abstract class AbstractLogViewerPresenter<
       const traceName = TRACE_INFO[this.trace.type].name;
       const propertiesStartTime = Date.now();
 
-      const tree = this.getPropertiesTree();
+      const tree = await this.getPropertiesTree();
       this.propertiesPresenter.setPropertiesTree(tree);
       if (updateDefaultAllowlist && this.updateDefaultAllowlist) {
         this.updateDefaultAllowlist(tree);
@@ -362,17 +365,32 @@ export abstract class AbstractLogViewerPresenter<
     this.uiData.scrollToIndex = this.logPresenter.getScrollToIndex();
   }
 
-  private getPropertiesTree(): PropertyTreeNode | undefined {
+  private async getPropertiesTree(): Promise<PropertyTreeNode | undefined> {
     const entries = this.logPresenter.getFilteredEntries();
     const selectedIndex = this.logPresenter.getSelectedIndex();
     const currentIndex = this.logPresenter.getCurrentIndex();
     if (selectedIndex !== undefined) {
-      return entries.at(selectedIndex)?.propertiesTree;
+      const entry = entries.at(selectedIndex);
+      return entry?.getPropertiesTree
+        ? await entry.getPropertiesTree()
+        : undefined;
     }
     if (currentIndex !== undefined) {
-      return entries.at(currentIndex)?.propertiesTree;
+      const entry = entries.at(currentIndex);
+      return entry?.getPropertiesTree
+        ? await entry.getPropertiesTree()
+        : undefined;
     }
     return undefined;
+  }
+
+  protected async updateFilterByCustomQuery(header: LogHeader) {
+    const filterValues = await this.trace.customQuery(
+      CustomQueryType.LOG_TABLE_FILTER_VALUES,
+      assertDefined(header.spec.columnType),
+    );
+    (header.filter as LogSelectFilter).options = filterValues;
+    return;
   }
 
   protected notifyViewChanged() {
@@ -384,9 +402,9 @@ export abstract class AbstractLogViewerPresenter<
     headers: LogHeader[],
   ): Promise<LogEntry[]>;
   protected initializeTraceSpecificData?(): Promise<void>;
-  protected updateFiltersInHeaders?(
+  protected async updateFiltersInHeaders?(
     headers: LogHeader[],
     allEntries: LogEntry[],
-  ): void;
+  ): Promise<void>;
   protected updateDefaultAllowlist?(tree: PropertyTreeNode | undefined): void;
 }

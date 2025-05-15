@@ -695,6 +695,7 @@ export class RectsComponent implements OnInit, OnDestroy {
   @HostListener('wheel', ['$event'])
   onScroll(event: WheelEvent) {
     if ((event.target as HTMLElement).className === 'large-rects-canvas') {
+      event.preventDefault();
       if (event.deltaY > 0) {
         Analytics.Navigation.logZoom('scroll', 'rects', 'out');
         this.doZoomOut(RectsComponent.ZOOM_SCROLL_RATIO);
