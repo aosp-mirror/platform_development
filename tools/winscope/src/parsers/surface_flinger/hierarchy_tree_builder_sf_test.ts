@@ -16,6 +16,7 @@
 
 import {PropertyTreeBuilder} from 'test/unit/property_tree_builder';
 import {TreeNodeUtils} from 'test/unit/tree_node_utils';
+import {LayerFlag} from 'trace/surface_flinger/layer_flag';
 import {HierarchyTreeNode} from 'trace/tree_node/hierarchy_tree_node';
 import {OperationChain} from 'trace/tree_node/operations/operation_chain';
 import {PropertiesProvider} from 'trace/tree_node/properties_provider';
@@ -24,7 +25,6 @@ import {
   PropertyTreeNode,
 } from 'trace/tree_node/property_tree_node';
 import {HierarchyTreeBuilderSf} from './hierarchy_tree_builder_sf';
-import {LayerFlag} from './layer_flag';
 
 describe('HierarchyTreeBuilderSf', () => {
   let builder: HierarchyTreeBuilderSf;

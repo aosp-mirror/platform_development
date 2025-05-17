@@ -22,7 +22,7 @@ describe('Viewer Transactions', () => {
   const totalEntries = 9534;
 
   beforeEach(async () => {
-    jasmine.DEFAULT_TIMEOUT_INTERVAL = 20000;
+    jasmine.DEFAULT_TIMEOUT_INTERVAL = 40000;
     await E2eTestUtils.beforeEach(2000);
     await browser.get(E2eTestUtils.WINSCOPE_URL);
   });

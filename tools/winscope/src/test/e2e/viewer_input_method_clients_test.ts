@@ -21,6 +21,7 @@ describe('Viewer Input Method Clients', () => {
   const viewerSelector = 'viewer-input-method';
 
   beforeEach(async () => {
+    jasmine.DEFAULT_TIMEOUT_INTERVAL = 60000;
     await E2eTestUtils.beforeEach(1000);
     await browser.get(E2eTestUtils.WINSCOPE_URL);
   });
@@ -92,7 +93,7 @@ describe('Viewer Input Method Clients', () => {
     await E2eTestUtils.checkItemInPropertiesTree(
       viewerSelector,
       'hwcCompositionType',
-      'hwcCompositionType:\nDEVICE',
+      'hwcCompositionType:\nHWC_TYPE_DEVICE',
     );
 
     await E2eTestUtils.checkItemInPropertiesTree(

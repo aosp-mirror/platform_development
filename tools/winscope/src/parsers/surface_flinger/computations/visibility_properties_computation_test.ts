@@ -15,12 +15,12 @@
  */
 
 import {assertDefined} from 'common/assert_utils';
-import {LayerFlag} from 'parsers/surface_flinger/layer_flag';
 import {android} from 'protos/surfaceflinger/udc/static';
 import {
   ChildHierarchy,
   HierarchyTreeBuilder,
 } from 'test/unit/hierarchy_tree_builder';
+import {LayerFlag} from 'trace/surface_flinger/layer_flag';
 import {HierarchyTreeNode} from 'trace/tree_node/hierarchy_tree_node';
 import {VisibilityPropertiesComputation} from './visibility_properties_computation';
 import {ZOrderPathsComputation} from './z_order_paths_computation';

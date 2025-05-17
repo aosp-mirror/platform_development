@@ -169,7 +169,7 @@ object SpecDemo : Demo<SpecDemo.Config> {
                         builderContext.spatialDirectionalMotionSpec(
                             Mapping.Fixed(inputOutputRange.start)
                         ) {
-                            constantValue(
+                            fixedValue(
                                 breakpoint =
                                     (inputOutputRange.start + inputOutputRange.endInclusive) / 2f,
                                 value = inputOutputRange.endInclusive,
@@ -192,14 +192,14 @@ object SpecDemo : Demo<SpecDemo.Config> {
                                 (inputOutputRange.start + inputOutputRange.endInclusive) /
                                     (steps - 1)
                             repeat(steps - 2) { step ->
-                                constantValue(
+                                fixedValue(
                                     breakpoint = (step + 1) * stepSize,
                                     value = (step + 1) * outDiff,
                                     guarantee = guarantee,
                                 )
                             }
 
-                            constantValue(
+                            fixedValue(
                                 breakpoint = inputOutputRange.endInclusive - stepSize,
                                 value = inputOutputRange.endInclusive,
                                 guarantee = guarantee,
@@ -213,7 +213,7 @@ object SpecDemo : Demo<SpecDemo.Config> {
                             val third = (inputOutputRange.start + inputOutputRange.endInclusive) / 3
 
                             target(third, from = third, to = 2 * third)
-                            constantValue(
+                            fixedValue(
                                 breakpoint = 2 * third,
                                 value = inputOutputRange.endInclusive,
                             )

@@ -17,12 +17,9 @@
 import {assertDefined} from 'common/assert_utils';
 import {Rect} from 'common/geometry/rect';
 import {RawDataUtils} from 'parsers/raw_data_utils';
-import {LayerFlag} from 'parsers/surface_flinger/layer_flag';
-import {
-  Transform,
-  TransformType,
-} from 'parsers/surface_flinger/transform_utils';
 import {GeometryFactory} from 'trace/geometry_factory';
+import {LayerFlag} from 'trace/surface_flinger/layer_flag';
+import {Transform, TransformType} from 'trace/surface_flinger/transform_utils';
 import {Computation} from 'trace/tree_node/computation';
 import {HierarchyTreeNode} from 'trace/tree_node/hierarchy_tree_node';
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';

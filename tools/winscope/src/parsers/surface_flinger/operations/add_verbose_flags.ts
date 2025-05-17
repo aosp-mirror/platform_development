@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import {LayerFlag} from 'parsers/surface_flinger/layer_flag';
+import {LayerFlag} from 'trace/surface_flinger/layer_flag';
 import {formatAsHex} from 'trace/tree_node/formatters';
 import {AddOperation} from 'trace/tree_node/operations/add_operation';
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';

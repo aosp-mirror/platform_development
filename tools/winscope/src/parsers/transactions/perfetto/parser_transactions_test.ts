@@ -18,13 +18,13 @@ import {
   TimestampConverterUtils,
   timestampEqualityTester,
 } from 'common/time/test_utils';
-import {TransactionType} from 'parsers/transactions/transaction_type';
 import {getPerfettoParser} from 'test/unit/fixture_utils';
 import {TraceBuilder} from 'test/unit/trace_builder';
 import {CoarseVersion} from 'trace/coarse_version';
 import {CustomQueryType} from 'trace/custom_query';
 import {Parser} from 'trace/parser';
 import {TraceType} from 'trace/trace_type';
+import {TransactionType} from 'trace/transactions/transaction_type';
 import {HierarchyTreeNode} from 'trace/tree_node/hierarchy_tree_node';
 
 describe('PerfettoParserTransactions', () => {

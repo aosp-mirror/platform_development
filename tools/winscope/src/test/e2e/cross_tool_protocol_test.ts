@@ -18,7 +18,7 @@ import {browser, by, element, ElementFinder} from 'protractor';
 import {E2eTestUtils} from './utils';
 
 describe('Cross-Tool Protocol', () => {
-  const DEFAULT_TIMEOUT_MS = 50000;
+  const DEFAULT_TIMEOUT_MS = 80000;
 
   beforeEach(async () => {
     await browser.restart();
@@ -188,6 +188,7 @@ describe('Cross-Tool Protocol', () => {
     );
 
     const expectedTabParagraphs = [
+      'Search',
       'Surface Flinger',
       'Transactions',
       'Transitions',

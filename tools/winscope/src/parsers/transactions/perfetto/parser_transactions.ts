@@ -32,7 +32,6 @@ import {
   TamperedProtoField,
   TAMPERED_TRACE_PACKET,
 } from 'parsers/tampered_message_type';
-import {TransactionType} from 'parsers/transactions/transaction_type';
 import {perfetto} from 'protos/perfetto/trace/static';
 import {
   CustomQueryParamTypeMap,
@@ -43,7 +42,8 @@ import {
 import {EntriesRange} from 'trace/index_types';
 import {TraceFile} from 'trace/trace_file';
 import {TraceType} from 'trace/trace_type';
-import {TransactionColumnType} from 'trace/transaction_column_type';
+import {TransactionColumnType} from 'trace/transactions/transaction_column_type';
+import {TransactionType} from 'trace/transactions/transaction_type';
 import {
   EnumFormatter,
   FixedStringFormatter,

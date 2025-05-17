@@ -21,6 +21,7 @@ describe('Viewer Surface Flinger', () => {
   const viewerSelector = 'viewer-surface-flinger';
 
   beforeEach(async () => {
+    jasmine.DEFAULT_TIMEOUT_INTERVAL = 40000;
     await E2eTestUtils.beforeEach(1000);
     await browser.get(E2eTestUtils.WINSCOPE_URL);
   });

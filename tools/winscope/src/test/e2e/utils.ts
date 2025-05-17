@@ -100,6 +100,13 @@ class E2eTestUtils {
   }
 
   static async clickViewerTabButton(title: string) {
+    await browser.wait(
+      async () => {
+        return await element(by.css('trace-view')).isPresent();
+      },
+      20000,
+      'Viewers failed to load',
+    );
     const tabs: ElementFinder[] = await element.all(by.css('trace-view .tab'));
     for (const tab of tabs) {
       const tabTitle = await tab.getText();
@@ -260,9 +267,15 @@ class E2eTestUtils {
   static async checkScrollPresent(viewerSelector: string) {
     await browser.wait(
       async () => {
-        return await element(by.css(`${viewerSelector} .scroll`)).isPresent();
+        const scrollIsPresent = await element(
+          by.css(`${viewerSelector} .scroll`),
+        ).isPresent();
+        const placeholderPresent = await element(
+          by.css(`${viewerSelector} .fetching-data`),
+        ).isPresent();
+        return scrollIsPresent && !placeholderPresent;
       },
-      1000,
+      5000,
       'Fetching data timeout',
     );
   }

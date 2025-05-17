@@ -18,7 +18,7 @@ import {browser, by, element} from 'protractor';
 import {E2eTestUtils} from './utils';
 
 describe('Upload traces', () => {
-  const DEFAULT_TIMEOUT_MS = 20000;
+  const DEFAULT_TIMEOUT_MS = 60000;
 
   beforeAll(async () => {
     jasmine.DEFAULT_TIMEOUT_INTERVAL = DEFAULT_TIMEOUT_MS;

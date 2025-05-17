@@ -19,12 +19,12 @@ import {Box3D} from 'common/geometry/box3d';
 import {Distance} from 'common/geometry/distance';
 import {Point3D} from 'common/geometry/point3d';
 import {IDENTITY_MATRIX} from 'common/geometry/transform_matrix';
+import * as THREE from 'three';
+import {CSS2DObject} from 'three/examples/jsm/renderers/CSS2DRenderer';
 import {
   TransformType,
   TransformTypeFlags,
-} from 'parsers/surface_flinger/transform_utils';
-import * as THREE from 'three';
-import {CSS2DObject} from 'three/examples/jsm/renderers/CSS2DRenderer';
+} from 'trace/surface_flinger/transform_utils';
 import {ViewerEvents} from 'viewers/common/viewer_events';
 import {Camera} from './camera';
 import {Canvas} from './canvas';

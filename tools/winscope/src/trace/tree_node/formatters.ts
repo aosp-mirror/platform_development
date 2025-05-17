@@ -17,8 +17,8 @@
 import {Timestamp} from 'common/time/time';
 import {TimeDuration} from 'common/time/time_duration';
 import {RawDataUtils} from 'parsers/raw_data_utils';
-import {TransformType} from 'parsers/surface_flinger/transform_utils';
-import {CujType} from 'trace/cuj_type';
+import {CujType} from 'trace/cujs/cuj_type';
+import {TransformType} from 'trace/surface_flinger/transform_utils';
 import {PropertyTreeNode} from './property_tree_node';
 
 const EMPTY_OBJ_STRING = '{empty}';

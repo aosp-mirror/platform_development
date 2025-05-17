@@ -21,8 +21,8 @@ import {
   TabbedViewSwitchRequest,
   TracePositionUpdate,
 } from 'messaging/winscope_event';
-import {LayerFlag} from 'parsers/surface_flinger/layer_flag';
 import {CustomQueryType} from 'trace/custom_query';
+import {LayerFlag} from 'trace/surface_flinger/layer_flag';
 import {Trace} from 'trace/trace';
 import {Traces} from 'trace/traces';
 import {TraceEntryFinder} from 'trace/trace_entry_finder';

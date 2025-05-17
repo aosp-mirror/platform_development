@@ -16,9 +16,9 @@
 
 import {assertDefined} from 'common/assert_utils';
 import {IDENTITY_MATRIX} from 'common/geometry/transform_matrix';
-import {TransformTypeFlags} from 'parsers/surface_flinger/transform_utils';
 import {PropertyTreeBuilder} from 'test/unit/property_tree_builder';
 import {TreeNodeUtils} from 'test/unit/tree_node_utils';
+import {TransformTypeFlags} from 'trace/surface_flinger/transform_utils';
 import {
   BUFFER_FORMATTER,
   COLOR_FORMATTER,

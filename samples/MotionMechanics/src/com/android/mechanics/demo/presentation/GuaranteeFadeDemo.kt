@@ -149,7 +149,7 @@ object GuaranteeFadeDemo : Demo<Unit> {
             with(builderContext) {
                 MotionSpec(
                     effectsDirectionalMotionSpec {
-                        constantValue(
+                        fixedValue(
                             breakpoint =
                                 (inputOutputRange.start + inputOutputRange.endInclusive) / 2f,
                             value = 1f,

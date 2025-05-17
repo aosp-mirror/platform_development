@@ -25,7 +25,7 @@ import {
 import {PropertiesProviderBuilder} from 'trace/tree_node/properties_provider_builder';
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
 import {DEFAULT_PROPERTY_TREE_NODE_FACTORY} from 'trace/tree_node/property_tree_node_factory';
-import {WindowTypePrefix} from 'trace/window_type';
+import {WindowTypePrefix} from 'trace/window_manager/window_type';
 import {DENYLIST_PROPERTIES} from './denylist_properties';
 import {EAGER_PROPERTIES} from './eager_properties';
 import {OperationLists, WmOperationLists} from './operations/operation_lists';

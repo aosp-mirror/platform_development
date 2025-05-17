@@ -28,6 +28,7 @@ import multiprocessing
 import os
 import os.path
 import re
+import shlex
 import sys
 import xml.dom.minidom
 
@@ -251,7 +252,9 @@ _PICK_COMMANDS = {
 }
 
 
-def build_pull_commands(change, branch_name, merge_opt, pick_opt):
+def build_pull_commands(
+    change, branch_name, merge_opt, merge_args, pick_opt, pick_args
+):
     """Build command lines for each change.  The command lines will be passed
     to subprocess.run()."""
 
@@ -260,9 +263,11 @@ def build_pull_commands(change, branch_name, merge_opt, pick_opt):
         cmds.append(['repo', 'start', branch_name])
     cmds.append(['git', 'fetch', change.fetch_url, change.fetch_ref])
     if change.is_merge():
-        cmds.append(_MERGE_COMMANDS[merge_opt] + ['FETCH_HEAD'])
+        merge_args = shlex.split(merge_args)
+        cmds.append(_MERGE_COMMANDS[merge_opt] + merge_args + ['FETCH_HEAD'])
     else:
-        cmds.append(_PICK_COMMANDS[pick_opt] + ['FETCH_HEAD'])
+        pick_args = shlex.split(pick_args)
+        cmds.append(_PICK_COMMANDS[pick_opt] + pick_args + ['FETCH_HEAD'])
     return cmds
 
 
@@ -295,7 +300,8 @@ def _main_bash(args):
             cmds = []
             cmds.append(['pushd', project_dir])
             cmds.extend(build_pull_commands(
-                change, branch_name, args.merge, args.pick))
+                change, branch_name, args.merge, args.merge_args, args.pick,
+                args.pick_args))
             cmds.append(['popd'])
             print(_sh_quote_commands(cmds))
     print(_sh_quote_command(['popd']))
@@ -307,7 +313,9 @@ def _do_pull_change_lists_for_project(task, ignore_unknown_changes):
 
     branch_name = task_opts['branch_name']
     merge_opt = task_opts['merge_opt']
+    merge_args = task_opts['merge_args']
     pick_opt = task_opts['pick_opt']
+    pick_args = task_opts['pick_args']
     project_dirs = task_opts['project_dirs']
     repo_top = task_opts['repo_top']
 
@@ -323,7 +331,8 @@ def _do_pull_change_lists_for_project(task, ignore_unknown_changes):
             return (change, changes[i + 1:], [], err_msg)
 
         print(change.commit_sha1[0:10], i + 1, cwd)
-        cmds = build_pull_commands(change, branch_name, merge_opt, pick_opt)
+        cmds = build_pull_commands(change, branch_name, merge_opt, merge_args,
+                                   pick_opt, pick_args)
         for cmd in cmds:
             proc = run(cmd, cwd=os.path.join(repo_top, cwd), stderr=PIPE)
             if proc.returncode != 0:
@@ -364,7 +373,9 @@ def _main_pull(args):
     task_opts = {
         'branch_name': branch_name,
         'merge_opt': args.merge,
+        'merge_args': args.merge_args,
         'pick_opt': args.pick,
+        'pick_args': args.pick_args,
         'project_dirs': project_dirs,
         'repo_top': repo_top,
     }
@@ -403,10 +414,16 @@ def _parse_args():
                         default='merge-ff-only',
                         help='Method to pull merge commits')
 
+    parser.add_argument('--merge-args', default='', type=str,
+                        help='Additional arguments for merge')
+
     parser.add_argument('-p', '--pick',
                         choices=sorted(_PICK_COMMANDS.keys()),
                         default='pick',
                         help='Method to pull merge commits')
+
+    parser.add_argument('--pick-args', default='', type=str,
+                        help='Additional arguments for pick')
 
     parser.add_argument('-b', '--branch',
                         help='Local branch name for `repo start`')

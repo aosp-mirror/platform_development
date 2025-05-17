@@ -124,7 +124,7 @@ class ViewDemoActivity : AppCompatActivity() {
             "toggle" to
                 MotionSpec(
                     directionalMotionSpec(DefaultSpring, Mapping.Zero) {
-                        constantValue(breakpoint = maxRange / 2f, value = maxRange)
+                        fixedValue(breakpoint = maxRange / 2f, value = maxRange)
                     }
                 ),
         )

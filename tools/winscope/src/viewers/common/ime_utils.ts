@@ -19,7 +19,7 @@ import {Timestamp} from 'common/time/time';
 import {Item} from 'trace/item';
 import {HierarchyTreeNode} from 'trace/tree_node/hierarchy_tree_node';
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
-import {WindowType} from 'trace/window_type';
+import {WindowType} from 'trace/window_manager/window_type';
 import {TextFilter} from 'viewers/common/text_filter';
 import {WmImeUtils} from 'viewers/common/wm_ime_utils';
 import {TreeNodeFilter, UiTreeUtils} from './ui_tree_utils';

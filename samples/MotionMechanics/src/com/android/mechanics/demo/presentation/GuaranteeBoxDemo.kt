@@ -227,7 +227,7 @@ object GuaranteeBoxDemo : Demo<GuaranteeBoxDemo.Config> {
                         MotionSpec(
                             spatialDirectionalMotionSpec(initialMapping = Mapping.Zero) {
                                 target(breakpoint = left, from = 0f, to = widthVal)
-                                constantValue(breakpoint = right, value = widthVal)
+                                fixedValue(breakpoint = right, value = widthVal)
                             }
                         )
 
@@ -239,7 +239,7 @@ object GuaranteeBoxDemo : Demo<GuaranteeBoxDemo.Config> {
                                     from = minSize,
                                     to = widthVal - minSize,
                                 )
-                                constantValue(breakpoint = right, value = widthVal)
+                                fixedValue(breakpoint = right, value = widthVal)
                             }
                         )
 
@@ -252,7 +252,7 @@ object GuaranteeBoxDemo : Demo<GuaranteeBoxDemo.Config> {
                                     to = widthVal - minSize,
                                     guarantee = guarantee,
                                 )
-                                constantValue(
+                                fixedValue(
                                     breakpoint = right,
                                     value = widthVal,
                                     guarantee = guarantee,

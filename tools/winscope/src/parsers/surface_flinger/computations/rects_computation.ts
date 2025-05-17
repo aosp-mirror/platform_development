@@ -19,11 +19,8 @@ import {Rect} from 'common/geometry/rect';
 import {Region} from 'common/geometry/region';
 import {Size} from 'common/geometry/size';
 import {TransformMatrix} from 'common/geometry/transform_matrix';
-import {
-  Transform,
-  TransformType,
-} from 'parsers/surface_flinger/transform_utils';
 import {GeometryFactory} from 'trace/geometry_factory';
+import {Transform, TransformType} from 'trace/surface_flinger/transform_utils';
 import {TraceRect} from 'trace/trace_rect';
 import {TraceRectBuilder} from 'trace/trace_rect_builder';
 import {Computation} from 'trace/tree_node/computation';

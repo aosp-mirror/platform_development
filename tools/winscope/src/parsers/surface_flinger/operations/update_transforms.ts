@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import {Transform} from 'parsers/surface_flinger/transform_utils';
+import {Transform} from 'trace/surface_flinger/transform_utils';
 import {Operation} from 'trace/tree_node/operations/operation';
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
 import {DEFAULT_PROPERTY_TREE_NODE_FACTORY} from 'trace/tree_node/property_tree_node_factory';

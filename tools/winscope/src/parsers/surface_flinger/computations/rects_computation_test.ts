@@ -17,12 +17,12 @@
 import {Rect} from 'common/geometry/rect';
 import {Region} from 'common/geometry/region';
 import {IDENTITY_MATRIX} from 'common/geometry/transform_matrix';
+import {android} from 'protos/surfaceflinger/udc/static';
+import {HierarchyTreeBuilder} from 'test/unit/hierarchy_tree_builder';
 import {
   Transform,
   TransformTypeFlags,
-} from 'parsers/surface_flinger/transform_utils';
-import {android} from 'protos/surfaceflinger/udc/static';
-import {HierarchyTreeBuilder} from 'test/unit/hierarchy_tree_builder';
+} from 'trace/surface_flinger/transform_utils';
 import {TraceRect} from 'trace/trace_rect';
 import {TraceRectBuilder} from 'trace/trace_rect_builder';
 import {HierarchyTreeNode} from 'trace/tree_node/hierarchy_tree_node';

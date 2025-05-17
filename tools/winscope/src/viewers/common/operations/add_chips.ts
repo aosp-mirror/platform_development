@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import {LayerCompositionType} from 'trace/layer_composition_type';
+import {LayerCompositionType} from 'trace/surface_flinger/layer_composition_type';
 import {Operation} from 'trace/tree_node/operations/operation';
 import {
   DUPLICATE_CHIP,

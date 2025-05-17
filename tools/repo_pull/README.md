@@ -85,6 +85,12 @@ These are common queries:
 * `-m` or `--merge` specifies the method to pick the merge commits.  (default:
   `merge-ff-only`)
 
+* `--merge-args` specifies additional arguments to be passed to the git command
+  specified by `--merge`.
+
+  * For example, `--merge merge --merge-args="-X theirs -q"` maps to
+    `git merge --no-edit -X theirs -q`
+
 * `-p` or `--pick` specifies the method to pick the non-merge commits.
   (default: `pick`)
 
@@ -94,6 +100,12 @@ These are common queries:
   * `merge-no-ff` maps to `git merge --no-edit --no-ff`
   * `reset` maps to `git reset --hard`
   * `checkout` maps to `git checkout`
+
+* `--pick-args` specifies additional arguments to be passed to the git command
+  specified by `--pick`.
+
+  * For example, `--pick pick --pick-args="--empty=drop"` maps to `git
+    cherry-pick --allow-empty --empty=drop`
 
 
 ## Examples

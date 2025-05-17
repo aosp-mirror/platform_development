@@ -22,13 +22,13 @@ import {
   TabbedViewSwitchRequest,
   TracePositionUpdate,
 } from 'messaging/winscope_event';
-import {Transform} from 'parsers/surface_flinger/transform_utils';
 import {getTracesParser} from 'test/unit/fixture_utils';
 import {HierarchyTreeBuilder} from 'test/unit/hierarchy_tree_builder';
 import {TracesBuilder} from 'test/unit/traces_builder';
 import {TraceBuilder} from 'test/unit/trace_builder';
 import {CustomQueryType} from 'trace/custom_query';
 import {Parser} from 'trace/parser';
+import {Transform} from 'trace/surface_flinger/transform_utils';
 import {Trace} from 'trace/trace';
 import {Traces} from 'trace/traces';
 import {TRACE_INFO} from 'trace/trace_info';
