@@ -62,3 +62,25 @@ export function assertTrue(value: boolean, lazyErrorMessage?: () => string) {
 export function assertUnreachable(x: never): never {
   throw new Error('This line should never execute');
 }
+
+/**
+ * Asserts that the given value is a string.
+ *
+ * @param value The value to assert.
+ * @param lazyErrorMessage A function that returns a message to be included in the error if the assertion fails.
+ * @throws {Error} If the value is not a string.
+ * @return The value, asserted to be a string.
+ */
+export function assertString<A>(
+  value: A | null | undefined,
+  lazyErrorMessage?: () => string,
+): string {
+  if (typeof value !== 'string') {
+    throw new Error(
+      lazyErrorMessage
+        ? lazyErrorMessage()
+        : `Expected string, but found ${value}`,
+    );
+  }
+  return value;
+}

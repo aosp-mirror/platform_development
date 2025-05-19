@@ -15,44 +15,50 @@
  */
 
 import {browser, by, element} from 'protractor';
-import {E2eTestUtils} from './utils';
+import {
+  applyStateToHierarchyOptions,
+  changeRealTimestampInWinscope,
+  checkFinalRealTimestamp,
+  checkInitialRealTimestamp,
+  checkItemInPropertiesTree,
+  checkTimelineTraceSelector,
+  checkWinscopeRealTimestamp,
+  loadTraceAndCheckViewer,
+  selectItemInHierarchy,
+  setTimeouts,
+  WINSCOPE_URL,
+} from './utils';
 
 describe('Viewer Input Method Manager Service', () => {
   const viewerSelector = 'viewer-input-method';
 
   beforeEach(async () => {
-    jasmine.DEFAULT_TIMEOUT_INTERVAL = 40000;
-    await E2eTestUtils.beforeEach(1000);
-    await browser.get(E2eTestUtils.WINSCOPE_URL);
+    await setTimeouts(1000);
+    await browser.get(WINSCOPE_URL);
   });
 
   it('processes trace from zip and navigates correctly', async () => {
-    await E2eTestUtils.loadTraceAndCheckViewer(
+    await loadTraceAndCheckViewer(
       'archives/deployment_full_trace_phone.zip',
       'IME system_server',
       viewerSelector,
     );
-    await E2eTestUtils.checkTimelineTraceSelector({
+    await checkTimelineTraceSelector({
       icon: 'keyboard_alt',
       color: 'rgba(255, 194, 75, 1)',
     });
-    await E2eTestUtils.checkInitialRealTimestamp('2022-11-21, 18:05:11.145');
-    await E2eTestUtils.checkFinalRealTimestamp('2022-11-21, 18:05:18.081');
+    await checkInitialRealTimestamp('2022-11-21, 18:05:11.145');
+    await checkFinalRealTimestamp('2022-11-21, 18:05:18.081');
 
-    await E2eTestUtils.changeRealTimestampInWinscope(
-      '2022-11-21, 18:05:14.713',
-    );
-    await E2eTestUtils.checkWinscopeRealTimestamp('18:05:14.713');
+    await changeRealTimestampInWinscope('2022-11-21, 18:05:14.713');
+    await checkWinscopeRealTimestamp('18:05:14.713');
 
     await checkAdditionalProperties();
     await clickWmState();
     await checkWmStateProperties();
 
-    await E2eTestUtils.applyStateToHierarchyOptions(viewerSelector, false);
-    await E2eTestUtils.selectItemInHierarchy(
-      viewerSelector,
-      'inputMethodManagerService',
-    );
+    await applyStateToHierarchyOptions(viewerSelector, false);
+    await selectItemInHierarchy(viewerSelector, 'inputMethodManagerService');
     await checkManagerServiceProperties();
   });
 
@@ -100,13 +106,13 @@ describe('Viewer Input Method Manager Service', () => {
   }
 
   async function checkWmStateProperties() {
-    await E2eTestUtils.checkItemInPropertiesTree(
+    await checkItemInPropertiesTree(
       viewerSelector,
       'interactiveState',
       'interactiveState:\nINTERACTIVE_STATE_AWAKE',
     );
 
-    await E2eTestUtils.checkItemInPropertiesTree(
+    await checkItemInPropertiesTree(
       viewerSelector,
       'windowFramesValid',
       'windowFramesValid:\ntrue',
@@ -114,25 +120,25 @@ describe('Viewer Input Method Manager Service', () => {
   }
 
   async function checkManagerServiceProperties() {
-    await E2eTestUtils.checkItemInPropertiesTree(
+    await checkItemInPropertiesTree(
       viewerSelector,
       'fieldId',
       'fieldId:\n2131430027',
     );
 
-    await E2eTestUtils.checkItemInPropertiesTree(
+    await checkItemInPropertiesTree(
       viewerSelector,
       'curToken',
       'curToken:\nandroid.os.Binder@a75e797',
     );
 
-    await E2eTestUtils.checkItemInPropertiesTree(
+    await checkItemInPropertiesTree(
       viewerSelector,
       'curFocusedWindowSoftInputMode',
       'curFocusedWindowSoftInputMode:\nSTATE_UNSPECIFIED|ADJUST_RESIZE',
     );
 
-    await E2eTestUtils.checkItemInPropertiesTree(
+    await checkItemInPropertiesTree(
       viewerSelector,
       'inputShown',
       'inputShown:\ntrue',

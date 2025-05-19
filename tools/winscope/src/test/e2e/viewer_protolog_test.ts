@@ -15,38 +15,44 @@
  */
 
 import {browser} from 'protractor';
-import {E2eTestUtils} from './utils';
+import {
+  checkFinalRealTimestamp,
+  checkInitialRealTimestamp,
+  checkScrollPresent,
+  checkSelectFilter,
+  checkTimelineTraceSelector,
+  checkTotalScrollEntries,
+  loadTraceAndCheckViewer,
+  setTimeouts,
+  updateInputField,
+  WINSCOPE_URL,
+} from './utils';
 
 describe('Viewer Protolog', () => {
   const viewerSelector = 'viewer-protolog';
   const totalEntries = 7295;
 
   beforeEach(async () => {
-    jasmine.DEFAULT_TIMEOUT_INTERVAL = 40000;
-    await E2eTestUtils.beforeEach(1000);
-    await browser.get(E2eTestUtils.WINSCOPE_URL);
+    await setTimeouts(1000);
+    await browser.get(WINSCOPE_URL);
   });
 
   it('processes trace from zip and navigates correctly', async () => {
-    await E2eTestUtils.loadTraceAndCheckViewer(
+    await loadTraceAndCheckViewer(
       'archives/deployment_full_trace_phone.zip',
       'ProtoLog',
       viewerSelector,
     );
-    await E2eTestUtils.checkScrollPresent(viewerSelector);
-    await E2eTestUtils.checkTotalScrollEntries(
-      viewerSelector,
-      totalEntries,
-      true,
-    );
-    await E2eTestUtils.checkTimelineTraceSelector({
+    await checkScrollPresent(viewerSelector);
+    await checkTotalScrollEntries(viewerSelector, totalEntries, true);
+    await checkTimelineTraceSelector({
       icon: 'notes',
       color: 'rgba(52, 168, 83, 1)',
     });
-    await E2eTestUtils.checkFinalRealTimestamp('2022-11-21, 18:05:18.259');
-    await E2eTestUtils.checkInitialRealTimestamp('2022-11-21, 18:05:09.777');
+    await checkFinalRealTimestamp('2022-11-21, 18:05:18.259');
+    await checkInitialRealTimestamp('2022-11-21, 18:05:09.777');
 
-    await E2eTestUtils.checkSelectFilter(
+    await checkSelectFilter(
       viewerSelector,
       '.source-file',
       ['com/android/server/wm/ActivityStarter.java'],
@@ -54,7 +60,7 @@ describe('Viewer Protolog', () => {
       totalEntries,
     );
 
-    await E2eTestUtils.checkSelectFilter(
+    await checkSelectFilter(
       viewerSelector,
       '.source-file',
       [
@@ -66,11 +72,11 @@ describe('Viewer Protolog', () => {
     );
 
     await filterByText('FREEZE');
-    await E2eTestUtils.checkTotalScrollEntries(viewerSelector, 4);
+    await checkTotalScrollEntries(viewerSelector, 4);
   });
 
   async function filterByText(filterString: string) {
-    await E2eTestUtils.updateInputField(
+    await updateInputField(
       `${viewerSelector} .headers .text`,
       'Search text',
       filterString,

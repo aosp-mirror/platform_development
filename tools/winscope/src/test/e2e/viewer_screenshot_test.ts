@@ -14,20 +14,26 @@
  * limitations under the License.
  */
 import {browser, by, element} from 'protractor';
-import {E2eTestUtils} from './utils';
+import {
+  clickViewTracesButton,
+  closeSnackBar,
+  setTimeouts,
+  uploadFixture,
+  WINSCOPE_URL,
+} from './utils';
 
 describe('Viewer Screenshot', () => {
   const viewerSelector = 'viewer-media-based';
 
   beforeEach(async () => {
-    await E2eTestUtils.beforeEach(1000);
-    await browser.get(E2eTestUtils.WINSCOPE_URL);
+    await setTimeouts(1000);
+    await browser.get(WINSCOPE_URL);
   });
 
   it('processes file and renders view', async () => {
-    await E2eTestUtils.uploadFixture('traces/screenshot/screenshot.png');
-    await E2eTestUtils.closeSnackBar();
-    await E2eTestUtils.clickViewTracesButton();
+    await uploadFixture('traces/screenshot/screenshot.png');
+    await closeSnackBar();
+    await clickViewTracesButton();
 
     const viewer = element(by.css(viewerSelector));
     expect(await viewer.isPresent()).toBeTruthy();
@@ -38,12 +44,12 @@ describe('Viewer Screenshot', () => {
   });
 
   it('processes files and renders view with multiple screenshots', async () => {
-    await E2eTestUtils.uploadFixture(
+    await uploadFixture(
       'traces/screenshot/screenshot.png',
       'traces/screenshot/screenshot_2.png',
     );
-    await E2eTestUtils.closeSnackBar();
-    await E2eTestUtils.clickViewTracesButton();
+    await closeSnackBar();
+    await clickViewTracesButton();
 
     const viewer = element(by.css(viewerSelector));
     expect(await viewer.isPresent()).toBeTruthy();

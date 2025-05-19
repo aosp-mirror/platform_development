@@ -15,7 +15,16 @@
  */
 
 import {browser, by, element} from 'protractor';
-import {E2eTestUtils} from './utils';
+import {
+  areMessagesEmitted,
+  clickClearAllButton,
+  clickCloseIcon,
+  clickViewTracesButton,
+  loadBugReport,
+  setTimeouts,
+  uploadFixture,
+  WINSCOPE_URL,
+} from './utils';
 
 describe('Upload traces', () => {
   const DEFAULT_TIMEOUT_MS = 60000;
@@ -25,33 +34,31 @@ describe('Upload traces', () => {
   });
 
   beforeEach(async () => {
-    await E2eTestUtils.beforeEach(DEFAULT_TIMEOUT_MS);
-    await browser.get(E2eTestUtils.WINSCOPE_URL);
+    await setTimeouts(DEFAULT_TIMEOUT_MS);
+    await browser.get(WINSCOPE_URL);
   });
 
   it('can clear all files', async () => {
-    await E2eTestUtils.loadBugReport(DEFAULT_TIMEOUT_MS);
-    await E2eTestUtils.clickClearAllButton();
+    await loadBugReport(DEFAULT_TIMEOUT_MS);
+    await clickClearAllButton();
     await checkNoFilesUploaded();
   });
 
   it('can remove a file using the close icon', async () => {
-    await E2eTestUtils.loadBugReport(DEFAULT_TIMEOUT_MS);
-    await E2eTestUtils.clickCloseIcon();
+    await loadBugReport(DEFAULT_TIMEOUT_MS);
+    await clickCloseIcon();
     await checkFileRemoved();
   });
 
   it('can replace an uploaded file with a new file', async () => {
-    await E2eTestUtils.loadBugReport(DEFAULT_TIMEOUT_MS);
-    await E2eTestUtils.uploadFixture(
-      'traces/perfetto/layers_trace.perfetto-trace',
-    );
+    await loadBugReport(DEFAULT_TIMEOUT_MS);
+    await uploadFixture('traces/perfetto/layers_trace.perfetto-trace');
     await checkFileReplaced();
   });
 
   it('can process bugreport', async () => {
-    await E2eTestUtils.loadBugReport(DEFAULT_TIMEOUT_MS);
-    await E2eTestUtils.clickViewTracesButton();
+    await loadBugReport(DEFAULT_TIMEOUT_MS);
+    await clickViewTracesButton();
     await checkRendersSurfaceFlingerView();
   });
 
@@ -63,12 +70,8 @@ describe('Upload traces', () => {
   }
 
   it("doesn't emit messages for valid trace file", async () => {
-    await E2eTestUtils.uploadFixture(
-      'traces/elapsed_and_real_timestamp/SurfaceFlinger.pb',
-    );
-    expect(
-      await E2eTestUtils.areMessagesEmitted(DEFAULT_TIMEOUT_MS),
-    ).toBeFalsy();
+    await uploadFixture('traces/elapsed_and_real_timestamp/SurfaceFlinger.pb');
+    expect(await areMessagesEmitted(DEFAULT_TIMEOUT_MS)).toBeFalsy();
   });
 
   async function checkNoFilesUploaded() {

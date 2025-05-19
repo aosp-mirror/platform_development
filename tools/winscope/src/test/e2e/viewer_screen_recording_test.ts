@@ -14,22 +14,28 @@
  * limitations under the License.
  */
 import {browser, by, element} from 'protractor';
-import {E2eTestUtils} from './utils';
+import {
+  clickViewTracesButton,
+  closeSnackBar,
+  setTimeouts,
+  uploadFixture,
+  WINSCOPE_URL,
+} from './utils';
 
 describe('Viewer ScreenRecording', () => {
   const viewerSelector = 'viewer-media-based';
 
   beforeEach(async () => {
-    await E2eTestUtils.beforeEach(1000);
-    await browser.get(E2eTestUtils.WINSCOPE_URL);
+    await setTimeouts(1000);
+    await browser.get(WINSCOPE_URL);
   });
 
   it('processes trace and renders view', async () => {
-    await E2eTestUtils.uploadFixture(
+    await uploadFixture(
       'traces/elapsed_and_real_timestamp/screen_recording_metadata_v2.mp4',
     );
-    await E2eTestUtils.closeSnackBar();
-    await E2eTestUtils.clickViewTracesButton();
+    await closeSnackBar();
+    await clickViewTracesButton();
 
     const viewer = element(by.css(viewerSelector));
     expect(await viewer.isPresent()).toBeTruthy();
@@ -41,12 +47,12 @@ describe('Viewer ScreenRecording', () => {
   });
 
   it('processes files and renders view with multiple recordings', async () => {
-    await E2eTestUtils.uploadFixture(
+    await uploadFixture(
       'traces/elapsed_and_real_timestamp/screen_recording_metadata_v2.mp4',
       'traces/elapsed_and_real_timestamp/screen_recording_metadata_v2.mp4',
     );
-    await E2eTestUtils.closeSnackBar();
-    await E2eTestUtils.clickViewTracesButton();
+    await closeSnackBar();
+    await clickViewTracesButton();
 
     const viewer = element(by.css(viewerSelector));
     expect(await viewer.isPresent()).toBeTruthy();

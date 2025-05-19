@@ -15,34 +15,43 @@
  */
 
 import {browser, by, element} from 'protractor';
-import {E2eTestUtils} from './utils';
+import {
+  applyStateToHierarchyOptions,
+  changeRealTimestampInWinscope,
+  checkFinalRealTimestamp,
+  checkInitialRealTimestamp,
+  checkItemInPropertiesTree,
+  checkTimelineTraceSelector,
+  checkWinscopeRealTimestamp,
+  loadTraceAndCheckViewer,
+  selectItemInHierarchy,
+  setTimeouts,
+  WINSCOPE_URL,
+} from './utils';
 
 describe('Viewer Input Method Clients', () => {
   const viewerSelector = 'viewer-input-method';
 
   beforeEach(async () => {
-    jasmine.DEFAULT_TIMEOUT_INTERVAL = 60000;
-    await E2eTestUtils.beforeEach(1000);
-    await browser.get(E2eTestUtils.WINSCOPE_URL);
+    await setTimeouts(1000, 60000);
+    await browser.get(WINSCOPE_URL);
   });
 
   it('processes trace from zip and navigates correctly', async () => {
-    await E2eTestUtils.loadTraceAndCheckViewer(
+    await loadTraceAndCheckViewer(
       'archives/deployment_full_trace_phone.zip',
       'IME Clients',
       viewerSelector,
     );
-    await E2eTestUtils.checkTimelineTraceSelector({
+    await checkTimelineTraceSelector({
       icon: 'keyboard_alt',
       color: 'rgba(255, 150, 75, 1)',
     });
-    await E2eTestUtils.checkInitialRealTimestamp('2022-11-21, 18:05:11.145');
-    await E2eTestUtils.checkFinalRealTimestamp('2022-11-21, 18:05:18.245');
+    await checkInitialRealTimestamp('2022-11-21, 18:05:11.145');
+    await checkFinalRealTimestamp('2022-11-21, 18:05:18.245');
 
-    await E2eTestUtils.changeRealTimestampInWinscope(
-      '2022-11-21, 18:05:14.969',
-    );
-    await E2eTestUtils.checkWinscopeRealTimestamp('18:05:14.969');
+    await changeRealTimestampInWinscope('2022-11-21, 18:05:14.969');
+    await checkWinscopeRealTimestamp('18:05:14.969');
 
     await checkAdditionalProperties();
     await clickWmState();
@@ -52,10 +61,10 @@ describe('Viewer Input Method Clients', () => {
     await clickInputMethodSurface();
     await checkInputMethodSurfaceProperties();
 
-    await E2eTestUtils.selectItemInHierarchy(viewerSelector, 'InputMethod#765');
+    await selectItemInHierarchy(viewerSelector, 'InputMethod#765');
     await checkInputMethodLayerProperties();
 
-    await E2eTestUtils.applyStateToHierarchyOptions(viewerSelector, true);
+    await applyStateToHierarchyOptions(viewerSelector, true);
     await checkHierarchy();
   });
 
@@ -78,25 +87,25 @@ describe('Viewer Input Method Clients', () => {
   }
 
   async function checkInputMethodLayerProperties() {
-    await E2eTestUtils.checkItemInPropertiesTree(
+    await checkItemInPropertiesTree(
       viewerSelector,
       'activeBuffer',
       'activeBuffer:\nw: 1006, h: 2204, stride: 268437760, format: 1',
     );
 
-    await E2eTestUtils.checkItemInPropertiesTree(
+    await checkItemInPropertiesTree(
       viewerSelector,
       'bufferTransform',
       'bufferTransform:\nROT_270',
     );
 
-    await E2eTestUtils.checkItemInPropertiesTree(
+    await checkItemInPropertiesTree(
       viewerSelector,
       'hwcCompositionType',
       'hwcCompositionType:\nHWC_TYPE_DEVICE',
     );
 
-    await E2eTestUtils.checkItemInPropertiesTree(
+    await checkItemInPropertiesTree(
       viewerSelector,
       'bounds',
       'bounds:\n(0, 0) - (2204, 1006)',
@@ -167,13 +176,13 @@ describe('Viewer Input Method Clients', () => {
   }
 
   async function checkWmStateProperties() {
-    await E2eTestUtils.checkItemInPropertiesTree(
+    await checkItemInPropertiesTree(
       viewerSelector,
       'screenState',
       'screenState:\nSCREEN_STATE_ON',
     );
 
-    await E2eTestUtils.checkItemInPropertiesTree(
+    await checkItemInPropertiesTree(
       viewerSelector,
       'windowFramesValid',
       'windowFramesValid:\ntrue',
@@ -188,13 +197,9 @@ describe('Viewer Input Method Clients', () => {
   }
 
   async function checkImeContainerProperties() {
-    await E2eTestUtils.checkItemInPropertiesTree(
-      viewerSelector,
-      'id',
-      'id:\n12',
-    );
+    await checkItemInPropertiesTree(viewerSelector, 'id', 'id:\n12');
 
-    await E2eTestUtils.checkItemInPropertiesTree(
+    await checkItemInPropertiesTree(
       viewerSelector,
       'bounds',
       'bounds:\n(-10800, -23400) - (10800, 23400)',
@@ -209,19 +214,15 @@ describe('Viewer Input Method Clients', () => {
   }
 
   async function checkInputMethodSurfaceProperties() {
-    await E2eTestUtils.checkItemInPropertiesTree(
-      viewerSelector,
-      'id',
-      'id:\n795',
-    );
+    await checkItemInPropertiesTree(viewerSelector, 'id', 'id:\n795');
 
-    await E2eTestUtils.checkItemInPropertiesTree(
+    await checkItemInPropertiesTree(
       viewerSelector,
       'position',
       'position:\nx: 136, y: 148',
     );
 
-    await E2eTestUtils.checkItemInPropertiesTree(
+    await checkItemInPropertiesTree(
       viewerSelector,
       'transform',
       'transform:\nTRANSLATE',

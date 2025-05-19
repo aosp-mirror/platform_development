@@ -15,35 +15,40 @@
  */
 
 import {browser, by, element} from 'protractor';
-import {E2eTestUtils} from './utils';
+import {
+  changeRealTimestampInWinscope,
+  checkFinalRealTimestamp,
+  checkInitialRealTimestamp,
+  checkTimelineTraceSelector,
+  checkWinscopeRealTimestamp,
+  filterHierarchy,
+  loadTraceAndCheckViewer,
+  selectItemInHierarchy,
+  setTimeouts,
+  WINSCOPE_URL,
+} from './utils';
 
 describe('Viewer Surface Flinger', () => {
   const viewerSelector = 'viewer-surface-flinger';
 
   beforeEach(async () => {
-    jasmine.DEFAULT_TIMEOUT_INTERVAL = 40000;
-    await E2eTestUtils.beforeEach(1000);
-    await browser.get(E2eTestUtils.WINSCOPE_URL);
+    await setTimeouts(1000);
+    await browser.get(WINSCOPE_URL);
   });
 
   it('processes trace from zip and navigates correctly', async () => {
     await loadTraces();
-    await E2eTestUtils.checkTimelineTraceSelector({
+    await checkTimelineTraceSelector({
       icon: 'layers',
       color: 'rgba(78, 205, 230, 1)',
     });
-    await E2eTestUtils.checkInitialRealTimestamp('2022-11-21, 18:05:09.780');
-    await E2eTestUtils.checkFinalRealTimestamp('2022-11-21, 18:05:18.607');
+    await checkInitialRealTimestamp('2022-11-21, 18:05:09.780');
+    await checkFinalRealTimestamp('2022-11-21, 18:05:18.607');
 
-    await E2eTestUtils.changeRealTimestampInWinscope(
-      '2022-11-21, 18:05:11.314',
-    );
-    await E2eTestUtils.checkWinscopeRealTimestamp('18:05:11.314');
-    await E2eTestUtils.filterHierarchy(
-      viewerSelector,
-      'ConversationListActivity#632',
-    );
-    await E2eTestUtils.selectItemInHierarchy(
+    await changeRealTimestampInWinscope('2022-11-21, 18:05:11.314');
+    await checkWinscopeRealTimestamp('18:05:11.314');
+    await filterHierarchy(viewerSelector, 'ConversationListActivity#632');
+    await selectItemInHierarchy(
       viewerSelector,
       'com.google.android.apps.messaging/com.google.android.apps.messaging.ui.ConversationListActivity#632',
     );
@@ -51,7 +56,7 @@ describe('Viewer Surface Flinger', () => {
   });
 
   async function loadTraces() {
-    await E2eTestUtils.loadTraceAndCheckViewer(
+    await loadTraceAndCheckViewer(
       'archives/deployment_full_trace_phone.zip',
       'Surface Flinger',
       viewerSelector,

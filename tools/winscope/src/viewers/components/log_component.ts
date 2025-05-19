@@ -370,6 +370,18 @@ export class LogComponent {
       event.preventDefault();
       this.emitEvent(ViewerEvents.ArrowUpPress);
     }
+    if (
+      event.key === KeyboardEventKey.ENTER &&
+      logComponentVisible &&
+      this.selectedIndex !== undefined
+    ) {
+      event.stopPropagation();
+      event.preventDefault();
+      this.emitEvent(
+        ViewerEvents.TimestampClick,
+        new TimestampClickDetail(this.entries[this.selectedIndex].traceEntry),
+      );
+    }
   }
 
   isCurrentEntry(index: number): boolean {

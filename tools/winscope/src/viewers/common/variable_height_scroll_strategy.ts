@@ -70,7 +70,6 @@ export abstract class VariableHeightScrollStrategy
 
   updateItems(items: object[]) {
     this.scrollItems = items;
-
     if (this.viewport) {
       this.viewport.checkViewportSize();
     }
@@ -95,10 +94,7 @@ export abstract class VariableHeightScrollStrategy
       this.viewport.measureScrollOffset(),
     );
     const range = {
-      start: Math.max(
-        0,
-        scrollIndex - VariableHeightScrollStrategy.HIDDEN_ELEMENTS_TO_RENDER,
-      ),
+      start: Math.max(0, scrollIndex - 5),
       end: Math.min(
         this.viewport.getDataLength(),
         scrollIndex +
@@ -111,7 +107,6 @@ export abstract class VariableHeightScrollStrategy
       this.getOffsetByItemIndex(range.start),
     );
     this.scrolledIndexChangeSubject.next(scrollIndex);
-
     this.updateItemHeightCache();
   }
 

@@ -15,26 +15,31 @@
  */
 
 import {browser, by, element, ElementFinder} from 'protractor';
-import {E2eTestUtils} from './utils';
+import {
+  clickUploadNewButton,
+  clickViewTracesButton,
+  closeSnackBar,
+  setTimeouts,
+  uploadFixture,
+  WINSCOPE_URL,
+} from './utils';
 
 describe('Trace navigation', () => {
   const DEFAULT_TIMEOUT_MS = 1000;
 
   beforeEach(async () => {
-    await E2eTestUtils.beforeEach(DEFAULT_TIMEOUT_MS);
-    await browser.get(E2eTestUtils.WINSCOPE_URL);
+    await setTimeouts(DEFAULT_TIMEOUT_MS);
+    await browser.get(WINSCOPE_URL);
   });
 
   it('can go between home and trace view pages correctly', async () => {
-    await E2eTestUtils.uploadFixture(
-      'traces/perfetto/layers_trace.perfetto-trace',
-    );
+    await uploadFixture('traces/perfetto/layers_trace.perfetto-trace');
     await checkHomepage();
-    await E2eTestUtils.closeSnackBar();
-    await E2eTestUtils.clickViewTracesButton();
+    await closeSnackBar();
+    await clickViewTracesButton();
     await checkTraceViewPage();
 
-    await E2eTestUtils.clickUploadNewButton();
+    await clickUploadNewButton();
     await checkHomepage();
   });
 

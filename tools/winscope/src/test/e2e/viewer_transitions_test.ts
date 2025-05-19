@@ -14,21 +14,27 @@
  * limitations under the License.
  */
 import {browser, by, element} from 'protractor';
-import {E2eTestUtils} from './utils';
+import {
+  clickViewTracesButton,
+  closeSnackBar,
+  setTimeouts,
+  uploadFixture,
+  WINSCOPE_URL,
+} from './utils';
 
 describe('Viewer Transitions', () => {
   beforeEach(async () => {
-    await E2eTestUtils.beforeEach(1000);
-    await browser.get(E2eTestUtils.WINSCOPE_URL);
+    await setTimeouts(1000);
+    await browser.get(WINSCOPE_URL);
   });
 
   it('processes trace and renders view', async () => {
-    await E2eTestUtils.uploadFixture(
+    await uploadFixture(
       'traces/elapsed_and_real_timestamp/wm_transition_trace.pb',
       'traces/elapsed_and_real_timestamp/shell_transition_trace.pb',
     );
-    await E2eTestUtils.closeSnackBar();
-    await E2eTestUtils.clickViewTracesButton();
+    await closeSnackBar();
+    await clickViewTracesButton();
 
     const isViewerRendered = await element(
       by.css('viewer-transitions'),
