@@ -4599,7 +4599,13 @@
       "56": "R_8",
       "57": "R_16",
       "58": "RG_1616",
-      "59": "RGBA_10101010"
+      "59": "RGBA_10101010",
+      "61": "R_12",
+      "62": "R_14",
+      "63": "RG_1212",
+      "64": "RG_1414",
+      "65": "RGBA_12121212",
+      "66": "RGBA_14141414"
     }
   },
   "android.hardware.LutProperties.Dimension": {
@@ -11341,7 +11347,8 @@
       "34": "USAGE_PHYSICAL_EMULATION",
       "33": "USAGE_RINGTONE",
       "18": "USAGE_TOUCH",
-      "82": "USAGE_IME_FEEDBACK"
+      "82": "USAGE_IME_FEEDBACK",
+      "98": "USAGE_GESTURE_INPUT"
     }
   },
   "android.os.VibrationAttributes.UsageClass": {
@@ -15298,7 +15305,8 @@
       "134": "RESULT_RIL_NO_SUBSCRIPTION",
       "135": "RESULT_RIL_NO_NETWORK_FOUND",
       "136": "RESULT_RIL_DEVICE_IN_USE",
-      "137": "RESULT_RIL_ABORTED"
+      "137": "RESULT_RIL_ABORTED",
+      "138": "RESULT_SMS_SEND_FAIL_AFTER_MAX_RETRY"
     }
   },
   "android.telephony.SmsManager.SMS_RP_CAUSE": {
@@ -17906,7 +17914,8 @@
       "16384": "SPY",
       "32768": "INTERCEPTS_STYLUS",
       "65536": "CLONE",
-      "262144": "SENSITIVE_FOR_PRIVACY"
+      "262144": "SENSITIVE_FOR_PRIVACY",
+      "524288": "DISPLAY_TOPOLOGY_AWARE"
     }
   },
   "android.view.InsetsController.AnimationType": {
@@ -18461,7 +18470,9 @@
       "64": "FLAG_NO_FOCUS_CHANGE",
       "2048": "FLAG_IS_ACCESSIBILITY_EVENT",
       "-2147483648": "FLAG_TAINTED",
-      "1073741824": "FLAG_TARGET_ACCESSIBILITY_FOCUS"
+      "1073741824": "FLAG_TARGET_ACCESSIBILITY_FOCUS",
+      "128": "FLAG_SUPPORTS_ORIENTATION",
+      "256": "FLAG_SUPPORTS_DIRECTIONAL_ORIENTATION"
     }
   },
   "android.view.MotionEvent.ToolType": {
@@ -19030,7 +19041,8 @@
       "1": "INPUT_FEATURE_NO_INPUT_CHANNEL",
       "2": "INPUT_FEATURE_DISABLE_USER_ACTIVITY",
       "4": "INPUT_FEATURE_SPY",
-      "8": "INPUT_FEATURE_SENSITIVE_FOR_PRIVACY"
+      "8": "INPUT_FEATURE_SENSITIVE_FOR_PRIVACY",
+      "16": "INPUT_FEATURE_DISPLAY_TOPOLOGY_AWARE"
     }
   },
   "android.view.WindowManager.LayoutParams.LayoutInDisplayCutoutMode": {
