@@ -313,9 +313,7 @@ export class Presenter extends AbstractLogViewerPresenter<
         },
         {
           spec: Presenter.COLUMNS.action,
-          value: assertDefined(eventTree.getChildByName('action'))
-            .formattedValue()
-            .replace('ACTION_', ''),
+          value: Presenter.getInputAction(eventTree),
         },
         {
           spec: Presenter.COLUMNS.deviceId,
@@ -351,6 +349,21 @@ export class Presenter extends AbstractLogViewerPresenter<
       async () => dispatchTree,
       sfEntry,
     );
+  }
+
+  private static getInputAction(eventTree: PropertyTreeNode): string {
+    const actionNode = assertDefined(eventTree.getChildByName('action'));
+    const action = actionNode.getValue();
+    const actionMasked = action & 0xff;
+    const pointerIndex = action >> 8;
+    switch (actionMasked) {
+      case 5:
+        return `POINTER_DOWN(${pointerIndex})`;
+      case 6:
+        return `POINTER_UP(${pointerIndex})`;
+      default:
+        return actionNode.formattedValue().replace('ACTION_', '');
+    }
   }
 
   private getLayerDisplayName(layerId: number): string {

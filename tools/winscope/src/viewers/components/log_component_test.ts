@@ -45,6 +45,7 @@ import {
   LogField,
   LogHeader,
 } from 'viewers/common/ui_data_log';
+import {VariableHeightScrollDirective} from 'viewers/common/variable_height_scroll_directive';
 import {
   LogFilterChangeDetail,
   LogTextFilterChangeDetail,
@@ -96,6 +97,7 @@ describe('LogComponent', () => {
         CollapsibleSectionTitleComponent,
         PropertiesComponent,
         SearchBoxComponent,
+        VariableHeightScrollDirective,
       ],
     }).compileComponents();
     const fixture = TestBed.createComponent(LogComponent);

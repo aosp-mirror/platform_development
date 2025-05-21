@@ -14,26 +14,24 @@
  * limitations under the License.
  */
 
-import {assertDefined, assertString} from 'common/assert_utils';
+import {assertString} from 'common/assert_utils';
 import {TransactionColumnType} from 'trace/transactions/transaction_column_type';
-import {VariableHeightScrollStrategy} from 'viewers/common/variable_height_scroll_strategy';
+import {ItemHeightPredictor} from 'viewers/common/item_height_predictor';
 import {TransactionsEntry} from 'viewers/viewer_transactions/ui_data';
 
-export class TransactionsScrollStrategy extends VariableHeightScrollStrategy {
-  protected readonly defaultRowSize = 24;
+export class TransactionsHeightPredictor extends ItemHeightPredictor {
+  protected override readonly defaultRowSize = 24;
   private readonly timestampCharsPerRow = 20;
 
-  protected override predictScrollItemHeight(entry: TransactionsEntry): number {
-    const flags = assertDefined(
+  override predictHeight(entry: TransactionsEntry): number {
+    const flags = assertString(
       entry.fields.find(
         (f) => f.spec.columnType === TransactionColumnType.FLAGS,
-      ),
-    ).value;
+      )?.value,
+    );
     const flagsHeight =
-      Math.max(
-        1,
-        Math.ceil((assertString(flags).match(/\|/g)?.length ?? 1) / 2),
-      ) * this.defaultRowSize; // we assume there are on average 2 flags listed per row
+      Math.max(1, Math.ceil(flags.match(/\|/g)?.length ?? 1) / 2) *
+      this.defaultRowSize; // we assume there are on average 2 flags listed per row
     const timestampHeight = this.subItemHeight(
       entry.traceEntry.getTimestamp().format(),
       this.timestampCharsPerRow,

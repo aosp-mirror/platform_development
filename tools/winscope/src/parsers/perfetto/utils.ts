@@ -14,7 +14,14 @@
  * limitations under the License.
  */
 
-import {assertDefined, assertTrue} from 'common/assert_utils';
+import {
+  assertBigInt,
+  assertBigIntOrUndefined,
+  assertNumberOrUndefined,
+  assertString,
+  assertStringOrUndefined,
+  assertTrue,
+} from 'common/assert_utils';
 import {UserNotifier} from 'common/user_notifier';
 import {MissingVsyncId} from 'messaging/user_warnings';
 import {AbsoluteEntryIndex, EntriesRange} from 'trace/trace';
@@ -67,11 +74,11 @@ async function getAndConvertArgsToProto(
   const builder = new FakeProtoBuilder();
   for (const it = result.iter({}); it.valid(); it.next()) {
     builder.addArg(
-      it.get('key') as string,
-      it.get('value_type') as string,
-      it.get('int_value') as bigint | undefined,
-      it.get('real_value') as number | undefined,
-      it.get('string_value') as string | undefined,
+      assertString(it.get('key')),
+      assertString(it.get('value_type')),
+      assertBigIntOrUndefined(it.get('int_value')),
+      assertNumberOrUndefined(it.get('real_value')),
+      assertStringOrUndefined(it.get('string_value')),
     );
   }
   return builder.build();
@@ -107,7 +114,7 @@ export async function queryVsyncId(
   const vsyncIdOrderedByRow: Array<bigint> = [];
   let curRowId = BigInt(minRowId);
   for (const it = result.iter({}); it.valid(); it.next()) {
-    const id = assertDefined(it.get('id') as bigint | undefined);
+    const id = assertBigInt(it.get('id'));
     while (curRowId < id) {
       // Handle missing table rows that don't have a vsync_id
       vsyncIdOrderedByRow.push(-1n);
@@ -117,8 +124,8 @@ export async function queryVsyncId(
       curRowId === id,
       () => 'query for vsyncId contains duplicate rows with the same id',
     );
-    const value = it.get('int_value') as bigint | undefined;
-    const valueType = it.get('value_type') as string;
+    const value = assertBigIntOrUndefined(it.get('int_value'));
+    const valueType = assertString(it.get('value_type'));
     assertTrue(
       valueType === 'uint' || valueType === 'int',
       () => 'expected vsync_id to have integer type',

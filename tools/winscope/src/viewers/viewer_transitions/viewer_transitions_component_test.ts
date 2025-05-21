@@ -24,7 +24,6 @@ import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
 import {AbstractLogViewerComponentTest} from 'viewers/common/abstract_log_viewer_component_test';
 import {LogSelectFilter} from 'viewers/common/log_filters';
 import {LogHeader} from 'viewers/common/ui_data_log';
-import {TransitionsScrollDirective} from './scroll_strategy/transitions_scroll_directive';
 import {TransitionsEntry, UiData} from './ui_data';
 import {ViewerTransitionsComponent} from './viewer_transitions_component';
 
@@ -74,7 +73,6 @@ class ViewerTransitionsComponentTest extends AbstractLogViewerComponentTest<View
     return await this.initializeTestEnvironment(
       uiData,
       ViewerTransitionsComponent,
-      [TransitionsScrollDirective],
     );
   }
 

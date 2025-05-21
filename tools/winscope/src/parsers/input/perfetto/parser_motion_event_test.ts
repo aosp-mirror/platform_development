@@ -80,19 +80,15 @@ describe('PerfettoParserMotionEvent', () => {
       'SOURCE_TOUCHSCREEN',
     );
     expect(motionEvent?.getChildByName('flags')?.formattedValue()).toEqual(
-      'UNKNOWN (0x80)',
+      'FLAG_SUPPORTS_ORIENTATION',
     );
     expect(motionEvent?.getChildByName('deviceId')?.getValue()).toEqual(4);
     expect(motionEvent?.getChildByName('displayId')?.getValue()).toEqual(0);
     expect(
       motionEvent?.getChildByName('classification')?.formattedValue(),
     ).toEqual('CLASSIFICATION_NONE');
-    expect(motionEvent?.getChildByName('cursorPositionX')?.getValue()).toEqual(
-      null,
-    );
-    expect(motionEvent?.getChildByName('cursorPositionY')?.getValue()).toEqual(
-      null,
-    );
+    expect(motionEvent?.getChildByName('cursorPositionX')).toEqual(undefined);
+    expect(motionEvent?.getChildByName('cursorPositionY')).toEqual(undefined);
     expect(motionEvent?.getChildByName('metaState')?.formattedValue()).toEqual(
       '0x0',
     );

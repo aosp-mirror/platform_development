@@ -14,7 +14,11 @@
  * limitations under the License.
  */
 
-import {ArrayUtils} from 'common/array_utils';
+import {
+  searchSubarray,
+  toIntLittleEndian,
+  toUintLittleEndian,
+} from 'common/array_utils';
 import {Timestamp} from 'common/time/time';
 import {ParserTimestampConverter} from 'common/time/timestamp_converter';
 import {TIME_UNIT_TO_NANO} from 'common/time/time_units';
@@ -95,7 +99,7 @@ class ParserScreenRecording extends AbstractParser<
   }
 
   private searchMagicString(videoData: Uint8Array): number | undefined {
-    let pos = ArrayUtils.searchSubarray(
+    let pos = searchSubarray(
       videoData,
       ParserScreenRecording.WINSCOPE_META_MAGIC_STRING,
     );
@@ -164,9 +168,7 @@ class ParserScreenRecording extends AbstractParser<
         'Failed to parse metadata version. Video data is too short.',
       );
     }
-    const version = Number(
-      ArrayUtils.toUintLittleEndian(videoData, pos, pos + 4),
-    );
+    const version = Number(toUintLittleEndian(videoData, pos, pos + 4));
     pos += 4;
     return [pos, version];
   }
@@ -180,7 +182,7 @@ class ParserScreenRecording extends AbstractParser<
         'Failed to parse realtime-to-elapsed time offset. Video data is too short.',
       );
     }
-    const offset = ArrayUtils.toIntLittleEndian(videoData, pos, pos + 8);
+    const offset = toIntLittleEndian(videoData, pos, pos + 8);
     pos += 8;
     return [pos, offset];
   }
@@ -194,9 +196,7 @@ class ParserScreenRecording extends AbstractParser<
         'Failed to parse frames count. Video data is too short.',
       );
     }
-    const count = Number(
-      ArrayUtils.toUintLittleEndian(videoData, pos, pos + 4),
-    );
+    const count = Number(toUintLittleEndian(videoData, pos, pos + 4));
     pos += 4;
     return [pos, count];
   }
@@ -213,7 +213,7 @@ class ParserScreenRecording extends AbstractParser<
     }
     const timestamps: Array<bigint> = [];
     for (let i = 0; i < count; ++i) {
-      const timestamp = ArrayUtils.toUintLittleEndian(videoData, pos, pos + 8);
+      const timestamp = toUintLittleEndian(videoData, pos, pos + 8);
       pos += 8;
       timestamps.push(timestamp);
     }

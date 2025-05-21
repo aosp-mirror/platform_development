@@ -14,7 +14,13 @@
  * limitations under the License.
  */
 
-import {assertDefined} from 'common/assert_utils';
+import {
+  assertBigIntOrUndefined,
+  assertDefined,
+  assertNumberOrUndefined,
+  assertString,
+  assertStringOrUndefined,
+} from 'common/assert_utils';
 import {ParserTimestampConverter} from 'common/time/timestamp_converter';
 import {SetFormatters} from 'parsers/operations/set_formatters';
 import {TranslateIntDef} from 'parsers/operations/translate_intdef';
@@ -84,11 +90,11 @@ export abstract class AbstractInputEventParser extends AbstractParser<PropertyTr
       const prevId = it.get('id');
       while (it.valid() && it.get('id') === prevId) {
         builder.addArg(
-          it.get('key') as string,
-          it.get('value_type') as string,
-          it.get('int_value') as bigint | undefined,
-          it.get('real_value') as number | undefined,
-          it.get('string_value') as string | undefined,
+          assertString(it.get('key')),
+          assertString(it.get('value_type')),
+          assertBigIntOrUndefined(it.get('int_value')),
+          assertNumberOrUndefined(it.get('real_value')),
+          assertStringOrUndefined(it.get('string_value')),
         );
         it.next();
       }

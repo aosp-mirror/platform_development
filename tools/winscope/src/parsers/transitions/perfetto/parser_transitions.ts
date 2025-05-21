@@ -13,7 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import {assertDefined} from 'common/assert_utils';
+import {
+  assertBigIntOrUndefined,
+  assertDefined,
+  assertNumberOrUndefined,
+  assertString,
+  assertStringOrUndefined,
+} from 'common/assert_utils';
 import {AbstractParser} from 'parsers/perfetto/abstract_parser';
 import {FakeProtoBuilder} from 'parsers/perfetto/fake_proto_builder';
 import {EntryPropertiesTreeFactory} from 'parsers/transitions/perfetto/entry_properties_tree_factory';
@@ -89,11 +95,11 @@ export class ParserTransitions extends AbstractParser<PropertyTreeNode> {
 
     for (const it = result.iter({}); it.valid(); it.next()) {
       protoBuilder.addArg(
-        it.get('key') as string,
-        it.get('value_type') as string,
-        it.get('int_value') as bigint | undefined,
-        it.get('real_value') as number | undefined,
-        it.get('string_value') as string | undefined,
+        assertString(it.get('key')),
+        assertString(it.get('value_type')),
+        assertBigIntOrUndefined(it.get('int_value')),
+        assertNumberOrUndefined(it.get('real_value')),
+        assertStringOrUndefined(it.get('string_value')),
       );
     }
 
@@ -131,9 +137,11 @@ export class ParserTransitions extends AbstractParser<PropertyTreeNode> {
 
     const handlers: TransitionHandler[] = [];
     for (const it = result.iter({}); it.valid(); it.next()) {
+      const handlerid = assertBigIntOrUndefined(it.get('handler_id'));
+      if (handlerid === undefined) continue;
       handlers.push({
-        id: it.get('handler_id') as number,
-        name: it.get('handler_name') as string,
+        id: Number(handlerid),
+        name: assertString(it.get('handler_name')),
       });
     }
 

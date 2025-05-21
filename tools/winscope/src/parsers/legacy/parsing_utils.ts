@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import {ArrayUtils} from 'common/array_utils';
+import {equal} from 'common/array_utils';
 
 export class ParsingUtils {
   static throwIfMagicNumberDoesNotMatch(
@@ -22,7 +22,7 @@ export class ParsingUtils {
     magicNumber: number[] | undefined,
   ) {
     if (magicNumber !== undefined) {
-      const bufferContainsMagicNumber = ArrayUtils.equal(
+      const bufferContainsMagicNumber = equal(
         magicNumber,
         traceBuffer.slice(0, magicNumber.length),
       );

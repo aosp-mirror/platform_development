@@ -14,7 +14,15 @@
  * limitations under the License.
  */
 
-import {assertDefined, assertTrue} from 'common/assert_utils';
+import {
+  assertBigInt,
+  assertBigIntOrUndefined,
+  assertDefined,
+  assertNumberOrUndefined,
+  assertString,
+  assertStringOrUndefined,
+  assertTrue,
+} from 'common/assert_utils';
 import {ParserTimestampConverter} from 'common/time/timestamp_converter';
 import {AddDefaults} from 'parsers/operations/add_defaults';
 import {SetFormatters} from 'parsers/operations/set_formatters';
@@ -153,7 +161,7 @@ export class ParserSurfaceFlinger extends AbstractParser<HierarchyTreeNode> {
         const result: CustomQueryParserResultTypeMap[CustomQueryType.SF_LAYERS_ID_AND_NAME] =
           [];
         for (const it = queryResult.iter({}); it.valid(); it.next()) {
-          const idAndName = it.get('id_and_name') as string;
+          const idAndName = assertString(it.get('id_and_name'));
           const indexDelimiter = idAndName.indexOf(',');
           assertTrue(
             indexDelimiter > 0,
@@ -200,13 +208,13 @@ export class ParserSurfaceFlinger extends AbstractParser<HierarchyTreeNode> {
     const result = await this.traceProcessor.query(sql);
 
     for (const it = result.iter({}); it.valid(); it.next()) {
-      const builder = getBuilder(it.get('layer_id') as number);
+      const builder = getBuilder(Number(assertBigInt(it.get('layer_id'))));
       builder.addArg(
-        it.get('key') as string,
-        it.get('value_type') as string,
-        it.get('int_value') as bigint | undefined,
-        it.get('real_value') as number | undefined,
-        it.get('string_value') as string | undefined,
+        assertString(it.get('key')),
+        assertString(it.get('value_type')),
+        assertBigIntOrUndefined(it.get('int_value')),
+        assertNumberOrUndefined(it.get('real_value')),
+        assertStringOrUndefined(it.get('string_value')),
       );
     }
 

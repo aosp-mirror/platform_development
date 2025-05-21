@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import {ArrayUtils} from 'common/array_utils';
+import {searchSubarray, toUintLittleEndian} from 'common/array_utils';
 import {Timestamp} from 'common/time/time';
 import {AbstractParser} from 'parsers/legacy/abstract_parser';
 import {MediaBasedTraceEntry} from 'trace/media_based_trace_entry';
@@ -63,7 +63,7 @@ class ParserScreenRecordingLegacy extends AbstractParser<
   }
 
   private searchMagicString(videoData: Uint8Array): number {
-    let pos = ArrayUtils.searchSubarray(
+    let pos = searchSubarray(
       videoData,
       ParserScreenRecordingLegacy.WINSCOPE_META_MAGIC_STRING,
     );
@@ -83,9 +83,7 @@ class ParserScreenRecordingLegacy extends AbstractParser<
         'Failed to parse frames count. Video data is too short.',
       );
     }
-    const framesCount = Number(
-      ArrayUtils.toUintLittleEndian(videoData, pos, pos + 4),
-    );
+    const framesCount = Number(toUintLittleEndian(videoData, pos, pos + 4));
     pos += 4;
     return [pos, framesCount];
   }
@@ -102,8 +100,7 @@ class ParserScreenRecordingLegacy extends AbstractParser<
     }
     const timestamps: Array<bigint> = [];
     for (let i = 0; i < count; ++i) {
-      const value =
-        ArrayUtils.toUintLittleEndian(videoData, pos, pos + 8) * 1000n;
+      const value = toUintLittleEndian(videoData, pos, pos + 8) * 1000n;
       pos += 8;
       timestamps.push(value);
     }

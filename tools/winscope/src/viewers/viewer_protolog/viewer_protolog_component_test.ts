@@ -23,7 +23,6 @@ import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
 import {AbstractLogViewerComponentTest} from 'viewers/common/abstract_log_viewer_component_test';
 import {LogSelectFilter} from 'viewers/common/log_filters';
 import {LogHeader} from 'viewers/common/ui_data_log';
-import {ProtologScrollDirective} from './scroll_strategy/protolog_scroll_directive';
 import {ProtologEntry, UiData} from './ui_data';
 import {ViewerProtologComponent} from './viewer_protolog_component';
 
@@ -84,7 +83,6 @@ class ViewerProtologComponentTest extends AbstractLogViewerComponentTest<ViewerP
     return await this.initializeTestEnvironment(
       uiData,
       ViewerProtologComponent,
-      [ProtologScrollDirective],
     );
   }
 }

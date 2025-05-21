@@ -14,17 +14,18 @@
  * limitations under the License.
  */
 
-import {VariableHeightScrollStrategy} from 'viewers/common/variable_height_scroll_strategy';
+import {assertString} from 'common/assert_utils';
+import {ItemHeightPredictor} from 'viewers/common/item_height_predictor';
 import {TransitionsEntry} from 'viewers/viewer_transitions/ui_data';
 
-export class TransitionsScrollStrategy extends VariableHeightScrollStrategy {
-  protected readonly defaultRowSize = 36;
+export class TransitionsHeightPredictor extends ItemHeightPredictor {
+  protected override readonly defaultRowSize = 36;
   private readonly participantsCharsPerRow = 25;
   private readonly timestampCharsPerRow = 20;
 
-  protected override predictScrollItemHeight(entry: TransitionsEntry): number {
+  override predictHeight(entry: TransitionsEntry): number {
     const participantsHeight = this.subItemHeight(
-      entry.fields[6].value as string,
+      assertString(entry.fields[6].value),
       this.participantsCharsPerRow,
     );
     const timestampHeight = this.subItemHeight(

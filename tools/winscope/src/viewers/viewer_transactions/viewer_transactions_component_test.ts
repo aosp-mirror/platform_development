@@ -21,12 +21,12 @@ import {HierarchyTreeBuilder} from 'test/unit/hierarchy_tree_builder';
 import {PropertyTreeBuilder} from 'test/unit/property_tree_builder';
 import {TraceBuilder} from 'test/unit/trace_builder';
 import {TraceType} from 'trace/trace_type';
+import {TransactionColumnType} from 'trace/transactions/transaction_column_type';
 import {HierarchyTreeNode} from 'trace/tree_node/hierarchy_tree_node';
 import {AbstractLogViewerComponentTest} from 'viewers/common/abstract_log_viewer_component_test';
 import {LogSelectFilter} from 'viewers/common/log_filters';
 import {LogHeader} from 'viewers/common/ui_data_log';
 import {UiPropertyTreeNode} from 'viewers/common/ui_property_tree_node';
-import {TransactionsScrollDirective} from './scroll_strategy/transactions_scroll_directive';
 import {TransactionsEntry, UiData} from './ui_data';
 import {ViewerTransactionsComponent} from './viewer_transactions_component';
 
@@ -73,9 +73,14 @@ class ViewerTransactionsComponentTest extends AbstractLogViewerComponentTest<Vie
 
     const entry1 = new TransactionsEntry(
       trace.getEntry(0),
-      Array.from({length: 7}, () => this.testField),
+      Array.from({length: 8}, () => this.testField),
       async () => propertiesTree,
     );
+    entry1.fields[7].spec = {
+      name: 'Test Column',
+      cssClass: 'test-class',
+      columnType: TransactionColumnType.FLAGS,
+    };
 
     const uiData = new UiData(
       [new LogHeader(this.testSpec, new LogSelectFilter([]))],
@@ -86,9 +91,7 @@ class ViewerTransactionsComponentTest extends AbstractLogViewerComponentTest<Vie
       UiPropertyTreeNode.from(propertiesTree),
       {},
     );
-    return this.initializeTestEnvironment(uiData, ViewerTransactionsComponent, [
-      TransactionsScrollDirective,
-    ]);
+    return this.initializeTestEnvironment(uiData, ViewerTransactionsComponent);
   }
 
   protected override async setUpTestEnvironmentForScroll(): Promise<
@@ -129,9 +132,13 @@ class ViewerTransactionsComponentTest extends AbstractLogViewerComponentTest<Vie
     for (let i = 0; i < 200; i++) {
       const entry = new TransactionsEntry(
         traceEntry,
-        Array.from({length: 6}, () => this.testField).concat([
+        Array.from({length: 8}, () => this.testField).concat([
           {
-            spec: {name: 'Test Column Flags', cssClass: 'test-class-flags'},
+            spec: {
+              name: 'Test Column Flags',
+              cssClass: 'test-class-flags',
+              columnType: TransactionColumnType.FLAGS,
+            },
             value: i % 2 === 0 ? shortMessage : longMessage,
           },
         ]),
@@ -143,7 +150,6 @@ class ViewerTransactionsComponentTest extends AbstractLogViewerComponentTest<Vie
     const [dom, viewport] = await this.initializeTestEnvironment(
       uiData,
       ViewerTransactionsComponent,
-      [TransactionsScrollDirective],
     );
     return [dom, viewport];
   }

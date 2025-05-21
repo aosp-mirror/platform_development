@@ -99,12 +99,12 @@ class InteractiveShareTestActivity : Hilt_InteractiveShareTestActivity() {
         }
 
     private val sessionStateListener =
-        object : ChooserSession.ChooserSessionUpdateListener {
+        object : ChooserSession.UpdateListener {
             override fun onChooserConnected(chooserController: ChooserController) {
                 Log.d(TAG, "onChooserConnected")
             }
 
-            override fun onSessionClosed() {
+            override fun onClosed() {
                 Log.d(TAG, "onSessionClosed")
                 chooserSession.value = null
             }
@@ -125,9 +125,8 @@ class InteractiveShareTestActivity : Hilt_InteractiveShareTestActivity() {
             lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) {
                 chooserSession
                     .scan<ChooserSession?, ChooserSession?>(null) { prevSession, newSession ->
-                        prevSession?.setChooserStateListener(null)
-                        prevSession?.cancel()
-                        newSession?.setChooserStateListener(sessionStateListener)
+                        prevSession?.close()
+                        newSession?.addUpdateListener(mainExecutor, sessionStateListener)
                         newSession
                     }
                     .collect {}
@@ -280,7 +279,7 @@ class InteractiveShareTestActivity : Hilt_InteractiveShareTestActivity() {
         if (useRefinementFlow.value) {
             unregisterReceiver(refinementReceiver)
         }
-        chooserSession.value?.setChooserStateListener(null)
+        chooserSession.value?.removeUpdateListener(sessionStateListener)
         super.onDestroy()
     }
 
@@ -368,7 +367,7 @@ class InteractiveShareTestActivity : Hilt_InteractiveShareTestActivity() {
     }
 
     private fun closeChooser() {
-        chooserSession.value?.cancel()
+        chooserSession.value?.close()
         chooserSession.value = null
         chooserWindowTopOffset.value = -1
     }
@@ -383,10 +382,7 @@ class InteractiveShareTestActivity : Hilt_InteractiveShareTestActivity() {
         }
         chooserIntent.putExtra(EXTRA_CHOOSER_RESULT_INTENT_SENDER, createResultIntentSender(this))
         if (chooserController == null) {
-            ChooserSession.Builder()
-                .build()
-                .also { chooserSession.value = it }
-                .start(this, chooserIntent)
+            ChooserSession().also { chooserSession.value = it }.start(this, chooserIntent)
         } else {
             chooserController.updateIntent(chooserIntent)
         }

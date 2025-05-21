@@ -14,7 +14,10 @@
  * limitations under the License.
  */
 
-import {ArrayUtils} from 'common/array_utils';
+import {
+  binarySearchFirstGreater,
+  binarySearchFirstGreaterOrEqual,
+} from 'common/array_utils';
 import {assertDefined} from 'common/assert_utils';
 import {INVALID_TIME_NS, Timestamp} from 'common/time/time';
 import {TimestampUtils} from 'common/time/timestamp_utils';
@@ -262,10 +265,7 @@ export class Trace<T> {
     }
 
     const entry = this.clampEntryToSliceBounds(
-      ArrayUtils.binarySearchFirstGreaterOrEqual(
-        this.getFullTraceTimestamps(),
-        time,
-      ),
+      binarySearchFirstGreaterOrEqual(this.getFullTraceTimestamps(), time),
     );
     if (entry === undefined || entry === this.entriesRange.end) {
       return this.getEntry(this.lengthEntries - 1);
@@ -295,10 +295,7 @@ export class Trace<T> {
     }
 
     const pos = this.clampEntryToSliceBounds(
-      ArrayUtils.binarySearchFirstGreaterOrEqual(
-        this.getFullTraceTimestamps(),
-        time,
-      ),
+      binarySearchFirstGreaterOrEqual(this.getFullTraceTimestamps(), time),
     );
     if (pos === undefined || pos === this.entriesRange.end) {
       return undefined;
@@ -318,7 +315,7 @@ export class Trace<T> {
     }
 
     const pos = this.clampEntryToSliceBounds(
-      ArrayUtils.binarySearchFirstGreater(this.getFullTraceTimestamps(), time),
+      binarySearchFirstGreater(this.getFullTraceTimestamps(), time),
     );
     if (pos === undefined || pos === this.entriesRange.end) {
       return undefined;
@@ -384,7 +381,7 @@ export class Trace<T> {
       start === undefined
         ? this.entriesRange.start
         : this.clampEntryToSliceBounds(
-            ArrayUtils.binarySearchFirstGreaterOrEqual(
+            binarySearchFirstGreaterOrEqual(
               this.getFullTraceTimestamps(),
               start,
             ),
@@ -393,10 +390,7 @@ export class Trace<T> {
       end === undefined
         ? this.entriesRange.end
         : this.clampEntryToSliceBounds(
-            ArrayUtils.binarySearchFirstGreaterOrEqual(
-              this.getFullTraceTimestamps(),
-              end,
-            ),
+            binarySearchFirstGreaterOrEqual(this.getFullTraceTimestamps(), end),
           ) ?? this.entriesRange.end;
     const entries: EntriesRange = {
       start: startEntry,

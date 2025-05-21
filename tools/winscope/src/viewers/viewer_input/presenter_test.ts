@@ -742,6 +742,33 @@ class PresenterInputTest extends AbstractLogViewerPresenterTest<UiData> {
         );
       });
 
+      it('tests input action formatter', async () => {
+        const presenter = await this.createPresenter(
+          (uiDataLog) => (uiData = uiDataLog as UiData),
+        );
+        await TimeUtils.wait(() => !uiData.isFetchingData);
+        const getInputAction = Presenter['getInputAction'];
+        const mockEventTree = (actionValue: number, formattedValue: string) => {
+          const mockActionNode = jasmine.createSpyObj('PropertyTreeNode', [
+            'getValue',
+            'formattedValue',
+            'getChildByName',
+          ]);
+          mockActionNode.getValue.and.returnValue(actionValue);
+          mockActionNode.formattedValue.and.returnValue(formattedValue);
+          mockActionNode.getChildByName.and.returnValue(mockActionNode);
+          return mockActionNode;
+        };
+        expect(getInputAction(mockEventTree(0, 'ACTION_DOWN'))).toEqual('DOWN');
+        expect(getInputAction(mockEventTree(1, 'ACTION_UP'))).toEqual('UP');
+        expect(
+          getInputAction(mockEventTree(5 | (2 << 8), 'ACTION_POINTER_DOWN')),
+        ).toEqual('POINTER_DOWN(2)');
+        expect(
+          getInputAction(mockEventTree(6 | (5 << 8), 'ACTION_POINTER_UP')),
+        ).toEqual('POINTER_UP(5)');
+      });
+
       async function getTracesWithSf(
         parser: Parser<PropertyTreeNode>,
         layerIdToName: Array<{

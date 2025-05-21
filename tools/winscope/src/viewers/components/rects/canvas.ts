@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import {ArrayUtils} from 'common/array_utils';
+import {equal} from 'common/array_utils';
 import {assertDefined, assertUnreachable} from 'common/assert_utils';
 import {Box3D} from 'common/geometry/box3d';
 import {Point3D} from 'common/geometry/point3d';
@@ -611,7 +611,7 @@ export class Canvas {
       existingMesh.material = Canvas.TRANSPARENT_MATERIAL;
       this.addFillRegionMesh(newRect, fillMaterial, existingMesh);
     } else if (newRect.fillRegion && existingRect.fillRegion) {
-      const fillRegionChanged = !ArrayUtils.equal(
+      const fillRegionChanged = !equal(
         newRect.fillRegion,
         existingRect.fillRegion,
         (a, b) => {
@@ -825,7 +825,7 @@ export class Canvas {
     }
 
     if (
-      !ArrayUtils.equal(newLabel.linePoints, existingLabel.linePoints, (a, b) =>
+      !equal(newLabel.linePoints, existingLabel.linePoints, (a, b) =>
         (a as Point3D).isEqual(b as Point3D),
       )
     ) {

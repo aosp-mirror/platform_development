@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import {assertDefined} from 'common/assert_utils';
+import {assertDefined, assertNumber} from 'common/assert_utils';
 import {HierarchyTreeBuilder} from 'parsers/hierarchy_tree_builder';
 import {HierarchyTreeNode} from 'trace/tree_node/hierarchy_tree_node';
 import {PropertiesProvider} from 'trace/tree_node/properties_provider';
@@ -42,15 +42,13 @@ export class HierarchyTreeBuilderVc extends HierarchyTreeBuilder {
     identifierToChildren: Map<string | number, HierarchyTreeNode[]>,
     isRoot?: boolean,
   ): void {
-    const rootId = assertDefined(
-      root.getEagerPropertyByName('id'),
-    ).getValue() as number;
+    const rootId = assertNumber(root.getEagerPropertyByName('id')?.getValue());
 
     for (const nodes of identifierToChildren.values()) {
       nodes.forEach((node) => {
-        const parentId = assertDefined(
-          node.getEagerPropertyByName('parentId'),
-        ).getValue() as number;
+        const parentId = assertNumber(
+          node.getEagerPropertyByName('parentId')?.getValue(),
+        );
         const parentIsRoot = parentId === rootId;
         const parent = parentIsRoot
           ? root

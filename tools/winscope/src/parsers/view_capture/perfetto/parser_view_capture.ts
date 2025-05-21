@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import {assertTrue} from 'common/assert_utils';
+import {assertString, assertTrue} from 'common/assert_utils';
 import {ParserTimestampConverter} from 'common/time/timestamp_converter';
 import {TraceFile} from 'trace/trace_file';
 import {TraceProcessor} from 'trace_processor/trace_processor';
@@ -89,7 +89,7 @@ export class ParserViewCapture {
 
     const names: WindowAndPackage[] = [];
     for (const it = result.iter({}); it.valid(); it.next()) {
-      const packageAndWindow = it.get('package_and_window') as string;
+      const packageAndWindow = assertString(it.get('package_and_window'));
       const tokens = packageAndWindow.split(',');
       assertTrue(tokens.length === 2);
       names.push({package: tokens[0], window: tokens[1]});

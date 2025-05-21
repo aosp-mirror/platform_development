@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import {assertDefined} from 'common/assert_utils';
+import {assertBigInt, assertDefined} from 'common/assert_utils';
 import {NOT_IMPLEMENTED_ERROR} from 'common/errors';
 import {INVALID_TIME_NS, Timestamp} from 'common/time/time';
 import {TimestampConverter} from 'common/time/timestamp_converter';
@@ -95,7 +95,7 @@ export class ParserSearch implements Parser<QueryResult> {
       this.queryResult = await tp.query(this.query);
       if (this.hasTimestamps() && this.queryResult.numRows() > 0) {
         for (const it = this.queryResult.iter({}); it.valid(); it.next()) {
-          const ns = it.get('ts') as bigint;
+          const ns = assertBigInt(it.get('ts'));
           if (ns === INVALID_TIME_NS) {
             this.timestamps.push(this.timestampConverter.makeZeroTimestamp());
           } else {

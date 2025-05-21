@@ -200,6 +200,7 @@ export class Presenter extends AbstractLogViewerPresenter<
       try {
         transitionNode = await entry.getValue();
       } catch (e) {
+        console.error(e);
         continue;
       }
       const wmDataNode = assertDefined(transitionNode.getChildByName('wmData'));

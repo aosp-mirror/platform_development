@@ -40,7 +40,7 @@ describe('ParserViewCapture', () => {
       )
       .getParser<HierarchyTreeNode>();
     trace = Trace.fromParser(parser);
-    jasmine.DEFAULT_TIMEOUT_INTERVAL = 10000;
+    jasmine.DEFAULT_TIMEOUT_INTERVAL = 30000;
   });
 
   it('has expected trace type', () => {

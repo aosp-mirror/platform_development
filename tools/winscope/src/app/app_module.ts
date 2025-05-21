@@ -48,6 +48,7 @@ import {MatToolbarModule} from '@angular/material/toolbar';
 import {MatTooltipModule} from '@angular/material/tooltip';
 import {BrowserModule, Title} from '@angular/platform-browser';
 import {BrowserAnimationsModule} from '@angular/platform-browser/animations';
+import {VariableHeightScrollDirective} from 'viewers/common/variable_height_scroll_directive';
 import {CollapsedSectionsComponent} from 'viewers/components/collapsed_sections_component';
 import {CollapsibleSectionTitleComponent} from 'viewers/components/collapsible_section_title_component';
 import {CoordinatesTableComponent} from 'viewers/components/coordinates_table_component';
@@ -71,15 +72,12 @@ import {ViewCapturePropertyGroupsComponent} from 'viewers/components/view_captur
 import {ViewerInputComponent} from 'viewers/viewer_input/viewer_input_component';
 import {ViewerJankCujsComponent} from 'viewers/viewer_jank_cujs/viewer_jank_cujs_component';
 import {ViewerMediaBasedComponent} from 'viewers/viewer_media_based/viewer_media_based_component';
-import {ProtologScrollDirective} from 'viewers/viewer_protolog/scroll_strategy/protolog_scroll_directive';
 import {ViewerProtologComponent} from 'viewers/viewer_protolog/viewer_protolog_component';
 import {ActiveSearchComponent} from 'viewers/viewer_search/active_search_component';
 import {SearchListComponent} from 'viewers/viewer_search/search_list_component';
 import {ViewerSearchComponent} from 'viewers/viewer_search/viewer_search_component';
 import {ViewerSurfaceFlingerComponent} from 'viewers/viewer_surface_flinger/viewer_surface_flinger_component';
-import {TransactionsScrollDirective} from 'viewers/viewer_transactions/scroll_strategy/transactions_scroll_directive';
 import {ViewerTransactionsComponent} from 'viewers/viewer_transactions/viewer_transactions_component';
-import {TransitionsScrollDirective} from 'viewers/viewer_transitions/scroll_strategy/transitions_scroll_directive';
 import {ViewerTransitionsComponent} from 'viewers/viewer_transitions/viewer_transitions_component';
 import {ViewerViewCaptureComponent} from 'viewers/viewer_view_capture/viewer_view_capture_component';
 import {ViewerWindowManagerComponent} from 'viewers/viewer_window_manager/viewer_window_manager_component';
@@ -150,9 +148,7 @@ import {GlobalErrorHandler} from './global_error_handler';
     MatDrawerContainer,
     LoadProgressComponent,
     SliderComponent,
-    ProtologScrollDirective,
-    TransactionsScrollDirective,
-    TransitionsScrollDirective,
+    VariableHeightScrollDirective,
     ViewCapturePropertyGroupsComponent,
     SelectWithFilterComponent,
     ShortcutsComponent,

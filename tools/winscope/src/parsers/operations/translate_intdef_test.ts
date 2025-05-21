@@ -148,7 +148,9 @@ describe('TranslateIntDef', () => {
       assertDefined(
         propertyRoot.getChildByName('inputConfig'),
       ).formattedValue(),
-    ).toEqual('SENSITIVE_FOR_PRIVACY | UNKNOWN (0xFFF80000)');
+    ).toEqual(
+      'DISPLAY_TOPOLOGY_AWARE | SENSITIVE_FOR_PRIVACY | UNKNOWN (0xFFF00000)',
+    );
   });
 
   it('formats flags if no translation found', () => {
@@ -158,7 +160,7 @@ describe('TranslateIntDef', () => {
       .setName('node')
       .setChildren([
         {name: 'layoutParamsFlags', value: 0},
-        {name: 'inputConfig', value: -524288},
+        {name: 'inputConfig', value: -1048576},
       ])
       .build();
 
@@ -174,6 +176,6 @@ describe('TranslateIntDef', () => {
       assertDefined(
         propertyRoot.getChildByName('inputConfig'),
       ).formattedValue(),
-    ).toEqual('UNKNOWN (0xFFF80000)');
+    ).toEqual('UNKNOWN (0xFFF00000)');
   });
 });

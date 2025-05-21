@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import {assertDefined} from 'common/assert_utils';
+import {assertBigInt, assertDefined, assertString} from 'common/assert_utils';
 import {ParserTimestampConverter} from 'common/time/timestamp_converter';
 import {HierarchyTreeBuilderLog} from 'parsers/hierarchy_tree_builder_log';
 import {AddDefaults} from 'parsers/operations/add_defaults';
@@ -289,9 +289,7 @@ LEFT JOIN ranked_process_matches AS rpm
     const argSetId = row.get('arg_set_id') ?? undefined;
 
     let field: TamperedProtoField | undefined;
-    const transactionType = assertDefined(
-      row.get('transaction_type'),
-    ) as string;
+    const transactionType = assertString(row.get('transaction_type'));
     const entryProtoType = assertDefined(
       ParserTransactions.TransactionsTraceEntryField.tamperedMessageType,
     );
@@ -375,8 +373,8 @@ LEFT JOIN ranked_process_matches AS rpm
 
     const flags = new Map<number, string>();
     for (const it = result.iter({}); it.valid(); it.next()) {
-      const flagId = it.get('flags_id') as number;
-      const flag = it.get('flag') as string;
+      const flagId = Number(assertBigInt(it.get('flags_id')));
+      const flag = assertString(it.get('flag'));
       if (flags.has(flagId)) {
         flags.set(flagId, flags.get(flagId) + ' | ' + flag);
       } else {

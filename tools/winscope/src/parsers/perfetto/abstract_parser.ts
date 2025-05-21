@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import {assertDefined, assertTrue} from 'common/assert_utils';
+import {assertBigInt, assertDefined, assertTrue} from 'common/assert_utils';
 import {NOT_IMPLEMENTED_ERROR} from 'common/errors';
 import {INVALID_TIME_NS, Timestamp} from 'common/time/time';
 import {ParserTimestampConverter} from 'common/time/timestamp_converter';
@@ -137,7 +137,7 @@ export abstract class AbstractParser<T> implements Parser<T> {
     const result = await this.traceProcessor.query(sqlRowIdAndTimestamp);
     const entryIndexToRowId: AbsoluteEntryIndex[] = [];
     for (const it = result.iter({}); it.valid(); it.next()) {
-      const rowId = Number(it.get('id') as bigint);
+      const rowId = Number(it.get('id'));
       entryIndexToRowId.push(rowId);
     }
     return entryIndexToRowId;
@@ -148,7 +148,7 @@ export abstract class AbstractParser<T> implements Parser<T> {
     const result = await this.traceProcessor.query(sql);
     const timestamps: Array<bigint> = [];
     for (const it = result.iter({}); it.valid(); it.next()) {
-      timestamps.push(it.get('ts') as bigint);
+      timestamps.push(assertBigInt(it.get('ts')));
     }
     return timestamps;
   }
@@ -168,7 +168,7 @@ export abstract class AbstractParser<T> implements Parser<T> {
       () => 'Failed to query realtime timestamp',
     );
 
-    const real = result.iter({}).get('realtime') as bigint;
+    const real = assertBigInt(result.iter({}).get('realtime'));
     return real - bootTimeNs;
   }
 

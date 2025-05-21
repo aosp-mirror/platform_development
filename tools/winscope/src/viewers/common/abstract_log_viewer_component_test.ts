@@ -49,7 +49,8 @@ import {ViewerJankCujsComponent} from 'viewers/viewer_jank_cujs/viewer_jank_cujs
 import {ViewerProtologComponent} from 'viewers/viewer_protolog/viewer_protolog_component';
 import {ViewerTransactionsComponent} from 'viewers/viewer_transactions/viewer_transactions_component';
 import {ViewerTransitionsComponent} from 'viewers/viewer_transitions/viewer_transitions_component';
-import {UiDataLog} from './ui_data_log';
+import {ColumnSpec, UiDataLog} from './ui_data_log';
+import {VariableHeightScrollDirective} from './variable_height_scroll_directive';
 
 type LogViewerComponent =
   | ViewerProtologComponent
@@ -61,7 +62,10 @@ type LogViewerComponent =
 export abstract class AbstractLogViewerComponentTest<
   T extends LogViewerComponent,
 > {
-  protected readonly testSpec = {name: 'Test Column', cssClass: 'test-class'};
+  protected readonly testSpec: ColumnSpec = {
+    name: 'Test Column',
+    cssClass: 'test-class',
+  };
   protected readonly testField = {spec: this.testSpec, value: 'VALUE'};
 
   execute() {
@@ -196,6 +200,7 @@ export abstract class AbstractLogViewerComponentTest<
       SelectWithFilterComponent,
       SearchBoxComponent,
       LogComponent,
+      VariableHeightScrollDirective,
     ];
     if (addedDeclarations) {
       declarations.push(...addedDeclarations);

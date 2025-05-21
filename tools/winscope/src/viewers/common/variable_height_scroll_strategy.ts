@@ -18,13 +18,19 @@ import {
   CdkVirtualScrollViewport,
   VirtualScrollStrategy,
 } from '@angular/cdk/scrolling';
+import {assertDefined} from 'common/assert_utils';
 import {distinctUntilChanged, Observable, Subject} from 'rxjs';
+import {TraceType} from 'trace/trace_type';
+import {InputHeightPredictor} from 'viewers/viewer_input/input_height_predictor';
+import {ProtologHeightPredictor} from 'viewers/viewer_protolog/protolog_height_predictor';
+import {TransactionsHeightPredictor} from 'viewers/viewer_transactions/transactions_height_predictor';
+import {TransitionsHeightPredictor} from 'viewers/viewer_transitions/transitions_height_predictor';
+import {ItemHeightPredictor} from './item_height_predictor';
 
-export abstract class VariableHeightScrollStrategy
-  implements VirtualScrollStrategy
-{
+export class VariableHeightScrollStrategy implements VirtualScrollStrategy {
   static readonly HIDDEN_ELEMENTS_TO_RENDER = 20;
   private scrollItems: object[] = [];
+  private itemHeightPredictor: ItemHeightPredictor | undefined;
   private itemHeightCache = new Map<number, ItemHeight>(); // indexed by scrollIndex
   private wrapper: any = undefined;
   private viewport: CdkVirtualScrollViewport | undefined;
@@ -72,6 +78,27 @@ export abstract class VariableHeightScrollStrategy
     this.scrollItems = items;
     if (this.viewport) {
       this.viewport.checkViewportSize();
+    }
+  }
+
+  updateTraceType(value: TraceType) {
+    switch (value) {
+      case TraceType.TRANSACTIONS:
+        this.itemHeightPredictor = new TransactionsHeightPredictor();
+        break;
+      case TraceType.PROTO_LOG:
+        this.itemHeightPredictor = new ProtologHeightPredictor();
+        break;
+      case TraceType.TRANSITION:
+        this.itemHeightPredictor = new TransitionsHeightPredictor();
+        break;
+      case TraceType.INPUT_EVENT_MERGED:
+        this.itemHeightPredictor = new InputHeightPredictor();
+        break;
+      default:
+        throw new Error(
+          'unexpected trace type received - no height predictor available',
+        );
     }
   }
 
@@ -198,16 +225,12 @@ export abstract class VariableHeightScrollStrategy
     }
   }
 
-  protected subItemHeight(subItem: string, rowLength: number): number {
-    return Math.ceil(subItem.length / rowLength) * this.defaultRowSize;
-  }
-
-  protected abstract readonly defaultRowSize: number;
-
   // best-effort estimate of item height using hardcoded values -
   // we render more items than are in the viewport, and once rendered,
   // the item's actual height is cached and used instead of the estimate
-  protected abstract predictScrollItemHeight(entry: object): number;
+  protected predictScrollItemHeight(entry: object): number {
+    return assertDefined(this.itemHeightPredictor).predictHeight(entry);
+  }
 }
 
 enum ItemHeightSource {

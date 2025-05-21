@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 import JSZip from 'jszip';
-import {ArrayUtils} from './array_utils';
+import {equal} from './array_utils';
 import {FunctionUtils, OnProgressUpdateType} from './function_utils';
 
 /**
@@ -205,7 +205,7 @@ export class FileUtils {
     magicNumber: number[],
   ): Promise<boolean> {
     const bufferStart = new Uint8Array((await file.arrayBuffer()).slice(0, 2));
-    return ArrayUtils.equal(bufferStart, magicNumber);
+    return equal(bufferStart, magicNumber);
   }
 
   private static readonly GZIP_MAGIC_NUMBER = [0x1f, 0x8b];

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import {ArrayUtils} from 'common/array_utils';
+import {binarySearchFirstGreaterOrEqual} from 'common/array_utils';
 import {assertDefined} from 'common/assert_utils';
 import {TraceEntry} from 'trace/trace';
 import {StringFilterPredicate} from 'viewers/common/string_filter_predicate';
@@ -200,7 +200,7 @@ export class LogPresenter<Entry extends LogEntry> {
 
     if (this.timeOrderedEntries) {
       return (
-        ArrayUtils.binarySearchFirstGreaterOrEqual(
+        binarySearchFirstGreaterOrEqual(
           this.originalIndicesOfAllEntries,
           this.currentEntry.getIndex(),
         ) ?? this.originalIndicesOfAllEntries.length - 1

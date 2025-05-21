@@ -14,6 +14,10 @@
  * limitations under the License.
  */
 
+import {
+  assertBigIntOrUndefined,
+  assertStringOrUndefined,
+} from 'common/assert_utils';
 import {AbstractParser} from 'parsers/perfetto/abstract_parser';
 import {LogMessage} from 'parsers/protolog/log_message';
 import {ParserProtologUtils} from 'parsers/protolog/parser_protolog_utils';
@@ -28,11 +32,11 @@ class PerfettoLogMessageTableRow {
   timestamp: bigint = 0n;
 
   constructor(
-    timestamp: bigint,
-    tag: string,
-    level: string,
-    message: string,
-    location: string,
+    timestamp: bigint | undefined,
+    tag: string | undefined,
+    level: string | undefined,
+    message: string | undefined,
+    location: string | undefined,
   ) {
     this.timestamp = timestamp ?? this.timestamp;
     this.tag = tag ?? this.tag;
@@ -86,11 +90,11 @@ export class ParserProtolog extends AbstractParser<PropertyTreeNode> {
     const entry = result.iter({});
 
     return new PerfettoLogMessageTableRow(
-      entry.get('ts') as bigint,
-      entry.get('tag') as string,
-      entry.get('level') as string,
-      entry.get('message') as string,
-      entry.get('location') as string,
+      assertBigIntOrUndefined(entry.get('ts')),
+      assertStringOrUndefined(entry.get('tag')),
+      assertStringOrUndefined(entry.get('level')),
+      assertStringOrUndefined(entry.get('message')),
+      assertStringOrUndefined(entry.get('location')),
     );
   }
 }
