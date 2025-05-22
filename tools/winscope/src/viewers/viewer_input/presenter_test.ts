@@ -42,6 +42,7 @@ import {VISIBLE_CHIP} from 'viewers/common/chip';
 import {LogSelectFilter} from 'viewers/common/log_filters';
 import {TextFilter} from 'viewers/common/text_filter';
 import {LogField, LogHeader} from 'viewers/common/ui_data_log';
+import {UI_RECT_FACTORY} from 'viewers/common/ui_rect_factory';
 import {UserOptions} from 'viewers/common/user_options';
 import {ViewerEvents} from 'viewers/common/viewer_events';
 import {TraceRectType} from 'viewers/components/rects/rect_spec';
@@ -621,8 +622,18 @@ class PresenterInputTest extends AbstractLogViewerPresenterTest<UiData> {
         );
         expect(uiData.rectsToDraw).toEqual([]);
 
+        const inputEntry = trace.getEntry(1);
+        const spy: jasmine.Spy = spyOn(
+          UI_RECT_FACTORY,
+          'makeInputRects',
+        ).and.callThrough();
         await presenter.onAppEvent(
-          TracePositionUpdate.fromTraceEntry(trace.getEntry(1)),
+          TracePositionUpdate.fromTraceEntry(inputEntry),
+        );
+        const spyArgs = spy.calls.allArgs();
+        expect(spyArgs.length).toEqual(1);
+        expect(spyArgs[0][2]).toEqual(
+          (await inputEntry.getValue()).getChildByName('windowDispatchEvents'),
         );
         expect(uiData.rectsToDraw).toHaveSize(1);
         expect(uiData.rectsToDraw?.at(0)?.id).toEqual('inputRect');

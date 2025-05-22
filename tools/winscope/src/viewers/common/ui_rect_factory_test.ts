@@ -16,6 +16,7 @@
 
 import {assertDefined} from 'common/assert_utils';
 import {HierarchyTreeBuilder} from 'test/unit/hierarchy_tree_builder';
+import {PropertyTreeBuilder} from 'test/unit/property_tree_builder';
 import {Transform} from 'trace/surface_flinger/transform_utils';
 import {TraceRectBuilder} from 'trace/trace_rect_builder';
 import {HierarchyTreeNode} from 'trace/tree_node/hierarchy_tree_node';
@@ -228,10 +229,6 @@ describe('UI_RECT_FACTORY', () => {
     buildRectAndSetToNode(node1, 1, 1, 1, false, false, true);
     buildRectAndSetToNode(node2, 2, 1, 1, false, false, false);
 
-    function hasContent(id: string) {
-      return id === node1.id;
-    }
-
     const expectedRootRect = new UiRectBuilder()
       .setX(0)
       .setY(0)
@@ -298,6 +295,208 @@ describe('UI_RECT_FACTORY', () => {
       expectedRects,
     );
   });
+
+  it('adds pointer and ray locations for input rects', () => {
+    const root = new HierarchyTreeBuilder()
+      .setId('TreeEntry')
+      .setName('root')
+      .setChildren([
+        {id: 11, name: 'node11'},
+        {id: 3, name: 'node3'},
+      ])
+      .build();
+    const node11 = assertDefined(root.getChildByName('node11'));
+    const node3 = assertDefined(root.getChildByName('node3'));
+    buildRectAndSetToNode(node11, 1, 1, 1, false, false, false);
+    buildRectAndSetToNode(node3, 1, 1, 1, false, false, false);
+
+    const dispatchedPointer1 = {
+      name: 'dispatchedPointer',
+      children: [
+        {
+          name: 'pointer0',
+          children: [
+            {name: 'xInDisplay', value: 100},
+            {name: 'yInDisplay', value: 100},
+          ],
+        },
+      ],
+    };
+
+    const dispatchedPointer2 = {
+      name: 'dispatchedPointer',
+      children: [
+        {
+          name: 'pointer0',
+          children: [
+            {name: 'xInDisplay', value: 5.25},
+            {name: 'yInDisplay', value: 10.5},
+            {
+              name: 'axisValueInWindow',
+              children: [
+                {name: 'axis2', children: [{name: 'axis', value: 1n}]},
+              ],
+            },
+          ],
+        },
+        {name: 'pointer1', children: [{name: 'xInDisplay', value: 5.25}]},
+        {name: 'pointer2', children: [{name: 'yInDisplay', value: 10.5}]},
+        {
+          name: 'pointer3',
+          children: [
+            {name: 'xInDisplay', value: 20},
+            {name: 'yInDisplay', value: 40},
+            {
+              name: 'axisValueInWindow',
+              children: [{name: 'axis1', children: [{name: 'axis', value: 0}]}],
+            },
+          ],
+        },
+      ],
+    };
+
+    const dispatchedPointer3 = {
+      name: 'dispatchedPointer',
+      children: [
+        {
+          name: 'pointer0',
+          children: [
+            {name: 'xInDisplay', value: 15},
+            {name: 'yInDisplay', value: 15},
+            {
+              name: 'axisValueInWindow',
+              children: [
+                {
+                  name: 'axis1',
+                  children: [
+                    {name: 'axis', value: 0},
+                    {name: 'value', value: 123},
+                  ],
+                },
+                {
+                  name: 'axis2',
+                  children: [
+                    {name: 'axis', value: 1n},
+                    {name: 'value', value: 321.321},
+                  ],
+                },
+              ],
+            },
+          ],
+        },
+        {
+          name: 'pointer1',
+          children: [
+            {
+              name: 'axisValueInWindow',
+              children: [
+                {
+                  name: 'axis2',
+                  children: [
+                    {name: 'axis', value: 1},
+                    {name: 'value', value: 123.123},
+                  ],
+                },
+                {
+                  name: 'axis1',
+                  children: [
+                    {name: 'axis', value: 0n},
+                    {name: 'value', value: 321},
+                  ],
+                },
+              ],
+            },
+          ],
+        },
+      ],
+    };
+
+    const dispatchProperties = new PropertyTreeBuilder()
+      .setRootId('')
+      .setName('')
+      .setChildren([
+        {
+          name: 'window1',
+          children: [
+            {name: 'windowId', value: 1}, // ignored as node1 name does not end in 1
+            dispatchedPointer1,
+          ],
+        },
+        {
+          name: 'window11',
+          children: [{name: 'windowId', value: 11}, dispatchedPointer2],
+        },
+        {
+          name: 'window2',
+          children: [
+            {name: 'windowId', value: 2}, // ignored as hierarchyRoot does not contain node2
+            dispatchedPointer1,
+          ],
+        },
+        {
+          name: 'window3',
+          children: [{name: 'windowId', value: 3n}, dispatchedPointer3],
+        },
+      ])
+      .build();
+
+    const expectedInputRect1 = new UiRectBuilder()
+      .setX(0)
+      .setY(0)
+      .setWidth(1)
+      .setHeight(1)
+      .setId('11 node11')
+      .setLabel('node11')
+      .setCornerRadius(0)
+      .setGroupId(0)
+      .setTransform(Transform.EMPTY.matrix)
+      .setIsVisible(true)
+      .setIsDisplay(false)
+      .setIsActiveDisplay(false)
+      .setIsClickable(true)
+      .setHasContent(false)
+      .setDepth(1)
+      .setOpacity(0.9)
+      .setPointerLocationsInRect([])
+      .setRayLocationsInDisplay([
+        {x: 5.25, y: 10.5},
+        {x: 20, y: 40},
+      ])
+      .build();
+
+    const expectedInputRect2 = new UiRectBuilder()
+      .setX(0)
+      .setY(0)
+      .setWidth(1)
+      .setHeight(1)
+      .setId('3 node3')
+      .setLabel('node3')
+      .setCornerRadius(0)
+      .setGroupId(0)
+      .setTransform(Transform.EMPTY.matrix)
+      .setIsVisible(true)
+      .setIsDisplay(false)
+      .setIsActiveDisplay(false)
+      .setIsClickable(true)
+      .setHasContent(false)
+      .setDepth(1)
+      .setOpacity(0.9)
+      .setPointerLocationsInRect([
+        {x: 123, y: 321.321},
+        {x: 321, y: 123.123},
+      ])
+      .setRayLocationsInDisplay([{x: 15, y: 15}])
+      .build();
+
+    const expectedRects: UiRect[] = [expectedInputRect1, expectedInputRect2];
+    expect(
+      UI_RECT_FACTORY.makeInputRects(root, hasContent, dispatchProperties),
+    ).toEqual(expectedRects);
+  });
+
+  function hasContent(id: string) {
+    return id === node1.id;
+  }
 
   function buildRectAndSetToNode(
     node: HierarchyTreeNode,

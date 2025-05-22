@@ -48,7 +48,7 @@ import {
   convertRectIdToLayerorDisplayName,
   makeDisplayIdentifiers,
 } from 'viewers/viewer_surface_flinger/presenter';
-import {DispatchEntryFormatter} from './operations/dispatch_entry_formatter';
+import {FormatDispatchEntry} from './operations/format_dispatch_entry';
 import {InputCoordinatePropagator} from './operations/input_coordinate_propagator';
 import {InputEntry, UiData} from './ui_data';
 
@@ -111,10 +111,11 @@ export class Presenter extends AbstractLogViewerPresenter<
     {},
     new TextFilter(),
     Presenter.DENYLIST_DISPATCH_PROPERTIES,
-    [new DispatchEntryFormatter(this.layerIdToName)],
+    [new FormatDispatchEntry(this.layerIdToName)],
   );
   protected override keepCalculated = true;
   private readonly currentTargetWindowIds = new Set<string>();
+  private currDispatchProperties: PropertyTreeNode | undefined;
 
   private readonly rectsPresenter = new RectsPresenter(
     PersistentStoreProxy.new<UserOptions>(
@@ -133,10 +134,13 @@ export class Presenter extends AbstractLogViewerPresenter<
       },
       this.storage,
     ),
-    (tree: HierarchyTreeNode) =>
-      UI_RECT_FACTORY.makeInputRects(tree, (id) =>
-        this.currentTargetWindowIds.has(id.split(' ')[0]),
-      ),
+    (tree: HierarchyTreeNode) => {
+      return UI_RECT_FACTORY.makeInputRects(
+        tree,
+        (id) => this.currentTargetWindowIds.has(id.split(' ')[0]),
+        this.currDispatchProperties,
+      );
+    },
     makeDisplayIdentifiers,
     convertRectIdToLayerorDisplayName,
   );
@@ -434,20 +438,22 @@ export class Presenter extends AbstractLogViewerPresenter<
     const inputEntry = this.getCurrentEntry();
 
     this.currentTargetWindowIds.clear();
-    if (inputEntry?.getDispatchPropertiesTree) {
-      (await inputEntry.getDispatchPropertiesTree())
-        .getAllChildren()
-        ?.forEach((dispatchEntry) => {
-          const windowId = dispatchEntry.getChildByName('windowId');
-          if (windowId !== undefined) {
-            this.currentTargetWindowIds.add(`${Number(windowId.getValue())}`);
-          }
-        });
+    this.currDispatchProperties = undefined;
+
+    const dispatchProperties = await inputEntry?.getDispatchPropertiesTree?.();
+    if (dispatchProperties) {
+      dispatchProperties.getAllChildren()?.forEach((dispatchEntry) => {
+        const windowId = dispatchEntry.getChildByName('windowId');
+        if (windowId !== undefined) {
+          this.currentTargetWindowIds.add(`${Number(windowId.getValue())}`);
+        }
+      });
     }
 
     if (inputEntry?.surfaceFlingerEntry !== undefined) {
       const startTimeMs = Date.now();
       const node = await inputEntry.surfaceFlingerEntry.getValue();
+      this.currDispatchProperties = dispatchProperties;
       this.rectsPresenter.applyHierarchyTreesChange([
         {trace: this.surfaceFlingerTrace, trees: [node]},
       ]);

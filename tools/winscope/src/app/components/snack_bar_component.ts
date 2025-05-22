@@ -34,6 +34,7 @@ import {MatSnackBarRef, MAT_SNACK_BAR_DATA} from '@angular/material/snack-bar';
       .snack-bar-container {
         display: flex;
         flex-direction: column;
+        white-space: pre-line;
       }
       .snack-bar-action {
         margin-left: 12px;

@@ -302,6 +302,12 @@ class Mapper3D {
         transform: clusterYOffset ? transform.addTy(clusterYOffset) : transform,
         fillRegion,
         isPinned: this.pinnedItems.some((node) => node.id === rect2d.id),
+        pointerLocationsInRect: rect2d.pointerLocationsInRect.map((p) => {
+          return new Point3D(p.x, p.y, z);
+        }),
+        rayLocationsInScene: rect2d.rayLocationsInDisplay.map((p) => {
+          return new Point3D(p.x, p.y, z);
+        }),
       };
       return this.cropOversizedRect(rect, maxDisplaySize);
     });

@@ -16,7 +16,9 @@
 
 import {assertDefined} from 'common/assert_utils';
 import {NOT_IMPLEMENTED_ERROR} from 'common/errors';
+import {UserNotifier} from 'common/user_notifier';
 import Long from 'long';
+import {FailedToConvertLegacyTraces} from 'messaging/user_warnings';
 import {perfetto} from 'protos/perfetto/trace/static';
 import {Parser} from 'trace/parser';
 import {TraceFile} from 'trace/trace_file';
@@ -37,10 +39,19 @@ export class LegacyToPerfettoConverter {
     allParsers: Array<Parser<object>>,
     perfettoFile?: TraceFile,
   ): Promise<TraceFile | undefined> {
-    const trace = await LegacyToPerfettoConverter.makePerfettoTrace(
-      allParsers,
-      perfettoFile,
-    );
+    let trace: perfetto.protos.Trace;
+    try {
+      trace = await LegacyToPerfettoConverter.makePerfettoTrace(
+        allParsers,
+        perfettoFile,
+      );
+    } catch (e) {
+      console.error(e);
+      UserNotifier.add(
+        new FailedToConvertLegacyTraces((e as Error).message),
+      ).notify();
+      return perfettoFile;
+    }
     const legacyPackets = LegacyToPerfettoConverter.makeTraceDataPackets(
       legacyParsers,
       trace,
@@ -66,7 +77,7 @@ export class LegacyToPerfettoConverter {
         LegacyToPerfettoConverter.makeClockSnapshots(allParsers);
       trace = perfetto.protos.Trace.create();
       if (clockSnapshots.length === 0) {
-        throw new Error('allParsers empty and no Perfetto file provided');
+        throw new Error('no parsers or Perfetto file provided');
       }
       clockSnapshots.forEach((snapshot) => {
         const clockSnapshot =

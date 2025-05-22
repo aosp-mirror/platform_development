@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import {Point} from 'common/geometry/point';
 import {Rect} from 'common/geometry/rect';
 import {Region} from 'common/geometry/region';
 import {TransformMatrix} from 'common/geometry/transform_matrix';
@@ -37,6 +38,8 @@ export class UiRect extends Rect {
     readonly hasContent: boolean | undefined,
     readonly opacity: number | undefined,
     readonly fillRegion: Region | undefined,
+    readonly pointerLocationsInRect: Point[] = [],
+    readonly rayLocationsInDisplay: Point[] = [],
   ) {
     super(x, y, w, h);
   }

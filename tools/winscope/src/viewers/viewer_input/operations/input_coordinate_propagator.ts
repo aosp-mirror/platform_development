@@ -18,6 +18,7 @@ import {assertDefined} from 'common/assert_utils';
 import {Operation} from 'trace/tree_node/operations/operation';
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
 import {PropertyTreeNodeFactory} from 'trace/tree_node/property_tree_node_factory';
+import {DispatchedPointerAxis} from './dispatched_pointer_axis';
 
 /**
  * A single input event can be dispatched to multiple windows, where each dispatch
@@ -28,9 +29,6 @@ import {PropertyTreeNodeFactory} from 'trace/tree_node/property_tree_node_factor
  * logged to save space.
  */
 export class InputCoordinatePropagator implements Operation<PropertyTreeNode> {
-  static readonly AXIS_X = 0;
-  static readonly AXIS_Y = 1;
-
   private propertyTreeNodeFactory = new PropertyTreeNodeFactory();
 
   apply(root: PropertyTreeNode): void {
@@ -68,8 +66,8 @@ export class InputCoordinatePropagator implements Operation<PropertyTreeNode> {
           axisValues.getAllChildren().forEach((axisValue) => {
             const axis = Number(axisValue.getChildByName('axis')?.getValue());
             if (
-              axis !== InputCoordinatePropagator.AXIS_X &&
-              axis !== InputCoordinatePropagator.AXIS_Y
+              axis !== DispatchedPointerAxis.X &&
+              axis !== DispatchedPointerAxis.Y
             ) {
               return;
             }
@@ -83,22 +81,14 @@ export class InputCoordinatePropagator implements Operation<PropertyTreeNode> {
           });
 
           // Populate the X and Y axis values
-          if (!populatedAxes.has(InputCoordinatePropagator.AXIS_X)) {
+          if (!populatedAxes.has(DispatchedPointerAxis.X)) {
             const xAxisValue = this.addPropertyTo(axisValues, 'x');
-            this.addPropertyTo(
-              xAxisValue,
-              'axis',
-              InputCoordinatePropagator.AXIS_X,
-            );
+            this.addPropertyTo(xAxisValue, 'axis', DispatchedPointerAxis.X);
             this.addPropertyTo(xAxisValue, 'value', eventXY[0]);
           }
-          if (!populatedAxes.has(InputCoordinatePropagator.AXIS_Y)) {
+          if (!populatedAxes.has(DispatchedPointerAxis.Y)) {
             const yAxisValue = this.addPropertyTo(axisValues, 'y');
-            this.addPropertyTo(
-              yAxisValue,
-              'axis',
-              InputCoordinatePropagator.AXIS_Y,
-            );
+            this.addPropertyTo(yAxisValue, 'axis', DispatchedPointerAxis.Y);
             this.addPropertyTo(yAxisValue, 'value', eventXY[1]);
           }
 
@@ -135,7 +125,7 @@ export class InputCoordinatePropagator implements Operation<PropertyTreeNode> {
     motionEventTree
       .getChildByName('pointer')
       ?.getAllChildren()
-      ?.forEach((pointer) => {
+      .forEach((pointer) => {
         const pointerId = pointer.getChildByName('pointerId')?.getValue();
         if (pointerId === undefined) return;
 
@@ -144,11 +134,11 @@ export class InputCoordinatePropagator implements Operation<PropertyTreeNode> {
         let y: number | undefined;
         axisValues?.getAllChildren()?.forEach((axisValue) => {
           const axis = Number(axisValue.getChildByName('axis')?.getValue());
-          if (axis === InputCoordinatePropagator.AXIS_X) {
+          if (axis === DispatchedPointerAxis.X) {
             x = axisValue.getChildByName('value')?.getValue();
             return;
           }
-          if (axis === InputCoordinatePropagator.AXIS_Y) {
+          if (axis === DispatchedPointerAxis.Y) {
             y = axisValue.getChildByName('value')?.getValue();
             return;
           }

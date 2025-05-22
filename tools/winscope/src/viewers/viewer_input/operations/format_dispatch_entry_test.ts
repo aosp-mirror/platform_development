@@ -16,17 +16,17 @@
 
 import {PropertyTreeBuilder} from 'test/unit/property_tree_builder';
 import {UiPropertyTreeNode} from 'viewers/common/ui_property_tree_node';
-import {DispatchEntryFormatter} from './dispatch_entry_formatter';
+import {FormatDispatchEntry} from './format_dispatch_entry';
 
-describe('DispatchEntryFormatter', () => {
-  let operation: DispatchEntryFormatter;
+describe('FormatDispatchEntry', () => {
+  let operation: FormatDispatchEntry;
   const layerIdToName = new Map<number, string>([
     [1, 'one'],
     [2, 'two'],
   ]);
 
   beforeEach(() => {
-    operation = new DispatchEntryFormatter(layerIdToName);
+    operation = new FormatDispatchEntry(layerIdToName);
   });
 
   it('formats dispatch entry node', () => {

@@ -31,4 +31,6 @@ export interface UiRect3D extends Rect3D {
   isOversized: boolean;
   fillRegion: Rect3D[] | undefined;
   isPinned: boolean;
+  pointerLocationsInRect: Point3D[];
+  rayLocationsInScene: Point3D[];
 }

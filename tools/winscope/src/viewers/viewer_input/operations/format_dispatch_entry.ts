@@ -17,11 +17,9 @@
 import {FixedStringFormatter} from 'trace/tree_node/formatters';
 import {Operation} from 'trace/tree_node/operations/operation';
 import {UiPropertyTreeNode} from 'viewers/common/ui_property_tree_node';
+import {DispatchedPointerAxis} from './dispatched_pointer_axis';
 
-export class DispatchEntryFormatter implements Operation<UiPropertyTreeNode> {
-  static readonly AXIS_X = 0;
-  static readonly AXIS_Y = 1;
-
+export class FormatDispatchEntry implements Operation<UiPropertyTreeNode> {
   constructor(private readonly layerIdToName: Map<number, string>) {}
 
   apply(node: UiPropertyTreeNode): void {
@@ -68,11 +66,11 @@ export class DispatchEntryFormatter implements Operation<UiPropertyTreeNode> {
       let y = '?';
       axisValues?.getAllChildren()?.forEach((axisValue) => {
         const axis = Number(axisValue.getChildByName('axis')?.getValue());
-        if (axis === DispatchEntryFormatter.AXIS_X) {
+        if (axis === DispatchedPointerAxis.X) {
           x = axisValue.getChildByName('value')?.getValue()?.toFixed(2) ?? '?';
           return;
         }
-        if (axis === DispatchEntryFormatter.AXIS_Y) {
+        if (axis === DispatchedPointerAxis.Y) {
           y = axisValue.getChildByName('value')?.getValue()?.toFixed(2) ?? '?';
           return;
         }

@@ -17,8 +17,10 @@
 import {assertDefined} from 'common/assert_utils';
 import {TimestampConverterUtils} from 'common/time/test_utils';
 import Long from 'long';
+import {FailedToConvertLegacyTraces} from 'messaging/user_warnings';
 import {perfetto} from 'protos/perfetto/trace/static';
 import {ParserBuilder} from 'test/unit/parser_builder';
+import {UserNotifierChecker} from 'test/unit/user_notifier_checker';
 import {Parser} from 'trace/parser';
 import {TraceFile} from 'trace/trace_file';
 import {
@@ -156,16 +158,31 @@ describe('LegacyToPerfettoConverter', () => {
     expect(trace.packet).toEqual([clockSnapshot, packet]);
   });
 
+  it('robust to errors in existing trace decoding', async () => {
+    const userNotifierChecker = new UserNotifierChecker();
+    const parser = makeParser([]);
+    spyOn(perfetto.protos.Trace, 'decode').and.throwError('decoding failed');
+    const perfettoFile = await convertToPerfetto([parser], existingFile);
+    expect(perfettoFile).toEqual(existingFile);
+    userNotifierChecker.expectNotified([
+      new FailedToConvertLegacyTraces('decoding failed'),
+    ]);
+  });
+
   it('robust to errors in packet conversion', async () => {
     const parser = makeParser([], true);
     expect(await convertToPerfetto([parser])).toBeUndefined();
   });
 
-  it('throws error if allParsers empty and no Perfetto file provided', async () => {
+  it('robust to errors if allParsers empty and no Perfetto file provided', async () => {
+    const userNotifierChecker = new UserNotifierChecker();
     const parser = makeParser([], true);
-    await expectAsync(
-      LegacyToPerfettoConverter.convertToSinglePerfettoFile([parser], []),
-    ).toBeRejectedWithError('allParsers empty and no Perfetto file provided');
+    const perfettoFile =
+      await LegacyToPerfettoConverter.convertToSinglePerfettoFile([parser], []);
+    expect(perfettoFile).toBeUndefined();
+    userNotifierChecker.expectNotified([
+      new FailedToConvertLegacyTraces('no parsers or Perfetto file provided'),
+    ]);
   });
 
   function makePacketWithMonotonicTs(ts: number) {

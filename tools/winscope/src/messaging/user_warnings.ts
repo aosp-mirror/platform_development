@@ -350,3 +350,17 @@ export class TraceSearchQueryFailed extends UserWarning {
     return `Search query failed: ${this.errorMessage}`;
   }
 }
+
+export class FailedToConvertLegacyTraces extends UserWarning {
+  constructor(private readonly errorMessage: string) {
+    super();
+  }
+
+  getDescriptor(): string {
+    return 'failed to convert legacy trace';
+  }
+
+  getMessage(): string {
+    return `Legacy to perfetto conversion failed: ${this.errorMessage}\nDiscarding legacy traces.`;
+  }
+}

@@ -112,8 +112,8 @@ export class TraceRectBuilder {
     return this;
   }
 
-  setFillRegion(region: Region | undefined) {
-    this.fillRegion = region;
+  setFillRegion(value: Region | undefined) {
+    this.fillRegion = value;
     return this;
   }
 
