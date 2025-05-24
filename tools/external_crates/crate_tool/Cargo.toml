@@ -39,3 +39,6 @@ protobuf-parse = "3"
 
 [dev-dependencies]
 tempfile = "3"
+
+[lints.rust]
+unexpected_cfgs = { level = "warn", check-cfg = ['cfg(soong)'] }
