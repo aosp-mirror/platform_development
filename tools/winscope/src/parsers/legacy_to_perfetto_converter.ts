@@ -251,9 +251,9 @@ export class LegacyToPerfettoConverter {
         ...trace.packet.map((packet) => packet.trustedPacketSequenceId ?? 0),
       ) + 1;
     for (const parser of legacyParsers) {
-      if (parser.convertToPerfettoPackets) {
+      if (parser.canConvertToPerfetto()) {
         try {
-          const legacyPackets = parser.convertToPerfettoPackets(
+          const legacyPackets = parser.convertToPerfettoPackets!(
             sequenceId,
             trustedUid,
             trustedPid,

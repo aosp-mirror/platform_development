@@ -176,7 +176,7 @@ export class Mediator {
           await this.uploadTracesComponent?.onWinscopeEvent(
             new AppTraceViewRequest(),
           );
-          await this.loadViewers(FilesSource.COLLECTED);
+          await this.loadViewers(FilesSource.COLLECTED, false);
           await this.uploadTracesComponent?.onWinscopeEvent(
             new AppTraceViewRequestHandled(),
           );
@@ -202,10 +202,13 @@ export class Mediator {
       },
     );
 
-    await event.visit(WinscopeEventType.APP_TRACE_VIEW_REQUEST, async () => {
-      await this.loadViewers(FilesSource.UPLOADED);
-      UserNotifier.notify();
-    });
+    await event.visit(
+      WinscopeEventType.APP_TRACE_VIEW_REQUEST,
+      async (event) => {
+        await this.loadViewers(FilesSource.UPLOADED, event.discardLegacyTraces);
+        UserNotifier.notify();
+      },
+    );
 
     await event.visit(
       WinscopeEventType.REMOTE_TOOL_DOWNLOAD_START,
@@ -516,16 +519,20 @@ export class Mediator {
     UserNotifier.notify();
   }
 
-  private async loadViewers(source: FilesSource) {
+  private async loadViewers(source: FilesSource, discardLegacyTraces: boolean) {
     const e2eStartTimeMs = Date.now();
 
-    this.currentProgressListener?.onProgressUpdate(
-      'Converting legacy traces to perfetto...',
-      undefined,
-    );
-    await TimeUtils.sleepMs(10); // allow the UI to update before making the main thread very busy
-    await this.tracePipeline.convertLegacyTracesToPerfetto();
-    this.currentProgressListener?.onOperationFinished(true);
+    if (discardLegacyTraces) {
+      this.tracePipeline.discardLegacyTraces();
+    } else {
+      this.currentProgressListener?.onProgressUpdate(
+        'Converting legacy traces to perfetto...',
+        undefined,
+      );
+      await TimeUtils.sleepMs(10); // allow the UI to update before making the main thread very busy
+      await this.tracePipeline.convertLegacyTracesToPerfetto();
+      this.currentProgressListener?.onOperationFinished(true);
+    }
 
     this.currentProgressListener?.onProgressUpdate(
       'Computing frame mapping...',

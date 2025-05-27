@@ -130,6 +130,9 @@ export class AppResetRequest extends WinscopeEvent {
 
 export class AppTraceViewRequest extends WinscopeEvent {
   override readonly type = WinscopeEventType.APP_TRACE_VIEW_REQUEST;
+  constructor(readonly discardLegacyTraces = false) {
+    super();
+  }
 }
 
 export class AppTraceViewRequestHandled extends WinscopeEvent {

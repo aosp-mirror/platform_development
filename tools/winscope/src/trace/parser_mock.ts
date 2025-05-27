@@ -96,6 +96,10 @@ export class ParserMock<T> implements Parser<T> {
     return this.descriptors;
   }
 
+  canConvertToPerfetto(): boolean {
+    return this.convertToPerfettoPackets !== undefined;
+  }
+
   convertToPerfettoPackets:
     | ((sequenceId: number) => perfetto.protos.TracePacket[])
     | undefined = undefined;

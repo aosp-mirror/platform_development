@@ -98,6 +98,10 @@ export abstract class AbstractParser<
     throw NOT_IMPLEMENTED_ERROR;
   }
 
+  canConvertToPerfetto(): boolean {
+    return false;
+  }
+
   convertToPerfettoPackets(
     sequenceId: number,
     trustedPid: number,

@@ -76,6 +76,10 @@ export class ParserSurfaceFlinger extends AbstractParser<
     return decoded.entry ?? [];
   }
 
+  override canConvertToPerfetto(): boolean {
+    return true;
+  }
+
   override convertToPerfettoPackets(
     sequenceId: number,
   ): perfetto.protos.TracePacket[] {

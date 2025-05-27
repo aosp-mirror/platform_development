@@ -128,6 +128,10 @@ export abstract class AbstractParser<T> implements Parser<T> {
     return this.realToBootTimeOffsetNs;
   }
 
+  canConvertToPerfetto(): boolean {
+    return false;
+  }
+
   protected async buildEntryIndexToRowIdMap(): Promise<AbsoluteEntryIndex[]> {
     const sqlRowIdAndTimestamp = `
      SELECT DISTINCT tbl.id AS id, tbl.ts

@@ -69,6 +69,10 @@ export class ParserTransactions extends AbstractParser<
     return decodedProto.entry ?? [];
   }
 
+  override canConvertToPerfetto(): boolean {
+    return true;
+  }
+
   override convertToPerfettoPackets(
     sequenceId: number,
   ): perfetto.protos.TracePacket[] {

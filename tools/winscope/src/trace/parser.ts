@@ -40,6 +40,7 @@ export interface Parser<T> {
   getRealToMonotonicTimeOffsetNs(): bigint | undefined;
   getRealToBootTimeOffsetNs(): bigint | undefined;
   createTimestamps(): void;
+  canConvertToPerfetto(): boolean;
   convertToPerfettoPackets?(
     sequenceId: number,
     trustedUid?: number,

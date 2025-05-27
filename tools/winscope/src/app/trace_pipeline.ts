@@ -116,6 +116,9 @@ export class TracePipeline
   }
 
   async convertLegacyTracesToPerfetto() {
+    if (!this.hasConvertibleLegacyTraces()) {
+      return;
+    }
     const singlePerfettoTrace = await this.convertLegacyParsersToPerfettoFile();
     if (!singlePerfettoTrace) {
       return;
@@ -136,6 +139,25 @@ export class TracePipeline
     this.updateTimestamps([], perfettoParsers);
     this.loadedParsers.addParsers([], perfettoParsers);
     await this.convertLoadedParsersToTraces();
+  }
+
+  hasConvertibleLegacyTraces(): boolean {
+    return this.getLegacyTracesWithPerfettoConversion().length > 0;
+  }
+
+  discardLegacyTraces() {
+    const tracesToRemove = this.getLegacyTracesWithPerfettoConversion();
+    tracesToRemove.forEach((trace) => this.removeTrace(trace));
+  }
+
+  private getLegacyTracesWithPerfettoConversion() {
+    const traces: Array<Trace<object>> = [];
+    this.traces.forEachTrace((trace) => {
+      if (trace.getParser()?.canConvertToPerfetto()) {
+        traces.push(trace);
+      }
+    });
+    return traces;
   }
 
   removeTrace<T extends TraceType>(

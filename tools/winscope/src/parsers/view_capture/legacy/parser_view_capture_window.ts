@@ -84,6 +84,10 @@ export class ParserViewCaptureWindow implements Parser<HierarchyTreeNode> {
     throw NOT_IMPLEMENTED_ERROR;
   }
 
+  canConvertToPerfetto(): boolean {
+    return true;
+  }
+
   convertToPerfettoPackets(
     sequenceId: number,
     trustedUid = 1,

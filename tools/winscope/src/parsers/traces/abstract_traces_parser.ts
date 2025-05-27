@@ -45,6 +45,10 @@ export abstract class AbstractTracesParser<T> implements Parser<T> {
     return this.timestamps;
   }
 
+  canConvertToPerfetto(): boolean {
+    return false;
+  }
+
   abstract getCoarseVersion(): CoarseVersion;
   abstract parse(): Promise<void>;
   abstract createTimestamps(): Promise<void>;

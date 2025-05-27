@@ -23,6 +23,7 @@ import {
   Output,
 } from '@angular/core';
 import {TracePipeline} from 'app/trace_pipeline';
+import {Store} from 'common/store/store';
 import {ProgressListener} from 'messaging/progress_listener';
 import {
   ShowTraceUploadWarning,
@@ -44,41 +45,53 @@ import {LoadProgressComponent} from './load_progress_component';
         <div
           *ngIf="!isLoadingFiles && tracePipeline.getTraces().getSize() > 0"
           class="trace-actions-container">
-          <button
-            color="primary"
-            mat-raised-button
-            class="load-btn"
-            matTooltip="Upload trace with an associated viewer to visualize"
-            [matTooltipDisabled]="hasLoadedFilesWithViewers()"
-            [disabled]="isViewTracesButtonDisabled()"
-            (click)="onViewTracesButtonClick()">
-            View traces
-          </button>
+          <div class="trace-action-buttons">
+            <button
+              class="clear-all-btn"
+              color="primary"
+              mat-stroked-button
+              [disabled]="viewersLoading"
+              (click)="onClearButtonClick()">
+              Clear all
+            </button>
 
-          <button
-            class="download-btn"
-            color="primary"
-            mat-stroked-button
-            (click)="downloadTracesClick.emit()">Download all</button>
+            <button
+              class="download-btn"
+              color="primary"
+              mat-stroked-button
+              (click)="downloadTracesClick.emit()">Download all</button>
 
-          <button
-            class="upload-btn"
-            color="primary"
-            mat-stroked-button
-            for="fileDropRef"
-            [disabled]="viewersLoading"
-            (click)="fileDropRef.click()">
-            Upload another file
-          </button>
-
-          <button
-            class="clear-all-btn"
-            color="primary"
-            mat-stroked-button
-            [disabled]="viewersLoading"
-            (click)="onClearButtonClick()">
-            Clear all
-          </button>
+            <button
+              class="upload-btn"
+              color="primary"
+              mat-stroked-button
+              for="fileDropRef"
+              [disabled]="viewersLoading"
+              (click)="fileDropRef.click()">
+              Upload another file
+            </button>
+          </div>
+          <div class="trace-action-buttons">
+            <button
+              color="primary"
+              mat-raised-button
+              class="load-btn"
+              matTooltip="Upload trace with an associated viewer to visualize"
+              [matTooltipDisabled]="hasLoadedFilesWithViewers()"
+              [disabled]="isViewTracesButtonDisabled()"
+              (click)="onViewTracesButtonClick()">
+              View traces
+            </button>
+            <mat-checkbox
+              class="discard-legacy-traces wrapped-checkbox"
+              color="primary"
+              [checked]="!isDiscardLegacyTracesBoxDisabled() && discardLegacyTraces"
+              [disabled]="isDiscardLegacyTracesBoxDisabled()"
+              matTooltip="Discard legacy traces instead of converting to Perfetto to reduce loading time"
+              (change)="updateDiscardLegacyTraces()">
+              Discard legacy traces
+            </mat-checkbox>
+          </div>
         </div>
       </div>
 
@@ -170,17 +183,21 @@ import {LoadProgressComponent} from './load_progress_component';
       }
       .card-header {
         justify-content: space-between;
-        align-items: center;
+        align-items: start;
         display: flex;
         flex-direction: row;
       }
       .title {
         padding-top: 16px;
-        text-align: center;
+        text-align: start;
       }
       .trace-actions-container {
         display: flex;
-        flex-direction: row;
+        flex-direction: column;
+      }
+      .trace-action-buttons {
+        display: flex;
+        flex-direction: row-reverse;
         flex-wrap: wrap;
         gap: 10px;
         padding: 4px 0px;
@@ -265,6 +282,12 @@ import {LoadProgressComponent} from './load_progress_component';
         margin: 0;
         white-space: pre-line;
       }
+      .discard-legacy-traces {
+        font-size: 14px;
+        display: flex;
+        align-items: center;
+        justify-content: end;
+      }
     `,
   ],
 })
@@ -278,11 +301,15 @@ export class UploadTracesComponent
   lastUiProgressUpdateTimeMs?: number;
   viewersLoading = false;
   warningMessages: string[] = [];
+  discardLegacyTraces = false;
 
   @Input() tracePipeline: TracePipeline | undefined;
+  @Input() storage: Store | undefined;
   @Output() filesUploaded = new EventEmitter<File[]>();
-  @Output() viewTracesButtonClick = new EventEmitter<void>();
+  @Output() viewTracesButtonClick = new EventEmitter<boolean>();
   @Output() downloadTracesClick = new EventEmitter<void>();
+
+  private readonly discardLegacyStoreKey = 'discardLegacyTraces';
 
   constructor(
     @Inject(ChangeDetectorRef) private changeDetectorRef: ChangeDetectorRef,
@@ -290,8 +317,21 @@ export class UploadTracesComponent
   ) {}
 
   ngOnInit() {
+    if (this.storage) {
+      const storedValue = this.storage.get(this.discardLegacyStoreKey);
+      this.discardLegacyTraces =
+        storedValue === 'true' || storedValue === undefined;
+    }
     this.tracePipeline?.clear();
     this.clearAllWarnings();
+  }
+
+  updateDiscardLegacyTraces() {
+    this.discardLegacyTraces = !this.discardLegacyTraces;
+    this.storage?.add(
+      this.discardLegacyStoreKey,
+      this.discardLegacyTraces.toString(),
+    );
   }
 
   clearAllWarnings() {
@@ -351,7 +391,7 @@ export class UploadTracesComponent
   }
 
   onViewTracesButtonClick() {
-    this.viewTracesButtonClick.emit();
+    this.viewTracesButtonClick.emit(this.discardLegacyTraces);
   }
 
   onClearButtonClick() {
@@ -402,6 +442,13 @@ export class UploadTracesComponent
 
       return hasFilesWithViewers;
     });
+  }
+
+  isDiscardLegacyTracesBoxDisabled(): boolean {
+    if (this.isViewTracesButtonDisabled()) {
+      return true;
+    }
+    return !this.tracePipeline?.hasConvertibleLegacyTraces();
   }
 
   isViewTracesButtonDisabled(): boolean {

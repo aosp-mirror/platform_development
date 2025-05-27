@@ -243,3 +243,6 @@ log-view .headers .mat-form-field-infix {
 .warning-action-boxes .mat-checkbox {
     padding-bottom: 10px;
 }
+.wrapped-checkbox .mat-checkbox-layout, .wrapped-checkbox .mat-checkbox-layout .mat-checkbox-label {
+    white-space: normal;
+}

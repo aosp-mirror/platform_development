@@ -143,6 +143,10 @@ export class TracesParserTransitions extends AbstractTracesParser<PropertyTreeNo
     return this.realToBootTimeOffsetNs;
   }
 
+  override canConvertToPerfetto(): boolean {
+    return true;
+  }
+
   convertToPerfettoPackets?(sequenceId: number): perfetto.protos.TracePacket[] {
     const packets = [];
     packets.push(this.createHandlerMappingPacket(sequenceId));

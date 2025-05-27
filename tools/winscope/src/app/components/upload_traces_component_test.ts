@@ -15,6 +15,7 @@
  */
 import {TestBed} from '@angular/core/testing';
 import {MatCardModule} from '@angular/material/card';
+import {MatCheckboxModule} from '@angular/material/checkbox';
 import {MatIconModule} from '@angular/material/icon';
 import {MatListModule} from '@angular/material/list';
 import {MatProgressBarModule} from '@angular/material/progress-bar';
@@ -23,6 +24,7 @@ import {MatTooltipModule} from '@angular/material/tooltip';
 import {FilesSource} from 'app/files_source';
 import {TracePipeline} from 'app/trace_pipeline';
 import {assertDefined} from 'common/assert_utils';
+import {InMemoryStorage} from 'common/store/in_memory_storage';
 import {TimestampConverterUtils} from 'common/time/test_utils';
 import {
   AppTraceViewRequest,
@@ -44,6 +46,7 @@ describe('UploadTracesComponent', () => {
   const warningBannerSelector = '.warning-banner';
   const warningMessageSelector = '.warn-message';
   const warningCloseButtonSelector = '.warning-banner button';
+  const discardLegacySelector = '.discard-legacy-traces input';
 
   let component: UploadTracesComponent;
   let dom: DOMTestHelper<UploadTracesComponent>;
@@ -59,6 +62,7 @@ describe('UploadTracesComponent', () => {
         MatIconModule,
         MatProgressBarModule,
         MatTooltipModule,
+        MatCheckboxModule,
       ],
       providers: [MatSnackBar],
       declarations: [UploadTracesComponent, LoadProgressComponent],
@@ -73,6 +77,7 @@ describe('UploadTracesComponent', () => {
     validWmFile = await getFixtureFile(
       'traces/elapsed_and_real_timestamp/WindowManager.pb',
     );
+    component.storage = new InMemoryStorage();
     dom.detectChanges();
   });
 
@@ -190,10 +195,56 @@ describe('UploadTracesComponent', () => {
 
   it('can emit view traces event', async () => {
     await loadFiles([validSfFile]);
-
     const spy = spyOn(component.viewTracesButtonClick, 'emit');
     dom.findAndClick(viewTracesSelector);
-    expect(spy).toHaveBeenCalled();
+    expect(spy).toHaveBeenCalledWith(true);
+  });
+
+  it('can emit view traces event discarding legacy traces', async () => {
+    await loadFiles([validSfFile]);
+    dom.findAndClick(discardLegacySelector);
+    const spy = spyOn(component.viewTracesButtonClick, 'emit');
+    dom.findAndClick(viewTracesSelector);
+    expect(spy).toHaveBeenCalledWith(false);
+  });
+
+  it('disables checkbox to discard legacy traces', async () => {
+    await loadFiles([validSfFile]);
+    spyOn(
+      assertDefined(component.tracePipeline),
+      'hasConvertibleLegacyTraces',
+    ).and.returnValue(false);
+    dom.detectChanges();
+    const box = dom.get(discardLegacySelector);
+    box.checkDisabled(true);
+    expect(box.getHTMLElement<HTMLInputElement>().checked).toBeFalse();
+  });
+
+  it('updates discard legacy traces box from storage', async () => {
+    await loadFiles([validSfFile]);
+    dom.findAndClick(discardLegacySelector);
+
+    const fixture = TestBed.createComponent(UploadTracesComponent);
+    const newComponent = fixture.componentInstance;
+    const newDom = new DOMTestHelper(fixture, fixture.nativeElement);
+    newComponent.storage = component.storage;
+    newComponent.tracePipeline = new TracePipeline();
+    newDom.detectChanges();
+
+    await newComponent.tracePipeline.loadFiles(
+      [validSfFile],
+      FilesSource.TEST,
+      undefined,
+    );
+    newDom.detectChanges();
+
+    expect(
+      newDom.get(discardLegacySelector).getHTMLElement<HTMLInputElement>()
+        .checked,
+    ).toBeFalse();
+    const spy = spyOn(newComponent.viewTracesButtonClick, 'emit');
+    newDom.findAndClick(viewTracesSelector);
+    expect(spy).toHaveBeenCalledWith(false);
   });
 
   it('shows warning elements for traces without visualization', async () => {
@@ -203,6 +254,7 @@ describe('UploadTracesComponent', () => {
     await loadFiles([shellTransitionFile]);
     expect(dom.find('.warning-icon')).toBeDefined();
     dom.get(viewTracesSelector).checkDisabled(true);
+    dom.get(discardLegacySelector).checkDisabled(true);
   });
 
   it('shows error elements for corrupted traces', async () => {

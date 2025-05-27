@@ -217,7 +217,7 @@ import {
     <mat-drawer-container autosize disableClose autoFocus>
       <mat-drawer-content>
         <ng-container *ngIf="dataLoaded; else noLoadedTracesBlock">
-          <trace-view class="viewers" [viewers]="viewers" [store]="store"></trace-view>
+          <trace-view class="viewers" [viewers]="viewers" [store]="persistentStore"></trace-view>
 
           <mat-divider></mat-divider>
         </ng-container>
@@ -228,7 +228,7 @@ import {
           *ngIf="dataLoaded"
           [allTraces]="tracePipeline.getTraces()"
           [timelineData]="timelineData"
-          [store]="store"
+          [store]="persistentStore"
           (collapsedTimelineSizeChanged)="onCollapsedTimelineSizeChanged($event)"></timeline>
       </mat-drawer>
     </mat-drawer-container>
@@ -243,15 +243,16 @@ import {
           <div class="card-grid landing-grid">
             <collect-traces
               class="collect-traces-card homepage-card"
-              [storage]="traceCollectionStorage"
+              [storage]="appStorage"
               (filesCollected)="onFilesCollected($event)"></collect-traces>
 
             <upload-traces
               #uploadTraces
               class="upload-traces-card homepage-card"
               [tracePipeline]="tracePipeline"
+              [storage]="appStorage"
               (filesUploaded)="onFilesUploaded($event)"
-              (viewTracesButtonClick)="onViewTracesButtonClick()"
+              (viewTracesButtonClick)="onViewTracesButtonClick($event)"
               (downloadTracesClick)="onDownloadTracesButtonClick(uploadTraces)"></upload-traces>
           </div>
         </div>
@@ -364,7 +365,7 @@ export class AppComponent implements WinscopeEventListener {
   showDataLoadedElements = false;
   collapsedTimelineHeight = 0;
   isEditingFilename = false;
-  store = new PersistentStore();
+  persistentStore = new PersistentStore();
   viewers: Viewer[] = [];
 
   isDarkModeOn = false;
@@ -380,7 +381,7 @@ export class AppComponent implements WinscopeEventListener {
     ]),
   );
 
-  traceCollectionStorage: Store;
+  appStorage: Store;
   downloadProgress: number | undefined;
 
   @ViewChild(UploadTracesComponent)
@@ -413,7 +414,7 @@ export class AppComponent implements WinscopeEventListener {
       new PersistentStore(),
     );
 
-    const storeDarkMode = this.store.get('dark-mode');
+    const storeDarkMode = this.persistentStore.get('dark-mode');
     const prefersDarkQuery = window.matchMedia?.(
       '(prefers-color-scheme: dark)',
     );
@@ -488,7 +489,7 @@ export class AppComponent implements WinscopeEventListener {
       );
     }
 
-    this.traceCollectionStorage =
+    this.appStorage =
       globalConfig.MODE === 'PROD'
         ? new PersistentStore()
         : new InMemoryStorage();
@@ -523,7 +524,7 @@ export class AppComponent implements WinscopeEventListener {
 
   async setDarkMode(enabled: boolean) {
     document.body.classList.toggle('dark-mode', enabled);
-    this.store.add('dark-mode', `${enabled}`);
+    this.persistentStore.add('dark-mode', `${enabled}`);
     this.isDarkModeOn = enabled;
     await this.mediator.onWinscopeEvent(new DarkModeToggled(enabled));
   }
@@ -574,11 +575,13 @@ export class AppComponent implements WinscopeEventListener {
 
   async onUploadNewButtonClick() {
     await this.mediator.onWinscopeEvent(new AppResetRequest());
-    this.store.clear('treeView');
+    this.persistentStore.clear('treeView');
   }
 
-  async onViewTracesButtonClick() {
-    await this.mediator.onWinscopeEvent(new AppTraceViewRequest());
+  async onViewTracesButtonClick(discardLegacyTraces: boolean) {
+    await this.mediator.onWinscopeEvent(
+      new AppTraceViewRequest(discardLegacyTraces),
+    );
   }
 
   onProgressUpdate(message: string, progressPercentage: number | undefined) {

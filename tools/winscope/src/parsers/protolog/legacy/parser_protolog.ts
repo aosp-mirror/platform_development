@@ -111,6 +111,10 @@ export class ParserProtoLog extends AbstractParser<
     );
   }
 
+  override canConvertToPerfetto(): boolean {
+    return true;
+  }
+
   override convertToPerfettoPackets(
     sequenceId: number,
     trustedUid = 1,
@@ -211,7 +215,7 @@ export class ParserProtoLog extends AbstractParser<
 
   private createPacket(
     sequenceId: number,
-    trustedUid: number,
+    trustedUid: number | undefined,
     trustedPid: number | undefined,
   ): perfetto.protos.TracePacket {
     const packet = perfetto.protos.TracePacket.create();

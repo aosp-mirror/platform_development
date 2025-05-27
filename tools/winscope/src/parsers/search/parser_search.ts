@@ -89,6 +89,10 @@ export class ParserSearch implements Parser<QueryResult> {
     throw NOT_IMPLEMENTED_ERROR;
   }
 
+  canConvertToPerfetto(): boolean {
+    return false;
+  }
+
   async parse() {
     const tp = TraceProcessorFactory.getSingleInstance();
     try {

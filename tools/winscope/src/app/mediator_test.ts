@@ -229,6 +229,7 @@ describe('Mediator', () => {
       spyOn(timelineData, 'initialize').and.callThrough(),
       spyOn(tracePipeline, 'onWinscopeEvent'),
       spyOn(tracePipeline, 'convertLegacyTracesToPerfetto'),
+      spyOn(tracePipeline, 'discardLegacyTraces'),
       spyOn(traceViewComponent, 'onWinscopeEvent'),
       spyOn(uploadTracesComponent, 'onWinscopeEvent'),
       spyOn(uploadTracesComponent, 'onProgressUpdate'),
@@ -261,6 +262,14 @@ describe('Mediator', () => {
     resetSpyCalls();
     await mediator.onWinscopeEvent(new AppTraceViewRequest());
     checkLoadTraceViewEvents(uploadTracesComponent);
+    userNotifierChecker.expectNotified([]);
+  });
+
+  it('handles uploaded traces discarding legacy traces with conversion option', async () => {
+    await mediator.onWinscopeEvent(new AppFilesUploaded(inputFiles));
+    resetSpyCalls();
+    await mediator.onWinscopeEvent(new AppTraceViewRequest(true));
+    checkLoadTraceViewEvents(uploadTracesComponent, undefined, undefined, true);
     userNotifierChecker.expectNotified([]);
   });
 
@@ -886,11 +895,15 @@ describe('Mediator', () => {
     progressListener: ProgressListener,
     expectedViewers = viewers,
     notifications: UserWarning[] = [],
+    discardLegacyTraces = false,
   ) {
     expect(progressListener.onProgressUpdate).toHaveBeenCalled();
     expect(progressListener.onOperationFinished).toHaveBeenCalled();
+    expect(tracePipeline.discardLegacyTraces).toHaveBeenCalledTimes(
+      discardLegacyTraces ? 1 : 0,
+    );
     expect(tracePipeline.convertLegacyTracesToPerfetto).toHaveBeenCalledTimes(
-      1,
+      discardLegacyTraces ? 0 : 1,
     );
     expect(timelineData.initialize).toHaveBeenCalledTimes(1);
     expect(appComponent.onWinscopeEvent).toHaveBeenCalledOnceWith(

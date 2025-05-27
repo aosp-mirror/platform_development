@@ -532,6 +532,15 @@ describe('TracePipeline', () => {
     await expectLoadResult(1, []);
   });
 
+  it('discards legacy traces without conversion', async () => {
+    await loadFiles([validSfFile, screenshotFile]);
+    expectLoadResult(2, []);
+    tracePipeline.discardLegacyTraces();
+    const traces = tracePipeline.getTraces();
+    expect(traces.getSize()).toEqual(1);
+    expect(traces.getTrace(TraceType.SCREENSHOT)).toBeDefined();
+  });
+
   describe('legacy to perfetto conversion', () => {
     let parserSf: Parser<object>;
     let converterSpy: jasmine.Spy;
@@ -551,10 +560,18 @@ describe('TracePipeline', () => {
     });
 
     it('robust to no available legacy-to-perfetto conversions', async () => {
+      tracePipeline.clear();
+      await loadFiles([screenshotFile]);
+      await tracePipeline.convertLegacyTracesToPerfetto();
+      expect(converterSpy).not.toHaveBeenCalled();
+    });
+
+    it('robust to failed legacy-to-perfetto conversion', async () => {
       converterSpy.and.returnValue(Promise.resolve(undefined));
       await expectAsync(
         tracePipeline.convertLegacyTracesToPerfetto(),
       ).not.toBeRejected();
+      expect(converterSpy).toHaveBeenCalledTimes(1);
     });
 
     it('robust to no perfetto data in converted file', async () => {
