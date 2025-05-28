@@ -80,10 +80,10 @@ impl RustDeps for BluePrint {
     }
 }
 
-// Convenience accessor for arrays of strings.
-trait AsStringVec {
-    // Interpret a android_bp::Value as an array of strings, and convert it to
-    // an array of owned strings. Any element that isn't a string is skipped.
+/// Convenience accessor for arrays of strings.
+pub trait AsStringVec {
+    /// Interpret a android_bp::Value as an array of strings, and convert it to
+    /// an array of &str's. Any element that isn't a string is skipped.
     fn as_strs(&self) -> Vec<&str>;
 }
 
@@ -106,11 +106,11 @@ impl AsStringVec for Value {
     }
 }
 
-// Evaluate concatenations and resolve identifiers.
+/// Evaluate concatenations and resolve identifiers.
 trait EvalConcat {
-    // Evaluate a concatenation expression, resolving it into a single vector of strings.
-    // The elements being concatenated are assumed to be either identifiers or
-    // arrays of strings. Otherwise, they are skipped.
+    /// Evaluate a concatenation expression, resolving it into a single vector of strings.
+    /// The elements being concatenated are assumed to be either identifiers or
+    /// arrays of strings. Otherwise, they are skipped.
     fn eval<'a>(&'a self, bp: &'a BluePrint) -> Vec<&'a str>;
 }
 
@@ -161,6 +161,37 @@ impl RustLibs for BluePrint {
             }
         }
         Ok(libs)
+    }
+}
+
+/// Trait for determining the features enabled for a Rust crate.
+pub trait CrateFeatures {
+    /// Return the features enabled for all crate variants in the Blueprint.
+    fn crate_features<'a>(
+        &'a self,
+        crate_name: impl AsRef<str> + 'a,
+    ) -> impl Iterator<Item = Option<Vec<&'a str>>>;
+    /// Returns true if a feature is enabled for any build variant of the crate.
+    fn is_enabled(&self, crate_name: impl AsRef<str>, feature: impl AsRef<str>) -> bool {
+        self.crate_features(crate_name).any(|variant_features| {
+            variant_features.is_some_and(|features| features.contains(&feature.as_ref()))
+        })
+    }
+}
+
+impl CrateFeatures for BluePrint {
+    fn crate_features<'a>(
+        &'a self,
+        crate_name: impl AsRef<str> + 'a,
+    ) -> impl Iterator<Item = Option<Vec<&'a str>>> {
+        let crate_name = crate_name.as_ref().to_string();
+        self.modules.iter().filter_map(move |m| {
+            if m.get_string("crate_name").is_some_and(|c| *c == crate_name) {
+                Some(m.get("features").map(|v| v.as_strs()))
+            } else {
+                None
+            }
+        })
     }
 }
 
@@ -239,5 +270,72 @@ rust_library { name: "foo" }
         .expect("Blueprint parse error");
         assert_eq!(bp.rust_libs()?, vec!["foo"]);
         Ok(())
+    }
+
+    #[test]
+    fn features() {
+        let bp = BluePrint::parse(
+            r###"
+rust_library { crate_name: "foo" }
+"###,
+        )
+        .expect("Blueprint parse error");
+        assert_eq!(
+            bp.crate_features("foo").collect::<Vec<_>>(),
+            vec![None],
+            "Missing features array returns None"
+        );
+
+        let bp = BluePrint::parse(
+            r###"
+rust_library { crate_name: "foo", features: [] }
+"###,
+        )
+        .expect("Blueprint parse error");
+        assert_eq!(
+            bp.crate_features("foo").collect::<Vec<_>>(),
+            vec![Some(Vec::new())],
+            "Empty features array is preserved"
+        );
+
+        let bp = BluePrint::parse(
+            r###"
+rust_library { crate_name: "foo", features: ["foo"] }
+rust_library { crate_name: "bar", features: ["bar"] }
+"###,
+        )
+        .expect("Blueprint parse error");
+        assert_eq!(
+            bp.crate_features("foo").collect::<Vec<_>>(),
+            vec![Some(vec!["foo"])],
+            "Crate name must match"
+        );
+
+        let bp = BluePrint::parse(
+            r###"
+rust_library { crate_name: "foo", features: ["foo1"] }
+rust_library { crate_name: "foo", features: ["foo2"] }
+"###,
+        )
+        .expect("Blueprint parse error");
+        assert_eq!(
+            bp.crate_features("foo").collect::<Vec<_>>(),
+            vec![Some(vec!["foo1"]), Some(vec!["foo2"])],
+            "Multiple variants of the same crate each return a list of features"
+        );
+    }
+
+    #[test]
+    fn feature_is_enabled() {
+        let bp = BluePrint::parse(
+            r###"
+rust_library { crate_name: "foo", features: ["bar"] }
+rust_library { crate_name: "foo", features: ["baz"] }
+"###,
+        )
+        .expect("Blueprint parse error");
+        assert!(bp.is_enabled("foo", "bar"));
+        assert!(bp.is_enabled("foo", "baz"));
+        assert!(!bp.is_enabled("foo", "qux"));
     }
 }

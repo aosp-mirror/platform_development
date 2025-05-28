@@ -1,0 +1,555 @@
+{
+  "name": "axum",
+  "vers": "0.7.0",
+  "deps": [
+    {
+      "name": "anyhow",
+      "req": "^1.0",
+      "features": [],
+      "kind": "dev",
+      "optional": false,
+      "default_features": true
+    },
+    {
+      "name": "async-trait",
+      "req": "^0.1.67",
+      "features": [],
+      "kind": "normal",
+      "optional": false,
+      "default_features": true
+    },
+    {
+      "name": "axum-core",
+      "req": "^0.4.0",
+      "features": [],
+      "kind": "normal",
+      "optional": false,
+      "default_features": true
+    },
+    {
+      "name": "axum-macros",
+      "req": "^0.4.0",
+      "features": [],
+      "kind": "normal",
+      "optional": true,
+      "default_features": true
+    },
+    {
+      "name": "axum-macros",
+      "req": "^0.4.0",
+      "features": [
+        "__private"
+      ],
+      "kind": "dev",
+      "optional": false,
+      "default_features": true
+    },
+    {
+      "name": "base64",
+      "req": "^0.21.0",
+      "features": [],
+      "kind": "normal",
+      "optional": true,
+      "default_features": true
+    },
+    {
+      "name": "bytes",
+      "req": "^1.0",
+      "features": [],
+      "kind": "normal",
+      "optional": false,
+      "default_features": true
+    },
+    {
+      "name": "futures-util",
+      "req": "^0.3",
+      "features": [
+        "alloc"
+      ],
+      "kind": "normal",
+      "optional": false,
+      "default_features": false
+    },
+    {
+      "name": "http",
+      "req": "^1.0.0",
+      "features": [],
+      "kind": "normal",
+      "optional": false,
+      "default_features": true
+    },
+    {
+      "name": "http-body",
+      "req": "^1.0.0",
+      "features": [],
+      "kind": "normal",
+      "optional": false,
+      "default_features": true
+    },
+    {
+      "name": "http-body-util",
+      "req": "^0.1.0",
+      "features": [],
+      "kind": "normal",
+      "optional": false,
+      "default_features": true
+    },
+    {
+      "name": "hyper",
+      "req": "^1.0.0",
+      "features": [],
+      "kind": "normal",
+      "optional": true,
+      "default_features": true
+    },
+    {
+      "name": "hyper-util",
+      "req": "^0.1.1",
+      "features": [
+        "tokio",
+        "server",
+        "server-auto"
+      ],
+      "kind": "normal",
+      "optional": true,
+      "default_features": true
+    },
+    {
+      "name": "itoa",
+      "req": "^1.0.5",
+      "features": [],
+      "kind": "normal",
+      "optional": false,
+      "default_features": true
+    },
+    {
+      "name": "matchit",
+      "req": "^0.7",
+      "features": [],
+      "kind": "normal",
+      "optional": false,
+      "default_features": true
+    },
+    {
+      "name": "memchr",
+      "req": "^2.4.1",
+      "features": [],
+      "kind": "normal",
+      "optional": false,
+      "default_features": true
+    },
+    {
+      "name": "mime",
+      "req": "^0.3.16",
+      "features": [],
+      "kind": "normal",
+      "optional": false,
+      "default_features": true
+    },
+    {
+      "name": "multer",
+      "req": "^2.0.0",
+      "features": [],
+      "kind": "normal",
+      "optional": true,
+      "default_features": true
+    },
+    {
+      "name": "percent-encoding",
+      "req": "^2.1",
+      "features": [],
+      "kind": "normal",
+      "optional": false,
+      "default_features": true
+    },
+    {
+      "name": "pin-project-lite",
+      "req": "^0.2.7",
+      "features": [],
+      "kind": "normal",
+      "optional": false,
+      "default_features": true
+    },
+    {
+      "name": "quickcheck",
+      "req": "^1.0",
+      "features": [],
+      "kind": "dev",
+      "optional": false,
+      "default_features": true
+    },
+    {
+      "name": "quickcheck_macros",
+      "req": "^1.0",
+      "features": [],
+      "kind": "dev",
+      "optional": false,
+      "default_features": true
+    },
+    {
+      "name": "reqwest",
+      "req": "^0.11.14",
+      "features": [
+        "json",
+        "stream",
+        "multipart"
+      ],
+      "kind": "dev",
+      "optional": false,
+      "default_features": false
+    },
+    {
+      "name": "rustversion",
+      "req": "^1.0.9",
+      "features": [],
+      "kind": "build",
+      "optional": false,
+      "default_features": true
+    },
+    {
+      "name": "rustversion",
+      "req": "^1.0.9",
+      "features": [],
+      "kind": "dev",
+      "optional": false,
+      "default_features": true
+    },
+    {
+      "name": "serde",
+      "req": "^1.0",
+      "features": [],
+      "kind": "normal",
+      "optional": false,
+      "default_features": true
+    },
+    {
+      "name": "serde",
+      "req": "^1.0",
+      "features": [
+        "derive"
+      ],
+      "kind": "dev",
+      "optional": false,
+      "default_features": true
+    },
+    {
+      "name": "serde_json",
+      "req": "^1.0",
+      "features": [
+        "raw_value"
+      ],
+      "kind": "normal",
+      "optional": true,
+      "default_features": true
+    },
+    {
+      "name": "serde_json",
+      "req": "^1.0",
+      "features": [],
+      "kind": "dev",
+      "optional": false,
+      "default_features": true
+    },
+    {
+      "name": "serde_path_to_error",
+      "req": "^0.1.8",
+      "features": [],
+      "kind": "normal",
+      "optional": true,
+      "default_features": true
+    },
+    {
+      "name": "serde_urlencoded",
+      "req": "^0.7",
+      "features": [],
+      "kind": "normal",
+      "optional": true,
+      "default_features": true
+    },
+    {
+      "name": "sha1",
+      "req": "^0.10",
+      "features": [],
+      "kind": "normal",
+      "optional": true,
+      "default_features": true
+    },
+    {
+      "name": "sync_wrapper",
+      "req": "^0.1.1",
+      "features": [],
+      "kind": "normal",
+      "optional": false,
+      "default_features": true
+    },
+    {
+      "name": "time",
+      "req": "^0.3",
+      "features": [
+        "serde-human-readable"
+      ],
+      "kind": "dev",
+      "optional": false,
+      "default_features": true
+    },
+    {
+      "name": "tokio",
+      "req": "^1.25.0",
+      "features": [
+        "time"
+      ],
+      "package": "tokio",
+      "kind": "normal",
+      "optional": true,
+      "default_features": true
+    },
+    {
+      "name": "tokio",
+      "req": "^1.25.0",
+      "features": [
+        "macros",
+        "rt",
+        "rt-multi-thread",
+        "net",
+        "test-util"
+      ],
+      "package": "tokio",
+      "kind": "dev",
+      "optional": false,
+      "default_features": true
+    },
+    {
+      "name": "tokio-stream",
+      "req": "^0.1",
+      "features": [],
+      "kind": "dev",
+      "optional": false,
+      "default_features": true
+    },
+    {
+      "name": "tokio-tungstenite",
+      "req": "^0.20",
+      "features": [],
+      "kind": "normal",
+      "optional": true,
+      "default_features": true
+    },
+    {
+      "name": "tower",
+      "req": "^0.4.13",
+      "features": [
+        "util"
+      ],
+      "kind": "normal",
+      "optional": false,
+      "default_features": false
+    },
+    {
+      "name": "tower",
+      "req": "^0.4.10",
+      "features": [
+        "util",
+        "timeout",
+        "limit",
+        "load-shed",
+        "steer",
+        "filter"
+      ],
+      "package": "tower",
+      "kind": "dev",
+      "optional": false,
+      "default_features": true
+    },
+    {
+      "name": "tower-http",
+      "req": "^0.5.0",
+      "features": [
+        "add-extension",
+        "auth",
+        "catch-panic",
+        "compression-br",
+        "compression-deflate",
+        "compression-gzip",
+        "cors",
+        "decompression-br",
+        "decompression-deflate",
+        "decompression-gzip",
+        "follow-redirect",
+        "fs",
+        "limit",
+        "map-request-body",
+        "map-response-body",
+        "metrics",
+        "normalize-path",
+        "propagate-header",
+        "redirect",
+        "request-id",
+        "sensitive-headers",
+        "set-header",
+        "set-status",
+        "timeout",
+        "trace",
+        "util",
+        "validate-request"
+      ],
+      "kind": "normal",
+      "optional": true,
+      "default_features": true
+    },
+    {
+      "name": "tower-http",
+      "req": "^0.5.0",
+      "features": [
+        "add-extension",
+        "auth",
+        "catch-panic",
+        "compression-br",
+        "compression-deflate",
+        "compression-gzip",
+        "cors",
+        "decompression-br",
+        "decompression-deflate",
+        "decompression-gzip",
+        "follow-redirect",
+        "fs",
+        "limit",
+        "map-request-body",
+        "map-response-body",
+        "metrics",
+        "normalize-path",
+        "propagate-header",
+        "redirect",
+        "request-id",
+        "sensitive-headers",
+        "set-header",
+        "set-status",
+        "timeout",
+        "trace",
+        "util",
+        "validate-request"
+      ],
+      "kind": "dev",
+      "optional": false,
+      "default_features": true
+    },
+    {
+      "name": "tower-layer",
+      "req": "^0.3.2",
+      "features": [],
+      "kind": "normal",
+      "optional": false,
+      "default_features": true
+    },
+    {
+      "name": "tower-service",
+      "req": "^0.3",
+      "features": [],
+      "kind": "normal",
+      "optional": false,
+      "default_features": true
+    },
+    {
+      "name": "tracing",
+      "req": "^0.1",
+      "features": [],
+      "kind": "normal",
+      "optional": true,
+      "default_features": false
+    },
+    {
+      "name": "tracing",
+      "req": "^0.1",
+      "features": [],
+      "kind": "dev",
+      "optional": false,
+      "default_features": true
+    },
+    {
+      "name": "tracing-subscriber",
+      "req": "^0.3",
+      "features": [
+        "json"
+      ],
+      "kind": "dev",
+      "optional": false,
+      "default_features": true
+    },
+    {
+      "name": "uuid",
+      "req": "^1.0",
+      "features": [
+        "serde",
+        "v4"
+      ],
+      "kind": "dev",
+      "optional": false,
+      "default_features": true
+    }
+  ],
+  "features": {
+    "default": [
+      "form",
+      "http1",
+      "json",
+      "matched-path",
+      "original-uri",
+      "query",
+      "tokio",
+      "tower-log"
+    ],
+    "__private_docs": [
+      "tower/full",
+      "dep:tower-http"
+    ],
+    "ws": [
+      "dep:hyper",
+      "tokio",
+      "dep:tokio-tungstenite",
+      "dep:sha1",
+      "dep:base64"
+    ],
+    "form": [
+      "dep:serde_urlencoded"
+    ],
+    "tracing": [
+      "dep:tracing",
+      "axum-core/tracing"
+    ],
+    "tokio": [
+      "dep:hyper-util",
+      "dep:tokio",
+      "tokio/net",
+      "tokio/rt",
+      "tower/make"
+    ],
+    "multipart": [
+      "dep:multer"
+    ],
+    "tower-log": [
+      "tower/log"
+    ],
+    "http1": [
+      "dep:hyper",
+      "hyper?/http1"
+    ],
+    "macros": [
+      "dep:axum-macros"
+    ],
+    "json": [
+      "dep:serde_json",
+      "dep:serde_path_to_error"
+    ],
+    "original-uri": [],
+    "http2": [
+      "dep:hyper",
+      "hyper?/http2"
+    ],
+    "query": [
+      "dep:serde_urlencoded"
+    ],
+    "matched-path": []
+  },
+  "rust_version": "1.66",
+  "cksum": "f3df9e51a6be3dff35208dc9a8e617d562a5232e7b7c69ef86eba088be62f084",
+  "yanked": false
+}

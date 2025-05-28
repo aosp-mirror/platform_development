@@ -93,7 +93,7 @@ impl<State: ManagedCrateState> ManagedCrate<State> {
     pub fn android_version(&self) -> &Version {
         self.android_crate.version()
     }
-    fn android_crate_path(&self) -> &RootedPath {
+    pub fn android_crate_path(&self) -> &RootedPath {
         self.android_crate.path()
     }
     pub fn config(&self) -> &CrateConfig {

@@ -1,0 +1,193 @@
+{
+  "name": "chrono",
+  "vers": "0.4.39",
+  "deps": [
+    {
+      "name": "android-tzdata",
+      "req": "^0.1.1",
+      "features": [],
+      "kind": "normal",
+      "target": "cfg(target_os = \"android\")",
+      "optional": true,
+      "default_features": true
+    },
+    {
+      "name": "arbitrary",
+      "req": "^1.0.0",
+      "features": [
+        "derive"
+      ],
+      "kind": "normal",
+      "optional": true,
+      "default_features": true
+    },
+    {
+      "name": "bincode",
+      "req": "^1.3.0",
+      "features": [],
+      "kind": "dev",
+      "optional": false,
+      "default_features": true
+    },
+    {
+      "name": "iana-time-zone",
+      "req": "^0.1.45",
+      "features": [
+        "fallback"
+      ],
+      "kind": "normal",
+      "target": "cfg(unix)",
+      "optional": true,
+      "default_features": true
+    },
+    {
+      "name": "js-sys",
+      "req": "^0.3",
+      "features": [],
+      "kind": "normal",
+      "target": "cfg(all(target_arch = \"wasm32\", not(any(target_os = \"emscripten\", target_os = \"wasi\"))))",
+      "optional": true,
+      "default_features": true
+    },
+    {
+      "name": "num-traits",
+      "req": "^0.2",
+      "features": [],
+      "kind": "normal",
+      "optional": false,
+      "default_features": false
+    },
+    {
+      "name": "pure-rust-locales",
+      "req": "^0.8",
+      "features": [],
+      "kind": "normal",
+      "optional": true,
+      "default_features": true
+    },
+    {
+      "name": "rkyv",
+      "req": "^0.7.43",
+      "features": [],
+      "kind": "normal",
+      "optional": true,
+      "default_features": false
+    },
+    {
+      "name": "serde",
+      "req": "^1.0.99",
+      "features": [],
+      "kind": "normal",
+      "optional": true,
+      "default_features": false
+    },
+    {
+      "name": "serde_derive",
+      "req": "^1",
+      "features": [],
+      "kind": "dev",
+      "optional": false,
+      "default_features": false
+    },
+    {
+      "name": "serde_json",
+      "req": "^1",
+      "features": [],
+      "kind": "dev",
+      "optional": false,
+      "default_features": true
+    },
+    {
+      "name": "wasm-bindgen",
+      "req": "^0.2",
+      "features": [],
+      "kind": "normal",
+      "target": "cfg(all(target_arch = \"wasm32\", not(any(target_os = \"emscripten\", target_os = \"wasi\"))))",
+      "optional": true,
+      "default_features": true
+    },
+    {
+      "name": "wasm-bindgen-test",
+      "req": "^0.3",
+      "features": [],
+      "kind": "dev",
+      "target": "cfg(all(target_arch = \"wasm32\", not(any(target_os = \"emscripten\", target_os = \"wasi\"))))",
+      "optional": false,
+      "default_features": true
+    },
+    {
+      "name": "windows-bindgen",
+      "req": "^0.58",
+      "features": [],
+      "kind": "dev",
+      "target": "cfg(windows)",
+      "optional": false,
+      "default_features": true
+    },
+    {
+      "name": "windows-targets",
+      "req": "^0.52",
+      "features": [],
+      "kind": "normal",
+      "target": "cfg(windows)",
+      "optional": true,
+      "default_features": true
+    }
+  ],
+  "features": {
+    "std": [
+      "alloc"
+    ],
+    "rkyv-16": [
+      "dep:rkyv",
+      "rkyv?/size_16"
+    ],
+    "default": [
+      "clock",
+      "std",
+      "oldtime",
+      "wasmbind"
+    ],
+    "unstable-locales": [
+      "pure-rust-locales"
+    ],
+    "wasmbind": [
+      "wasm-bindgen",
+      "js-sys"
+    ],
+    "rkyv-64": [
+      "dep:rkyv",
+      "rkyv?/size_64"
+    ],
+    "rkyv-validation": [
+      "rkyv?/validation"
+    ],
+    "__internal_bench": [],
+    "alloc": [],
+    "now": [
+      "std"
+    ],
+    "rkyv": [
+      "dep:rkyv",
+      "rkyv/size_32"
+    ],
+    "clock": [
+      "winapi",
+      "iana-time-zone",
+      "android-tzdata",
+      "now"
+    ],
+    "oldtime": [],
+    "winapi": [
+      "windows-targets"
+    ],
+    "libc": [],
+    "rkyv-32": [
+      "dep:rkyv",
+      "rkyv?/size_32"
+    ]
+  },
+  "rust_version": "1.61.0",
+  "cksum": "7e36cc9d416881d2e24f9a963be5fb1cd90966419ac844274161d10488b3e825",
+  "yanked": false
+}
