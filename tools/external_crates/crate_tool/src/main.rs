@@ -155,6 +155,8 @@ impl CrateList {
 }
 
 fn main() -> Result<()> {
+    env_logger::init();
+
     let args = Cli::parse();
 
     maybe_build_cargo_embargo(&args.android_root, args.rebuild_cargo_embargo)?;
