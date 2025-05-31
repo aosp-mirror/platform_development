@@ -20,14 +20,14 @@ import {TimestampConverterUtils} from 'common/time/test_utils';
 import {TimeUtils} from 'common/time/time_utils';
 import {TracePositionUpdate} from 'messaging/winscope_event';
 import {getPerfettoParser} from 'test/unit/fixture_utils';
+import {HierarchyTreeBuilder} from 'test/unit/hierarchy_tree_builder';
 import {ParserBuilder} from 'test/unit/parser_builder';
-import {PropertyTreeBuilder} from 'test/unit/property_tree_builder';
 import {TracesBuilder} from 'test/unit/traces_builder';
 import {TraceBuilder} from 'test/unit/trace_builder';
 import {Trace} from 'trace/trace';
 import {Traces} from 'trace/traces';
 import {TraceType} from 'trace/trace_type';
-import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
+import {HierarchyTreeNode} from 'trace/tree_node/hierarchy_tree_node';
 import {NotifyLogViewCallbackType} from 'viewers/common/abstract_log_viewer_presenter';
 import {AbstractLogViewerPresenterTest} from 'viewers/common/abstract_log_viewer_presenter_test';
 import {LogSelectFilter} from 'viewers/common/log_filters';
@@ -119,7 +119,7 @@ class PresenterTransitionsTest extends AbstractLogViewerPresenterTest<UiData> {
       options: ['MERGED', 'N/A', 'PLAYED'],
     },
   ];
-  private trace: Trace<PropertyTreeNode> | undefined;
+  private trace: Trace<HierarchyTreeNode> | undefined;
   private positionUpdate: TracePositionUpdate | undefined;
 
   override async setUpTestEnvironment(): Promise<void> {
@@ -128,7 +128,7 @@ class PresenterTransitionsTest extends AbstractLogViewerPresenterTest<UiData> {
       'traces/perfetto/shell_transitions_trace.perfetto-trace',
     );
 
-    this.trace = new TraceBuilder<PropertyTreeNode>()
+    this.trace = new TraceBuilder<HierarchyTreeNode>()
       .setType(TraceType.TRANSITION)
       .setParser(parser)
       .build();
@@ -175,12 +175,15 @@ class PresenterTransitionsTest extends AbstractLogViewerPresenterTest<UiData> {
     expect(uiData.entries.length).toEqual(4);
 
     const selectedTransition = assertDefined(uiData.propertiesTree);
-    const wmData = assertDefined(selectedTransition.getChildByName('wmData'));
-    expect(wmData.getChildByName('id')?.formattedValue()).toEqual('32');
-    expect(wmData.getChildByName('type')?.formattedValue()).toEqual('OPEN');
-    expect(wmData.getChildByName('createTimeNs')?.formattedValue()).toEqual(
-      '2023-11-21, 13:30:25.429',
+    expect(selectedTransition.getChildByName('id')?.formattedValue()).toEqual(
+      '32',
     );
+    expect(selectedTransition.getChildByName('type')?.formattedValue()).toEqual(
+      'OPEN',
+    );
+    expect(
+      selectedTransition.getChildByName('createTimeNs')?.formattedValue(),
+    ).toEqual('2023-11-21, 13:30:25.429');
 
     const dispatchTimeEntryTs = uiData.entries[0].fields[3];
     expect(dispatchTimeEntryTs?.propagateEntryTimestamp).toBeTrue();
@@ -197,14 +200,14 @@ class PresenterTransitionsTest extends AbstractLogViewerPresenterTest<UiData> {
     describe('Specialized tests', () => {
       it('robust to corrupted transitions trace', async () => {
         const timestamp10 = TimestampConverterUtils.makeRealTimestamp(10n);
-        const trace = new TraceBuilder<PropertyTreeNode>()
+        const trace = new TraceBuilder<HierarchyTreeNode>()
           .setType(TraceType.TRANSITION)
           .setParser(
-            new ParserBuilder<PropertyTreeNode>()
+            new ParserBuilder<HierarchyTreeNode>()
               .setIsCorrupted(true)
               .setEntries([
-                new PropertyTreeBuilder()
-                  .setRootId('TransitionsTraceEntry')
+                new HierarchyTreeBuilder()
+                  .setId('TransitionsTraceEntry')
                   .setName('transition0')
                   .build(),
               ])

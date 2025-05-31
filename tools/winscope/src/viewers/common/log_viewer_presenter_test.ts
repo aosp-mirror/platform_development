@@ -534,7 +534,7 @@ describe('AbstractLogViewerPresenter', () => {
   });
 
   it('is robust to empty trace', async () => {
-    const trace = makeEmptyTrace(TraceType.TRANSITION);
+    const trace = makeEmptyTrace(TraceType.CUJS);
     const presenter = new MockPresenter(
       trace,
       new InMemoryStorage(),

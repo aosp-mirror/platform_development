@@ -29,6 +29,7 @@ import {CoarseVersion} from 'trace/coarse_version';
 import {Parser} from 'trace/parser';
 import {TraceFile} from 'trace/trace_file';
 import {TraceType} from 'trace/trace_type';
+import {HierarchyTreeNode} from 'trace/tree_node/hierarchy_tree_node';
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
 import {TracesParserTransitions} from './traces_parser_transitions';
 
@@ -196,7 +197,7 @@ describe('TracesParserTransitions', () => {
         [new FileAndParser(new TraceFile(new File([], '')), parser)],
         converter,
       )
-    )[0].parser as Parser<PropertyTreeNode>;
+    )[0].parser as Parser<HierarchyTreeNode>;
 
     converter.setRealToBootTimeOffsetNs(
       assertDefined(perfettoParser.getRealToBootTimeOffsetNs()),
@@ -214,21 +215,37 @@ describe('TracesParserTransitions', () => {
       await perfettoParser.getEntry(2),
       await perfettoParser.getEntry(3),
     ];
-    const entryIds = entries.map((e) => e.getChildByName('id')?.getValue());
+    const entryIds = entries.map((e) =>
+      e.getEagerPropertyByName('transitionId')?.getValue(),
+    );
     expect(entryIds).toEqual([6n, 7n, 8n, 9n]);
 
     const entry = entries[2];
-    expect(entry.getChildByName('merged')?.getValue()).toBeFalse();
-    expect(entry.getChildByName('played')?.getValue()).toBeTrue();
-    expect(entry.getChildByName('aborted')?.getValue()).toBeFalse();
+    const entryProperties = await entry.getAllProperties();
+    expect(entry.getEagerPropertyByName('status')?.getValue()).toEqual(
+      'played',
+    );
 
-    const wmData = assertDefined(entry.getChildByName('wmData'));
-    checkPropertyValue(wmData, 'sendTimeNs', '2023-05-04, 08:21:19.252');
-    checkPropertyValue(wmData, 'startTransactionId', '13086765351920');
-    checkPropertyValue(wmData, 'flags', 'TRANSIT_FLAG_IS_RECENTS');
+    checkEagerPropertyValue(entry, 'sendTimeNs', '2023-05-04, 08:21:19.252');
+    checkPropertyValue(entryProperties, 'startTransactionId', '13086765351920');
+    checkEagerPropertyValue(entry, 'flags', 'TRANSIT_FLAG_IS_RECENTS');
+
+    const layerParticipants = assertDefined(
+      entry.getEagerPropertyByName('layers'),
+    );
+    expect(layerParticipants.getAllChildren().length).toEqual(2);
+    checkPropertyValue(layerParticipants, '0', '113');
+    checkPropertyValue(layerParticipants, '1', '190');
+
+    const windowParticipants = assertDefined(
+      entry.getEagerPropertyByName('windows'),
+    );
+    expect(windowParticipants.getAllChildren().length).toEqual(2);
+    checkPropertyValue(windowParticipants, '0', '179781688');
+    checkPropertyValue(windowParticipants, '1', '184699222');
 
     const targets = assertDefined(
-      wmData.getChildByName('targets'),
+      entryProperties.getChildByName('targets'),
     ).getAllChildren();
     expect(targets.length).toEqual(2);
     checkPropertyValue(targets[0], 'layerId', '113');
@@ -240,13 +257,27 @@ describe('TracesParserTransitions', () => {
     );
     checkPropertyValue(targets[0], 'windowId', '179781688');
 
-    const shellData = assertDefined(entry.getChildByName('shellData'));
+    checkEagerPropertyValue(
+      entry,
+      'handler',
+      'com.android.wm.shell.recents.RecentsTransitionHandler',
+    );
     checkPropertyValue(
-      shellData,
+      entryProperties,
       'handler',
       'com.android.wm.shell.recents.RecentsTransitionHandler',
     );
   });
+
+  function checkEagerPropertyValue(
+    node: HierarchyTreeNode,
+    property: string,
+    value: string,
+  ) {
+    expect(node.getEagerPropertyByName(property)?.formattedValue()).toEqual(
+      value,
+    );
+  }
 
   function checkPropertyValue(
     node: PropertyTreeNode,

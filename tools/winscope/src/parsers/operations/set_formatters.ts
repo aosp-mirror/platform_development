@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import {Timestamp} from 'common/time/time';
 import {RawDataUtils} from 'parsers/raw_data_utils';
 import {
   TamperedMessageType,
@@ -31,6 +32,7 @@ import {
   RECT_FORMATTER,
   REGION_FORMATTER,
   SIZE_FORMATTER,
+  TIMESTAMP_NODE_FORMATTER,
   TRANSFORM_FORMATTER,
 } from 'trace/tree_node/formatters';
 import {Operation} from 'trace/tree_node/operations/operation';
@@ -78,6 +80,8 @@ export class SetFormatters implements Operation<PropertyTreeNode> {
     }
 
     if (valuesById) return new EnumFormatter(valuesById);
+
+    if (node.getValue() instanceof Timestamp) return TIMESTAMP_NODE_FORMATTER;
 
     if (RawDataUtils.isColor(node)) return COLOR_FORMATTER;
     if (RawDataUtils.isRect(node)) return RECT_FORMATTER;

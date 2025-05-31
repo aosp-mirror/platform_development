@@ -7,7 +7,7 @@ edition = "2021"
 
 [dependencies]
 anyhow = "1"
-cargo_metadata = "0.19"
+cargo_toml = "0.22"
 cfg-expr = "0.17"
 chrono = "0.4"
 clap = { version = "4.4.6", features = ["derive"] }
@@ -34,10 +34,6 @@ repo_config = { path = "../repo_config" }
 rooted_path = { path = "../rooted_path" }
 success_or_error = { path = "../success_or_error" }
 test_mapping = { path = "../test_mapping" }
-
-[build-dependencies]
-protobuf-codegen = "3"
-protobuf-parse = "3"
 
 [dev-dependencies]
 tempfile = "3"

@@ -16,7 +16,7 @@
 
 import {Color} from 'app/colors';
 import {Segment} from 'app/components/timeline/segment';
-import {TimelineUtils} from 'app/components/timeline/timeline_utils';
+import {convertHexToRgb} from 'app/components/timeline/timeline_utils';
 import {Point} from 'common/geometry/point';
 import {MouseEventButton} from 'common/mouse_event_button';
 import {Padding} from 'common/padding';
@@ -322,7 +322,7 @@ export class MiniTimelineDrawerImpl implements MiniTimelineDrawer {
       return;
     }
 
-    const rgbColor = TimelineUtils.convertHexToRgb(hexColor);
+    const rgbColor = convertHexToRgb(hexColor);
     if (rgbColor === undefined) {
       throw new Error('Failed to parse provided hex color');
     }

@@ -16,11 +16,12 @@
 import {CdkVirtualScrollViewport} from '@angular/cdk/scrolling';
 import {TimestampConverterUtils} from 'common/time/test_utils';
 import {DOMTestHelper} from 'test/unit/dom_test_utils';
+import {HierarchyTreeBuilder} from 'test/unit/hierarchy_tree_builder';
 import {PropertyTreeBuilder} from 'test/unit/property_tree_builder';
 import {TraceBuilder} from 'test/unit/trace_builder';
 import {TraceEntry} from 'trace/trace';
 import {TraceType} from 'trace/trace_type';
-import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
+import {HierarchyTreeNode} from 'trace/tree_node/hierarchy_tree_node';
 import {AbstractLogViewerComponentTest} from 'viewers/common/abstract_log_viewer_component_test';
 import {LogSelectFilter} from 'viewers/common/log_filters';
 import {LogHeader} from 'viewers/common/ui_data_log';
@@ -35,7 +36,12 @@ class ViewerTransitionsComponentTest extends AbstractLogViewerComponentTest<View
   protected override readonly propertiesPlaceholder =
     'No current or selected transition.';
 
-  private readonly transitionTree = new PropertyTreeBuilder()
+  private readonly transitionTree = new HierarchyTreeBuilder()
+    .setId('TransitionTraceEntry')
+    .setName('transition')
+    .build();
+
+  private readonly transitionProperties = new PropertyTreeBuilder()
     .setIsRoot(true)
     .setRootId('TransitionTraceEntry')
     .setName('transition')
@@ -54,7 +60,7 @@ class ViewerTransitionsComponentTest extends AbstractLogViewerComponentTest<View
       ViewerTransitionsComponent,
     ]
   > {
-    const trace = new TraceBuilder<PropertyTreeNode>()
+    const trace = new TraceBuilder<HierarchyTreeNode>()
       .setType(TraceType.TRANSITION)
       .setEntries([this.transitionTree])
       .setTimestamps([TimestampConverterUtils.makeElapsedTimestamp(20n)])
@@ -77,7 +83,7 @@ class ViewerTransitionsComponentTest extends AbstractLogViewerComponentTest<View
   }
 
   private createMockTransition(
-    entry: TraceEntry<PropertyTreeNode>,
+    entry: TraceEntry<HierarchyTreeNode>,
     i: number,
   ): TransitionsEntry {
     return new TransitionsEntry(
@@ -94,7 +100,7 @@ class ViewerTransitionsComponentTest extends AbstractLogViewerComponentTest<View
           value: i % 2 === 0 ? 'VALUE' : 'VALUE'.repeat(40),
         },
       ],
-      async () => this.transitionTree,
+      async () => this.transitionProperties,
     );
   }
 }

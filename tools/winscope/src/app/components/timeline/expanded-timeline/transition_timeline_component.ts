@@ -15,14 +15,19 @@
  */
 
 import {Component, Input} from '@angular/core';
-import {TimelineUtils} from 'app/components/timeline/timeline_utils';
+import {
+  getTimeRangeForTransition,
+  isTransitionWithUnknownEnd,
+  isTransitionWithUnknownStart,
+} from 'app/components/timeline/timeline_utils';
 import {assertDefined, assertTrue} from 'common/assert_utils';
 import {Point} from 'common/geometry/point';
 import {Rect} from 'common/geometry/rect';
 import {TimeRange, Timestamp} from 'common/time/time';
 import {AbsoluteEntryIndex, Trace, TraceEntry} from 'trace/trace';
 import {TraceType} from 'trace/trace_type';
-import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
+import {TransitionStatus} from 'trace/transitions/status';
+import {HierarchyTreeNode} from 'trace/tree_node/hierarchy_tree_node';
 import {AbstractTimelineRowComponent} from './abstract_timeline_row_component';
 
 @Component({
@@ -53,13 +58,13 @@ import {AbstractTimelineRowComponent} from './abstract_timeline_row_component';
     `,
   ],
 })
-export class TransitionTimelineComponent extends AbstractTimelineRowComponent<PropertyTreeNode> {
-  @Input() selectedEntry: TraceEntry<PropertyTreeNode> | undefined;
-  @Input() trace: Trace<PropertyTreeNode> | undefined;
-  @Input() transitionEntries: Array<PropertyTreeNode | undefined> | undefined;
+export class TransitionTimelineComponent extends AbstractTimelineRowComponent<HierarchyTreeNode> {
+  @Input() selectedEntry: TraceEntry<HierarchyTreeNode> | undefined;
+  @Input() trace: Trace<HierarchyTreeNode> | undefined;
+  @Input() transitionEntries: Array<HierarchyTreeNode | undefined> | undefined;
   @Input() fullRange: TimeRange | undefined;
 
-  hoveringEntry?: TraceEntry<PropertyTreeNode>;
+  hoveringEntry?: TraceEntry<HierarchyTreeNode>;
   rowsToUse = new Map<number, number>();
   maxRowsRequires = 0;
   shouldNotRenderEntries: number[] = [];
@@ -116,7 +121,7 @@ export class TransitionTimelineComponent extends AbstractTimelineRowComponent<Pr
     if (!transition) {
       return undefined;
     }
-    const timeRange = TimelineUtils.getTimeRangeForTransition(
+    const timeRange = getTimeRangeForTransition(
       transition,
       assertDefined(this.selectionRange),
       assertDefined(this.timestampConverter),
@@ -130,7 +135,7 @@ export class TransitionTimelineComponent extends AbstractTimelineRowComponent<Pr
 
   protected override getEntryAt(
     mousePoint: Point,
-  ): TraceEntry<PropertyTreeNode> | undefined {
+  ): TraceEntry<HierarchyTreeNode> | undefined {
     const transitionEntries = assertDefined(this.trace).mapEntry(
       (entry) => entry,
     );
@@ -213,21 +218,18 @@ export class TransitionTimelineComponent extends AbstractTimelineRowComponent<Pr
     );
   }
 
-  private drawSegment(rect: Rect, transition: PropertyTreeNode) {
-    const aborted = assertDefined(
-      transition.getChildByName('aborted'),
-    ).getValue();
+  private drawSegment(rect: Rect, transition: HierarchyTreeNode) {
+    const aborted =
+      transition.getEagerPropertyByName('status')?.formattedValue() ===
+      TransitionStatus.ABORTED;
     const alpha = aborted ? 0.25 : 1.0;
 
-    const hasUnknownStart =
-      TimelineUtils.isTransitionWithUnknownStart(transition);
-    const hasUnknownEnd = TimelineUtils.isTransitionWithUnknownEnd(transition);
     this.canvasDrawer.drawRect(
       rect,
       this.color,
       alpha,
-      hasUnknownStart,
-      hasUnknownEnd,
+      isTransitionWithUnknownStart(transition),
+      isTransitionWithUnknownEnd(transition),
     );
   }
 
@@ -248,7 +250,7 @@ export class TransitionTimelineComponent extends AbstractTimelineRowComponent<Pr
         return;
       }
 
-      const timeRange = TimelineUtils.getTimeRangeForTransition(
+      const timeRange = getTimeRangeForTransition(
         transition,
         assertDefined(this.fullRange),
         assertDefined(this.timestampConverter),

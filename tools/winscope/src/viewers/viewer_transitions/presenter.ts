@@ -21,8 +21,8 @@ import {CustomQueryType} from 'trace/custom_query';
 import {Trace} from 'trace/trace';
 import {Traces} from 'trace/traces';
 import {TraceType} from 'trace/trace_type';
+import {TransitionStatus} from 'trace/transitions/status';
 import {HierarchyTreeNode} from 'trace/tree_node/hierarchy_tree_node';
-import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
 import {
   AbstractLogViewerPresenter,
   NotifyLogViewCallbackType,
@@ -32,12 +32,13 @@ import {LogPresenter} from 'viewers/common/log_presenter';
 import {PropertiesPresenter} from 'viewers/common/properties_presenter';
 import {TextFilter} from 'viewers/common/text_filter';
 import {ColumnSpec, LogField, LogHeader} from 'viewers/common/ui_data_log';
-import {UpdateTransitionChangesNames} from './operations/update_transition_changes_names';
-import {TransitionsEntry, TransitionStatus, UiData} from './ui_data';
+import {UpdateTransitionParticipants} from './operations/update_transition_participants';
+import {UpdateTransitionTargets} from './operations/update_transition_targets';
+import {TransitionsEntry, UiData} from './ui_data';
 
 export class Presenter extends AbstractLogViewerPresenter<
   UiData,
-  PropertyTreeNode
+  HierarchyTreeNode
 > {
   private static readonly COLUMNS = {
     id: {name: 'Id', cssClass: 'transition-id right-align'},
@@ -50,12 +51,16 @@ export class Presenter extends AbstractLogViewerPresenter<
     flags: {name: 'Flags', cssClass: 'flags'},
     status: {name: 'Status', cssClass: 'status right-align'},
   };
-  private transitionTrace: Trace<PropertyTreeNode>;
+  private transitionTrace: Trace<HierarchyTreeNode>;
   private surfaceFlingerTrace: Trace<HierarchyTreeNode> | undefined;
   private windowManagerTrace: Trace<HierarchyTreeNode> | undefined;
   private layerIdToName = new Map<number, string>();
   private windowTokenToTitle = new Map<string, string>();
-  private updateTransitionChangesNames = new UpdateTransitionChangesNames(
+  private updateTransitionParticipants = new UpdateTransitionParticipants(
+    this.layerIdToName,
+    this.windowTokenToTitle,
+  );
+  private updateTransitionTargets = new UpdateTransitionTargets(
     this.layerIdToName,
     this.windowTokenToTitle,
   );
@@ -66,11 +71,11 @@ export class Presenter extends AbstractLogViewerPresenter<
   protected override propertiesPresenter = new PropertiesPresenter(
     {},
     new TextFilter(),
-    [],
+    ['layers', 'windows'],
   );
 
   constructor(
-    trace: Trace<PropertyTreeNode>,
+    trace: Trace<HierarchyTreeNode>,
     traces: Traces,
     readonly storage: Store,
     notifyViewCallback: NotifyLogViewCallbackType<UiData>,
@@ -196,36 +201,36 @@ export class Presenter extends AbstractLogViewerPresenter<
       ++traceIndex
     ) {
       const entry = assertDefined(this.trace.getEntry(traceIndex));
-      let transitionNode: PropertyTreeNode;
+      let transitionNode: HierarchyTreeNode;
       try {
         transitionNode = await entry.getValue();
       } catch (e) {
         console.error(e);
         continue;
       }
-      const wmDataNode = assertDefined(transitionNode.getChildByName('wmData'));
-      const shellDataNode = assertDefined(
-        transitionNode.getChildByName('shellData'),
-      );
-      this.updateTransitionChangesNames.apply(transitionNode);
+      this.updateTransitionParticipants.apply(transitionNode);
 
-      const transitionType = this.extractAndFormatTransitionType(wmDataNode);
-      const handler = this.extractAndFormatHandler(shellDataNode);
-      const participants = this.extractAndFormatParticipants(wmDataNode);
-      const flags = this.extractAndFormatFlags(wmDataNode);
+      const transitionType =
+        this.extractAndFormatTransitionType(transitionNode);
+      const handler = this.extractAndFormatHandler(transitionNode);
+      const participants = this.extractAndFormatParticipants(transitionNode);
+      const flags = this.extractAndFormatFlags(transitionNode);
       const [status, statusIcon, statusIconColor] =
         this.extractAndFormatStatus(transitionNode);
 
-      const sendTs: Timestamp | undefined = wmDataNode
-        .getChildByName('sendTimeNs')
+      const sendTs: Timestamp | undefined = transitionNode
+        .getEagerPropertyByName('sendTimeNs')
         ?.getValue();
-      const dispatchTs: Timestamp | undefined = shellDataNode
-        .getChildByName('dispatchTimeNs')
+      const dispatchTs: Timestamp | undefined = transitionNode
+        .getEagerPropertyByName('dispatchTimeNs')
         ?.getValue();
+
       const fields: LogField[] = [
         {
           spec: Presenter.COLUMNS.id,
-          value: assertDefined(transitionNode.getChildByName('id')).getValue(),
+          value: assertDefined(
+            transitionNode.getEagerPropertyByName('transitionId'),
+          ).getValue(),
         },
         {spec: Presenter.COLUMNS.type, value: transitionType},
         {
@@ -242,8 +247,9 @@ export class Presenter extends AbstractLogViewerPresenter<
         {
           spec: Presenter.COLUMNS.duration,
           value:
-            transitionNode.getChildByName('duration')?.formattedValue() ??
-            Presenter.VALUE_NA,
+            transitionNode
+              .getEagerPropertyByName('durationNs')
+              ?.formattedValue() ?? Presenter.VALUE_NA,
         },
         {spec: Presenter.COLUMNS.handler, value: handler},
         {spec: Presenter.COLUMNS.participants, value: participants},
@@ -256,25 +262,32 @@ export class Presenter extends AbstractLogViewerPresenter<
         },
       ];
       transitions.push(
-        new TransitionsEntry(entry, fields, async () => transitionNode),
+        new TransitionsEntry(entry, fields, async () => {
+          const properties = await transitionNode.getAllProperties();
+          this.updateTransitionTargets.apply(properties);
+          return properties;
+        }),
       );
     }
 
     return transitions;
   }
 
-  private extractAndFormatTransitionType(wmDataNode: PropertyTreeNode): string {
+  private extractAndFormatTransitionType(
+    transition: HierarchyTreeNode,
+  ): string {
     const transitionType =
-      wmDataNode.getChildByName('type')?.formattedValue() ?? 'NONE';
+      transition.getEagerPropertyByName('transitionType')?.formattedValue() ??
+      'NONE';
     assertDefined(this.uniqueFieldValues.get(Presenter.COLUMNS.type)).add(
       transitionType,
     );
     return transitionType;
   }
 
-  private extractAndFormatHandler(shellDataNode: PropertyTreeNode): string {
+  private extractAndFormatHandler(transition: HierarchyTreeNode): string {
     const handler =
-      shellDataNode.getChildByName('handler')?.formattedValue() ??
+      transition.getEagerPropertyByName('handler')?.formattedValue() ??
       Presenter.VALUE_NA;
     assertDefined(this.uniqueFieldValues.get(Presenter.COLUMNS.handler)).add(
       handler,
@@ -282,9 +295,9 @@ export class Presenter extends AbstractLogViewerPresenter<
     return handler;
   }
 
-  private extractAndFormatFlags(wmDataNode: PropertyTreeNode): string {
+  private extractAndFormatFlags(transition: HierarchyTreeNode): string {
     const flags =
-      wmDataNode.getChildByName('flags')?.formattedValue() ??
+      transition.getEagerPropertyByName('flags')?.formattedValue() ??
       Presenter.VALUE_NA;
 
     const uniqueFlags = assertDefined(
@@ -298,51 +311,53 @@ export class Presenter extends AbstractLogViewerPresenter<
     return flags;
   }
 
-  private extractAndFormatParticipants(wmDataNode: PropertyTreeNode): string {
-    const targets = wmDataNode.getChildByName('targets')?.getAllChildren();
-    if (!targets) return Presenter.VALUE_NA;
+  private extractAndFormatParticipants(transition: HierarchyTreeNode): string {
+    const layers = transition
+      .getEagerPropertyByName('layers')
+      ?.getAllChildren()
+      .map((layer) => {
+        return layer.formattedValue();
+      });
+    const windows = transition
+      .getEagerPropertyByName('windows')
+      ?.getAllChildren()
+      .map((window) => {
+        return window.formattedValue();
+      });
+    if (!layers && !windows) return Presenter.VALUE_NA;
 
-    const layers = new Set<string>();
-    const windows = new Set<string>();
-    targets.forEach((target) => {
-      const layerId = target.getChildByName('layerId');
-      if (layerId) layers.add(layerId.formattedValue());
-      const windowId = target.getChildByName('windowId');
-      if (windowId) windows.add(windowId.formattedValue());
-    });
     const uniqueParticipants = assertDefined(
       this.uniqueFieldValues.get(Presenter.COLUMNS.participants),
     );
-    layers.forEach((layer) => uniqueParticipants.add(layer));
-    windows.forEach((window) => uniqueParticipants.add(window));
+    layers?.forEach((layer) => uniqueParticipants.add(layer));
+    windows?.forEach((window) => uniqueParticipants.add(window));
 
     return `Layers: ${
-      layers.size > 0 ? [...layers].join(', ') : Presenter.VALUE_NA
+      (layers?.length ?? 0) > 0
+        ? assertDefined(layers).join(', ')
+        : Presenter.VALUE_NA
     }\nWindows: ${
-      windows.size > 0 ? [...windows].join(', ') : Presenter.VALUE_NA
+      (windows?.length ?? 0) > 0
+        ? assertDefined(windows).join(', ')
+        : Presenter.VALUE_NA
     }`;
   }
 
   private extractAndFormatStatus(
-    transitionNode: PropertyTreeNode,
+    transitionNode: HierarchyTreeNode,
   ): [string, string | undefined, string | undefined] {
-    let status = Presenter.VALUE_NA;
+    const status =
+      transitionNode.getEagerPropertyByName('status')?.formattedValue() ??
+      Presenter.VALUE_NA;
     let statusIcon: string | undefined;
     let statusIconColor: string | undefined;
-    if (assertDefined(transitionNode.getChildByName('merged')).getValue()) {
-      status = TransitionStatus.MERGED;
+    if (status === TransitionStatus.MERGED) {
       statusIcon = 'merge';
       statusIconColor = 'gray';
-    } else if (
-      assertDefined(transitionNode.getChildByName('aborted')).getValue()
-    ) {
-      status = TransitionStatus.ABORTED;
+    } else if (status === TransitionStatus.ABORTED) {
       statusIcon = 'close';
       statusIconColor = 'red';
-    } else if (
-      assertDefined(transitionNode.getChildByName('played')).getValue()
-    ) {
-      status = TransitionStatus.PLAYED;
+    } else if (status === TransitionStatus.PLAYED) {
       statusIcon = 'check';
       statusIconColor = 'green';
     }

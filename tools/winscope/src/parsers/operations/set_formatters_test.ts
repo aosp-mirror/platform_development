@@ -15,6 +15,7 @@
  */
 
 import {assertDefined} from 'common/assert_utils';
+import {TimestampConverterUtils} from 'common/time/test_utils';
 import {
   TamperedMessageType,
   TamperedProtoField,
@@ -268,5 +269,18 @@ describe('SetFormatters', () => {
     expect(
       assertDefined(propertyRoot.getChildByName('layerId')).formattedValue(),
     ).toEqual('none');
+  });
+
+  it('adds correct formatter for timestamp node', () => {
+    propertyRoot = new PropertyTreeBuilder()
+      .setIsRoot(true)
+      .setRootId('test')
+      .setName('node')
+      .setChildren([
+        {name: 'ts', value: TimestampConverterUtils.makeElapsedTimestamp(10n)},
+      ])
+      .build();
+    operation.apply(propertyRoot);
+    expect(propertyRoot.getChildByName('ts')?.formattedValue()).toEqual('10ns');
   });
 });

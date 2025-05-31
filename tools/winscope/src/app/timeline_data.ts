@@ -24,7 +24,7 @@ import {Traces} from 'trace/traces';
 import {TraceEntryFinder} from 'trace/trace_entry_finder';
 import {TracePosition} from 'trace/trace_position';
 import {TraceType, TraceTypeUtils} from 'trace/trace_type';
-import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
+import {HierarchyTreeNode} from 'trace/tree_node/hierarchy_tree_node';
 
 export class TimelineData {
   private traces = new Traces();
@@ -41,7 +41,8 @@ export class TimelineData {
     TraceEntry<object> | undefined
   >();
   private activeTrace: Trace<object> | undefined;
-  private transitionEntries: Array<PropertyTreeNode | undefined> = []; // cached trace entries to avoid TP and object creation latencies each time transition timeline is redrawn
+  // cached trace entries to avoid TP and object creation latencies each time transition timeline is redrawn
+  private transitionEntries: Array<HierarchyTreeNode | undefined> = [];
   private timestampConverter: ComponentTimestampConverter | undefined;
 
   async initialize(
@@ -68,7 +69,7 @@ export class TimelineData {
       let someCorrupted = false;
       await Promise.all(
         transitionTrace.mapEntry(async (entry) => {
-          let transition: PropertyTreeNode | undefined;
+          let transition: HierarchyTreeNode | undefined;
           try {
             transition = await entry.getValue();
           } catch (e) {
@@ -100,7 +101,7 @@ export class TimelineData {
     }
   }
 
-  getTransitionEntries(): Array<PropertyTreeNode | undefined> {
+  getTransitionEntries(): Array<HierarchyTreeNode | undefined> {
     return this.transitionEntries;
   }
 

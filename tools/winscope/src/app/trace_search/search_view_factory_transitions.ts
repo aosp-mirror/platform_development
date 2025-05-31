@@ -74,7 +74,7 @@ ORDER BY PROPS.transition_id, PROPS.property`,
           PROTOS.transition_id,
           PROTOS.base64_proto_id
         FROM __intrinsic_window_manager_shell_transition_protos PROTOS
-        LEFT JOIN transitions_with_updated_ts TRANS
+        LEFT JOIN window_manager_shell_transitions TRANS
           ON TRANS.transition_id = PROTOS.transition_id;
     `;
     await this.traceProcessor.query(sqlCreateTableWithTimestamps);

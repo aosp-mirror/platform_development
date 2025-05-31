@@ -17,21 +17,21 @@ import {Store} from 'common/store/store';
 import {Trace} from 'trace/trace';
 import {Traces} from 'trace/traces';
 import {TraceType} from 'trace/trace_type';
-import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
+import {HierarchyTreeNode} from 'trace/tree_node/hierarchy_tree_node';
 import {AbstractViewer} from 'viewers/abstract_viewer';
 import {ViewerComponent} from 'viewers/components/viewer_component';
 import {Presenter} from './presenter';
 import {UiData} from './ui_data';
 
-export class ViewerTransitions extends AbstractViewer<PropertyTreeNode> {
+export class ViewerTransitions extends AbstractViewer<HierarchyTreeNode> {
   static readonly DEPENDENCIES: TraceType[] = [TraceType.TRANSITION];
 
-  constructor(trace: Trace<PropertyTreeNode>, traces: Traces, store: Store) {
+  constructor(trace: Trace<HierarchyTreeNode>, traces: Traces, store: Store) {
     super(trace, traces, 'viewer-transitions', store);
   }
 
   protected override initializePresenter(
-    trace: Trace<PropertyTreeNode>,
+    trace: Trace<HierarchyTreeNode>,
     traces: Traces,
     store: Store,
   ): Presenter {

@@ -17,122 +17,122 @@
 import {assertDefined} from 'common/assert_utils';
 import {TimeRange, Timestamp} from 'common/time/time';
 import {ComponentTimestampConverter} from 'common/time/timestamp_converter';
-import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
+import {TransitionStatus} from 'trace/transitions/status';
+import {HierarchyTreeNode} from 'trace/tree_node/hierarchy_tree_node';
 
-export class TimelineUtils {
-  static isTransitionWithUnknownStart(transition: PropertyTreeNode): boolean {
-    const shellData = transition.getChildByName('shellData');
-    const dispatchTimestamp: Timestamp | undefined = shellData
-      ?.getChildByName('dispatchTimeNs')
-      ?.getValue();
-    return dispatchTimestamp === undefined;
+export function isTransitionWithUnknownStart(
+  transition: HierarchyTreeNode,
+): boolean {
+  const dispatchTimestamp: Timestamp | undefined = transition
+    ?.getEagerPropertyByName('dispatchTimeNs')
+    ?.getValue();
+  return dispatchTimestamp === undefined;
+}
+
+export function isTransitionWithUnknownEnd(
+  transition: HierarchyTreeNode,
+): boolean {
+  const aborted = isAborted(transition);
+  const finishOrAbortTimestamp: Timestamp | undefined = aborted
+    ? transition?.getEagerPropertyByName('shellAbortTimeNs')?.getValue()
+    : transition?.getEagerPropertyByName('finishTimeNs')?.getValue();
+  return finishOrAbortTimestamp === undefined;
+}
+
+function isAborted(transition: HierarchyTreeNode): boolean {
+  return (
+    transition.getEagerPropertyByName('status')?.formattedValue() ===
+    TransitionStatus.ABORTED
+  );
+}
+
+export function getTimeRangeForTransition(
+  transition: HierarchyTreeNode,
+  fullTimeRange: TimeRange,
+  converter: ComponentTimestampConverter,
+): TimeRange | undefined {
+  const aborted = isAborted(transition);
+
+  const dispatchTimestamp: Timestamp | undefined = transition
+    ?.getEagerPropertyByName('dispatchTimeNs')
+    ?.getValue();
+  const createTimestamp: Timestamp | undefined = transition
+    ?.getEagerPropertyByName('createTimeNs')
+    ?.getValue();
+  const finishOrAbortTimestamp: Timestamp | undefined = aborted
+    ? transition?.getEagerPropertyByName('shellAbortTimeNs')?.getValue()
+    : transition?.getEagerPropertyByName('finishTimeNs')?.getValue();
+
+  // currently we only render transitions during 'play' stage, so
+  // do not render if no dispatch time and no finish/shell abort time
+  // or if transition created but never dispatched to shell
+  // TODO (b/324056564): visualise transition lifecycle in timeline
+  if (
+    (!dispatchTimestamp && !finishOrAbortTimestamp) ||
+    (!dispatchTimestamp && createTimestamp)
+  ) {
+    return undefined;
   }
 
-  static isTransitionWithUnknownEnd(transition: PropertyTreeNode): boolean {
-    const shellData = transition.getChildByName('shellData');
-    const wmData = transition.getChildByName('wmData');
-    const aborted: boolean = assertDefined(
-      transition.getChildByName('aborted'),
-    ).getValue();
-    const finishOrAbortTimestamp: Timestamp | undefined = aborted
-      ? shellData?.getChildByName('abortTimeNs')?.getValue()
-      : wmData?.getChildByName('finishTimeNs')?.getValue();
-    return finishOrAbortTimestamp === undefined;
+  const timeRangeMin = fullTimeRange.from.getValueNs();
+  const timeRangeMax = fullTimeRange.to.getValueNs();
+
+  if (
+    finishOrAbortTimestamp &&
+    finishOrAbortTimestamp.getValueNs() < timeRangeMin
+  ) {
+    return undefined;
   }
 
-  static getTimeRangeForTransition(
-    transition: PropertyTreeNode,
-    fullTimeRange: TimeRange,
-    converter: ComponentTimestampConverter,
-  ): TimeRange | undefined {
-    const shellData = transition.getChildByName('shellData');
-    const wmData = transition.getChildByName('wmData');
-
-    const aborted: boolean = assertDefined(
-      transition.getChildByName('aborted'),
-    ).getValue();
-
-    const dispatchTimestamp: Timestamp | undefined = shellData
-      ?.getChildByName('dispatchTimeNs')
-      ?.getValue();
-    const createTimestamp: Timestamp | undefined = wmData
-      ?.getChildByName('createTimeNs')
-      ?.getValue();
-    const finishOrAbortTimestamp: Timestamp | undefined = aborted
-      ? shellData?.getChildByName('abortTimeNs')?.getValue()
-      : wmData?.getChildByName('finishTimeNs')?.getValue();
-
-    // currently we only render transitions during 'play' stage, so
-    // do not render if no dispatch time and no finish/shell abort time
-    // or if transition created but never dispatched to shell
-    // TODO (b/324056564): visualise transition lifecycle in timeline
-    if (
-      (!dispatchTimestamp && !finishOrAbortTimestamp) ||
-      (!dispatchTimestamp && createTimestamp)
-    ) {
-      return undefined;
-    }
-
-    const timeRangeMin = fullTimeRange.from.getValueNs();
-    const timeRangeMax = fullTimeRange.to.getValueNs();
-
-    if (
-      finishOrAbortTimestamp &&
-      finishOrAbortTimestamp.getValueNs() < timeRangeMin
-    ) {
-      return undefined;
-    }
-
-    if (
-      !finishOrAbortTimestamp &&
-      assertDefined(dispatchTimestamp).getValueNs() < timeRangeMin
-    ) {
-      return undefined;
-    }
-
-    if (
-      dispatchTimestamp &&
-      finishOrAbortTimestamp &&
-      dispatchTimestamp.getValueNs() > timeRangeMax
-    ) {
-      return undefined;
-    }
-
-    const dispatchTimeNs = dispatchTimestamp
-      ? dispatchTimestamp.getValueNs()
-      : assertDefined(finishOrAbortTimestamp).getValueNs() - 1n;
-
-    const finishTimeNs = finishOrAbortTimestamp
-      ? finishOrAbortTimestamp.getValueNs()
-      : dispatchTimeNs + 1n;
-
-    const startTime = converter.makeTimestampFromNs(
-      dispatchTimeNs > timeRangeMin ? dispatchTimeNs : timeRangeMin,
-    );
-    const finishTime = converter.makeTimestampFromNs(finishTimeNs);
-
-    return new TimeRange(startTime, finishTime);
+  if (
+    !finishOrAbortTimestamp &&
+    assertDefined(dispatchTimestamp).getValueNs() < timeRangeMin
+  ) {
+    return undefined;
   }
 
-  static convertHexToRgb(
-    hex: string,
-  ): {r: number; g: number; b: number} | undefined {
-    // Expand shorthand form (e.g. "03F") to full form (e.g. "0033FF")
-    const shorthandRegex = /^#?([a-f\d])([a-f\d])([a-f\d])$/i;
-    hex = hex.replace(shorthandRegex, (m, r, g, b) => {
-      return r + r + g + g + b + b;
-    });
-
-    const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
-    return result
-      ? {
-          // tslint:disable-next-line:ban
-          r: parseInt(result[1], 16),
-          // tslint:disable-next-line:ban
-          g: parseInt(result[2], 16),
-          // tslint:disable-next-line:ban
-          b: parseInt(result[3], 16),
-        }
-      : undefined;
+  if (
+    dispatchTimestamp &&
+    finishOrAbortTimestamp &&
+    dispatchTimestamp.getValueNs() > timeRangeMax
+  ) {
+    return undefined;
   }
+
+  const dispatchTimeNs = dispatchTimestamp
+    ? dispatchTimestamp.getValueNs()
+    : assertDefined(finishOrAbortTimestamp).getValueNs() - 1n;
+
+  const finishTimeNs = finishOrAbortTimestamp
+    ? finishOrAbortTimestamp.getValueNs()
+    : dispatchTimeNs + 1n;
+
+  const startTime = converter.makeTimestampFromNs(
+    dispatchTimeNs > timeRangeMin ? dispatchTimeNs : timeRangeMin,
+  );
+  const finishTime = converter.makeTimestampFromNs(finishTimeNs);
+
+  return new TimeRange(startTime, finishTime);
+}
+
+export function convertHexToRgb(
+  hex: string,
+): {r: number; g: number; b: number} | undefined {
+  // Expand shorthand form (e.g. "03F") to full form (e.g. "0033FF")
+  const shorthandRegex = /^#?([a-f\d])([a-f\d])([a-f\d])$/i;
+  hex = hex.replace(shorthandRegex, (m, r, g, b) => {
+    return r + r + g + g + b + b;
+  });
+
+  const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+  return result
+    ? {
+        // tslint:disable-next-line:ban
+        r: parseInt(result[1], 16),
+        // tslint:disable-next-line:ban
+        g: parseInt(result[2], 16),
+        // tslint:disable-next-line:ban
+        b: parseInt(result[3], 16),
+      }
+    : undefined;
 }

@@ -16,13 +16,17 @@
 
 import {Transformer} from 'app/components/timeline/mini-timeline/transformer';
 import {Segment} from 'app/components/timeline/segment';
-import {TimelineUtils} from 'app/components/timeline/timeline_utils';
+import {
+  getTimeRangeForTransition,
+  isTransitionWithUnknownEnd,
+  isTransitionWithUnknownStart,
+} from 'app/components/timeline/timeline_utils';
 import {TimelineData} from 'app/timeline_data';
 import {assertDefined} from 'common/assert_utils';
 import {TimeRange, Timestamp} from 'common/time/time';
 import {Trace, TraceEntry} from 'trace/trace';
 import {TraceType} from 'trace/trace_type';
-import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
+import {HierarchyTreeNode} from 'trace/tree_node/hierarchy_tree_node';
 import {
   MiniCanvasDrawerData,
   TimelineTrace,
@@ -77,12 +81,12 @@ export class MiniTimelineDrawerInput {
           activePoint: undefined,
           segments: this.transformTransitionTraceTimestamps(
             transformer,
-            trace as Trace<PropertyTreeNode>,
+            trace as Trace<HierarchyTreeNode>,
           ),
           activeSegment: activeEntry
             ? this.transformTransitionEntry(
                 transformer,
-                activeEntry as TraceEntry<PropertyTreeNode>,
+                activeEntry as TraceEntry<HierarchyTreeNode>,
               )
             : undefined,
         });
@@ -103,7 +107,7 @@ export class MiniTimelineDrawerInput {
 
   private transformTransitionTraceTimestamps(
     transformer: Transformer,
-    trace: Trace<PropertyTreeNode>,
+    trace: Trace<HierarchyTreeNode>,
   ): Segment[] {
     return trace
       .mapEntry((entry) => this.transformTransitionEntry(transformer, entry))
@@ -118,16 +122,16 @@ export class MiniTimelineDrawerInput {
 
   private transformTransitionEntry(
     transformer: Transformer,
-    entry: TraceEntry<PropertyTreeNode>,
+    entry: TraceEntry<HierarchyTreeNode>,
   ): Segment | undefined {
-    const transition: PropertyTreeNode | undefined = this.timelineData
+    const transition: HierarchyTreeNode | undefined = this.timelineData
       .getTransitionEntries()
       .at(entry.getIndex());
     if (!transition) {
       return undefined;
     }
 
-    const timeRange = TimelineUtils.getTimeRangeForTransition(
+    const timeRange = getTimeRangeForTransition(
       transition,
       this.selection,
       assertDefined(this.timelineData.getTimestampConverter()),
@@ -140,8 +144,8 @@ export class MiniTimelineDrawerInput {
     return {
       from: transformer.transform(timeRange.from),
       to: transformer.transform(timeRange.to),
-      unknownStart: TimelineUtils.isTransitionWithUnknownStart(transition),
-      unknownEnd: TimelineUtils.isTransitionWithUnknownEnd(transition),
+      unknownStart: isTransitionWithUnknownStart(transition),
+      unknownEnd: isTransitionWithUnknownEnd(transition),
     };
   }
 

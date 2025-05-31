@@ -17,7 +17,7 @@ rust_binary_host {
     edition: "2021",
     rustlibs: [
         "libanyhow",
-        "libcargo_metadata",
+        "libcargo_toml",
         "libcfg_expr",
         "libchecksum",
         "libchrono",
@@ -61,7 +61,7 @@ rust_test_host {
     edition: "2021",
     rustlibs: [
         "libanyhow",
-        "libcargo_metadata",
+        "libcargo_toml",
         "libcfg_expr",
         "libchecksum",
         "libchrono",
@@ -105,7 +105,7 @@ rust_test_host {
     edition: "2021",
     rustlibs: [
         "libanyhow",
-        "libcargo_metadata",
+        "libcargo_toml",
         "libcfg_expr",
         "libchecksum",
         "libchrono",
@@ -145,7 +145,7 @@ rust_library_host {
     edition: "2021",
     rustlibs: [
         "libanyhow",
-        "libcargo_metadata",
+        "libcargo_toml",
         "libcfg_expr",
         "libchecksum",
         "libchrono",

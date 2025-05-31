@@ -68,7 +68,7 @@ export interface TraceEntryTypeMap {
   [TraceType.EVENT_LOG]: PropertyTreeNode;
   [TraceType.WM_TRANSITION]: com.android.server.wm.shell.ITransition;
   [TraceType.SHELL_TRANSITION]: com.android.wm.shell.ITransition;
-  [TraceType.TRANSITION]: PropertyTreeNode;
+  [TraceType.TRANSITION]: HierarchyTreeNode;
   [TraceType.CUJS]: PropertyTreeNode;
   [TraceType.TEST_TRACE_STRING]: string;
   [TraceType.TEST_TRACE_NUMBER]: number;

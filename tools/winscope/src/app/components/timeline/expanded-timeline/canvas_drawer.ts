@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import {TimelineUtils} from 'app/components/timeline/timeline_utils';
+import {convertHexToRgb} from 'app/components/timeline/timeline_utils';
 import {assertDefined} from 'common/assert_utils';
 import {Rect} from 'common/geometry/rect';
 
@@ -42,7 +42,7 @@ export class CanvasDrawer {
       throw new Error('Canvas not set');
     }
 
-    const rgbColor = TimelineUtils.convertHexToRgb(hexColor);
+    const rgbColor = convertHexToRgb(hexColor);
     if (rgbColor === undefined) {
       throw new Error('Failed to parse provided hex color');
     }

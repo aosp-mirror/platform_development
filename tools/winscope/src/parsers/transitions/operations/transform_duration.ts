@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2024 The Android Open Source Project
+ * Copyright (C) 2025 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,26 +14,23 @@
  * limitations under the License.
  */
 
-import {assertDefined} from 'common/assert_utils';
+import {TimeDuration} from 'common/time/time_duration';
 import {AddOperation} from 'trace/tree_node/operations/add_operation';
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
 import {DEFAULT_PROPERTY_TREE_NODE_FACTORY} from 'trace/tree_node/property_tree_node_factory';
 
-export class AddRootProperties extends AddOperation<PropertyTreeNode> {
-  protected override makeProperties(
-    value: PropertyTreeNode,
-  ): PropertyTreeNode[] {
-    const wmData = assertDefined(value.getChildByName('wmData'));
-    const shellData = assertDefined(value.getChildByName('shellData'));
-    const id = wmData.getChildByName('id') ?? shellData.getChildByName('id');
-
-    const rootIdNode =
-      DEFAULT_PROPERTY_TREE_NODE_FACTORY.makeCalculatedProperty(
+export class TransformDuration extends AddOperation<PropertyTreeNode> {
+  override makeProperties(value: PropertyTreeNode): PropertyTreeNode[] {
+    const durationNs = value.getChildByName('durationNs');
+    if (durationNs === null || durationNs === undefined) {
+      return [];
+    }
+    const transformedDuration =
+      DEFAULT_PROPERTY_TREE_NODE_FACTORY.makeTpProperty(
         value.id,
-        'id',
-        assertDefined(id).getValue(),
+        durationNs.name,
+        new TimeDuration(BigInt(durationNs.getValue()?.toString())),
       );
-
-    return [rootIdNode];
+    return [transformedDuration];
   }
 }

@@ -29,7 +29,7 @@ import {TimelineData} from 'app/timeline_data';
 import {assertDefined} from 'common/assert_utils';
 import {TimestampConverterUtils} from 'common/time/test_utils';
 import {DOMTestHelper} from 'test/unit/dom_test_utils';
-import {PropertyTreeBuilder} from 'test/unit/property_tree_builder';
+import {HierarchyTreeBuilder} from 'test/unit/hierarchy_tree_builder';
 import {TracesBuilder} from 'test/unit/traces_builder';
 import {TracePosition} from 'trace/trace_position';
 import {TraceType} from 'trace/trace_type';
@@ -84,37 +84,21 @@ describe('ExpandedTimelineComponent', () => {
       .setEntries(TraceType.TRANSACTIONS, [{}])
       .setTimestamps(TraceType.TRANSACTIONS, [time12])
       .setEntries(TraceType.TRANSITION, [
-        new PropertyTreeBuilder()
-          .setIsRoot(true)
-          .setRootId('TransitionsTraceEntry')
+        new HierarchyTreeBuilder()
+          .setId('TransitionsTraceEntry')
           .setName('transition')
-          .setChildren([
-            {
-              name: 'wmData',
-              children: [{name: 'finishTimeNs', value: time30}],
-            },
-            {
-              name: 'shellData',
-              children: [{name: 'dispatchTimeNs', value: time10}],
-            },
-            {name: 'aborted', value: false},
-          ])
+          .setProperties({
+            finishTimeNs: time30,
+            dispatchTimeNs: time10,
+          })
           .build(),
-        new PropertyTreeBuilder()
-          .setIsRoot(true)
-          .setRootId('TransitionsTraceEntry')
+        new HierarchyTreeBuilder()
+          .setId('TransitionsTraceEntry')
           .setName('transition')
-          .setChildren([
-            {
-              name: 'wmData',
-              children: [{name: 'finishTimeNs', value: time110}],
-            },
-            {
-              name: 'shellData',
-              children: [{name: 'dispatchTimeNs', value: time60}],
-            },
-            {name: 'aborted', value: false},
-          ])
+          .setProperties({
+            finishTimeNs: time110,
+            dispatchTimeNs: time60,
+          })
           .build(),
       ])
       .setTimestamps(TraceType.TRANSITION, [time10, time60])

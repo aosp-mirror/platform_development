@@ -27,6 +27,7 @@ import {TraceType} from 'trace/trace_type';
 import {
   CUJ_TYPE_FORMATTER,
   DEFAULT_PROPERTY_FORMATTER,
+  TIMESTAMP_NODE_FORMATTER,
 } from 'trace/tree_node/formatters';
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
 
@@ -85,7 +86,7 @@ describe('TracesParserCujs', () => {
             TimestampConverterUtils.TIMESTAMP_CONVERTER.makeTimestampFromNs(
               1681207048025580000n,
             ),
-          formatter: DEFAULT_PROPERTY_FORMATTER,
+          formatter: TIMESTAMP_NODE_FORMATTER,
         },
         {
           name: 'endTimestamp',
@@ -93,7 +94,7 @@ describe('TracesParserCujs', () => {
             TimestampConverterUtils.TIMESTAMP_CONVERTER.makeTimestampFromNs(
               1681207048643085000n,
             ),
-          formatter: DEFAULT_PROPERTY_FORMATTER,
+          formatter: TIMESTAMP_NODE_FORMATTER,
         },
         {name: 'canceled', value: true, formatter: DEFAULT_PROPERTY_FORMATTER},
       ])

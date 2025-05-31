@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2024 The Android Open Source Project
+ * Copyright (C) 2025 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,10 +15,10 @@
  */
 
 import {PropertyTreeBuilder} from 'test/unit/property_tree_builder';
-import {UpdateTransitionChangesNames} from './update_transition_changes_names';
+import {UpdateTransitionTargets} from './update_transition_targets';
 
-describe('UpdateTransitionChangesNames', () => {
-  let operation: UpdateTransitionChangesNames;
+describe('UpdateTransitionTargets', () => {
+  let operation: UpdateTransitionTargets;
 
   beforeEach(() => {
     const layerIdToName = new Map<number, string>([[2, 'testLayer']]);
@@ -26,10 +26,7 @@ describe('UpdateTransitionChangesNames', () => {
       ['97b5518', 'testTitle'],
     ]);
 
-    operation = new UpdateTransitionChangesNames(
-      layerIdToName,
-      windowTokenToTitle,
-    );
+    operation = new UpdateTransitionTargets(layerIdToName, windowTokenToTitle);
   });
 
   it('updates layerId and windowToken display names if in maps', () => {
@@ -39,18 +36,13 @@ describe('UpdateTransitionChangesNames', () => {
       .setName('transition')
       .setChildren([
         {
-          name: 'wmData',
+          name: 'targets',
           children: [
             {
-              name: 'targets',
+              name: '0',
               children: [
-                {
-                  name: '0',
-                  children: [
-                    {name: 'layerId', value: 2},
-                    {name: 'windowId', value: 159077656n},
-                  ],
-                },
+                {name: 'layerId', value: 2},
+                {name: 'windowId', value: 159077656n},
               ],
             },
           ],
@@ -61,7 +53,6 @@ describe('UpdateTransitionChangesNames', () => {
     operation.apply(propertyRoot);
     expect(
       propertyRoot
-        .getChildByName('wmData')
         ?.getChildByName('targets')
         ?.getChildByName('0')
         ?.getChildByName('layerId')
@@ -70,7 +61,6 @@ describe('UpdateTransitionChangesNames', () => {
 
     expect(
       propertyRoot
-        .getChildByName('wmData')
         ?.getChildByName('targets')
         ?.getChildByName('0')
         ?.getChildByName('windowId')
@@ -85,18 +75,13 @@ describe('UpdateTransitionChangesNames', () => {
       .setName('transition')
       .setChildren([
         {
-          name: 'wmData',
+          name: 'targets',
           children: [
             {
-              name: 'targets',
+              name: '0',
               children: [
-                {
-                  name: '0',
-                  children: [
-                    {name: 'layerId', value: 1},
-                    {name: 'windowId', value: 193491296n},
-                  ],
-                },
+                {name: 'layerId', value: 1},
+                {name: 'windowId', value: 193491296n},
               ],
             },
           ],
@@ -107,7 +92,6 @@ describe('UpdateTransitionChangesNames', () => {
     operation.apply(propertyRoot);
     expect(
       propertyRoot
-        .getChildByName('wmData')
         ?.getChildByName('targets')
         ?.getChildByName('0')
         ?.getChildByName('layerId')
@@ -116,7 +100,6 @@ describe('UpdateTransitionChangesNames', () => {
 
     expect(
       propertyRoot
-        .getChildByName('wmData')
         ?.getChildByName('targets')
         ?.getChildByName('0')
         ?.getChildByName('windowId')

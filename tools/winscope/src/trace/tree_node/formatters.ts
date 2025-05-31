@@ -260,6 +260,13 @@ class HexFormatter implements PropertyFormatter {
 }
 const HEX_FORMATTER = new HexFormatter();
 
+class UpperCaseFormatter implements PropertyFormatter {
+  format(node: PropertyTreeNode): string {
+    return node.getValue()?.toString().toUpperCase() ?? '';
+  }
+}
+const UPPER_CASE_FORMATTER = new UpperCaseFormatter();
+
 export {
   EMPTY_OBJ_STRING,
   EMPTY_ARRAY_STRING,
@@ -280,4 +287,5 @@ export {
   MATRIX_FORMATTER,
   CUJ_TYPE_FORMATTER,
   HEX_FORMATTER,
+  UPPER_CASE_FORMATTER,
 };

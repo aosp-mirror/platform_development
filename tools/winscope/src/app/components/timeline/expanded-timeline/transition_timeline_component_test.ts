@@ -30,11 +30,12 @@ import {Rect} from 'common/geometry/rect';
 import {TimestampConverterUtils} from 'common/time/test_utils';
 import {TimeRange, Timestamp} from 'common/time/time';
 import {DOMTestHelper} from 'test/unit/dom_test_utils';
-import {PropertyTreeBuilder} from 'test/unit/property_tree_builder';
+import {HierarchyTreeBuilder} from 'test/unit/hierarchy_tree_builder';
 import {waitToBeCalled} from 'test/unit/spy_utils';
 import {TraceBuilder} from 'test/unit/trace_builder';
 import {TraceType} from 'trace/trace_type';
-import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
+import {TransitionStatus} from 'trace/transitions/status';
+import {HierarchyTreeNode} from 'trace/tree_node/hierarchy_tree_node';
 import {TransitionTimelineComponent} from './transition_timeline_component';
 
 describe('TransitionTimelineComponent', () => {
@@ -401,7 +402,7 @@ describe('TransitionTimelineComponent', () => {
     const transition0 = makeTransition(time10, time30);
     const transition1 = makeTransition(time60, time110);
 
-    component.trace = new TraceBuilder<PropertyTreeNode>()
+    component.trace = new TraceBuilder<HierarchyTreeNode>()
       .setType(TraceType.TRANSITION)
       .setEntries([transition0, transition1])
       .setTimestamps([time10, time20])
@@ -444,7 +445,7 @@ describe('TransitionTimelineComponent', () => {
 
   async function setDefaultTraceAndSelectionRange(setSelectedEntry = false) {
     const transitions = [makeTransition(time35, time85)];
-    component.trace = new TraceBuilder<PropertyTreeNode>()
+    component.trace = new TraceBuilder<HierarchyTreeNode>()
       .setType(TraceType.TRANSITION)
       .setEntries(transitions)
       .setTimestamps([time35])
@@ -456,51 +457,31 @@ describe('TransitionTimelineComponent', () => {
   }
 
   function makeTransition(
-    dispatchTime: Timestamp | undefined,
-    finishTime: Timestamp | undefined,
-    abortTime?: Timestamp,
-    createTime?: Timestamp,
-  ): PropertyTreeNode {
-    const shellDataChildren = [];
-    if (dispatchTime !== undefined) {
-      shellDataChildren.push({name: 'dispatchTimeNs', value: dispatchTime});
-    }
-    if (dispatchTime !== undefined) {
-      shellDataChildren.push({name: 'abortTimeNs', value: abortTime});
-    }
-
-    const wmDataChildren = [];
-    if (finishTime !== undefined) {
-      wmDataChildren.push({name: 'finishTimeNs', value: finishTime});
-    }
-    if (createTime !== undefined) {
-      wmDataChildren.push({name: 'createTimeNs', value: createTime});
-    }
-
-    return new PropertyTreeBuilder()
-      .setIsRoot(true)
-      .setRootId('TransitionsTraceEntry')
+    dispatchTimeNs: Timestamp | undefined,
+    finishTimeNs: Timestamp | undefined,
+    shellAbortTimeNs?: Timestamp,
+    createTimeNs?: Timestamp,
+  ): HierarchyTreeNode {
+    return new HierarchyTreeBuilder()
+      .setId('TransitionsTraceEntry')
       .setName('transition')
-      .setChildren([
-        {
-          name: 'wmData',
-          children: wmDataChildren,
-        },
-        {
-          name: 'shellData',
-          children: shellDataChildren,
-        },
-        {name: 'aborted', value: abortTime !== undefined},
-      ])
+      .setProperties({
+        dispatchTimeNs,
+        shellAbortTimeNs,
+        finishTimeNs,
+        createTimeNs,
+        status:
+          shellAbortTimeNs !== undefined ? TransitionStatus.ABORTED : undefined,
+      })
       .build();
   }
 
   async function setTraceAndSelectionRange(
-    transitions: PropertyTreeNode[],
+    transitions: HierarchyTreeNode[],
     timestamps: Timestamp[],
     range = range10to110,
   ) {
-    component.trace = new TraceBuilder<PropertyTreeNode>()
+    component.trace = new TraceBuilder<HierarchyTreeNode>()
       .setType(TraceType.TRANSITION)
       .setEntries(transitions)
       .setTimestamps(timestamps)

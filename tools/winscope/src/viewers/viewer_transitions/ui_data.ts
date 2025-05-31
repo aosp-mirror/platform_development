@@ -15,8 +15,8 @@
  */
 
 import {TraceEntry} from 'trace/trace';
+import {HierarchyTreeNode} from 'trace/tree_node/hierarchy_tree_node';
 import {LazyPropertiesStrategyType} from 'trace/tree_node/properties_provider';
-import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
 import {TextFilter} from 'viewers/common/text_filter';
 import {
   LogEntry,
@@ -46,14 +46,8 @@ export class UiData implements UiDataLog {
 
 export class TransitionsEntry implements LogEntry {
   constructor(
-    public traceEntry: TraceEntry<PropertyTreeNode>,
+    public traceEntry: TraceEntry<HierarchyTreeNode>,
     public fields: LogField[],
     public getPropertiesTree: LazyPropertiesStrategyType | undefined,
   ) {}
-}
-
-export enum TransitionStatus {
-  ABORTED = 'ABORTED',
-  MERGED = 'MERGED',
-  PLAYED = 'PLAYED',
 }
