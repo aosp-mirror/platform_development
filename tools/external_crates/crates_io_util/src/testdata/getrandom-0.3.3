@@ -1,0 +1,162 @@
+{
+  "name": "getrandom",
+  "vers": "0.3.3",
+  "deps": [
+    {
+      "name": "cfg-if",
+      "req": "^1",
+      "features": [],
+      "kind": "normal",
+      "optional": false,
+      "default_features": true
+    },
+    {
+      "name": "compiler_builtins",
+      "req": "^0.1",
+      "features": [],
+      "kind": "normal",
+      "optional": true,
+      "default_features": true
+    },
+    {
+      "name": "core",
+      "req": "^1.0",
+      "features": [],
+      "package": "rustc-std-workspace-core",
+      "kind": "normal",
+      "optional": true,
+      "default_features": true
+    },
+    {
+      "name": "js-sys",
+      "req": "^0.3.77",
+      "features": [],
+      "kind": "normal",
+      "target": "cfg(all(target_arch = \"wasm32\", any(target_os = \"unknown\", target_os = \"none\"), target_feature = \"atomics\"))",
+      "optional": true,
+      "default_features": false
+    },
+    {
+      "name": "libc",
+      "req": "^0.2.154",
+      "features": [],
+      "kind": "normal",
+      "target": "cfg(all(any(target_os = \"linux\", target_os = \"android\"), not(any(all(target_os = \"linux\", target_env = \"\"), getrandom_backend = \"custom\", getrandom_backend = \"linux_raw\", getrandom_backend = \"rdrand\", getrandom_backend = \"rndr\"))))",
+      "optional": false,
+      "default_features": false
+    },
+    {
+      "name": "libc",
+      "req": "^0.2.154",
+      "features": [],
+      "kind": "normal",
+      "target": "cfg(any(target_os = \"dragonfly\", target_os = \"freebsd\", target_os = \"hurd\", target_os = \"illumos\", target_os = \"cygwin\", all(target_os = \"horizon\", target_arch = \"arm\")))",
+      "optional": false,
+      "default_features": false
+    },
+    {
+      "name": "libc",
+      "req": "^0.2.154",
+      "features": [],
+      "kind": "normal",
+      "target": "cfg(any(target_os = \"haiku\", target_os = \"redox\", target_os = \"nto\", target_os = \"aix\"))",
+      "optional": false,
+      "default_features": false
+    },
+    {
+      "name": "libc",
+      "req": "^0.2.154",
+      "features": [],
+      "kind": "normal",
+      "target": "cfg(any(target_os = \"ios\", target_os = \"visionos\", target_os = \"watchos\", target_os = \"tvos\"))",
+      "optional": false,
+      "default_features": false
+    },
+    {
+      "name": "libc",
+      "req": "^0.2.154",
+      "features": [],
+      "kind": "normal",
+      "target": "cfg(any(target_os = \"macos\", target_os = \"openbsd\", target_os = \"vita\", target_os = \"emscripten\"))",
+      "optional": false,
+      "default_features": false
+    },
+    {
+      "name": "libc",
+      "req": "^0.2.154",
+      "features": [],
+      "kind": "normal",
+      "target": "cfg(target_os = \"netbsd\")",
+      "optional": false,
+      "default_features": false
+    },
+    {
+      "name": "libc",
+      "req": "^0.2.154",
+      "features": [],
+      "kind": "normal",
+      "target": "cfg(target_os = \"solaris\")",
+      "optional": false,
+      "default_features": false
+    },
+    {
+      "name": "libc",
+      "req": "^0.2.154",
+      "features": [],
+      "kind": "normal",
+      "target": "cfg(target_os = \"vxworks\")",
+      "optional": false,
+      "default_features": false
+    },
+    {
+      "name": "r-efi",
+      "req": "^5.1",
+      "features": [],
+      "kind": "normal",
+      "target": "cfg(all(target_os = \"uefi\", getrandom_backend = \"efi_rng\"))",
+      "optional": false,
+      "default_features": false
+    },
+    {
+      "name": "wasi",
+      "req": "^0.14",
+      "features": [],
+      "kind": "normal",
+      "target": "cfg(all(target_arch = \"wasm32\", target_os = \"wasi\", target_env = \"p2\"))",
+      "optional": false,
+      "default_features": false
+    },
+    {
+      "name": "wasm-bindgen",
+      "req": "^0.2.98",
+      "features": [],
+      "kind": "normal",
+      "target": "cfg(all(target_arch = \"wasm32\", any(target_os = \"unknown\", target_os = \"none\")))",
+      "optional": true,
+      "default_features": false
+    },
+    {
+      "name": "wasm-bindgen-test",
+      "req": "^0.3",
+      "features": [],
+      "kind": "dev",
+      "target": "cfg(all(target_arch = \"wasm32\", any(target_os = \"unknown\", target_os = \"none\")))",
+      "optional": false,
+      "default_features": true
+    }
+  ],
+  "features": {
+    "std": [],
+    "wasm_js": [
+      "dep:wasm-bindgen",
+      "dep:js-sys"
+    ],
+    "rustc-dep-of-std": [
+      "dep:compiler_builtins",
+      "dep:core"
+    ]
+  },
+  "rust_version": "1.63",
+  "cksum": "26145e563e54f2cadc477553f1ec5ee650b00862f0a58bcd12cbdc5f0ea2d2f4",
+  "yanked": false
+}

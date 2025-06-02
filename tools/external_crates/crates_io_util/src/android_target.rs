@@ -12,11 +12,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+use std::sync::LazyLock;
+
 use cfg_expr::{
-    targets::{Arch, Family, Os},
-    Predicate, TargetPredicate,
+    targets::{get_builtin_target_by_triple, TargetInfo},
+    Predicate,
 };
 use crates_index::{Dependency, Version};
+use log::debug;
 
 /// Parse cfg expressions in dependencies and determine if they refer to a target relevant to Android.
 /// Dependencies are relevant if they are for Unix, Android, or Linux, and for an architecture we care about (Arm, RISC-V, or X86)
@@ -31,23 +34,42 @@ impl AndroidTarget for Dependency {
     }
 }
 
+static ANDROID_TARGETS: LazyLock<Vec<&'static TargetInfo>> = LazyLock::new(|| {
+    vec![
+        get_builtin_target_by_triple("aarch64-linux-android").unwrap(),
+        get_builtin_target_by_triple("armv7-linux-androideabi").unwrap(),
+        get_builtin_target_by_triple("i686-linux-android").unwrap(),
+        get_builtin_target_by_triple("i686-unknown-linux-gnu").unwrap(),
+        get_builtin_target_by_triple("riscv64-linux-android").unwrap(),
+        get_builtin_target_by_triple("x86_64-linux-android").unwrap(),
+        get_builtin_target_by_triple("x86_64-unknown-linux-gnu").unwrap(),
+    ]
+});
+
 fn is_android(target: &str) -> bool {
+    debug!("is_android({target})");
     let Ok(expr) = cfg_expr::Expression::parse(target) else {
         return false;
     };
-    expr.eval(|pred| match pred {
-        Predicate::Target(target_predicate) => match target_predicate {
-            TargetPredicate::Family(family) => *family == Family::unix,
-            TargetPredicate::Os(os) => *os == Os::android || *os == Os::linux,
-            TargetPredicate::Arch(arch) => {
-                [Arch::arm, Arch::aarch64, Arch::riscv32, Arch::riscv64, Arch::x86, Arch::x86_64]
-                    .contains(arch)
+    ANDROID_TARGETS.iter().any(|android_target| {
+        debug!("Checking target {android_target:?}");
+        expr.eval(|pred| match pred {
+            Predicate::Target(target_predicate) => {
+                let matches = target_predicate.matches(*android_target);
+                debug!("Predicate::Target({target_predicate:?}) = {matches}");
+                matches
             }
-            TargetPredicate::Env(env) => env.as_str() != "musl",
+            Predicate::Flag(flag) => {
+                debug!("Predicate::Flag({flag})");
+                *flag == "mls_build_async" || *flag == "rustix_use_libc"
+            }
+            Predicate::KeyValue { key, val } => {
+                let expr_val = *key != "getrandom_backend";
+                debug!("Predicate::KeyValue(key = {key}, val = {val}) = {expr_val}");
+                expr_val
+            }
             _ => true,
-        },
-        Predicate::Flag(flag) => *flag == "mls_build_async" || *flag == "rustix_use_libc",
-        _ => true,
+        })
     })
 }
 
@@ -77,8 +99,14 @@ mod tests {
 
     use super::*;
 
+    fn init_logger() {
+        let _ =
+            env_logger::builder().filter_level(log::LevelFilter::max()).is_test(true).try_init();
+    }
+
     #[test]
     fn test_android_cfgs() {
+        init_logger();
         assert!(!is_android("asmjs-unknown-emscripten"), "Parse error");
         assert!(!is_android("cfg(windows)"));
         assert!(is_android("cfg(unix)"));
@@ -109,6 +137,8 @@ mod tests {
 
     #[test]
     fn test_required_android_deps() {
+        init_logger();
+
         let aarch64_paging_0_7_1: Version =
             serde_json::from_str(include_str!("testdata/aarch64-paging-0.7.1"))
                 .expect("Failed to parse JSON testdata");
@@ -117,8 +147,29 @@ mod tests {
             [aarch64_paging_0_7_1
                 .dependencies()
                 .iter()
-                .find(|dep| dep.name() == "bitflags")
+                .find(|dep| dep.crate_name() == "bitflags")
                 .unwrap()],
+        );
+    }
+
+    // getrandom 0.3.3 has a complex cfg expression for the libc dependency.
+    #[test]
+    fn test_getrandom_cfg() {
+        init_logger();
+
+        assert!(
+            is_android(
+                r#"cfg(all(any(target_os = "linux", target_os = "android"), not(any(all(target_os = "linux", target_env = ""), getrandom_backend = "custom", getrandom_backend = "linux_raw", getrandom_backend = "rdrand", getrandom_backend = "rndr"))))"#
+            ),
+            "getrandom 0.3.3"
+        );
+
+        let getrandom_0_3_3: Version =
+            serde_json::from_str(include_str!("testdata/getrandom-0.3.3"))
+                .expect("Failed to parse JSON testdata");
+        assert_equal(
+            getrandom_0_3_3.required_android_deps().map(|dep| dep.crate_name()),
+            ["cfg-if", "libc"],
         );
     }
 }

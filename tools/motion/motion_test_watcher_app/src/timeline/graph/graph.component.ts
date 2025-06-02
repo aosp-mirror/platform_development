@@ -135,11 +135,14 @@ export class GraphComponent implements AfterViewInit, OnChanges {
       ))
     };
 
-    const minValue = Math.min(...numericValues) ?? 0;
+    let minValue = Math.min(...numericValues) ?? 0;
     let maxValue = Math.max(...numericValues) ?? 1;
 
     if (minValue === maxValue) {
       maxValue += 1;
+    }
+    if(minValue!==0) {
+      minValue-=(maxValue-minValue)/10;
     }
 
     return new LineGraphVisualization(

@@ -23,9 +23,11 @@
 // ./android_cargo.py test -p crates_io_util --test resolver_test  -- --nocapture --ignored
 //
 // For additional information about what the resolver is doing, prepend "RUST_LOG=debug" to
-// the command
+// the command.
+//
+// To specify which crates to test, prepend "CRATES_TO_TEST=crate1,crate2" to the command.
 
-use std::{collections::BTreeSet, path::PathBuf, process::Command};
+use std::{collections::BTreeSet, env, path::PathBuf, process::Command};
 
 use android_bp::BluePrint;
 use anyhow::{anyhow, Result};
@@ -179,9 +181,47 @@ impl CratesIoResolver {
         let optional = resolver
             .resolve_optional(features.as_ref().map(|f| f.iter()))?
             .into_iter()
-            .map(|d| d.name().to_string())
+            .map(|d| d.crate_name().to_string())
             .collect::<BTreeSet<String>>();
         Ok(Deps { required, optional })
+    }
+}
+
+trait CrateFeaturesWithDefault {
+    fn crate_features_with_default<'a>(
+        &'a self,
+        crate_name: &'a str,
+    ) -> impl Iterator<Item = Option<Vec<&'a str>>>;
+}
+
+impl CrateFeaturesWithDefault for BluePrint {
+    fn crate_features_with_default<'a>(
+        &'a self,
+        crate_name: &'a str,
+    ) -> impl Iterator<Item = Option<Vec<&'a str>>> {
+        self.crate_features(crate_name)
+            .filter_map(move |features_or_none| {
+                match features_or_none {
+                    // ahash has a "specialize" feature that is added by the build script and passed to
+                    // rustc, but not present in Cargo.toml.
+                    Some(features) => {
+                        if crate_name == "ahash" {
+                            Some(Some(
+                                features
+                                    .into_iter()
+                                    .filter(|feature| *feature != "specialize")
+                                    .collect(),
+                            ))
+                        } else {
+                            Some(Some(features))
+                        }
+                    }
+                    // We always add the default feature set below with .chain([None]), so
+                    // filter it out to avoid testing it twice.
+                    None => None,
+                }
+            })
+            .chain([None])
     }
 }
 
@@ -196,15 +236,19 @@ fn compare_with_cargo_tree() -> Result<()> {
     )?;
     let cargo_tree_resolver = CargoTreeResolver::new()?;
     let crates_io_resolver = CratesIoResolver::new()?;
+
+    let crate_names = env::var("CRATES_TO_TEST")
+        .map(|s| s.split(",").map(String::from).collect::<BTreeSet<_>>())
+        .unwrap_or_else(|_| managed_repo.all_crate_names().unwrap());
     let mut all_match = true;
-    for crate_name in managed_repo.all_crate_names()? {
-        let managed_crate = managed_repo.managed_crate_for(&crate_name)?;
+    for crate_name in &crate_names {
+        let managed_crate = managed_repo.managed_crate_for(crate_name)?;
         let version = managed_crate.android_version();
         println!("Checking {crate_name} {version}");
 
         if crates_io_resolver
             .index
-            .get_crate(&crate_name)?
+            .get_crate(crate_name)?
             .get_version(managed_crate.android_version())
             .ok_or(anyhow!("{crate_name} version {version} not found"))?
             .is_yanked()
@@ -215,8 +259,8 @@ fn compare_with_cargo_tree() -> Result<()> {
 
         let bp = BluePrint::from_file(managed_crate.android_crate_path().abs().join("Android.bp"))
             .map_err(|e: String| anyhow!(e))?;
-        for features in bp.crate_features(&crate_name).chain([None]) {
-            let cargo_tree_deps = match cargo_tree_resolver.resolve(&crate_name, version, &features)
+        for features in bp.crate_features_with_default(crate_name) {
+            let cargo_tree_deps = match cargo_tree_resolver.resolve(crate_name, version, &features)
             {
                 Ok(d) => d,
                 Err(e) => {
@@ -225,7 +269,7 @@ fn compare_with_cargo_tree() -> Result<()> {
                     continue;
                 }
             };
-            let crates_io_deps = match crates_io_resolver.resolve(&crate_name, version, &features) {
+            let crates_io_deps = match crates_io_resolver.resolve(crate_name, version, &features) {
                 Ok(d) => d,
                 Err(e) => {
                     println!("  Failed to resolve: {e}");

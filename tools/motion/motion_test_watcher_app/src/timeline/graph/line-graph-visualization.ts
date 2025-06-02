@@ -1,4 +1,4 @@
-import { Visualization, DataPoint } from './visualization';
+import { Visualization, DataPoint, COLORS } from './visualization';
 import * as d3 from 'd3';
 import { PreviewService } from '../../service/preview.service';
 
@@ -70,13 +70,24 @@ export class LineGraphVisualization implements Visualization {
 
   private drawAxes(g: d3.Selection<SVGGElement, unknown, null, undefined>) {
     const xAxis = d3.axisBottom(this.xScale);
-    const yAxis = d3.axisLeft(this.yScale);
-    g.append('g')
+    const currentYAxisTicks = this.yScale.ticks().length;
+    const newYAxisTicks = Math.max(1, Math.floor(currentYAxisTicks / 2));
+    const yAxis = d3.axisLeft(this.yScale)
+                    .ticks(newYAxisTicks);
+    const xAxisGroup= g.append('g')
       .attr('class', 'x axis')
       .attr('transform', `translate(0, ${this.chartHeight})`)
       .call(xAxis);
+      xAxisGroup.selectAll('path').attr('stroke', COLORS.gray); // Main axis line
+      xAxisGroup.selectAll('line').attr('stroke', COLORS.gray); // Tick marks
+      xAxisGroup.selectAll('text').attr('fill', COLORS.gray); // Labels
 
-    g.append('g').attr('class', 'y axis').call(yAxis);
+    const yAxisGroup= g.append('g')
+      .attr('class', 'y axis')
+      .call(yAxis);
+      yAxisGroup.selectAll('path').attr('stroke', COLORS.gray); // Main axis line
+      yAxisGroup.selectAll('line').attr('stroke', COLORS.gray); // Tick marks
+      yAxisGroup.selectAll('text').attr('fill', COLORS.gray); // Labels
   }
 
   private drawExpected(
@@ -91,8 +102,9 @@ export class LineGraphVisualization implements Visualization {
     g.append('path')
       .datum(data)
       .attr('fill', 'none')
-      .attr('stroke', 'red')
-      .attr('stroke-width', 1.5)
+      .attr('stroke',COLORS.green)
+      .attr('stroke-width', 2.4)
+      .attr('stroke-dasharray', '10, 5')
       .attr('d', expectedLine);
 
     g.selectAll('.dot-expected')
@@ -103,7 +115,7 @@ export class LineGraphVisualization implements Visualization {
       .attr('cx', (d) => this.xScale(d.x))
       .attr('cy', (d) => this.yScale(d.expectedValue || 0))
       .attr('r', 3)
-      .attr('fill', 'red');
+      .attr('fill', COLORS.green);
   }
 
   private drawActual(
@@ -118,8 +130,8 @@ export class LineGraphVisualization implements Visualization {
     g.append('path')
       .datum(data)
       .attr('fill', 'none')
-      .attr('stroke', 'blue')
-      .attr('stroke-width', 1.5)
+      .attr('stroke',COLORS.blue)
+      .attr('stroke-width', 2.5)
       .attr('d', actualLine);
 
     g.selectAll('.dot-actual')
@@ -129,8 +141,8 @@ export class LineGraphVisualization implements Visualization {
       .attr('class', 'dot-actual')
       .attr('cx', (d) => this.xScale(d.x))
       .attr('cy', (d) => this.yScale(d.actualValue || 0))
-      .attr('r', 2)
-      .attr('fill', 'blue');
+      .attr('r', 3)
+      .attr('fill',COLORS.blue);
   }
 
   private drawLegend(g: d3.Selection<SVGGElement, unknown, null, undefined>) {
@@ -148,8 +160,8 @@ export class LineGraphVisualization implements Visualization {
       .attr('y1', 0)
       .attr('x2', 20)
       .attr('y2', 0)
-      .attr('stroke', 'blue')
-      .attr('stroke-width', 1.5);
+      .attr('stroke', COLORS.blue)
+      .attr('stroke-width', 2.5);
 
     legend
       .append('text')
@@ -164,8 +176,9 @@ export class LineGraphVisualization implements Visualization {
       .attr('y1', 20)
       .attr('x2', 20)
       .attr('y2', 20)
-      .attr('stroke', 'red')
-      .attr('stroke-width', 1.5);
+      .attr('stroke', COLORS.green)
+      .attr('stroke-dasharray', '8, 3')
+      .attr('stroke-width', 2.5);
 
     legend
       .append('text')
@@ -179,11 +192,20 @@ export class LineGraphVisualization implements Visualization {
     g: d3.Selection<SVGGElement, unknown, null, undefined>,
     data: DataPoint[]
   ) {
-    const markerLine = g
+    const YmarkerLine = g
       .append('line')
-      .attr('class', 'marker-line')
+      .attr('class', 'marker-line vertical')
       .attr('y1', 0)
       .attr('y2', this.chartHeight)
+      .attr('stroke', 'lightblue')
+      .attr('stroke-width', 1)
+      .style('opacity', 0);
+
+    const XmarkerLine = g
+      .append('line')
+      .attr('class', 'marker-line horizontal')
+      .attr('x1', 0)
+      .attr('x2', this.chartWidth)
       .attr('stroke', 'lightblue')
       .attr('stroke-width', 1)
       .style('opacity', 0);
@@ -208,19 +230,23 @@ export class LineGraphVisualization implements Visualization {
       .attr('fill', 'none')
       .attr('pointer-events', 'all')
       .on('mouseover', () => {
-        markerLine.style('opacity', 1);
+        YmarkerLine.style('opacity', 1);
+        XmarkerLine.style('opacity', 1);
         tooltip.style('opacity', 1);
       })
       .on('mouseout', () => {
-        markerLine.style('opacity', 0);
+        YmarkerLine.style('opacity', 0);
+        XmarkerLine.style('opacity', 0);
         tooltip.style('opacity', 0);
       })
       .on('mousemove', (event: MouseEvent) => {
         const xPos = d3.pointer(event, g.node())[0];
+        const yPos = d3.pointer(event, g.node())[1];
+        XmarkerLine.attr('y1', yPos).attr('y2', yPos);
         const dataPoint = this.getDataPointAtX(xPos, data);
         if (dataPoint) {
           const snappedXPos = this.xScale(dataPoint.x);
-          markerLine.attr('x1', snappedXPos).attr('x2', snappedXPos);
+          YmarkerLine.attr('x1', snappedXPos).attr('x2', snappedXPos);
 
           tooltipText
             .text(`Actual: ${dataPoint.actualValue}`)
@@ -278,7 +304,7 @@ export class LineGraphVisualization implements Visualization {
       .attr('y1', -400)
       .attr('x2', xPos)
       .attr('y2', this.chartHeight)
-      .attr('stroke', 'red')
+      .attr('stroke', COLORS.red)
       .attr('stroke-width', 1)
       .attr('stroke-linecap', 'butt')
       .attr('transform', `translate(${this.margin.left},${this.margin.top})`);

@@ -3,12 +3,17 @@
 </mat-toolbar>
 
 <div class="flex h-screen p-4 bg-gray-100">
-  <div class="w-1/4 bg-white rounded-md shadow-md overflow-y-auto mr-4">
-    <app-test-list
-      [goldens]="goldens"
-      (refreshRequest)="refreshGoldens($event)"
-      (selectedGoldenChange)="setSelectedGolden($event)"
-    ></app-test-list>
+  <div class="nav-bar flex items-start justify-center w-10 bg-slate-200 overflow-y-auto">
+    <button (click)="toggleTestListVisibility()" class="pt-4">
+    <span class="google-symbols">menu</span>
+    </button>
+  </div>
+  <div *ngIf="showTestList" [@sidebarMenuAnimation] class="w-1/4 bg-white rounded-r-md  overflow-y-auto mr-4">
+      <app-test-list
+        [goldens]="goldens"
+        (refreshRequest)="refreshGoldens($event)"
+        (selectedGoldenChange)="setSelectedGolden($event)"
+      ></app-test-list>
   </div>
 
   <div class="flex flex-col flex-grow space-y-4">

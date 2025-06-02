@@ -8,6 +8,13 @@ import { TimelineComponent } from '../timeline/timeline.component';
 import { MotionGolden } from '../model/golden';
 import { finalize } from 'rxjs';
 import { NgIf } from '@angular/common';
+import {
+  trigger,
+  state,
+  style,
+  animate,
+  transition
+} from '@angular/animations';
 
 @Component({
   selector: 'app-root',
@@ -20,6 +27,48 @@ import { NgIf } from '@angular/common';
   ],
   templateUrl: './app.component.html',
   styleUrl: './app.component.css',
+  animations: [
+    trigger('sidebarMenuAnimation', [
+      state('void', style({
+        width: '0',
+        'min-width': '0',
+        marginRight: '0',
+        opacity: 0,
+        paddingLeft: '0',
+        paddingRight: '0',
+        overflow: 'hidden'
+      })),
+      transition(':leave', [
+        style({
+          width: '*',
+          'min-width': '25%',
+          marginRight: '*',
+          opacity: 1,
+          paddingLeft: '*',
+          paddingRight: '*'
+        }),
+        animate('300ms ease-in')
+      ]),
+      transition(':enter', [
+        style({
+          width: '0',
+          'min-width': '0',
+          marginRight: '0',
+          opacity: 0,
+          paddingLeft: '0',
+          paddingRight: '0'
+        }),
+        animate('300ms ease-out', style({
+          width: '*',
+          'min-width': '25%',
+          marginRight: '*',
+          opacity: 1,
+          paddingLeft: '*',
+          paddingRight: '*'
+        }))
+      ])
+    ])
+  ]
 })
 export class AppComponent implements DoCheck, OnInit {
   constructor(
@@ -30,6 +79,11 @@ export class AppComponent implements DoCheck, OnInit {
   showProgress = false;
   goldens: MotionGolden[] = [];
   selectedGolden: MotionGolden | null = null;
+  showTestList: boolean = true;
+
+  toggleTestListVisibility() {
+    this.showTestList = !this.showTestList;
+  }
 
   ngDoCheck(): void {
     this.showProgress = this.progressTracker.isActive;

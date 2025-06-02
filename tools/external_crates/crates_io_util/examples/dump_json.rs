@@ -13,6 +13,10 @@
 // limitations under the License.
 
 // Use to capture more test cases from crates.io.
+//
+// Usage:
+//
+// cargo run --example dump_json -- getrandom 0.3.3
 
 use std::env;
 
