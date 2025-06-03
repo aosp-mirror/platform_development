@@ -1,0 +1,11 @@
+<h2 mat-dialog-title>Get Presubmit artifacts</h2>
+<mat-dialog-content>
+    <mat-form-field>
+    <mat-label>Presubmit Invocation ID/URL</mat-label>
+    <input matInput type="text" [(ngModel)]="inputText" />
+    </mat-form-field>
+</mat-dialog-content>
+<mat-dialog-actions align="end">
+    <button mat-button color="primary" (click)="onCancel()">Cancel</button>
+    <button mat-button color="primary" (click)="getArtifacts()">Get Artifacts</button>
+</mat-dialog-actions>

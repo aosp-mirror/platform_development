@@ -25,11 +25,15 @@ import { FormsModule } from '@angular/forms';
   templateUrl: './test-list.component.html',
   styleUrl: './test-list.component.css',
 })
-export class TestListComponent implements OnChanges {
+export class TestListComponent implements OnChanges{
   @Input() goldens: MotionGolden[] = [];
+  @Input() testNames: String[] = [];
+  @Output() selectedTestNameChange = new EventEmitter<String>();
   @Output() refreshRequest = new EventEmitter<boolean>();
   @Output() selectedGoldenChange = new EventEmitter<MotionGolden>();
   selectedGolden: MotionGolden | null = null;
+  selectedTest: String | null = null;
+
 
   filterStatus: 'all' | 'pass' | 'fail' = 'all';
 
@@ -56,6 +60,16 @@ export class TestListComponent implements OnChanges {
     this.selectedGoldenChange.emit(golden);
   }
 
+  extractLastPart(path: String): String {
+  return path.split('/').pop() || '';
+}
+
+  testOpened(testName: String): void {
+    console.log(`testName clicked : ${testName}`)
+    this.selectedTest = testName;
+    this.selectedTestNameChange.emit(testName);
+  }
+
   get filteredGoldens(): MotionGolden[] {
     if (this.filterStatus === 'all') {
       return this.goldens;
@@ -79,3 +93,4 @@ export class TestListComponent implements OnChanges {
     }
   }
 }
+

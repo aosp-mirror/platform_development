@@ -16,6 +16,10 @@ import {
   transition
 } from '@angular/animations';
 
+import { DialogContentComponent } from '../dialog/dialog.component';
+import { MatButton } from '@angular/material/button';
+import { MatDialog } from '@angular/material/dialog';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 @Component({
   selector: 'app-root',
   imports: [
@@ -24,7 +28,9 @@ import {
     PreviewComponent,
     TimelineComponent,
     NgIf,
-  ],
+    MatButton,
+    MatProgressSpinnerModule
+],
   templateUrl: './app.component.html',
   styleUrl: './app.component.css',
   animations: [
@@ -73,17 +79,68 @@ import {
 export class AppComponent implements DoCheck, OnInit {
   constructor(
     private goldenService: GoldensService,
-    private progressTracker: ProgressTracker
-  ) {}
+    private progressTracker: ProgressTracker,
+    public dialog: MatDialog
+    ) {}
+
+  isNullOrEmpty(obj : any) : Boolean {
+    return (obj == null || obj.length == 0)
+  }
+
+  openDialog(): void {
+    const dialogRef = this.dialog.open(DialogContentComponent);
+
+    dialogRef.afterClosed().subscribe(invocationID => {
+      if (invocationID) {
+        this.showLoaderBar()
+        this.goldenService.refreshGoldens(true)
+        this.goldenService.getTestArtifacts(invocationID)
+        .pipe(finalize(() => this.hideLoaderBar()))
+        .subscribe({
+          next : (fetchedTestNames) => {
+            if (this.isNullOrEmpty(fetchedTestNames)) {
+              fetchedTestNames = []
+              console.log("No artifacts found")
+              alert("No artifacts found")
+            }
+            this.goldens = []
+            this.selectedGolden = null
+            this.testNames = fetchedTestNames
+          },
+          error : (err) => {
+            this.testNames = []
+            this.goldens = []
+            this.selectedGolden = null
+            this.showErrorAlert(err)
+          }
+        })
+      }
+    });
+  }
 
   showProgress = false;
+  showLoader = false;
   goldens: MotionGolden[] = [];
+  testNames: String[] = [];
+  selectedTest: String | null = null;
   selectedGolden: MotionGolden | null = null;
   showTestList: boolean = true;
 
   toggleTestListVisibility() {
     this.showTestList = !this.showTestList;
   }
+
+  showErrorAlert(err: Error) {
+    alert(`Some error occurred ${err.message}`)
+  }
+  showLoaderBar() : void {
+    this.showLoader = true;
+  }
+
+  hideLoaderBar() : void {
+    this.showLoader = false;
+  }
+
 
   ngDoCheck(): void {
     this.showProgress = this.progressTracker.isActive;
@@ -111,5 +168,20 @@ export class AppComponent implements DoCheck, OnInit {
 
   setSelectedGolden(golden: MotionGolden): void {
     this.selectedGolden = golden;
+  }
+
+   setSelectedTest(testName: String): void {
+    this.selectedTest = testName;
+    this.showLoaderBar();
+    this.goldenService.getTestArtifactsForTestName(testName).pipe(finalize(() => this.hideLoaderBar())).subscribe({
+      next: (fetchedGolden) => {
+        this.selectedGolden = fetchedGolden
+      },
+      error: (err) => {
+        this.goldens = [];
+        this.selectedGolden = null;
+        this.showErrorAlert(err)
+      }
+    })
   }
 }

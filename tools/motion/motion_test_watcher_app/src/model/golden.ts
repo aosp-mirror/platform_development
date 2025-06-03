@@ -26,6 +26,7 @@ export interface MotionGolden {
   testTime: string;
   updated: boolean;
   videoUrl: string | undefined;
+  goldenName: string | undefined;
 }
 
 export interface MotionGoldenData {

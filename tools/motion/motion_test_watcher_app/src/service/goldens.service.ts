@@ -69,6 +69,42 @@ export class GoldensService {
     );
   }
 
+  getTestArtifacts(invocation_id: String) : Observable<String[]> {
+    return this.http
+    .post<String[]>(
+      `${this.serverRoot}/service/presubmit_artifact/list`,
+      { invocation_id },
+      {
+        headers: {
+          ...this.defaultHeaders,
+          'Content-Type': 'application/json',
+        },
+      }
+    )
+    .pipe(
+      tap((artifacts) => console.log(`fetched ${artifacts.length} for invocationID : ${invocation_id}`)),
+      catchError(this.handleError<String[]>('e'))
+    );
+  }
+
+  getTestArtifactsForTestName(resource_id: String) : Observable<MotionGolden> {
+    return this.http
+    .post<MotionGolden>(
+      `${this.serverRoot}/service/fetch_artifact`,
+      { resource_id },
+      {
+        headers: {
+          ...this.defaultHeaders,
+          'Content-Type': 'application/json',
+        },
+      }
+    )
+    .pipe(
+      tap((artifact) => console.log(`fetched ${artifact} for testName : ${resource_id}`)),
+      catchError(this.handleError<MotionGolden>('e'))
+    );
+  }
+
   getActualGoldenData(golden: MotionGolden): Observable<MotionGoldenData> {
     return this.http
       .get<MotionGoldenData>(`${golden.actualUrl}`, {
