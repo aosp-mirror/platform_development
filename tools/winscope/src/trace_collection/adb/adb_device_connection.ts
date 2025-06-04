@@ -14,8 +14,6 @@
  * limitations under the License.
  */
 
-import {UserNotifier} from 'common/user_notifier';
-import {ProxyTracingWarnings} from 'messaging/user_warnings';
 import {ConnectionState} from 'trace_collection/connection_state';
 import {TraceTarget} from 'trace_collection/trace_target';
 import {UiTraceTarget} from 'trace_collection/ui/ui_trace_target';
@@ -64,20 +62,6 @@ export abstract class AdbDeviceConnection {
       status += ' ';
     }
     return `${status}${this.model} (${this.id})`;
-  }
-
-  async checkRoot(): Promise<boolean> {
-    const root = await this.runShellCommand('su root id -u');
-    const isRoot = Number(root) === 0;
-    if (!isRoot) {
-      UserNotifier.add(
-        new ProxyTracingWarnings([
-          'Unable to acquire root privileges on the device - ' +
-            `check the output of 'adb -s ${this.id} shell su root id'`,
-        ]),
-      ).notify();
-    }
-    return isRoot;
   }
 
   async updateAvailableTraces() {
@@ -147,7 +131,7 @@ export abstract class AdbDeviceConnection {
 
     if (this.state === AdbDeviceState.AVAILABLE) {
       const output = await this.runShellCommand(
-        'su root dumpsys SurfaceFlinger --display-id',
+        'dumpsys SurfaceFlinger --display-id',
       );
       if (!output.includes('Display')) {
         this.displays = [];

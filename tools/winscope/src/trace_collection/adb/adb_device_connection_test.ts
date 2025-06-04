@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-import {ProxyTracingWarnings} from 'messaging/user_warnings';
 import {UserNotifierChecker} from 'test/unit/user_notifier_checker';
 import {
   AdbDeviceConnectionListener,
@@ -81,23 +80,6 @@ describe('AdbDeviceConnection', () => {
     expect(connection.getFormattedName()).toEqual('Pixel (35562)');
   });
 
-  it('checks root success', async () => {
-    runShellCmdSpy.withArgs('su root id -u').and.returnValue('0');
-    expect(await connection.checkRoot()).toBeTrue();
-  });
-
-  it('checks root failure', async () => {
-    runShellCmdSpy.withArgs('su root id -u').and.returnValue('1');
-    expect(await connection.checkRoot()).toBeFalse();
-    userNotifierChecker.expectNotified([
-      new ProxyTracingWarnings([
-        'Unable to acquire root privileges on the device - ' +
-          `check the output of 'adb -s 35562 shell su root id'`,
-      ]),
-    ]);
-    userNotifierChecker.reset();
-  });
-
   it('updates availability of wayland trace if available', async () => {
     await connection.updateAvailableTraces();
     expect(listener.onAvailableTracesChange).toHaveBeenCalledOnceWith(
@@ -157,7 +139,7 @@ describe('AdbDeviceConnection', () => {
 
   it('adds display', async () => {
     runShellCmdSpy
-      .withArgs('su root dumpsys SurfaceFlinger --display-id')
+      .withArgs('dumpsys SurfaceFlinger --display-id')
       .and.returnValue('Display 12345 Extra Info displayName="Test Display"');
     await connection.updateProperties({});
     expect(connection.getDisplays()).toEqual([
@@ -167,7 +149,7 @@ describe('AdbDeviceConnection', () => {
 
   it('adds display with missing displayName', async () => {
     runShellCmdSpy
-      .withArgs('su root dumpsys SurfaceFlinger --display-id')
+      .withArgs('dumpsys SurfaceFlinger --display-id')
       .and.returnValue('Display 12345 Extra Info');
     await connection.updateProperties({});
     expect(connection.getDisplays()).toEqual(['12345 Extra Info']);
@@ -175,12 +157,12 @@ describe('AdbDeviceConnection', () => {
 
   it('clears display', async () => {
     runShellCmdSpy
-      .withArgs('su root dumpsys SurfaceFlinger --display-id')
+      .withArgs('dumpsys SurfaceFlinger --display-id')
       .and.returnValue('Display 12345 Extra Info');
     await connection.updateProperties({});
     expect(connection.getDisplays().length).toEqual(1);
     runShellCmdSpy
-      .withArgs('su root dumpsys SurfaceFlinger --display-id')
+      .withArgs('dumpsys SurfaceFlinger --display-id')
       .and.returnValue('');
     await connection.updateProperties({});
     expect(connection.getDisplays().length).toEqual(0);

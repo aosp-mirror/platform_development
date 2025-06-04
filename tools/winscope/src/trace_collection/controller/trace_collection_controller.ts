@@ -179,8 +179,8 @@ export class TraceCollectionController {
     await perfettoModerator.tryStopCurrentPerfettoSession();
     await perfettoModerator.clearPreviousConfigFiles();
     console.debug('Clearing previous tracing session files from device');
-    await device.runShellCommand(`su root rm -rf ${WINSCOPE_BACKUP_DIR}`);
-    await device.runShellCommand(`su root mkdir ${WINSCOPE_BACKUP_DIR}`);
+    await device.runShellCommand(`rm -rf ${WINSCOPE_BACKUP_DIR}`);
+    await device.runShellCommand(`mkdir ${WINSCOPE_BACKUP_DIR}`);
     console.debug('Cleared previous tracing session files from device');
   }
 

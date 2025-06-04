@@ -14,19 +14,30 @@
  * limitations under the License.
  */
 
-import {Component, Inject} from '@angular/core';
+import {Component, ElementRef, Inject} from '@angular/core';
 import {MatSnackBarRef, MAT_SNACK_BAR_DATA} from '@angular/material/snack-bar';
 
 @Component({
   selector: 'snack-bar',
   template: `
     <div class="snack-bar-container">
-      <p *ngFor="let message of messages" class="mat-body-1">
-        {{ message }}
-      </p>
-      <button color="primary" mat-button class="snack-bar-action" (click)="snackBarRef.dismiss()">
-        Close
-      </button>
+      <div class="message-container">
+        <p *ngFor="let message of messages" class="message mat-body-1">
+          {{ message }}
+        </p>
+      </div>
+      <div class="snackbar-actions">
+        <button
+          color="primary"
+          mat-button
+          class="copy-button"
+          [cdkCopyToClipboard]="formatMessages()">Copy</button>
+        <button
+          color="primary"
+          mat-button
+          class="close-button"
+          (click)="snackBarRef.dismiss()">Close</button>
+      </div>
     </div>
   `,
   styles: [
@@ -36,8 +47,19 @@ import {MatSnackBarRef, MAT_SNACK_BAR_DATA} from '@angular/material/snack-bar';
         flex-direction: column;
         white-space: pre-line;
       }
-      .snack-bar-action {
-        margin-left: 12px;
+      .message-container {
+        display: flex;
+        flex-direction: column;
+        white-space: pre-line;
+        max-height: 200px;
+        overflow-y: auto;
+      }
+      .message {
+        padding-block-end: 4px;
+      }
+      .snackbar-actions {
+        display: flex;
+        justify-content: center;
       }
     `,
   ],
@@ -47,5 +69,10 @@ export class SnackBarComponent {
     @Inject(MatSnackBarRef)
     public snackBarRef: MatSnackBarRef<SnackBarComponent>,
     @Inject(MAT_SNACK_BAR_DATA) public messages: string[],
+    @Inject(ElementRef) public elementRef: ElementRef,
   ) {}
+
+  formatMessages(): string {
+    return this.messages.join('\n\n');
+  }
 }

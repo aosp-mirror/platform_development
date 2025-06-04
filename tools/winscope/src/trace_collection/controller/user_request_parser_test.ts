@@ -20,11 +20,7 @@ import {MockAdbDeviceConnection} from 'trace_collection/mock/mock_adb_device_con
 import {AdbFileIdentifier, TraceTarget} from 'trace_collection/trace_target';
 import {UiTraceTarget} from 'trace_collection/ui/ui_trace_target';
 import {UserRequest, UserRequestConfig} from 'trace_collection/user_request';
-import {
-  PerfettoSessionModerator,
-  PERFETTO_DUMP_CONFIG_FILE,
-  PERFETTO_TRACE_CONFIG_FILE,
-} from './perfetto_session_moderator';
+import {PerfettoSessionModerator} from './perfetto_session_moderator';
 import {TracingSession} from './tracing_session';
 import {UserRequestParser} from './user_request_parser';
 
@@ -53,8 +49,7 @@ describe('UserRequestParser', () => {
     ],
   );
   const expectedSfLegacySession = new TracingSession(expectedSfLegacyTarget);
-  const expectedWmPerfettoSetupCommand = `cat << EOF >> ${PERFETTO_TRACE_CONFIG_FILE}
-data_sources: {
+  const expectedWmPerfettoConfigDs = `data_sources: {
   config {
     name: "android.windowmanager"
     windowmanager_config: {
@@ -62,8 +57,7 @@ data_sources: {
       log_frequency: LOG_FREQUENCY_FRAME
     }
   }
-}
-EOF`;
+}`;
   let isTooManySessions: jasmine.Spy;
 
   beforeEach(() => {
@@ -82,7 +76,7 @@ EOF`;
     expect(await parseRequests(req)).toEqual([expectedSfLegacySession]);
   });
 
-  it('makes perfetto session with multiple setup commands', async () => {
+  it('makes perfetto session with multiple data sources', async () => {
     const req: UserRequest[] = [
       {target: UiTraceTarget.SURFACE_FLINGER_TRACE, config: []},
       {target: UiTraceTarget.WINDOW_MANAGER_TRACE, config: []},
@@ -92,17 +86,15 @@ EOF`;
     );
     expect(await parseRequests(req)).toEqual([
       moderator.createTracingSession([
-        `cat << EOF >> ${PERFETTO_TRACE_CONFIG_FILE}
-data_sources: {
+        `data_sources: {
   config {
     name: "android.surfaceflinger.layers"
     surfaceflinger_layers_config: {
       mode: MODE_ACTIVE
     }
   }
-}
-EOF`,
-        expectedWmPerfettoSetupCommand,
+}`,
+        expectedWmPerfettoConfigDs,
       ]),
     ]);
   });
@@ -135,25 +127,23 @@ EOF`,
       .and.returnValue(Promise.resolve(true));
     expect(await parseRequests(req)).toEqual([
       expectedSfLegacySession,
-      moderator.createTracingSession([expectedWmPerfettoSetupCommand]),
+      moderator.createTracingSession([expectedWmPerfettoConfigDs]),
     ]);
   });
 
   describe('makes SF trace perfetto session', () => {
-    const expectedSfSetupCommand = `cat << EOF >> ${PERFETTO_TRACE_CONFIG_FILE}
-data_sources: {
+    const expectedSfConfigDs = `data_sources: {
   config {
     name: "android.surfaceflinger.layers"
     surfaceflinger_layers_config: {
       mode: MODE_ACTIVE
     }
   }
-}
-EOF`;
+}`;
 
     it('without config', async () => {
       await checkPerfettoSessionCreated(
-        expectedSfSetupCommand,
+        expectedSfConfigDs,
         'android.surfaceflinger.layers',
         UiTraceTarget.SURFACE_FLINGER_TRACE,
       );
@@ -161,7 +151,7 @@ EOF`;
 
     it('with invalid config', async () => {
       await checkPerfettoSessionCreated(
-        expectedSfSetupCommand,
+        expectedSfConfigDs,
         'android.surfaceflinger.layers',
         UiTraceTarget.SURFACE_FLINGER_TRACE,
         [{key: 'invalid', value: '123'}],
@@ -169,8 +159,7 @@ EOF`;
     });
 
     it('with flags', async () => {
-      const setupCommand = `cat << EOF >> ${PERFETTO_TRACE_CONFIG_FILE}
-data_sources: {
+      const configDs = `data_sources: {
   config {
     name: "android.surfaceflinger.layers"
     surfaceflinger_layers_config: {
@@ -180,10 +169,9 @@ data_sources: {
       trace_flags: TRACE_FLAG_VIRTUAL_DISPLAYS
     }
   }
-}
-EOF`;
+}`;
       await checkPerfettoSessionCreated(
-        setupCommand,
+        configDs,
         'android.surfaceflinger.layers',
         UiTraceTarget.SURFACE_FLINGER_TRACE,
         [{key: 'input'}, {key: 'hwc'}, {key: 'virtualdisplays'}],
@@ -194,7 +182,7 @@ EOF`;
   describe('makes WM trace perfetto session', () => {
     it('without config', async () => {
       await checkPerfettoSessionCreated(
-        expectedWmPerfettoSetupCommand,
+        expectedWmPerfettoConfigDs,
         'android.windowmanager',
         UiTraceTarget.WINDOW_MANAGER_TRACE,
       );
@@ -202,7 +190,7 @@ EOF`;
 
     it('with invalid config', async () => {
       await checkPerfettoSessionCreated(
-        expectedWmPerfettoSetupCommand,
+        expectedWmPerfettoConfigDs,
         'android.windowmanager',
         UiTraceTarget.WINDOW_MANAGER_TRACE,
         [{key: 'invalid', value: '123'}],
@@ -210,8 +198,7 @@ EOF`;
     });
 
     it('with log level and frequency', async () => {
-      const setupCommand = `cat << EOF >> ${PERFETTO_TRACE_CONFIG_FILE}
-data_sources: {
+      const dataSource = `data_sources: {
   config {
     name: "android.windowmanager"
     windowmanager_config: {
@@ -219,10 +206,9 @@ data_sources: {
       log_frequency: LOG_FREQUENCY_TRANSACTION
     }
   }
-}
-EOF`;
+}`;
       await checkPerfettoSessionCreated(
-        setupCommand,
+        dataSource,
         'android.windowmanager',
         UiTraceTarget.WINDOW_MANAGER_TRACE,
         [
@@ -234,107 +220,94 @@ EOF`;
   });
 
   it('makes VC perfetto session', async () => {
-    const setupCommand = `cat << EOF >> ${PERFETTO_TRACE_CONFIG_FILE}
-data_sources: {
+    const configDs = `data_sources: {
   config {
     name: "android.viewcapture"
   }
-}
-EOF`;
+}`;
     await checkPerfettoSessionCreated(
-      setupCommand,
+      configDs,
       'android.viewcapture',
       UiTraceTarget.VIEW_CAPTURE,
     );
   });
 
   it('makes transactions perfetto session', async () => {
-    const setupCommand = `cat << EOF >> ${PERFETTO_TRACE_CONFIG_FILE}
-data_sources: {
+    const configDs = `data_sources: {
   config {
     name: "android.surfaceflinger.transactions"
     surfaceflinger_transactions_config: {
       mode: MODE_ACTIVE
     }
   }
-}
-EOF`;
+}`;
     await checkPerfettoSessionCreated(
-      setupCommand,
+      configDs,
       'android.surfaceflinger.transactions',
       UiTraceTarget.TRANSACTIONS,
     );
   });
 
   it('makes protolog perfetto session', async () => {
-    const setupCommand = `cat << EOF >> ${PERFETTO_TRACE_CONFIG_FILE}
-data_sources: {
+    const configDs = `data_sources: {
   config {
     name: "android.protolog"
     protolog_config: {
       tracing_mode: ENABLE_ALL
     }
   }
-}
-EOF`;
+}`;
     await checkPerfettoSessionCreated(
-      setupCommand,
+      configDs,
       'android.protolog',
       UiTraceTarget.PROTO_LOG,
     );
   });
 
   it('makes IME perfetto session', async () => {
-    const setupCommand = `cat << EOF >> ${PERFETTO_TRACE_CONFIG_FILE}
-data_sources: {
+    const configDs = `data_sources: {
   config {
     name: "android.inputmethod"
   }
-}
-EOF`;
+}`;
     await checkPerfettoSessionCreated(
-      setupCommand,
+      configDs,
       'android.inputmethod',
       UiTraceTarget.IME,
     );
   });
 
   it('makes transitions perfetto session', async () => {
-    const setupCommand = `cat << EOF >> ${PERFETTO_TRACE_CONFIG_FILE}
-data_sources: {
+    const configDs = `data_sources: {
   config {
     name: "com.android.wm.shell.transition"
   }
-}
-EOF`;
+}`;
     await checkPerfettoSessionCreated(
-      setupCommand,
+      configDs,
       'com.android.wm.shell.transition',
       UiTraceTarget.TRANSITIONS,
     );
   });
 
   it('makes input perfetto session', async () => {
-    const setupCommand = `cat << EOF >> ${PERFETTO_TRACE_CONFIG_FILE}
-data_sources: {
+    const configDs = `data_sources: {
   config {
     name: "android.input.inputevent"
     android_input_event_config {
       mode: TRACE_MODE_TRACE_ALL
     }
   }
-}
-EOF`;
+}`;
     await checkPerfettoSessionCreated(
-      setupCommand,
+      configDs,
       'android.input.inputevent',
       UiTraceTarget.INPUT,
     );
   });
 
   it('makes SF dump perfetto session', async () => {
-    const setupCommand = `cat << EOF >> ${PERFETTO_DUMP_CONFIG_FILE}
-data_sources: {
+    const configDs = `data_sources: {
   config {
     name: "android.surfaceflinger.layers"
     surfaceflinger_layers_config: {
@@ -346,10 +319,9 @@ data_sources: {
       trace_flags: TRACE_FLAG_VIRTUAL_DISPLAYS
     }
   }
-}
-EOF`;
+}`;
     await checkPerfettoSessionCreated(
-      setupCommand,
+      configDs,
       'android.surfaceflinger.layers',
       UiTraceTarget.SURFACE_FLINGER_DUMP,
       [],
@@ -928,7 +900,7 @@ EOF`;
   }
 
   async function checkPerfettoSessionCreated(
-    setupCmd: string,
+    perfettoDs: string,
     ds: string,
     target: UiTraceTarget,
     config: UserRequestConfig[] = [],
@@ -939,7 +911,7 @@ EOF`;
       .and.returnValue(Promise.resolve(true));
     const req: UserRequest[] = [{target, config}];
     expect(await parseRequests(req, perfettoModerator)).toEqual([
-      perfettoModerator.createTracingSession([setupCmd]),
+      perfettoModerator.createTracingSession([perfettoDs]),
     ]);
   }
 

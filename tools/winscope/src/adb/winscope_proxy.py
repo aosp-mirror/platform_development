@@ -240,7 +240,7 @@ class FetchEndpoint(DeviceRequestEndpoint):
                 log.debug(
                     f"Fetching file {filepath} from device to {tmp.name}")
                 try:
-                    self.call_adb_outfile('exec-out su root cat ' +
+                    self.call_adb_outfile('exec-out cat ' +
                                         filepath, tmp, device_id)
                 except AdbError as ex:
                     log.warning(f"Unable to fetch file {filepath} - {repr(ex)}")
@@ -334,7 +334,7 @@ class TraceThread(threading.Thread):
         log.info("Trace {} ended on {}, waiting for cleanup".format(self.target_id, self._device_id))
         time.sleep(0.2)
         for i in range(int(COMMAND_TIMEOUT_S / retry_interval)):
-            if call_adb(f"shell su root cat {self.status_filename}", device=self._device_id) == 'TRACE_OK\n':
+            if call_adb(f"shell cat {self.status_filename}", device=self._device_id) == 'TRACE_OK\n':
                 log.info("Trace {} finished on {}".format(
                     self.target_id,
                     self._device_id))
@@ -430,7 +430,7 @@ class EndTraceEndpoint(DeviceRequestEndpoint):
         if thread.is_alive():
             thread.end_trace()
         success = thread.success()
-        signal_handler_log = call_adb(f"shell su root cat {SIGNAL_HANDLER_LOG}", device=device_id).encode('utf-8')
+        signal_handler_log = call_adb(f"shell cat {SIGNAL_HANDLER_LOG}", device=device_id).encode('utf-8')
 
         if (thread.timed_out()):
             timeout_message = "Trace {} timed out during cleanup".format(target_id)
@@ -450,7 +450,7 @@ class EndTraceEndpoint(DeviceRequestEndpoint):
             b"\n"
         log.debug("### Output ###\n".format(target_id) + out.decode("utf-8"))
 
-        call_adb(f"shell su root rm {thread.status_filename}", device=device_id)
+        call_adb(f"shell rm {thread.status_filename}", device=device_id)
 
         threads.pop(target_id)
 

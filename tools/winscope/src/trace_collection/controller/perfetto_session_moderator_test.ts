@@ -50,7 +50,7 @@ describe('PerfettoSessionModerator', () => {
       const moderator = new PerfettoSessionModerator(mockDevice, false);
       await moderator.clearPreviousConfigFiles();
       expect(runShellCmdSpy).toHaveBeenCalledOnceWith(
-        `su root rm -f ${PERFETTO_TRACE_CONFIG_FILE}`,
+        `rm -f ${PERFETTO_TRACE_CONFIG_FILE}`,
       );
     });
 
@@ -58,7 +58,7 @@ describe('PerfettoSessionModerator', () => {
       const moderator = new PerfettoSessionModerator(mockDevice, true);
       await moderator.clearPreviousConfigFiles();
       expect(runShellCmdSpy).toHaveBeenCalledOnceWith(
-        `su root rm -f ${PERFETTO_DUMP_CONFIG_FILE}`,
+        `rm -f ${PERFETTO_DUMP_CONFIG_FILE}`,
       );
     });
   });
@@ -220,13 +220,47 @@ describe('PerfettoSessionModerator', () => {
   });
 
   describe('createTracingSession', () => {
+    const mockConfigDataSources = [
+      `data_sources {
+  config {
+    name: "ds1"
+    extra_config_1 {
+      config_param_1: false
+    }
+  }
+}`,
+      `data_sources {
+  config {
+    name: "ds2"
+    extra_config_2 {
+      config_param_2: 1
+    }
+  }
+}`,
+    ];
     it('trace', () => {
       const moderator = new PerfettoSessionModerator(mockDevice, false);
-      const session = moderator.createTracingSession(['setup1']);
+      const session = moderator.createTracingSession(mockConfigDataSources);
       const expectedTarget = new TraceTarget(
         'PerfettoTrace',
-        ['setup1'],
-        `cat << EOF >> ${PERFETTO_TRACE_CONFIG_FILE}
+        [],
+        `cat << EOF > ${PERFETTO_TRACE_CONFIG_FILE}
+data_sources {
+  config {
+    name: "ds1"
+    extra_config_1 {
+      config_param_1: false
+    }
+  }
+}
+data_sources {
+  config {
+    name: "ds2"
+    extra_config_2 {
+      config_param_2: 1
+    }
+  }
+}
 data_sources {
   config {
     name: "linux.process_stats"
@@ -275,11 +309,27 @@ echo 'Perfetto trace stopped.'`,
 
     it('dump', () => {
       const moderator = new PerfettoSessionModerator(mockDevice, true);
-      const session = moderator.createTracingSession(['setup1']);
+      const session = moderator.createTracingSession(mockConfigDataSources);
       const expectedTarget = new TraceTarget(
         'PerfettoDump',
-        ['setup1'],
-        `cat << EOF >> ${PERFETTO_DUMP_CONFIG_FILE}
+        [],
+        `cat << EOF > ${PERFETTO_DUMP_CONFIG_FILE}
+data_sources {
+  config {
+    name: "ds1"
+    extra_config_1 {
+      config_param_1: false
+    }
+  }
+}
+data_sources {
+  config {
+    name: "ds2"
+    extra_config_2 {
+      config_param_2: 1
+    }
+  }
+}
 buffers: {
   size_kb: 500000
   fill_policy: RING_BUFFER
@@ -296,58 +346,50 @@ echo 'Dumped perfetto'`,
     });
   });
 
-  describe('createSetupCommand', () => {
+  describe('makeConfigDataSource', () => {
     it('trace', () => {
       const moderator = new PerfettoSessionModerator(mockDevice, false);
-      expect(moderator.createSetupCommand('ds1')).toEqual(
-        `cat << EOF >> ${PERFETTO_TRACE_CONFIG_FILE}
-data_sources: {
+      expect(moderator.makeConfigDataSource('ds1')).toEqual(
+        `data_sources: {
   config {
     name: "ds1"
   }
-}
-EOF`,
+}`,
       );
     });
 
     it('trace with config', () => {
       const moderator = new PerfettoSessionModerator(mockDevice, false);
-      expect(moderator.createSetupCommand('ds1', 'extraconfig {}')).toEqual(
-        `cat << EOF >> ${PERFETTO_TRACE_CONFIG_FILE}
-data_sources: {
+      expect(moderator.makeConfigDataSource('ds1', 'extraconfig {}')).toEqual(
+        `data_sources: {
   config {
     name: "ds1"
     extraconfig {}
   }
-}
-EOF`,
+}`,
       );
     });
 
     it('dump', () => {
       const moderator = new PerfettoSessionModerator(mockDevice, true);
-      expect(moderator.createSetupCommand('ds1')).toEqual(
-        `cat << EOF >> ${PERFETTO_DUMP_CONFIG_FILE}
-data_sources: {
+      expect(moderator.makeConfigDataSource('ds1')).toEqual(
+        `data_sources: {
   config {
     name: "ds1"
   }
-}
-EOF`,
+}`,
       );
     });
 
     it('dump with config', () => {
       const moderator = new PerfettoSessionModerator(mockDevice, true);
-      expect(moderator.createSetupCommand('ds1', 'extraconfig {}')).toEqual(
-        `cat << EOF >> ${PERFETTO_DUMP_CONFIG_FILE}
-data_sources: {
+      expect(moderator.makeConfigDataSource('ds1', 'extraconfig {}')).toEqual(
+        `data_sources: {
   config {
     name: "ds1"
     extraconfig {}
   }
-}
-EOF`,
+}`,
       );
     });
   });
