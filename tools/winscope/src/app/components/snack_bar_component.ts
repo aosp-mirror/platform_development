@@ -26,7 +26,7 @@ import {MatSnackBarRef, MAT_SNACK_BAR_DATA} from '@angular/material/snack-bar';
           {{ message }}
         </p>
       </div>
-      <div class="snackbar-actions">
+      <div class="snack-bar-actions">
         <button
           color="primary"
           mat-button
@@ -57,7 +57,7 @@ import {MatSnackBarRef, MAT_SNACK_BAR_DATA} from '@angular/material/snack-bar';
       .message {
         padding-block-end: 4px;
       }
-      .snackbar-actions {
+      .snack-bar-actions {
         display: flex;
         justify-content: center;
       }

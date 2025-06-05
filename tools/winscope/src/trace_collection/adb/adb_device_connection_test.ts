@@ -169,11 +169,25 @@ describe('AdbDeviceConnection', () => {
   });
 
   it('finds files via exact filepath', async () => {
+    runShellCmdSpy.withArgs('find filepath').and.returnValue('file');
+    expect(await connection.findFiles('filepath', [])).toEqual(['file']);
+  });
+
+  it('finds files via exact filepath as root', async () => {
+    setDeviceAsRoot();
     runShellCmdSpy.withArgs('su root find filepath').and.returnValue('file');
     expect(await connection.findFiles('filepath', [])).toEqual(['file']);
   });
 
   it('finds files via first matcher', async () => {
+    runShellCmdSpy.withArgs('find filepath -name m1').and.returnValue('file');
+    expect(await connection.findFiles('filepath', ['m1', 'm2'])).toEqual([
+      'file',
+    ]);
+  });
+
+  it('finds files via first matcher as root', async () => {
+    setDeviceAsRoot();
     runShellCmdSpy
       .withArgs('su root find filepath -name m1')
       .and.returnValue('file');
@@ -183,6 +197,14 @@ describe('AdbDeviceConnection', () => {
   });
 
   it('finds files via second matcher', async () => {
+    runShellCmdSpy.withArgs('find filepath -name m2').and.returnValue('file');
+    expect(await connection.findFiles('filepath', ['m1', 'm2'])).toEqual([
+      'file',
+    ]);
+  });
+
+  it('finds files via second matcher as root', async () => {
+    setDeviceAsRoot();
     runShellCmdSpy
       .withArgs('su root find filepath -name m2')
       .and.returnValue('file');
@@ -192,16 +214,33 @@ describe('AdbDeviceConnection', () => {
   });
 
   it('handles "No such file" error', async () => {
+    runShellCmdSpy.withArgs('find filepath').and.returnValue('No such file');
+    expect(await connection.findFiles('filepath', [])).toEqual([]);
+  });
+
+  it('handles "Permission denied" error', async () => {
     runShellCmdSpy
       .withArgs('su root find filepath')
-      .and.returnValue('No such file');
+      .and.returnValue('Permission denied');
     expect(await connection.findFiles('filepath', [])).toEqual([]);
   });
 
   it('ignores whitespace', async () => {
-    runShellCmdSpy
-      .withArgs('su root find filepath')
-      .and.returnValue('file\n  ');
+    runShellCmdSpy.withArgs('find filepath').and.returnValue('file\n  ');
     expect(await connection.findFiles('filepath', [])).toEqual(['file']);
   });
+
+  it('checks root and returns true for "0" output', async () => {
+    setDeviceAsRoot();
+    expect(await connection.checkRoot()).toBeTrue();
+  });
+
+  it('checks root and returns false for non "0" output', async () => {
+    setDeviceAsRoot();
+    expect(await connection.checkRoot()).toBeTrue();
+  });
+
+  function setDeviceAsRoot() {
+    runShellCmdSpy.withArgs('su root id -u').and.returnValue('0');
+  }
 });

@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+import {ClipboardModule} from '@angular/cdk/clipboard';
 import {CommonModule} from '@angular/common';
 import {
   Component,
@@ -97,6 +98,7 @@ describe('CollectTracesComponent', () => {
         MatSelectModule,
         MatFormFieldModule,
         MatInputModule,
+        ClipboardModule,
       ],
       providers: [MatSnackBar],
       declarations: [

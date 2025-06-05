@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+import {ClipboardModule} from '@angular/cdk/clipboard';
 import {TestBed} from '@angular/core/testing';
 import {MatCardModule} from '@angular/material/card';
 import {MatCheckboxModule} from '@angular/material/checkbox';
@@ -63,6 +64,7 @@ describe('UploadTracesComponent', () => {
         MatProgressBarModule,
         MatTooltipModule,
         MatCheckboxModule,
+        ClipboardModule,
       ],
       providers: [MatSnackBar],
       declarations: [UploadTracesComponent, LoadProgressComponent],

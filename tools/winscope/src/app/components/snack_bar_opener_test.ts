@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import {ClipboardModule} from '@angular/cdk/clipboard';
 import {Overlay} from '@angular/cdk/overlay';
 import {TestBed} from '@angular/core/testing';
 import {MatSnackBar, MatSnackBarRef} from '@angular/material/snack-bar';
@@ -39,7 +40,7 @@ describe('SnackBarOpener', () => {
   beforeEach(() => {
     TestBed.configureTestingModule({
       providers: [SnackBarOpener, MatSnackBar, Overlay],
-      imports: [BrowserAnimationsModule],
+      imports: [BrowserAnimationsModule, ClipboardModule],
       declarations: [SnackBarComponent],
     });
     snackBarOpener = TestBed.inject(SnackBarOpener);

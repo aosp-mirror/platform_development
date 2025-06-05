@@ -48,6 +48,9 @@ export class TracingSession {
   }
 
   async moveFiles(device: AdbDeviceConnection) {
+    const isRoot = await device.checkRoot();
+    const maybeRootParam = isRoot ? 'su root ' : '';
+
     for (const file of this.target.fileIdentifiers) {
       const filepaths = await device.findFiles(file.path, file.matchers);
 
@@ -57,7 +60,12 @@ export class TracingSession {
         );
         try {
           await device.runShellCommand(
-            `su root [ ! -f ${filepath} ] || su root mv ${filepath} ${WINSCOPE_BACKUP_DIR}${file.destName}`,
+            maybeRootParam +
+              `[ -f ${filepath} ] && ` +
+              maybeRootParam +
+              `cp ${filepath} ${WINSCOPE_BACKUP_DIR}${file.destName} && ` +
+              maybeRootParam +
+              `rm -f ${filepath}`,
           );
           console.debug(
             `Moved ${filepath} to ${WINSCOPE_BACKUP_DIR}${file.destName} on device`,

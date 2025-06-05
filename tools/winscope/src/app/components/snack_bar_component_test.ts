@@ -54,12 +54,12 @@ describe('SnackBarComponent', () => {
   });
 
   it('dismisses snackbar on close button click', () => {
-    dom.findAndClick('.snackbar-actions .close-button');
+    dom.findAndClick('.snack-bar-actions .close-button');
     expect(mockSnackbarRef.dismiss).toHaveBeenCalledTimes(1);
   });
 
   it('copies messages on copy button click', () => {
-    dom.findAndClick('.snackbar-actions .copy-button');
+    dom.findAndClick('.snack-bar-actions .copy-button');
     expect(mockCopyText).toHaveBeenCalledOnceWith(messages.join('\n\n'));
   });
 });

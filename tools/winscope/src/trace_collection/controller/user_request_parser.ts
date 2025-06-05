@@ -41,6 +41,7 @@ export class UserRequestParser {
     [UiTraceTarget.VIEW_CAPTURE, 'android.viewcapture'],
     [UiTraceTarget.INPUT, 'android.input.inputevent'],
     [UiTraceTarget.SURFACE_FLINGER_DUMP, 'android.surfaceflinger.layers'],
+    [UiTraceTarget.WINDOW_MANAGER_DUMP, 'android.windowmanager'],
   ]);
 
   private perfettoModerator: PerfettoSessionModerator | undefined;
@@ -113,6 +114,8 @@ export class UserRequestParser {
         return this.getInputPerfettoConfigDataSource();
       case UiTraceTarget.SURFACE_FLINGER_DUMP:
         return this.getSfDumpPerfettoConfigDataSource();
+      case UiTraceTarget.WINDOW_MANAGER_DUMP:
+        return this.getWmDumpPerfettoConfigDataSource();
       default:
         return undefined;
     }
@@ -523,6 +526,16 @@ export class UserRequestParser {
           'layers_dump',
         ),
       ],
+    );
+  }
+
+  private getWmDumpPerfettoConfigDataSource() {
+    return this.perfettoModerator?.makeConfigDataSource(
+      'android.windowmanager',
+      `windowmanager_config: {
+      log_level: LOG_LEVEL_VERBOSE
+      log_frequency: LOG_FREQUENCY_SINGLE_DUMP
+    }`,
     );
   }
 

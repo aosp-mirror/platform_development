@@ -329,6 +329,25 @@ describe('UserRequestParser', () => {
     );
   });
 
+  it('makes WM dump perfetto session', async () => {
+    const configDs = `data_sources: {
+  config {
+    name: "android.windowmanager"
+    windowmanager_config: {
+      log_level: LOG_LEVEL_VERBOSE
+      log_frequency: LOG_FREQUENCY_SINGLE_DUMP
+    }
+  }
+}`;
+    await checkPerfettoSessionCreated(
+      configDs,
+      'android.windowmanager',
+      UiTraceTarget.WINDOW_MANAGER_DUMP,
+      [],
+      new PerfettoSessionModerator(mockDevice, true),
+    );
+  });
+
   describe('makes SF trace legacy session', () => {
     it('without config', async () => {
       await checkSession(expectedSfLegacyTarget, []);

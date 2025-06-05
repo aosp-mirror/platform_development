@@ -415,7 +415,7 @@ describe('AppComponent', () => {
     snackbar = dom.getSnackBar();
     snackbar.checkText(firstMessage.getMessage());
 
-    snackbar.findAndClick('.snack-bar-action');
+    snackbar.findAndClick('.snack-bar-actions .close-button');
     await dom.whenRenderingDone();
     snackbar = dom.getSnackBar();
     snackbar.checkText(secondMessage.getMessage());

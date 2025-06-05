@@ -193,7 +193,7 @@ describe('WdpDeviceConnection', () => {
         [
           'service check Wayland',
           'screenrecord --version',
-          'su root dumpsys SurfaceFlinger --display-id',
+          'dumpsys SurfaceFlinger --display-id',
         ],
         [],
       );

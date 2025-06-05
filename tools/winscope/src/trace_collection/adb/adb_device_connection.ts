@@ -64,6 +64,11 @@ export abstract class AdbDeviceConnection {
     return `${status}${this.model} (${this.id})`;
   }
 
+  async checkRoot(): Promise<boolean> {
+    const root = await this.runShellCommand('su root id -u');
+    return root === '0';
+  }
+
   async updateAvailableTraces() {
     if (
       this.state === AdbDeviceState.AVAILABLE &&
@@ -81,22 +86,25 @@ export abstract class AdbDeviceConnection {
   }
 
   async findFiles(path: string, matchers: string[]): Promise<string[]> {
+    const errors = ['No such file', 'Permission denied'];
     if (matchers.length === 0) {
       matchers.push('');
     }
+    const isRoot = await this.checkRoot();
     for (const matcher of matchers) {
-      let matchingFiles: string;
+      let findCmd = `find ${path}`;
       if (matcher.length > 0) {
-        matchingFiles = await this.runShellCommand(
-          `su root find ${path} -name ${matcher}`,
-        );
-      } else {
-        matchingFiles = await this.runShellCommand(`su root find ${path}`);
+        findCmd += ` -name ${matcher}`;
       }
+      if (isRoot) {
+        findCmd = 'su root ' + findCmd;
+      }
+      const matchingFiles = await this.runShellCommand(findCmd);
       const files = matchingFiles
         .split('\n')
         .filter(
-          (file) => !file.includes('No such file') && file.trim().length > 0,
+          (maybeFile) =>
+            !errors.includes(maybeFile) && maybeFile.trim().length > 0,
         );
       if (files.length > 0) {
         return files;
